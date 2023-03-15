@@ -1,0 +1,465 @@
+#include "structure-util.h"
+#include "../core/asn_comments.h"
+#include "../core/asn1module.h"
+#include <assert.h>
+#include <string.h>
+
+bool IsROSEValueDef(ValueDef* vd) {
+	if (vd->value->type == NULL)
+		return false;
+	if (vd->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
+		return false;
+	if (vd->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
+		return false;
+	if (gNoDeprecatedSymbols) {
+		RosOperationMacroType* pRoseOperation = vd->value->type->basicType->a.macroType->a.rosOperation;
+		if (!pRoseOperation)
+			return false;
+		asnoperationcomment com;
+		if (GetOperationComment_UTF8(vd->definedName, &com))
+		{
+			if (com.iDeprecated)
+				return false;
+		}
+	}
+
+	return true;
+}
+
+bool GetROSEDetails(ValueDef* vd, char** ppszArgument, char** ppszResult, char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot)
+{
+	if (ppszArgument)
+		*ppszArgument = NULL;
+	if (ppszResult)
+		*ppszResult = NULL;
+	if (ppszError)
+		*ppszError = NULL;
+
+	Type*(*resolver)(Type* type, char** szName) = NULL;
+	// Depends on the caller we resolved any type to root or one level (just one local type ref or imported type ref is resolved)
+	if(bResolveToRoot)
+		resolver = &ResolveTypeReferencesToRoot;
+	else
+		resolver = &ResolveTypeReferencesOneLevel;
+
+	if (!IsROSEValueDef(vd))
+		return false;
+
+	RosOperationMacroType* pOperation = vd->value->type->basicType->a.macroType->a.rosOperation;
+	if (!pOperation)
+		return false;
+
+	bool bRetVal = false;
+
+	if (IsROSEValueDef(vd)) {
+		struct NamedType* pArgument = pOperation->arguments;
+		if (pArgument && (ppszArgument || argumentType)) {
+			if (pArgument->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF ||
+				pArgument->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+			{
+				if (argumentType)
+					*argumentType = resolver(pArgument->type, ppszArgument);
+				else
+					resolver(pArgument->type, ppszArgument);
+				bRetVal = true;
+			}
+		}
+
+		struct NamedType* pResult = pOperation->result;
+		if (pResult && (ppszResult || resultType))
+		{
+			if (pResult->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF ||
+				pResult->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+			{
+				if (resultType)
+					*resultType = resolver(pResult->type, ppszResult);
+				else
+					resolver(pResult->type, ppszResult);
+				bRetVal = true;
+			}
+		}
+
+		TypeOrValueList* pErrors = pOperation->errors;
+		if (pErrors && pErrors->count)
+		{
+			TypeOrValue* first = (TypeOrValue*)FIRST_LIST_ELMT(pErrors);
+			if (first->choiceId == TYPEORVALUE_TYPE)
+			{
+				if (first->a.type->basicType->choiceId == BASICTYPE_LOCALTYPEREF ||
+					first->a.type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+				{
+					if (errorType)
+						*errorType = resolver(first->a.type, ppszError);
+					else
+						resolver(first->a.type, ppszError);
+					bRetVal = true;
+				}
+			}
+		}
+	}
+	return bRetVal;
+}
+
+BasicType* ResolveBasicTypeReferences(BasicType* type, const char** szName)
+{
+	BasicType* returnType = type;
+	while (returnType->choiceId == BASICTYPE_LOCALTYPEREF ||
+		returnType->choiceId == BASICTYPE_IMPORTTYPEREF)
+	{
+		if (returnType->choiceId == BASICTYPE_LOCALTYPEREF)
+		{
+			TypeRef* localTypeRef = returnType->a.localTypeRef;
+			if (szName)
+				*szName = localTypeRef->typeName;
+			returnType = localTypeRef->link->type->basicType;
+		}
+		else if (returnType->choiceId == BASICTYPE_IMPORTTYPEREF)
+		{
+			TypeRef* importTypeRef = returnType->a.importTypeRef;
+			if (szName)
+				*szName = importTypeRef->typeName;
+			returnType = importTypeRef->link->type->basicType;
+		}
+	}
+	return returnType;
+}
+
+Type* ResolveTypeReferencesOneLevel(Type* type, char** szName)
+{
+	Type* returnType = type;
+	if (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF)
+	{
+		TypeRef* localTypeRef = returnType->basicType->a.localTypeRef;
+		if (szName)
+			*szName = localTypeRef->typeName;
+		returnType = localTypeRef->link->type;
+	}
+	else if (returnType->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+	{
+		TypeRef* importTypeRef = returnType->basicType->a.importTypeRef;
+		if (szName)
+			*szName = importTypeRef->typeName;
+		returnType = importTypeRef->link->type;
+	}
+	return returnType;
+}
+
+Type* ResolveTypeReferencesToRoot(Type* type, char** szName)
+{
+	Type* returnType = type;
+	while (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF ||
+		returnType->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+	{
+		if (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF)
+		{
+			TypeRef* localTypeRef = returnType->basicType->a.localTypeRef;
+			if (szName)
+				*szName = localTypeRef->typeName;
+			returnType = localTypeRef->link->type;
+		}
+		else if (returnType->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+		{
+			TypeRef* importTypeRef = returnType->basicType->a.importTypeRef;
+			if (szName)
+				*szName = importTypeRef->typeName;
+			returnType = importTypeRef->link->type;
+		}
+	}
+	return returnType;
+}
+
+Type* GetRootType(Type* type, const char** szName)
+{
+	Type* returnType = type;
+	while (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF ||
+		returnType->basicType->choiceId == BASICTYPE_IMPORTTYPEREF ||
+		returnType->basicType->choiceId == BASICTYPE_SEQUENCEOF ||
+		returnType->basicType->choiceId == BASICTYPE_SETOF)
+	{
+		if (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF)
+		{
+			if (szName)
+				*szName = returnType->basicType->a.localTypeRef->typeName;
+			returnType = returnType->basicType->a.localTypeRef->link->type;
+		}
+		else if (returnType->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+		{
+			if (szName)
+				*szName = returnType->basicType->a.localTypeRef->typeName;
+			returnType = returnType->basicType->a.importTypeRef->link->type;
+		}
+		else if (returnType->basicType->choiceId == BASICTYPE_SEQUENCEOF)
+		{
+			if (szName)
+				*szName = returnType->basicType->a.sequenceOf->typeName;
+			returnType = returnType->basicType->a.sequenceOf;
+		}
+		else if (returnType->basicType->choiceId == BASICTYPE_SETOF)
+		{
+			if (szName)
+				*szName = returnType->basicType->a.setOf->typeName;
+			returnType = returnType->basicType->a.setOf;
+		}
+
+	}
+
+	return returnType;
+}
+
+int IsSimpleType(const enum BasicTypeChoiceId type)
+{
+	switch (type)
+	{
+	case BASICTYPE_BOOLEAN:
+	case BASICTYPE_REAL:
+	case BASICTYPE_OCTETSTRING:
+	case BASICTYPE_OCTETCONTAINING:
+	case BASICTYPE_INTEGER:
+	case BASICTYPE_UTF8_STR:
+	case BASICTYPE_BITSTRING:
+	case BASICTYPE_ENUMERATED:
+	case BASICTYPE_NULL:
+	case BASICTYPE_ANY:
+		return TRUE;
+	case BASICTYPE_SEQUENCE:
+	case BASICTYPE_SETOF:
+	case BASICTYPE_CHOICE:
+	case BASICTYPE_LOCALTYPEREF:
+	case BASICTYPE_IMPORTTYPEREF:
+	case BASICTYPE_SEQUENCEOF:
+		break;
+	default:
+		snacc_exit("Unknown type %d", type);
+	}
+	return FALSE;
+}
+
+const char* GetNameSpace(Module* mod)
+{
+	if (!mod || !mod->baseFileName)
+		return NULL;
+	return RemovePath(mod->baseFileName);
+}
+
+enum BasicTypeChoiceId GetBaseBasicTypeChoiceId(BasicType* basicType)
+{
+	BasicType* type = basicType;
+	if (type->choiceId == BASICTYPE_LOCALTYPEREF)
+		type = type->a.localTypeRef->link->type->basicType;
+	else if (type->choiceId == BASICTYPE_IMPORTTYPEREF)
+		type = type->a.importTypeRef->link->type->basicType;
+	else if (type->choiceId == BASICTYPE_SEQUENCEOF)
+		type = type->a.sequenceOf->basicType;
+	else if (type->choiceId == BASICTYPE_SETOF)
+		type = type->a.setOf->basicType;
+	return type->choiceId;
+}
+
+BasicType* GetBaseBasicType(BasicType* type, const char** szName)
+{
+	BasicType* returnType = type;
+	if (returnType->choiceId == BASICTYPE_LOCALTYPEREF)
+	{
+		if (szName)
+			*szName = returnType->a.localTypeRef->typeName;
+		returnType = returnType->a.localTypeRef->link->type->basicType;
+
+	}
+	else if (returnType->choiceId == BASICTYPE_IMPORTTYPEREF)
+	{
+		if (szName)
+			*szName = returnType->a.importTypeRef->typeName;
+		returnType = returnType->a.importTypeRef->link->type->basicType;
+	}
+	else if (returnType->choiceId == BASICTYPE_SEQUENCEOF)
+	{
+		returnType = returnType->a.sequenceOf->basicType;
+		if (szName)
+			GetBaseBasicType(returnType, szName);
+	}
+	else if (returnType->choiceId == BASICTYPE_SETOF)
+	{
+		returnType = returnType->a.setOf->basicType;
+		if (szName)
+			GetBaseBasicType(returnType, szName);
+	}
+	return returnType;
+}
+
+BasicType* ResolveArrayRootType(BasicType* type, const char** szName)
+{
+	BasicType* returnType = type;
+	if (returnType->choiceId == BASICTYPE_SEQUENCEOF)
+	{
+		returnType = returnType->a.sequenceOf->basicType;
+		if (szName)
+			GetBaseBasicType(returnType, szName);
+	}
+	else if (returnType->choiceId == BASICTYPE_SETOF)
+	{
+		returnType = returnType->a.setOf->basicType;
+		if (szName)
+			GetBaseBasicType(returnType, szName);
+	}
+	return returnType;
+}
+
+char* GetImportFileName(char* Impname, ModuleList* mods)
+{
+	AsnListNode* stored = mods->curr;
+	Module* currMod;
+	char* fileName = NULL;
+	FOR_EACH_LIST_ELMT(currMod, mods)
+	{
+		/* Find the import Module in the Modules and
+		* return the header file name
+		*/
+		if (strcmp(Impname, currMod->modId->name) == 0)
+		{
+			/* Set the file name and break */
+			fileName = currMod->cxxHdrFileName;
+			break;
+		}
+	}
+	mods->curr = stored;
+	return fileName;
+}
+
+Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, Module* mod)
+{
+	AsnListNode* stored = mods->curr;
+	Module* returnMod = NULL;
+	{
+		ImportModule* impMod;
+		AsnListNode* storeImport = mod->imports->curr;
+		FOR_EACH_LIST_ELMT(impMod, mod->imports)
+		{
+			bool bFound = false;
+			ImportElmtList* ElemList = impMod->importElmts;
+			AsnListNode* elemStore = ElemList->curr;
+			ImportElmt* impElem;
+			FOR_EACH_LIST_ELMT(impElem, ElemList)
+			{
+				if (strcmp(impElem->name, className) == 0)
+				{
+					bFound = true;
+					break;
+				}
+			}
+			ElemList->curr = elemStore;
+			if (bFound) {
+				Module* currMod;
+				FOR_EACH_LIST_ELMT(currMod, mods)
+				{
+					if (strcmp(impMod->modId->name, currMod->modId->name) == 0)
+					{
+						returnMod = currMod;
+						break;
+					}
+				}
+				break;
+			}
+		}
+		mod->imports->curr = storeImport;
+	}
+
+	if (!returnMod) {
+		TypeDef* typeDef;
+		AsnListNode* storeTypeDef = mod->typeDefs->curr;
+		FOR_EACH_LIST_ELMT(typeDef, mod->typeDefs)
+		{
+			if (strcmp(typeDef->definedName, className) == 0) {
+				returnMod = mod;
+				break;
+			}
+		}
+		mod->typeDefs->curr = storeTypeDef;
+		if (!returnMod) {
+			fprintf(stderr, "GetImportModuleRefByClassName() - error unresolved reference");
+			assert(FALSE);
+		}
+	}
+
+	mods->curr = stored;
+
+	return returnMod;
+}
+
+Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod) {
+	Module* module = NULL;
+	AsnListNode* saved = mods->curr;
+	Module* currMod;
+	FOR_EACH_LIST_ELMT(currMod, mods)
+	{
+		if (strcmp(impMod->modId->name, currMod->modId->name) == 0) {
+			module = currMod;
+			break;
+		}
+	}
+	mods->curr = saved;
+
+	if (!module) {
+		fprintf(stderr, "GetModuleForImportModule() - error unresolved reference");
+		assert(FALSE);
+	}
+
+	return module;
+}
+
+bool IsDeprecatedSequence(const char* szSequenceName) {
+	asnsequencecomment comment;
+	if (GetSequenceComment_UTF8(szSequenceName, &comment)) {
+		if (comment.iDeprecated)
+			return true;
+	}
+	return false;
+}
+
+bool IsDeprecatedOperation(const char* szOperationName) {
+	asnoperationcomment comment;
+	if (GetOperationComment_UTF8(szOperationName, &comment)) {
+		if (comment.iDeprecated)
+			return true;
+	}
+	return false;
+}
+
+bool IsDeprecatedMember(const TypeDef* td, const char* szElement) {
+	if (!gNoDeprecatedSymbols)
+		return false;
+
+	enum BasicTypeChoiceId type = td->cxxTypeDefInfo->asn1TypeId;
+
+	// Deprecated may get skipped for:
+	// - choices
+	// - enums
+	// - sequences if the property is optional
+	// -> so in any other case false, not skippable
+
+	if(type != BASICTYPE_CHOICE &&
+		type != BASICTYPE_ENUMERATED &&
+		type != BASICTYPE_SEQUENCE)
+		return false;
+
+	asnmembercomment comment;
+	if (GetMemberComment_UTF8(td->definedName, szElement, &comment)) {
+		if (comment.iDeprecated) {
+			if (type == BASICTYPE_SEQUENCE) {
+				// We need to check if the property is optional, if that is the case we can skip it
+				NamedType* e;
+				FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
+				{
+					if (strcmp(e->fieldName, szElement) != 0)
+						continue;
+					if (e->type->optional)
+						return true;
+				}
+			}
+			else
+				return true;
+		}
+	}
+				
+	return false;
+}
+

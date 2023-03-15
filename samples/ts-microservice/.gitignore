@@ -1,0 +1,10 @@
+# directories
+node_modules/
+dist/
+log/
+.vs/
+
+# files
+*.pem
+.env
+.eslintcache

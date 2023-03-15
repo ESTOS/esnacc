@@ -1,0 +1,103 @@
+﻿UC-Server-Access-Protocol-Settings-Manager
+	{ iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) estos(10924) micro-service-example(3) settings-manager(2) }
+
+-- @category Settings Manager
+-- @brief This module is used to retrieve and store settings and to dispatch events for changed settings
+-- @long
+-- A client may retrieve settings, adopt them and store them on the server
+-- In case a property in the events has changed the server will notify this to connected websocket events
+
+--~ Interface uses the following operation IDs (please check that the id´s do not overlap other id´s)
+--~ Operation IDs: 4100 - 4199
+
+-- Methods and Events
+
+-- Methods:
+-- 		4100 asnGetSettings					- Sample to get settings
+-- 		4101 asnSetSettings					- Sample to set settings
+
+-- Events:
+-- 		4150 asnSettingsChanged				- An event that the settings have changed
+
+DEFINITIONS
+IMPLICIT TAGS ::=
+BEGIN
+
+IMPORTS 
+AsnOptionalParameters, AsnRequestError, AsnSystemTime FROM UC-Server-Access-Protocol-Common;
+
+AsnSomeSettings ::= SEQUENCE
+{
+	bEnabled							[0] BOOLEAN OPTIONAL,
+	u8sUsername							[1] UTF8String OPTIONAL,
+	stTime								[2] AsnSystemTime OPTIONAL,
+	optionalParams						[3] AsnOptionalParameters OPTIONAL
+}
+
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~ FUNCTION ~~~~~~~~~~~~~~~~ asnGetSettings ~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-- @brief Argument for the asnGetSettings method
+AsnGetSettingsArgument ::= SEQUENCE
+{
+	optionalParams						AsnOptionalParameters OPTIONAL
+}
+
+-- @brief Result for the asnGetSettings method
+AsnGetSettingsResult ::= SEQUENCE
+{
+	settings							AsnSomeSettings,
+	optionalParams						AsnOptionalParameters OPTIONAL
+}
+
+-- @brief Method to retrieve settings from the server side
+asnGetSettings OPERATION
+	ARGUMENT	arg AsnGetSettingsArgument
+	RESULT		res AsnGetSettingsResult
+	ERRORS		{AsnRequestError}
+::= 4100
+
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~ FUNCTION ~~~~~~~~~~~~~~~~ asnSetSettings ~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-- @brief Argument for the asnSetSettings method
+AsnSetSettingsArgument ::= SEQUENCE
+{
+	settings							AsnSomeSettings,
+	optionalParams						AsnOptionalParameters OPTIONAL
+}
+
+-- @brief Result for the asnSetSettings method
+AsnSetSettingsResult ::= SEQUENCE
+{
+	optionalParams						AsnOptionalParameters OPTIONAL
+}
+
+-- @brief Method to store settings on the server side
+-- @long If a settings property has changed the client will get notified by an event
+asnSetSettings OPERATION
+	ARGUMENT	arg AsnSetSettingsArgument
+	RESULT		res AsnSetSettingsResult
+	ERRORS		{AsnRequestError}
+::= 4101
+
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~ EVENT ~~~~~~~~~~~~~~~~~~~~ asnSettingsChanged ~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-- @brief Argument for the asnSettingsChanged event
+AsnSettingsChangedArgument ::= SEQUENCE
+{
+	settings							AsnSomeSettings,
+	optionalParams						AsnOptionalParameters OPTIONAL
+}
+
+-- @brief Sent to the clients in the case settings have changed
+asnSettingsChanged OPERATION
+	ARGUMENT	arg AsnSettingsChangedArgument
+::= 4150
+
+END
+

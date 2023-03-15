@@ -1,0 +1,17 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "typescript.tsdk": "node_modules\\typescript\\lib",
+        "html.format.enable": false,
+        "javascript.preferences.quoteStyle": "double",
+        "typescript.preferences.quoteStyle": "double",
+        "workbench.colorCustomizations": {
+            "tab.activeBackground": "#A00000",
+            "tab.activeForeground": "#ffffff"
+        }
+    }
+}

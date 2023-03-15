@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"C_Cpp.autoAddFileAssociations": false,
+		"files.associations": {
+			"*.h": "c",
+			"*.c": "c",
+			"*.cpp": "cpp"
+		}
+	}
+}

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>MicroService Test Client</title>
+    <link rel="stylesheet" href="sampleclient.css" type="text/css" />
+    <script>
+      function encoding_changed() {
+        const encoding = document.getElementById("encoding");
+        if(encoding)
+          theClient.setEncoding(parseInt(encoding.value));
+      }
+      function transport_changed() {
+        const transport = document.getElementById("transport");
+        if(transport)
+          theClient.setTransport(transport.value);
+      }
+      function getEvents() {
+        const amount = document.getElementById("amount");
+        const delay = document.getElementById("delay");
+        if(amount && delay)
+          theClient.eventManager.getEvents(parseInt(amount.value, 10), parseInt(delay.value, 10));
+          console.log("fullydone");
+      }
+      async function getSettings() {
+        const result = await theClient.settingsManager.getSettings();
+        if (!result)
+          return;
+        const enabled = document.getElementById("enabled");
+        if(enabled)
+          enabled.checked = result.enabled;
+        const username = document.getElementById("username");
+        if(username)
+          username.value = result.username;
+      }
+      function setSettings() {
+        const enabled = document.getElementById("enabled");
+        const username = document.getElementById("username");
+        if(enabled && username)
+          theClient.settingsManager.setSettings(enabled.checked, username.value);
+      }
+      window.onload = function() {
+        encoding_changed();
+        transport_changed();
+      }
+    </script>
+  </head>
+
+  <body>
+    <script type="text/javascript" src="bundle.js"></script>
+    <form>
+      <h3>Welcome to the microservice test client</h3>
+
+      <h4>General section:</h4>
+      Encoding:
+      <select id="encoding" onchange="encoding_changed()">
+        <option value="1">JSON</option>
+        <option value="2">BER</option>
+      </select>
+      Transport:
+      <select id="transport" onchange="transport_changed()">
+        <option value="REST">REST</option>
+        <option value="WEBSOCKET">WebSocket</option>
+      </select>
+      <input
+        type="button"
+        id="disconnect"
+        onclick="theClient.disconnect();"
+        value="Disconnect"
+        disabled
+      />
+      
+      <h4>Module One Functions:</h4>
+      <br/>
+      Amount:
+      <input
+        type="edit"
+        value="5"
+        id="amount"
+        size="1"
+      />
+      Delay:
+      <input
+        type="edit"
+        value="1000"
+        id="delay"
+        size="4"
+      />
+      <input
+        type="button"
+        onclick="getEvents()"
+        value="Get events"
+      />
+      <br/>
+      <h4>Module Two Functions:</h4>
+      Enabled:
+      <input
+        type="checkbox"
+        id="enabled"
+      />
+      Username:
+      <input
+        type="edit"
+        id="username"
+        size="20"
+      />
+      <input
+        type="button"
+        onclick="getSettings()"
+        value="Get settings"
+      />
+      <input
+        type="button"
+        onclick="setSettings()"
+        value="Set settings"
+      />
+
+      <h4>Log:</h4>
+      <div id="result"></div>
+      <input
+        type="button"
+        id="clear"
+        onclick="theClient.clearLog();"
+        value="Clear log"
+        disabled
+      />
+      <br/>
+    </div>
+  </form>
+</body>
+</html>

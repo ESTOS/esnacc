@@ -1,0 +1,29 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Start and Debug",
+      "preLaunchTask": "nb-tsc-watch",
+      "timeout": 10000,
+      "program": "${workspaceFolder}/src/app.ts",
+      "console": "integratedTerminal",
+      "restart": true,
+      "smartStep": true,
+      "sourceMaps": true,
+      "cwd": "${workspaceRoot}",
+      "outFiles": [
+        "${workspaceFolder}/dist/**/*.js"
+      ],
+      "serverReadyAction": {
+        "pattern": "listening on port ([0-9]+)",
+        "uriFormat": "https://ws-jr.estos.de:%s",
+        "action": "openExternally"
+      }
+    }
+  ]
+}

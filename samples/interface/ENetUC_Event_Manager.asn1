@@ -1,0 +1,77 @@
+﻿UC-Server-Access-Protocol-Event-Manager
+	{ iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) estos(10924) micro-service-example(3) event-manager(1) }
+
+-- @category Event Manager
+-- @brief This module is used to create and dispatch events.
+-- @long
+-- Clients may request events from the server
+-- The server then sends events to all websocket connected clients
+-- Requesting events through rest is not supported and rejected
+
+--~ Interface uses the following operation IDs (please check that the id´s do not overlap other id´s)
+--~ Operation IDs: 4000 - 4099
+
+-- Methods and Events
+
+-- Methods:
+-- 		4000 asnCreateFancyEvents			- A method that will create events on the server side
+
+-- Events:
+-- 		4050 asnFancyEvent					- An event that is fired by the server in case a client request an event
+
+DEFINITIONS
+IMPLICIT TAGS ::=
+BEGIN
+
+IMPORTS 
+AsnOptionalParameters, AsnRequestError FROM UC-Server-Access-Protocol-Common;
+
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~ FUNCTION ~~~~~~~~~~~~~~~~ asnCreateFancyEvents ~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-- @brief Argument to create fancy events on the server side
+AsnCreateFancyEventsArgument ::= SEQUENCE
+{
+	-- the delay in msec between the events (the first event will also be delayed by that delay)
+	iEventDelay							INTEGER,
+	-- the amount of events to send
+	iEventCount							INTEGER,
+	optionalParams						AsnOptionalParameters OPTIONAL
+}
+
+-- @brief Result for the asnCreateFancyEvents method
+AsnCreateFancyEventsResult ::= SEQUENCE
+{
+	optionalParams						AsnOptionalParameters OPTIONAL
+}
+
+-- @brief Method that will create some events the server will then dispatch to the clients
+-- @long It´s not possible to call this method through rest as the client won´t receive these events
+asnCreateFancyEvents OPERATION
+	ARGUMENT	arg AsnCreateFancyEventsArgument
+	RESULT		res AsnCreateFancyEventsResult
+	ERRORS		{AsnRequestError}
+::= 4000
+
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~ EVENT ~~~~~~~~~~~~~~~~~~~~ asnFancyEvent ~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-- @brief Argument for the AsnFancyEventArgument method
+AsnFancyEventArgument ::= SEQUENCE
+{
+	-- The count that is incremented with every event
+	iEventCounter						INTEGER,
+	-- The events that are left to get dispatched
+	iEventsLeft							INTEGER,
+	optionalParams						AsnOptionalParameters OPTIONAL
+}
+
+-- @brief An event that is dispatched from the server to the clients
+asnFancyEvent OPERATION
+	ARGUMENT	arg AsnFancyEventArgument
+::= 4050
+
+END
+

@@ -1,0 +1,60 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "1.0.0",
+    "configurations": [
+        {
+            "name": "Visual Studio - ts-microservice-sample - server - compile asn1 files",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": ["-o", "${workspaceFolder}/samples/ts-microservice/server/src/stub", "-JT", "-j", "-RTS_SERVER", "*.asn1"],
+            "cwd": "${workspaceFolder}/samples/interface",
+            "preLaunchTask": "CMake: build",
+            "console": "externalTerminal"
+        },
+        {
+            "name": "Visual Studio - ts-microservice-sample - client - compile asn1 files",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": ["-o", "${workspaceFolder}/samples/ts-microservice/client/src/stub", "-JT", "-j", "-RTS_CLIENT_BROWSER", "*.asn1"],
+            "cwd": "${workspaceFolder}/samples/interface",
+            "preLaunchTask": "CMake: build",
+            "console": "externalTerminal"
+        },
+        {
+            "name": "LLDB - ts-microservice-sample - server - compile asn1 files",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": ["-o", "${workspaceFolder}/samples/ts-microservice/server/src/stub", "-JT", "-j", "-RTS_SERVER", "*.asn1"],
+            "cwd": "${workspaceFolder}/samples/interface",
+            "preLaunchTask": "CMake: build"
+        },
+        {
+            "name": "LLDB - ts-microservice-sample - client - compile asn1 files",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": ["-o", "${workspaceFolder}/samples/ts-microservice/client/src/stub", "-JT", "-j", "-RTS_CLIENT_BROWSER", "*.asn1"],
+            "cwd": "${workspaceFolder}/samples/interface",
+            "preLaunchTask": "CMake: build"
+        }
+    ],
+	"tasks": [
+		{
+			"type": "cmake",
+			"label": "CMake: build",
+			"command": "build",
+			"targets": [
+				"compiler"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"detail": "CMake template build task"
+		}
+	]
+
+}

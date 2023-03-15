@@ -1,0 +1,16 @@
+// place your settings in this file to overwrite default and user settings.
+{
+	"files.exclude": {
+		"**/.DS_Store": true,
+		"**/.git": true,
+		"**/*.js": {
+			"when": "$(basename).ts"
+		},
+		"**/*.js.map": true,
+		"**/dist": true
+	},
+	"eslint.alwaysShowStatus": true,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true
+	}
+}

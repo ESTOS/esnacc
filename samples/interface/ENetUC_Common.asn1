@@ -1,0 +1,314 @@
+﻿UC-Server-Access-Protocol-Common
+	{ iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) estos(10924) uc-server-access-protocol-v2(2) common(3) }
+
+
+-- @category Common
+-- @brief Common interface definitions
+-- @long
+-- ## Module description
+-- This module contains common usable strutures for the other interfaces.
+-- There should not be any function/operation defintions in this module.
+-- 
+-- ~ Erlaubte Operation IDs: keine
+-- ~ 
+-- ~ Um das Interface kompatibel zu halten werden Änderungen am Interface NACH dem 09.07.2008
+-- ~ nur noch über, in allen Methoden hinterlegte, optionale Parameter oder neue Methoden
+-- ~ abgebildet. Neue Methoden die den Funktionsumfang einer bereits existierenden Methode
+-- ~ ändern werden mit dem Suffix Ex gekennzeichnet, ebenso die benötigen Datentypen Argument
+-- ~ Result Error.
+-- ~ 
+-- ~ Bei der Verwendung der optionale Parameter ist darauf zu achten das diese eindeutig dokumentiert
+-- ~ werden. Für die optionalen Parameter werden die EDataStructures und EDataConverter aus dieser 
+-- ~ Bibliothek verwendet um unterschiedliches ein und auspacken auf Client bzw. Serverseite 
+-- ~ zu verhindern. Jeder optionale Parameter besteht aus einer UUID zur eindeutigen Kennzeichnung
+-- ~ sowie einer Choice aus UTF8String, OCTET STRING oder INTEGER. (Siehe weiter unten)
+-- ~ Die einzelnen verwendeten UUIDs werden im Header OptionalParamUUIDs.h beschrieben (Siehe Info dort)
+-- ~ 
+-- ~ Änderungen an dieser Datei werden zukünftig sowohl hier im Header als auch bei den entsprechenden 
+-- ~ Methoden, Datentypen beschrieben. Die folgende Nomenklatur sollte dabei eingehalten werden
+-- ~ 
+-- ~ ## ChangeLog
+-- ~ 
+-- ~ - + 01.07.2008 JR - AsnCtiNewCallParams, optionaler Parameter für Rufnummernunterdrückung hinzugefügt
+-- ~ - * 01.07.2008 JR - komponente, modifiziert
+-- ~ - 01.07.2008 JR - komponente, entfernt
+-- ~ - + 09.07.2008 JR - asnCtiSetupConference, hinzugefügt für Erstellen einer Konferenz
+-- ~ - * 23.07.2008 JR - AsnConversationContactStatus enum um zwei weitere Werte erweitert (Versionkompatibel da nur Vergleichsliste für Konverter )
+-- ~ - 12.08.2011 AS Anmerkung diese Versionhistorie wird nicht gepflegt siehe Subversion Log
+-- ~ - ste 21.10.2014
+-- ~ - twu 29.05.2017 AsnStringIntegerPairList, AsnStringIntegerPair added
+-- ~ 
+-- ~ Das ENetRoseInterface wird jetzt auf mehrere ASN Files verteilt.
+-- ~ Datentypen, die gemeinsam verwendet werden, stehen hier im common
+-- ~ in dieser Datei sollen keine IMPORT Statements stehen
+-- ~ 
+-- ~ ## Modulbeschreibung
+-- ~ In diesem Modul werden Datentypen definiert, die von den anderen Modulen
+-- ~ gemeinsam verwendet werden.
+-- ~ Es sollen so wenig wie möglich Datentypen hier aufgenommen werden
+-- ~ Die generierten c++ header werden beim Compilieren von den anderen Modulen included
+-- ~ 
+-- ~ NAME CONVENTION
+-- ~ Namenskonvention 15.11.2005 JR
+-- ~ updated 25.10.2006 JR
+-- ~ updated 14.08.2007 JR
+-- ~ 
+-- ~ Variablennamen beginnen mit Kleinbuchstaben die den Typ der
+-- ~ Variable beschreiben gefolgt von einem Großbuchstaben und dem
+-- ~ Namen der Variable. Zusammengesetzte Datentypen beginnen mit
+-- ~ Großbuchstaben die den Typ der Struktur angeben gefolgt vom Namen.
+-- ~ 
+-- ~ ## Singuläre Datentypen
+-- ~ C++ Äquivalent
+-- ~ 
+-- ~ - iDummy    = INTEGER  -32768 bis +32767    short int
+-- ~ - rDummy    = REAL		2,9E-39 bis 3,4E34   float (3,4E-38 3,4E+38)
+-- ~ - bDummy    = BOOLEAN   TRUE oder FALSE     bool / BOOL
+-- ~ - binDummy  = OCTET STRING                  byteblock - json encoded as base64
+-- ~ - u8sDummy  = OCTET STRING ( CONTAINING UTF8String )	std::string - json encoded as string
+-- ~ - u8sDummy  = UTF8String					 std::wstring
+-- ~ 
+-- ~ Optionale Parameter tragen im Namen das p für Pointer
+-- ~ 
+-- ~ ## Zusammengesetzte Datentypen:
+-- ~ 
+-- ~ - seqDummy  = SEQUENCE
+-- ~ - choDummy	 = CHOICE
+-- ~ - EnumDummy  = ENUMERATED
+-- ~ 
+-- ~ objective systems
+-- ~ AUSNAHME:
+-- ~ Result und Argument beginnen NICHT mit SEQ sondern direkt mit dem Namen der Struktur
+-- ~ Sie beinhalten als letzten Teil des Namens "Argument" bzw. "Result"
+-- ~ 
+-- ~ Argumentnamen beginnen mit einem Großbuchstaben
+-- ~ 
+-- ~ Resultnamen beginnen mit einem Großbuchstaben
+-- ~ 
+-- ~ Operationen beginnen mit einem Kleinbuchstaben
+-- ~ 
+
+DEFINITIONS
+IMPLICIT TAGS ::=
+BEGIN
+
+
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~ common ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-- @brief List of AsnOptionalParam.
+-- @long
+-- Sequences can change over time of the development. To ensure, that possible breakiung changes can be avoided 
+-- within a major version, most sequences contain a list of AsnOptionalParam.
+--
+-- Because of the generic nature of the this sequence, the documention of the content is defined in the sections 
+-- using the AsnOptionalParameters.
+AsnOptionalParameters ::= SEQUENCE OF AsnOptionalParam
+
+-- @brief Encapsulated key value pair, including a definition of the value type.
+-- @long
+-- Sequences can change over time of the development of the product. To ensure, that possible breaking changes can be avoided 
+-- within the life cycle of a major version, most sequences contain a list of AsnOptionalParam.
+--
+-- Because of the generic nature of the this sequence, the documention of the content is defined in the sections 
+-- using the AsnOptionalParam.
+AsnOptionalParam ::= SEQUENCE
+{
+	key UTF8String,
+	value CHOICE 
+	{
+		stringdata UTF8String,
+		binarydata OCTET STRING,
+		integerdata INTEGER
+	}
+}
+
+-- @brief List of key value pairs of strings.
+AsnStringPairList ::= SEQUENCE OF AsnStringPair
+
+-- @brief Key value pair of strings.
+AsnStringPair ::= SEQUENCE
+{
+	key UTF8String,
+	value UTF8String
+}
+
+-- @brief List of key value paitrs of integer
+AsnIntegerPairList ::= SEQUENCE OF AsnIntegerPair
+
+-- @brief Key value pair of integer
+AsnIntegerPair ::= SEQUENCE
+{
+	key INTEGER,
+	value INTEGER
+}
+
+-- @brief List of key value pairs of string, integer
+AsnStringIntegerPairList ::= SEQUENCE OF AsnStringIntegerPair
+
+-- @brief Key value pair of string, integer
+AsnStringIntegerPair ::= SEQUENCE
+{
+	u8sStr UTF8String,
+	iInt INTEGER
+}
+
+-- @brief Generic error sequence. See the documentation of the operations specific descriptions.
+AsnRequestError ::= SEQUENCE
+{
+	iErrorDetail						INTEGER, -- A number representing the error
+	u8sErrorString						UTF8String, -- A string representing the error
+	optionalParams						AsnOptionalParameters OPTIONAL -- No optional params yet
+}
+
+-- @brief List of integers
+SEQInteger ::= SEQUENCE OF INTEGER
+
+-- @brief List of strings.
+UTF8StringList ::= SEQUENCE OF UTF8String
+
+-- @brief Datatype for time values
+-- @long
+-- Contains a double value (format Windows Variant Time) in UTC timezone.
+--
+-- The 1.1.1900 is value 2.0; the first decimal place is part of the day, e.g. 2.5 is the first january 1900, 12:00 noon.
+--
+-- In the JSON encoding (estos) the time will be represented by a string, in ISO 8601 format.
+AsnSystemTime ::= REAL
+
+-- @brief Sequence/object containing contact data.
+-- @long
+-- AsnNetDatabaseContact is widly used almost everywhere in the API. It contains the contact data of a contact and from which databse it comes from.
+-- All fields in this sequence are optional, because not every field must have content, but the sequence is broadly used, so every field which is 
+-- not transmitted saves bandwidth.
+AsnNetDatabaseContact ::= SEQUENCE
+{
+	u8sFound							[0] UTF8String OPTIONAL,
+	u8sDatabaseName						[1] UTF8String OPTIONAL,
+	u8sEntryIDDB						[2] UTF8String OPTIONAL,        -- ~ TODOC: Datenbank aus der der Kontakt stammt ( ENUM Fehlt ) z.B. Federation=23, Addressbuch = 03, Mobilephonebook 29
+	u8sEntryIDStore						[3] UTF8String OPTIONAL,        -- ~ TODOC: Wenn die Datenquelle aus der der Kontakt stammt verschiedene stores hat.
+	u8sEntryID							[4] UTF8String OPTIONAL,        -- ~ TODOC: Die eigentliche unique ID aus der jeweiligen Datenbank
+	u8sCtiServerUserName				[5] UTF8String OPTIONAL,
+	u8sDisplayName						[6] UTF8String OPTIONAL,
+	u8sFirstName						[7] UTF8String OPTIONAL,
+	u8sLastName							[8] UTF8String OPTIONAL,
+	u8sJobTitle							[9] UTF8String OPTIONAL,
+	u8sCompany							[10] UTF8String OPTIONAL,
+	u8sDepartment						[11] UTF8String OPTIONAL,
+	u8sOfficeRoomNumber					[12] UTF8String OPTIONAL,
+	u8sCustomerID						[13] UTF8String OPTIONAL,
+	u8sBusinessAddressStreet			[14] UTF8String OPTIONAL,
+	u8sBusinessAddressPostalCode		[15] UTF8String OPTIONAL,
+	u8sBusinessAddressCity				[16] UTF8String OPTIONAL,
+	u8sBusinessAddressState				[17] UTF8String OPTIONAL,
+	u8sBusinessAddressCountry			[18] UTF8String OPTIONAL,
+	u8sPrivateAddressStreet				[19] UTF8String OPTIONAL,
+	u8sPrivateAddressPostalCode			[20] UTF8String OPTIONAL,
+	u8sPrivateAddressCity				[21] UTF8String OPTIONAL,
+	u8sPrivateAddressState				[22] UTF8String OPTIONAL,
+	u8sPrivateAddressCountry			[23] UTF8String OPTIONAL,
+	u8sOtherAddressStreet				[24] UTF8String OPTIONAL,
+	u8sOtherAddressPostalCode			[25] UTF8String OPTIONAL,
+	u8sOtherAddressCity					[26] UTF8String OPTIONAL,
+	u8sOtherAddressState				[27] UTF8String OPTIONAL,
+	u8sOtherAddressCountry				[28] UTF8String OPTIONAL,
+	u8sEMail							[29] UTF8String OPTIONAL,
+	u8sEMail2							[30] UTF8String OPTIONAL,
+	u8sEMail3							[31] UTF8String OPTIONAL,
+	u8sSIPAddress						[32] UTF8String OPTIONAL,
+	u8sWebPageURL						[33] UTF8String OPTIONAL,
+	u8sPhoneBusiness					[34] UTF8String OPTIONAL,
+	u8sPhoneBusiness2					[35] UTF8String OPTIONAL,
+	u8sCompanyMainTelephoneNumber		[36] UTF8String OPTIONAL,
+	u8sAssistantTelephoneNumber			[37] UTF8String OPTIONAL,
+	u8sPhoneHome						[38] UTF8String OPTIONAL,
+	u8sPhoneHome2						[39] UTF8String OPTIONAL,
+	u8sPrimaryTelephoneNumber			[40] UTF8String OPTIONAL,
+	u8sPhoneMobile						[41] UTF8String OPTIONAL,
+	u8sCarTelephoneNumber				[42] UTF8String OPTIONAL,
+	u8sRadioTelephoneNumber				[43] UTF8String OPTIONAL,
+	u8sPagerTelephoneNumber				[44] UTF8String OPTIONAL,
+	u8sOtherTelephoneNumber				[45] UTF8String OPTIONAL,
+	u8sCallbackTelephoneNumber			[46] UTF8String OPTIONAL,
+	u8sISDNTelephoneNumber				[47] UTF8String OPTIONAL,
+	u8sTTYTTDTelephoneNumber			[48] UTF8String OPTIONAL,
+	u8sFaxBusiness						[49] UTF8String OPTIONAL,
+	u8sFaxHome							[50] UTF8String OPTIONAL,
+	u8sBody								[51] UTF8String OPTIONAL, -- thats also called "note"
+	u8sDirectWebLink					[52] UTF8String OPTIONAL,
+	customFields						[53] AsnStringPairList OPTIONAL, -- additional fields, mostly filled with runtime information
+	bValid								[54] BOOLEAN OPTIONAL,
+	iPrivateContact						[55] INTEGER OPTIONAL,
+	iCtiServerUser						[56] INTEGER OPTIONAL,
+
+
+	-- @brief Additionally fields added later in the key-value-field for backward compatibility.
+	-- - key "jpegPhoto", Type byte[], a jpeg photo of the contact; Note: it is planned to not transmit the photo with 
+	--   the contact but a hash code instead in the future.
+	optionalParams						[57] AsnOptionalParameters OPTIONAL
+}
+
+-- @brief List of AsnNetDatabaseContact
+AsnNetDatabaseContactList ::= SEQUENCE OF AsnNetDatabaseContact
+
+-- @brief A three tuple to identify contact data.
+-- @long The three tuple EntryID, EntryIDDB and EntryIDStore identifies contact data including its
+--       source database, so that contact data from different data sources can be differentiated from each other.
+--	     It is an own sequence, so it can be tranferred without any concrete contact data to save bandwidth.
+--
+--		 The AsnNetDatabaseContact does not contain a AsnNetDatabaseContactID object, it contains the three 
+--       members by itself.
+AsnNetDatabaseContactID ::= SEQUENCE
+{
+	u8sEntryID			UTF8String, -- ID of the contact data in the source database.
+	u8sEntryIDDB		UTF8String, -- ID of the database (type).
+	u8sEntryIDStore		UTF8String, -- Additional ID of a store in the database (if needed).
+
+	optionalParams							AsnOptionalParameters OPTIONAL
+}
+
+-- @brief List of AsnNetDatabaseContactID .
+AsnNetDatabaseContactIDList ::= SEQUENCE OF AsnNetDatabaseContactID;
+
+-- @brief Property bag definition for storing runtime defined content for objects (like users, computers, groups etc.).
+-- @long To make it possible to transport and store runtime defined content in some objects, these object contain
+--       a property bag, which is simply a key value store. Which keys (and therefor which data) is available
+--       is depending on the object and the business logic, which uses it. So see the according sequence (object) documentation
+--       for more details.
+AsnUserPropertyBag ::= SEQUENCE
+{
+	asnProperties						AsnStringPairList
+}
+
+-- @brief Header data for a RFC-7519 JSON Web Token
+AsnJSONWebTokenHeader ::= SEQUENCE
+{
+	u8sTYP			UTF8String,						-- Defines the type of the token. This is currently by default JWT to specify it as RFC-7519 JSON Web Token
+	u8sALG			UTF8String, 					-- Identifies which algorithm is used to generate the signature, HS256 indicates that this token is signed using HMAC-SHA256. 
+	u8sCTY			[0] UTF8String OPTIONAL, 		-- Defines the content type if the typ is not JWT (JSON Web Token)
+	optionals 		[1] AsnStringPairList OPTIONAL
+}
+
+-- @brief Payload data for a RFC-7519 JSON Web Token
+AsnJSONWebTokenPayLoad ::= SEQUENCE
+{
+	u8sISS			[0] UTF8String OPTIONAL,		-- Identifies principal that issued the JWT. 
+	u8sSUB			[1] UTF8String OPTIONAL,		-- Identifies the subject of the JWT. 
+	u8sAUD			[2] UTF8String OPTIONAL,		-- Identifies the recipients that the JWT is intended for. Each principal intended to process the JWT must identify itself with a value in the audience claim. If the principal processing the claim does not identify itself with a value in the aud claim when this claim is present, then the JWT must be rejected. 
+	utcEXP			[3] AsnSystemTime OPTIONAL,		-- Identifies the expiration time on and after which the JWT must not be accepted for processing. The value must be a NumericDate[10]: either an integer or decimal, representing seconds past 1970-01-01 00:00:00Z. 
+	utcNBF			[4] AsnSystemTime OPTIONAL,		-- Identifies the time on which the JWT will start to be accepted for processing. The value must be a NumericDate. 
+	utcIAT			[5] AsnSystemTime OPTIONAL,		-- Identifies the time at which the JWT was issued. The value must be a NumericDate. 
+	u8sJTI			UTF8String,						-- Case sensitive unique identifier of the token even among different issuers.
+	iUserType		[6] INTEGER OPTIONAL,			-- Defines a user type in the context of using the token. The implementer has to define a enum value list this value belongs to
+	optionals 		[7] AsnStringPairList OPTIONAL
+}
+
+-- @brief Data for a RFC-7519 JSON Web Token
+AsnJSONWebToken ::= SEQUENCE
+{
+	header			AsnJSONWebTokenHeader,		-- The header content of the JWT
+	payload			AsnJSONWebTokenPayLoad,		-- The body content of the JWT
+	signature		UTF8String					-- The signature of the base64 encoded header and payload
+}
+
+END

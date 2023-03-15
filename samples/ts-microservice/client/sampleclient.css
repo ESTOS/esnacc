@@ -1,0 +1,19 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+div.result
+{
+    padding-top:20px;
+    width:100%;
+}
+
+pre {
+    display: inline;
+    margin: 0;
+}
+
+h4 {
+    margin-bottom: 10px;
+    text-decoration: underline;
+}

@@ -1,0 +1,87 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// German (Germany) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RCDATA
+//
+
+TS_CONVERTER_BASE       RCDATA                  "back-ends/ts-gen/gluecode/TSConverterBase.ts"
+TS_OPTIONALPARAM_CONVERTER RCDATA               "back-ends/ts-gen/gluecode/TSOptionalParamConverter.ts"
+TS_ASN1_BASE          	RCDATA                  "back-ends/ts-gen/gluecode/TSASN1Base.ts"
+TS_ASN1_CLIENT          RCDATA                  "back-ends/ts-gen/gluecode/TSASN1Client.ts"
+TS_ASN1_NODE_CLIENT     RCDATA                  "back-ends/ts-gen/gluecode/TSASN1NodeClient.ts"
+TS_ASN1_BROWSER_CLIENT  RCDATA                  "back-ends/ts-gen/gluecode/TSASN1BrowserClient.ts"
+TS_ASN1_SERVER          RCDATA                  "back-ends/ts-gen/gluecode/TSASN1Server.ts"
+TS_ROSE_BASE            RCDATA                  "back-ends/ts-gen/gluecode/TSROSEBase.ts"
+TS_SNACCROSE            RCDATA                  "back-ends/ts-gen/gluecode/SNACCROSE.ts"
+TS_SNACCROSE_CONVERTER  RCDATA                  "back-ends/ts-gen/gluecode/SNACCROSE_Converter.ts"
+DELPHI_ASN1_YPES		RCDATA					"back-ends/delphi-gen/gluecode/DelphiAsn1Types.pas"
+
+#endif    // German (Germany) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
