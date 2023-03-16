@@ -175,7 +175,7 @@ static void PrintJsonDocBitstringDefCode(FILE *src, ModuleList *mods, Module *m,
 			fprintf(src, "\t\t\t\t\t\"name\" : \"%s\",\n", n->name);
 			//fprintf(src, "\t\t\t\t\t\"typeName\" : \"number\",\n"); bitstring enth�lt nur namen, text und zahl(=value)
 			asnmembercomment comment;
-			if (GetMemberComment_UTF8(td->definedName, n->name, &comment))
+			if (GetMemberComment_UTF8(m->className, td->definedName, n->name, &comment))
 			{
 				fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
 				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.iDeprecated);
@@ -211,7 +211,7 @@ static void PrintJsonDocEnumDefCode(FILE *src, ModuleList *mods, Module *m,
 			fprintf(src, "\t\t\t\t\t\"name\" : \"%s\",\n", n->name);
 			fprintf(src, "\t\t\t\t\t\"typeName\" : \"number\",\n");
 			asnmembercomment comment;
-			if (GetMemberComment_UTF8(td->definedName, n->name, &comment))
+			if (GetMemberComment_UTF8(m->className, td->definedName, n->name, &comment))
 			{
 				fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
 				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.iDeprecated);
@@ -246,7 +246,7 @@ static void PrintJsonDocChoiceDefCode(FILE *src, ModuleList *mods, Module *m, Ty
 		fprintf(src, "\t\t\t\t\t\"name\" : \"%s\",\n", e->fieldName);
 
 		asnmembercomment comment;
-		if (GetMemberComment_UTF8(td->definedName, e->fieldName, &comment))
+		if (GetMemberComment_UTF8(m->className, td->definedName, e->fieldName, &comment))
 		{
 			fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
 			fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.iDeprecated);
@@ -291,7 +291,7 @@ static void PrintJsonDocSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeD
 
 
 			asnmembercomment comment;
-			if (GetMemberComment_UTF8(td->definedName, e->fieldName, &comment))
+			if (GetMemberComment_UTF8(m->className, td->definedName, e->fieldName, &comment))
 			{
 				fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
 				if (comment.szLinkedType[0])
@@ -393,7 +393,7 @@ static void PrintJsonDocTypeDefCode(FILE *src, ModuleList *mods, Module *m, Type
 	fprintf(src, "\t\t\t\"typeName\" : \"%s\",\n", td->definedName);
 
 	asnsequencecomment comment;
-	if (GetSequenceComment_UTF8(td->definedName, &comment))
+	if (GetSequenceComment_UTF8(m->className, td->definedName, &comment))
 	{
 		fprintf(src, "\t\t\t\"category\" : \"%s\",\n", comment.szCategory);
 		fprintf(src, "\t\t\t\"short\" : \"%s\",\n", comment.szShort);
@@ -571,7 +571,7 @@ int GetJsonROSEDetails(ValueDef *vd, char** ppszArgument, char** ppszResult, cha
 }
 
 
-static int PrintJsonDocOperation(FILE *src, ValueDef *vd)
+static int PrintJsonDocOperation(FILE *src, Module* mod, ValueDef *vd)
 {
 	char* pszArgument = NULL;
 	char* pszResult = NULL;
@@ -583,7 +583,7 @@ static int PrintJsonDocOperation(FILE *src, ValueDef *vd)
 		fprintf(src, "\t\t\t\"typeName\" : \"%s\",\n", vd->definedName);
 
 		asnoperationcomment comment;
-		if (GetOperationComment_UTF8(vd->definedName, &comment))
+		if (GetOperationComment_UTF8(mod->className, vd->definedName, &comment))
 		{
 			fprintf(src, "\t\t\t\"category\" : \"%s\",\n", comment.szCategory);
 			if (comment.szShort)
@@ -639,7 +639,7 @@ static void PrintJsonDocOperations(FILE *src, Module *m)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
 		{
-			if (PrintJsonDocOperation(src, vd) == 0)
+			if (PrintJsonDocOperation(src, m, vd) == 0)
 			{
 				if (m->valueDefs->curr->next)
 					fprintf(src, ",\n");
@@ -658,11 +658,10 @@ void PrintJsonDocModule(FILE *src, ModuleList *mods, Module *m)
 {
 	fprintf(src, "\t\"module\": {\n");
 
-	char* szModName = MakeFileNameWithoutOutputPath(m->baseFileName, "");
-	fprintf(src, "\t\t\"name\": \"%s\"", szModName);
+	fprintf(src, "\t\t\"name\": \"%s\"", m->className);
 
 	asnmodulecomment comment;
-	if (GetModuleComment_UTF8(szModName, &comment))
+	if (GetModuleComment_UTF8(m->className, &comment))
 	{
 		fprintf(src, ",\n");
 		fprintf(src, "\t\t\"short\": \"%s\",\n", comment.szShort);
@@ -673,8 +672,6 @@ void PrintJsonDocModule(FILE *src, ModuleList *mods, Module *m)
 	}
 	else
 		fprintf(src, "\n");
-
-	free(szModName);
 
 	fprintf(src, "\t},\n");
 }
@@ -731,9 +728,7 @@ void PrintJsonDocImports(FILE *src, ModuleList *mods, Module *m)
 				fprintf(src, "\n");
 				fprintf(src, "\t\t\t],\n");
 
-				char* szModName = MakeFileNameWithoutOutputPath(impMod->moduleRef->baseFileName, "");
-				fprintf(src, "\t\t\t\"module\" : \"%s\"", szModName);
-				free(szModName);
+				fprintf(src, "\t\t\t\"module\" : \"%s\"", impMod->moduleRef->className);
 
 				fprintf(src, "\n");
 				fprintf(src, "\t\t}");

@@ -125,6 +125,7 @@ void ValidateStructure PROTO((ModuleList* m));
 int  yyparse();
 
 /* Internal routines */
+void CreateNames(ModuleList* allMods);
 static int GenCCode(ModuleList *allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genPrinters, int genValues, int genFree);
 
 static void GenCxxCode(ModuleList *allMods, long longJmpVal,
@@ -763,12 +764,6 @@ int main PARAMS ((argc, argv),
 					break;
 				}
 #endif
-				else if (argv[currArg][2] == 'm')
-				{
-					keepbaseG = FALSE;
-					currArg++;
-					break;
-				}
 error:
 			default:
 				fprintf (stderr, "%s: ERROR---unknown cmd line option `%s'\n\n", argv[0], argv[currArg]);
@@ -1039,6 +1034,10 @@ error:
 		}
 	}
 
+	/*
+	 * Creates the different names we need to write the output files
+	 */
+	CreateNames(allMods);	
 
 	/*
 	 * Step 13
@@ -1155,13 +1154,7 @@ Module* ParseAsn1File(const char* fileName, short ImportFlag, int parseComments)
 	 */
 	if (strcmp (fileName, "-") == 0)
 	{
-		if (keepbaseG)
-		{
-			fprintf (errFileG, "ERROR---asn1 src file `%s' cannot be processed without output filename mangling\n", fileName);
-			return NULL;
-		}
-		else
-			fPtr = stdin;
+		fPtr = stdin;
 	}
 	else
 	{
@@ -1224,10 +1217,8 @@ Module* ParseAsn1File(const char* fileName, short ImportFlag, int parseComments)
 	if (parseComments)
 	{
 		//Parse the comments in this file...
-		char* szbaseName = MakeBaseFileName(fileName);
-		char* szModuleName = MakeFileNameWithoutOutputPath(szbaseName, "");
+		char* szModuleName = MakeClassName(fileName);
 		parseResult = ParseFileForComments(fPtr, szModuleName, fileType);
-		free(szbaseName);
 		free(szModuleName);
 		if (parseResult != 0)
 		{
@@ -1266,7 +1257,6 @@ GenCCode PARAMS ((allMods, longJmpVal, genTypes, genValues, genEncoders, genDeco
 	int genFree)
 {
 	Module *currMod;
-	char *modBaseFileName;
 	FILE *cHdrFilePtr = NULL;
 	FILE *cSrcFilePtr = NULL;
 	DefinedObj *fNames;
@@ -1280,11 +1270,6 @@ GenCCode PARAMS ((allMods, longJmpVal, genTypes, genValues, genEncoders, genDeco
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT (currMod, allMods)
 	{
-		modBaseFileName = MakeBaseFileName (keepbaseG
-		? currMod->asn1SrcFileName
-		: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-			currMod->cHdrFileName = MakeCHdrFileName (modBaseFileName);
-			currMod->cSrcFileName = MakeCSrcFileName (modBaseFileName);
 		if (ObjIsDefined (fNames, currMod->cHdrFileName, StrObjCmp) ||
 			ObjIsDefined (fNames, currMod->cSrcFileName, StrObjCmp))
 		{
@@ -1300,7 +1285,6 @@ GenCCode PARAMS ((allMods, longJmpVal, genTypes, genValues, genEncoders, genDeco
 			DefineObj (&fNames, currMod->cHdrFileName);
 			DefineObj (&fNames, currMod->cSrcFileName);
 		}
-		Free (modBaseFileName);
 	}
 	if (fNameConflict)
 		return (1);
@@ -1346,7 +1330,6 @@ void GenJAVACode(ModuleList *allMods, int genROSEJAVADecoders)
 {
 	Module		*currMod;
 	AsnListNode	*saveMods;
-	char		*modBaseFileName;
 	DefinedObj		*fNames;
 	int			fNameConflict = FALSE;
 
@@ -1359,14 +1342,6 @@ void GenJAVACode(ModuleList *allMods, int genROSEJAVADecoders)
 
 	FOR_EACH_LIST_ELMT (currMod, allMods)
 	{
-		modBaseFileName = MakeBaseFileName (keepbaseG
-		? currMod->asn1SrcFileName
-		: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-
-		if(genROSEJAVADecoders) currMod->ROSESrcJAVAFileName = MakeROSESrcJAVAFileName (modBaseFileName);
-
-		currMod->ROSEClassName = MakeROSEClassName (modBaseFileName);
-
 		if (ObjIsDefined (fNames, currMod->ROSESrcJAVAFileName, StrObjCmp))
 		{
 			fprintf(errFileG, "Ack! ERROR---file name conflict for generated source files with names `%s'.\n\n", currMod->ROSESrcJAVAFileName);
@@ -1380,8 +1355,7 @@ void GenJAVACode(ModuleList *allMods, int genROSEJAVADecoders)
 		{
 			DefineObj (&fNames, currMod->ROSESrcJAVAFileName);
 		}
-		Free (modBaseFileName);
-
+		
 		if (fNameConflict)
 			return;
 
@@ -1413,7 +1387,6 @@ void GenCSCode(ModuleList *allMods, int genROSECSDecoders)
 {
 	Module		*currMod;
 	AsnListNode	*saveMods;
-	char		*modBaseFileName;
 	FILE		*srcFilePtr;
 	DefinedObj		*fNames;
 	int			fNameConflict = FALSE;
@@ -1427,14 +1400,6 @@ void GenCSCode(ModuleList *allMods, int genROSECSDecoders)
 
 	FOR_EACH_LIST_ELMT (currMod, allMods)
 	{
-		modBaseFileName = MakeBaseFileName (keepbaseG
-		? currMod->asn1SrcFileName
-		: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-
-		if(genROSECSDecoders) currMod->ROSESrcCSFileName = MakeROSESrcCSFileName(modBaseFileName);
-
-		currMod->ROSEClassName = MakeROSEClassName (modBaseFileName);
-
 		if (ObjIsDefined (fNames, currMod->ROSESrcCSFileName, StrObjCmp))
 		{
 			fprintf(errFileG, "Ack! ERROR---file name conflict for generated source files with names `%s'.\n\n", currMod->ROSESrcCSFileName);
@@ -1448,7 +1413,6 @@ void GenCSCode(ModuleList *allMods, int genROSECSDecoders)
 		{
 			DefineObj (&fNames, currMod->ROSESrcCSFileName);
 		}
-		Free (modBaseFileName);
 
 		if (fNameConflict)
 			return;
@@ -1504,7 +1468,6 @@ void GenCxxCode(ModuleList *allMods,
 {
 	Module		*currMod;
 	AsnListNode	*saveMods;
-	char		*modBaseFileName;
 	FILE		*hdrFilePtr;
 	FILE		*srcFilePtr;
 	FILE		*hdrInterfaceFilePtr;
@@ -1532,20 +1495,6 @@ void GenCxxCode(ModuleList *allMods,
 #endif
 	FOR_EACH_LIST_ELMT (currMod, allMods)
 	{
-		modBaseFileName = MakeBaseFileName (keepbaseG
-		? currMod->asn1SrcFileName
-		: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-		currMod->cxxHdrFileName = MakeCxxHdrFileName (modBaseFileName);
-		currMod->cxxSrcFileName = MakeCxxSrcFileName (modBaseFileName);
-
-
-		if(genROSEDecoders)currMod->ROSEHdrFileName = MakeROSEHdrFileName (modBaseFileName);
-		if(genROSEDecoders)currMod->ROSESrcFileName = MakeROSESrcFileName (modBaseFileName);
-		if(genROSEDecoders)currMod->ROSEHdrInterfaceFileName = MakeROSEHdrInterfaceFileName (modBaseFileName);
-		if(genROSEDecoders)currMod->ROSEHdrForwardDeclFileName = MakeROSEHdrForwardDeclFileName (modBaseFileName);
-
-		currMod->ROSEClassName = MakeROSEClassName (modBaseFileName);
-
 		#if META
 			{
 				char *in, *out;
@@ -1570,10 +1519,7 @@ void GenCxxCode(ModuleList *allMods,
 		{
 			DefineObj (&fNames, currMod->cxxHdrFileName);
 			DefineObj (&fNames, currMod->cxxSrcFileName);
-
-
 		}
-		Free (modBaseFileName);
 
 		if (fNameConflict)
 			return;
@@ -1745,7 +1691,6 @@ void GenSwiftCode(ModuleList *allMods,
 {
 	Module		*currMod;
 	AsnListNode	*saveMods;
-	char		*modBaseFileName;
 	FILE		*srcFilePtr;
 	//FILE		*hdrInterfaceFilePtr;
 	//FILE		*hdrForwardDecl;
@@ -1762,20 +1707,6 @@ void GenSwiftCode(ModuleList *allMods,
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		modBaseFileName = MakeBaseFileName(keepbaseG
-			? currMod->asn1SrcFileName
-			: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-		currMod->swiftFileName = MakeSwiftFileName(modBaseFileName);
-		currMod->baseFileName = MakeBaseFileName(keepbaseG
-			? currMod->asn1SrcFileName
-			: currMod->modId->name);
-
-		if (genROSEDecoders)
-			currMod->ROSESwiftInterfaceFileName = MakeROSESwiftInterfaceFileName(modBaseFileName);
-
-		currMod->ROSEClassName = MakeROSEClassName(modBaseFileName);
-
-
 		if (ObjIsDefined(fNames, currMod->swiftFileName, StrObjCmp))
 		{
 			fprintf(errFileG, "Ack! ERROR---file name conflict for generated swift file with name `%s'.\n\n", currMod->swiftFileName);
@@ -1790,7 +1721,6 @@ void GenSwiftCode(ModuleList *allMods,
 			DefineObj(&fNames, currMod->swiftFileName);
 
 		}
-		Free(modBaseFileName);
 
 		if (fNameConflict)
 			return;
@@ -1880,7 +1810,6 @@ void GenHJSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValue
 {
 	Module		*currMod;
 	AsnListNode	*saveMods;
-	char		*modBaseFileName;
 	//FILE		*srcFilePtr;
 	//FILE		*hdrInterfaceFilePtr;
 	//FILE		*hdrForwardDecl;
@@ -1897,11 +1826,6 @@ void GenHJSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValue
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		modBaseFileName = MakeBaseFileName(keepbaseG
-			? currMod->asn1SrcFileName
-			: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-		currMod->hjsFileName = MakeHJSFileName(modBaseFileName);
-
 		if (ObjIsDefined(fNames, currMod->hjsFileName, StrObjCmp))
 		{
 			fprintf(errFileG, "Ack! ERROR---file name conflict for generated swift file with name `%s'.\n\n", currMod->hjsFileName);
@@ -1915,7 +1839,6 @@ void GenHJSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValue
 		{
 			DefineObj(&fNames, currMod->hjsFileName);
 		}
-		Free(modBaseFileName);
 
 		if (fNameConflict)
 			return;
@@ -1946,7 +1869,6 @@ void GenJSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 {
 	Module		*currMod;
 	AsnListNode	*saveMods;
-	char		*modBaseFileName;
 	FILE		*srcFilePtr;
 	//FILE		*hdrInterfaceFilePtr;
 	//FILE		*hdrForwardDecl;
@@ -1963,11 +1885,6 @@ void GenJSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		modBaseFileName = MakeBaseFileName(keepbaseG
-			? currMod->asn1SrcFileName
-			: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-		currMod->jsFileName = MakeJSFileName(modBaseFileName);
-
 		if (ObjIsDefined(fNames, currMod->jsFileName, StrObjCmp))
 		{
 			fprintf(errFileG, "Ack! ERROR---file name conflict for generated swift file with name `%s'.\n\n", currMod->jsFileName);
@@ -1981,8 +1898,7 @@ void GenJSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 		{
 			DefineObj(&fNames, currMod->jsFileName);
 		}
-		Free(modBaseFileName);
-
+		
 		if (fNameConflict)
 			return;
 
@@ -2041,19 +1957,10 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		char* modBaseFileName = MakeBaseFileName(keepbaseG
-			? currMod->asn1SrcFileName
-			: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-		currMod->jsFileName = MakeTSFileName(modBaseFileName);
-		currMod->tsConverterFileName = MakeTSEncDecFileName(modBaseFileName);
-		currMod->baseFileName = MakeBaseFileName(keepbaseG
-			? currMod->asn1SrcFileName
-			: currMod->modId->name);
-
-		if (ObjIsDefined(fNames, currMod->jsFileName, StrObjCmp) ||
+		if (ObjIsDefined(fNames, currMod->tsFileName, StrObjCmp) ||
 			ObjIsDefined(fNames, currMod->tsConverterFileName, StrObjCmp))
 		{
-			fprintf(errFileG, "Ack! ERROR---file name conflict for generated typescript files with names `%s' and `%s'.\n\n", currMod->jsFileName, currMod->tsConverterFileName);
+			fprintf(errFileG, "Ack! ERROR---file name conflict for generated typescript files with names `%s' and `%s'.\n\n", currMod->tsFileName, currMod->tsConverterFileName);
 			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
 			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
 			fprintf(errFileG, "This error can also be caused by 2 modules with the same names but different OBJECT IDENTIFIERs.");
@@ -2062,11 +1969,9 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 		}
 		else
 		{
-			DefineObj(&fNames, currMod->jsFileName);
+			DefineObj(&fNames, currMod->tsFileName);
 			DefineObj(&fNames, currMod->tsConverterFileName);
 		}
-
-		Free(modBaseFileName);
 
 		if (fNameConflict)
 			return;
@@ -2146,13 +2051,10 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 			{
 				if (HasROSEOperations(currMod))
 				{
-					char* modBaseFileName = MakeBaseFileName(keepbaseG
-						? currMod->asn1SrcFileName
-						: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-					char* baseName = MakeFileNameWithoutOutputPath(Asn1TypeName2CTypeName(modBaseFileName), "");
+					char* baseName = strdup(currMod->className);
 					{
 						char szBuffer[512] = { 0 };
-						char* szReadPos = baseName;
+						char* szReadPos = currMod->className;
 						int iPos = 0;
 						while (*szReadPos) {
 							if (*szReadPos != '-' && *szReadPos != '_') {
@@ -2196,8 +2098,6 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 							iCountStrings++;
 						}
 					}
-
-					free(modBaseFileName);
 				}
 			}
 		}
@@ -2284,7 +2184,7 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 	{
 		if (currMod->ImportedFlag == FALSE)
 		{
-			if (fopen_s(&srcFilePtr, currMod->jsFileName, "wt") != 0 || srcFilePtr == NULL)
+			if (fopen_s(&srcFilePtr, currMod->tsFileName, "wt") != 0 || srcFilePtr == NULL)
 				perror("fopen");
 			else
 			{
@@ -2343,11 +2243,6 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 							continue;
 					}
 
-					char* modBaseFileName = MakeBaseFileName(keepbaseG
-						? currMod->asn1SrcFileName
-						: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-
-					currMod->ROSEClassName = MakeROSEClassName(modBaseFileName);
 					saveMods = allMods->curr;
 
 					char szStubFileName[_MAX_PATH];
@@ -2411,8 +2306,6 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 					}
 
 					allMods->curr = saveMods;
-
-					free(modBaseFileName);
 				}
 			}
 		}
@@ -2428,7 +2321,6 @@ void GenJsonDocCode(ModuleList *allMods)
 {
 	Module		*currMod;
 	AsnListNode	*saveMods;
-	char		*modBaseFileName;
 	FILE		*srcFilePtr;
 	//FILE		*hdrInterfaceFilePtr;
 	//FILE		*hdrForwardDecl;
@@ -2443,13 +2335,7 @@ void GenJsonDocCode(ModuleList *allMods)
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		modBaseFileName = MakeBaseFileName(keepbaseG
-			? currMod->asn1SrcFileName
-			: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-		currMod->jsFileName = MakeJsonDocFileName(modBaseFileName);
-		currMod->baseFileName = MakeBaseFileName(keepbaseG
-			? currMod->asn1SrcFileName
-			: currMod->modId->name);
+		currMod->jsFileName = MakeJsonDocFileName(currMod->baseFileName);
 
 		if (ObjIsDefined(fNames, currMod->jsFileName, StrObjCmp))
 		{
@@ -2464,7 +2350,6 @@ void GenJsonDocCode(ModuleList *allMods)
 		{
 			DefineObj(&fNames, currMod->jsFileName);
 		}
-		Free(modBaseFileName);
 
 		if (fNameConflict)
 			return;
@@ -2502,7 +2387,6 @@ void GenDelphiCode(ModuleList *allMods, long longJmpVal, int genTypes, int genVa
 {
 	Module		*currMod;
 	AsnListNode	*saveMods;
-	char		*modBaseFileName;
 	FILE		*srcFilePtr;
 	//FILE		*hdrInterfaceFilePtr;
 	//FILE		*hdrForwardDecl;
@@ -2522,14 +2406,6 @@ void GenDelphiCode(ModuleList *allMods, long longJmpVal, int genTypes, int genVa
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		modBaseFileName = MakeBaseFileName(keepbaseG
-			? currMod->asn1SrcFileName
-			: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-		currMod->delphiFileName = MakeDelphiFileName(modBaseFileName);
-		char* unitName = MakeFileName(modBaseFileName, "");
-		Dash2Underscore(unitName, strlen(unitName));
-		currMod->delphiUnitName = unitName;
-
 		if (ObjIsDefined(fNames, currMod->delphiFileName, StrObjCmp)) //todo: change message or remove it
 		{
 			fprintf(errFileG, "Ack! ERROR---file name conflict for generated delphi file with name `%s'.\n\n", currMod->delphiFileName);
@@ -2543,7 +2419,6 @@ void GenDelphiCode(ModuleList *allMods, long longJmpVal, int genTypes, int genVa
 		{
 			DefineObj(&fNames, currMod->delphiFileName);
 		}
-		Free(modBaseFileName);
 
 		if (fNameConflict)
 			return;
@@ -2589,7 +2464,6 @@ GenIDLCode PARAMS ((allMods, longJmpVal, genTypes, genValues, genPrinters, genFr
 	int genFree)
 {
 	Module		*currMod;
-	char		*modBaseFileName;
 	FILE		*idlFilePtr;
 	DefinedObj		*fNames;
 	int			fNameConflict = FALSE;
@@ -2602,18 +2476,12 @@ GenIDLCode PARAMS ((allMods, longJmpVal, genTypes, genValues, genPrinters, genFr
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT (currMod, allMods)
 	{
-		modBaseFileName = MakeBaseFileName (keepbaseG
-		? currMod->asn1SrcFileName
-		: currMod->modId->name); /* shorten module name if necessary (SYSV etc) */
-		currMod->idlFileName = MakeIDLFileName (modBaseFileName);
-	{
 		char *in, *out;
 
 		out = currMod->idlname = (char *)malloc (strlen (in = currMod->modId->name)+1);
 		do
-		*out++ = (char)(*in == '-' ? '_' : *in);
+			*out++ = (char)(*in == '-' ? '_' : *in);
 		while (*in++);
-	}
 
 		if (ObjIsDefined (fNames, currMod->idlFileName, StrObjCmp))
 		{
@@ -2628,7 +2496,6 @@ GenIDLCode PARAMS ((allMods, longJmpVal, genTypes, genValues, genPrinters, genFr
 		{
 			DefineObj (&fNames, currMod->idlFileName);
 		}
-		Free (modBaseFileName);
 	}
 	if (fNameConflict)
 		return;
@@ -2725,7 +2592,7 @@ void EnsureNoDuplicateMethodIDs(ModuleList* allMods)
 				ValueDef* vd;
 				FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
 				{
-					if (!IsROSEValueDef(vd))
+					if (!IsROSEValueDef(currMod, vd))
 						continue;
 
 					int methodID = vd->value->basicValue->a.integer;
@@ -2765,11 +2632,11 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 				ValueDef* vd;
 				FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
 				{
-					if (!IsROSEValueDef(vd))
+					if (!IsROSEValueDef(currMod, vd))
 						continue;
 
 					asnoperationcomment com;
-					if (GetOperationComment_UTF8(vd->definedName, &com))
+					if (GetOperationComment_UTF8(currMod->className, vd->definedName, &com))
 						if (com.iDeprecated)
 							continue;
 
@@ -2779,7 +2646,7 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 					Type* argumentType = NULL;
 					Type* resultType = NULL;
 					Type* errorType = NULL;
-					if (GetROSEDetails(vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false)) {
+					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false)) {
 
 						bool bArgumentIssue = false;
 						if (argumentType) {
@@ -2971,7 +2838,7 @@ bool isSupportedType(enum BasicTypeChoiceId choiceId) {
 }
 
 // Returns true when an invalid element was found
-bool recurseFindInvalid(Type* type, const char* szPath, const char* szElementName) {
+bool recurseFindInvalid(Module* mod, Type* type, const char* szPath, const char* szElementName) {
 	#define TESTBUFFERSIZE 256
 	#define BUFFERSIZE 4096
 
@@ -2983,13 +2850,13 @@ bool recurseFindInvalid(Type* type, const char* szPath, const char* szElementNam
 	enum BasicTypeChoiceId choiceId = type->basicType->choiceId;
 
 	if (szElementName) {
-		if (choiceId == BASICTYPE_SEQUENCE && IsDeprecatedSequence(szElementName))
+		if (choiceId == BASICTYPE_SEQUENCE && IsDeprecatedSequence(mod, szElementName))
 			return false;
 		char szNewName[TESTBUFFERSIZE] = { 0 };
 		strcat_s(szNewName, TESTBUFFERSIZE, "::");
 		strcat_s(szNewName, TESTBUFFERSIZE, szElementName);
 		if ((choiceId == BASICTYPE_SEQUENCE || choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF) && type->cxxTypeRefInfo->className) {
-			if (IsDeprecatedSequence(type->cxxTypeRefInfo->className))
+			if (IsDeprecatedSequence(mod, type->cxxTypeRefInfo->className))
 				return false;
 			strcat_s(szNewName, TESTBUFFERSIZE, "(");
 			strcat_s(szNewName, TESTBUFFERSIZE, type->cxxTypeRefInfo->className);
@@ -3019,9 +2886,9 @@ bool recurseFindInvalid(Type* type, const char* szPath, const char* szElementNam
 	}
 
 	if (choiceId == BASICTYPE_LOCALTYPEREF)
-		bFoundInvalid = recurseFindInvalid(type->basicType->a.localTypeRef->link->type, szCurrentPath, NULL);
+		bFoundInvalid = recurseFindInvalid(mod, type->basicType->a.localTypeRef->link->type, szCurrentPath, NULL);
 	else if (choiceId == BASICTYPE_IMPORTTYPEREF)
-		bFoundInvalid = recurseFindInvalid(type->basicType->a.importTypeRef->link->type, szCurrentPath, NULL);
+		bFoundInvalid = recurseFindInvalid(mod, type->basicType->a.importTypeRef->link->type, szCurrentPath, NULL);
 	else {
 		if (!isSupportedType(choiceId)) {
 			fprintf(stderr, "Unsupported type %s found in %s\n", getTypeName(choiceId), szCurrentPath);
@@ -3031,7 +2898,7 @@ bool recurseFindInvalid(Type* type, const char* szPath, const char* szElementNam
 		if (choiceId == BASICTYPE_SEQUENCEOF)
 		{
 			Type* subType = type->basicType->a.sequenceOf;
-			bFoundInvalid = recurseFindInvalid(subType, szCurrentPath, NULL);
+			bFoundInvalid = recurseFindInvalid(mod, subType, szCurrentPath, NULL);
 		}
 		else if (choiceId == BASICTYPE_SEQUENCE)
 		{
@@ -3041,7 +2908,7 @@ bool recurseFindInvalid(Type* type, const char* szPath, const char* szElementNam
 			{
 				// Due to possible recursion we need to store the current position
 				AsnListNode* oldCurr = typeList->curr;
-				if (recurseFindInvalid(subType->type, szCurrentPath, subType->fieldName))
+				if (recurseFindInvalid(mod, subType->type, szCurrentPath, subType->fieldName))
 					bFoundInvalid = true;
 				typeList->curr = oldCurr;
 			}
@@ -3063,7 +2930,7 @@ void EnsureOnlySupportedObjects(ModuleList* allMods) {
 			{
 				char szPath[128] = { 0 };
 				sprintf_s(szPath, 128, "%s ", currMod->asn1SrcFileName);
-				if (recurseFindInvalid(vd->type, szPath, vd->definedName))
+				if (recurseFindInvalid(currMod, vd->type, szPath, vd->definedName))
 					nWeHaveErrors++;
 			}
 		}
@@ -3075,6 +2942,34 @@ void EnsureOnlySupportedObjects(ModuleList* allMods) {
 		fprintf(stderr, "* Found not supported asn1 types *\n");
 		fprintf(stderr, "**********************************\n");
 		snacc_exit_now(__FUNCTION__, "Now terminating...\n");
+	}
+}
+
+void CreateNames(ModuleList* allMods) {
+	Module* currMod;
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		currMod->baseFileName = MakeBaseFileName(currMod->asn1SrcFileName);
+		currMod->className = MakeClassName(currMod->baseFileName);
+		currMod->ROSEClassName = MakeROSEClassName(currMod->baseFileName);
+		currMod->cHdrFileName = MakeCHdrFileName(currMod->baseFileName);
+		currMod->cSrcFileName = MakeCSrcFileName(currMod->baseFileName);
+		currMod->cxxHdrFileName = MakeCxxHdrFileName(currMod->baseFileName);
+		currMod->cxxSrcFileName = MakeCxxSrcFileName(currMod->baseFileName);
+		currMod->swiftFileName = MakeSwiftFileName(currMod->baseFileName);
+		currMod->hjsFileName = MakeHJSFileName(currMod->baseFileName);
+		currMod->jsFileName = MakeJSFileName(currMod->baseFileName);
+		currMod->tsFileName = MakeTSFileName(currMod->baseFileName);
+		currMod->tsConverterFileName = MakeTSEncDecFileName(currMod->baseFileName);
+		currMod->idlFileName = MakeIDLFileName(currMod->baseFileName);
+		currMod->delphiFileName = MakeDelphiFileName(currMod->baseFileName);
+		currMod->ROSEHdrFileName = MakeROSEHdrFileName(currMod->baseFileName);
+		currMod->ROSESrcFileName = MakeROSESrcFileName(currMod->baseFileName);
+		currMod->ROSESrcCSFileName = MakeROSESrcCSFileName(currMod->baseFileName);
+		currMod->ROSEHdrInterfaceFileName = MakeROSEHdrInterfaceFileName(currMod->baseFileName);
+		currMod->ROSEHdrForwardDeclFileName = MakeROSEHdrForwardDeclFileName(currMod->baseFileName);
+		currMod->ROSESrcJAVAFileName = MakeROSESrcJAVAFileName(currMod->baseFileName);
+		currMod->ROSESwiftInterfaceFileName = MakeROSESwiftInterfaceFileName(currMod->baseFileName);
 	}
 }
 

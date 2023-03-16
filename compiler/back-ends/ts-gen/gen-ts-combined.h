@@ -5,7 +5,8 @@
 #include "../../core/asn1module.h"
 
 #ifdef _DEBUG
-    #define ESLINT_DISABLE "/* eslint-disable curly, max-len, max-lines, no-unused-vars, jsdoc/require-jsdoc, @typescript-eslint/naming-convention, @typescript-eslint/no-use-before-define, @typescript-eslint/no-unused-vars */\n"
+//    #define ESLINT_DISABLE "/* eslint-disable curly, max-len, max-lines, no-unused-vars, jsdoc/require-jsdoc, @typescript-eslint/naming-convention, @typescript-eslint/no-use-before-define, @typescript-eslint/no-unused-vars */\n"
+    #define ESLINT_DISABLE "/* eslint-disable */\n"
 #else
     #define ESLINT_DISABLE "/* eslint-disable */\n"
 #endif

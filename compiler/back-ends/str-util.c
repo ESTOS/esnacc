@@ -55,9 +55,6 @@
  * Revision 1.4  1995/07/25  18:13:31  rj
  * include string(s).h
  *
- * by default, snacc now derives output file names from the .asn1 input file name instead of the module name.
- * the global keepbaseG variable switches between the two behaviours.
- *
  * additional filename generator for idl backend.
  *
  * changed `_' to `-' in file names.
@@ -94,10 +91,6 @@ char gszOutputPath[100] = { 0 };
 
 int IsCKeyWord PROTO ((char *str));
 int IsCxxKeyWord PROTO ((char *str));
-
-
-int	keepbaseG = TRUE;
-
 
 /*
  * allocates new and returns a copy of the given
@@ -432,26 +425,8 @@ char* getNakedCommentDupped(const char* szString)
 }
 
 
-/*
- * if (keepbaseG)
- * {
- *   strip leading path and trailing suffix
- * }
- * else
- * {
- *   allocates and returns a base file name generated from
- *   the module's name.  May shorten the name if the
- *   expected length exceed the systems max path component length
- *   (eg to support SYS V 14 char filename len limit)
- * }
- * Base file name is used as the base name for the generated C source files.
- */
-char *
-MakeBaseFileName PARAMS ((refName),
-	const char *refName)
+char * MakeBaseFileName PARAMS ((refName), const char *refName)
 {
-  if (keepbaseG)
-  {
 	char	*base, *dot;
 	size_t		stublen;
 	size_t		pathLen = 0;
@@ -483,57 +458,7 @@ MakeBaseFileName PARAMS ((refName),
 	stub[pathLen + stublen] = '\0';
 
 	return stub;
-  }
-  else
-  {
-	size_t fNameLen;
-
-	size_t cpyLen;
-	char *retVal;
-	size_t maxPathComponentLen;
-#ifdef _PC_NAME_MAX
-	char pathName[1024];
-#endif
-#   define MAX_SUFFIX_LEN 2 /* .c, .h, .C */
-	extern int maxFileNameLenG; /* declared in snacc.c */
-
-	/*
-	 * if the user has not given the max file name len
-	 * via the -mf option,
-	 * find the max filename len (ala POSIX method)
-	 * if possible.  Otherwise hardwire it to 14
-	 * to support underpowered OSes
-	 */
-	if (maxFileNameLenG > 2)
-		maxPathComponentLen = maxFileNameLenG;
-	else
-#ifdef _PC_NAME_MAX
-		maxPathComponentLen = pathconf (getcwd (pathName, 1024), _PC_NAME_MAX);
-#else
-		maxPathComponentLen = 14;
-#endif
-
-	size_t size = strlen(refName) + 1;
-	retVal = (char *)Malloc (size);
-	fNameLen = strlen (refName) + MAX_SUFFIX_LEN;
-	if ((fNameLen > maxPathComponentLen) && (maxPathComponentLen != -1))
-	{
-		cpyLen = maxPathComponentLen - MAX_SUFFIX_LEN;
-
-		/* don't allow trailing dash */
-		if (refName[cpyLen-1] == '-')
-			cpyLen--;
-
-		strncpy_s(retVal, size, refName, cpyLen);
-		retVal[cpyLen] = '\0';
-	}
-	else
-		strcpy_s(retVal, size, refName);
-
-	return retVal;
-  }
 } /* MakeBaseFileName */
-
 
 const char *
 FileNameOnly(const char *path)
@@ -563,9 +488,6 @@ MakeFileName PARAMS ((refName, suffix),
 	const char *refName _AND_
 	const char *suffix)
 {
-  
-  if (keepbaseG)
-  {  
 	const char *fn = FileNameOnly(refName);
 
 	size_t	baselen = strlen (fn);
@@ -579,34 +501,6 @@ MakeFileName PARAMS ((refName, suffix),
 	strcat_s(filename, size, suffix);
 
 	return filename;
-  }
-  else
-  {
-	  size_t fNameLen;
-	char *fName;
-	#define MAX_UNDERSCORE 10
-
-	size_t size = strlen(refName) + strlen(suffix) + 1;
-	fName = Malloc (size);
-	strcpy_s(fName, size, refName);
-	strcat_s(fName, size, suffix);
-
-
-	fNameLen = strlen (fName);
-
-	/*
-	 * convert dashes to underscores, add spaces
-	 */
-	Dash2Underscore (fName, fNameLen);
-	
-	/*
-	 * remove the next two lines if you uncomment the
-	 * following underscore inserter
-	 */
-	Str2LCase (fName, fNameLen - strlen (suffix));
-	return fName;
-
-  }
 }  /* MakeFileName */
 
 char *
@@ -614,48 +508,17 @@ MakeFileNameWithoutOutputPath PARAMS((refName, suffix),
 	const char *refName _AND_
 	const char *suffix)
 {
+	const char *fn = FileNameOnly(refName);
 
-	if (keepbaseG)
-	{
-		const char *fn = FileNameOnly(refName);
+	size_t	baselen = strlen(fn);
+	size_t  sufflen = strlen(suffix);
+	size_t size = baselen + sufflen + 1;
+	char *filename = Malloc(size);
 
-		size_t	baselen = strlen(fn);
-		size_t  sufflen = strlen(suffix);
-		size_t size = baselen + sufflen + 1;
-		char *filename = Malloc(size);
+	strcpy_s(filename, size, fn);
+	strcat_s(filename, size, suffix);
 
-		strcpy_s(filename, size, fn);
-		strcat_s(filename, size, suffix);
-
-		return filename;
-	}
-	else
-	{
-		size_t fNameLen;
-		char *fName;
-#define MAX_UNDERSCORE 10
-
-		size_t size = strlen(refName) + strlen(suffix) + 1;
-		fName = Malloc(size);
-		strcpy_s(fName, size, refName);
-		strcat_s(fName, size, suffix);
-
-
-		fNameLen = strlen(fName);
-
-		/*
-		* convert dashes to underscores, add spaces
-		*/
-		Dash2Underscore(fName, fNameLen);
-
-		/*
-		* remove the next two lines if you uncomment the
-		* following underscore inserter
-		*/
-		Str2LCase(fName, fNameLen - strlen(suffix));
-		return fName;
-
-	}
+	return filename;
 }  /* MakeFileName */
 
 
@@ -799,6 +662,15 @@ MakeROSESrcJAVAFileName PARAMS ((refName),
 	return MakeFileName (refName, "ROSE.java");
 }
 
+
+char *
+MakeClassName PARAMS ((refName),
+	const char *refName)
+{
+	char* szClassName = MakeFileNameWithoutOutputPath(Asn1TypeName2CTypeName(refName), "");
+	Dash2Underscore(szClassName, strlen(szClassName));
+	return szClassName;
+}
 
 char *
 MakeROSEClassName PARAMS ((refName),

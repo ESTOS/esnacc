@@ -329,7 +329,12 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 	if (szLine == "END")
 	{
 		//end of module
-		gComments.mapModules[m_ModuleComment.strTypeName_UTF8] = m_ModuleComment;
+		std::string strKey = szModuleName;
+		const auto pos = strKey.find_first_of(".");
+		if (pos != std::string::npos)
+			strKey = strKey.substr(0, pos);
+
+		gComments.mapModules[strKey] = m_ModuleComment;
 
 		bElementEnd = true;
 		return 0;
@@ -482,7 +487,14 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 			comment.strTypeName_UTF8 = strType;
 			comment.strCategory_UTF8 = m_ModuleComment.strCategory_UTF8;
 			convertCommentList(m_CollectComments, &comment);
-			gComments.mapSequences[comment.strTypeName_UTF8] = comment;
+
+			std::string strKey = szModuleName;
+			const auto pos = strKey.find_first_of(".");
+			if (pos != std::string::npos)
+				strKey = strKey.substr(0, pos);
+			strKey += "::";
+			strKey += comment.strTypeName_UTF8;		
+			gComments.mapSequences[strKey] = comment;
 
 			m_CollectComments.clear();
 			return 0;
@@ -650,7 +662,13 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 	if (szLine.find("}") != std::string::npos)
 	{
 		//sequence complete
-		gComments.mapSequences[m_comment.strTypeName_UTF8] = m_comment;
+		std::string strKey = szModuleName;
+		const auto pos = strKey.find_first_of(".");
+		if (pos != std::string::npos)
+			strKey = strKey.substr(0, pos);
+		strKey += "::";
+		strKey += m_comment.strTypeName_UTF8;		
+		gComments.mapSequences[strKey] = m_comment;
 
 		bElementEnd = true;
 	}
@@ -665,7 +683,14 @@ int EAsnStackElementSequenceOf::ProcessLine(const char* szModuleName, std::strin
 	convertCommentList(commentsBefore, &m_comment);
 	commentsBefore.clear();
 
-	gComments.mapSequences[m_comment.strTypeName_UTF8] = m_comment;
+	std::string strKey = szModuleName;
+	const auto pos = strKey.find_first_of(".");
+	if (pos != std::string::npos)
+		strKey = strKey.substr(0, pos);
+	strKey += "::";
+	strKey += m_comment.strTypeName_UTF8;
+
+	gComments.mapSequences[strKey] = m_comment;
 
 	bElementEnd = true;
 	return 0;
@@ -685,9 +710,13 @@ int EAsnStackElementOperation::ProcessLine(const char* szModuleName, std::string
 {
 	if (szLine.find("::=") != std::string::npos)
 	{
-		//sequence complete
-		gComments.mapOperations[m_comment.strTypeName_UTF8] = m_comment;
-
+		std::string strKey = szModuleName;
+		const auto pos = strKey.find_first_of(".");
+		if (pos != std::string::npos)
+			strKey = strKey.substr(0, pos);
+		strKey += "::";
+		strKey += m_comment.strTypeName_UTF8;
+		gComments.mapOperations[strKey.c_str()] = m_comment;
 		bElementEnd = true;
 	}
 	return 0;

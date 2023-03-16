@@ -59,14 +59,14 @@ extern "C" {
 	extern int GetModuleComment_UTF8(const char* szModuleName, asnmodulecomment* pcomment);
 	extern int GetModuleComment_ASCII(const char* szModuleName, asnmodulecomment* pcomment);
 	//Get Comments for Operation (returns 1 for success)
-	extern int GetOperationComment_UTF8(const char* szOpName, asnoperationcomment* pcomment);
-	extern int GetOperationComment_ASCII(const char* szOpName, asnoperationcomment* pcomment);
+	extern int GetOperationComment_UTF8(const char* szModuleName, const char* szOpName, asnoperationcomment* pcomment);
+	extern int GetOperationComment_ASCII(const char* szModuleName, const char* szOpName, asnoperationcomment* pcomment);
 	//Get Comments for Sequence or other types (returns 1 for success)
-	extern int GetSequenceComment_UTF8(const char* szTypeName, asnsequencecomment* pcomment);
-	extern int GetSequenceComment_ASCII(const char* szTypeName, asnsequencecomment* pcomment);
+	extern int GetSequenceComment_UTF8(const char* szModuleName, const char* szTypeName, asnsequencecomment* pcomment);
+	extern int GetSequenceComment_ASCII(const char* szModuleName, const char* szTypeName, asnsequencecomment* pcomment);
 	//Get Comments for member of sequence (returns 1 for success)
-	extern int GetMemberComment_UTF8(const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment);
-	extern int GetMemberComment_ASCII(const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment);
+	extern int GetMemberComment_UTF8(const char* szModuleName, const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment);
+	extern int GetMemberComment_ASCII(const char* szModuleName, const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment);
 
 #ifdef __cplusplus
 }

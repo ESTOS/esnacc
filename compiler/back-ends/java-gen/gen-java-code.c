@@ -540,7 +540,7 @@ static void PrintJavaOperationClass(Module *m, ValueDef *vd)
 	}
 
 	fprintf (src, "package com.estos.asn;\n\n");
-	if (GetROSEDetails(vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
+	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
 	{
 		// vars
 		//fprintf(src, "  public class var name    : String { get { return \"%s\" } }\n", vd->definedName);

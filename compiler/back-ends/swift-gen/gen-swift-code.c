@@ -227,7 +227,7 @@ void PrintSwiftEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, 
 	if (HasNamedElmts(td->type) != 0) {
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
-			printMemberComment(src, td, n->name);
+			printMemberComment(src, m, td, n->name);
 			{
 				char* szConverted = FixName(n->name);
 				fprintf(src, "\tcase %s = %d", szConverted, n->value);
@@ -252,7 +252,7 @@ void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 	bool bIsChoice = seq->basicType->choiceId == BASICTYPE_CHOICE;
 	char* szConverted = FixName(td->definedName);
 
-	printSequenceComment(src, td);
+	printSequenceComment(src, m, td);
 
 	/* put class spec in src file */
 	fprintf(src, "open class %s : JSONConvertable, JSONObjectConvertable {\n", szConverted);
@@ -268,7 +268,7 @@ void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
 			continue;
 
-		printMemberComment(src, td, e->fieldName);
+		printMemberComment(src, m, td, e->fieldName);
 		char* szConverted2 = FixName(e->fieldName);
 		fprintf(src, "\tpublic final var %s : ", szConverted2);
 		free(szConverted2);
@@ -602,7 +602,7 @@ void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int
 
 	TypeDef* td;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs) {
-		if (IsDeprecatedSequence(td->definedName))
+		if (IsDeprecatedSequence(m, td->definedName))
 			continue;
 		PrintSwiftTypeDefCode(src, mods, m, td, novolatilefuncs);
 	}

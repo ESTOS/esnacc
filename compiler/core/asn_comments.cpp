@@ -106,12 +106,16 @@ extern "C" {
 		return 0;
 	}
 
-	int GetOperationComment_UTF8(const char* szOpName, asnoperationcomment* pcomment)
+	int GetOperationComment_UTF8(const char* szModuleName, const char* szOpName, asnoperationcomment* pcomment)
 	{
-		if (!szOpName)
+		if (!szModuleName || !szOpName)
 			return 0;
 
-		auto it = gComments.mapOperations.find(szOpName);
+		std::string strKey = szModuleName;
+		strKey += "::";
+		strKey += szOpName;
+
+		auto it = gComments.mapOperations.find(strKey);
 		if (it != gComments.mapOperations.end()) 
 		{
 			const EOperationComment& comment = it->second;
@@ -127,12 +131,16 @@ extern "C" {
 		return 0;
 	}
 
-	int GetOperationComment_ASCII(const char* szOpName, asnoperationcomment* pcomment)
+	int GetOperationComment_ASCII(const char* szModuleName, const char* szOpName, asnoperationcomment* pcomment)
 	{
-		if (!szOpName)
+		if (!szModuleName || !szOpName)
 			return 0;
 
-		auto it = gComments.mapOperations.find(szOpName);
+		std::string strKey = szModuleName;
+		strKey += "::";
+		strKey += szOpName;
+
+		auto it = gComments.mapOperations.find(strKey);
 		if (it != gComments.mapOperations.end()) 
 		{
 			EOperationComment& comment = it->second;
@@ -157,12 +165,16 @@ extern "C" {
 	}	
 
 	//Get Comments for Sequence or other types
-	int GetSequenceComment_UTF8(const char* szTypeName, asnsequencecomment* pcomment)
+	int GetSequenceComment_UTF8(const char* szModuleName, const char* szTypeName, asnsequencecomment* pcomment)
 	{
-		if (!szTypeName)
+		if (!szModuleName || !szTypeName)
 			return 0;
 
-		auto it = gComments.mapSequences.find(szTypeName);
+		std::string strKey = szModuleName;
+		strKey += "::";
+		strKey += szTypeName;
+
+		auto it = gComments.mapSequences.find(strKey);
 		if (it != gComments.mapSequences.end())
 		{
 			const ESequenceComment& comment = it->second;
@@ -178,12 +190,16 @@ extern "C" {
 		return 0;
 	}
 
-	int GetSequenceComment_ASCII(const char* szTypeName, asnsequencecomment* pcomment)
+	int GetSequenceComment_ASCII(const char* szModuleName, const char* szTypeName, asnsequencecomment* pcomment)
 	{
-		if (!szTypeName)
+		if (!szModuleName || !szTypeName)
 			return 0;
 
-		auto it = gComments.mapSequences.find(szTypeName);
+		std::string strKey = szModuleName;
+		strKey += "::";
+		strKey += szTypeName;
+
+		auto it = gComments.mapSequences.find(strKey);
 		if (it != gComments.mapSequences.end())
 		{
 			ESequenceComment& comment = it->second;
@@ -208,12 +224,18 @@ extern "C" {
 	}
 
 	//Get Comments for member of sequence
-	int GetMemberComment_UTF8(const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment)
+	int GetMemberComment_UTF8(const char* szModuleName, const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment)
 	{
-		if (!szTypeName || !szMemberName)
+		if (!szModuleName || !szTypeName || !szMemberName)
 			return 0;
 
-		auto it = gComments.mapSequences.find(szTypeName);
+		std::string strKey = szModuleName;
+		strKey += "::";
+		strKey += szTypeName;
+
+		if(strKey == "ENetUC_Conference::AsnInterfaceVersions")
+			printf("");
+		auto it = gComments.mapSequences.find(strKey);
 		if (it != gComments.mapSequences.end())
 		{
 			auto it2 = it->second.mapMembers.find(szMemberName);
@@ -231,12 +253,16 @@ extern "C" {
 		return 0;
 	}
 
-	int GetMemberComment_ASCII(const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment)
+	int GetMemberComment_ASCII(const char* szModuleName, const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment)
 	{
-		if (!szTypeName || !szMemberName)
+		if (!szModuleName || !szTypeName || !szMemberName)
 			return 0;
 
-		auto it = gComments.mapSequences.find(szTypeName);
+		std::string strKey = szModuleName;
+		strKey += "::";
+		strKey += szTypeName;
+
+		auto it = gComments.mapSequences.find(strKey);
 		if (it != gComments.mapSequences.end())
 		{
 			auto it2 = it->second.mapMembers.find(szMemberName);
