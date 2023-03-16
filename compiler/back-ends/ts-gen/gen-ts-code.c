@@ -785,7 +785,7 @@ void PrintTSComments(FILE* src, Module* m) {
 	fprintf(src, "// prettier-ignore\n");
 	fprintf(src, ESLINT_DISABLE);
 
-	printModuleComment(src, MakeFileName(m->baseFileName, ""));
+	printModuleComment(src, RemovePath(m->baseFileName));
 }
 
 void PrintTSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printTSONEncDec, int novolatilefuncs)

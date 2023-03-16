@@ -587,7 +587,7 @@ void PrintSwiftComments(FILE* src, Module* m) {
 	write_snacc_header(src);
 	fprintf(src, " */\n\n");
 
-	printModuleComment(src, m->baseFileName);
+	printModuleComment(src, RemovePath(m->baseFileName));
 }
 
 void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int PrintSwiftONEncDec, int novolatilefuncs)

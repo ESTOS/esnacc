@@ -46,10 +46,6 @@ void PrintTSConverterImports(FILE* src, ModuleList* mods, Module* mod)
 	// Our own data structure file is not in the imports
 	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), RemovePath(szModName));
 
-	// Special for the UCServer compatible OptionalParamsConverter
-	if (strcmp(szModName, "ENetUC_Common") == 0)
-		fprintf(src, "import { EAsnOptionalParameters_Converter } from \"./TSOptionalParamConverter\";\n");
-
 	printTSImports(src, mods, mod, true, true);
 }
 

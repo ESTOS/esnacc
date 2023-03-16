@@ -349,7 +349,7 @@ void PrintTSROSEHandlerInterface(FILE* src, ModuleList* mods, Module* m)
 
 void PrintTSROSEServerCopyPasteInterface(FILE* src, ModuleList* mods, Module* m)
 {
-	fprintf(src, "\n// [%s]\n", __FUNCTION__);
+	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	fprintf(src, "/* Copy paste code for the import statement\n");
 	fprintf(src, "import { IReceiveInvokeContext } from \"./TSROSEBase\";\n");
