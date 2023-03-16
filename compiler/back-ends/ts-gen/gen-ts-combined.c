@@ -49,8 +49,6 @@ void printTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	if (bIncludeasn1ts)
 		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
-	if (strcmp(mod->modId->name, "UC-Server-Access-Protocol-Common") == 0)
-		fprintf(src, "import { EAsnOptionalParameters_Converter } from \"./TSOptionalParamConverter\";\n");
 
 	if (mod->imports) {
 		char szAlreadyAdded[4096] = {0};

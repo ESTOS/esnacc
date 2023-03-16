@@ -45,6 +45,8 @@ void PrintTSConverterImports(FILE* src, ModuleList* mods, Module* mod)
 
 	// Our own data structure file is not in the imports
 	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), RemovePath(szModName));
+	if (strcmp(mod->modId->name, "UC-Server-Access-Protocol-Common") == 0)
+		fprintf(src, "import { EAsnOptionalParameters_Converter } from \"./TSOptionalParamConverter\";\n");
 
 	printTSImports(src, mods, mod, true, true);
 }
