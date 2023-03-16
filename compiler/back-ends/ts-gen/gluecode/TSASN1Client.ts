@@ -100,7 +100,6 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	// Additional headers we want to pass with every fetch and websocket init request towards the server
 	private additionalHeaders?: EHttpHeaders;
 
-
 	/**
 	 * Constructs the Client and binds some messages to this.
 	 *
