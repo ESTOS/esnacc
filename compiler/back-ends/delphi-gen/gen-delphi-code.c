@@ -1272,7 +1272,7 @@ void PrintDelphiImports(FILE *src, ModuleList *mods, Module *m)
 				{
 					fprintf(src, ",\n");
 					fprintf(src, "  // Imports from %s\n", impMod->modId->name);
-					fprintf(src, "  %s", RemovePath(impMod->moduleRef->delphiUnitName));
+					fprintf(src, "  %s", impMod->moduleRef->moduleName);
 				}
 
 			}
@@ -1305,7 +1305,7 @@ void PrintDelphiCode(FILE *src, ModuleList *mods, Module *m)
 
 	fprintf(src, "// [PrintDelphiCode]\n");
 	
-	fprintf(src, "unit %s;\n", RemovePath(m->delphiUnitName));
+	fprintf(src, "unit %s;\n", m->moduleName);
 
 	// Comments
 	PrintDelphiComments(src, m);

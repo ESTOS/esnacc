@@ -49,8 +49,6 @@ void printTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	if (bIncludeasn1ts)
 		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
-	if (strcmp(mod->modId->name, "UC-Server-Access-Protocol-Common") == 0)
-		fprintf(src, "import { EAsnOptionalParameters_Converter } from \"./TSOptionalParamConverter\";\n");
 
 	if (mod->imports) {
 		char szAlreadyAdded[4096] = {0};
@@ -64,9 +62,7 @@ void printTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 				const char* szNameSpace = GetNameSpace(referencedModule);
 				if (strstr(szAlreadyAdded, szNameSpace) == NULL) {
 					strcat_s(szAlreadyAdded, 4096, szNameSpace);
-					char* szFileName = MakeFileName(referencedModule->baseFileName, "");
-					fprintf(src, "import * as %s from \"./%s\";\n", szNameSpace, RemovePath(szFileName));
-					free(szFileName);
+					fprintf(src, "import * as %s from \"./%s\";\n", szNameSpace, referencedModule->moduleName);
 				}
 			}
 		}
@@ -81,9 +77,7 @@ void printTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 					if (strstr(szAlreadyAdded, szNameSpace) == NULL) {
 						strcat_s(szAlreadyAdded, 4096, szNameSpace);
 						impMod->moduleRef = referencedModule;
-						char* szFileName = MakeFileName(referencedModule->baseFileName, "");
-						fprintf(src, "import * as %s_Converter from \"./%s_Converter\";\n", szNameSpace, RemovePath(szFileName));
-						free(szFileName);
+						fprintf(src, "import * as %s_Converter from \"./%s_Converter\";\n", szNameSpace, referencedModule->moduleName);
 					}
 				}
 			}

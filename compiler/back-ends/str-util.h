@@ -25,10 +25,6 @@
  * Revision 1.1.1.1  2000/08/21 20:36:04  leonberp
  * First CVS Version of SNACC.
  *
- * Revision 1.3  1995/07/25  18:13:55  rj
- * by default, snacc now derives output file names from the .asn1 input file name instead of the module name.
- * the global keepbaseG variable switches between the two behaviours.
- *
  * additional filename generator for idl backend.
  *
  * changed `_' to `-' in file names.
@@ -69,8 +65,6 @@ char* str_replace(const char* string, const char* substr, const char* replacemen
 
 char* getNakedCommentDupped(const char* szString);
 
-extern int	keepbaseG;
-
 char *MakeBaseFileName PROTO ((const char *moduleName));
 char *MakeFileName PROTO ((const char *moduleName, const char *suffix));
 char *MakeFileNameWithoutOutputPath PROTO((const char *moduleName, const char *suffix));
@@ -95,6 +89,7 @@ const char* RemovePath(const char *refName);
 char* RemovePathNonConst(char *refName);
 char *MakeROSESrcCSFileName PROTO ((const char *moduleName));
 char *MakeROSESrcJAVAFileName PROTO ((const char *moduleName));
+char *MakeModuleName PROTO ((const char *moduleName));
 char *MakeROSEClassName PROTO ((const char *moduleName));
 char *MakeROSESwiftInterfaceFileName PROTO ((const char *moduleName));
 char* FixName(const char* szName);

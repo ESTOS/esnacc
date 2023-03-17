@@ -193,9 +193,13 @@ public:
 	std::map<std::string, EModuleComment> mapModules;
 
 	//map Operation Name to Details
+	// Key is the combination of the module and the operation as operations may exist multiple times
+	// modulename::operationname
 	std::map<std::string, EOperationComment> mapOperations;
 
 	//map Type Name to Details
+	// Key is the combination of the module and the type name as type names may exist multiple times
+	// modulename::typename
 	std::map<std::string, ESequenceComment> mapSequences;
 };
 

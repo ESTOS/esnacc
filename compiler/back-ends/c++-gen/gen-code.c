@@ -586,13 +586,13 @@ static int RestAreTailOptional(NamedTypeList *e)
 /*
 * prints PrintROSEOnInvoke
 */
-static void PrintROSEOnInvoke(FILE *hdr, int bEvents, ValueDef *vd)
+static void PrintROSEOnInvoke(FILE *hdr, int bEvents, Module* mod, ValueDef *vd)
 {
 	char* pszArgument = NULL;
 	char* pszResult = NULL;
 	char* pszError = NULL;
 
-	if (GetROSEDetails(vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
+	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 	{
 		if (pszResult && !bEvents)
 		{
@@ -628,13 +628,13 @@ static void PrintROSEOnInvoke(FILE *hdr, int bEvents, ValueDef *vd)
 /*
 * prints PrintROSEOnInvokeswitchCase
 */
-static void PrintROSEOnInvokeswitchCase(FILE *src, int bEvents, ValueDef *vd)
+static void PrintROSEOnInvokeswitchCase(FILE *src, int bEvents, Module* mod, ValueDef *vd)
 {
 	char* pszArgument = NULL;
 	char* pszResult = NULL;
 	char* pszError = NULL;
 
-	if (GetROSEDetails(vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
+	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 	{
 		//there is an argument
 		if (pszResult && !bEvents)
@@ -826,12 +826,12 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 	char* pszResult = NULL;
 	char* pszError = NULL;
 
-	if (GetROSEDetails(vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
+	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 	{
 		if (pszResult && !bEvents)
 		{
 			asnoperationcomment com;
-			if (GetOperationComment_ASCII(vd->definedName, &com))
+			if (GetOperationComment_ASCII(m->moduleName, vd->definedName, &com))
 			{
 				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.iDeprecated ? "deprecated " : "", com.szShort);
 				PrintLongComment(hdr, "\t", com.szLong);
@@ -905,7 +905,7 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 		{
 			//there is no result -> it is an Event
 			asnoperationcomment com;
-			if (GetOperationComment_ASCII(vd->definedName, &com))
+			if (GetOperationComment_ASCII(m->moduleName, vd->definedName, &com))
 			{
 				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.iDeprecated ? "deprecated " : "", com.szShort);
 				PrintLongComment(hdr, "\t", com.szLong);
@@ -4852,7 +4852,7 @@ int HasROSEOperations(Module *m)
 	//check for existing operation defines....
 	FOR_EACH_LIST_ELMT (vd, m->valueDefs)
 	{
-		if (IsROSEValueDef(vd)) {
+		if (IsROSEValueDef(m, vd)) {
 			iHasOperations = 1;
 			break;
 		}
@@ -5087,7 +5087,7 @@ void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, M
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
 		{
-			PrintROSEOnInvokeswitchCase(src, 0, vd);
+			PrintROSEOnInvokeswitchCase(src, 0, m, vd);
 		}
 	}
 
@@ -5095,7 +5095,7 @@ void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, M
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
 		{
-			PrintROSEOnInvokeswitchCase(src, 1, vd);
+			PrintROSEOnInvokeswitchCase(src, 1, m, vd);
 		}
 	}
 
@@ -5132,7 +5132,7 @@ void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, M
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
 		{
-			PrintROSEOnInvoke(hdrInterface, 0, vd);
+			PrintROSEOnInvoke(hdrInterface, 0, m, vd);
 		}
 	}
 	fprintf (hdr, "\t//Event Handler Messages\n");
@@ -5141,7 +5141,7 @@ void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, M
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
 		{
-			PrintROSEOnInvoke(hdrInterface, 1, vd);
+			PrintROSEOnInvoke(hdrInterface, 1, m, vd);
 		}
 	}
 

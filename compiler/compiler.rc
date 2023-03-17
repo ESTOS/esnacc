@@ -8,6 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "winres.h"
+#include "version.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -35,6 +36,38 @@ TS_SNACCROSE            RCDATA                  "back-ends/ts-gen/gluecode/SNACC
 TS_SNACCROSE_CONVERTER  RCDATA                  "back-ends/ts-gen/gluecode/SNACCROSE_Converter.ts"
 DELPHI_ASN1_YPES		RCDATA					"back-ends/delphi-gen/gluecode/DelphiAsn1Types.pas"
 
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION VERSION_RC
+ PRODUCTVERSION VERSION_RC
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040704b0"
+        BEGIN
+			VALUE "CompanyName", "estos GmbH"
+            VALUE "FileDescription", "estos esnacc"
+            VALUE "FileVersion", VERSION
+            VALUE "OriginalFilename", "esnacc.exe"
+            VALUE "ProductName", "estos esnacc"
+            VALUE "ProductVersion", VERSION		
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x407, 1200
+    END
+END
+
+
 #endif    // German (Germany) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -59,6 +92,7 @@ END
 2 TEXTINCLUDE 
 BEGIN
     "#include ""winres.h""\r\n"
+    "#include ""../version.h.h""\r\n"
     "\0"
 END
 

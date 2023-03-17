@@ -5,12 +5,11 @@
 #include "../core/asn1module.h"
 #include "str-util.h"
 
-bool IsROSEValueDef(ValueDef* vd);
-
+bool IsROSEValueDef(Module* mod, ValueDef* vd);
 // Resolves the argument, result and error value for a ROSE operation
 // if specified also resolves the types of these references
 // if bResolveToRoot is specified a local or imported type ref is resolved to the root, otherwise a type ref is only resolved one level
-bool GetROSEDetails(ValueDef* vd, char** ppszArgument, char** ppszResult, char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot);
+bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszResult, char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot);
 // Wenn es sich um ein localtyperef oder importedtyperef handelt wandert es so lange nach oben bis es kein imported oder localtyperef mehr ist
 BasicType* ResolveBasicTypeReferences(BasicType* type, const char** szName);
 // Resolveds a type reference one level down (if imported or local type ref)
@@ -38,8 +37,8 @@ Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, M
 Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod);
 
 // Returns true when the member can be skipped (only certain members can get removed, check the function for details)
-bool IsDeprecatedMember(const TypeDef* td, const char* szElement);
-bool IsDeprecatedSequence(const char* szSequenceName);
-bool IsDeprecatedOperation(const char* szOperationName);
+bool IsDeprecatedMember(Module* mod, const TypeDef* td, const char* szElement);
+bool IsDeprecatedSequence(Module* mod, const char* szSequenceName);
+bool IsDeprecatedOperation(Module* mod, const char* szOperationName);
 
 #endif

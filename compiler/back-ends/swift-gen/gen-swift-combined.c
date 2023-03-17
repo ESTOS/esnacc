@@ -49,49 +49,6 @@ void PrintSwiftImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeCo
 	PRINTCOMMENT(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "import Foundation\n");
 
-	/*
-	if (bIncludeasn1ts)
-		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
-	if (mod->imports) {
-		char szAlreadyAdded[4096] = {0};
-		AsnListNode* saveImport = mod->imports->curr;
-		ImportModule* impMod;
-		FOR_EACH_LIST_ELMT(impMod, mod->imports)
-		{
-			Module* referencedModule = GetModuleForImportModule(mods, impMod);
-			if (referencedModule) {
-				impMod->moduleRef = referencedModule;
-				const char* szNameSpace = GetNameSpace(referencedModule);
-				if (strstr(szAlreadyAdded, szNameSpace) == NULL) {
-					strcat_s(szAlreadyAdded, _countof(szAlreadyAdded), szNameSpace);
-					char* szFileName = MakeFileName(referencedModule->baseFileName, "");
-					fprintf(src, "import * as %s from \"./%s\";\n", szNameSpace, RemovePath(szFileName));
-					free(szFileName);
-				}
-			}
-		}
-
-		if (bIncludeConverters) {
-			szAlreadyAdded[0] = 0;
-			FOR_EACH_LIST_ELMT(impMod, mod->imports)
-			{
-				Module* referencedModule = GetModuleForImportModule(mods, impMod);
-				if (referencedModule) {
-					const char* szNameSpace = GetNameSpace(referencedModule);
-					if (strstr(szAlreadyAdded, szNameSpace) == NULL) {
-						strcat_s(szAlreadyAdded, _countof(szAlreadyAdded), szNameSpace);
-						impMod->moduleRef = referencedModule;
-						char* szFileName = MakeFileName(referencedModule->baseFileName, "");
-						fprintf(src, "import * as %s_Converter from \"./%s_Converter\";\n", szNameSpace, RemovePath(szFileName));
-						free(szFileName);
-					}
-				}
-			}
-		}
-
-		mod->imports->curr = saveImport;
-	}
-	*/
 }
 
 const char* GetSwiftType(const enum BasicTypeChoiceId basicTypeChoiseId)

@@ -117,12 +117,12 @@ void printComment(FILE* src, const char* szPrefix, const char* szString, const c
 	fprintf(src, "%s", szSuffix);
 }
 
-void printMemberComment(FILE* src, const TypeDef* td, const char* szElement) {
+void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const char* szElement) {
 	if (!gWriteComments)
 		return;
 
 	asnmembercomment comment;
-	if (GetMemberComment_UTF8(td->definedName, szElement, &comment)) {
+	if (GetMemberComment_UTF8(m->moduleName, td->definedName, szElement, &comment)) {
 		if (strlen(comment.szShort) || comment.iDeprecated || comment.iPrivate) {
 			int iMultiline = 0;
 			if (comment.iDeprecated)
@@ -188,12 +188,12 @@ void printModuleComment(FILE* src, const char* szModuleName) {
 	}
 }
 
-void printSequenceComment(FILE* src, const TypeDef* td) {
+void printSequenceComment(FILE* src, const Module* m, const TypeDef* td) {
 	if (!gWriteComments)
 		return;
 
 	asnsequencecomment sequenceComment;
-	if (GetSequenceComment_UTF8(td->definedName, &sequenceComment))
+	if (GetSequenceComment_UTF8(m->moduleName, td->definedName, &sequenceComment))
 	{
 		bool bHasShort = strlen(sequenceComment.szShort) ? true : false;
 		bool bHasLong = strlen(sequenceComment.szLong) ? true : false;

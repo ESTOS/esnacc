@@ -250,11 +250,11 @@ void PrintTSEnumDefCode(FILE* src, ModuleList* mods, Module* m,
 		bool bFirst = true;
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
-			if (IsDeprecatedMember(td, n->name))
+			if (IsDeprecatedMember(m, td, n->name))
 				continue;
 			if(!bFirst)
 				fprintf(src, ",\n");
-			printMemberComment(src, td, n->name);
+			printMemberComment(src, m, td, n->name);
 			char* szConverted = FixName(n->name);
 			fprintf(src, "\t%s = %d", szConverted, n->value);
 			free(szConverted);
@@ -374,7 +374,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	char* szConverted = FixName(td->definedName);
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	printSequenceComment(src, td);
+	printSequenceComment(src, m, td);
 
 	/* put class spec in hdr file */
 	fprintf(src, "export class %s {\n", szConverted);
@@ -443,7 +443,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		if (choiceId == BASICTYPE_EXTENSION)
 			continue;
 
-		if (IsDeprecatedMember(td, e->fieldName))
+		if (IsDeprecatedMember(m, td, e->fieldName))
 			continue;
 
 		if (!bFirst)
@@ -515,10 +515,10 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
 			continue;
 
-		if (IsDeprecatedMember(td, e->fieldName))
+		if (IsDeprecatedMember(m, td, e->fieldName))
 			continue;
 
-		printMemberComment(src, td, e->fieldName);
+		printMemberComment(src, m, td, e->fieldName);
 
 		enum BasicTypeChoiceId choiceId = e->type->basicType->choiceId;
 		if (choiceId == BASICTYPE_IMPORTTYPEREF || choiceId == BASICTYPE_LOCALTYPEREF)
@@ -777,7 +777,7 @@ void PrintTSComments(FILE* src, Module* m) {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	fprintf(src, "/*\n");
-	fprintf(src, " * %s\n", RemovePath(m->jsFileName));
+	fprintf(src, " * %s\n", RemovePath(m->tsFileName));
 	fprintf(src, " * \"%s\" ASN.1 stubs.\n", m->modId->name);
 	write_snacc_header(src);
 	fprintf(src, " */\n\n");
@@ -785,7 +785,7 @@ void PrintTSComments(FILE* src, Module* m) {
 	fprintf(src, "// prettier-ignore\n");
 	fprintf(src, ESLINT_DISABLE);
 
-	printModuleComment(src, MakeFileName(m->baseFileName, ""));
+	printModuleComment(src, RemovePath(m->baseFileName));
 }
 
 void PrintTSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printTSONEncDec, int novolatilefuncs)
@@ -801,7 +801,7 @@ void PrintTSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int pr
 	bool bIsFirst = true;
 	TypeDef* td;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs) {
-		if (IsDeprecatedSequence(td->definedName))
+		if (IsDeprecatedSequence(m, td->definedName))
 			continue;
 		if (!bIsFirst)
 			fprintf(src, "\n");

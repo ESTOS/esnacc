@@ -216,6 +216,7 @@ typedef struct Module /* SEQUENCE */
 	AsnBool					ImportedFlag; /* BOOLEAN */
 	AsnBool					ImportUsed; /* BOOLEAN */
     const char*	    		asn1SrcFileName; /* MyString */
+    MyString 				moduleName; /* MyString */
     MyString 				cHdrFileName; /* MyString */
     MyString 				cSrcFileName; /* MyString */
     MyString 				cxxHdrFileName; /* MyString */
@@ -224,10 +225,10 @@ typedef struct Module /* SEQUENCE */
 	MyString 				csSrcFileName; /* MyString */
 	MyString 				hjsFileName; /* MyString */
 	MyString 				jsFileName; /* MyString */
+	MyString 				tsFileName; /* MyString */
 	MyString 				tsConverterFileName; /* Filename of the typescript encoder decoders */
 	MyString 				baseFileName; /* MyString filename without extension (for ts-gen) */
 	MyString 				delphiFileName; /* MyString */
-	MyString 				delphiUnitName; /* MyString */
 	MyString 				ROSEHdrFileName; /* Header for ROSE Handler */
     MyString 				ROSESrcFileName; /* cpp for ROSE Handler */
 	MyString 				ROSEHdrInterfaceFileName; /* Header for ROSE Interface (OnInvoke, OnEvent) */

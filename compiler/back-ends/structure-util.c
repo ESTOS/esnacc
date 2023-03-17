@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <string.h>
 
-bool IsROSEValueDef(ValueDef* vd) {
+bool IsROSEValueDef(Module* mod, ValueDef* vd) {
 	if (vd->value->type == NULL)
 		return false;
 	if (vd->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
@@ -16,7 +16,7 @@ bool IsROSEValueDef(ValueDef* vd) {
 		if (!pRoseOperation)
 			return false;
 		asnoperationcomment com;
-		if (GetOperationComment_UTF8(vd->definedName, &com))
+		if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &com))
 		{
 			if (com.iDeprecated)
 				return false;
@@ -26,7 +26,7 @@ bool IsROSEValueDef(ValueDef* vd) {
 	return true;
 }
 
-bool GetROSEDetails(ValueDef* vd, char** ppszArgument, char** ppszResult, char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot)
+bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszResult, char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot)
 {
 	if (ppszArgument)
 		*ppszArgument = NULL;
@@ -42,7 +42,7 @@ bool GetROSEDetails(ValueDef* vd, char** ppszArgument, char** ppszResult, char**
 	else
 		resolver = &ResolveTypeReferencesOneLevel;
 
-	if (!IsROSEValueDef(vd))
+	if (!IsROSEValueDef(mod, vd))
 		return false;
 
 	RosOperationMacroType* pOperation = vd->value->type->basicType->a.macroType->a.rosOperation;
@@ -51,7 +51,7 @@ bool GetROSEDetails(ValueDef* vd, char** ppszArgument, char** ppszResult, char**
 
 	bool bRetVal = false;
 
-	if (IsROSEValueDef(vd)) {
+	if (IsROSEValueDef(mod, vd)) {
 		struct NamedType* pArgument = pOperation->arguments;
 		if (pArgument && (ppszArgument || argumentType)) {
 			if (pArgument->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF ||
@@ -406,25 +406,25 @@ Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod) {
 	return module;
 }
 
-bool IsDeprecatedSequence(const char* szSequenceName) {
+bool IsDeprecatedSequence(Module* mod, const char* szSequenceName) {
 	asnsequencecomment comment;
-	if (GetSequenceComment_UTF8(szSequenceName, &comment)) {
+	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
 		if (comment.iDeprecated)
 			return true;
 	}
 	return false;
 }
 
-bool IsDeprecatedOperation(const char* szOperationName) {
+bool IsDeprecatedOperation(Module* mod, const char* szOperationName) {
 	asnoperationcomment comment;
-	if (GetOperationComment_UTF8(szOperationName, &comment)) {
+	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
 		if (comment.iDeprecated)
 			return true;
 	}
 	return false;
 }
 
-bool IsDeprecatedMember(const TypeDef* td, const char* szElement) {
+bool IsDeprecatedMember(Module* mod, const TypeDef* td, const char* szElement) {
 	if (!gNoDeprecatedSymbols)
 		return false;
 
@@ -442,7 +442,7 @@ bool IsDeprecatedMember(const TypeDef* td, const char* szElement) {
 		return false;
 
 	asnmembercomment comment;
-	if (GetMemberComment_UTF8(td->definedName, szElement, &comment)) {
+	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment)) {
 		if (comment.iDeprecated) {
 			if (type == BASICTYPE_SEQUENCE) {
 				// We need to check if the property is optional, if that is the case we can skip it

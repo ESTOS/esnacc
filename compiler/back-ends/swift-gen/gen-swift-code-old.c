@@ -900,7 +900,7 @@ static void PrintSwiftROSEInvoke(FILE *src, Module *m, int bEvents, ValueDef *vd
 	Type* resultType = NULL;
 	Type* errorType = NULL;
 
-	if (GetROSEDetails(vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
+	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
 	{
 		fprintf(src, "open class %s : AsnOperation\n", vd->definedName);
 		fprintf(src, "{\n");
@@ -1175,7 +1175,7 @@ void PrintSwiftOperationFactoryOLD(FILE *src, ModuleList *mods) {
 					fprintf(src, "      case \"%s\":\n", vd->definedName);
 					fprintf(src, "        let operation:%s = %s()\n",vd->definedName,vd->definedName);
 
-					if (GetROSEDetails(vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
+					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
 					{
 						if(pszArgument)
 						{
@@ -1252,7 +1252,7 @@ void PrintSwiftOperationFactoryOLD(FILE *src, ModuleList *mods) {
 					fprintf(src, "      case \"%s\":\n", vd->definedName);
 					fprintf(src, "        let operation:%s = %s()\n", vd->definedName,vd->definedName);
 
-					if (GetROSEDetails(vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
+					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
 					{
 						fprintf(src, "        if(initializeWithDefaultProperties) {\n");
 						if(pszArgument)

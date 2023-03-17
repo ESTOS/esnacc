@@ -41,13 +41,9 @@ void PrintTSConverterImports(FILE* src, ModuleList* mods, Module* mod)
 
 	fprintf(src, "import { DecodeContext, ConverterError, ConverterErrorType, ConverterErrors, EncodeContext, TSConverter, INamedType } from \"./%s\";\n", "TSConverterBase");
 
-	char* szModName = MakeFileName(mod->baseFileName, "");
-
 	// Our own data structure file is not in the imports
-	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), RemovePath(szModName));
-
-	// Special for the UCServer compatible OptionalParamsConverter
-	if (strcmp(szModName, "ENetUC_Common") == 0)
+	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
+	if (strcmp(mod->modId->name, "UC-Server-Access-Protocol-Common") == 0)
 		fprintf(src, "import { EAsnOptionalParameters_Converter } from \"./TSOptionalParamConverter\";\n");
 
 	printTSImports(src, mods, mod, true, true);
@@ -839,7 +835,7 @@ void Print_JSON_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
-		if (IsDeprecatedMember(td, e->fieldName))
+		if (IsDeprecatedMember(m, td, e->fieldName))
 			continue;
 
 		enum BasicTypeChoiceId type = e->type->basicType->choiceId;
@@ -888,7 +884,7 @@ void Print_BER_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 	// Validate the mandatory (non optional) objects on block (we only set them once the full set is valid)
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
-		if (IsDeprecatedMember(td, e->fieldName))
+		if (IsDeprecatedMember(m, td, e->fieldName))
 			continue;
 
 		enum BasicTypeChoiceId type = TSResolveImportedType(e);
@@ -906,7 +902,7 @@ void Print_BER_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 		fprintf(src, "\t\tif (errors.validateResult(errorCount, newContext, \"%s\")) {\n", td->definedName);
 		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 		{
-			if (IsDeprecatedMember(td, e->fieldName))
+			if (IsDeprecatedMember(m, td, e->fieldName))
 				continue;
 
 			enum BasicTypeChoiceId type = TSResolveImportedType(e);
@@ -1059,7 +1055,7 @@ void Print_JSON_DecoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 	NamedType* e;
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
-		if (IsDeprecatedMember(td, e->fieldName))
+		if (IsDeprecatedMember(m, td, e->fieldName))
 			continue;
 
 		enum BasicTypeChoiceId type = e->type->basicType->choiceId;
@@ -1090,7 +1086,7 @@ void Print_BER_DecoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
-		if (IsDeprecatedMember(td, e->fieldName))
+		if (IsDeprecatedMember(m, td, e->fieldName))
 			continue;
 
 		enum BasicTypeChoiceId type = e->type->basicType->choiceId;
@@ -1487,7 +1483,7 @@ void PrintTSConverterCode(FILE* src, ModuleList* mods, Module* m, long longJmpVa
 
 	TypeDef* td;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs) {
-		if (IsDeprecatedSequence(td->definedName))
+		if (IsDeprecatedSequence(m, td->definedName))
 			continue;
 		PrintTSEncoderDecoderCode(src, mods, m, td, novolatilefuncs, printEncoders, printDecoders);
 	}
