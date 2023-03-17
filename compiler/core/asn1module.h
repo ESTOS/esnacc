@@ -13,6 +13,7 @@
 #ifndef _asn1module_h_
 #define _asn1module_h_
 
+#include "../../c-lib/include/asn-int.h"
 
 typedef enum
     {
