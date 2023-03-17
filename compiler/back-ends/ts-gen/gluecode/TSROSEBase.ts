@@ -422,10 +422,10 @@ export interface IASN1Transport {
 	getSessionID(): string | undefined;
 	getEncoding(clientConnectionID?: string): EASN1TransportEncoding;
 	log(severity: ELogSeverity, message: string, calling_method: string, callback: IASN1LogCallback, meta?: unknown, exception?: unknown): void;
-	logInvoke(calling_method: string, callback: IASN1LogCallback, argument: Object, context: IReceiveInvokeContext | ISendInvokeContext, isOutbound: boolean): void;
-	logResult(calling_method: string, callback: IASN1LogCallback, result: Object, context: IReceiveInvokeContext | ISendInvokeContext, isOutbound: boolean): void;
-	logError(calling_method: string, callback: IASN1LogCallback, error: Object, invoke: unknown | undefined, context: IInvokeContextBase, isOutbound: boolean): void;
-	logReject(calling_method: string, callback: IASN1LogCallback, reject: Object, invoke: unknown | undefined, context: IInvokeContextBase, isOutbound: boolean): void;
+	logInvoke(calling_method: string, callback: IASN1LogCallback, argument: object, context: IReceiveInvokeContext | ISendInvokeContext, isOutbound: boolean): void;
+	logResult(calling_method: string, callback: IASN1LogCallback, result: object, context: IReceiveInvokeContext | ISendInvokeContext, isOutbound: boolean): void;
+	logError(calling_method: string, callback: IASN1LogCallback, error: object, invoke: unknown | undefined, context: IInvokeContextBase, isOutbound: boolean): void;
+	logReject(calling_method: string, callback: IASN1LogCallback, reject: object, invoke: unknown | undefined, context: IInvokeContextBase, isOutbound: boolean): void;
 }
 
 // Envelop to be able to call initEmpty on the class object we pass to ROSEBase.handleRequest
@@ -439,7 +439,7 @@ interface IASN1HandlerClass {
 }
 // Type declares for methods that are handling a request
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type IOnInvokeMethod = (argument: any, invokeContext: IReceiveInvokeContext) => Promise<Object | ENetUC_Common.AsnRequestError | undefined>;
+type IOnInvokeMethod = (argument: any, invokeContext: IReceiveInvokeContext) => Promise<object | ENetUC_Common.AsnRequestError | undefined>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type IOnEventMethod = (argument: any, invokeContext: IReceiveInvokeContext) => void;
 
@@ -548,14 +548,10 @@ export function asn1Decode<T>(argument: Uint8Array | asn1ts.Sequence | string | 
  * @param encodeContext - the context from the transport how to decode an object
  * @returns the encoded object or undefined on error
  */
-export function asn1Encode(encoding: EASN1TransportEncoding | undefined, argument: unknown, converter: IConverter, errors: ConverterErrors, encodeContext: EncodeContext): asn1ts.Sequence | object | undefined {
+export function asn1Encode(encoding: EASN1TransportEncoding | undefined, argument: unknown, converter: IConverter, errors: ConverterErrors, encodeContext: EncodeContext): asn1ts.Sequence | Object | undefined {
 	switch (encoding) {
-		case EASN1TransportEncoding.JSON: {
-			const encoded = {};
-			if (converter.toJSON(argument, encoded, errors, encodeContext))
-				return encoded;
-			break;
-		}
+		case EASN1TransportEncoding.JSON:
+			return converter.toJSON(argument, errors, encodeContext);
 		case EASN1TransportEncoding.BER:
 			return converter.toBER(argument, errors, encodeContext);
 		case undefined:
@@ -790,7 +786,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param invokeContext - the invokeContext which has already been prefilled with session related details
 	 * @returns undefined or, if bSendEventSynchronous has been set true when the event was sent
 	 */
-	public handleEvent(argument: Object, operationID: number, argumentConverter: IConverter, invokeContext?: ISendInvokeContextParams): undefined | boolean {
+	public handleEvent(argument: object, operationID: number, argumentConverter: IConverter, invokeContext?: ISendInvokeContextParams): undefined | boolean {
 		// Encodes the argument and the ROSEInvoke envelop
 		const result = this.encodeInvoke(argument, operationID, argumentConverter, true, invokeContext);
 		if (result instanceof AsnInvokeProblem)
@@ -927,7 +923,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		invokeContext.init(operationID, operationName);
 		const methodName = "onInvoke_" + operationName;
 
-		let handlerResult: Object | undefined;
+		let handlerResult: object | undefined;
 		const argument = asn1Decode(invoke.argument, argumentConverter, converterErrors, this.transport.getDecodeContext(), invokeContext);
 		if (argument) {
 			this.transport.logInvoke(methodName, this, argument, invokeContext, false);

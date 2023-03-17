@@ -78,7 +78,10 @@ export class ConverterError {
  * Context base data
  */
 interface IContextBase {
+	// The context string, as we recurse through objects the path is visible in this string root_object::sub_object::property
 	context: string;
+	// root is set to true if we are on the highest, initial layer (the root object)
+	root: boolean;
 }
 
 export interface IEncodeContext {
@@ -104,6 +107,8 @@ export interface INamedType {
 export class EncodeContext implements IEncodeContext, IContextBase {
 	// Give the diagnostic elements the context of the element we are currently encoding to ease understanding where an error occured...
 	public context = "";
+	// root is set to true if we are on the highest, initial layer (the root object)
+	public root = true;
 	// If encoding lax the encoder will sum up errors but will not stop encoding, errors are collected but the function always returns true
 	public bLaxEncoding = false;
 	// to get naked code (not pretty printed with newlines, and tabs) set this to false
@@ -141,6 +146,8 @@ export interface IDecodeContext {
 export class DecodeContext implements IDecodeContext, IContextBase {
 	// Give the diagnostic elements the context of the element we are currently decoding to ease understanding where an error occured...
 	public context = "";
+	// root is set to true if we are on the highest, initial layer (the root object)
+	public root = true;
 	// If decoding lax the parser will sum up errors but will not stop parsing, errors are collected but the function always returns true
 	public bLaxDecoding = false;
 
@@ -191,19 +198,27 @@ export class ConverterErrors extends Array<ConverterError> {
 	 * @returns true on success or false on error
 	 */
 	public validateResult(errorCount: number, context: IContextBase, objectName: string): boolean {
-		// No errors in the array -> always return true
-		if (this.length === 0)
+		// Is our error counter now higher than when entering the encoding/decoding function? -> no = return false
+		if (this.length <= errorCount)
 			return true;
 
+		let bSuccess = false;
+		// We have a higher error count -> What to return now?
 		if (Object.prototype.hasOwnProperty.call(context, "bLaxEncoding")) {
 			// We are encoding
 			const encodeContext = context as unknown as IEncodeContext;
-			return encodeContext.bLaxEncoding;
+			bSuccess = encodeContext.bLaxEncoding;
+			if (!bSuccess && context.root)
+				this.unshift(new ConverterError(undefined, undefined, `Errors while encoding ${objectName}`));
 		} else {
 			// We are decoding
 			const decodingContext = context as unknown as IDecodeContext;
-			return decodingContext.bLaxDecoding;
+			bSuccess = decodingContext.bLaxDecoding;
+			if (!bSuccess && context.root)
+				this.unshift(new ConverterError(undefined, undefined, `Errors while decoding ${objectName}`));
 		}
+
+		return bSuccess;
 	}
 }
 
@@ -212,7 +227,7 @@ export class ConverterErrors extends Array<ConverterError> {
  * The transport layer then converts the object into the appropriate transport notation
  */
 export interface IConverter {
-	toJSON(obj: unknown, value: unknown, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): boolean;
+	toJSON(obj: unknown, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): Object | undefined;
 	fromJSON(obj: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): unknown | undefined;
 	toBER(obj: unknown | undefined, errors?: ConverterErrors, context?: EncodeContext, parametername?: string, optional?: boolean | number): asn1ts.BaseBlock | undefined;
 	fromBER(obj: Uint8Array | asn1ts.Sequence | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): unknown | undefined;
@@ -568,9 +583,11 @@ export class TSConverter {
 	 * @returns - The new adopted or created DecodeContext
 	 */
 	public static addContext<T extends IContextBase>(context: undefined | T, parametername: string | undefined, object: string): T {
-		const newContext = { context: "" } as T;
-		if (context)
+		const newContext = { context: "", root: true } as T;
+		if (context) {
 			Object.assign(newContext, context);
+			newContext.root = false;
+		}
 
 		if (newContext.context.length)
 			newContext.context += "::";
