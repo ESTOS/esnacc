@@ -1217,7 +1217,7 @@ Module* ParseAsn1File(const char* fileName, short ImportFlag, int parseComments)
 	if (parseComments)
 	{
 		//Parse the comments in this file...
-		char* szModuleName = MakeClassName(fileName);
+		char* szModuleName = MakeModuleName(fileName);
 		parseResult = ParseFileForComments(fPtr, szModuleName, fileType);
 		free(szModuleName);
 		if (parseResult != 0)
@@ -2051,10 +2051,10 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 			{
 				if (HasROSEOperations(currMod))
 				{
-					char* baseName = strdup(currMod->className);
+					char* baseName = _strdup(currMod->moduleName);
 					{
 						char szBuffer[512] = { 0 };
-						char* szReadPos = currMod->className;
+						char* szReadPos = currMod->moduleName;
 						int iPos = 0;
 						while (*szReadPos) {
 							if (*szReadPos != '-' && *szReadPos != '_') {
@@ -2636,7 +2636,7 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 						continue;
 
 					asnoperationcomment com;
-					if (GetOperationComment_UTF8(currMod->className, vd->definedName, &com))
+					if (GetOperationComment_UTF8(currMod->moduleName, vd->definedName, &com))
 						if (com.iDeprecated)
 							continue;
 
@@ -2950,7 +2950,7 @@ void CreateNames(ModuleList* allMods) {
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
 		currMod->baseFileName = MakeBaseFileName(currMod->asn1SrcFileName);
-		currMod->className = MakeClassName(currMod->baseFileName);
+		currMod->moduleName = MakeModuleName(currMod->baseFileName);
 		currMod->ROSEClassName = MakeROSEClassName(currMod->baseFileName);
 		currMod->cHdrFileName = MakeCHdrFileName(currMod->baseFileName);
 		currMod->cSrcFileName = MakeCSrcFileName(currMod->baseFileName);

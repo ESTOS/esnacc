@@ -664,7 +664,7 @@ MakeROSESrcJAVAFileName PARAMS ((refName),
 
 
 char *
-MakeClassName PARAMS ((refName),
+MakeModuleName PARAMS ((refName),
 	const char *refName)
 {
 	char* szClassName = MakeFileNameWithoutOutputPath(Asn1TypeName2CTypeName(refName), "");

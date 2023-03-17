@@ -16,7 +16,7 @@ bool IsROSEValueDef(Module* mod, ValueDef* vd) {
 		if (!pRoseOperation)
 			return false;
 		asnoperationcomment com;
-		if (GetOperationComment_UTF8(mod->className, vd->definedName, &com))
+		if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &com))
 		{
 			if (com.iDeprecated)
 				return false;
@@ -408,7 +408,7 @@ Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod) {
 
 bool IsDeprecatedSequence(Module* mod, const char* szSequenceName) {
 	asnsequencecomment comment;
-	if (GetSequenceComment_UTF8(mod->className, szSequenceName, &comment)) {
+	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
 		if (comment.iDeprecated)
 			return true;
 	}
@@ -417,7 +417,7 @@ bool IsDeprecatedSequence(Module* mod, const char* szSequenceName) {
 
 bool IsDeprecatedOperation(Module* mod, const char* szOperationName) {
 	asnoperationcomment comment;
-	if (GetOperationComment_UTF8(mod->className, szOperationName, &comment)) {
+	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
 		if (comment.iDeprecated)
 			return true;
 	}
@@ -442,7 +442,7 @@ bool IsDeprecatedMember(Module* mod, const TypeDef* td, const char* szElement) {
 		return false;
 
 	asnmembercomment comment;
-	if (GetMemberComment_UTF8(mod->className, td->definedName, szElement, &comment)) {
+	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment)) {
 		if (comment.iDeprecated) {
 			if (type == BASICTYPE_SEQUENCE) {
 				// We need to check if the property is optional, if that is the case we can skip it

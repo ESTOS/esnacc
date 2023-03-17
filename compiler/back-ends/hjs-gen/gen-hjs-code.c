@@ -187,7 +187,7 @@ static void PrintHJSComments(FILE *src, TypeDef *td, Module *m) {
 	fprintf(src, " */\n");
 
 	asnsequencecomment sequenceComment;
-	if (GetSequenceComment_UTF8(m->className, td->definedName, &sequenceComment) && (strlen(sequenceComment.szShort) || strlen(sequenceComment.szLong)))
+	if (GetSequenceComment_UTF8(m->moduleName, td->definedName, &sequenceComment) && (strlen(sequenceComment.szShort) || strlen(sequenceComment.szLong)))
 	{
 		fprintf(src, "/**\n");
 		if (strlen(sequenceComment.szShort))
@@ -468,7 +468,7 @@ static void PrintHJSBitstringDefCode(TypeDef *td, Module *mod)
 
 	{
 		asnsequencecomment sequenceComment;
-		if (GetSequenceComment_UTF8(mod->className, td->definedName, &sequenceComment) && (strlen(sequenceComment.szShort) || strlen(sequenceComment.szLong)))
+		if (GetSequenceComment_UTF8(mod->moduleName, td->definedName, &sequenceComment) && (strlen(sequenceComment.szShort) || strlen(sequenceComment.szLong)))
 		{
 			fprintf(src, "/**\n");
 			if (strlen(sequenceComment.szShort))
@@ -488,7 +488,7 @@ static void PrintHJSBitstringDefCode(TypeDef *td, Module *mod)
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
 			asnmembercomment comment;
-			if (GetMemberComment_UTF8(mod->className, td->definedName, n->name, &comment) && strlen(comment.szShort))
+			if (GetMemberComment_UTF8(mod->moduleName, td->definedName, n->name, &comment) && strlen(comment.szShort))
 			{
 				int iMultiline = comment.iDeprecated || comment.iPrivate;
 				const char* szRemarksPrefix = iMultiline ? "\t * " : "\t/** ";
@@ -543,7 +543,7 @@ static void PrintHJSEnumDefCode(TypeDef *td, Module *mod)
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
 			asnmembercomment memberComment;
-			if (GetMemberComment_UTF8(mod->className, td->definedName, n->name, &memberComment) && (strlen(memberComment.szShort)))
+			if (GetMemberComment_UTF8(mod->moduleName, td->definedName, n->name, &memberComment) && (strlen(memberComment.szShort)))
 			{
 				int iMultiline = memberComment.iDeprecated || memberComment.iPrivate;
 				const char* szRemarksPrefix = iMultiline ? "\t * " : "\t/** ";
@@ -586,9 +586,9 @@ static void PrintHJSEnumDefCode(TypeDef *td, Module *mod)
 static void PrintHJSModuleCode(Module* mod)
 {
 	asnmodulecomment moduleComment;
-	if (GetModuleComment_UTF8(mod->className, &moduleComment) && (strlen(moduleComment.szLong) || strlen(moduleComment.szShort)))
+	if (GetModuleComment_UTF8(mod->moduleName, &moduleComment) && (strlen(moduleComment.szLong) || strlen(moduleComment.szShort)))
 	{
-		FILE* src = getHJSFilePointer(mod->className, mod);
+		FILE* src = getHJSFilePointer(mod->moduleName, mod);
 		fprintf(src, "/**\n");
 		fprintf(src, " * [ModuleName] %s\n", moduleComment.szModuleName);
 		fprintf(src, " * [Category]   %s\n", moduleComment.szCategory);
@@ -637,7 +637,7 @@ static void PrintHJSChoiceDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 		}
 
 		asnmembercomment comment;
-		if (GetMemberComment_UTF8(mod->className, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
+		if (GetMemberComment_UTF8(mod->moduleName, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
 		{
 			int iMultiline = comment.iDeprecated || comment.iPrivate;
 			const char* szRemarksPrefix = iMultiline ? "\t\t * " : "\t\t/** ";
@@ -720,7 +720,7 @@ static void PrintHJSSeqDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 		}
 
 		asnmembercomment comment;
-		if (GetMemberComment_UTF8(mod->className, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
+		if (GetMemberComment_UTF8(mod->moduleName, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
 		{
 			fprintf(src, "\n");
 			int iMultiline = comment.iDeprecated || comment.iPrivate;
@@ -780,7 +780,7 @@ static void PrintHJSSeqDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 		}
 
 		asnmembercomment comment;
-		if (GetMemberComment_UTF8(mod->className, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
+		if (GetMemberComment_UTF8(mod->moduleName, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
 		{
 			int iMultiline = comment.iDeprecated || comment.iPrivate;
 			const char* szRemarksPrefix = iMultiline ? "\t\t * " : "\t\t/** ";

@@ -89,7 +89,7 @@ const char* RemovePath(const char *refName);
 char* RemovePathNonConst(char *refName);
 char *MakeROSESrcCSFileName PROTO ((const char *moduleName));
 char *MakeROSESrcJAVAFileName PROTO ((const char *moduleName));
-char *MakeClassName PROTO ((const char *moduleName));
+char *MakeModuleName PROTO ((const char *moduleName));
 char *MakeROSEClassName PROTO ((const char *moduleName));
 char *MakeROSESwiftInterfaceFileName PROTO ((const char *moduleName));
 char* FixName(const char* szName);

@@ -62,7 +62,7 @@ void printTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 				const char* szNameSpace = GetNameSpace(referencedModule);
 				if (strstr(szAlreadyAdded, szNameSpace) == NULL) {
 					strcat_s(szAlreadyAdded, 4096, szNameSpace);
-					fprintf(src, "import * as %s from \"./%s\";\n", szNameSpace, referencedModule->className);
+					fprintf(src, "import * as %s from \"./%s\";\n", szNameSpace, referencedModule->moduleName);
 				}
 			}
 		}
@@ -77,7 +77,7 @@ void printTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 					if (strstr(szAlreadyAdded, szNameSpace) == NULL) {
 						strcat_s(szAlreadyAdded, 4096, szNameSpace);
 						impMod->moduleRef = referencedModule;
-						fprintf(src, "import * as %s_Converter from \"./%s_Converter\";\n", szNameSpace, referencedModule->className);
+						fprintf(src, "import * as %s_Converter from \"./%s_Converter\";\n", szNameSpace, referencedModule->moduleName);
 					}
 				}
 			}

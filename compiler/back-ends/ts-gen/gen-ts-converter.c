@@ -42,7 +42,7 @@ void PrintTSConverterImports(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "import { DecodeContext, ConverterError, ConverterErrorType, ConverterErrors, EncodeContext, TSConverter, INamedType } from \"./%s\";\n", "TSConverterBase");
 
 	// Our own data structure file is not in the imports
-	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->className);
+	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
 	if (strcmp(mod->modId->name, "UC-Server-Access-Protocol-Common") == 0)
 		fprintf(src, "import { EAsnOptionalParameters_Converter } from \"./TSOptionalParamConverter\";\n");
 

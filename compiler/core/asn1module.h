@@ -216,7 +216,7 @@ typedef struct Module /* SEQUENCE */
 	AsnBool					ImportedFlag; /* BOOLEAN */
 	AsnBool					ImportUsed; /* BOOLEAN */
     const char*	    		asn1SrcFileName; /* MyString */
-    MyString 				className; /* MyString */
+    MyString 				moduleName; /* MyString */
     MyString 				cHdrFileName; /* MyString */
     MyString 				cSrcFileName; /* MyString */
     MyString 				cxxHdrFileName; /* MyString */

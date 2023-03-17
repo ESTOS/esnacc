@@ -106,8 +106,8 @@ void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, ISendInvokeContextParams, IInvokeHandler, ELogSeverity, ROSEBase } from \"./TSROSEBase\";\n");
 
 	fprintf(src, "// Local imports\n");
-	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->className);
-	fprintf(src, "import * as Converter from \"./%s_Converter\";\n", mod->className);
+	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
+	fprintf(src, "import * as Converter from \"./%s_Converter\";\n", mod->moduleName);
 
 	printTSImports(src, mods, mod, true, false);
 }
@@ -215,7 +215,7 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 	if (bAsComment)
 	{
 		asnoperationcomment operationComment;
-		if (GetOperationComment_UTF8(m->className, pszFunction, &operationComment))
+		if (GetOperationComment_UTF8(m->moduleName, pszFunction, &operationComment))
 		{
 			fprintf(src, "/**\n");
 			bool bHasShort = strlen(operationComment.szShort) ? true : false;
@@ -230,7 +230,7 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 				fprintf(src, " * -\n");
 			fprintf(src, " *\n");
 			asnsequencecomment argumentComment;
-			GetSequenceComment_UTF8(m->className, pszArgument, &argumentComment);
+			GetSequenceComment_UTF8(m->moduleName, pszArgument, &argumentComment);
 			fprintf(src, " * @param argument -");
 
 			char* szComment = getNakedCommentDupped(argumentComment.szShort);
@@ -284,7 +284,7 @@ void PrintTSROSEImport(FILE* src, ModuleList* mods, Module* mod)
 
 	fprintf(src, "import { IReceiveInvokeContext, ISendInvokeContextParams, AsnInvokeProblem } from \"./TSROSEBase\";\n");
 	fprintf(src, "// Local imports\n");
-	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->className);
+	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
 
 	printTSImports(src, mods, mod, false, false);
 
@@ -633,7 +633,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 			fprintf(src, "\n\t// [%s]\n", __FUNCTION__);
 			{
 				asnoperationcomment operationComment;
-				if (GetOperationComment_UTF8(m->className, pszFunction, &operationComment))
+				if (GetOperationComment_UTF8(m->moduleName, pszFunction, &operationComment))
 				{
 					fprintf(src, "\t/**\n");
 					bool bHasShort = strlen(operationComment.szShort) ? true : false;
@@ -757,7 +757,7 @@ void PrintTSROSEInterfaceCode(FILE* src, ModuleList* mods, Module* m)
 void PrintTSROSEModuleComment(FILE* src, Module* m)
 {
 	fprintf(src, "\n// [%s]\n", __FUNCTION__);
-	printModuleComment(src, m->className);
+	printModuleComment(src, m->moduleName);
 }
 
 bool hasEvents(Module* m) {

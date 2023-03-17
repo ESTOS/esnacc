@@ -831,7 +831,7 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 		if (pszResult && !bEvents)
 		{
 			asnoperationcomment com;
-			if (GetOperationComment_ASCII(m->className, vd->definedName, &com))
+			if (GetOperationComment_ASCII(m->moduleName, vd->definedName, &com))
 			{
 				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.iDeprecated ? "deprecated " : "", com.szShort);
 				PrintLongComment(hdr, "\t", com.szLong);
@@ -905,7 +905,7 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 		{
 			//there is no result -> it is an Event
 			asnoperationcomment com;
-			if (GetOperationComment_ASCII(m->className, vd->definedName, &com))
+			if (GetOperationComment_ASCII(m->moduleName, vd->definedName, &com))
 			{
 				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.iDeprecated ? "deprecated " : "", com.szShort);
 				PrintLongComment(hdr, "\t", com.szLong);
