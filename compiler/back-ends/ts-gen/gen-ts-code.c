@@ -247,6 +247,7 @@ void PrintTSEnumDefCode(FILE* src, ModuleList* mods, Module* m,
 		free(szConverted);
 	}
 	if (HasNamedElmts(td->type) != 0) {
+		bool bSomeThingAdded = false;
 		bool bFirst = true;
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
@@ -257,10 +258,12 @@ void PrintTSEnumDefCode(FILE* src, ModuleList* mods, Module* m,
 			printMemberComment(src, m, td, n->name);
 			char* szConverted = FixName(n->name);
 			fprintf(src, "\t%s = %d", szConverted, n->value);
+			bSomeThingAdded = true;
 			free(szConverted);
 			bFirst = false;
 		}
-		fprintf(src, "\n");
+		if (bSomeThingAdded)
+			fprintf(src, "\n");
 	}
 
 	/* close class definition */

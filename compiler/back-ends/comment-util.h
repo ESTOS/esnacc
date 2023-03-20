@@ -6,6 +6,7 @@
 typedef struct TypeDef TypeDef;
 typedef struct Module Module;
 
+const char* getDeprecated(const char* szDeprecated);
 void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const char* szElement);
 void printSequenceComment(FILE* src, const Module* m, const TypeDef* td);
 void printModuleComment(FILE* src, const char* szModuleName);

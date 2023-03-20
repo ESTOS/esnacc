@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../../core/asn_comments.h"
+#include "../comment-util.h"
 
 // implementation handled inside the gen-ts-code.c
 extern char* str_replace(const char* string, const char* substr, const char* replacement);
@@ -476,7 +477,7 @@ static void PrintHJSBitstringDefCode(TypeDef *td, Module *mod)
 			if (strlen(sequenceComment.szLong))
 				printCommentJS(src, " * @remarks ", sequenceComment.szLong, "\n");
 			if (sequenceComment.lDeprecated)
-				fprintf(src, " * @deprecated *\n");
+				fprintf(src, " * @deprecated %s\n", getDeprecated(sequenceComment.szDeprecated));
 			if (sequenceComment.iPrivate)
 				fprintf(src, " * @private\n");
 			fprintf(src, " */\n");
@@ -597,7 +598,7 @@ static void PrintHJSModuleCode(Module* mod)
 		if (strlen(moduleComment.szLong))
 			printCommentJS(src, " * @remarks", moduleComment.szLong, "\n");
 		if (moduleComment.lDeprecated)
-			fprintf(src, " * @deprecated *\n");
+			fprintf(src, " * @deprecated %s\n", getDeprecated(moduleComment.szDeprecated));
 		if (moduleComment.iPrivate)
 			fprintf(src, " * @private\n");
 		fprintf(src, " */\n");

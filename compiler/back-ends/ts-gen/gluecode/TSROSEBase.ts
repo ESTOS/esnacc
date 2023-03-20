@@ -548,7 +548,7 @@ export function asn1Decode<T>(argument: Uint8Array | asn1ts.Sequence | string | 
  * @param encodeContext - the context from the transport how to decode an object
  * @returns the encoded object or undefined on error
  */
-export function asn1Encode(encoding: EASN1TransportEncoding | undefined, argument: unknown, converter: IConverter, errors: ConverterErrors, encodeContext: EncodeContext): asn1ts.Sequence | Object | undefined {
+export function asn1Encode(encoding: EASN1TransportEncoding | undefined, argument: unknown, converter: IConverter, errors: ConverterErrors, encodeContext: EncodeContext): asn1ts.Sequence | object | undefined {
 	switch (encoding) {
 		case EASN1TransportEncoding.JSON:
 			return converter.toJSON(argument, errors, encodeContext);

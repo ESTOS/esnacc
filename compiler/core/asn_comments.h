@@ -47,6 +47,7 @@ extern "C" {
 		const char* szLinkedType;		//Link to a related Type for example the enum used in the integer
 		int iPrivate;
 		long lDeprecated;
+		const char* szDeprecated;
 	} asnmembercomment;
 
 	//Parse for Comments

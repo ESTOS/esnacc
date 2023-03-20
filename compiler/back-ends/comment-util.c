@@ -6,6 +6,13 @@
 #include "str-util.h"
 #include "comment-util.h"
 
+const char* getDeprecated(const char* szDeprecated) {
+	if (szDeprecated && strlen(szDeprecated))
+		return szDeprecated;
+	else
+		return "*";
+}
+
 void printEscaped(FILE* src, const char* szData) {
 	const char* szPos = szData;
 	const char* szLast = NULL;
@@ -41,10 +48,10 @@ void printEscaped(FILE* src, const char* szData) {
 	}
 }
 
-void printComment(FILE* src, const char* szPrefix, const char* szString, const char* szSuffix)
+bool printComment(FILE* src, const char* szPrefix, const char* szString, const char* szSuffix)
 {
 	if (!strlen(szString))
-		return;
+		return false;
 
 	fprintf(src, "%s", szPrefix);
 
@@ -115,6 +122,8 @@ void printComment(FILE* src, const char* szPrefix, const char* szString, const c
 	}
 
 	fprintf(src, "%s", szSuffix);
+
+	return true;
 }
 
 void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const char* szElement) {
@@ -139,14 +148,16 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 			if (iMultiline > 1)
 				fprintf(src, "\t/**\n");
 
-			printComment(src, szRemarksPrefix, comment.szShort, suffix);
+			bool bAdded = printComment(src, szRemarksPrefix, comment.szShort, suffix);
 
 			if (comment.lDeprecated || comment.iPrivate)
 			{
+				if(bAdded)
+					fprintf(src, "\n");
 				if (comment.lDeprecated)
-					fprintf(src, "\n%s @deprecated - this property is deprecated%s", prefix, suffix);
+					fprintf(src, "%s @deprecated %s%s", prefix, getDeprecated(comment.szDeprecated), suffix);
 				if (comment.iPrivate)
-					fprintf(src, "\n%s @private%s", prefix, suffix);
+					fprintf(src, "%s @private%s", prefix, suffix);
 			}
 
 			if (iMultiline > 1)
@@ -174,12 +185,8 @@ void printModuleComment(FILE* src, const char* szModuleName) {
 			if (moduleComment.lDeprecated || moduleComment.iPrivate) {
 				if (bHasShort || bHasLong)
 					fprintf(src, " *\n");
-				if (moduleComment.lDeprecated) {
-					if (strlen(moduleComment.szDeprecated))
-						fprintf(src, " * @deprecated - %s\n", moduleComment.szDeprecated);
-					else
-						fprintf(src, " * @deprecated\n");
-				}
+				if (moduleComment.lDeprecated)
+					fprintf(src, " * @deprecated %s\n", getDeprecated(moduleComment.szDeprecated));
 				if (moduleComment.iPrivate)
 					fprintf(src, "* @private\n");
 			}
@@ -206,14 +213,10 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td) {
 			if (sequenceComment.lDeprecated || sequenceComment.iPrivate) {
 				if (bHasShort || bHasLong)
 					fprintf(src, " *\n");
-				if (sequenceComment.lDeprecated) {
-					if (strlen(sequenceComment.szDeprecated))
-						fprintf(src, " * @deprecated - %s\n", sequenceComment.szDeprecated);
-					else
-						fprintf(src, " * @deprecated\n");
-				}
+				if (sequenceComment.lDeprecated)
+					fprintf(src, " * @deprecated %s\n", getDeprecated(sequenceComment.szDeprecated));
 				if (sequenceComment.iPrivate)
-					fprintf(src, "* @private\n");
+					fprintf(src, " * @private\n");
 			}
 			fprintf(src, " */\n");
 		}
