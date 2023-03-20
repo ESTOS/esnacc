@@ -123,9 +123,9 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 
 	asnmembercomment comment;
 	if (GetMemberComment_UTF8(m->moduleName, td->definedName, szElement, &comment)) {
-		if (strlen(comment.szShort) || comment.iDeprecated || comment.iPrivate) {
+		if (strlen(comment.szShort) || comment.lDeprecated || comment.iPrivate) {
 			int iMultiline = 0;
-			if (comment.iDeprecated)
+			if (comment.lDeprecated)
 				iMultiline++;
 			if (comment.iPrivate)
 				iMultiline++;
@@ -141,9 +141,9 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 
 			printComment(src, szRemarksPrefix, comment.szShort, suffix);
 
-			if (comment.iDeprecated || comment.iPrivate)
+			if (comment.lDeprecated || comment.iPrivate)
 			{
-				if (comment.iDeprecated)
+				if (comment.lDeprecated)
 					fprintf(src, "\n%s @deprecated - this property is deprecated%s", prefix, suffix);
 				if (comment.iPrivate)
 					fprintf(src, "\n%s @private%s", prefix, suffix);
@@ -165,16 +165,16 @@ void printModuleComment(FILE* src, const char* szModuleName) {
 	{
 		bool bHasShort = strlen(moduleComment.szShort) ? true : false;
 		bool bHasLong = strlen(moduleComment.szLong) ? true : false;
-		if (bHasShort || bHasLong || moduleComment.iDeprecated || moduleComment.iPrivate) {
+		if (bHasShort || bHasLong || moduleComment.lDeprecated || moduleComment.iPrivate) {
 			fprintf(src, "/**\n");
 			if (bHasShort)
 				printComment(src, " *", moduleComment.szShort, "\n");
 			if (bHasLong)
 				printComment(src, " *", moduleComment.szLong, "\n");
-			if (moduleComment.iDeprecated || moduleComment.iPrivate) {
+			if (moduleComment.lDeprecated || moduleComment.iPrivate) {
 				if (bHasShort || bHasLong)
 					fprintf(src, " *\n");
-				if (moduleComment.iDeprecated) {
+				if (moduleComment.lDeprecated) {
 					if (strlen(moduleComment.szDeprecated))
 						fprintf(src, " * @deprecated - %s\n", moduleComment.szDeprecated);
 					else
@@ -197,16 +197,16 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td) {
 	{
 		bool bHasShort = strlen(sequenceComment.szShort) ? true : false;
 		bool bHasLong = strlen(sequenceComment.szLong) ? true : false;
-		if (bHasShort || bHasLong || sequenceComment.iDeprecated || sequenceComment.iPrivate) {
+		if (bHasShort || bHasLong || sequenceComment.lDeprecated || sequenceComment.iPrivate) {
 			fprintf(src, "/**\n");
 			if (bHasShort)
 				printComment(src, " *", sequenceComment.szShort, "\n");
 			if (bHasLong)
 				printComment(src, " *", sequenceComment.szLong, "\n");
-			if (sequenceComment.iDeprecated || sequenceComment.iPrivate) {
+			if (sequenceComment.lDeprecated || sequenceComment.iPrivate) {
 				if (bHasShort || bHasLong)
 					fprintf(src, " *\n");
-				if (sequenceComment.iDeprecated) {
+				if (sequenceComment.lDeprecated) {
 					if (strlen(sequenceComment.szDeprecated))
 						fprintf(src, " * @deprecated - %s\n", sequenceComment.szDeprecated);
 					else

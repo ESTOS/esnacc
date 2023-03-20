@@ -194,7 +194,7 @@ static void PrintHJSComments(FILE *src, TypeDef *td, Module *m) {
 			printCommentJS(src, " * ", sequenceComment.szShort, "\n");
 		if (strlen(sequenceComment.szLong))
 			printCommentJS(src, " * @remarks ", sequenceComment.szLong, "\n");
-		if (sequenceComment.iDeprecated)
+		if (sequenceComment.lDeprecated)
 			fprintf(src, " * @deprecated *\n");
 		if (sequenceComment.iPrivate)
 			fprintf(src, " * @private\n");
@@ -350,7 +350,7 @@ static void PrintHJSDefaultValue(FILE *hdr, TypeDef *td, Type *t)
 		case BASICTYPE_LOCALTYPEREF:
 			if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
 			{
-				fprintf(hdr, ", default: ''"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String �bermittelt.
+				fprintf(hdr, ", default: ''"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String übermittelt.
 			}
 			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0)
 			{
@@ -426,7 +426,7 @@ static void PrintHJSType(FILE *hdr, TypeDef *td, Type *t)
 		case BASICTYPE_LOCALTYPEREF:
 			if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
 			{
-				fprintf(hdr, "string"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String �bermittelt.
+				fprintf(hdr, "string"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String übermittelt.
 			}
 			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0)
 			{
@@ -475,7 +475,7 @@ static void PrintHJSBitstringDefCode(TypeDef *td, Module *mod)
 				printCommentJS(src, " * @remarks ", sequenceComment.szShort, "\n");
 			if (strlen(sequenceComment.szLong))
 				printCommentJS(src, " * @remarks ", sequenceComment.szLong, "\n");
-			if (sequenceComment.iDeprecated)
+			if (sequenceComment.lDeprecated)
 				fprintf(src, " * @deprecated *\n");
 			if (sequenceComment.iPrivate)
 				fprintf(src, " * @private\n");
@@ -490,7 +490,7 @@ static void PrintHJSBitstringDefCode(TypeDef *td, Module *mod)
 			asnmembercomment comment;
 			if (GetMemberComment_UTF8(mod->moduleName, td->definedName, n->name, &comment) && strlen(comment.szShort))
 			{
-				int iMultiline = comment.iDeprecated || comment.iPrivate;
+				int iMultiline = comment.lDeprecated || comment.iPrivate;
 				const char* szRemarksPrefix = iMultiline ? "\t * " : "\t/** ";
 				const char* prefix = iMultiline ? "\t * " : "\t/** ";
 				const char* suffix = iMultiline ? "\n" : " */\n";
@@ -499,7 +499,7 @@ static void PrintHJSBitstringDefCode(TypeDef *td, Module *mod)
 
 				printCommentJS(src, szRemarksPrefix, comment.szShort, suffix);
 
-				if (comment.iDeprecated)
+				if (comment.lDeprecated)
 					fprintf(src, "%s@deprecated *%s", prefix, suffix);
 
 				if (comment.iPrivate)
@@ -545,7 +545,7 @@ static void PrintHJSEnumDefCode(TypeDef *td, Module *mod)
 			asnmembercomment memberComment;
 			if (GetMemberComment_UTF8(mod->moduleName, td->definedName, n->name, &memberComment) && (strlen(memberComment.szShort)))
 			{
-				int iMultiline = memberComment.iDeprecated || memberComment.iPrivate;
+				int iMultiline = memberComment.lDeprecated || memberComment.iPrivate;
 				const char* szRemarksPrefix = iMultiline ? "\t * " : "\t/** ";
 				const char* prefix = iMultiline ? "\t * " : "\t/** ";
 				const char* suffix = iMultiline ? "\n" : " */\n";
@@ -554,7 +554,7 @@ static void PrintHJSEnumDefCode(TypeDef *td, Module *mod)
 
 				printCommentJS(src, szRemarksPrefix, memberComment.szShort, suffix);
 
-				if (memberComment.iDeprecated)
+				if (memberComment.lDeprecated)
 					fprintf(src, "%s@deprecated *%s", prefix, suffix);
 
 				if (memberComment.iPrivate)
@@ -596,7 +596,7 @@ static void PrintHJSModuleCode(Module* mod)
 			printCommentJS(src, " * ", moduleComment.szShort, "\n");
 		if (strlen(moduleComment.szLong))
 			printCommentJS(src, " * @remarks", moduleComment.szLong, "\n");
-		if (moduleComment.iDeprecated)
+		if (moduleComment.lDeprecated)
 			fprintf(src, " * @deprecated *\n");
 		if (moduleComment.iPrivate)
 			fprintf(src, " * @private\n");
@@ -639,7 +639,7 @@ static void PrintHJSChoiceDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 		asnmembercomment comment;
 		if (GetMemberComment_UTF8(mod->moduleName, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
 		{
-			int iMultiline = comment.iDeprecated || comment.iPrivate;
+			int iMultiline = comment.lDeprecated || comment.iPrivate;
 			const char* szRemarksPrefix = iMultiline ? "\t\t * " : "\t\t/** ";
 			const char* prefix = iMultiline ? "\t\t * " : "\t\t/** ";
 			const char* suffix = iMultiline ? "\n" : " */\n";
@@ -648,7 +648,7 @@ static void PrintHJSChoiceDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 
 			printCommentJS(src, szRemarksPrefix, comment.szShort, suffix);
 
-			if (comment.iDeprecated)
+			if (comment.lDeprecated)
 				fprintf(src, "%s@deprecated *%s", prefix, suffix);
 
 			if (comment.iPrivate)
@@ -723,7 +723,7 @@ static void PrintHJSSeqDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 		if (GetMemberComment_UTF8(mod->moduleName, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
 		{
 			fprintf(src, "\n");
-			int iMultiline = comment.iDeprecated || comment.iPrivate;
+			int iMultiline = comment.lDeprecated || comment.iPrivate;
 			const char* szRemarksPrefix = iMultiline ? "\t\t * @remarks " : "\t\t/** @remarks ";
 			const char* prefix = iMultiline ? "\t\t * " : "\t\t/** ";
 			const char* suffix = iMultiline ? "\n" : " */\n";
@@ -732,7 +732,7 @@ static void PrintHJSSeqDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 
 			printCommentJS(src, szRemarksPrefix, comment.szShort, suffix);
 
-			if (comment.iDeprecated)
+			if (comment.lDeprecated)
 				fprintf(src, "%s@deprecated *%s", prefix, suffix);
 
 			if (comment.iPrivate)
@@ -782,7 +782,7 @@ static void PrintHJSSeqDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 		asnmembercomment comment;
 		if (GetMemberComment_UTF8(mod->moduleName, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
 		{
-			int iMultiline = comment.iDeprecated || comment.iPrivate;
+			int iMultiline = comment.lDeprecated || comment.iPrivate;
 			const char* szRemarksPrefix = iMultiline ? "\t\t * " : "\t\t/** ";
 			const char* prefix = iMultiline ? "\t\t * " : "\t\t/** ";
 			const char* suffix = iMultiline ? "\n" : " */\n";
@@ -791,7 +791,7 @@ static void PrintHJSSeqDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 
 			printCommentJS(src, szRemarksPrefix, comment.szShort, suffix);
 
-			if (comment.iDeprecated)
+			if (comment.lDeprecated)
 				fprintf(src, "%s@deprecated *%s", prefix, suffix);
 
 			if (comment.iPrivate)

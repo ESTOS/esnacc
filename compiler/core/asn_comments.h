@@ -15,7 +15,7 @@ extern "C" {
 		const char* szShort;
 		const char* szLong;
 		int iPrivate;
-		int iDeprecated;
+		long lDeprecated;
 		const char* szDeprecated;
 	} asnmodulecomment;
 
@@ -26,7 +26,7 @@ extern "C" {
 		const char* szShort;
 		const char* szLong;
 		int iPrivate;
-		int iDeprecated;
+		long lDeprecated;
 		const char* szDeprecated;
 	} asnoperationcomment;
 
@@ -37,7 +37,7 @@ extern "C" {
 		const char* szShort;
 		const char* szLong;
 		int iPrivate;
-		int iDeprecated;
+		long lDeprecated;
 		const char* szDeprecated;
 	} asnsequencecomment;
 
@@ -46,7 +46,7 @@ extern "C" {
 		const char* szShort;
 		const char* szLinkedType;		//Link to a related Type for example the enum used in the integer
 		int iPrivate;
-		int iDeprecated;
+		long lDeprecated;
 	} asnmembercomment;
 
 	//Parse for Comments

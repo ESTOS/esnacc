@@ -833,7 +833,7 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 			asnoperationcomment com;
 			if (GetOperationComment_ASCII(m->moduleName, vd->definedName, &com))
 			{
-				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.iDeprecated ? "deprecated " : "", com.szShort);
+				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.lDeprecated ? "deprecated " : "", com.szShort);
 				PrintLongComment(hdr, "\t", com.szLong);
 			}
 			//there is a result -> it is a Funktion
@@ -907,7 +907,7 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 			asnoperationcomment com;
 			if (GetOperationComment_ASCII(m->moduleName, vd->definedName, &com))
 			{
-				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.iDeprecated ? "deprecated " : "", com.szShort);
+				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.lDeprecated ? "deprecated " : "", com.szShort);
 				PrintLongComment(hdr, "\t", com.szLong);
 			}
 
@@ -2701,7 +2701,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE *src, FILE *hdr, CxxRules *r, TypeDef 
 			{
 				if (!e->type->extensionAddition)
 				{
-                    fprintf(src, "  if (elmtLen0 == 0)\n"); // Wenn die L�nge 0 ist, gibts nix zum Auslesen -> fertig
+                    fprintf(src, "  if (elmtLen0 == 0)\n"); // Wenn die Länge 0 ist, gibts nix zum Auslesen -> fertig
                     fprintf(src, "    return;\n");
 					fprintf(src, "  tag1 = BDecTag (_b, seqBytesDecoded);\n\n");
 				}
