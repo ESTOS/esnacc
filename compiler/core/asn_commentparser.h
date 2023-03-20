@@ -7,7 +7,26 @@
 #include <vector>
 #include "filetype.h"
 
-class EStructMemberComment
+std::string escapeJsonString(const std::string& input);
+
+class EDeprecated {
+public:
+	void handleDeprecated(const std::string& strParsedLine);
+	// Type is deprecated, the value shows the time in unix time when the property has been flagged deprecated
+	
+	// @deprecated [optional] 1.1.2023 [optional] comment
+	// e.g.
+	// @deprecated 1.1.2023 Superseeded by method xyz
+
+	// If no time has been specified the value is set to 1
+	// The value is compared with the global gNoDeprecatedSymbols to validate whether the symbol shall get excluded or not for the output
+	long lDeprecated = 0;
+	// Deprecated comment - text that was written behing the @deprecated flag
+	std::string strDeprecated_UTF8;
+	std::string strDeprecated_ASCII;
+};
+
+class EStructMemberComment : public EDeprecated
 {
 public:
 	// Short Description - must be stored json encoded
@@ -18,34 +37,27 @@ public:
 	std::string strLinkedType_ASCII;
 	// Type is private
 	int iPrivate = 0;
-	// Type is deprecated
-	int iDeprecated = 0;
 	// Interal flag that stores whether the UTF8 value has already been converted to ascii (is done on access)
 	bool m_bConvertedToAscii = false;
 };
 
-class ETypeComment
+class ETypeComment : public EDeprecated
 {
 public:
-	//Name of the strCategory
+	// Name of the strCategory
 	std::string strCategory_UTF8;
 	std::string strCategory_ASCII;
-	//Name of the Type (name of SEQUENCE or name of OPERATION)
+	// Name of the Type (name of SEQUENCE or name of OPERATION)
 	std::string strTypeName_UTF8;
 	std::string strTypeName_ASCII;
-	//Short Description - must be stored json encoded
+	// Short Description - must be stored json encoded
 	std::string strShort_UTF8;
 	std::string strShort_ASCII;
-	//Long Description - must be stored json encoded
+	// Long Description - must be stored json encoded
 	std::string strLong_UTF8;
 	std::string strLong_ASCII;
-	//Type is private
+	// Type is private
 	int iPrivate = 0;
-	//Type is deprecated
-	int iDeprecated = 0;
-	//Deprecated comment - text that was written behing the @deprecated flag
-	std::string strDeprecated_UTF8;
-	std::string strDeprecated_ASCII;
 	// Interal flag that stores whether the UTF8 value has already been converted to ascii (is done on access)
 	bool m_bConvertedToAscii = false;
 };

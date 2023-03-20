@@ -4,6 +4,12 @@
 #include <assert.h>
 #include <string.h>
 
+bool IsDeprecated(const long lDeprecatedValue)  {
+	if (!gNoDeprecatedSymbols || !lDeprecatedValue)
+		return false;
+	return gNoDeprecatedSymbols > lDeprecatedValue;
+}
+
 bool IsROSEValueDef(Module* mod, ValueDef* vd) {
 	if (vd->value->type == NULL)
 		return false;
@@ -18,7 +24,7 @@ bool IsROSEValueDef(Module* mod, ValueDef* vd) {
 		asnoperationcomment com;
 		if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &com))
 		{
-			if (com.iDeprecated)
+			if (IsDeprecated(com.lDeprecated))
 				return false;
 		}
 	}
@@ -409,7 +415,7 @@ Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod) {
 bool IsDeprecatedSequence(Module* mod, const char* szSequenceName) {
 	asnsequencecomment comment;
 	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
-		if (comment.iDeprecated)
+		if (IsDeprecated(comment.lDeprecated))
 			return true;
 	}
 	return false;
@@ -418,7 +424,7 @@ bool IsDeprecatedSequence(Module* mod, const char* szSequenceName) {
 bool IsDeprecatedOperation(Module* mod, const char* szOperationName) {
 	asnoperationcomment comment;
 	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
-		if (comment.iDeprecated)
+		if (IsDeprecated(comment.lDeprecated))
 			return true;
 	}
 	return false;
@@ -443,7 +449,7 @@ bool IsDeprecatedMember(Module* mod, const TypeDef* td, const char* szElement) {
 
 	asnmembercomment comment;
 	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment)) {
-		if (comment.iDeprecated) {
+		if (IsDeprecated(comment.lDeprecated)) {
 			if (type == BASICTYPE_SEQUENCE) {
 				// We need to check if the property is optional, if that is the case we can skip it
 				NamedType* e;

@@ -644,9 +644,9 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 						printComment(src, "\t *", operationComment.szLong, "\n");
 					if (bHasShort || bHasLong)
 						fprintf(src, "\t *\n");
-					if (operationComment.iDeprecated || operationComment.iPrivate)
+					if (operationComment.lDeprecated || operationComment.iPrivate)
 					{
-						if (operationComment.iDeprecated)
+						if (operationComment.lDeprecated)
 							fprintf(src, "\t * @deprecated *\n");
 						if (operationComment.iPrivate)
 							fprintf(src, "\t * @private\n");
@@ -683,7 +683,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 				fprintf(src, "invokeContext");
 
 				if (pszError && strcmp(pszError, "AsnRequestError") != 0) {
-					// Custom error, also m�ssen wir den Converter bekannt machen
+					// Custom error, also müssen wir den Converter bekannt machen
 					if (errorMod == m)
 						fprintf(src, ", Converter.%s_Converter", pszError);
 					else

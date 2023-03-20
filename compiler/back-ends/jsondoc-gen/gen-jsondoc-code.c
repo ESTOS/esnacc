@@ -137,7 +137,7 @@ static void PrintJsonDocType(FILE *hdr, ModuleList *mods, Module *m, TypeDef *td
 		case BASICTYPE_LOCALTYPEREF:
 			if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
 			{
-				fprintf(hdr, "string"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im TS als String �bermittelt.
+				fprintf(hdr, "string"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im TS als String übermittelt.
 			}
 			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0)
 			{
@@ -173,12 +173,14 @@ static void PrintJsonDocBitstringDefCode(FILE *src, ModuleList *mods, Module *m,
 			//fprintf(src, "\n");
 			fprintf(src, "\t\t\t\t{\n");
 			fprintf(src, "\t\t\t\t\t\"name\" : \"%s\",\n", n->name);
-			//fprintf(src, "\t\t\t\t\t\"typeName\" : \"number\",\n"); bitstring enth�lt nur namen, text und zahl(=value)
+			//fprintf(src, "\t\t\t\t\t\"typeName\" : \"number\",\n"); bitstring enthält nur namen, text und zahl(=value)
 			asnmembercomment comment;
 			if (GetMemberComment_UTF8(m->moduleName, td->definedName, n->name, &comment))
 			{
 				fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
-				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.iDeprecated);
+				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.lDeprecated ? 1 : 0);
+				if (comment.lDeprecated > 1)
+					fprintf(src, "\t\t\"deprecated_starting\": %ld\n", comment.lDeprecated);
 				fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
 			}
 
@@ -214,7 +216,9 @@ static void PrintJsonDocEnumDefCode(FILE *src, ModuleList *mods, Module *m,
 			if (GetMemberComment_UTF8(m->moduleName, td->definedName, n->name, &comment))
 			{
 				fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
-				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.iDeprecated);
+				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.lDeprecated ? 1 : 0);
+				if (comment.lDeprecated > 1)
+					fprintf(src, "\t\t\"deprecated_starting\": %ld\n", comment.lDeprecated);
 				fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
 			}
 
@@ -249,7 +253,9 @@ static void PrintJsonDocChoiceDefCode(FILE *src, ModuleList *mods, Module *m, Ty
 		if (GetMemberComment_UTF8(m->moduleName, td->definedName, e->fieldName, &comment))
 		{
 			fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
-			fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.iDeprecated);
+			fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.lDeprecated ? 1 : 0);
+			if (comment.lDeprecated > 1)
+				fprintf(src, "\t\t\"deprecated_starting\": %ld\n", comment.lDeprecated);
 			fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
 		}
 
@@ -296,7 +302,9 @@ static void PrintJsonDocSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeD
 				fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
 				if (comment.szLinkedType[0])
 					fprintf(src, "\t\t\t\t\t\"linkedType\" : \"%s\",\n", comment.szLinkedType);
-				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.iDeprecated);
+				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.lDeprecated ? 1 : 0);
+				if (comment.lDeprecated > 1)
+					fprintf(src, "\t\t\"deprecated_starting\": %ld\n", comment.lDeprecated);
 				fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
 			}
 			else
@@ -399,7 +407,9 @@ static void PrintJsonDocTypeDefCode(FILE *src, ModuleList *mods, Module *m, Type
 		fprintf(src, "\t\t\t\"short\" : \"%s\",\n", comment.szShort);
 		fprintf(src, "\t\t\t\"long\" : \"%s\",\n", comment.szLong);
 		fprintf(src, "\t\t\t\"private\" : %d,\n", comment.iPrivate);
-		fprintf(src, "\t\t\t\"deprecated\" : \"%d\",\n", comment.iDeprecated);
+		fprintf(src, "\t\t\t\"deprecated\" : \"%d\",\n", comment.lDeprecated ? 1 : 0);
+		if (comment.lDeprecated > 1)
+			fprintf(src, "\t\t\"deprecated_starting\": %ld\n", comment.lDeprecated);
 	}
 
 
@@ -591,9 +601,10 @@ static int PrintJsonDocOperation(FILE *src, Module* mod, ValueDef *vd)
 			if (comment.szLong)
 				fprintf(src, "\t\t\t\"long\" : \"%s\",\n", comment.szLong);
 			fprintf(src, "\t\t\t\"private\" : %d,\n", comment.iPrivate);
-			fprintf(src, "\t\t\t\"deprecated\" : %d,\n", comment.iDeprecated);
+			fprintf(src, "\t\t\t\"deprecated\" : %d,\n", comment.lDeprecated ? 1 : 0);
+			if (comment.lDeprecated > 1)
+				fprintf(src, "\t\t\"deprecated_starting\": %ld\n", comment.lDeprecated);
 		}
-
 
 		fprintf(src, "\t\t\t\"arg\" : \"%s\"", pszArgument);
 		if (pszResult)
@@ -668,7 +679,9 @@ void PrintJsonDocModule(FILE *src, ModuleList *mods, Module *m)
 		fprintf(src, "\t\t\"long\": \"%s\",\n", comment.szLong);
 		fprintf(src, "\t\t\"category\" : \"%s\",\n", comment.szCategory);
 		fprintf(src, "\t\t\"private\": %d,\n", comment.iPrivate);
-		fprintf(src, "\t\t\"deprecated\": %d\n", comment.iDeprecated);
+		fprintf(src, "\t\t\"deprecated\": %d\n", comment.lDeprecated ? 1 : 0);
+		if (comment.lDeprecated > 1)
+			fprintf(src, "\t\t\"deprecated_starting\": %ld\n", comment.lDeprecated);
 	}
 	else
 		fprintf(src, "\n");

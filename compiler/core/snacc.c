@@ -199,12 +199,18 @@ int isInWithSyntax = 0;				/* Deepak: 26/Mar/2003 */
 
 //ste 9.9.2016 - allow private declared symbols to be suppressed
 int gPrivateSymbols = 1;
-//jan 10.1.2023 - if 1 deprecated symbols are removed from the generated code
+
+//jan 10.1.2023 - if set deprecated symbols are removed from the generated code
+// The value contains a timestamp, either specified by the command line or set to the current day if no timestamp has been specified on the command line
+// When we parse the @deprecated flag we also search for a timestamp, if no timestamp is found the value of the deprecated timesamp is unix time 1
+// Any deprecated flag lower than the gNoDeprecatedSymbols will get removed in case gNoDeprecatedSymbols is set
 int gNoDeprecatedSymbols = 0;
+
 //jan 11.1.2023 - Default level for validating the content of the asn1 files
 // 1 - Validates that operationIDs are not used twice
 // 2 - Validates that the result is an AsnRequestError and argument, result, and error are SEQUENCES and thus extensible (@deprecated modules are excluded from that check)
 int gValidationLevel = 2;
+
 // Write comments to the target files on true (parsing is always enabled)
 int gWriteComments = 0;
 
@@ -262,7 +268,8 @@ void Usage PARAMS ((prgName, fp),
 	fprintf (fp, "  -idl generate CORBA IDL\n");
 #endif
 	fprintf(fp, "  -noprivate   do not generate code that is marked as private\n");
-	fprintf(fp, "  -nodeprecated   do not generate code that is marked as deprecated\n");
+	fprintf(fp, "  -nodeprecated   do not generate code that is marked as deprecated (any date)\n");
+	fprintf(fp, "  -nodeprecated:[Day.Month.Year]  do not generate code that has been marked deprecated prior to this date\n");
 	fprintf(fp, "  -ValidationLevel:[0-2]   validate the asn1 against predefined rules\n");
 	fprintf(fp, "   0 no validation\n");
 	fprintf(fp, "   1 Validates that operationIDs are not used twice\n");
@@ -347,7 +354,7 @@ int main PARAMS ((argc, argv),
 	int			currArg;
 	int			printModuleFlag = FALSE;  /* default: Don't print */
 	int			genTypeTbls = 0; /* default: Don't gen tbls */
-	char		*tblFileName=NULL;
+	const char	*tblFileName=NULL;
 	int         encRulesSet = FALSE;
 	int			genTypeCode = FALSE;
 	int			genEncodeCode = FALSE;
@@ -379,8 +386,8 @@ int main PARAMS ((argc, argv),
 	int			novolatilefuncs = FALSE;
 	int			genTSRoseStubs = FALSE;
 	int			genROSEDecoders = FALSE;   /* ste -- 13.04.054 --added */
-	char*		dirName;					/* REN -- 6/2/03 -- added */
-	char*		errFileName;				/* REN -- 7/7/03 -- added */
+	const char*	dirName;					/* REN -- 6/2/03 -- added */
+	const char*	errFileName;				/* REN -- 7/7/03 -- added */
 
 	if (argc <= 1)
 	{
@@ -394,9 +401,10 @@ int main PARAMS ((argc, argv),
 	numSrcFiles = 0;
 	for (currArg = 1; (currArg < argc); )
 	{
-		if ((argv[currArg][0] == '-') && (argv[currArg][1] != '\0'))
+		const char* argument = argv[currArg];
+		if ((argument[0] == '-') && (argument[1] != '\0'))
 		{
-			switch (argv[currArg][1])
+			switch (argument[1])
 			{
 	  		case 'h':
 				Usage (argv[0], stdout);
@@ -410,9 +418,9 @@ int main PARAMS ((argc, argv),
 				break;
 
 			case 'a': /* AnyID start value */
-				if (argv[currArg][2] != '\0')  /* no space after -a */
+				if (argument[2] != '\0')  /* no space after -a */
 				{
-					anyEnumValG = atoi (&argv[currArg][2]);
+					anyEnumValG = atoi (&argument[2]);
 					currArg++;
 				}
 				else
@@ -423,8 +431,8 @@ int main PARAMS ((argc, argv),
 				break;
 
 			case 'I':
-				if (argv[currArg][2] != '\0')
-					dirName = &argv[currArg][2];
+				if (argument[2] != '\0')
+					dirName = &argument[2];
 				else
 					dirName = argv[++currArg];
 				if(!findFiles(dirName, true))
@@ -442,7 +450,7 @@ int main PARAMS ((argc, argv),
 				break;
 
 			case 'R':
-				if(strcmp(argv[currArg],"-RCS")==0)
+				if(strcmp(argument,"-RCS")==0)
 				{
 					/* asn --added */
 					genCxxCode = FALSE;
@@ -450,7 +458,7 @@ int main PARAMS ((argc, argv),
 					genROSEDecoders = TRUE;
 					currArg++;
 				}
-				else if(strcmp(argv[currArg],"-RJ")==0)
+				else if(strcmp(argument,"-RJ")==0)
 				{
 					/* stm --added */
 					genCxxCode = FALSE;
@@ -458,17 +466,17 @@ int main PARAMS ((argc, argv),
 					genROSEDecoders = TRUE;
 					currArg++;
 				}
-				else if (strcmp(argv[currArg], "-RTS_SERVER") == 0)
+				else if (strcmp(argument, "-RTS_SERVER") == 0)
 				{
 					genTSRoseStubs |= 0x01;
 					currArg++;
 				}
-				else if (strcmp(argv[currArg], "-RTS_CLIENT_NODE") == 0)
+				else if (strcmp(argument, "-RTS_CLIENT_NODE") == 0)
 				{
 					genTSRoseStubs |= 0x02;
 					currArg++;
 				}
-				else if (strcmp(argv[currArg], "-RTS_CLIENT_BROWSER") == 0)
+				else if (strcmp(argument, "-RTS_CLIENT_BROWSER") == 0)
 				{
 					genTSRoseStubs |= 0x04;
 					currArg++;
@@ -481,7 +489,7 @@ int main PARAMS ((argc, argv),
 				}
 				break;
 			case 's':
-				if(strcmp(argv[currArg],"-stdafx")==0)
+				if(strcmp(argument,"-stdafx")==0)
 				{
 					/* ste --added */
 					genCodeCPPPrintStdAfxInclude = 1;
@@ -494,7 +502,7 @@ int main PARAMS ((argc, argv),
 				break;
 #if IDL
 			case 'i':
-				if (!strcmp (argv[currArg]+1, "idl"))
+				if (!strcmp (argument+1, "idl"))
 				{
 					genIDLCode = TRUE;
 					currArg++;
@@ -505,7 +513,7 @@ int main PARAMS ((argc, argv),
 #endif
 
 			case 't':
-				if (!strcmp (argv[currArg]+1, "tcl"))
+				if (!strcmp (argument+1, "tcl"))
 				{
 #if TCL
 					meta_pdus = parse_type_list (argv[++currArg]);
@@ -558,9 +566,9 @@ int main PARAMS ((argc, argv),
 				currArg++;
 				break;
 			case 'J': /* produce Javascript Objects */
-				if (strcmp(argv[currArg], "-JD") == 0)
+				if (strcmp(argument, "-JD") == 0)
 					genJsonDocCode = TRUE;
-				else if (strcmp(argv[currArg], "-JT") == 0)
+				else if (strcmp(argument, "-JT") == 0)
 					genTSCode = TRUE;
 				else
 					genJSCode = TRUE;
@@ -575,27 +583,44 @@ int main PARAMS ((argc, argv),
 				currArg++;
 				break;
 			case 'n':
-				if (!strcmp (argv[currArg]+1, "nons"))
+				if (!strcmp (argument+1, "nons"))
 				{
 					currArg++;
 					gNO_NAMESPACE=1;
 				}
-				else if(!strncmp(argv[currArg], "-ns", 3))
+				else if(!strcmp(argument+1, "ns"))
 				{
-					gAlternateNamespaceString = &argv[currArg][4];
+					gAlternateNamespaceString = &argument[4];
 					currArg+=2;
 				}
-				else if (!strncmp(argv[currArg], "-noprivate", 10))
+				else if (!strcmp(argument+1, "noprivate"))
 				{
 					gPrivateSymbols = 0;
 					currArg++;
 				}
-				else if (!strncmp(argv[currArg], "-nodeprecated", 10))
+				else if (!strncmp(argument + 1, "nodeprecated", 12))
 				{
-					gNoDeprecatedSymbols = 1;
+					// Shortest time would be -nodeprecated:1.1.2000 = + 9 charachters
+					size_t len = strlen(argument + 1) - 12;
+					if (len > 0) {
+						if (len < 9) {
+							// The string but not long enough....
+							Usage(argv[0], stderr);
+							return 1;
+						}
+						const char* szFollowing = argument + 14;
+						long lResult = ConvertDateToUnixTime(szFollowing);
+						if (lResult < 0) {
+							// Invalid time, could not parse the time
+							Usage(argv[0], stderr);
+							return 1;
+						}
+						gNoDeprecatedSymbols = lResult;
+					} else
+						time(&gNoDeprecatedSymbols);
 					currArg++;
 				}
-				else if (!strcmp (argv[currArg]+1, "novolat"))
+				else if (!strcmp (argument+1, "novolat"))
 				{
 					novolatilefuncs = TRUE;
 					currArg++;
@@ -604,16 +629,16 @@ int main PARAMS ((argc, argv),
 					goto error;
 				break;
 			case 'c':
-				if (strcmp(argv[currArg], "-comments") == 0)
+				if (strcmp(argument, "-comments") == 0)
 					gWriteComments = TRUE;
 				else
 					genCCode = TRUE;
 				currArg++;
 				break;
 			case 'l':
-				if (argv[currArg][2] != '\0')  /* no space after -l */
+				if (argument[2] != '\0')  /* no space after -l */
 				{
-					longJmpVal = atoi (&argv[currArg][2]);
+					longJmpVal = atoi (&argument[2]);
 					currArg++;
 				}
 				else
@@ -624,10 +649,10 @@ int main PARAMS ((argc, argv),
 				break;
 			case 'T':
 			case 'O':
-				genTypeTbls = argv[currArg][1]=='T'?2:1;
-				if (argv[currArg][2] != '\0')  /* no space after -T */
+				genTypeTbls = argument[1]=='T'?2:1;
+				if (argument[2] != '\0')  /* no space after -T */
 				{
-					tblFileName = &argv[currArg][2];
+					tblFileName = &argument[2];
 					currArg++;
 				}
 				else
@@ -676,23 +701,23 @@ int main PARAMS ((argc, argv),
 				}
 				break;
 			case 'V':
-				if (!strncmp (argv[currArg]+1, "VDAexport", strlen("VDAexport")))
+				if (!strncmp (argument+1, "VDAexport", strlen("VDAexport")))
 				{
-					if (strlen(argv[currArg]+1) > strlen("VDAexport"))
-						bVDAGlobalDLLExport = _strdup(argv[currArg]+1+
+					if (strlen(argument+1) > strlen("VDAexport"))
+						bVDAGlobalDLLExport = _strdup(argument+1+
 						strlen("VDAexport")+1);    //TRUE
 					else        // Default a definition for SFL.
 						bVDAGlobalDLLExport = "VDASNACCDLL_API";
 					currArg++;
 					break;
 				}
-				else if (strncmp(argv[currArg], "-ValidationLevel", 16) == 0)
+				else if (strncmp(argument, "-ValidationLevel", 16) == 0)
 				{
-					if (strlen(argv[currArg]) < 18) {
+					if (strlen(argument) < 18) {
 						Usage(argv[0], stderr);
 						return 1;
 					}
-					gValidationLevel = atoi(argv[currArg] + 17);
+					gValidationLevel = atoi(argument + 17);
 					currArg++;
 					break;
 				}
@@ -706,8 +731,8 @@ int main PARAMS ((argc, argv),
 					Usage (argv[0], stderr);
 					return 1;
 				}
-				if (argv[currArg][2] != '\0')
-					errFileName = &argv[currArg][2];
+				if (argument[2] != '\0')
+					errFileName = &argument[2];
 				else
 					errFileName = argv[++currArg];
 				/* Open the error log file */
@@ -725,11 +750,11 @@ int main PARAMS ((argc, argv),
 				currArg++;
 				break;
 			case 'm':
-				if (argv[currArg][2] == 'f')
+				if (argument[2] == 'f')
 				{
-					if (argv[currArg][3] != '\0')  /* no space after -mf */
+					if (argument[3] != '\0')  /* no space after -mf */
 					{
-						maxFileNameLenG = atoi (&argv[currArg][3]);
+						maxFileNameLenG = atoi (&argument[3]);
 						currArg++;
 					}
 					else
@@ -740,7 +765,7 @@ int main PARAMS ((argc, argv),
 					break;
 				}
 #if META
-				else if (!strcmp (argv[currArg]+1, "meta"))
+				else if (!strcmp (argument+1, "meta"))
 				{
 					meta_pdus = parse_type_list (argv[++currArg]);
 					if (!genMetaCode)
@@ -749,14 +774,14 @@ int main PARAMS ((argc, argv),
 					currArg++;
 					break;
 				}
-				else if (!strcmp (argv[currArg]+1, "mA"))
+				else if (!strcmp (argument+1, "mA"))
 				{
 					genMetaCode = META_asn1_names;
 					genCxxCode = TRUE;
 					currArg++;
 					break;
 				}
-				else if (!strcmp (argv[currArg]+1, "mC"))
+				else if (!strcmp (argument+1, "mC"))
 				{
 					genMetaCode = META_backend_names;
 					genCxxCode = TRUE;
@@ -766,7 +791,7 @@ int main PARAMS ((argc, argv),
 #endif
 error:
 			default:
-				fprintf (stderr, "%s: ERROR---unknown cmd line option `%s'\n\n", argv[0], argv[currArg]);
+				fprintf (stderr, "%s: ERROR---unknown cmd line option `%s'\n\n", argv[0], argument);
 				Usage (argv[0], stderr);
 				return 1;
 			}
@@ -774,7 +799,7 @@ error:
 		else /* asn1srcFileName */
 		{
 			// no -Argument on the command line, this is a file or a wildcard to a file...
-			const char* szFileName = argv[currArg];
+			const char* szFileName = argument;
 			numSrcFiles += findFiles(szFileName, false);
 			currArg++;
 		}
@@ -2065,8 +2090,8 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 						}
 						szBuffer[iPos] = 0;
 
-						// Bei SizeInBytes ber�cksichtigen, dass das null-Byte im baseName auch reserviert ist, strlen() das aber nicht mitz�hlt
-						// wenn jetzt beide Strings gleich lang sind f�llts auf die Nase :)
+						// Bei SizeInBytes berücksichtigen, dass das null-Byte im baseName auch reserviert ist, strlen() das aber nicht mitzählt
+						// wenn jetzt beide Strings gleich lang sind fällts auf die Nase :)
 						strcpy_s(baseName, strlen(baseName)+1, szBuffer);
 
 						interfaces[iCountInterfaces] = baseName;
@@ -2239,7 +2264,7 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 					asnmodulecomment moduleComment;
 					if (GetModuleComment_UTF8(RemovePath(currMod->baseFileName), &moduleComment))
 					{
-						if (moduleComment.iDeprecated && gNoDeprecatedSymbols)
+						if (moduleComment.lDeprecated && gNoDeprecatedSymbols)
 							continue;
 					}
 
@@ -2637,7 +2662,7 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 
 					asnoperationcomment com;
 					if (GetOperationComment_UTF8(currMod->moduleName, vd->definedName, &com))
-						if (com.iDeprecated)
+						if (com.lDeprecated)
 							continue;
 
 					char* pszArgument = NULL;
@@ -2992,3 +3017,36 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...) {
 	assert(false);
 	exit(200);
 }
+
+/**
+ * Converts a date in notation day.month.year into the seconds based on unix time 1.1.1970
+ *
+ * Returns -1 on error
+ */
+long ConvertDateToUnixTime(const char* szDate) {
+	long lResult = -1;
+	#ifdef _WIN32
+		SYSTEMTIME st;
+		memset(&st, 0x00, sizeof(SYSTEMTIME));
+		if (sscanf(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3) {
+			if(st.wDay < 1 || st.wDay > 31)
+				return lResult;
+			if(st.wMonth < 1 || st.wMonth > 12)
+				return lResult;
+			if(st.wYear < 1970)
+				return lResult;
+			FILETIME ft;
+			SystemTimeToFileTime(&st, &ft);
+			ULARGE_INTEGER uli;
+			uli.LowPart = ft.dwLowDateTime;
+			uli.HighPart = ft.dwHighDateTime;
+			lResult = (time_t)((uli.QuadPart / 10000000ULL) - 11644473600ULL);
+		}
+	#else
+		struct tm tm;
+		if (strptime(szDate, "%d.%m.%Y", &tm));
+			lResult = mktime(&tm);
+	#endif
+	return lResult;
+}
+

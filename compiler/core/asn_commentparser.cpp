@@ -1,6 +1,7 @@
 #include "asn_commentparser.h"
 #include "asn-stringconvert.h"
 #include "filetype.h"
+#include "../../snacc.h"
 #include <sstream>
 #include <string>
 #include <list>
@@ -23,6 +24,28 @@ std::string rtrim(const std::string &s)
 
 std::string trim(const std::string &s) {
 	return rtrim(ltrim(s));
+}
+
+void EDeprecated::handleDeprecated(const std::string& strParsedLine) {
+	lDeprecated = 1;
+	std::string strComment = trim(strParsedLine);
+	// Check is ther a date in the value?
+	// @deprecated 1.1.2023 Some comment
+	auto pos = strComment.find(" ");
+	if(pos == std::string::npos)
+		pos = strComment.length();
+	// Longest is 31.12.2023 (10), shortest is 1.1.2000 (8)
+	if(pos >= 8 && pos <= 10) {
+		// Okay, let´s see if this is timestamp value...
+		std::string strDate = strComment.substr(0, pos);
+		long lUnixTime = ConvertDateToUnixTime(strDate.c_str());
+		if (lUnixTime > 0) {
+			lDeprecated = lUnixTime;
+			strComment = trim(strComment.substr(strDate.length()));
+		}
+	}
+	if (strComment.length())
+		strDeprecated_UTF8 = escapeJsonString(strComment);
 }
 
 void replaceAll(std::string& str, const char* szSearch, const char* szReplace) {
@@ -121,10 +144,7 @@ void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType
 		else if (strLine.substr(0, 11) == "@deprecated")
 		{
 			nEmptyLines = 0;
-			pType->iDeprecated = 1;
-			std::string strComment = trim(strLine.substr(11));
-			if (strComment.length())
-				pType->strDeprecated_UTF8 = escapeJsonString(strComment);
+			pType->handleDeprecated(strLine.substr(11));
 			bInLong = false;
 			bInBrief = false;
 		}
@@ -220,13 +240,7 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 		else if (strLine.substr(0, 11) == "@deprecated")
 		{
 			last = eLast::_deprecated;
-			pType->iDeprecated = 1;
-			std::string strComment = trim(strLine.substr(11));
-			if (strComment.length()) {
-				if(!pType->strShort_UTF8.empty())
-					pType->strShort_UTF8 += escapeJsonString("\n");
-				pType->strShort_UTF8 += escapeJsonString(strComment);
-			}
+			pType->handleDeprecated(strLine.substr(11));
 		}
 		else if (strLine.substr(0, 7) == "@linked")
 		{
@@ -534,7 +548,7 @@ void EAsnStackElementSequence::SetProperties(bool bOpenBracket, const char* szTy
 	m_comment.strTypeName_UTF8 = szTypeName;
 	m_comment.strCategory_UTF8 = pmodcomment->strCategory_UTF8;
 	m_comment.iPrivate = pmodcomment->iPrivate;
-	m_comment.iDeprecated = pmodcomment->iDeprecated;
+	m_comment.lDeprecated = pmodcomment->lDeprecated;
 	m_pmodcomment = pmodcomment;
 	convertCommentList(listComments, &m_comment);
 }
@@ -701,7 +715,7 @@ void EAsnStackElementOperation::SetProperties(const char* szTypeName, EModuleCom
 	m_comment.strTypeName_UTF8 = szTypeName;
 	m_comment.strCategory_UTF8 = pmodcomment->strCategory_UTF8;
 	m_comment.iPrivate = pmodcomment->iPrivate;
-	m_comment.iDeprecated = pmodcomment->iDeprecated;
+	m_comment.lDeprecated = pmodcomment->lDeprecated;
 
 	convertCommentList(listComments, &m_comment);
 }

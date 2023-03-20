@@ -14,6 +14,13 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...);
 	fprintf(src, " * based on Coral WinSnacc written by Deepak Gupta\n");\
 	fprintf(src, " * NOTE: This is a machine generated file - editing not recommended\n");\
 }
+#ifdef __cplusplus
+extern "C" {
+#endif
+int ConvertDateToUnixTime(const char* szValue);
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef __cplusplus
 
