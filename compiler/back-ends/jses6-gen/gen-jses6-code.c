@@ -151,7 +151,7 @@ static void PrintJSES6DefaultValue(FILE *hdr, ModuleList *mods, Module *m, TypeD
 		case BASICTYPE_LOCALTYPEREF:
 			if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
 			{
-				fprintf(hdr, "''"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String �bermittelt.
+				fprintf(hdr, "''"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String übermittelt.
 			}
 			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0) 
 			{
@@ -229,7 +229,7 @@ static void PrintJSES6Type(FILE *hdr, ModuleList *mods, Module *m, TypeDef *td, 
 		case BASICTYPE_LOCALTYPEREF:
 			if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
 			{
-				fprintf(hdr, "string"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String �bermittelt.
+				fprintf(hdr, "string"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String übermittelt.
 			}
 			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0) 
 			{

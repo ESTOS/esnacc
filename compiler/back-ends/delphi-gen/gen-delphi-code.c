@@ -204,7 +204,7 @@ static void PrintDelphiType(FILE *hdr, ModuleList *mods, Module *mmodule, TypeDe
 		case BASICTYPE_LOCALTYPEREF:
 			if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
 			{
-				fprintf(hdr, "AsnTime"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String �bermittelt.
+				fprintf(hdr, "AsnTime"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String übermittelt.
 			}
 			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0) 
 			{

@@ -27,7 +27,7 @@ namespace SNACC
 	dient zur Realisierung der Funktionsaufrufe.
 	Wird eine Funktion (Invoke) gerufen, so wird eine SnaccROSEPendingOperation
 	angelegt. Kommt nun die entsprechende Antwort vom Server, so 
-	wird Anhand der invokeID die Instanz gefunden und der m_CompletedEvent ausgel�st. */
+	wird Anhand der invokeID die Instanz gefunden und der m_CompletedEvent ausgelöst. */
 class SnaccROSEPendingOperation
 {
 private:
@@ -60,7 +60,7 @@ typedef std::pair<long, SnaccROSEPendingOperation*> SnaccROSEPendingOperationPai
 
 class SnaccROSEBase;
 
-//Hilfsklasse f�r OperationID / Name lookup
+//Hilfsklasse für OperationID / Name lookup
 //Alle generierten Interfaces registrieren Ihre OperationIDs in dieser Klasse
 class SnaccRoseOperationLookup
 {
@@ -80,9 +80,9 @@ private:
 };
 
 //Invoke Context
-//Dieser Context wird allen OnInvoke_ Funktionen mit �bergeben
-//Dieser Context kann den Invoke_ Funktionen mit �bergeben werden
-//Die ROSEAuth Member werden automatisch gel�scht, Angelegt mit new
+//Dieser Context wird allen OnInvoke_ Funktionen mit übergeben
+//Dieser Context kann den Invoke_ Funktionen mit übergeben werden
+//Die ROSEAuth Member werden automatisch gelöscht, Angelegt mit new
 class SnaccInvokeContext
 {
 public:
@@ -90,19 +90,19 @@ public:
 	virtual ~SnaccInvokeContext();
 
 	//Bedeutung im OnInvoke_: Authentication Header aus ROSE Invoke (Pointer auf das Objekt im Invoke)
-	//Bedeutung im Invoke_: Authentication Header der im Invoke mitgeschickt wird (muss mit new erzeugt werden, wird selbst aufger�umt)
+	//Bedeutung im Invoke_: Authentication Header der im Invoke mitgeschickt wird (muss mit new erzeugt werden, wird selbst aufgeräumt)
 	SNACC::ROSEAuthRequest* pInvokeAuth;
 
-	//Bedeutung im OnInvoke_: Authentication Header, der im Reject zur�ckgegeben wird falls die Methode returnReject zur�ckliefert muss mit new erzeugt werden, wird selbst aufger�umt
-	//Bedeutung im Invoke_: Falls die Methode returnReject zur�ckliefert enth�lt dieser Member die Optionale Reject Authentication (nur wenn SNACC_REJECT_AUTH_INCOMPLETE)
+	//Bedeutung im OnInvoke_: Authentication Header, der im Reject zurückgegeben wird falls die Methode returnReject zurückliefert muss mit new erzeugt werden, wird selbst aufgeräumt
+	//Bedeutung im Invoke_: Falls die Methode returnReject zurückliefert enthält dieser Member die Optionale Reject Authentication (nur wenn SNACC_REJECT_AUTH_INCOMPLETE)
 	SNACC::ROSEAuthResult* pRejectAuth;
 
 	//Reject Result Code: 0 oder ROSE_REJECT_AUTHENTICATIONFAILED oder ROSE_REJECT_AUTHENTICATIONINCOMPLETE
-	//Bedeutung im Invoke_: Falls die Methode returnReject zur�ckliefert enth�lt dieser Member ROSE_REJECT_AUTHENTICATIONINCOMPLETE oder ROSE_REJECT_AUTHENTICATIONFAILED, falls die Authentication nicht erfolgreich war
+	//Bedeutung im Invoke_: Falls die Methode returnReject zurückliefert enthält dieser Member ROSE_REJECT_AUTHENTICATIONINCOMPLETE oder ROSE_REJECT_AUTHENTICATIONFAILED, falls die Authentication nicht erfolgreich war
 	//Special: ROSE_REJECT_ASYNCOPERATION - es wird kein Result versendet.
 	long lRejectResult;
 
-	//Bedeutung im OnInvoke_: Funktion, die gerufen wird, nachdem das Result zur�ckgeschickt wurde.
+	//Bedeutung im OnInvoke_: Funktion, die gerufen wird, nachdem das Result zurückgeschickt wurde.
 	//Verwendung: cxt->funcAfterResult = [this, strCrossRefID]() -> void { /* executed after result has been sent. */ };
 	std::function<void()> funcAfterResult;
 
@@ -259,7 +259,7 @@ public:
 		ppresult or pperror will be filled on return
 		caller must delete returned result!
 		returns NO_ERROR for Result
-		iTimeout: Wartezeit f�r das Result.
+		iTimeout: Wartezeit für das Result.
 		iTimeout : -1 default Wartezeit m_lMaxInvokeWait
 		iTimeout : 0 keine Wartezeit
 		iTimeout : 1 ... Wartezeit in Millisekunden
@@ -272,7 +272,7 @@ public:
 	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt = nullptr);
 
 protected:
-	//ASN prefix mit l�nge f�r JSON bauen
+	//ASN prefix mit länge für JSON bauen
 	std::string GetJsonAsnPrefix(std::string& strJson);
 
 	/*! Die functions and events.
@@ -316,7 +316,7 @@ private:
 	void RemovePendingOperation(int invokeID);
 	/*! Pending Operation result has been received.
 		Attention: The pMessage Objekt will be taken over from the
-		SnaccROSEPendingOperation Object �bernommen und und am Ende deleted. */
+		SnaccROSEPendingOperation Object übernommen und und am Ende deleted. */
 	bool CompletePendingOperation(int invokeID, SNACC::ROSEMessage* pMessage);
 	void CompleteAllPendingOperations();
 
