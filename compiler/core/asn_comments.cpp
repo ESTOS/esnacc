@@ -246,7 +246,7 @@ extern "C" {
 				pcomment->szLinkedType = comment.strLinkedType_UTF8.c_str();
 				pcomment->iPrivate = comment.iPrivate;
 				pcomment->lDeprecated = comment.lDeprecated;
-
+				pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 				return 1;
 			}
 		}
@@ -278,7 +278,7 @@ extern "C" {
 				pcomment->szLinkedType = comment.strLinkedType_ASCII.c_str();
 				pcomment->iPrivate = comment.iPrivate;
 				pcomment->lDeprecated = comment.lDeprecated;
-
+				pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
 				return 1;
 			}
 		}
