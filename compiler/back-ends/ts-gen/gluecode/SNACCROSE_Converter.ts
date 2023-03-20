@@ -12,17 +12,17 @@
 /* eslint-disable */
 
 // [PrintTSConverterImports]
-import { DecodeContext, ConverterError, ConverterErrorType, ConverterErrors, EncodeContext, TSConverter, INamedType } from "./TSConverterBase";
+import { ConverterError, ConverterErrorType, ConverterErrors, TSConverter, IDecodeContext, IEncodeContext, INamedType } from "./TSConverterBase";
 import * as SNACCROSE from "./SNACCROSE";
 // [printTSImports]
 import * as asn1ts from "@estos/asn1ts";
 
 // [PrintTSEncoderDecoderCode]
 export class ROSERejectChoice_Converter {
-	public static toJSON(s: SNACCROSE.ROSERejectChoice, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.ROSERejectChoice & INamedType | undefined {
+	public static toJSON(s: SNACCROSE.ROSERejectChoice, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.ROSERejectChoice & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSERejectChoice");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSERejectChoice");
 
 		const t = SNACCROSE.ROSERejectChoice.initEmpty();
 
@@ -43,10 +43,10 @@ export class ROSERejectChoice_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSERejectChoice | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSERejectChoice | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSERejectChoice");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSERejectChoice");
 
 		let t: SNACCROSE.ROSERejectChoice | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.ROSERejectChoice>(data, errors, newContext, optional);
@@ -68,7 +68,7 @@ export class ROSERejectChoice_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.ROSERejectChoice | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.BaseBlock | undefined {
+	public static toBER(s: SNACCROSE.ROSERejectChoice | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.BaseBlock | undefined {
 		name ||= "ROSERejectChoice";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -78,7 +78,7 @@ export class ROSERejectChoice_Converter {
 		let t: asn1ts.BaseBlock | undefined;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "ROSERejectChoice");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSERejectChoice");
 
 		// [Print_BER_EncoderChoiceDefCode]
 		if (TSConverter.validateParam(s, "invokedID", "number", errors, newContext, true))
@@ -92,10 +92,10 @@ export class ROSERejectChoice_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSERejectChoice | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSERejectChoice | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSERejectChoice");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSERejectChoice");
 
 		let t: SNACCROSE.ROSERejectChoice | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.ROSERejectChoice.getASN1Schema, data, errors, newContext, optional);
@@ -123,10 +123,10 @@ export class ROSERejectChoice_Converter {
 
 // [PrintTSEncoderDecoderCode]
 export class ROSEResultSeq_Converter {
-	public static toJSON(s: SNACCROSE.ROSEResultSeq, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.ROSEResultSeq & INamedType | undefined {
+	public static toJSON(s: SNACCROSE.ROSEResultSeq, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.ROSEResultSeq & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEResultSeq");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEResultSeq");
 
 		const t = SNACCROSE.ROSEResultSeq.initEmpty();
 
@@ -143,10 +143,10 @@ export class ROSEResultSeq_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEResultSeq | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEResultSeq | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEResultSeq");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEResultSeq");
 
 		let t: SNACCROSE.ROSEResultSeq | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.ROSEResultSeq>(data, errors, newContext, optional);
@@ -164,7 +164,7 @@ export class ROSEResultSeq_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.ROSEResultSeq | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
+	public static toBER(s: SNACCROSE.ROSEResultSeq | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
 		name ||= "ROSEResultSeq";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -175,7 +175,7 @@ export class ROSEResultSeq_Converter {
 		const t = result.valueBlock.value;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "ROSEResultSeq");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEResultSeq");
 
 		// [Print_BER_EncoderSeqDefCode]
 		TSConverter.validateParam(s, "resultValue", "number", errors, newContext);
@@ -188,10 +188,10 @@ export class ROSEResultSeq_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEResultSeq | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEResultSeq | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEResultSeq");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEResultSeq");
 
 		let t: SNACCROSE.ROSEResultSeq | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.ROSEResultSeq.getASN1Schema, data, errors, newContext, optional);
@@ -211,10 +211,10 @@ export class ROSEResultSeq_Converter {
 
 // [PrintTSEncoderDecoderCode]
 export class ROSEAuth_Converter {
-	public static toJSON(s: SNACCROSE.ROSEAuth, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.ROSEAuth & INamedType | undefined {
+	public static toJSON(s: SNACCROSE.ROSEAuth, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.ROSEAuth & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuth");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEAuth");
 
 		const t = SNACCROSE.ROSEAuth.initEmpty();
 
@@ -231,10 +231,10 @@ export class ROSEAuth_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEAuth | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEAuth | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuth");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEAuth");
 
 		let t: SNACCROSE.ROSEAuth | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.ROSEAuth>(data, errors, newContext, optional);
@@ -251,7 +251,7 @@ export class ROSEAuth_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.ROSEAuth | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
+	public static toBER(s: SNACCROSE.ROSEAuth | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
 		name ||= "ROSEAuth";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -262,7 +262,7 @@ export class ROSEAuth_Converter {
 		const t = result.valueBlock.value;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "ROSEAuth");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEAuth");
 
 		// [Print_BER_EncoderSeqDefCode]
 		TSConverter.validateParam(s, "method", "string", errors, newContext);
@@ -275,10 +275,10 @@ export class ROSEAuth_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEAuth | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEAuth | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuth");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEAuth");
 
 		let t: SNACCROSE.ROSEAuth | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.ROSEAuth.getASN1Schema, data, errors, newContext, optional);
@@ -298,10 +298,10 @@ export class ROSEAuth_Converter {
 
 // [PrintTSEncoderDecoderCode]
 export class ROSEError_Converter {
-	public static toJSON(s: SNACCROSE.ROSEError, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.ROSEError & INamedType | undefined {
+	public static toJSON(s: SNACCROSE.ROSEError, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.ROSEError & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEError");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEError");
 
 		const t = SNACCROSE.ROSEError.initEmpty();
 
@@ -320,10 +320,10 @@ export class ROSEError_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEError | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEError | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEError");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEError");
 
 		let t: SNACCROSE.ROSEError | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.ROSEError>(data, errors, newContext, optional);
@@ -343,7 +343,7 @@ export class ROSEError_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.ROSEError | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
+	public static toBER(s: SNACCROSE.ROSEError | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
 		name ||= "ROSEError";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -354,7 +354,7 @@ export class ROSEError_Converter {
 		const t = result.valueBlock.value;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "ROSEError");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEError");
 
 		// [Print_BER_EncoderSeqDefCode]
 		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true);
@@ -373,10 +373,10 @@ export class ROSEError_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEError | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEError | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEError");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEError");
 
 		let t: SNACCROSE.ROSEError | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.ROSEError.getASN1Schema, data, errors, newContext, optional);
@@ -398,10 +398,10 @@ export class ROSEError_Converter {
 
 // [PrintTSEncoderDecoderCode]
 export class ROSEAuthList_Converter {
-	public static toJSON(s: SNACCROSE.ROSEAuthList, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.ROSEAuthList | undefined {
+	public static toJSON(s: SNACCROSE.ROSEAuthList, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.ROSEAuthList | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuthList");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEAuthList");
 
 		const t = new SNACCROSE.ROSEAuthList();
 
@@ -422,10 +422,10 @@ export class ROSEAuthList_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEAuthList | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEAuthList | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuthList");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEAuthList");
 
 		let t: SNACCROSE.ROSEAuthList | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.ROSEAuthList>(data, errors, newContext, optional);
@@ -447,7 +447,7 @@ export class ROSEAuthList_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.ROSEAuthList | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
+	public static toBER(s: SNACCROSE.ROSEAuthList | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
 		name ||= "ROSEAuthList";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -458,7 +458,7 @@ export class ROSEAuthList_Converter {
 		const t = result.valueBlock.value;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "ROSEAuthList");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEAuthList");
 
 		// [Print_BER_EncoderSetOfDefCode]
 		for (const id in s) {
@@ -473,10 +473,10 @@ export class ROSEAuthList_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEAuthList | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEAuthList | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuthList");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEAuthList");
 
 		let t: SNACCROSE.ROSEAuthList | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.ROSEAuthList.getASN1Schema, data, errors, newContext, optional);
@@ -502,10 +502,10 @@ export class ROSEAuthList_Converter {
 
 // [PrintTSEncoderDecoderCode]
 export class ROSEAuthRequest_Converter {
-	public static toJSON(s: SNACCROSE.ROSEAuthRequest, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.ROSEAuthRequest & INamedType | undefined {
+	public static toJSON(s: SNACCROSE.ROSEAuthRequest, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.ROSEAuthRequest & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuthRequest");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEAuthRequest");
 
 		const t = SNACCROSE.ROSEAuthRequest.initEmpty();
 
@@ -524,10 +524,10 @@ export class ROSEAuthRequest_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEAuthRequest | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEAuthRequest | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuthRequest");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEAuthRequest");
 
 		let t: SNACCROSE.ROSEAuthRequest | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.ROSEAuthRequest>(data, errors, newContext, optional);
@@ -545,7 +545,7 @@ export class ROSEAuthRequest_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.ROSEAuthRequest | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
+	public static toBER(s: SNACCROSE.ROSEAuthRequest | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
 		name ||= "ROSEAuthRequest";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -556,7 +556,7 @@ export class ROSEAuthRequest_Converter {
 		const t = result.valueBlock.value;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "ROSEAuthRequest");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEAuthRequest");
 
 		// [Print_BER_EncoderSeqDefCode]
 		const _auth = ROSEAuth_Converter.toBER(s.auth, errors, newContext, "auth");
@@ -571,10 +571,10 @@ export class ROSEAuthRequest_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEAuthRequest | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEAuthRequest | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuthRequest");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEAuthRequest");
 
 		let t: SNACCROSE.ROSEAuthRequest | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.ROSEAuthRequest.getASN1Schema, data, errors, newContext, optional);
@@ -596,10 +596,10 @@ export class ROSEAuthRequest_Converter {
 
 // [PrintTSEncoderDecoderCode]
 export class ROSEAuthResult_Converter {
-	public static toJSON(s: SNACCROSE.ROSEAuthResult, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.ROSEAuthResult & INamedType | undefined {
+	public static toJSON(s: SNACCROSE.ROSEAuthResult, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.ROSEAuthResult & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuthResult");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEAuthResult");
 
 		const t = SNACCROSE.ROSEAuthResult.initEmpty();
 
@@ -618,10 +618,10 @@ export class ROSEAuthResult_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEAuthResult | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEAuthResult | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuthResult");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEAuthResult");
 
 		let t: SNACCROSE.ROSEAuthResult | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.ROSEAuthResult>(data, errors, newContext, optional);
@@ -639,7 +639,7 @@ export class ROSEAuthResult_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.ROSEAuthResult | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
+	public static toBER(s: SNACCROSE.ROSEAuthResult | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
 		name ||= "ROSEAuthResult";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -650,7 +650,7 @@ export class ROSEAuthResult_Converter {
 		const t = result.valueBlock.value;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "ROSEAuthResult");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEAuthResult");
 
 		// [Print_BER_EncoderSeqDefCode]
 		const _authList = ROSEAuthList_Converter.toBER(s.authList, errors, newContext, "authList");
@@ -665,10 +665,10 @@ export class ROSEAuthResult_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEAuthResult | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEAuthResult | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEAuthResult");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEAuthResult");
 
 		let t: SNACCROSE.ROSEAuthResult | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.ROSEAuthResult.getASN1Schema, data, errors, newContext, optional);
@@ -690,10 +690,10 @@ export class ROSEAuthResult_Converter {
 
 // [PrintTSEncoderDecoderCode]
 export class ROSEInvoke_Converter {
-	public static toJSON(s: SNACCROSE.ROSEInvoke, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.ROSEInvoke & INamedType | undefined {
+	public static toJSON(s: SNACCROSE.ROSEInvoke, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.ROSEInvoke & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEInvoke");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEInvoke");
 
 		const t = SNACCROSE.ROSEInvoke.initEmpty();
 
@@ -719,10 +719,10 @@ export class ROSEInvoke_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEInvoke | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEInvoke | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEInvoke");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEInvoke");
 
 		let t: SNACCROSE.ROSEInvoke | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.ROSEInvoke>(data, errors, newContext, optional);
@@ -745,7 +745,7 @@ export class ROSEInvoke_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.ROSEInvoke | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
+	public static toBER(s: SNACCROSE.ROSEInvoke | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
 		name ||= "ROSEInvoke";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -756,7 +756,7 @@ export class ROSEInvoke_Converter {
 		const t = result.valueBlock.value;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "ROSEInvoke");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEInvoke");
 
 		// [Print_BER_EncoderSeqDefCode]
 		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true);
@@ -784,10 +784,10 @@ export class ROSEInvoke_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEInvoke | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEInvoke | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEInvoke");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEInvoke");
 
 		let t: SNACCROSE.ROSEInvoke | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.ROSEInvoke.getASN1Schema, data, errors, newContext, optional);
@@ -812,10 +812,10 @@ export class ROSEInvoke_Converter {
 
 // [PrintTSEncoderDecoderCode]
 export class ROSEResult_Converter {
-	public static toJSON(s: SNACCROSE.ROSEResult, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.ROSEResult & INamedType | undefined {
+	public static toJSON(s: SNACCROSE.ROSEResult, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.ROSEResult & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEResult");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEResult");
 
 		const t = SNACCROSE.ROSEResult.initEmpty();
 
@@ -837,10 +837,10 @@ export class ROSEResult_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEResult | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEResult | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEResult");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEResult");
 
 		let t: SNACCROSE.ROSEResult | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.ROSEResult>(data, errors, newContext, optional);
@@ -857,7 +857,7 @@ export class ROSEResult_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.ROSEResult | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
+	public static toBER(s: SNACCROSE.ROSEResult | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
 		name ||= "ROSEResult";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -868,7 +868,7 @@ export class ROSEResult_Converter {
 		const t = result.valueBlock.value;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "ROSEResult");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEResult");
 
 		// [Print_BER_EncoderSeqDefCode]
 		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true);
@@ -885,10 +885,10 @@ export class ROSEResult_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEResult | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEResult | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEResult");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEResult");
 
 		let t: SNACCROSE.ROSEResult | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.ROSEResult.getASN1Schema, data, errors, newContext, optional);
@@ -909,10 +909,10 @@ export class ROSEResult_Converter {
 
 // [PrintTSEncoderDecoderCode]
 export class RejectProblem_Converter {
-	public static toJSON(s: SNACCROSE.RejectProblem, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.RejectProblem & INamedType | undefined {
+	public static toJSON(s: SNACCROSE.RejectProblem, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.RejectProblem & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "RejectProblem");
+		const newContext = TSConverter.addEncodeContext(context, name, "RejectProblem");
 
 		const t = SNACCROSE.RejectProblem.initEmpty();
 
@@ -937,10 +937,10 @@ export class RejectProblem_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.RejectProblem | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.RejectProblem | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "RejectProblem");
+		const newContext = TSConverter.addDecodeContext(context, name, "RejectProblem");
 
 		let t: SNACCROSE.RejectProblem | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.RejectProblem>(data, errors, newContext, optional);
@@ -968,7 +968,7 @@ export class RejectProblem_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.RejectProblem | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.BaseBlock | undefined {
+	public static toBER(s: SNACCROSE.RejectProblem | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.BaseBlock | undefined {
 		name ||= "RejectProblem";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -978,7 +978,7 @@ export class RejectProblem_Converter {
 		let t: asn1ts.BaseBlock | undefined;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "RejectProblem");
+		const newContext = TSConverter.addEncodeContext(context, name, "RejectProblem");
 
 		// [Print_BER_EncoderChoiceDefCode]
 		if (TSConverter.validateParam(s, "generalProblem", "number", errors, newContext, true))
@@ -996,10 +996,10 @@ export class RejectProblem_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.RejectProblem | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.RejectProblem | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "RejectProblem");
+		const newContext = TSConverter.addDecodeContext(context, name, "RejectProblem");
 
 		let t: SNACCROSE.RejectProblem | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.RejectProblem.getASN1Schema, data, errors, newContext, optional);
@@ -1035,10 +1035,10 @@ export class RejectProblem_Converter {
 
 // [PrintTSEncoderDecoderCode]
 export class ROSEReject_Converter {
-	public static toJSON(s: SNACCROSE.ROSEReject, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.ROSEReject & INamedType | undefined {
+	public static toJSON(s: SNACCROSE.ROSEReject, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.ROSEReject & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEReject");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEReject");
 
 		const t = SNACCROSE.ROSEReject.initEmpty();
 
@@ -1068,10 +1068,10 @@ export class ROSEReject_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEReject | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEReject | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEReject");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEReject");
 
 		let t: SNACCROSE.ROSEReject | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.ROSEReject>(data, errors, newContext, optional);
@@ -1092,7 +1092,7 @@ export class ROSEReject_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.ROSEReject | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
+	public static toBER(s: SNACCROSE.ROSEReject | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.Sequence | undefined {
 		name ||= "ROSEReject";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -1103,7 +1103,7 @@ export class ROSEReject_Converter {
 		const t = result.valueBlock.value;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "ROSEReject");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEReject");
 
 		// [Print_BER_EncoderSeqDefCode]
 		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true);
@@ -1127,10 +1127,10 @@ export class ROSEReject_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEReject | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEReject | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEReject");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEReject");
 
 		let t: SNACCROSE.ROSEReject | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.ROSEReject.getASN1Schema, data, errors, newContext, optional);
@@ -1155,10 +1155,10 @@ export class ROSEReject_Converter {
 
 // [PrintTSEncoderDecoderCode]
 export class ROSEMessage_Converter {
-	public static toJSON(s: SNACCROSE.ROSEMessage, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): SNACCROSE.ROSEMessage & INamedType | undefined {
+	public static toJSON(s: SNACCROSE.ROSEMessage, errors?: ConverterErrors, context?: IEncodeContext, name?: string): SNACCROSE.ROSEMessage & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEMessage");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEMessage");
 
 		const t = SNACCROSE.ROSEMessage.initEmpty();
 
@@ -1191,10 +1191,10 @@ export class ROSEMessage_Converter {
 
 	}
 
-	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEMessage | undefined {
+	public static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEMessage | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEMessage");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEMessage");
 
 		let t: SNACCROSE.ROSEMessage | undefined;
 		const s = TSConverter.prepareJSONData<SNACCROSE.ROSEMessage>(data, errors, newContext, optional);
@@ -1218,7 +1218,7 @@ export class ROSEMessage_Converter {
 		return undefined;
 	}
 
-	public static toBER(s: SNACCROSE.ROSEMessage | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): asn1ts.BaseBlock | undefined {
+	public static toBER(s: SNACCROSE.ROSEMessage | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): asn1ts.BaseBlock | undefined {
 		name ||= "ROSEMessage";
 		if (!s) {
 			TSConverter.addMissingError(errors, context, name, optional);
@@ -1228,7 +1228,7 @@ export class ROSEMessage_Converter {
 		let t: asn1ts.BaseBlock | undefined;
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, name, "ROSEMessage");
+		const newContext = TSConverter.addEncodeContext(context, name, "ROSEMessage");
 
 		// [Print_BER_EncoderChoiceDefCode]
 		if (s.invoke)
@@ -1246,10 +1246,10 @@ export class ROSEMessage_Converter {
 		return undefined;
 	}
 
-	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): SNACCROSE.ROSEMessage | undefined {
+	public static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): SNACCROSE.ROSEMessage | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "ROSEMessage");
+		const newContext = TSConverter.addDecodeContext(context, name, "ROSEMessage");
 
 		let t: SNACCROSE.ROSEMessage | undefined;
 		const s = TSConverter.prepareASN1BERData(SNACCROSE.ROSEMessage.getASN1Schema, data, errors, newContext, optional);

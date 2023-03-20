@@ -84,7 +84,7 @@ interface IContextBase {
 	root: boolean;
 }
 
-export interface IEncodeContext {
+export interface IEncodeContext extends IContextBase {
 	// If encoding lax the encoder will sum up errors but will not stop encoding, errors are collected but the function always returns true
 	bLaxEncoding: boolean;
 	// to get naked code (not pretty printed with newlines, and tabs) set this to false
@@ -104,7 +104,7 @@ export interface INamedType {
 /**
  * Config how we encode something that goes into the transport layer
  */
-export class EncodeContext implements IEncodeContext, IContextBase {
+export class EncodeContext implements IEncodeContext {
 	// Give the diagnostic elements the context of the element we are currently encoding to ease understanding where an error occured...
 	public context = "";
 	// root is set to true if we are on the highest, initial layer (the root object)
@@ -135,7 +135,7 @@ export class EncodeContext implements IEncodeContext, IContextBase {
 	}
 }
 
-export interface IDecodeContext {
+export interface IDecodeContext extends IContextBase {
 	// If decoding lax the parser will sum up errors but will not stop parsing, errors are collected but the function always returns true
 	bLaxDecoding: boolean;
 }
@@ -143,7 +143,7 @@ export interface IDecodeContext {
 /**
  * Config how we decode something that comes from the transport layer
  */
-export class DecodeContext implements IDecodeContext, IContextBase {
+export class DecodeContext implements IDecodeContext {
 	// Give the diagnostic elements the context of the element we are currently decoding to ease understanding where an error occured...
 	public context = "";
 	// root is set to true if we are on the highest, initial layer (the root object)
@@ -227,7 +227,7 @@ export class ConverterErrors extends Array<ConverterError> {
  * The transport layer then converts the object into the appropriate transport notation
  */
 export interface IConverter {
-	toJSON(obj: unknown, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): Object | undefined;
+	toJSON(obj: unknown, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): object | undefined;
 	fromJSON(obj: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): unknown | undefined;
 	toBER(obj: unknown | undefined, errors?: ConverterErrors, context?: EncodeContext, parametername?: string, optional?: boolean | number): asn1ts.BaseBlock | undefined;
 	fromBER(obj: Uint8Array | asn1ts.Sequence | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): unknown | undefined;
@@ -359,7 +359,7 @@ export class TSConverter {
 	 * @param optional - set to true if the parameter is optional (if optional, the parameter might be missing)
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
-	public static validateParam(data: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "Date" | "Uint8Array" | "object", errors?: ConverterErrors, context?: DecodeContext | EncodeContext, optional?: boolean): boolean {
+	public static validateParam(data: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "Date" | "Uint8Array" | "object", errors?: ConverterErrors, context?: IDecodeContext | IEncodeContext, optional?: boolean): boolean {
 		if (!Object.prototype.hasOwnProperty.call(data, propertyName)) {
 			if (errors && context) {
 				if (!(optional === true))
@@ -573,30 +573,55 @@ export class TSConverter {
 	}
 
 	/**
-	 * Adds a calling context to log decoding errors.
+	 * Adds a calling context to log encoding errors.
 	 * As we travers through the object in the tree we always add a new context whenever we walk in a branch
 	 * Thus the decoder always knows for logging where the parser is currently parsing content
 	 *
 	 * @param context - An existing handed over context or undefined if we freshly create one
 	 * @param parametername - The name of the parameter we are currently processing
-	 * @param object - Or the object name we are currently processing in case the parameter name is missing
+	 * @param objectName - Or the object name we are currently processing in case the parameter name is missing
 	 * @returns - The new adopted or created DecodeContext
 	 */
-	public static addContext<T extends IContextBase>(context: undefined | T, parametername: string | undefined, object: string): T {
-		const newContext = { context: "", root: true } as T;
-		if (context) {
-			Object.assign(newContext, context);
-			newContext.root = false;
-		}
+	public static addEncodeContext(context: IEncodeContext | undefined, parametername: string | undefined, objectName: string): IEncodeContext {
+		if (!context)
+			context = new EncodeContext();
+		return TSConverter.addContext(context, parametername, objectName);
+	}
 
-		if (newContext.context.length)
-			newContext.context += "::";
+	/**
+	 * Adds a calling context to log decoding errors.
+	 * As we travers through the object in the tree we always add a new context whenever we walk in a branch
+	 * Thus the decoder always knows for logging where the parser is currently parsing content
+	 *
+	 * @param context - An existing handed over context or undefined if we freshly create one
+	 * @param name - The name of the parameter we are currently processing
+	 * @param objectName - Or the object name we are currently processing in case the parameter name is missing
+	 * @returns - The new adopted or created DecodeContext
+	 */
+	public static addDecodeContext(context: IDecodeContext | undefined, name: string | undefined, objectName: string): IDecodeContext {
+		if (!context)
+			context = new DecodeContext();
+		return TSConverter.addContext(context, name, objectName);
+	}
 
-		if (parametername !== undefined)
-			newContext.context += parametername;
+	/**
+	 * Adds a calling context to log decoding errors.
+	 * As we travers through the object in the tree we always add a new context whenever we walk in a branch
+	 * Thus the decoder always knows for logging where the parser is currently parsing content
+	 *
+	 * @param context - An existing handed over context or undefined if we freshly create one
+	 * @param name - The name of the parameter we are currently processing
+	 * @param objectName - Or the object name we are currently processing in case the parameter name is missing
+	 * @returns - The new adopted or created DecodeContext
+	 */
+	private static addContext<T extends IContextBase>(context: T, name: string | undefined, objectName: string): T {
+		if (context.context.length)
+			context.context += "::";
+		if (name !== undefined)
+			context.context += name;
 		else
-			newContext.context += object;
-		return newContext;
+			context.context += objectName;
+		return context;
 	}
 
 	/**

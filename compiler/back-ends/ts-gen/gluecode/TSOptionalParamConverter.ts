@@ -33,7 +33,7 @@ export class EAsnOptionalParameters_Converter {
 	public static toJSON(obj: ENetUC_Common.AsnOptionalParameters, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): ENetUC_Common.AsnOptionalParameters & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		const errorCount = errors.length;
-		const newContext = TSConverter.addContext(context, parametername, "AsnOptionalParameters");
+		const newContext = TSConverter.addEncodeContext(context, parametername, "AsnOptionalParameters");
 
 		if (!newContext?.bUCServerOptionalParams) {
 			debugger;
@@ -83,7 +83,7 @@ export class EAsnOptionalParameters_Converter {
 		const bFirstCaller = context ? context.context === "" : false;
 		if (errors == null)
 			errors = new ConverterErrors();
-		const newContext = TSConverter.addContext(context, parametername, "AsnOptionalParameters");
+		const newContext = TSConverter.addDecodeContext(context, parametername, "AsnOptionalParameters");
 
 		if (dataarg == null) {
 			if (!(optional === true)) {
