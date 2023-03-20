@@ -544,7 +544,7 @@ bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllIn
 			{
 				OnResultMessage(pmessage->result);
 				// nichts abfangen wenn an der Stelle pmessage->result->result == nullptr ist, da durch die fehlende invokeID das auch schon
-				// ber�cksichtigt ist
+				// berücksichtigt ist
 				CompletePendingOperation(pmessage->result->invokeID, pmessage);
 				return true;
 			}
@@ -554,7 +554,7 @@ bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllIn
 			{
 				OnErrorMessage(pmessage->error);
 				// nichts abfangen wenn an der Stelle pmessage->error->error == nullptr ist, da durch die fehlende invokeID das auch schon
-				// ber�cksichtigt ist
+				// berücksichtigt ist
 				CompletePendingOperation(pmessage->error->invokedID, pmessage);
 				return true;
 			}
@@ -565,7 +565,7 @@ bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllIn
 				OnRejectMessage(pmessage->reject);
 				if (pmessage->reject->invokedID.choiceId == ROSERejectChoice::invokedIDCid)
 				{
-					// Pr�fung! bei REJECT ist die InvokeID ein Choice und damit ist die ID selbst ein Pointer!
+					// Prüfung! bei REJECT ist die InvokeID ein Choice und damit ist die ID selbst ein Pointer!
 					// und der kann nullptr werden.
 					if (pmessage->reject->invokedID.invokedID != nullptr)
 					{
@@ -914,7 +914,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** p
 							lRoseResult = ROSE_NOERROR;
 							if (pendingOP->m_pAnswerMessage->result && ppresult)
 							{
-								//�bergeben des Results an den caller,
+								//übergeben des Results an den caller,
 								//der muss das dann deallokieren.
 								*ppresult = pendingOP->m_pAnswerMessage->result;
 								pendingOP->m_pAnswerMessage->result = NULL;
@@ -926,7 +926,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** p
 							lRoseResult = ROSE_ERROR_VALUE;
 							if (pendingOP->m_pAnswerMessage->error && pperror)
 							{
-								//�bergeben des Errors an den caller,
+								//übergeben des Errors an den caller,
 								//der muss das dann deallokieren.
 								*pperror = pendingOP->m_pAnswerMessage->error;
 								pendingOP->m_pAnswerMessage->error = NULL;

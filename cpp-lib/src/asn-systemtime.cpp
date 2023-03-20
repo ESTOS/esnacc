@@ -58,7 +58,7 @@ std::string DateToISO8601(DATE dt)
 		return "";
 
 	//2012-04-23T18:25:43.511Z
-	//2012-04-23T18:25:43.500Z		// Nullen am Ende rein technisch �berfl�ssig, erleichtern aber die Lesbarkeit.
+	//2012-04-23T18:25:43.500Z		// Nullen am Ende rein technisch überflüssig, erleichtern aber die Lesbarkeit.
 	char szDateTime[40] = {0};
 	SYSTEMTIME sysTime;
 	memset(&sysTime, 0x00, sizeof(sysTime));
@@ -78,8 +78,8 @@ bool SystemTimeToVariantTimeWithMilliseconds(const SYSTEMTIME& st, DATE& dVarian
 	WORD wMilliseconds = st.wMilliseconds;
 
 	// Die Funktion SystemTimeToVariantTime verwirft normalerweise die Millisekunden.
-	// Zur Sicherheit (man wei� nie, ob sich Microsoft das mal anders �berlegt), die
-	// Millisekunden l�schen. Damit haben wir garaniert immer den Wert ohne Millisekunden.
+	// Zur Sicherheit (man weiß nie, ob sich Microsoft das mal anders überlegt), die
+	// Millisekunden löschen. Damit haben wir garaniert immer den Wert ohne Millisekunden.
 	SYSTEMTIME st_temp = st;
 	st_temp.wMilliseconds = 0;
 	if (!SystemTimeToVariantTime(&st_temp, &dVariantTime))

@@ -157,7 +157,7 @@ Asn1ErrorHandler Asn1InstallErrorHandler PROTO ((Asn1ErrorHandler handler));
 
 /*
  * NOTE: for use with tables, I defined the (slower)
- *  GenBuf type that is more flexible (� la ISODE and XDR).
+ *  GenBuf type that is more flexible (_ la ISODE and XDR).
  *  This allows the encode/decode libs to support other
  *  buffer types dynamically instead of having different
  *  libs for each buffer type.

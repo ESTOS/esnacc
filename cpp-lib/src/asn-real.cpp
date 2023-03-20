@@ -17,7 +17,7 @@
 
 // $Log: asn-real.cpp,v $
 // Revision 1.3  2005/10/19 12:32:50  \stm
-// Verbesserungen f�r 2005 Compiler
+// Verbesserungen für 2005 Compiler
 //
 // Revision 1.2  2005/08/18 11:24:49  \ste
 // fixed real encoding and decoding
@@ -114,7 +114,7 @@
 // Modifications collected for new version 1.3: Bug fixes, tk4.2.
 //
 // Revision 1.6  1995/08/17 15:27:19  rj
-// recognize and return "�inf" for PLUS-INFINITY/MINUS-INFINITY.
+// recognize and return "inf" for PLUS-INFINITY/MINUS-INFINITY.
 //
 // Revision 1.5  1995/07/24  20:29:24  rj
 // #if TCL ... #endif wrapped into #if META ... #endif
