@@ -109,7 +109,7 @@ void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
 	fprintf(src, "import * as Converter from \"./%s_Converter\";\n", mod->moduleName);
 
-	printTSImports(src, mods, mod, true, false);
+	PrintTSImports(src, mods, mod, true, false, true);
 }
 
 void PrintTSROSETypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td)
@@ -128,7 +128,7 @@ bool PrintTSROSEOperationDefine(FILE* src, Module* m, ValueDef* v)
 	if (v->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
 		return false;
 
-	if (IsDeprecatedOperation(m, v->definedName))
+	if (IsDeprecatedNoOutputOperation(m, v->definedName))
 		return false;
 
 	fprintf(src, "\tOPID_%s = %d", v->definedName, v->value->basicValue->a.integer);
@@ -286,7 +286,7 @@ void PrintTSROSEImport(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "// Local imports\n");
 	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
 
-	printTSImports(src, mods, mod, false, false);
+	PrintTSImports(src, mods, mod, false, false, false);
 
 }
 
@@ -299,7 +299,7 @@ void PrintTSROSEInterface(FILE* src, ModuleList* mods, Module* m)
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
-			if (IsDeprecatedOperation(m, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEInterfaceEntry(src, mods, vd, false, m);
 		}
@@ -319,7 +319,7 @@ void PrintTSROSEHandlerInterface(FILE* src, ModuleList* mods, Module* m)
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
-			if (IsDeprecatedOperation(m, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEHandlerInterfaceEntry(src, mods, m, vd, false, true, false);
 		}
@@ -332,7 +332,7 @@ void PrintTSROSEHandlerInterface(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\tsetLogContext?(argument: unknown, invokeContext: IReceiveInvokeContext): void;\n");
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
-			if (IsDeprecatedOperation(m, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEHandlerInterfaceEntry(src, mods, m, vd, false, false, false);
 		}
@@ -371,7 +371,7 @@ void PrintTSROSEServerCopyPasteInterface(FILE* src, ModuleList* mods, Module* m)
 	// Writes invokes
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
-			if (IsDeprecatedOperation(m, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			bAddNewLine = PrintTSROSEHandlerInterfaceEntry(src, mods, m, vd, true, true, bAddNewLine);
 		}
@@ -380,7 +380,7 @@ void PrintTSROSEServerCopyPasteInterface(FILE* src, ModuleList* mods, Module* m)
 	// Writes events
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
-			if (IsDeprecatedOperation(m, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			bAddNewLine = PrintTSROSEHandlerInterfaceEntry(src, mods, m, vd, true, false, bAddNewLine);
 		}
@@ -471,9 +471,13 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 		}
 
 		const char* pszFunction = vd->definedName;
+		bool bDeprecated = IsDeprecatedFlaggedOperation(m, pszFunction);
+
 		if (pszResult && !bEvents)
 		{
 			fprintf(src, "\t\t\tcase OperationIDs.OPID_%s:\n", pszFunction);
+			if (bDeprecated)
+				fprintf(src, "\t\t\t\tTSASN1Base.deprecatedMethod(this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", pszFunction);
 			fprintf(src, "\t\t\t\treturn await this.handleOnInvoke(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
 			fprintf(src, "%s.%s, ", szArgumentNS, pszArgument);
@@ -492,6 +496,8 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 		else if (!pszResult && bEvents)
 		{
 			fprintf(src, "\t\t\tcase OperationIDs.OPID_%s:\n", pszFunction);
+			if (bDeprecated)
+				fprintf(src, "\t\t\t\tTSASN1Base.deprecatedMethod(this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", pszFunction);
 			fprintf(src, "\t\t\t\treturn await this.handleOnEvent(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
 			fprintf(src, "%s.%s, ", szArgumentNS, pszArgument);
@@ -528,7 +534,7 @@ void PrintTSROSEOnInvokeswitchCase(FILE* src, ModuleList* mods, Module* m)
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
-			if (IsDeprecatedOperation(m, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEOnInvokeswitchCaseEntry(src, mods, 0, vd, m);
 		}
@@ -538,7 +544,7 @@ void PrintTSROSEOnInvokeswitchCase(FILE* src, ModuleList* mods, Module* m)
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
-			if (IsDeprecatedOperation(m, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			const char* pszFunction = vd->definedName;
 
@@ -591,7 +597,7 @@ void PrintTSROSEOnEventSwitchCase(FILE* src, ModuleList* mods, Module* m)
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
-			if (IsDeprecatedOperation(m, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEOnInvokeswitchCaseEntry(src, mods, 1, vd, m);
 		}
@@ -627,6 +633,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 			errorMod = GetImportModuleRefByClassName(pszError, mods, m);
 
 		const char* pszFunction = vd->definedName;
+		bool bDeprecated = false;
 
 		if ((pszResult && !bEvents) || (!pszResult && bEvents))
 		{
@@ -648,6 +655,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 					{
 						if (operationComment.lDeprecated) {
 							fprintf(src, "\t * @deprecated %s\n", getDeprecated(operationComment.szDeprecated));
+							bDeprecated = true;
 						}
 						if (operationComment.iPrivate)
 							fprintf(src, "\t * @private\n");
@@ -670,6 +678,8 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 				if (szErrorNS && pszError)
 					fprintf(src, " | %s.%s", szErrorNS, pszError);
 				fprintf(src, " | AsnInvokeProblem> {\n");
+				if (bDeprecated)
+					fprintf(src, "\t\tTSASN1Base.deprecatedMethod(this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", pszFunction);
 				fprintf(src, "\t\treturn this.handleInvoke(argument, ");
 				fprintf(src, "%s.%s, ", szResultNS, pszResult);
 				fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
@@ -697,6 +707,8 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 			else if (!pszResult && bEvents)
 			{
 				fprintf(src, "\tpublic event_%s(argument: %s.%s, invokeContext?: ISendInvokeContextParams): undefined | boolean {\n", pszFunction, szArgumentNS, pszArgument);
+				if (bDeprecated)
+					fprintf(src, "\t\tTSASN1Base.deprecatedMethod(this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", pszFunction);
 				fprintf(src, "\t\treturn this.handleEvent(argument, ");
 				fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
 				if (argumentMod == m)
@@ -720,7 +732,7 @@ void PrintTSROSEInvokeMethods(FILE* src, ModuleList* mods, Module* m)
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
-			if (IsDeprecatedOperation(m, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEInvokeMethod(src, mods, 0, vd, m);
 		}
@@ -728,7 +740,7 @@ void PrintTSROSEInvokeMethods(FILE* src, ModuleList* mods, Module* m)
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
-			if (IsDeprecatedOperation(m, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEInvokeMethod(src, mods, 1, vd, m);
 		}
@@ -744,6 +756,9 @@ void PrintTSROSEInterfaceCode(FILE* src, ModuleList* mods, Module* m)
 
 	// Import definition
 	PrintTSROSEImport(src, mods, m);
+
+	// Root types
+	PrintTSRootTypes(src, m, "ROSEInterface");
 
 	// ClientInterface definition
 	PrintTSROSEInterface(src, mods, m);
@@ -798,7 +813,7 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t */\n");
 	fprintf(src, "\tpublic getLogData(): IASN1LogData {\n");
 	fprintf(src, "\t\treturn {\n");
-	fprintf(src, "\t\t\tclassName: \"%s\"\n", m->ROSEClassName);
+	fprintf(src, "\t\t\tclassName: moduleName\n");
 	fprintf(src, "\t\t};\n");
 	fprintf(src, "\t}\n\n");
 
@@ -820,7 +835,7 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 			continue;
 		if (v->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
 			continue;
-		if (IsDeprecatedOperation(m, v->definedName))
+		if (IsDeprecatedNoOutputOperation(m, v->definedName))
 			continue;
 
 		fprintf(src, "\t\t\tcase OperationIDs.OPID_%s:\n", v->definedName);
@@ -845,6 +860,7 @@ void PrintTSROSECode(FILE* src, ModuleList* mods, Module* m)
 {
 	PrintTSROSEHeader(src, m, false);
 	PrintTSROSEImports(src, mods, m);
+	PrintTSRootTypes(src, m, "ROSE");
 	PrintTSROSEOperationDefines(src, m, m->valueDefs);
 	PrintTSROSEModuleComment(src, m);
 	PrintTSROSEClass(src, mods, m);

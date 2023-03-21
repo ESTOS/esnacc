@@ -251,7 +251,7 @@ void PrintTSEnumDefCode(FILE* src, ModuleList* mods, Module* m,
 		bool bFirst = true;
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
-			if (IsDeprecatedMember(m, td, n->name))
+			if (IsDeprecatedNoOutputMember(m, td, n->name))
 				continue;
 			if(!bFirst)
 				fprintf(src, ",\n");
@@ -307,7 +307,7 @@ void PrintTSChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
 		char szOptionalParam[128] = { 0 };
-		int id = getContextID(e->type);
+		int id = GetContextID(e->type);
 		if (id >= 0)
 			sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", idBlock: { optionalID: %i }", id);
 
@@ -372,13 +372,13 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	//	int allOpt;
 
 	// DEFINE PER encode/decode tmp vars.
-	NamedType** pSeqElementNamedType = NULL;
+		NamedType** pSeqElementNamedType = NULL;
 
 	char* szConverted = FixName(td->definedName);
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	printSequenceComment(src, m, td);
-
+	
 	/* put class spec in hdr file */
 	fprintf(src, "export class %s {\n", szConverted);
 	// fprintf(src, "\ttype: \"%s\",\n", td->definedName);
@@ -402,6 +402,8 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		fprintf(src, "?");
 
 	fprintf(src, ": %s) {\n", szConverted);
+	if (IsDeprecatedFlaggedSequence(m, td->definedName))
+		fprintf(src, "\t\tTSASN1Base.deprecatedObject(moduleName, this);\n");
 	fprintf(src, "\t\tObject.assign(this, that);\n");
 	fprintf(src, "\t}\n\n");
 
@@ -446,7 +448,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		if (choiceId == BASICTYPE_EXTENSION)
 			continue;
 
-		if (IsDeprecatedMember(m, td, e->fieldName))
+		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
 
 		if (!bFirst)
@@ -460,7 +462,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		char szOptionalParam[128] = { 0 };
 		int iOptionalID = -1;
 		if (bOptional) {
-			iOptionalID = getContextID(e->type);
+			iOptionalID = GetContextID(e->type);
 			if (bImplicit && iOptionalID >= 0)
 				sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", idBlock: { optionalID: %i }", iOptionalID);
 			else
@@ -518,7 +520,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
 			continue;
 
-		if (IsDeprecatedMember(m, td, e->fieldName))
+		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
 
 		printMemberComment(src, m, td, e->fieldName);
@@ -798,15 +800,18 @@ void PrintTSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int pr
 	// Comments
 	PrintTSComments(src, m);
 
-	// Includes
-	printTSImports(src, mods, m, false, true);
+	// Imports
+	PrintTSImports(src, mods, m, false, true, true);
+
+	// Root types
+	PrintTSRootTypes(src, m, "");
 
 	bool bIsFirst = true;
 	TypeDef* td;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs) {
-		if (IsDeprecatedSequence(m, td->definedName))
-			continue;
+		if (IsDeprecatedNoOutputSequence(m, td->definedName))
 		if (!bIsFirst)
+			continue;
 			fprintf(src, "\n");
 		PrintTSTypeDefCode(src, mods, m, td, novolatilefuncs);
 		bIsFirst = false;

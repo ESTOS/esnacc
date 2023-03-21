@@ -36,9 +36,14 @@ char* GetImportFileName(char* Impname, ModuleList* mods);
 Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, Module* m);
 Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod);
 
-// Returns true when the member can be skipped (only certain members can get removed, check the function for details)
-bool IsDeprecatedMember(Module* mod, const TypeDef* td, const char* szElement);
-bool IsDeprecatedSequence(Module* mod, const char* szSequenceName);
-bool IsDeprecatedOperation(Module* mod, const char* szOperationName);
+// Returns true when an element is flagged as deprecated
+bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szElement);
+bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName);
+bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName);
+// Returns true when an element is flagged as deprecated AND shall not be written to the output
+bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szElement);
+bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName);
+bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName);
+
 
 #endif

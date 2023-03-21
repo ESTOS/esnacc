@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <string.h>
 
-void printTSEscaped(FILE* src, const char* szData) {
+void PrintTSEscaped(FILE* src, const char* szData) {
 	const char* szPos = szData;
 	const char* szLast = NULL;
 	int iStars = 0;
@@ -45,8 +45,15 @@ void printTSEscaped(FILE* src, const char* szData) {
 	}
 }
 
-void printTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConverters, bool bIncludeasn1ts) {
+void PrintTSRootTypes(FILE* src, Module* mod, const char* szSuffix) {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
+	fprintf(src, "export const moduleName = \"%s%s\";\n", mod->moduleName, szSuffix ? szSuffix : "");
+}
+
+void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConverters, bool bIncludeasn1ts, bool bIncludeTASN1Base) {
+	fprintf(src, "// [%s]\n", __FUNCTION__);
+	if (bIncludeTASN1Base)
+		fprintf(src, "import { TSASN1Base } from \"./TSASN1Base\";\n");
 	if (bIncludeasn1ts)
 		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
 
@@ -64,7 +71,7 @@ void printTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 					strcat_s(szAlreadyAdded, 4096, szNameSpace);
 					fprintf(src, "import * as %s from \"./%s\";\n", szNameSpace, referencedModule->moduleName);
 				}
-			}
+			} 
 		}
 
 		if (bIncludeConverters) {
@@ -129,7 +136,7 @@ const char* GetBERType(const enum BasicTypeChoiceId basicTypeChoiseId)
 	exit(1);
 }
 
-int getContextID(struct Type* type) {
+int GetContextID(struct Type* type) {
 	int iResult = -1;
 	if (type->tags->count) {
 		Tag* pTag = NULL;

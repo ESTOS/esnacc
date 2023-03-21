@@ -10,6 +10,6 @@ const char* getDeprecated(const char* szDeprecated);
 void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const char* szElement);
 void printSequenceComment(FILE* src, const Module* m, const TypeDef* td);
 void printModuleComment(FILE* src, const char* szModuleName);
-void printComment(FILE* src, const char* szPrefix, const char* szString, const char* szSuffix);
+bool printComment(FILE* src, const char* szPrefix, const char* szString, const char* szSuffix);
 
 #endif // COMMENT_UTIL_H

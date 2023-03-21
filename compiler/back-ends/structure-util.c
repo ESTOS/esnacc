@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <string.h>
 
-bool IsDeprecated(const long lDeprecatedValue)  {
+bool IsDeprecatedNoOutput(const long lDeprecatedValue)  {
 	if (!gNoDeprecatedSymbols || !lDeprecatedValue)
 		return false;
 	return gNoDeprecatedSymbols > lDeprecatedValue;
@@ -24,7 +24,7 @@ bool IsROSEValueDef(Module* mod, ValueDef* vd) {
 		asnoperationcomment com;
 		if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &com))
 		{
-			if (IsDeprecated(com.lDeprecated))
+			if (IsDeprecatedNoOutput(com.lDeprecated))
 				return false;
 		}
 	}
@@ -242,9 +242,9 @@ int IsSimpleType(const enum BasicTypeChoiceId type)
 
 const char* GetNameSpace(Module* mod)
 {
-	if (!mod || !mod->baseFileName)
+	if (!mod)
 		return NULL;
-	return RemovePath(mod->baseFileName);
+	return mod->moduleName;
 }
 
 enum BasicTypeChoiceId GetBaseBasicTypeChoiceId(BasicType* basicType)
@@ -412,25 +412,7 @@ Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod) {
 	return module;
 }
 
-bool IsDeprecatedSequence(Module* mod, const char* szSequenceName) {
-	asnsequencecomment comment;
-	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
-		if (IsDeprecated(comment.lDeprecated))
-			return true;
-	}
-	return false;
-}
-
-bool IsDeprecatedOperation(Module* mod, const char* szOperationName) {
-	asnoperationcomment comment;
-	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
-		if (IsDeprecated(comment.lDeprecated))
-			return true;
-	}
-	return false;
-}
-
-bool IsDeprecatedMember(Module* mod, const TypeDef* td, const char* szElement) {
+bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szElement) {
 	if (!gNoDeprecatedSymbols)
 		return false;
 
@@ -449,7 +431,33 @@ bool IsDeprecatedMember(Module* mod, const TypeDef* td, const char* szElement) {
 
 	asnmembercomment comment;
 	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment)) {
-		if (IsDeprecated(comment.lDeprecated)) {
+		if (comment.lDeprecated)
+			return true;
+	}
+				
+	return false;
+}
+
+bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szElement) {
+	if (!gNoDeprecatedSymbols)
+		return false;
+
+	enum BasicTypeChoiceId type = td->cxxTypeDefInfo->asn1TypeId;
+
+	// Deprecated may get skipped for:
+	// - choices
+	// - enums
+	// - sequences if the property is optional
+	// -> so in any other case false, not skippable
+
+	if(type != BASICTYPE_CHOICE &&
+		type != BASICTYPE_ENUMERATED &&
+		type != BASICTYPE_SEQUENCE)
+		return false;
+
+	asnmembercomment comment;
+	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment)) {
+		if (IsDeprecatedNoOutput(comment.lDeprecated)) {
 			if (type == BASICTYPE_SEQUENCE) {
 				// We need to check if the property is optional, if that is the case we can skip it
 				NamedType* e;
@@ -469,3 +477,38 @@ bool IsDeprecatedMember(Module* mod, const TypeDef* td, const char* szElement) {
 	return false;
 }
 
+bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName) {
+	asnsequencecomment comment;
+	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
+		if (comment.lDeprecated)
+			return true;
+	}
+	return false;
+}
+
+bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName) {
+	asnsequencecomment comment;
+	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
+		if (IsDeprecatedNoOutput(comment.lDeprecated))
+			return true;
+	}
+	return false;
+}
+
+bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName) {
+	asnoperationcomment comment;
+	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
+		if (comment.lDeprecated)
+			return true;
+	}
+	return false;
+}
+
+bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName) {
+	asnoperationcomment comment;
+	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
+		if (IsDeprecatedNoOutput(comment.lDeprecated))
+			return true;
+	}
+	return false;
+}

@@ -602,7 +602,7 @@ void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int
 
 	TypeDef* td;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs) {
-		if (IsDeprecatedSequence(m, td->definedName))
+		if (IsDeprecatedNoOutputSequence(m, td->definedName))
 			continue;
 		PrintSwiftTypeDefCode(src, mods, m, td, novolatilefuncs);
 	}
