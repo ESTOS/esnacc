@@ -308,7 +308,7 @@ void Print_JSON_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 
 	char* szConverted = FixName(td->definedName);
 	fprintf(src, "\t\tif (newContext.bAddTypes)\n");
-	fprintf(src, "\t\t\t(t as INamedType)._type = \"%s\";\n", szConverted);
+	fprintf(src, "\t\t\tt._type = \"%s\";\n", szConverted);
 	int bFirst = TRUE;
 	bool bCurly = false;
 	NamedType* e;
@@ -825,7 +825,7 @@ void Print_JSON_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 	NamedType* e;
 	char* szConverted = FixName(td->definedName);
 	fprintf(src, "\t\tif (newContext.bAddTypes)\n");
-	fprintf(src, "\t\t\t(t as INamedType)._type = \"%s\";\n", szConverted);
+	fprintf(src, "\t\t\tt._type = \"%s\";\n", szConverted);
 
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
@@ -1352,9 +1352,9 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			fprintf(src, "\t\tconst newContext = TSConverter.addEncodeContext(context, name, \"%s\");\n\n", szConverted);
 
 			if (type == BASICTYPE_SEQUENCEOF || type == BASICTYPE_SETOF)
-				fprintf(src, "\t\tconst t = new %s.%s();\n\n", szNameSpace, szConverted);
+				fprintf(src, "\t\tconst t = [] as %s.%s;\n\n", szNameSpace, szConverted);
 			else
-				fprintf(src, "\t\tconst t = %s.%s.initEmpty();\n\n", szNameSpace, szConverted);
+				fprintf(src, "\t\tconst t = {} as %s.%s & INamedType;\n\n", szNameSpace, szConverted);
 
 			if (strcmp(szConverted, "AsnOptionalParam") == 0) {
 				fprintf(src, "\t\t// It is not possible to encode a single AsnOptionalParam into the ucserver notation. Needs the AsnOptionalParameters envelop!\n");
