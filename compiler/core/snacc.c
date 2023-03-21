@@ -2875,13 +2875,13 @@ bool recurseFindInvalid(Module* mod, Type* type, const char* szPath, const char*
 	enum BasicTypeChoiceId choiceId = type->basicType->choiceId;
 
 	if (szElementName) {
-		if (choiceId == BASICTYPE_SEQUENCE && IsDeprecatedSequence(mod, szElementName))
+		if (choiceId == BASICTYPE_SEQUENCE && IsDeprecatedNoOutputSequence(mod, szElementName))
 			return false;
 		char szNewName[TESTBUFFERSIZE] = { 0 };
 		strcat_s(szNewName, TESTBUFFERSIZE, "::");
 		strcat_s(szNewName, TESTBUFFERSIZE, szElementName);
 		if ((choiceId == BASICTYPE_SEQUENCE || choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF) && type->cxxTypeRefInfo->className) {
-			if (IsDeprecatedSequence(mod, type->cxxTypeRefInfo->className))
+			if (IsDeprecatedNoOutputSequence(mod, type->cxxTypeRefInfo->className))
 				return false;
 			strcat_s(szNewName, TESTBUFFERSIZE, "(");
 			strcat_s(szNewName, TESTBUFFERSIZE, type->cxxTypeRefInfo->className);
