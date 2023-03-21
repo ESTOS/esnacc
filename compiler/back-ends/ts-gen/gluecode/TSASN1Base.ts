@@ -453,7 +453,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param callback - the callback that shall get notified
 	 */
 	public static setDeprecatedCallback(callback: IASN1DeprecatedCallback | undefined): void {
-		this.deprecatedCallback = callback;
+		TSASN1Base.deprecatedCallback = callback;
 	}
 
 	/**
@@ -463,11 +463,11 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param obj - the object that has been created
 	 */
 	public static deprecatedObject(moduleName: string, obj: object): void {
-		if (!this.deprecatedCallback)
+		if (!TSASN1Base.deprecatedCallback)
 			return;
 		const name = obj.constructor.name;
 		const stack = this.getCallStack();
-		this.deprecatedCallback.deprecatedObject(moduleName, name, stack);
+		TSASN1Base.deprecatedCallback.deprecatedObject(moduleName, name, stack);
 	}
 
 	/**
@@ -479,10 +479,10 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param invokeContext - the invokeContext that shows more details about the invoke
 	 */
 	public static deprecatedMethod(moduleName: string, methodName: string, direction: "IN" | "OUT", invokeContext: IReceiveInvokeContextParams | ISendInvokeContextParams | undefined): void {
-		if (!this.deprecatedCallback)
+		if (!TSASN1Base.deprecatedCallback)
 			return;
 		const stack = this.getCallStack();
-		this.deprecatedCallback.deprecatedMethod(moduleName, methodName, direction, invokeContext, stack);
+		TSASN1Base.deprecatedCallback.deprecatedMethod(moduleName, methodName, direction, invokeContext, stack);
 	}
 
 	/**
@@ -942,18 +942,32 @@ export abstract class TSASN1Base implements IASN1Transport {
 				const caller = elements[iCount];
 				if (!caller)
 					break;
+				let bIsNode = true;
 				const reg1 = / at (.*) /;
-				const method = reg1.exec(caller);
+				let method = reg1.exec(caller);
+				if (!method) {
+					const reg2 = /(.*)@/;
+					method = reg2.exec(caller);
+					bIsNode = false;
+				}
 				if (method && method[1]) {
-					// node js root element, we stop here as the root level gives no additional insights...
-					if (method[1] === "Object.<anonymous>")
-						break;
-					const reg2 = /(.*)\.(.*)/;
-					const split = reg2.exec(method[1]);
+					let split: RegExpExecArray | null = null;
+					if (bIsNode) {
+						// node js root element, we stop here as the root level gives no additional insights...
+						if (method[1] === "Object.<anonymous>")
+							break;
+						const reg3 = /(.*)\.(.*)/;
+						split = reg3.exec(method[1]);
+					}
 					if (split)
 						result.push({ class: split[1], method: split[2] });
 					else
 						result.push({ method: method[1] });
+					if (!bIsNode) {
+						// After the componentDidMount in react we need no further entires (just blurries the callstack)
+						if (method[1] === "componentDidMount")
+							break;
+					}
 				}
 			}
 		}
