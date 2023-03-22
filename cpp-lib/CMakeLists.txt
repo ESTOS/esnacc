@@ -1,13 +1,16 @@
 # WARNING: not really tested yet and has compile errors!
 # to improve things, maybe c-lib and compiler CMakeLists.txt can be examples
-include_directories(.)
-include_directories(./..)
 
 add_compile_definitions("SNACCDLL_NONE")
 
 file(GLOB src_files src/*.cpp src/tkAppInit.c ejsoncpp/*.cpp)
 
 add_library(cpp-lib STATIC ${src_files})
+
+target_include_directories("cpp-lib" PUBLIC .)
+target_include_directories("cpp-lib" PUBLIC ./..)
+target_include_directories("cpp-lib" PUBLIC "include")
+
 # set the name for the library (the d addon for debug has been specified in the root CMakeLists.txt)
 if(CPP_LIBRARY_OUTPUT_NAME)
 	set_target_properties(cpp-lib PROPERTIES OUTPUT_NAME ${CPP_LIBRARY_OUTPUT_NAME})
