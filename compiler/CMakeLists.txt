@@ -31,15 +31,6 @@ MACRO(SUBDIRLIST result curdir)
     SET(${result} ${dirlist})
 ENDMACRO()
 
-# Get include paths the compiler needs
-# get all subdriectories of back-ends
-SUBDIRLIST(subdirs ${CMAKE_CURRENT_SOURCE_DIR}/back-ends)
-
-# put them in the compiler include path
-foreach(subdi ${subdirs})
-    include_directories(${subdi})
-endforeach()
-
 # add all compiler sources
 if(WIN32)
     file(GLOB src_files core/*.c core/*.cpp back-ends/*.c back-ends/**/*.c compiler.rc)
@@ -59,6 +50,16 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 # build executable and link it with c-static-lib and back-end
 add_executable(compiler ${src_files} )
 target_link_libraries (compiler LINK_PUBLIC c-lib)
+
+# Get include paths the compiler needs
+# get all subdriectories of back-ends
+SUBDIRLIST(subdirs ${CMAKE_CURRENT_SOURCE_DIR}/back-ends)
+
+# put them in the compiler include path
+foreach(subdi ${subdirs})
+    target_include_directories(compiler PUBLIC ${subdi})
+endforeach()
+
 
 if(COMPILER_OUTPUT_NAME)
 	set_target_properties(compiler PROPERTIES OUTPUT_NAME ${COMPILER_OUTPUT_NAME})
