@@ -19,8 +19,8 @@ public:
 	// @deprecated 1.1.2023 Superseeded by method xyz
 
 	// If no time has been specified the value is set to 1
-	// The value is compared with the global gNoDeprecatedSymbols to validate whether the symbol shall get excluded or not for the output
-	long lDeprecated = 0;
+	// The value is compared with the global gi64NoDeprecatedSymbols to validate whether the symbol shall get excluded or not for the output
+	long long i64Deprecated = 0;
 	// Deprecated comment - text that was written behing the @deprecated flag
 	std::string strDeprecated_UTF8;
 	std::string strDeprecated_ASCII;

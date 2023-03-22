@@ -17,7 +17,7 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...);
 #ifdef __cplusplus
 extern "C" {
 #endif
-int ConvertDateToUnixTime(const char* szValue);
+long long ConvertDateToUnixTime(const char* szValue);
 #ifdef __cplusplus
 }
 #endif
@@ -129,8 +129,8 @@ typedef char bool;
 #define if_TCL( code)
 #endif
 
-extern int gNoDeprecatedSymbols;
-extern int gValidationLevel;
-extern int gWriteComments;
+extern long long gi64NoDeprecatedSymbols;
+extern int giValidationLevel;
+extern int giWriteComments;
 
 #endif /* _SNACC_H_ */

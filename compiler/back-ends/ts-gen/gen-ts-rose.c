@@ -651,9 +651,9 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 						printComment(src, "\t *", operationComment.szLong, "\n");
 					if (bHasShort || bHasLong)
 						fprintf(src, "\t *\n");
-					if (operationComment.lDeprecated || operationComment.iPrivate)
+					if (operationComment.i64Deprecated || operationComment.iPrivate)
 					{
-						if (operationComment.lDeprecated) {
+						if (operationComment.i64Deprecated) {
 							fprintf(src, "\t * @deprecated %s\n", getDeprecated(operationComment.szDeprecated));
 							bDeprecated = true;
 						}

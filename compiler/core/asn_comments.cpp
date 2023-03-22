@@ -70,7 +70,7 @@ extern "C" {
 			pcomment->szLong = comment.strLong_UTF8.c_str();
 			pcomment->szCategory = comment.strCategory_UTF8.c_str();
 			pcomment->iPrivate = comment.iPrivate;
-			pcomment->lDeprecated = comment.lDeprecated;
+			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 			return 1;
 		}
@@ -99,7 +99,7 @@ extern "C" {
 			pcomment->szLong = comment.strLong_ASCII.c_str();
 			pcomment->szCategory = comment.strCategory_ASCII.c_str();
 			pcomment->iPrivate = comment.iPrivate;
-			pcomment->lDeprecated = comment.lDeprecated;
+			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
 			return 1;
 		}
@@ -124,7 +124,7 @@ extern "C" {
 			pcomment->szLong = comment.strLong_UTF8.c_str();
 			pcomment->szCategory = comment.strCategory_UTF8.c_str();
 			pcomment->iPrivate = comment.iPrivate;
-			pcomment->lDeprecated = comment.lDeprecated;
+			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 			return 1;
 		}
@@ -157,7 +157,7 @@ extern "C" {
 			pcomment->szLong = comment.strLong_ASCII.c_str();
 			pcomment->szCategory = comment.strCategory_ASCII.c_str();
 			pcomment->iPrivate = comment.iPrivate;
-			pcomment->lDeprecated = comment.lDeprecated;
+			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
 			return 1;
 		}
@@ -183,7 +183,7 @@ extern "C" {
 			pcomment->szLong = comment.strLong_UTF8.c_str();
 			pcomment->szCategory = comment.strCategory_UTF8.c_str();
 			pcomment->iPrivate = comment.iPrivate;
-			pcomment->lDeprecated = comment.lDeprecated;
+			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 			return 1;
 		}
@@ -216,7 +216,7 @@ extern "C" {
 			pcomment->szLong = comment.strLong_ASCII.c_str();
 			pcomment->szCategory = comment.strCategory_ASCII.c_str();
 			pcomment->iPrivate = comment.iPrivate;
-			pcomment->lDeprecated = comment.lDeprecated;
+			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
 			return 1;
 		}
@@ -245,7 +245,7 @@ extern "C" {
 				pcomment->szShort = comment.strShort_UTF8.c_str();
 				pcomment->szLinkedType = comment.strLinkedType_UTF8.c_str();
 				pcomment->iPrivate = comment.iPrivate;
-				pcomment->lDeprecated = comment.lDeprecated;
+				pcomment->i64Deprecated = comment.i64Deprecated;
 				pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 				return 1;
 			}
@@ -277,7 +277,7 @@ extern "C" {
 				pcomment->szShort = comment.strShort_ASCII.c_str();
 				pcomment->szLinkedType = comment.strLinkedType_ASCII.c_str();
 				pcomment->iPrivate = comment.iPrivate;
-				pcomment->lDeprecated = comment.lDeprecated;
+				pcomment->i64Deprecated = comment.i64Deprecated;
 				pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
 				return 1;
 			}
