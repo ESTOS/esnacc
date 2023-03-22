@@ -7,7 +7,7 @@
 bool IsDeprecatedNoOutput(const long long i64DeprecatedValue)  {
 	if (!gi64NoDeprecatedSymbols || !i64DeprecatedValue)
 		return false;
-	return gi64NoDeprecatedSymbols > i64DeprecatedValue;
+	return gi64NoDeprecatedSymbols >= i64DeprecatedValue;
 }
 
 bool IsROSEValueDef(Module* mod, ValueDef* vd) {
@@ -413,9 +413,6 @@ Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod) {
 }
 
 bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szElement) {
-	if (!gi64NoDeprecatedSymbols)
-		return false;
-
 	enum BasicTypeChoiceId type = td->cxxTypeDefInfo->asn1TypeId;
 
 	// Deprecated may get skipped for:
@@ -431,8 +428,12 @@ bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szEle
 
 	asnmembercomment comment;
 	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment)) {
-		if (comment.i64Deprecated)
-			return true;
+		if (comment.i64Deprecated){
+			if (gi64NoDeprecatedSymbols)
+				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
+			else
+				return true;
+		}
 	}
 				
 	return false;
@@ -480,13 +481,20 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName) {
 	asnsequencecomment comment;
 	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
-		if (comment.i64Deprecated)
-			return true;
+		if (comment.i64Deprecated) {
+			if (gi64NoDeprecatedSymbols)
+				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
+			else
+				return true;
+		}
 	}
 	return false;
 }
 
 bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName) {
+	if (!gi64NoDeprecatedSymbols)
+		return false;
+
 	asnsequencecomment comment;
 	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
 		if (IsDeprecatedNoOutput(comment.i64Deprecated))
@@ -498,13 +506,20 @@ bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName) {
 bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName) {
 	asnoperationcomment comment;
 	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
-		if (comment.i64Deprecated)
-			return true;
+		if (comment.i64Deprecated) {
+			if (gi64NoDeprecatedSymbols)
+				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
+			else
+				return true;
+		}
 	}
 	return false;
 }
 
 bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName) {
+	if (!gi64NoDeprecatedSymbols)
+		return false;
+
 	asnoperationcomment comment;
 	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
 		if (IsDeprecatedNoOutput(comment.i64Deprecated))
