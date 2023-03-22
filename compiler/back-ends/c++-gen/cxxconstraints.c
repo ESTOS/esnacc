@@ -283,7 +283,7 @@ void PrintCxxSetOfSizeSingleValConstraints PARAMS((hdr, src, td),
         fprintf (src, "     if(pConstraintFails!=NULL)\n     {\n");
         fprintf (src, "       pTmpError=pConstraintFails->Append();\n");
         fprintf (src, "       *pTmpError += ptr;\n");
-        fprintf (src, "       *pTmpError += \"In function call:  %s::checkConstraints(...)\\n\";\n", td->cxxTypeDefInfo->className);
+        fprintf (src, "       *pTmpError += \"In function call:  %s...)\\n\";\n", td->cxxTypeDefInfo->className);
         fprintf (src, "     }\n");
         fprintf (src, "   }\n   else\n   {\n");
 

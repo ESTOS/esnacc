@@ -6,7 +6,7 @@
 //   esnacc by Jan Fellner - estos GmbH
 
 
-#include "SNACCROSE.h"
+#include "../include/SNACCROSE.h"
 
 namespace SNACC{
 //------------------------------------------------------------------------------

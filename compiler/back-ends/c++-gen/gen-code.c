@@ -126,14 +126,237 @@ static Module *GetImportModuleRef (char *Impname, ModuleList *mods)
 	return currMod;
 }
 
-/* PIERCE added 8-22-2001 */
-void PrintCopyConstructor(FILE *hdr, FILE *src, char *className)
+void PrintMemberAttributes(FILE *hdr, ModuleList *mods, Module *m, Type *t)
 {
-	fprintf(hdr, "   %s(const %s& that);\n", className, className);
+	if(t->basicType->choiceId == BASICTYPE_SET) {
+		NamedType *e = NULL;
+		FOR_EACH_LIST_ELMT(e, set->basicType->a.set)
+		{
+			fprintf (hdr, "\t");
+
+			/* JKG 7/31/03 */
+			/*The following code enclosed in this if/else statement */
+			/*is constructed for constraint handling capability     */
+			/*for primitives found in sequences or sets             */
+			if (e->type->subtypes!=NULL)
+			{
+				switch (e->type->subtypes->choiceId)
+				{
+				case SUBTYPE_AND:
+				case SUBTYPE_OR:
+				case SUBTYPE_SINGLE:
+					if(!PrintCxxMultiConstraintOrHandler(hdr, src, td->definedName, e, 1))
+					{
+						PrintCxxType (hdr, mods, m, r, td, set, e->type);
+						fprintf (hdr, "%s;\n\n", e->type->cxxTypeRefInfo->fieldName);
+					}
+					break;
+				default:
+					PrintCxxType (hdr, mods, m, r, td, set, e->type);
+					fprintf (hdr, "%s;\n\n", e->type->cxxTypeRefInfo->fieldName);
+					break;
+				}
+			}
+			else
+			{
+				PrintCxxType (hdr, mods, m, r, td, set, e->type);
+				fprintf (hdr, "%s;\n\n", e->type->cxxTypeRefInfo->fieldName);
+			}
+		}
+		fprintf (hdr, "\n");
+	}
+}
+
+void PrintConstructor(FILE *hdr, FILE *src, Module *m, char *className)
+{
+	fprintf(hdr, "\t%s();\n", className);
+	fprintf(src,"%s::%s()\n{\n", className, className);
+
+	if (IsDeprecatedFlaggedSequence(m, className))
+		fprintf(src,"\tSNACCDeprecated::DeprecatedObject(\"%s\", \"%s\");\n", m->moduleName, className);
+
+	fprintf(src,"\tInit();\n");
+	fprintf(src,"}\n\n");
+}
+
+void PrintCopyConstructor(FILE *hdr, FILE *src, Module *m, char *className)
+{
+	fprintf(hdr, "\t%s(const %s& that);\n", className, className);
 	fprintf(src,"%s::%s(const %s &that)\n{\n",className, className,className);
-	/*fprintf(src,"   Clear();\n");*/
-	fprintf(src,"   Init();\n");
-	fprintf(src,"   *this = that;\n}\n");
+
+	if (IsDeprecatedFlaggedSequence(m, className))
+		fprintf(src,"\tSNACCDeprecated::DeprecatedObject(\"%s\", \"%s\");\n", m->moduleName, className);
+
+	fprintf(src,"\tInit();\n");
+	fprintf(src,"\t*this = that;\n}\n\n");
+}
+
+void PrintDestructor(FILE *hdr, FILE *src, Module *m, char *className)
+{
+	fprintf (hdr, "\tvirtual ~%s();\n\n", className);
+	fprintf (src, "%s::~%s()\n{\n", className, className);
+	fprintf (src, "\tClear();\n");
+	fprintf (src, "}\n\n");
+}
+
+void PrintInit(FILE *hdr, FILE *src, Module *m, Type *t, char *className)
+{
+	fprintf (hdr, "\tvoid Init();\n");
+	fprintf (src, "void %s::Init()\n", className);
+	fprintf (src, "{\n");
+	if(t->basicType->choiceId == BASICTYPE_CHOICE) {
+		fprintf (src, "\t// initialize choice to no choiceId to first choice and set pointer to NULL\n");
+		NamedType *e = FIRST_LIST_ELMT(t->basicType->a.choice);
+		if (!e)
+			exit(3);
+		fprintf (src, "\tchoiceId = %sCid;\n", e->type->cxxTypeRefInfo->fieldName);
+		fprintf (src, "\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+	} else if(t->basicType->choiceId == BASICTYPE_SEQUENCE) {
+		NamedType *e = NULL;
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
+		{
+			if ((e->type->cxxTypeRefInfo->isPtr))
+			{
+#if TCL
+				fprintf (src, "#if TCL\n");
+				fprintf (src, "\t%s = new %s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
+				fprintf (src, "#else\n");
+				fprintf (src, "\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf (src, "#endif // TCL\n");
+#else
+				/* Default member initialization is a work in progress for eSNACC 1.6
+				*/
+
+				/* initialize default members to their default values */
+				if (e->type->defaultVal != NULL)
+				{
+					Value *defVal = GetValue(e->type->defaultVal->value);
+
+					/* HANDLE DEFAULT VALUE DECODING FOR DER by initializing the respective members to their default
+					* values.
+					*/
+					switch(ParanoidGetBuiltinType(e->type))
+					{
+					case BASICTYPE_INTEGER:
+					case BASICTYPE_ENUMERATED:
+						fprintf(src,"\t%s = new %s(%d);\n",
+							e->type->cxxTypeRefInfo->fieldName,
+							e->type->cxxTypeRefInfo->className,
+							defVal->basicValue->a.integer);
+						break;
+					case BASICTYPE_BOOLEAN:
+						fprintf(src,"\t%s = new %s(%s);\n",
+							e->type->cxxTypeRefInfo->fieldName,
+							e->type->cxxTypeRefInfo->className,
+							defVal->basicValue->a.boolean == 0 ? "false": "true");
+						break;
+					case BASICTYPE_BITSTRING:
+						{
+							NamedNumberList *pNNL = GetNamedElmts(e->type);
+							BasicValue *pBV;
+							pBV = GetLastNamedNumberValue(pNNL);
+
+							if (defVal->basicValue->choiceId == BASICVALUE_VALUENOTATION &&
+								pBV != NULL)
+							{
+								char *defBitStr;
+								normalizeValue(&defBitStr, defVal->basicValue->a.valueNotation->octs);
+
+								fprintf(src,"\t%s = new %s(%d);\n",
+									e->type->cxxTypeRefInfo->fieldName,
+									e->type->cxxTypeRefInfo->className,
+									pBV->a.integer);
+
+								//ste modified for empty default values
+								if (strlen(defBitStr))
+									fprintf(src, "\t%s->SetBit(%s::%s);\n",
+									e->type->cxxTypeRefInfo->fieldName,
+									e->type->cxxTypeRefInfo->className,
+									defBitStr);
+								free(defBitStr);
+							}
+							else
+								printf("\nWARNING: unsupported use of default BIT STRING\n");
+						}
+						break;
+					default:
+						{
+							fprintf (src, "\t%s = new %s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
+						}
+
+					} /* end switch */
+				}
+				else
+				{
+					if(e->type->optional)
+					{
+						fprintf (src, "\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+					}
+					else
+					{
+						fprintf (src, "\t%s = new %s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
+					}
+				}
+				/* end of default member initialization */
+
+#endif /* TCL */
+			}
+		}
+	}
+	fprintf (src, "}\n\n");
+}
+
+void PrintClear(FILE *hdr, FILE *src, Module *m, Type *t, char *className)
+{
+	fprintf (hdr, " \tvoid Clear();\n");
+	fprintf (src, "void %s::Clear()\n", className);
+	fprintf (src, "{\n");
+	if (t->basicType->choiceId == BASICTYPE_CHOICE) {
+		fprintf (src, "\tswitch (choiceId)\n");
+		fprintf (src, "\t{\n");
+		NamedType *e = NULL;
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
+		{
+			enum BasicTypeChoiceId tmpTypeId = GetBuiltinType(e->type);
+
+			fprintf (src, "\t\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
+			if (e->type->cxxTypeRefInfo->isPtr)
+			{
+				fprintf (src, "\t\t\tdelete %s;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf (src, "\t\t\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+			}
+			else if(!e->type->cxxTypeRefInfo->isPtr &&
+				((tmpTypeId == BASICTYPE_CHOICE) ||
+				(tmpTypeId == BASICTYPE_SET) ||
+				(tmpTypeId == BASICTYPE_SEQUENCE)) )
+			{
+				fprintf (src, "\t\t\t%s.Clear();\n", e->type->cxxTypeRefInfo->fieldName);
+			}
+			fprintf (src, "\t\t\tbreak;\n");
+		}
+		fprintf (src, "\t\t} // end of switch\n");
+	} else if (t->basicType->choiceId == BASICTYPE_CHOICE) {
+		NamedType *e = NULL;
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
+		{
+			enum BasicTypeChoiceId tmpTypeId = GetBuiltinType(e->type);
+			if (e->type->cxxTypeRefInfo->isPtr)
+			{
+				fprintf (src, "\tif(%s)\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf (src, "\t\tdelete %s;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf (src, "\t\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+			}
+			else if(!e->type->cxxTypeRefInfo->isPtr &&
+				((tmpTypeId == BASICTYPE_CHOICE) ||
+				(tmpTypeId == BASICTYPE_SET) ||
+				(tmpTypeId == BASICTYPE_SEQUENCE)) )
+			{
+				fprintf (src, "\t%s.Clear();\n", e->type->cxxTypeRefInfo->fieldName);
+			}
+		}
+	}
+
+	fprintf (src, "}\n\n");
 }
 
 void PrintSimpleMeta(FILE *hdr, char *className,int exportMember)
@@ -255,11 +478,11 @@ static void PrintCxxType(FILE *hdr,
 
 	if (pszNamespace)
 	{
-		fprintf (hdr, "%s::%s       ", pszNamespace, t->cxxTypeRefInfo->className);
+		fprintf (hdr, "%s::%s ", pszNamespace, t->cxxTypeRefInfo->className);
 	}
 	else
 	{
-		fprintf (hdr, "%s       ", t->cxxTypeRefInfo->className);
+		fprintf (hdr, "%s ", t->cxxTypeRefInfo->className);
 	}           // END IF BASICTYPE_IMPORTTYPEREF
 
 	if (t->cxxTypeRefInfo->isPtr)
@@ -955,6 +1178,8 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 */
 static void PrintCxxSimpleDef(FILE *hdr, FILE *src, Module *m, CxxRules *r, TypeDef *td)
 {
+	fprintf(hdr, "// [%s]\n", __FUNCTION__);
+
 	Tag *tag;
 	TagList *tags;
 	char *formStr;
@@ -981,11 +1206,10 @@ static void PrintCxxSimpleDef(FILE *hdr, FILE *src, Module *m, CxxRules *r, Type
 	{
 		int	hasNamedElmts;
 
-		char *ptr="";   /* NOT DLL Exported, or ignored on Unix. */
+		fprintf (hdr, "class ");
 		if (bVDAGlobalDLLExport)
-			ptr = bVDAGlobalDLLExport;
-
-		fprintf (hdr, "class %s %s: public %s\n", ptr, td->cxxTypeDefInfo->className, td->type->cxxTypeRefInfo->className);
+			fprintf (hdr, "%s ", bVDAGlobalDLLExport);
+		fprintf (hdr, "%s : public %s\n", td->cxxTypeDefInfo->className, td->type->cxxTypeRefInfo->className);
 		fprintf (hdr, "{\n");
 		fprintf (hdr, "public:\n");
 
@@ -1889,7 +2113,7 @@ void PrintChoiceDefCodePEREnc(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Ty
 	/*** FIRST, handle index encoding for PER Choice.  Taking advantage of
 	* the AsnInt class with constraints for the detailed encoding
 	* details.  Declare outside scope of source method for PEnc/PDec. */
-	fprintf (src, "class AsnIntChoice_%s: public AsnInt  {\n", td->cxxTypeDefInfo->className);
+	fprintf (src, "class AsnIntChoice_%s : public AsnInt  {\n", td->cxxTypeDefInfo->className);
 	fprintf (src, "  public:\n");
 	fprintf (src, "  AsnIntChoice_%s(AsnIntType val=0):AsnInt(val){ }\n",
 		td->cxxTypeDefInfo->className);
@@ -2119,26 +2343,22 @@ void PrintChoiceDefCodePERDec(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Ty
 static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m, CxxRules *r ,
 								  TypeDef *td,Type *parent, Type *choice, int novolatilefuncs)
 {
-	NamedType *e;
-	enum BasicTypeChoiceId tmpTypeId;
-	char *ptr="";   /* NOT DLL Exported, or ignored on Unix. */
-
-	/* put class spec in hdr file */
-
-	if (bVDAGlobalDLLExport != NULL)
-		ptr = bVDAGlobalDLLExport;
+	fprintf(hdr, "// [%s]\n", __FUNCTION__);
 
 	if (gAlternateNamespaceString == 0 &&
 		(strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParam") == 0 ||
 		strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParamChoice") == 0))
 		return;
 
-	fprintf (hdr, "class %s %s%s\n", ptr, td->cxxTypeDefInfo->className, baseClassesG);
+	fprintf (hdr, "class ");
+	if (bVDAGlobalDLLExport)
+		fprintf (hdr, "%s ", bVDAGlobalDLLExport);
+	fprintf (hdr, "%s %s\n", td->cxxTypeDefInfo->className, baseClassesG);
 	fprintf (hdr, "{\n");
 	fprintf (hdr, "public:\n");
 
 	/* write out choiceId enum type */
-
+	NamedType* e = NULL;
 	FOR_EACH_LIST_ELMT (e, choice->basicType->a.choice)
 	{
 		if(e->type->subtypes != NULL)
@@ -2196,26 +2416,17 @@ static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module
 
 	fprintf (hdr, "\n");
 
-	/* constructors and destructor */
-	fprintf (hdr, "   %s() {Init();}\n", td->cxxTypeDefInfo->className);
-
 	/* PIERCE 8-22-2001 */
-	PrintCopyConstructor(hdr, src, td->cxxTypeDefInfo->className);
+	PrintConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
+	PrintCopyConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
+	PrintDestructor(hdr, src, m, td->cxxTypeDefInfo->className);
+	PrintInit(hdr, src, m, choice, td->cxxTypeDefInfo->className);
+	PrintClear(hdr, src, m, choice, td->cxxTypeDefInfo->className);
+
 	PrintSimpleMeta(hdr,td->cxxTypeDefInfo->className,0);
 
-	/* Init() member function*/
-	fprintf (hdr, "   void Init(void);\n");
-	fprintf (src, "void %s::Init(void)\n", td->cxxTypeDefInfo->className);
-	fprintf (src, "{\n");
-	fprintf (src, "   // initialize choice to no choiceId to first choice and set pointer to NULL\n");
-	e = FIRST_LIST_ELMT (choice->basicType->a.choice);
-	if (!e)
-		exit(3);
-	fprintf (src, "  choiceId = %sCid;\n", e->type->cxxTypeRefInfo->fieldName);
-	fprintf (src, "  %s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
-	fprintf (src, "}\n\n");
-	fprintf (hdr, "\n   virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n\n");
-	fprintf(src, "\nint %s::checkConstraints(ConstraintFailList* pConstraintFails) const\n{\n",
+	fprintf (hdr, "\tvirtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n\n");
+	fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails) const\n{\n",
 		td->cxxTypeDefInfo->className);
 
 	FOR_EACH_LIST_ELMT (e, choice->basicType->a.choice)
@@ -2235,40 +2446,6 @@ static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module
 	}
 	fprintf(src, "\treturn 0;\n");
 	fprintf(src, "}\n\n\n");
-
-	/* virtual destructor*/
-	fprintf (hdr, "   virtual ~%s() {Clear();}\n\n", td->cxxTypeDefInfo->className);
-
-	/* Clear() member*/
-	fprintf (hdr, "   void Clear();\n\n");
-	fprintf (src, "void %s::Clear()\n", td->cxxTypeDefInfo->className);
-	fprintf (src, "{\n");
-	fprintf (src, "  switch (choiceId)\n");
-	fprintf (src, "  {\n");
-
-	FOR_EACH_LIST_ELMT (e, choice->basicType->a.choice)
-	{
-		tmpTypeId = GetBuiltinType (e->type);
-
-		fprintf (src, "    case %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
-		if (e->type->cxxTypeRefInfo->isPtr)
-		{
-			fprintf (src, "      delete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-			fprintf (src, "      %s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
-		}
-		else if(!e->type->cxxTypeRefInfo->isPtr &&
-			((tmpTypeId == BASICTYPE_CHOICE) ||
-			(tmpTypeId == BASICTYPE_SET) ||
-			(tmpTypeId == BASICTYPE_SEQUENCE)) )
-		{
-			fprintf (src, "  %s.Clear();\n", e->type->cxxTypeRefInfo->fieldName);
-		}
-		fprintf (src, "      break;\n");
-	}
-
-	fprintf (src, "  } // end of switch\n");
-	fprintf (src, "} // end of Clear()\n");
-	fprintf (src, "\n");
 
 	/* print clone routine for ANY mgmt */
 	PrintCloneMethod (hdr, src, td);
@@ -3382,34 +3559,30 @@ void PrintSeqDefCodePERDec(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Type 
 
 static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m, CxxRules *r ,TypeDef *td, Type *parent, Type *seq, int novolatilefuncs)
 {
+	fprintf(hdr, "// [%s]\n", __FUNCTION__);
+
 	NamedType *e;
 	CxxTRI *cxxtri=NULL;
 
-	enum BasicTypeChoiceId tmpTypeId;
-
 	// DEFINE PER encode/decode tmp vars.
 	NamedType **pSeqElementNamedType=NULL;
-
-
-	/* put class spec in hdr file */
-	char *ptr="";   /* NOT DLL Exported, or ignored on Unix. */
-	if (bVDAGlobalDLLExport != NULL)
-		ptr = bVDAGlobalDLLExport;
 
 	if (gAlternateNamespaceString == 0 &&
 		(strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParam") == 0 ||
 		strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParameters") == 0))
 		return;
 
-
-	fprintf (hdr, "class %s %s%s\n", ptr, td->cxxTypeDefInfo->className, baseClassesG);
+	fprintf (hdr, "class ");
+	if (bVDAGlobalDLLExport)
+		fprintf (hdr, "%s ", bVDAGlobalDLLExport);
+	fprintf (hdr, "%s %s\n", td->cxxTypeDefInfo->className, baseClassesG);
 	fprintf (hdr, "{\n");
 	fprintf (hdr, "public:\n");
 
 	/* write out the sequence elmts */
 	FOR_EACH_LIST_ELMT (e, seq->basicType->a.sequence)
 	{
-		fprintf (hdr, "  ");
+		fprintf (hdr, "\t");
 
 		/* JKG 7/31/03 */
 		/*The following code enclosed in this if/else statement */
@@ -3456,117 +3629,15 @@ static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 	/* constructors and destructor: */
 	/* Default constructor
 	*/
-	fprintf (hdr, "   %s() {Init();}\n", td->cxxTypeDefInfo->className);
-
-	/* Init() member function
-	*/
-	fprintf (hdr, "   void Init(void);\n");
-	fprintf (src, "void %s::Init(void)\n", td->cxxTypeDefInfo->className);
-	fprintf (src, "{\n");
-	FOR_EACH_LIST_ELMT (e, seq->basicType->a.sequence)
-	{
-		if ((e->type->cxxTypeRefInfo->isPtr))
-		{
-
-#if TCL
-			fprintf (src, "#if TCL\n");
-			fprintf (src, "  %s = new %s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
-			fprintf (src, "#else\n");
-			fprintf (src, "  %s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
-			fprintf (src, "#endif // TCL\n");
-#else
-
-			/* Default member initialization is a work in progress for eSNACC 1.6
-			*/
-
-			/* initialize default members to their default values */
-			if (e->type->defaultVal != NULL)
-			{
-				Value *defVal = GetValue(e->type->defaultVal->value);
-
-				/* HANDLE DEFAULT VALUE DECODING FOR DER by initializing the respective members to their default
-				* values.
-				*/
-				switch(ParanoidGetBuiltinType(e->type))
-				{
-				case BASICTYPE_INTEGER:
-				case BASICTYPE_ENUMERATED:
-					fprintf(src,"  %s = new %s(%d);\n",
-						e->type->cxxTypeRefInfo->fieldName,
-						e->type->cxxTypeRefInfo->className,
-						defVal->basicValue->a.integer);
-					break;
-				case BASICTYPE_BOOLEAN:
-					fprintf(src,"  %s = new %s(%s);\n",
-						e->type->cxxTypeRefInfo->fieldName,
-						e->type->cxxTypeRefInfo->className,
-						defVal->basicValue->a.boolean == 0 ? "false": "true");
-					break;
-				case BASICTYPE_BITSTRING:
-					{
-						NamedNumberList *pNNL = GetNamedElmts(e->type);
-						BasicValue *pBV;
-						pBV = GetLastNamedNumberValue(pNNL);
-
-						if (defVal->basicValue->choiceId == BASICVALUE_VALUENOTATION &&
-							pBV != NULL)
-						{
-							char *defBitStr;
-							normalizeValue(&defBitStr, defVal->basicValue->a.valueNotation->octs);
-
-							fprintf(src,"  %s = new %s(%d);\n",
-								e->type->cxxTypeRefInfo->fieldName,
-								e->type->cxxTypeRefInfo->className,
-								pBV->a.integer);
-
-							//ste modified for empty default values
-							if (strlen(defBitStr))
-								fprintf(src, "  %s->SetBit(%s::%s);\n",
-								e->type->cxxTypeRefInfo->fieldName,
-								e->type->cxxTypeRefInfo->className,
-								defBitStr);
-							free(defBitStr);
-						}
-						else
-							printf("\nWARNING: unsupported use of default BIT STRING\n");
-					}
-					break;
-				default:
-					{
-						fprintf (src, "  %s = new %s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
-					}
-
-				} /* end switch */
-			}
-			else
-			{
-				if(e->type->optional)
-				{
-					fprintf (src, "  %s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
-				}
-				else
-				{
-					fprintf (src, "  %s = new %s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
-				}
-			}
-			/* end of default member initialization */
-
-#endif /* TCL */
-		}
-	}
-	fprintf (src, "}\n\n");
-
-	/* virtual destructor
-	*/
-	fprintf (hdr, "   virtual ~%s() {Clear();}\n", td->cxxTypeDefInfo->className);
-	/* Clear() member
-	*/
-	fprintf (hdr, "   void Clear();\n");
+	PrintConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
+	PrintCopyConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
+	PrintDestructor(hdr, src, m, td->cxxTypeDefInfo->className);
+	PrintInit(hdr, src, m, seq, td->cxxTypeDefInfo->className);
+	PrintClear(hdr, src, m, seq, td->cxxTypeDefInfo->className);
 
 	/*JKG: 7/30/03 -- virtual check Constraints method*/
-
-	fprintf(hdr, "\n  int checkConstraints(ConstraintFailList* pConstraintFails) const;\n\n");
-	fprintf(src, "\nint %s::checkConstraints(ConstraintFailList* pConstraintFails) const{\n",
+	fprintf(hdr, "\n\tint checkConstraints(ConstraintFailList* pConstraintFails) const;\n\n");
+	fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails) const{\n",
 		td->cxxTypeDefInfo->className);
 
 	FOR_EACH_LIST_ELMT (e, seq->basicType->a.sequence)
@@ -3587,30 +3658,7 @@ static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 	fprintf(src, "\treturn 0;\n");
 	fprintf(src, "}\n\n\n");
 
-	fprintf (src, "void %s::Clear()\n", td->cxxTypeDefInfo->className);
-	fprintf (src, "{\n");
-	FOR_EACH_LIST_ELMT (e, seq->basicType->a.sequence)
-	{
-		tmpTypeId = GetBuiltinType (e->type);
-		if (e->type->cxxTypeRefInfo->isPtr)
-		{
-			fprintf (src, "  if(%s)\n", e->type->cxxTypeRefInfo->fieldName);
-			fprintf (src, "    delete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-			fprintf (src, "  %s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
-		}
-		else if(!e->type->cxxTypeRefInfo->isPtr &&
-			((tmpTypeId == BASICTYPE_CHOICE) ||
-			(tmpTypeId == BASICTYPE_SET) ||
-			(tmpTypeId == BASICTYPE_SEQUENCE)) )
-		{
-			fprintf (src, "  %s.Clear();\n", e->type->cxxTypeRefInfo->fieldName);
-		}
-	}
-
-	fprintf (src, "}\n\n");
-
 	/* PIERCE 8-22-2001 */
-	PrintCopyConstructor(hdr, src, td->cxxTypeDefInfo->className);
 	PrintSimpleMeta(hdr, td->cxxTypeDefInfo->className,0);
 
 	/* print clone routine for ANY mgmt */
@@ -3784,7 +3832,7 @@ static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 	/* end of print method code printer */
 
 	/* close class definition */
-	fprintf (hdr, "};\n\n\n");
+	fprintf (hdr, "};\n\n");
 } /* PrintCxxSeqDefCode */
 
 
@@ -3792,6 +3840,8 @@ static void
 PrintCxxSetDefCode (FILE *src, FILE *hdr, ModuleList *mods, Module *m,
 					CxxRules *r, TypeDef *td, Type *parent, Type *set, int novolatilefuncs)
 {
+	fprintf(hdr, "// [%s]\n", __FUNCTION__);
+
 	NamedType *e;
 	char *classStr;
 	char *formStr;
@@ -3814,56 +3864,15 @@ PrintCxxSetDefCode (FILE *src, FILE *hdr, ModuleList *mods, Module *m,
 	NamedType **pSetElementNamedType=NULL;
 	int extensionAdditions = FALSE;
 
-	/* put class spec in hdr file */
-	char *ptr="";   /* NOT DLL Exported, or ignored on Unix. */
-	if (bVDAGlobalDLLExport != NULL)
-		ptr = bVDAGlobalDLLExport;
-
-	fprintf (hdr, "class %s %s%s\n", ptr, td->cxxTypeDefInfo->className, baseClassesG);
+	fprintf (hdr, "class ");
+	if (bVDAGlobalDLLExport)
+		fprintf (hdr, "%s ", bVDAGlobalDLLExport);
+	fprintf (hdr, "%s %s\n", td->cxxTypeDefInfo->className, baseClassesG);
 	fprintf (hdr, "{\n");
 	fprintf (hdr, "public:\n");
 
-	/* write out the set elmts */
-	FOR_EACH_LIST_ELMT (e, set->basicType->a.set)
-	{
-		fprintf (hdr, "  ");
 
-		/* JKG 7/31/03 */
-		/*The following code enclosed in this if/else statement */
-		/*is constructed for constraint handling capability     */
-		/*for primitives found in sequences or sets             */
-
-		if(e->type->subtypes!=NULL)
-		{
-			switch(e->type->subtypes->choiceId)
-			{
-			case SUBTYPE_AND:
-			case SUBTYPE_OR:
-			case SUBTYPE_SINGLE:
-				{
-					if(!PrintCxxMultiConstraintOrHandler(hdr, src, td->definedName, e, 1))
-					{
-						PrintCxxType (hdr, mods, m, r, td, set, e->type);
-						fprintf (hdr, "%s;\n\n", e->type->cxxTypeRefInfo->fieldName);
-					}
-					break;
-				}
-			default:
-				{
-					PrintCxxType (hdr, mods, m, r, td, set, e->type);
-					fprintf (hdr, "%s;\n\n", e->type->cxxTypeRefInfo->fieldName);
-					break;
-				}
-			}
-		}
-		else
-		{
-			PrintCxxType (hdr, mods, m, r, td, set, e->type);
-			fprintf (hdr, "%s;\n\n", e->type->cxxTypeRefInfo->fieldName);
-		}
-
-	}
-	fprintf (hdr, "\n");
+	PrintMemberAttributes(hdr, mods, m, set);
 
 #if META
 	if (printMetaG)
@@ -3874,7 +3883,9 @@ PrintCxxSetDefCode (FILE *src, FILE *hdr, ModuleList *mods, Module *m,
 
 	/* Default constructor
 	*/
-	fprintf (hdr, "   %s(){Init();}\n", td->cxxTypeDefInfo->className);
+	PrintConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
+	PrintCopyConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
+	PrintDestructor(hdr, src, m, td->cxxTypeDefInfo->className);
 
 	/* Init() member function
 	*/
@@ -3967,11 +3978,7 @@ PrintCxxSetDefCode (FILE *src, FILE *hdr, ModuleList *mods, Module *m,
 	/* PIERCE added 8-22-2001
 
 	Simple META support */
-	PrintCopyConstructor(hdr, src, td->cxxTypeDefInfo->className);
 	PrintSimpleMeta(hdr, td->cxxTypeDefInfo->className,0);
-
-	/* virtual destructor */
-	fprintf (hdr, "  virtual ~%s() {Clear();}\n", td->cxxTypeDefInfo->className);
 
 	/* Clear() member*/
 	fprintf (hdr, "  void Clear();\n");
@@ -5243,6 +5250,15 @@ void PrintCxxCode(FILE *src,
 	fprintf (src, "\n");    //RWC; PRINT before possible "namespace" designations.
 
 	PrintSrcIncludes (src, mods, m);
+
+	bool bHasDeprecatedElements = false;
+	FOR_EACH_LIST_ELMT (td, m->typeDefs) {
+		if(IsDeprecatedFlaggedSequence(m, td->definedName)) {
+			fprintf (src, "#include <cpp-lib/include/SNACCDeprecated.h>\n");
+			bHasDeprecatedElements = true;
+			break;
+		}
+	}
 
 	FOR_EACH_LIST_ELMT (currMod, mods)
 	{

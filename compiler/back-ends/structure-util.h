@@ -36,10 +36,31 @@ char* GetImportFileName(char* Impname, ModuleList* mods);
 Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, Module* m);
 Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod);
 
-// Returns true when an element is flagged as deprecated
+// An element may be flagged deprecated with a timestamp or without
+// It´s important to mention that when the compiler is running it can remove elements from the output which are flagged as deprecated
+// This allows to remove elements e.g. on the client side but not on the server side.
+// A method is flagged like this:
+// -- @deprecated 01.01.2023 Superseeded by XYZ
+
+// You may now call the compiler with:
+// -nodeprecated 
+// which will remove all deprecated flagg elements
+// IsDeprecatedFlagged... returns false, IsDeprecatedNoOutput... returns true
+
+// -nodeprecated:01.01.2023
+// which will remove only the elements that are flagg prior or including the mentioned date
+// IsDeprecatedFlagged... returns false, IsDeprecatedNoOutput... returns true
+
+// -nodeprecated:31.12.2022
+// which will not remove the element but will annotate that the element has been flagged deprecated
+// IsDeprecatedFlagged... returns true, IsDeprecatedNoOutput... returns false
+
+
+// Returns true when an element is flagged as deprecated (and is not set as no output)
 bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szElement);
 bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName);
 bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName);
+
 // Returns true when an element is flagged as deprecated AND shall not be written to the output
 bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szElement);
 bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName);
