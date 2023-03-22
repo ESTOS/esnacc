@@ -195,7 +195,7 @@ static void PrintHJSComments(FILE *src, TypeDef *td, Module *m) {
 			printCommentJS(src, " * ", sequenceComment.szShort, "\n");
 		if (strlen(sequenceComment.szLong))
 			printCommentJS(src, " * @remarks ", sequenceComment.szLong, "\n");
-		if (sequenceComment.lDeprecated)
+		if (sequenceComment.i64Deprecated)
 			fprintf(src, " * @deprecated *\n");
 		if (sequenceComment.iPrivate)
 			fprintf(src, " * @private\n");
@@ -476,7 +476,7 @@ static void PrintHJSBitstringDefCode(TypeDef *td, Module *mod)
 				printCommentJS(src, " * @remarks ", sequenceComment.szShort, "\n");
 			if (strlen(sequenceComment.szLong))
 				printCommentJS(src, " * @remarks ", sequenceComment.szLong, "\n");
-			if (sequenceComment.lDeprecated)
+			if (sequenceComment.i64Deprecated)
 				fprintf(src, " * @deprecated %s\n", getDeprecated(sequenceComment.szDeprecated));
 			if (sequenceComment.iPrivate)
 				fprintf(src, " * @private\n");
@@ -491,7 +491,7 @@ static void PrintHJSBitstringDefCode(TypeDef *td, Module *mod)
 			asnmembercomment comment;
 			if (GetMemberComment_UTF8(mod->moduleName, td->definedName, n->name, &comment) && strlen(comment.szShort))
 			{
-				int iMultiline = comment.lDeprecated || comment.iPrivate;
+				int iMultiline = comment.i64Deprecated || comment.iPrivate;
 				const char* szRemarksPrefix = iMultiline ? "\t * " : "\t/** ";
 				const char* prefix = iMultiline ? "\t * " : "\t/** ";
 				const char* suffix = iMultiline ? "\n" : " */\n";
@@ -500,7 +500,7 @@ static void PrintHJSBitstringDefCode(TypeDef *td, Module *mod)
 
 				printCommentJS(src, szRemarksPrefix, comment.szShort, suffix);
 
-				if (comment.lDeprecated)
+				if (comment.i64Deprecated)
 					fprintf(src, "%s@deprecated *%s", prefix, suffix);
 
 				if (comment.iPrivate)
@@ -546,7 +546,7 @@ static void PrintHJSEnumDefCode(TypeDef *td, Module *mod)
 			asnmembercomment memberComment;
 			if (GetMemberComment_UTF8(mod->moduleName, td->definedName, n->name, &memberComment) && (strlen(memberComment.szShort)))
 			{
-				int iMultiline = memberComment.lDeprecated || memberComment.iPrivate;
+				int iMultiline = memberComment.i64Deprecated || memberComment.iPrivate;
 				const char* szRemarksPrefix = iMultiline ? "\t * " : "\t/** ";
 				const char* prefix = iMultiline ? "\t * " : "\t/** ";
 				const char* suffix = iMultiline ? "\n" : " */\n";
@@ -555,7 +555,7 @@ static void PrintHJSEnumDefCode(TypeDef *td, Module *mod)
 
 				printCommentJS(src, szRemarksPrefix, memberComment.szShort, suffix);
 
-				if (memberComment.lDeprecated)
+				if (memberComment.i64Deprecated)
 					fprintf(src, "%s@deprecated *%s", prefix, suffix);
 
 				if (memberComment.iPrivate)
@@ -597,7 +597,7 @@ static void PrintHJSModuleCode(Module* mod)
 			printCommentJS(src, " * ", moduleComment.szShort, "\n");
 		if (strlen(moduleComment.szLong))
 			printCommentJS(src, " * @remarks", moduleComment.szLong, "\n");
-		if (moduleComment.lDeprecated)
+		if (moduleComment.i64Deprecated)
 			fprintf(src, " * @deprecated %s\n", getDeprecated(moduleComment.szDeprecated));
 		if (moduleComment.iPrivate)
 			fprintf(src, " * @private\n");
@@ -640,7 +640,7 @@ static void PrintHJSChoiceDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 		asnmembercomment comment;
 		if (GetMemberComment_UTF8(mod->moduleName, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
 		{
-			int iMultiline = comment.lDeprecated || comment.iPrivate;
+			int iMultiline = comment.i64Deprecated || comment.iPrivate;
 			const char* szRemarksPrefix = iMultiline ? "\t\t * " : "\t\t/** ";
 			const char* prefix = iMultiline ? "\t\t * " : "\t\t/** ";
 			const char* suffix = iMultiline ? "\n" : " */\n";
@@ -649,7 +649,7 @@ static void PrintHJSChoiceDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 
 			printCommentJS(src, szRemarksPrefix, comment.szShort, suffix);
 
-			if (comment.lDeprecated)
+			if (comment.i64Deprecated)
 				fprintf(src, "%s@deprecated *%s", prefix, suffix);
 
 			if (comment.iPrivate)
@@ -724,7 +724,7 @@ static void PrintHJSSeqDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 		if (GetMemberComment_UTF8(mod->moduleName, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
 		{
 			fprintf(src, "\n");
-			int iMultiline = comment.lDeprecated || comment.iPrivate;
+			int iMultiline = comment.i64Deprecated || comment.iPrivate;
 			const char* szRemarksPrefix = iMultiline ? "\t\t * @remarks " : "\t\t/** @remarks ";
 			const char* prefix = iMultiline ? "\t\t * " : "\t\t/** ";
 			const char* suffix = iMultiline ? "\n" : " */\n";
@@ -733,7 +733,7 @@ static void PrintHJSSeqDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 
 			printCommentJS(src, szRemarksPrefix, comment.szShort, suffix);
 
-			if (comment.lDeprecated)
+			if (comment.i64Deprecated)
 				fprintf(src, "%s@deprecated *%s", prefix, suffix);
 
 			if (comment.iPrivate)
@@ -783,7 +783,7 @@ static void PrintHJSSeqDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 		asnmembercomment comment;
 		if (GetMemberComment_UTF8(mod->moduleName, td->definedName, e->fieldName, &comment) && strlen(comment.szShort))
 		{
-			int iMultiline = comment.lDeprecated || comment.iPrivate;
+			int iMultiline = comment.i64Deprecated || comment.iPrivate;
 			const char* szRemarksPrefix = iMultiline ? "\t\t * " : "\t\t/** ";
 			const char* prefix = iMultiline ? "\t\t * " : "\t\t/** ";
 			const char* suffix = iMultiline ? "\n" : " */\n";
@@ -792,7 +792,7 @@ static void PrintHJSSeqDefCode(TypeDef *td, ModuleList *mods, Module *mod)
 
 			printCommentJS(src, szRemarksPrefix, comment.szShort, suffix);
 
-			if (comment.lDeprecated)
+			if (comment.i64Deprecated)
 				fprintf(src, "%s@deprecated *%s", prefix, suffix);
 
 			if (comment.iPrivate)

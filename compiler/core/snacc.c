@@ -105,7 +105,7 @@ char *bVDAGlobalDLLExport=(char *)0;
 void ErrChkModule PROTO ((Module *m));
 void FillCxxTypeInfo PROTO ((CxxRules *r, ModuleList *m));
 void FillIDLTypeInfo PROTO ((IDLRules *r, ModuleList *modList));
-void GenTypeTbls PROTO ((ModuleList *mods, char *fileName, int tableFileVersion));
+void GenTypeTbls PROTO ((ModuleList *mods, const char *fileName, int tableFileVersion));
 int  InitAsn1Parser PROTO ((Module *mod, const char *fileName, FILE *fPtr));
 int  LinkTypeRefs PROTO ((ModuleList *m));
 int  LinkValueRefs PROTO ((ModuleList *m));
@@ -203,16 +203,16 @@ int gPrivateSymbols = 1;
 //jan 10.1.2023 - if set deprecated symbols are removed from the generated code
 // The value contains a timestamp, either specified by the command line or set to the current day if no timestamp has been specified on the command line
 // When we parse the @deprecated flag we also search for a timestamp, if no timestamp is found the value of the deprecated timesamp is unix time 1
-// Any deprecated flag lower than the gNoDeprecatedSymbols will get removed in case gNoDeprecatedSymbols is set
-int gNoDeprecatedSymbols = 0;
+// Any deprecated flag lower than the gi64NoDeprecatedSymbols will get removed in case gi64NoDeprecatedSymbols is set
+long long gi64NoDeprecatedSymbols = 0;
 
 //jan 11.1.2023 - Default level for validating the content of the asn1 files
 // 1 - Validates that operationIDs are not used twice
 // 2 - Validates that the result is an AsnRequestError and argument, result, and error are SEQUENCES and thus extensible (@deprecated modules are excluded from that check)
-int gValidationLevel = 2;
+int giValidationLevel = 2;
 
 // Write comments to the target files on true (parsing is always enabled)
-int gWriteComments = 0;
+int giWriteComments = 0;
 
 #ifdef WIN_SNACC					/* Deepak: 14/Feb/2003 */
 	#define main Win_Snacc_Main
@@ -609,15 +609,18 @@ int main PARAMS ((argc, argv),
 							return 1;
 						}
 						const char* szFollowing = argument + 14;
-						long lResult = ConvertDateToUnixTime(szFollowing);
-						if (lResult < 0) {
+						long long i64Result = ConvertDateToUnixTime(szFollowing);
+						if (i64Result < 0) {
 							// Invalid time, could not parse the time
 							Usage(argv[0], stderr);
 							return 1;
 						}
-						gNoDeprecatedSymbols = lResult;
-					} else
-						time(&gNoDeprecatedSymbols);
+						gi64NoDeprecatedSymbols = i64Result;
+					} else {
+						time_t current_time;
+    					time(&current_time);
+    					gi64NoDeprecatedSymbols = (long long)difftime(current_time, 0);
+					}
 					currArg++;
 				}
 				else if (!strcmp (argument+1, "novolat"))
@@ -630,7 +633,7 @@ int main PARAMS ((argc, argv),
 				break;
 			case 'c':
 				if (strcmp(argument, "-comments") == 0)
-					gWriteComments = TRUE;
+					giWriteComments = TRUE;
 				else
 					genCCode = TRUE;
 				currArg++;
@@ -717,7 +720,7 @@ int main PARAMS ((argc, argv),
 						Usage(argv[0], stderr);
 						return 1;
 					}
-					gValidationLevel = atoi(argument + 17);
+					giValidationLevel = atoi(argument + 17);
 					currArg++;
 					break;
 				}
@@ -2264,7 +2267,7 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 					asnmodulecomment moduleComment;
 					if (GetModuleComment_UTF8(RemovePath(currMod->baseFileName), &moduleComment))
 					{
-						if (moduleComment.lDeprecated && gNoDeprecatedSymbols)
+						if (moduleComment.i64Deprecated && gi64NoDeprecatedSymbols)
 							continue;
 					}
 
@@ -2662,7 +2665,7 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 
 					asnoperationcomment com;
 					if (GetOperationComment_UTF8(currMod->moduleName, vd->definedName, &com))
-						if (com.lDeprecated)
+						if (com.i64Deprecated)
 							continue;
 
 					char* pszArgument = NULL;
@@ -2999,9 +3002,9 @@ void CreateNames(ModuleList* allMods) {
 }
 
 void ValidateStructure(ModuleList* allMods) {
-	if (gValidationLevel >= 1)
+	if (giValidationLevel >= 1)
 		EnsureNoDuplicateMethodIDs(allMods);
-	if (gValidationLevel >= 2) {
+	if (giValidationLevel >= 2) {
 		EnsureOnlySupportedObjects(allMods);
 		EnsureNoSequenceAndSetOfInArgumentOrResult(allMods);
 	}
@@ -3023,30 +3026,30 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...) {
  *
  * Returns -1 on error
  */
-long ConvertDateToUnixTime(const char* szDate) {
-	long lResult = -1;
+long long ConvertDateToUnixTime(const char* szDate) {
+	long long i64Result = -1;
 	#ifdef _WIN32
 		SYSTEMTIME st;
 		memset(&st, 0x00, sizeof(SYSTEMTIME));
-		if (sscanf(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3) {
+		if (sscanf_s(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3) {
 			if(st.wDay < 1 || st.wDay > 31)
-				return lResult;
+				return i64Result;
 			if(st.wMonth < 1 || st.wMonth > 12)
-				return lResult;
+				return i64Result;
 			if(st.wYear < 1970)
-				return lResult;
+				return i64Result;
 			FILETIME ft;
 			SystemTimeToFileTime(&st, &ft);
 			ULARGE_INTEGER uli;
 			uli.LowPart = ft.dwLowDateTime;
 			uli.HighPart = ft.dwHighDateTime;
-			lResult = (time_t)((uli.QuadPart / 10000000ULL) - 11644473600ULL);
+			i64Result = (time_t)((uli.QuadPart / 10000000ULL) - 11644473600ULL);
 		}
 	#else
 		struct tm tm;
 		if (strptime(szDate, "%d.%m.%Y", &tm));
-			lResult = mktime(&tm);
+			i64Result = mktime(&tm);
 	#endif
-	return lResult;
+	return i64Result;
 }
 

@@ -4,10 +4,10 @@
 #include <assert.h>
 #include <string.h>
 
-bool IsDeprecatedNoOutput(const long lDeprecatedValue)  {
-	if (!gNoDeprecatedSymbols || !lDeprecatedValue)
+bool IsDeprecatedNoOutput(const long long i64DeprecatedValue)  {
+	if (!gi64NoDeprecatedSymbols || !i64DeprecatedValue)
 		return false;
-	return gNoDeprecatedSymbols > lDeprecatedValue;
+	return gi64NoDeprecatedSymbols > i64DeprecatedValue;
 }
 
 bool IsROSEValueDef(Module* mod, ValueDef* vd) {
@@ -17,14 +17,14 @@ bool IsROSEValueDef(Module* mod, ValueDef* vd) {
 		return false;
 	if (vd->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
 		return false;
-	if (gNoDeprecatedSymbols) {
+	if (gi64NoDeprecatedSymbols) {
 		RosOperationMacroType* pRoseOperation = vd->value->type->basicType->a.macroType->a.rosOperation;
 		if (!pRoseOperation)
 			return false;
 		asnoperationcomment com;
 		if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &com))
 		{
-			if (IsDeprecatedNoOutput(com.lDeprecated))
+			if (IsDeprecatedNoOutput(com.i64Deprecated))
 				return false;
 		}
 	}
@@ -413,7 +413,7 @@ Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod) {
 }
 
 bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szElement) {
-	if (!gNoDeprecatedSymbols)
+	if (!gi64NoDeprecatedSymbols)
 		return false;
 
 	enum BasicTypeChoiceId type = td->cxxTypeDefInfo->asn1TypeId;
@@ -431,7 +431,7 @@ bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szEle
 
 	asnmembercomment comment;
 	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment)) {
-		if (comment.lDeprecated)
+		if (comment.i64Deprecated)
 			return true;
 	}
 				
@@ -439,7 +439,7 @@ bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szEle
 }
 
 bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szElement) {
-	if (!gNoDeprecatedSymbols)
+	if (!gi64NoDeprecatedSymbols)
 		return false;
 
 	enum BasicTypeChoiceId type = td->cxxTypeDefInfo->asn1TypeId;
@@ -457,7 +457,7 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 
 	asnmembercomment comment;
 	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment)) {
-		if (IsDeprecatedNoOutput(comment.lDeprecated)) {
+		if (IsDeprecatedNoOutput(comment.i64Deprecated)) {
 			if (type == BASICTYPE_SEQUENCE) {
 				// We need to check if the property is optional, if that is the case we can skip it
 				NamedType* e;
@@ -480,7 +480,7 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName) {
 	asnsequencecomment comment;
 	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
-		if (comment.lDeprecated)
+		if (comment.i64Deprecated)
 			return true;
 	}
 	return false;
@@ -489,7 +489,7 @@ bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName) {
 bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName) {
 	asnsequencecomment comment;
 	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
-		if (IsDeprecatedNoOutput(comment.lDeprecated))
+		if (IsDeprecatedNoOutput(comment.i64Deprecated))
 			return true;
 	}
 	return false;
@@ -498,7 +498,7 @@ bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName) {
 bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName) {
 	asnoperationcomment comment;
 	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
-		if (comment.lDeprecated)
+		if (comment.i64Deprecated)
 			return true;
 	}
 	return false;
@@ -507,7 +507,7 @@ bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName) {
 bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName) {
 	asnoperationcomment comment;
 	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
-		if (IsDeprecatedNoOutput(comment.lDeprecated))
+		if (IsDeprecatedNoOutput(comment.i64Deprecated))
 			return true;
 	}
 	return false;

@@ -127,14 +127,14 @@ bool printComment(FILE* src, const char* szPrefix, const char* szString, const c
 }
 
 void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const char* szElement) {
-	if (!gWriteComments)
+	if (!giWriteComments)
 		return;
 
 	asnmembercomment comment;
 	if (GetMemberComment_UTF8(m->moduleName, td->definedName, szElement, &comment)) {
-		if (strlen(comment.szShort) || comment.lDeprecated || comment.iPrivate) {
+		if (strlen(comment.szShort) || comment.i64Deprecated || comment.iPrivate) {
 			int iMultiline = 0;
-			if (comment.lDeprecated)
+			if (comment.i64Deprecated)
 				iMultiline++;
 			if (comment.iPrivate)
 				iMultiline++;
@@ -150,11 +150,11 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 
 			bool bAdded = printComment(src, szRemarksPrefix, comment.szShort, suffix);
 
-			if (comment.lDeprecated || comment.iPrivate)
+			if (comment.i64Deprecated || comment.iPrivate)
 			{
 				if(bAdded)
 					fprintf(src, "\n");
-				if (comment.lDeprecated)
+				if (comment.i64Deprecated)
 					fprintf(src, "%s @deprecated %s%s", prefix, getDeprecated(comment.szDeprecated), suffix);
 				if (comment.iPrivate)
 					fprintf(src, "%s @private%s", prefix, suffix);
@@ -168,7 +168,7 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 }
 
 void printModuleComment(FILE* src, const char* szModuleName) {
-	if (!gWriteComments)
+	if (!giWriteComments)
 		return;
 
 	asnmodulecomment moduleComment;
@@ -176,16 +176,16 @@ void printModuleComment(FILE* src, const char* szModuleName) {
 	{
 		bool bHasShort = strlen(moduleComment.szShort) ? true : false;
 		bool bHasLong = strlen(moduleComment.szLong) ? true : false;
-		if (bHasShort || bHasLong || moduleComment.lDeprecated || moduleComment.iPrivate) {
+		if (bHasShort || bHasLong || moduleComment.i64Deprecated || moduleComment.iPrivate) {
 			fprintf(src, "/**\n");
 			if (bHasShort)
 				printComment(src, " *", moduleComment.szShort, "\n");
 			if (bHasLong)
 				printComment(src, " *", moduleComment.szLong, "\n");
-			if (moduleComment.lDeprecated || moduleComment.iPrivate) {
+			if (moduleComment.i64Deprecated || moduleComment.iPrivate) {
 				if (bHasShort || bHasLong)
 					fprintf(src, " *\n");
-				if (moduleComment.lDeprecated)
+				if (moduleComment.i64Deprecated)
 					fprintf(src, " * @deprecated %s\n", getDeprecated(moduleComment.szDeprecated));
 				if (moduleComment.iPrivate)
 					fprintf(src, "* @private\n");
@@ -196,7 +196,7 @@ void printModuleComment(FILE* src, const char* szModuleName) {
 }
 
 void printSequenceComment(FILE* src, const Module* m, const TypeDef* td) {
-	if (!gWriteComments)
+	if (!giWriteComments)
 		return;
 
 	asnsequencecomment sequenceComment;
@@ -204,16 +204,16 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td) {
 	{
 		bool bHasShort = strlen(sequenceComment.szShort) ? true : false;
 		bool bHasLong = strlen(sequenceComment.szLong) ? true : false;
-		if (bHasShort || bHasLong || sequenceComment.lDeprecated || sequenceComment.iPrivate) {
+		if (bHasShort || bHasLong || sequenceComment.i64Deprecated || sequenceComment.iPrivate) {
 			fprintf(src, "/**\n");
 			if (bHasShort)
 				printComment(src, " *", sequenceComment.szShort, "\n");
 			if (bHasLong)
 				printComment(src, " *", sequenceComment.szLong, "\n");
-			if (sequenceComment.lDeprecated || sequenceComment.iPrivate) {
+			if (sequenceComment.i64Deprecated || sequenceComment.iPrivate) {
 				if (bHasShort || bHasLong)
 					fprintf(src, " *\n");
-				if (sequenceComment.lDeprecated)
+				if (sequenceComment.i64Deprecated)
 					fprintf(src, " * @deprecated %s\n", getDeprecated(sequenceComment.szDeprecated));
 				if (sequenceComment.iPrivate)
 					fprintf(src, " * @private\n");

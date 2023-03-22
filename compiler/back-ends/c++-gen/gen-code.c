@@ -833,7 +833,7 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 			asnoperationcomment com;
 			if (GetOperationComment_ASCII(m->moduleName, vd->definedName, &com))
 			{
-				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.lDeprecated ? "deprecated " : "", com.szShort);
+				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.i64Deprecated ? "deprecated " : "", com.szShort);
 				PrintLongComment(hdr, "\t", com.szLong);
 			}
 			//there is a result -> it is a Funktion
@@ -907,7 +907,7 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 			asnoperationcomment com;
 			if (GetOperationComment_ASCII(m->moduleName, vd->definedName, &com))
 			{
-				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.lDeprecated ? "deprecated " : "", com.szShort);
+				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.i64Deprecated ? "deprecated " : "", com.szShort);
 				PrintLongComment(hdr, "\t", com.szLong);
 			}
 

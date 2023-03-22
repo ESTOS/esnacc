@@ -27,7 +27,7 @@ std::string trim(const std::string &s) {
 }
 
 void EDeprecated::handleDeprecated(const std::string& strParsedLine) {
-	lDeprecated = 1;
+	i64Deprecated = 1;
 	std::string strComment = trim(strParsedLine);
 	// Check is ther a date in the value?
 	// @deprecated 1.1.2023 Some comment
@@ -38,9 +38,9 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine) {
 	if(pos >= 8 && pos <= 10) {
 		// Okay, let´s see if this is timestamp value...
 		std::string strDate = strComment.substr(0, pos);
-		long lUnixTime = ConvertDateToUnixTime(strDate.c_str());
-		if (lUnixTime > 0) {
-			lDeprecated = lUnixTime;
+		long long i64UnixTime = ConvertDateToUnixTime(strDate.c_str());
+		if (i64UnixTime > 0) {
+			i64Deprecated = i64UnixTime;
 			strComment = trim(strComment.substr(strDate.length()));
 		}
 	}
@@ -548,7 +548,7 @@ void EAsnStackElementSequence::SetProperties(bool bOpenBracket, const char* szTy
 	m_comment.strTypeName_UTF8 = szTypeName;
 	m_comment.strCategory_UTF8 = pmodcomment->strCategory_UTF8;
 	m_comment.iPrivate = pmodcomment->iPrivate;
-	m_comment.lDeprecated = pmodcomment->lDeprecated;
+	m_comment.i64Deprecated = pmodcomment->i64Deprecated;
 	m_pmodcomment = pmodcomment;
 	convertCommentList(listComments, &m_comment);
 }
@@ -715,7 +715,7 @@ void EAsnStackElementOperation::SetProperties(const char* szTypeName, EModuleCom
 	m_comment.strTypeName_UTF8 = szTypeName;
 	m_comment.strCategory_UTF8 = pmodcomment->strCategory_UTF8;
 	m_comment.iPrivate = pmodcomment->iPrivate;
-	m_comment.lDeprecated = pmodcomment->lDeprecated;
+	m_comment.i64Deprecated = pmodcomment->i64Deprecated;
 
 	convertCommentList(listComments, &m_comment);
 }
