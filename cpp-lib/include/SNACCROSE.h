@@ -9,8 +9,8 @@
 #define _SNACCROSE_h_
 
 
-#include "asn-incl.h"
-#include "asn-listset.h"
+#include <cpp-lib/include/asn-incl.h>
+#include <cpp-lib/include/asn-listset.h>
 
 #ifndef NO_NAMESPACE
 namespace SNACC {
@@ -113,7 +113,7 @@ public:
 };
 
 
-class ROSERejectChoice : public AsnType
+class  ROSERejectChoice: public AsnType
 {
 public:
   enum ChoiceIdEnum
@@ -133,7 +133,7 @@ public:
    ROSERejectChoice() {Init();}
    ROSERejectChoice(const ROSERejectChoice& that);
 public:
-   virtual const char* typeName() const	{ return "ROSERejectChoice"; }
+   const char* typeName() const	{ return "ROSERejectChoice"; }
    void Init(void);
 
    virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;
@@ -173,7 +173,7 @@ public:
    ROSEResultSeq(const ROSEResultSeq& that);
 public:
    const char* typeName() const	{ return "ROSEResultSeq"; }
- 	AsnType		*Clone() const;
+  AsnType		*Clone() const;
 
   ROSEResultSeq		&operator = (const ROSEResultSeq &that);
   AsnLen		BEncContent (AsnBuf &_b) const;
@@ -258,7 +258,7 @@ public:
 class ROSEAuthList : public AsnSeqOf<ROSEAuth>
 {
 public:
-   virtual const char* typeName() const	{ return "ROSEAuthList"; }
+   const char* typeName() const	{ return "ROSEAuthList"; }
    AsnType* Clone() const			{ return new ROSEAuthList(*this); }
 };
 

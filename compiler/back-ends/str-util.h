@@ -38,8 +38,9 @@
  */
 
 #include "../core/define.h"
+#include "../../snacc.h"
 
-char *Asn1TypeName2CTypeName PROTO ((const char *aName));
+char* Asn1TypeName2CTypeName PROTO ((const char *aName));
 
 char *Asn1FieldName2CFieldName PROTO ((char *aName));
 

@@ -39,7 +39,7 @@ void PrintTSConverterImports(FILE* src, ModuleList* mods, Module* mod)
 {
 	fprintf(src, "\n// [%s]\n", __FUNCTION__);
 
-	fprintf(src, "import { DecodeContext, ConverterError, ConverterErrorType, ConverterErrors, EncodeContext, TSConverter, INamedType } from \"./%s\";\n", "TSConverterBase");
+	fprintf(src, "import { ConverterError, ConverterErrorType, ConverterErrors, TSConverter, IDecodeContext, IEncodeContext, INamedType } from \"./%s\";\n", "TSConverterBase");
 
 	// Our own data structure file is not in the imports
 	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
@@ -108,15 +108,14 @@ void Print_JSON_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		if (choice == BASICTYPE_IMPORTTYPEREF) {
 			Module* mod = GetImportModuleRefByClassName(szTypeName, mods, m);
 			const char* szNameSpace = GetNameSpace(mod);
-			fprintf(src, "\t\t\tconst _%s = %s.%s.initEmpty();\n", szTypeName, szNameSpace, szTypeName);
-			fprintf(src, "\t\t\tif (%s_Converter.%s_Converter.toJSON(se, _%s, errors, newContext, \"%s\"))\n", szNameSpace, szTypeName, szTypeName, szTypeName);
-			fprintf(src, "\t\t\t\tt.push(_%s);\n", szTypeName);
+			fprintf(src, "\t\t\tconst val = %s_Converter.%s_Converter.toJSON(se, errors, newContext, \"%s\")\n", szNameSpace, szTypeName, szTypeName);
+			fprintf(src, "\t\t\tif (val)\n");
+			fprintf(src, "\t\t\t\tt.push(val);\n");
 		}
 		else if (choice == BASICTYPE_LOCALTYPEREF) {
-			const char* szNameSpace = GetNameSpace(m);
-			fprintf(src, "\t\t\tconst _%s = %s.%s.initEmpty();\n", szTypeName, szNameSpace, szTypeName);
-			fprintf(src, "\t\t\tif (%s_Converter.toJSON(se, _%s, errors, newContext, \"%s\"))\n", szTypeName, szTypeName, szTypeName);
-			fprintf(src, "\t\t\t\tt.push(_%s);\n", szTypeName);
+			fprintf(src, "\t\t\tconst val = %s_Converter.toJSON(se, errors, newContext, \"%s\");\n", szTypeName, szTypeName);
+			fprintf(src, "\t\t\tif (val)\n");
+			fprintf(src, "\t\t\t\tt.push(val);\n");
 		}
 		else {
 			assert(FALSE);
@@ -309,7 +308,7 @@ void Print_JSON_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 
 	char* szConverted = FixName(td->definedName);
 	fprintf(src, "\t\tif (newContext.bAddTypes)\n");
-	fprintf(src, "\t\t\tt._type = \"%s\";\n", szConverted);
+	fprintf(src, "\t\t\t(t as INamedType)._type = \"%s\";\n", szConverted);
 	int bFirst = TRUE;
 	bool bCurly = false;
 	NamedType* e;
@@ -610,22 +609,17 @@ void Print_JSON_EncoderNamedType(FILE* src, ModuleList* mods, Module* m, enum Ba
 		}
 
 		const char* szNameSpace = "";
-		enum BasicTypeChoiceId baseType = GetBaseBasicTypeChoiceId(e->type->basicType);
 		if (type == BASICTYPE_LOCALTYPEREF)
 			szNameSpace = GetNameSpace(m);
 		else {
 			Module* ref = GetImportModuleRefByClassName(szClassName, mods, m);
 			szNameSpace = GetNameSpace(ref);
 		}
-		if (baseType == BASICTYPE_SEQUENCEOF || baseType == BASICTYPE_SETOF)
-			fprintf(src, "%s%sconst _%s = new %s.%s();\n", szIndent, szIndent2, szFieldName, szNameSpace, szClassName);
-		else
-			fprintf(src, "%s%sconst _%s = %s.%s.initEmpty();\n", szIndent, szIndent2, szFieldName, szNameSpace, szClassName);
-
 		if (type == BASICTYPE_LOCALTYPEREF)
-			fprintf(src, "%s%sif (%s_Converter.toJSON(s.%s, _%s, errors, newContext, \"%s\"))\n", szIndent, szIndent2, szClassName, szFieldName, szFieldName, szFieldName);
+			fprintf(src, "%s%sconst _%s = %s_Converter.toJSON(s.%s, errors, newContext, \"%s\");\n", szIndent, szIndent2, szFieldName, szClassName, szFieldName, szFieldName);
 		else
-			fprintf(src, "%s%sif (%s_Converter.%s_Converter.toJSON(s.%s, _%s, errors, newContext, \"%s\"))\n", szIndent, szIndent2, szNameSpace, szClassName, szFieldName, szFieldName, szFieldName);
+			fprintf(src, "%s%sconst _%s = %s_Converter.%s_Converter.toJSON(s.%s, errors, newContext, \"%s\");\n", szIndent, szIndent2, szFieldName, szNameSpace, szClassName, szFieldName, szFieldName);
+		fprintf(src, "%s%sif (_%s)\n", szIndent, szIndent2, szFieldName);
 		fprintf(src, "%s%s\t%s%s%s = _%s;\n", szIndent, szIndent2, szObjectName, szObjectName ? "." : "", szFieldName, szFieldName);
 		if (bOptional)
 			fprintf(src, "%s}\n", szIndent);
@@ -831,7 +825,7 @@ void Print_JSON_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 	NamedType* e;
 	char* szConverted = FixName(td->definedName);
 	fprintf(src, "\t\tif (newContext.bAddTypes)\n");
-	fprintf(src, "\t\t\tt._type = \"%s\";\n", szConverted);
+	fprintf(src, "\t\t\t(t as INamedType)._type = \"%s\";\n", szConverted);
 
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
@@ -1123,31 +1117,47 @@ void Print_BER_DecoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, Type
 	const char* szClassName = td->type->basicType->a.importTypeRef->link->definedName;
 	Module* mod = GetImportModuleRefByClassName(szClassName, mods, m);
 	const char* szNameSpace = GetNameSpace(mod);
-	fprintf(src, "%st = %s_Converter.%s_Converter.fromBER(s, errors, newContext, parametername, optional);\n", szIndent, szNameSpace, szClassName);
+	fprintf(src, "%st = %s_Converter.%s_Converter.fromBER(s, errors, newContext, name, optional);\n", szIndent, szNameSpace, szClassName);
 }
 
 void Print_JSON_DecoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs, const char* szIndent)
 {
+	// Seems to be unused
+	assert(FALSE);
+	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
+	
 	fprintf(src, "\n%s// [%s]\n", szIndent, __FUNCTION__);
-	fprintf(src, "%st = %s_Converter.fromJSON(s, errors, newContext, parametername, optional);\n", szIndent, td->type->basicType->a.localTypeRef->link->definedName);
+	fprintf(src, "%st = %s_Converter.fromJSON(s, errors, newContext, name, optional);\n", szIndent, td->type->basicType->a.localTypeRef->link->definedName);
 }
 
 void Print_BER_DecoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs, const char* szIndent)
 {
+	// Seems to be unused
+	assert(FALSE);
+	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
+
 	fprintf(src, "\n%s// [%s]\n", szIndent, __FUNCTION__);
-	fprintf(src, "%st = %s_Converter.fromJSON(s, errors, newContext, parametername, optional);\n", szIndent, td->type->basicType->a.localTypeRef->link->definedName);
+	fprintf(src, "%st = %s_Converter.fromJSON(s, errors, newContext, name, optional);\n", szIndent, td->type->basicType->a.localTypeRef->link->definedName);
 }
 
 void Print_JSON_EncoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
 {
+	// Seems to be unused
+	assert(FALSE);
+	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
+
 	fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
 	Module* mod = GetImportModuleRefByClassName(td->type->basicType->a.importTypeRef->link->definedName, mods, m);
 	const char* szNameSpace = GetNameSpace(mod);
-	fprintf(src, "\t\t%s_Converter.%s_Converter.toJSON(s, t, errors, newContext, parametername);\n", szNameSpace, td->type->basicType->a.importTypeRef->link->definedName);
+	fprintf(src, "\t\t%s_Converter.%s_Converter.toJSON(s, t, errors, newContext, name);\n", szNameSpace, td->type->basicType->a.importTypeRef->link->definedName);
 }
 
 void Print_BER_EncoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
 {
+	// Seems to be unused
+	assert(FALSE);
+	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
+
 	fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
 
 	const char* szElementName = td->type->basicType->a.importTypeRef->link->definedName;
@@ -1164,13 +1174,21 @@ void Print_BER_EncoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, Type
 
 void Print_JSON_EncoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
 {
+	// Seems to be unused
+	assert(FALSE);
+	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
+
 	fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
 
-	fprintf(src, "\t\t%s_Converter.toJSON(s, t, errors, newContext, parametername);\n", td->type->basicType->a.importTypeRef->link->definedName);
+	fprintf(src, "\t\t%s_Converter.toJSON(s, t, errors, newContext, name);\n", td->type->basicType->a.importTypeRef->link->definedName);
 }
 
 void Print_BER_EncoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
 {
+	// Seems to be unused
+	assert(FALSE);
+	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
+
 	fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
 
 	const char* szElementName = td->type->basicType->a.importTypeRef->link->definedName;
@@ -1321,17 +1339,23 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 		fprintf(src, "export class %s_Converter {", szConverted);
 		if (printEncoders)
 		{
-			fprintf(src, "\n\tpublic static toJSON(s: %s.%s, t: %s.%s", szNameSpace, szConverted, szNameSpace, szConverted);
+			fprintf(src, "\n\tpublic static toJSON(s: %s.%s, errors?: ConverterErrors, context?: IEncodeContext, name?: string): %s.%s", szNameSpace, szConverted, szNameSpace, szConverted);
 			if (type != BASICTYPE_SEQUENCEOF && type != BASICTYPE_SETOF) {
 				// Sequence of only contains the elements, no additional stuff
 				fprintf(src, " & INamedType");
 			}
-			fprintf(src, ", errors?: ConverterErrors, context?: EncodeContext, parametername?: string): boolean {\n");
+			fprintf(src, " | undefined {\n");
 
 			// An array cannot create any erros while converting
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");
 			fprintf(src, "\t\tconst errorCount = errors.length;\n");
-			fprintf(src, "\t\tconst newContext = TSConverter.addContext(context, parametername, \"%s\");\n\n", szConverted);
+			fprintf(src, "\t\tconst newContext = TSConverter.addEncodeContext(context, name, \"%s\");\n\n", szConverted);
+
+			if (type == BASICTYPE_SEQUENCEOF || type == BASICTYPE_SETOF)
+				fprintf(src, "\t\tconst t = new %s.%s();\n\n", szNameSpace, szConverted);
+			else
+				fprintf(src, "\t\tconst t = %s.%s.initEmpty();\n\n", szNameSpace, szConverted);
+
 			if (strcmp(szConverted, "AsnOptionalParam") == 0) {
 				fprintf(src, "\t\t// It is not possible to encode a single AsnOptionalParam into the ucserver notation. Needs the AsnOptionalParameters envelop!\n");
 				fprintf(src, "\t\tif (newContext?.bUCServerOptionalParams)\n");
@@ -1339,24 +1363,26 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			}
 			else if (strcmp(szConverted, "AsnOptionalParameters") == 0) {
 				fprintf(src, "\t\tif (newContext?.bUCServerOptionalParams) {\n");
-				fprintf(src, "\t\t\tconst params = new ENetUC_Common.AsnOptionalParameters();\n");
-				fprintf(src, "\t\t\tif (EAsnOptionalParameters_Converter.toJSON(s, params, errors, newContext, parametername))\n");
-				fprintf(src, "\t\t\t\tt = params;\n");
-				fprintf(src, "\t\t\treturn errors.validateResult(errorCount, newContext, \"%s\");\n", "EAsnOptionalParameters");
+				fprintf(src, "\t\t\tconst params = EAsnOptionalParameters_Converter.toJSON(s, errors, newContext, name);\n");
+				fprintf(src, "\t\t\tif (errors.validateResult(errorCount, newContext, \"EAsnOptionalParameters\"))\n");
+				fprintf(src, "\t\t\t\treturn params;\n");
+				fprintf(src, "\t\t\treturn undefined;\n");
 				fprintf(src, "\t\t}\n");
 			}
 
 			Print_JSON_EncoderCodeStructuredType(src, mods, m, td, novolatilefuncs);
 
-			fprintf(src, "\n\t\treturn errors.validateResult(errorCount, newContext, \"%s\");\n", td->definedName);
+			fprintf(src, "\n\t\tif (errors.validateResult(errorCount, newContext, \"%s\"))\n", td->definedName);
+			fprintf(src, "\t\t\treturn t;\n\n");
+			fprintf(src, "\t\treturn undefined;\n\n");
 			fprintf(src, "\t}\n");
 		}
 		if (printDecoders)
 		{
-			fprintf(src, "\n\tpublic static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): %s.%s | undefined {\n", szNameSpace, szConverted);
+			fprintf(src, "\n\tpublic static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): %s.%s | undefined {\n", szNameSpace, szConverted);
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");
 			fprintf(src, "\t\tconst errorCount = errors.length;\n");
-			fprintf(src, "\t\tconst newContext = TSConverter.addContext(context, parametername, \"%s\");\n\n", szConverted);
+			fprintf(src, "\t\tconst newContext = TSConverter.addDecodeContext(context, name, \"%s\");\n\n", szConverted);
 			fprintf(src, "\t\tlet t: %s.%s | undefined;\n", szNameSpace, szConverted);
 
 			fprintf(src, "\t\tconst s = TSConverter.prepareJSONData<%s.%s>(data, errors, newContext, optional);\n", szNameSpace, szConverted);
@@ -1384,7 +1410,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 				fprintf(src, "\n");
 				fprintf(src, "\t\t\tif (s.length === undefined) {\n");
 				fprintf(src, "\t\t\t\t// Proprietary UCServer AsnOptionalParameters decoding\n");
-				fprintf(src, "\t\t\t\tEAsnOptionalParameters_Converter.fromJSON(s, t, errors, context, parametername, optional);\n");
+				fprintf(src, "\t\t\t\tEAsnOptionalParameters_Converter.fromJSON(s, t, errors, context, name, optional);\n");
 				fprintf(src, "\t\t\t} else {");
 				szIdendt = "\t\t\t\t";
 			}
@@ -1402,7 +1428,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 		}
 		if (printEncoders)
 		{
-			fprintf(src, "\n\tpublic static toBER(s: %s.%s | undefined, errors?: ConverterErrors, context?: EncodeContext, name?: string, optional?: boolean | number): ", szNameSpace, szConverted);
+			fprintf(src, "\n\tpublic static toBER(s: %s.%s | undefined, errors?: ConverterErrors, context?: IEncodeContext, name?: string, optional?: boolean | number): ", szNameSpace, szConverted);
 			if (td->type->basicType->choiceId == BASICTYPE_CHOICE)
 				fprintf(src, "asn1ts.BaseBlock");
 			else
@@ -1423,7 +1449,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");
 			fprintf(src, "\t\tconst errorCount = errors.length;\n");
-			fprintf(src, "\t\tconst newContext = TSConverter.addContext(context, name, \"%s\");\n", szConverted);
+			fprintf(src, "\t\tconst newContext = TSConverter.addEncodeContext(context, name, \"%s\");\n", szConverted);
 
 			Print_BER_EncoderCodeStructuredType(src, mods, m, td, novolatilefuncs);
 
@@ -1432,10 +1458,10 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 		}
 		if (printDecoders)
 		{
-			fprintf(src, "\n\tpublic static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): %s.%s | undefined {\n", szNameSpace, szConverted);
+			fprintf(src, "\n\tpublic static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): %s.%s | undefined {\n", szNameSpace, szConverted);
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");
 			fprintf(src, "\t\tconst errorCount = errors.length;\n");
-			fprintf(src, "\t\tconst newContext = TSConverter.addContext(context, parametername, \"%s\");\n\n", szConverted);
+			fprintf(src, "\t\tconst newContext = TSConverter.addDecodeContext(context, name, \"%s\");\n\n", szConverted);
 
 			fprintf(src, "\t\tlet t: %s.%s | undefined;\n", szNameSpace, szConverted);
 
