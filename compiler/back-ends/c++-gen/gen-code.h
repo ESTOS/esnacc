@@ -36,7 +36,7 @@ void PrintForwardDeclarationsCode(FILE* hdrForwardDecl, ModuleList *mods, Module
 int HasROSEOperations(Module *m);
 
 
-enum BasicTypeChoiceId ParanoidGetBuiltinType (Type *t);
+enum BasicTypeChoiceId ParanoidGetBuiltinType(Type *t);
 void PrintConditionalIncludeOpen(FILE *f, char *fileName);
 void PrintConditionalIncludeClose(FILE *f, char *fileName);
 void PrintCxxAnyCode (FILE *src, FILE *hdr, CxxRules *r,
@@ -59,7 +59,7 @@ static const char	bufTypeNameG[] = "AsnBuf";
 static const char	lenTypeNameG[] = "AsnLen";
 static const char	tagTypeNameG[] = "AsnTag";
 static const char	envTypeNameG[] = "ENV_TYPE";
-static const char	baseClassesG[] = ": public AsnType";
+static const char	baseClassesG[] = "AsnType";
 
 extern long 	longJmpValG;
 extern int		printTypesG;
@@ -78,10 +78,10 @@ static int		printTclG;
 #endif
 #endif /* META */
 
-void PrintCxxEncodeContaining(Type *t, CxxRules *r, FILE *src);
-void PrintCxxDecodeContaining(Type *t, CxxRules *r, FILE *src);
+void PrintCxxEncodeContaining(Type *t, CxxRules *r, FILE *src, const char* szIndet);
+void PrintCxxDecodeContaining(Type *t, CxxRules *r, FILE *src, const char* szIndet);
 void PrintCxxPEREncodeContaining(Type *t, CxxRules *r, FILE *src);
 void PrintCxxPERDecodeContaining(Type *t, CxxRules *r, FILE *src);
-void PrintCxxSetTypeByCode(NamedType *defByNamedType, CxxTRI *cxxtri, FILE *src);
+void PrintCxxSetTypeByCode(NamedType *defByNamedType, CxxTRI *cxxtri, FILE *src, const char* szIndet);
 
 #endif //GENCODE_H_INCLUDED

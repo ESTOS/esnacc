@@ -631,14 +631,11 @@ LookupModule PARAMS ((moduleList, modName, oid),
  * given type does not have the named field or is not
  * a type that has fields.
  */
-NamedType*
-LookupFieldInType PARAMS ((tRef, fieldName),
-    Type *tRef _AND_
-    char *fieldName)
+NamedType* LookupFieldInType(Type *tRef, const char *fieldName)
 {
     NamedType *e;
     NamedType *retVal;
-    Type *t;
+    const Type *t;
     void *tmp;
 
     t = ParanoidGetType (tRef); /* skip any references etc */
@@ -682,9 +679,7 @@ LookupFieldInType PARAMS ((tRef, fieldName),
  *  May return the given type t, if it's not a typeref
  *  or if it is an unlinked type ref
  */
-Type*
-ResolveImportedType PARAMS ((type),
-    Type *type)
+Type* ResolveImportedType(Type *type)
 {
     TypeDef *td;
     Type *t;
@@ -720,9 +715,7 @@ ResolveImportedType PARAMS ((type),
  *      B ::= A
  * would make the normal GetType recurse forever (until no stk mem)
  */
-Type*
-ParanoidGetType PARAMS ((type),
-    Type *type)
+Type* ParanoidGetType(Type *type)
 {
     TypeDef *td;
     Type *t;
@@ -766,13 +759,11 @@ ParanoidGetType PARAMS ((type),
  *  set of, choice, any, etc.
  *  Returns the typeId of that type, otherwise -1.
  */
-enum BasicTypeChoiceId
-GetBuiltinType PARAMS ((t),
-    Type *t)
+enum BasicTypeChoiceId GetBuiltinType(Type *t)
 {
     Type *definingType;
 
-    definingType = ResolveImportedType (t);
+    definingType = ResolveImportedType(t);
     if (definingType != NULL)
         return definingType->basicType->choiceId;
     else
@@ -1034,9 +1025,7 @@ LookupValue PARAMS ((valueList, valueName),
 
 }  /* LookupValue */
 
-BasicValue *
-GetLastNamedNumberValue PARAMS ((valueList),
-    NamedNumberList *valueList)
+BasicValue* GetLastNamedNumberValue(NamedNumberList *valueList)
 {
     ValueDef *v;
     BasicValue *retVal;

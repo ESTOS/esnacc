@@ -135,21 +135,21 @@ static NamedType *badNamedType;
 // static DefinedName *fieldNames = NULL;
 
 
-int	 CountTags PROTO ((Type *t));
-enum BasicTypeChoiceId ParanoidGetBuiltinType PARAMS ((t),Type *t);
+int	 CountTags(Type *t);
+enum BasicTypeChoiceId ParanoidGetBuiltinType(Type *t);
 
-void ErrChkTypeDef PROTO ((Module *m, TypeDef *td));
-void ErrChkType PROTO ((Module *m, TypeDef *td, Type *parent, NamedType *nt, Type *t));
-void ErrChkElmtTypes PROTO ((Module *m, TypeDef *td, Type *parent, NamedTypeList *e));
-void ErrChkBasicType PROTO ((Module  *m, TypeDef *td, Type *parent, NamedType *nt, Type *type));
-void ErrChkValueDef PROTO ((Module *m, ValueDef *vd));
-void ErrChkValue PROTO ((Module *m, ValueDef *vd, Value *v));
-int HasDistinctTags PROTO ((NamedTypeList *elmts));
-int AddFirstTag PROTO ((DefinedObj **definedTags, Type *t));
-void ChkFieldNames PROTO ((Module *m, TypeDef *td, Type *parent, NamedTypeList *elmts));
-void ChkNamedNumbers PROTO ((Module *m, Type *t, NamedNumberList *n));
-void ChkNamedBits PROTO ((Module *m, Type *t, NamedNumberList *n));
-void ChkSeqTags PROTO ((Module *m, TypeDef *td, Type *t));
+void ErrChkTypeDef(Module *m, TypeDef *td);
+void ErrChkType(Module *m, TypeDef *td, Type *parent, NamedType *nt, Type *t);
+void ErrChkElmtTypes(Module *m, TypeDef *td, Type *parent, NamedTypeList *e);
+void ErrChkBasicType(Module  *m, TypeDef *td, Type *parent, NamedType *nt, Type *type);
+void ErrChkValueDef(Module *m, ValueDef *vd);
+void ErrChkValue(Module *m, ValueDef *vd, Value *v);
+int HasDistinctTags(NamedTypeList *elmts);
+int AddFirstTag(DefinedObj **definedTags, Type *t);
+void ChkFieldNames(Module *m, TypeDef *td, Type *parent, NamedTypeList *elmts);
+void ChkNamedNumbers(Module *m, Type *t, NamedNumberList *n);
+void ChkNamedBits(Module *m, Type *t, NamedNumberList *n);
+void ChkSeqTags(Module *m, TypeDef *td, Type *t);
 char *DetermineCode(Tag *tag, int *ptagLen, int bJustIntegerFlag);
 
 
@@ -826,7 +826,7 @@ ChkFieldNamesRec PARAMS ((m, td, parent, elmts, fieldNames, followedTypeRefs),
     DefinedObj **followedTypeRefs)
 {
     NamedType *e;
-    Type *definingType;
+    const Type *definingType;
 
     FOR_EACH_LIST_ELMT (e, elmts)
     {

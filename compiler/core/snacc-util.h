@@ -57,6 +57,9 @@
  * first check-in. for a list of changes to the snacc-1.1 distribution please refer to the ChangeLog.
  *
  */
+
+#include "asn1module.h"
+
 #define PrintErrLoc( fileName, lineNo)\
 			fprintf (errFileG, "%s(%ld) : ", fileName, (lineNo))
 
@@ -108,90 +111,88 @@
     AsnListConcat(list1, list2);\
 }
 
+BasicValue* GetLastNamedNumberValue(NamedNumberList *valueList);
+
+void SetupType(Type **t, enum BasicTypeChoiceId typeId, unsigned long lineNum);
+
+void SetupMacroType(Type **t, enum MacroTypeChoiceId macroTypeId, unsigned long lineNum);
+
+void SetupValue(Value **v, enum BasicValueChoiceId valId, unsigned long lineNum);
 
 
-BasicValue * GetLastNamedNumberValue PROTO ((NamedNumberList *valueList));
+void AddPrivateImportElmt(Module *m, char *name, char *refModuleName, long lineNo);
 
-void SetupType PROTO ((Type **t, enum BasicTypeChoiceId typeId, unsigned long lineNum));
+ImportElmt *LookupImportElmtInModule(Module *m, char *name, ImportModule **importModule);
 
-void SetupMacroType PROTO ((Type **t, enum MacroTypeChoiceId macroTypeId, unsigned long lineNum));
+ImportElmt *LookupImportElmtInImportElmtList(ImportElmtList *importElmtList, char *name);
 
-void SetupValue PROTO ((Value **v, enum BasicValueChoiceId valId, unsigned long lineNum));
+ImportModule *LookupImportModule(Module *m, char *importModuleName);
 
-
-void AddPrivateImportElmt PROTO ((Module *m, char *name, char *refModuleName, long lineNo));
-
-ImportElmt *LookupImportElmtInModule PROTO ((Module *m, char *name, ImportModule **importModule));
-
-ImportElmt *LookupImportElmtInImportElmtList PROTO ((ImportElmtList *importElmtList, char *name));
-
-ImportModule *LookupImportModule PROTO ((Module *m, char *importModuleName));
-
-TypeDef *LookupType PROTO ((TypeDefList *t, char *typeName));
+TypeDef *LookupType(TypeDefList *t, char *typeName);
 
 // Deepak: 04/Feb/2003
-NamedType *LookupObjectClassFieldType PROTO ((NamedTypeList *n, char *typeName));
+NamedType *LookupObjectClassFieldType(NamedTypeList *n, char *typeName);
 
 // Deepak: 05/Mar/2003
-WithSyntax* LookupObjectClassFieldTypeWithSyntax PROTO ((WithSyntaxList *withSyntaxList, char *typeName, char* bError));
+WithSyntax* LookupObjectClassFieldTypeWithSyntax(WithSyntaxList *withSyntaxList, char *typeName, char* bError);
 
 // Deepak: 05/Mar/2003
-ObjectAssignment* LookupObjectClassObjectAssignment PROTO ((ObjectAssignmentList *objAssignmentList, char *objName));
+ObjectAssignment* LookupObjectClassObjectAssignment(ObjectAssignmentList *objAssignmentList, char *objName);
 
 // Deepak: 11/Mar/2003
-ObjectSetAssignment* LookupObjectClassObjectSetAssignment PROTO ((ObjectSetAssignmentList *objSetAssignmentList, char *objSetName));
+ObjectSetAssignment* LookupObjectClassObjectSetAssignment(ObjectSetAssignmentList *objSetAssignmentList, char *objSetName);
 
-Module *LookupModule PROTO ((ModuleList *m, char *modName, OID *oid));
+Module *LookupModule(ModuleList *m, char *modName, OID *oid);
 
-NamedType *LookupFieldInType PROTO ((Type *t, char *fieldName));
+NamedType* LookupFieldInType(Type* t, const char* fieldName);
 
-Type *ResolveImportedType PROTO ((Type *t));
+Type* ResolveImportedType(Type *t);
 
-Type *ParanoidGetType PROTO ((Type *t));
+Type* ParanoidGetType(Type *t);
 
-enum BasicTypeChoiceId GetBuiltinType PROTO ((Type *t));
+enum BasicTypeChoiceId GetBuiltinType(Type *t);
 enum BasicTypeChoiceId ParanoidGetBuiltinType(Type *t);
 
 
-NamedNumberList *GetNamedElmts PROTO ((Type *t));
+NamedNumberList *GetNamedElmts(Type *t);
 
-NamedNumberList *GetAllNamedElmts PROTO ((Type *t));
+NamedNumberList *GetAllNamedElmts(Type *t);
 
-Type *GetParentS PROTO ((Type *ancestor, Type *child));
+Type *GetParentS(Type *ancestor, Type *child);
 
-ValueDef *LookupValue PROTO ((ValueDefList *v, char *valueName));
+ValueDef *LookupValue(ValueDefList *v, char *valueName);
 
-Value *GetValue PROTO ((Value *v));
+Value *GetValue(Value *v);
 
-int CompareOids PROTO ((OID *oid1, OID *oid2));
+int CompareOids(OID *oid1, OID *oid2);
 
-int HasNamedElmts PROTO ((Type *t));
+int HasNamedElmts(Type *t);
 
-int GetNumNamedElmts PROTO ((Type *t));
+int GetNumNamedElmts(Type *t);
 
-int TagsAreIdentical PROTO ((TagList *t1, TagList *t2));
+int TagsAreIdentical(TagList *t1, TagList *t2);
 
-int HasDefaultTag PROTO ((Type *t));
+int HasDefaultTag(Type *t);
 
-int IsPrimitiveByDefOrRef PROTO ((Type *t));
+int IsPrimitiveByDefOrRef(Type *t);
 
-int IsPrimitiveByDef PROTO ((Type *t));
+int IsPrimitiveByDef(Type *t);
 
-int IsDefinedByLibraryType PROTO ((Type *t));
+int IsDefinedByLibraryType(Type *t);
 
-int IsTypeRef PROTO ((Type *t));
+int IsTypeRef(Type *t);
 
-int IsNewType PROTO ((Type *t));
+int IsNewType(Type *t);
 
-int IsTailOptional PROTO ((NamedTypeList *e));
+int IsTailOptional(NamedTypeList *e);
 
-int NextIsTailOptional PROTO ((NamedTypeList *e));
+int NextIsTailOptional(NamedTypeList *e);
 
-int AllElmtsOptional PROTO ((NamedTypeList *e));
+int AllElmtsOptional(NamedTypeList *e);
 
-AnyRefList **GetAnyRefListHndl PROTO ((Type *t));
+AnyRefList **GetAnyRefListHndl(Type *t);
 
-void AppendSubtype PROTO ((Subtype **s, Subtype *newSubtype, enum SubtypeChoiceId op));
+void AppendSubtype(Subtype **s, Subtype *newSubtype, enum SubtypeChoiceId op);
 
 
 extern FILE* errFileG;		// Defined in snacc.c

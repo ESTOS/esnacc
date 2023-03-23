@@ -45,27 +45,27 @@ typedef struct DefinedObj
 } DefinedObj;
 
 
-typedef int (*CmpObjsRoutine) PROTO ((void *obj1, void *obj2));
-typedef int (*FreeObjRoutine) PROTO ((void *obj));
+typedef int (*CmpObjsRoutine)(void *obj1, void *obj2);
+typedef int (*FreeObjRoutine)(void *obj);
 
-int StrObjCmp PROTO ((void *s1, void *s2));
+int StrObjCmp(void *s1, void *s2);
 
-int IntObjCmp PROTO ((void *s1, void *s2));
+int IntObjCmp(void *s1, void *s2);
 
-int OidObjCmp PROTO ((void *o1, void *o2));
+int OidObjCmp(void *o1, void *o2);
 
-int ObjPtrCmp PROTO ((void *s1, void *s2));
+int ObjPtrCmp(void *s1, void *s2);
 
-DefinedObj  *NewObjList();
+DefinedObj *NewObjList();
 
-void DefineObj PROTO ((DefinedObj **l, void *obj));
+void DefineObj(DefinedObj **l, const void *obj);
 
-void UndefineObj PROTO ((DefinedObj **l, void *obj, CmpObjsRoutine cmpRoutine));
+void UndefineObj(DefinedObj **l, void *obj, CmpObjsRoutine cmpRoutine);
 
-int  ObjIsDefined (DefinedObj *l, void *obj, CmpObjsRoutine cmp);
+int ObjIsDefined(DefinedObj *l, void *obj, CmpObjsRoutine cmp);
 
-void FreeDefinedObjs PROTO ((DefinedObj **l));
+void FreeDefinedObjs(DefinedObj **l);
 
-void FreeDefinedObjsAndContent PROTO ((DefinedObj **l));
+void FreeDefinedObjsAndContent(DefinedObj **l);
 
 #endif
