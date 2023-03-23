@@ -670,7 +670,7 @@ TypeLinkBasicType PARAMS ((m, currMod, head, type, bt),
 			/*
 			 * find field ref'd by selection
 			 */
-			tmpElmtType = LookupFieldInType (tmpTypeDef->type, bt->a.selection->fieldName);
+			tmpElmtType = LookupFieldInType(tmpTypeDef->type, bt->a.selection->fieldName);
 			if (tmpElmtType == NULL)
 			{
 				PrintErrLoc (currMod->asn1SrcFileName, (long)type->lineNo);

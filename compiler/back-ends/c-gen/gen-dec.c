@@ -218,8 +218,8 @@ PrintCDecoder PARAMS ((src, hdr, r, m,  td, longJmpVal),
 
       /* grab any EOCs that match redundant, indef lengths */
       for (i = elmtLevel-1; i > 0; i--) {
-	fprintf (src,"    if (elmtLen%d == INDEFINITE_LEN)\n", i);
-        fprintf (src,"        %sDecEoc (b, bytesDecoded, env);\n", 
+	fprintf (src,"\tif (elmtLen%d == INDEFINITE_LEN)\n", i);
+        fprintf (src,"\t\t%sDecEoc(b, bytesDecoded, env);\n", 
 		 GetEncRulePrefix());
       }
 
@@ -661,8 +661,8 @@ PrintCElmtDecodeCode PARAMS ((src, td, parent, t, elmtLevel, totalLevel, tagLeve
 	    if ((tmpType->basicType->choiceId == BASICTYPE_CHOICE)
 		    && !stoleChoiceTags)
 	    {
-		fprintf(src,"    if (elmtLen%d == INDEFINITE_LEN)\n", elmtLevel-1);
-		fprintf(src,"        %sDecEoc(b, &totalElmtsLen%d, env);\n", 
+		fprintf(src,"\tif (elmtLen%d == INDEFINITE_LEN)\n", elmtLevel-1);
+		fprintf(src,"\t\t%sDecEoc(b, &totalElmtsLen%d, env);\n", 
 			GetEncRulePrefix(), totalLevel);
 	    }
 
