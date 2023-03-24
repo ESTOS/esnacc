@@ -224,7 +224,6 @@ typedef struct Module /* SEQUENCE */
     MyString 				cxxSrcFileName; /* MyString */
 	MyString 				swiftFileName; /* MyString */
 	MyString 				csSrcFileName; /* MyString */
-	MyString 				hjsFileName; /* MyString */
 	MyString 				jsFileName; /* MyString */
 	MyString 				tsFileName; /* MyString */
 	MyString 				tsConverterFileName; /* Filename of the typescript encoder decoders */

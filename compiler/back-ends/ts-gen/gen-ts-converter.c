@@ -29,7 +29,7 @@ void PrintTSConverterComments(FILE* src, Module* m) {
 	fprintf(src, "/*\n");
 	fprintf(src, " * %s\n", RemovePath(m->tsConverterFileName));
 	fprintf(src, " * \"%s\" ASN.1 stubs.\n", m->modId->name);
-	write_snacc_header(src);
+	write_snacc_header(src, " * ");
 	fprintf(src, " */\n\n");
 	fprintf(src, "// prettier-ignore\n");
 	fprintf(src, ESLINT_DISABLE);

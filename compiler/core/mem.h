@@ -33,7 +33,7 @@
 #ifndef _snacc_mem_h_
 #define _snacc_mem_h_
 
-#include <snacc.h>
+#include "../../snacc.h"
 
 void	*Malloc PROTO ((int size));
 void	*Realloc PROTO ((void *ptr, int newsize));

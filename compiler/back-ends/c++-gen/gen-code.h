@@ -1,7 +1,7 @@
 #if !defined(GENCODE_H_INCLUDED)
 #define GENCODE_H_INCLUDED
 
-#include "snacc.h"
+#include "../../../snacc.h"
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
 # include <time.h>
@@ -25,16 +25,14 @@ void PrintCxxCode (FILE *src, FILE *hdr, if_META (MetaNameStyle genMeta COMMA
 				   ModuleList *mods, Module *m, CxxRules *r, long longJmpVal,
 				   int printTypes, int printValues, int printEncoders,
 				   int printDecoders, int printJSONEncDec, int printPrinters, int printPrintersXML, int printFree,
-				   if_TCL (int printTcl COMMA) int novolatilefuncs);
+				   if_TCL (int printTcl COMMA) int novolatilefuncs, const char* szCppHeaderIncludePath);
 
 //ROSE Protocol Stub (V2) - ste 22.10.2014
-void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, Module *m, CxxRules *r);
+void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, Module *m, CxxRules *r, const char* szCppHeaderIncludePath);
 //Forward declarations
 void PrintForwardDeclarationsCode(FILE* hdrForwardDecl, ModuleList *mods, Module *m);
 
-
 int HasROSEOperations(Module *m);
-
 
 enum BasicTypeChoiceId ParanoidGetBuiltinType(Type *t);
 void PrintConditionalIncludeOpen(FILE *f, char *fileName);

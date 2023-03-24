@@ -74,7 +74,6 @@ char *MakeCSrcFileName PROTO ((const char *moduleName));
 char *MakeCxxHdrFileName PROTO ((const char *moduleName));
 char *MakeCxxSrcFileName PROTO ((const char *moduleName));
 char *MakeSwiftFileName PROTO((const char *moduleName));
-char *MakeHJSFileName PROTO((const char *moduleName));
 char *MakeJSFileName PROTO((const char *moduleName));
 char *MakeTSFileName PROTO((const char *moduleName));
 char* MakeTSEncDecFileName PROTO((const char* moduleName));

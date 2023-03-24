@@ -88,7 +88,6 @@ char *bVDAGlobalDLLExport=(char *)0;
 #include "../back-ends/cs-gen/gen-code.h"
 #include "../back-ends/swift-gen/gen-swift-code-old.h"
 #include "../back-ends/swift-gen/gen-swift-code.h"
-#include "../back-ends/hjs-gen/gen-hjs-code.h"
 #include "../back-ends/js-gen/gen-js-code.h"
 #include "../back-ends/ts-gen/gen-ts-code.h"
 #include "../back-ends/ts-gen/gen-ts-converter.h"
@@ -131,15 +130,11 @@ static int GenCCode(ModuleList *allMods, long longJmpVal, int genTypes, int genE
 static void GenCxxCode(ModuleList *allMods, long longJmpVal,
 							 int genTypes, int genEncoders, int genDecoders, int genJSONEncDec,
 							 int genPrinters, int genPrintersXML, int genValues, int genFree,
+							 const char* szCppHeaderIncludePath,
 							 if_META (MetaNameStyle genMeta COMMA MetaPDU *meta_pdus COMMA)
 							 if_TCL (int genTcl COMMA) int novolatilefuncs, int genROSEDecoders);
 
 static void GenSwiftCode(ModuleList *allMods, long longJmpVal,
-	int genTypes, int genEncoders, int genDecoders, int genJSONEncDec,
-	int genPrinters, int genPrintersXML, int genValues, int genFree,
-	int novolatilefuncs, int genROSEDecoders);
-
-static void GenHJSCode(ModuleList *allMods, long longJmpVal,
 	int genTypes, int genEncoders, int genDecoders, int genJSONEncDec,
 	int genPrinters, int genPrintersXML, int genValues, int genFree,
 	int novolatilefuncs, int genROSEDecoders);
@@ -247,10 +242,10 @@ void Usage PARAMS ((prgName, fp),
 	fprintf (fp, "            <ASN.1 file list>\n\n");
 	fprintf (fp, "  -c   generate C encoders and decoders (default)\n");
 	fprintf (fp, "  -C   generate C++ encoders and decoders\n");
-	fprintf(fp, "  -S   generate Swift code (for usage with WebService NG)\n");
-	fprintf(fp, "  -H   generate HumanJS Object code (for usage with WebService NG)\n");
+	fprintf (fp, "  -Ch:<path>   header prefix for the generated cpp files (defaults to cpp-lib/include/ but you may e.g. define snacclib5/cpp-lib/include)\n");
+	fprintf(fp, "  -S   generate Swift code\n");
 	fprintf(fp, "  -j   generate JSON encoders/decoders. Use with -J or -JT.\n");
-	fprintf(fp, "  -J   generate plain JavaScript code (for usage with WebService NG). For Java see -RJ.\n");
+	fprintf(fp, "  -J   generate plain JavaScript code. For Java see -RJ.\n");
 	fprintf(fp, "  -JT  generate Javascript - Typescript code.\n");
 	fprintf(fp, "  -JD  generate JSON Documentation files.\n");
 	fprintf(fp, "  -T <filename> write a type table file for the ASN.1 modules to file filename\n");
@@ -378,7 +373,6 @@ int main PARAMS ((argc, argv),
 	int			genDelphiCode = FALSE;	//Delphi
 	int			genCSCode = FALSE;		//c#
 	int			genSwiftCode = FALSE;
-	int			genHJSCode = FALSE;
 	int			genJSCode = FALSE;
 	int			genTSCode = FALSE;
 	int			genJsonDocCode = FALSE;
@@ -388,6 +382,7 @@ int main PARAMS ((argc, argv),
 	int			genROSEDecoders = FALSE;   /* ste -- 13.04.054 --added */
 	const char*	dirName;					/* REN -- 6/2/03 -- added */
 	const char*	errFileName;				/* REN -- 7/7/03 -- added */
+	const char*	szCppHeaderIncludePath = "cpp-lib/include/";
 
 	if (argc <= 1)
 	{
@@ -554,15 +549,16 @@ int main PARAMS ((argc, argv),
 				currArg++;
 				break;
 			case 'C': /* produce C++ code */
-				genCxxCode = TRUE;
+				if (strncmp(argument, "-Ch:", 4) == 0)
+					szCppHeaderIncludePath = argument + 4;
+				else if(strcmp(argument, "-C") == 0)
+					genCxxCode = TRUE;
+				else
+					goto error;
 				currArg++;
 				break;
 			case 'S': /* produce Swift code */
 				genSwiftCode = TRUE;
-				currArg++;
-				break;
-			case 'H': /* produce HumanJS Objects */
-				genHJSCode = TRUE;
 				currArg++;
 				break;
 			case 'J': /* produce Javascript Objects */
@@ -831,14 +827,14 @@ error:
 		genPrintCode = TRUE;
 		genPrintCodeXML = FALSE;
 	}
-	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genHJSCode + genJSCode + genSwiftCode + genTSCode + genDelphiCode > 1 + genJsonDocCode)
+	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCode + genDelphiCode > 1 + genJsonDocCode)
 	{
-		fprintf (stderr, "%s: ERROR---Choose only one of the -c -C or -D or -T or -RCS or -RJ or -H or -J OR -JD options\n",	argv[0]);
+		fprintf (stderr, "%s: ERROR---Choose only one of the -c -C or -D or -T or -RCS or -RJ or or -J OR -JD options\n",	argv[0]);
 		Usage (argv[0], stderr);
 		return 1;
 	}
 
-	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genHJSCode && !genJSCode && !genDelphiCode && !genTSCode && !genJsonDocCode)
+	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCode && !genJsonDocCode)
 		genCCode = TRUE;  /* default to C if neither specified */
 
 	/* Set the encoding rules to BER if not set */
@@ -1020,7 +1016,7 @@ error:
 	if (genCCode)
 		FillCTypeInfo (&cRulesG, allMods);
 
-	else if (genCxxCode || genJAVACode || genCSCode || genSwiftCode || genHJSCode || genJSCode || genDelphiCode || genTSCode || genJsonDocCode)
+	else if (genCxxCode || genJAVACode || genCSCode || genSwiftCode || genJSCode || genDelphiCode || genTSCode || genJsonDocCode)
 		FillCxxTypeInfo (&cxxRulesG, allMods);
 
 #if IDL
@@ -1078,6 +1074,7 @@ error:
 	if (genCxxCode)
 		GenCxxCode (allMods, longJmpVal, genTypeCode, genValueCode,
 			genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode,
+			szCppHeaderIncludePath,
 			if_META (genMetaCode COMMA meta_pdus COMMA)
 			if_TCL (genTclCode COMMA) novolatilefuncs, genROSEDecoders);
 
@@ -1086,12 +1083,6 @@ error:
 		genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode,
 		if_META(genMetaCode COMMA meta_pdus COMMA)
 		if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
-
-	if (genHJSCode)
-		GenHJSCode(allMods, longJmpVal, genTypeCode, genValueCode,
-			genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode,
-			if_META(genMetaCode COMMA meta_pdus COMMA)
-			if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
 
 	if (genJSCode)
 		GenJSCode(allMods, longJmpVal, genTypeCode, genValueCode,
@@ -1488,6 +1479,7 @@ void GenCxxCode(ModuleList *allMods,
 	int genPrinters,
 	int genPrintersXML,
 	int genFree,
+	const char* szCppHeaderIncludePath,
 	if_META (MetaNameStyle genMeta _AND_)
 	if_META (MetaPDU *meta_pdus _AND_)
 	if_TCL (int genTcl _AND_)
@@ -1567,11 +1559,10 @@ void GenCxxCode(ModuleList *allMods,
 				perror ("fopen");
 				exit (1);
 				}
-				fprintf (meta.srcfp, "// NOTE: this is a machine generated file--editing not recommended\n");
-				fprintf (meta.srcfp, "//\n");
 				fprintf (meta.srcfp, "// modules.C - reference to all modules and their types\n");
 				fprintf (meta.srcfp, "//\n");
-				fprintf (meta.srcfp, "// This file was generated by snacc on %s", ctime (&now));
+				write_snacc_header(meta.srcfp, "// ");
+				fprintf (meta.srcfp, "//\n");
 			}
 		#endif
 	}
@@ -1597,7 +1588,7 @@ void GenCxxCode(ModuleList *allMods,
 				if_META (genMeta COMMA &meta COMMA meta_pdus COMMA)
 				allMods, currMod, &cxxRulesG, longJmpVal,
 				genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, genPrinters, genPrintersXML, genFree,
-				if_TCL (genTcl COMMA) novolatilefuncs);
+				if_TCL (genTcl COMMA) novolatilefuncs, szCppHeaderIncludePath);
 				allMods->curr = saveMods;
 				fclose (hdrFilePtr);
 				fclose (srcFilePtr);
@@ -1635,7 +1626,7 @@ void GenCxxCode(ModuleList *allMods,
 					{
 						saveMods = allMods->curr;
 
-						PrintROSECode(srcFilePtr, hdrFilePtr, hdrInterfaceFilePtr, allMods, currMod, &cxxRulesG);
+						PrintROSECode(srcFilePtr, hdrFilePtr, hdrInterfaceFilePtr, allMods, currMod, &cxxRulesG, szCppHeaderIncludePath);
 						allMods->curr = saveMods;
 
 						fclose (hdrFilePtr);
@@ -1829,70 +1820,12 @@ void GenSwiftCode(ModuleList *allMods,
 	}
 }  /* GenSwiftCode */
 
+
 /*
-* Given the list of parsed, linked, normalized, error-checked and sorted
-* modules, and some code generation flags, generates Swift code and
-* writes it to files derived from each modules name.
-*/
-void GenHJSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genFree, int novolatilefuncs, int genROSEDecoders)
-{
-	Module		*currMod;
-	AsnListNode	*saveMods;
-	//FILE		*srcFilePtr;
-	//FILE		*hdrInterfaceFilePtr;
-	//FILE		*hdrForwardDecl;
-	DefinedObj		*fNames;
-	int			fNameConflict = FALSE;
-
-	genROSEDecoders = 1;
-
-	/*
-	* Make names for each module's encoder/decoder src and hdr files
-	* so import references can be made via include files
-	* check for truncation --> name conflicts & exit if nec
-	*/
-	fNames = NewObjList();
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (ObjIsDefined(fNames, currMod->hjsFileName, StrObjCmp))
-		{
-			fprintf(errFileG, "Ack! ERROR---file name conflict for generated swift file with name `%s'.\n\n", currMod->hjsFileName);
-			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
-			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
-			fprintf(errFileG, "This error can also be caused by 2 modules have the same names but different OBJECT IDENTIFIERs.");
-			fprintf(errFileG, "Try renaming the modules to correct this.\n");
-			fNameConflict = TRUE;
-		}
-		else
-		{
-			DefineObj(&fNames, currMod->hjsFileName);
-		}
-
-		if (fNameConflict)
-			return;
-
-		FreeDefinedObjs(&fNames);
-
-	}
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (currMod->ImportedFlag == FALSE)
-		{
-			saveMods = allMods->curr;
-			PrintHJSCode(allMods, currMod, longJmpVal,
-				genTypes, genValues, genEncoders, genDecoders, genJSONEncDec,
-				novolatilefuncs);
-			allMods->curr = saveMods;
-
-		}
-	}
-}  /* GenHJSCode */
-
-   /*
-   * Given the list of parsed, linked, normalized, error-checked and sorted
-   * modules, and some code generation flags, generates Swift code and
-   * writes it to files derived from each modules name.
-   */
+ * Given the list of parsed, linked, normalized, error-checked and sorted
+ * modules, and some code generation flags, generates Swift code and
+ * writes it to files derived from each modules name.
+ */
 void GenJSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genFree, int novolatilefuncs, int genROSEDecoders)
 {
 	Module		*currMod;
@@ -2016,7 +1949,7 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 		fprintf(typesFile, "/**\n");
 		fprintf(typesFile, " * This file combines exports from asn1 files under one name\n");
 		fprintf(typesFile, " *\n");
-		write_snacc_header(typesFile);
+		write_snacc_header(typesFile, " * ");
  		fprintf(typesFile, " */\n\n");
 
 		char* strings[1000];
@@ -2054,7 +1987,7 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 		fprintf(methodsFile, "/**\n");
 		fprintf(methodsFile, " * This file exports all specified ROSE methods as arrays\n");
 		fprintf(methodsFile, " *\n");
-		write_snacc_header(methodsFile);
+		write_snacc_header(methodsFile, " * ");
 		fprintf(methodsFile, " */\n\n");
 		fprintf(methodsFile, "export interface IROSEMethod {\n");
 		fprintf(methodsFile, "\tname: string;\n");
@@ -2985,7 +2918,6 @@ void CreateNames(ModuleList* allMods) {
 		currMod->cxxHdrFileName = MakeCxxHdrFileName(currMod->baseFileName);
 		currMod->cxxSrcFileName = MakeCxxSrcFileName(currMod->baseFileName);
 		currMod->swiftFileName = MakeSwiftFileName(currMod->baseFileName);
-		currMod->hjsFileName = MakeHJSFileName(currMod->baseFileName);
 		currMod->jsFileName = MakeJSFileName(currMod->baseFileName);
 		currMod->tsFileName = MakeTSFileName(currMod->baseFileName);
 		currMod->tsConverterFileName = MakeTSEncDecFileName(currMod->baseFileName);

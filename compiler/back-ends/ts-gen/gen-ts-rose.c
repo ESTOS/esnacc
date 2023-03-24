@@ -26,7 +26,7 @@ void PrintTSROSEHeader(FILE* src, Module* m, const bool bInterface) {
 	else
 		fprintf(src, " * \"%s\" ASN.1 stubs.\n", m->modId->name);
 
-	write_snacc_header(src);
+	write_snacc_header(src, " * ");
 	fprintf(src, " */\n\n");
 	fprintf(src, "// prettier-ignore\n");
 	fprintf(src, ESLINT_DISABLE);

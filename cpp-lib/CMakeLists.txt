@@ -7,9 +7,9 @@ file(GLOB src_files src/*.cpp src/tkAppInit.c ejsoncpp/*.cpp)
 
 add_library(cpp-lib STATIC ${src_files})
 
-target_include_directories("cpp-lib" PUBLIC .)
-target_include_directories("cpp-lib" PUBLIC ./..)
-target_include_directories("cpp-lib" PUBLIC "include")
+target_include_directories(cpp-lib PUBLIC "include")
+target_compile_definitions(cpp-lib PRIVATE SNACCDLL_NONE)
+target_compile_definitions(cpp-lib PRIVATE SNACCLIB_BUILD)
 
 # set the name for the library (the d addon for debug has been specified in the root CMakeLists.txt)
 if(CPP_LIBRARY_OUTPUT_NAME)
