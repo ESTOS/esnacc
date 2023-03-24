@@ -4,6 +4,10 @@
 #include <list>
 #include <string>
 
+#ifdef _WIN32
+    #pragma comment(lib, "Dbghelp.lib")
+#endif
+
 enum class SNACCDeprecatedNotifyCallDirection {
     in = 0,
     out = 1

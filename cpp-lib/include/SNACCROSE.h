@@ -129,9 +129,8 @@ public:
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
 	void JEnc(EJson::Value& b) const;
 	bool JDec(const EJson::Value& b);
-
-  void Print(std::ostream& os, unsigned short indent = 0) const;
-  void			PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// [PrintMemberAttributes]
 	union
@@ -161,7 +160,6 @@ public:
 	ROSEResultSeq& operator=(const ROSEResultSeq& that);
 	const char* typeName() const;
 	int checkConstraints(ConstraintFailList* pConstraintFails) const;
-
 	// Encoders & Decoders
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -169,8 +167,8 @@ public:
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
 	void JEnc(EJson::Value& b) const;
 	bool JDec(const EJson::Value& b);
-  void Print(std::ostream& os, unsigned short indent = 0) const;
-	void PrintXML(std::ostream &os, const char* lpszTitle = NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// [PrintMemberAttributes]
 	AsnInt resultValue;
@@ -191,7 +189,6 @@ public:
 	ROSEAuth& operator=(const ROSEAuth& that);
 	const char* typeName() const;
 	int checkConstraints(ConstraintFailList* pConstraintFails) const;
-
 	// Encoders & Decoders
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -199,8 +196,8 @@ public:
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
 	void JEnc(EJson::Value& b) const;
 	bool JDec(const EJson::Value& b);
-  void Print(std::ostream& os, unsigned short indent = 0) const;
-	void PrintXML(std::ostream &os, const char* lpszTitle = NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// [PrintMemberAttributes]
 	UTF8String method;
@@ -221,7 +218,6 @@ public:
 	ROSEError& operator=(const ROSEError& that);
 	const char* typeName() const;
 	int checkConstraints(ConstraintFailList* pConstraintFails) const;
-
 	// Encoders & Decoders
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -229,8 +225,8 @@ public:
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
 	void JEnc(EJson::Value& b) const;
 	bool JDec(const EJson::Value& b);
-  void Print(std::ostream& os, unsigned short indent = 0) const;
-	void PrintXML(std::ostream &os, const char* lpszTitle = NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// [PrintMemberAttributes]
 	UTF8String* sessionID;
@@ -260,7 +256,6 @@ public:
 	ROSEAuthRequest& operator=(const ROSEAuthRequest& that);
 	const char* typeName() const;
 	int checkConstraints(ConstraintFailList* pConstraintFails) const;
-
 	// Encoders & Decoders
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -268,8 +263,8 @@ public:
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
 	void JEnc(EJson::Value& b) const;
 	bool JDec(const EJson::Value& b);
-  void Print(std::ostream& os, unsigned short indent = 0) const;
-	void PrintXML(std::ostream &os, const char* lpszTitle = NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// [PrintMemberAttributes]
 	ROSEAuth auth;
@@ -290,7 +285,6 @@ public:
 	ROSEAuthResult& operator=(const ROSEAuthResult& that);
 	const char* typeName() const;
 	int checkConstraints(ConstraintFailList* pConstraintFails) const;
-
 	// Encoders & Decoders
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -298,8 +292,8 @@ public:
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
 	void JEnc(EJson::Value& b) const;
 	bool JDec(const EJson::Value& b);
-  void Print(std::ostream& os, unsigned short indent = 0) const;
-	void PrintXML(std::ostream &os, const char* lpszTitle = NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// [PrintMemberAttributes]
 	ROSEAuthList authList;
@@ -320,7 +314,6 @@ public:
 	ROSEInvoke& operator=(const ROSEInvoke& that);
 	const char* typeName() const;
 	int checkConstraints(ConstraintFailList* pConstraintFails) const;
-
 	// Encoders & Decoders
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -328,8 +321,8 @@ public:
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
 	void JEnc(EJson::Value& b) const;
 	bool JDec(const EJson::Value& b);
-  void Print(std::ostream& os, unsigned short indent = 0) const;
-	void PrintXML(std::ostream &os, const char* lpszTitle = NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// [PrintMemberAttributes]
 	UTF8String* sessionID;
@@ -355,7 +348,6 @@ public:
 	ROSEResult& operator=(const ROSEResult& that);
 	const char* typeName() const;
 	int checkConstraints(ConstraintFailList* pConstraintFails) const;
-
 	// Encoders & Decoders
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -363,8 +355,8 @@ public:
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
 	void JEnc(EJson::Value& b) const;
 	bool JDec(const EJson::Value& b);
-  void Print(std::ostream& os, unsigned short indent = 0) const;
-	void PrintXML(std::ostream &os, const char* lpszTitle = NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// [PrintMemberAttributes]
 	UTF8String* sessionID;
@@ -394,9 +386,8 @@ public:
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
 	void JEnc(EJson::Value& b) const;
 	bool JDec(const EJson::Value& b);
-
-  void Print(std::ostream& os, unsigned short indent = 0) const;
-  void			PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// [PrintMemberAttributes]
 	union
@@ -430,7 +421,6 @@ public:
 	ROSEReject& operator=(const ROSEReject& that);
 	const char* typeName() const;
 	int checkConstraints(ConstraintFailList* pConstraintFails) const;
-
 	// Encoders & Decoders
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -438,8 +428,8 @@ public:
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
 	void JEnc(EJson::Value& b) const;
 	bool JDec(const EJson::Value& b);
-  void Print(std::ostream& os, unsigned short indent = 0) const;
-	void PrintXML(std::ostream &os, const char* lpszTitle = NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// [PrintMemberAttributes]
 	UTF8String* sessionID;
@@ -471,9 +461,8 @@ public:
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
 	void JEnc(EJson::Value& b) const;
 	bool JDec(const EJson::Value& b);
-
-  void Print(std::ostream& os, unsigned short indent = 0) const;
-  void			PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// [PrintMemberAttributes]
 	union
