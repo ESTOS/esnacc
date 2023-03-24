@@ -274,42 +274,41 @@ void ROSERejectChoice::Print(std::ostream& os, unsigned short indent) const
 	} // end of switch
 } // end of ROSERejectChoice::Print()
 
-void ROSERejectChoice::PrintXML (std::ostream &os, const char *lpszTitle) const
+void ROSERejectChoice::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
-  if (lpszTitle)
-  {
-     os << "<" << lpszTitle;
-        os << " typeName=\"ROSERejectChoice\" type=\"CHOICE\">";
-  }
-  else
-        os << "<ROSERejectChoice type=\"CHOICE\">";
-  switch (choiceId)
-  {
-    case invokedIDCid:
-      if (invokedID)
-        invokedID->PrintXML(os,"invokedID");
-      else
-      {
-        os << "<invokedID -- void3 -- /invokedID>" << std::endl;
-      }
-      break;
+	if (lpszTitle)
+	{
+		os << "<" << lpszTitle;
+		os << " typeName=\"ROSERejectChoice\" type=\"CHOICE\">";
+	}
+	else
+		os << "<ROSERejectChoice type=\"CHOICE\">";
+		switch (choiceId)
+		{
+			case invokedIDCid:
+				if (invokedID)
+					invokedID->PrintXML(os,"invokedID");
+				else
+				{
+					os << "<invokedID -- void3 -- /invokedID>" << std::endl;
+				}
+			break;
 
-    case invokednullCid:
-      if (invokednull)
-        invokednull->PrintXML(os,"invokednull");
-      else
-      {
-        os << "<invokednull -- void3 -- /invokednull>" << std::endl;
-      }
-      break;
+			case invokednullCid:
+				if (invokednull)
+					invokednull->PrintXML(os,"invokednull");
+				else
+				{
+					os << "<invokednull -- void3 -- /invokednull>" << std::endl;
+				}
+			break;
 
-  } // end of switch
-  if (lpszTitle)
-     os << "</" << lpszTitle << ">";
-  else
-        os << "</ROSERejectChoice>";
-} // ROSERejectChoice::PrintXML
-
+		} // end of switch
+		if (lpszTitle)
+			os << "</" << lpszTitle << ">";
+		else
+			os << "</ROSERejectChoice>";
+		}
 // [PrintConstructor]
 ROSEResultSeq::ROSEResultSeq()
 {
@@ -518,7 +517,7 @@ void ROSEResultSeq::Print(std::ostream& os, unsigned short indent) const
 } // end of ROSEResultSeq::Print()
 
 // [PrintSeqDefCodeXMLPrinter]
-void ROSEResultSeq::PrintXML (std::ostream &os, const char *lpszTitle) const
+void ROSEResultSeq::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	if (lpszTitle)
 	{
@@ -770,7 +769,7 @@ void ROSEAuth::Print(std::ostream& os, unsigned short indent) const
 } // end of ROSEAuth::Print()
 
 // [PrintSeqDefCodeXMLPrinter]
-void ROSEAuth::PrintXML (std::ostream &os, const char *lpszTitle) const
+void ROSEAuth::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	if (lpszTitle)
 	{
@@ -1160,7 +1159,7 @@ void ROSEError::Print(std::ostream& os, unsigned short indent) const
 } // end of ROSEError::Print()
 
 // [PrintSeqDefCodeXMLPrinter]
-void ROSEError::PrintXML (std::ostream &os, const char *lpszTitle) const
+void ROSEError::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	if (lpszTitle)
 	{
@@ -1474,7 +1473,7 @@ void ROSEAuthRequest::Print(std::ostream& os, unsigned short indent) const
 } // end of ROSEAuthRequest::Print()
 
 // [PrintSeqDefCodeXMLPrinter]
-void ROSEAuthRequest::PrintXML (std::ostream &os, const char *lpszTitle) const
+void ROSEAuthRequest::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	if (lpszTitle)
 	{
@@ -1768,7 +1767,7 @@ void ROSEAuthResult::Print(std::ostream& os, unsigned short indent) const
 } // end of ROSEAuthResult::Print()
 
 // [PrintSeqDefCodeXMLPrinter]
-void ROSEAuthResult::PrintXML (std::ostream &os, const char *lpszTitle) const
+void ROSEAuthResult::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	if (lpszTitle)
 	{
@@ -2355,7 +2354,7 @@ void ROSEInvoke::Print(std::ostream& os, unsigned short indent) const
 } // end of ROSEInvoke::Print()
 
 // [PrintSeqDefCodeXMLPrinter]
-void ROSEInvoke::PrintXML (std::ostream &os, const char *lpszTitle) const
+void ROSEInvoke::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	if (lpszTitle)
 	{
@@ -2741,7 +2740,7 @@ void ROSEResult::Print(std::ostream& os, unsigned short indent) const
 } // end of ROSEResult::Print()
 
 // [PrintSeqDefCodeXMLPrinter]
-void ROSEResult::PrintXML (std::ostream &os, const char *lpszTitle) const
+void ROSEResult::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	if (lpszTitle)
 	{
@@ -3091,60 +3090,59 @@ void RejectProblem::Print(std::ostream& os, unsigned short indent) const
 	} // end of switch
 } // end of RejectProblem::Print()
 
-void RejectProblem::PrintXML (std::ostream &os, const char *lpszTitle) const
+void RejectProblem::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
-  if (lpszTitle)
-  {
-     os << "<" << lpszTitle;
-        os << " typeName=\"RejectProblem\" type=\"CHOICE\">";
-  }
-  else
-        os << "<RejectProblem type=\"CHOICE\">";
-  switch (choiceId)
-  {
-    case generalProblemCid:
-      if (generalProblem)
-        generalProblem->PrintXML(os,"generalProblem");
-      else
-      {
-        os << "<generalProblem -- void3 -- /generalProblem>" << std::endl;
-      }
-      break;
+	if (lpszTitle)
+	{
+		os << "<" << lpszTitle;
+		os << " typeName=\"RejectProblem\" type=\"CHOICE\">";
+	}
+	else
+		os << "<RejectProblem type=\"CHOICE\">";
+		switch (choiceId)
+		{
+			case generalProblemCid:
+				if (generalProblem)
+					generalProblem->PrintXML(os,"generalProblem");
+				else
+				{
+					os << "<generalProblem -- void3 -- /generalProblem>" << std::endl;
+				}
+			break;
 
-    case invokeProblemCid:
-      if (invokeProblem)
-        invokeProblem->PrintXML(os,"invokeProblem");
-      else
-      {
-        os << "<invokeProblem -- void3 -- /invokeProblem>" << std::endl;
-      }
-      break;
+			case invokeProblemCid:
+				if (invokeProblem)
+					invokeProblem->PrintXML(os,"invokeProblem");
+				else
+				{
+					os << "<invokeProblem -- void3 -- /invokeProblem>" << std::endl;
+				}
+			break;
 
-    case returnResultProblemCid:
-      if (returnResultProblem)
-        returnResultProblem->PrintXML(os,"returnResultProblem");
-      else
-      {
-        os << "<returnResultProblem -- void3 -- /returnResultProblem>" << std::endl;
-      }
-      break;
+			case returnResultProblemCid:
+				if (returnResultProblem)
+					returnResultProblem->PrintXML(os,"returnResultProblem");
+				else
+				{
+					os << "<returnResultProblem -- void3 -- /returnResultProblem>" << std::endl;
+				}
+			break;
 
-    case returnErrorProblemCid:
-      if (returnErrorProblem)
-        returnErrorProblem->PrintXML(os,"returnErrorProblem");
-      else
-      {
-        os << "<returnErrorProblem -- void3 -- /returnErrorProblem>" << std::endl;
-      }
-      break;
+			case returnErrorProblemCid:
+				if (returnErrorProblem)
+					returnErrorProblem->PrintXML(os,"returnErrorProblem");
+				else
+				{
+					os << "<returnErrorProblem -- void3 -- /returnErrorProblem>" << std::endl;
+				}
+			break;
 
-  } // end of switch
-  if (lpszTitle)
-     os << "</" << lpszTitle << ">";
-  else
-        os << "</RejectProblem>";
-} // RejectProblem::PrintXML
-
+		} // end of switch
+		if (lpszTitle)
+			os << "</" << lpszTitle << ">";
+		else
+			os << "</RejectProblem>";
+		}
 // [PrintConstructor]
 ROSEReject::ROSEReject()
 {
@@ -3623,7 +3621,7 @@ void ROSEReject::Print(std::ostream& os, unsigned short indent) const
 } // end of ROSEReject::Print()
 
 // [PrintSeqDefCodeXMLPrinter]
-void ROSEReject::PrintXML (std::ostream &os, const char *lpszTitle) const
+void ROSEReject::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	if (lpszTitle)
 	{
@@ -3983,60 +3981,59 @@ void ROSEMessage::Print(std::ostream& os, unsigned short indent) const
 	} // end of switch
 } // end of ROSEMessage::Print()
 
-void ROSEMessage::PrintXML (std::ostream &os, const char *lpszTitle) const
+void ROSEMessage::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
-  if (lpszTitle)
-  {
-     os << "<" << lpszTitle;
-        os << " typeName=\"ROSEMessage\" type=\"CHOICE\">";
-  }
-  else
-        os << "<ROSEMessage type=\"CHOICE\">";
-  switch (choiceId)
-  {
-    case invokeCid:
-      if (invoke)
-        invoke->PrintXML(os,"invoke");
-      else
-      {
-        os << "<invoke -- void3 -- /invoke>" << std::endl;
-      }
-      break;
+	if (lpszTitle)
+	{
+		os << "<" << lpszTitle;
+		os << " typeName=\"ROSEMessage\" type=\"CHOICE\">";
+	}
+	else
+		os << "<ROSEMessage type=\"CHOICE\">";
+		switch (choiceId)
+		{
+			case invokeCid:
+				if (invoke)
+					invoke->PrintXML(os,"invoke");
+				else
+				{
+					os << "<invoke -- void3 -- /invoke>" << std::endl;
+				}
+			break;
 
-    case resultCid:
-      if (result)
-        result->PrintXML(os,"result");
-      else
-      {
-        os << "<result -- void3 -- /result>" << std::endl;
-      }
-      break;
+			case resultCid:
+				if (result)
+					result->PrintXML(os,"result");
+				else
+				{
+					os << "<result -- void3 -- /result>" << std::endl;
+				}
+			break;
 
-    case errorCid:
-      if (error)
-        error->PrintXML(os,"error");
-      else
-      {
-        os << "<error -- void3 -- /error>" << std::endl;
-      }
-      break;
+			case errorCid:
+				if (error)
+					error->PrintXML(os,"error");
+				else
+				{
+					os << "<error -- void3 -- /error>" << std::endl;
+				}
+			break;
 
-    case rejectCid:
-      if (reject)
-        reject->PrintXML(os,"reject");
-      else
-      {
-        os << "<reject -- void3 -- /reject>" << std::endl;
-      }
-      break;
+			case rejectCid:
+				if (reject)
+					reject->PrintXML(os,"reject");
+				else
+				{
+					os << "<reject -- void3 -- /reject>" << std::endl;
+				}
+			break;
 
-  } // end of switch
-  if (lpszTitle)
-     os << "</" << lpszTitle << ">";
-  else
-        os << "</ROSEMessage>";
-} // ROSEMessage::PrintXML
-
+		} // end of switch
+		if (lpszTitle)
+			os << "</" << lpszTitle << ">";
+		else
+			os << "</ROSEMessage>";
+		}
 #ifndef NO_NAMESPACE
 } // namespace close
 #endif

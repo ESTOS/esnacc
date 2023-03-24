@@ -2207,7 +2207,7 @@ void PrintChoiceDefCodeJsonDec(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, T
 	CxxTRI *cxxtri;
 	int iCounter = 0;
 
-	fprintf(hdr, "\tbool JDec(const EJson::Value& b);\n\n");
+	fprintf(hdr, "\tbool JDec(const EJson::Value& b);\n");
 	fprintf(src, "bool %s::JDec(const EJson::Value& b)", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	fprintf(src, "\tClear();\n");
@@ -2555,8 +2555,7 @@ static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module
 	PrintTypeName(hdr, src, td->cxxTypeDefInfo->className, 0);
 	PrintCheckConstraints(hdr, src, m, choice, td);
 
-	if(printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode)
-	{
+	if(printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode) {
 		fprintf(hdr, "\n\t// Encoders & Decoders\n");
 		if (printEncodersG)
 			PrintChoiceDefCodeBerEncodeContent(src, hdr, r, td, choice);
@@ -2582,7 +2581,7 @@ static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module
 	/* ostream printing routine */
 	if (printPrintersG)
 	{
-		fprintf(hdr, "  void Print(std::ostream& os, unsigned short indent = 0) const;\n");
+		fprintf(hdr, "\tvoid Print(std::ostream& os, unsigned short indent = 0) const;\n");
 		fprintf(src, "void %s::Print(std::ostream& os, unsigned short indent) const\n",
 			td->cxxTypeDefInfo->className);
 		fprintf(src, "{\n");
@@ -2621,59 +2620,58 @@ static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module
 	if (printPrintersXMLG)
 	{
 		/* RWC;1/12/00; ADDED XML output capability. */
-		fprintf(hdr, "  void			PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;\n");
-
-		fprintf(src, "void %s::PrintXML (std::ostream &os, const char *lpszTitle) const\n", td->cxxTypeDefInfo->className);
+		fprintf(hdr, "\tvoid PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;\n");
+		fprintf(src, "void %s::PrintXML(std::ostream& os, const char* lpszTitle) const\n", td->cxxTypeDefInfo->className);
 		fprintf(src, "{\n");
-		fprintf(src, "  if (lpszTitle)\n");
-		fprintf(src, "  {\n");
-		fprintf(src, "     os << \"<\" << lpszTitle;\n");
-		fprintf(src, "        os << \" typeName=\\\"%s\\\" type=\\\"CHOICE\\\">\";\n", td->cxxTypeDefInfo->className);
-		fprintf(src, "  }\n");
-		fprintf(src, "  else\n");
-		fprintf(src, "        os << \"<%s type=\\\"CHOICE\\\">\";\n", td->cxxTypeDefInfo->className);
-		fprintf(src, "  switch (choiceId)\n");
-		fprintf(src, "  {\n");
+		fprintf(src, "\tif (lpszTitle)\n");
+		fprintf(src, "\t{\n");
+		fprintf(src, "\t\tos << \"<\" << lpszTitle;\n");
+		fprintf(src, "\t\tos << \" typeName=\\\"%s\\\" type=\\\"CHOICE\\\">\";\n", td->cxxTypeDefInfo->className);
+		fprintf(src, "\t}\n");
+		fprintf(src, "\telse\n");
+		fprintf(src, "\t\tos << \"<%s type=\\\"CHOICE\\\">\";\n", td->cxxTypeDefInfo->className);
+		fprintf(src, "\t\tswitch (choiceId)\n");
+		fprintf(src, "\t\t{\n");
 
 		FOR_EACH_LIST_ELMT (e, choice->basicType->a.choice)
 		{
-			fprintf(src, "    case %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
+			fprintf(src, "\t\t\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
 
 			/* value notation so print the choice elmts field name */
 			if (e->type->cxxTypeRefInfo->isPtr)
 			{
-				fprintf(src, "      if (%s)\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "        %s->PrintXML(os", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\t\tif (%s)\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\t\t\t%s->PrintXML(os", e->type->cxxTypeRefInfo->fieldName);
 				if (e->fieldName != NULL)
 					fprintf(src, ",\"%s\");\n", e->fieldName);
 				else
 					fprintf(src, ");\n");
-				fprintf(src, "      else\n");
-				fprintf(src, "      {\n");
+				fprintf(src, "\t\t\t\telse\n");
+				fprintf(src, "\t\t\t\t{\n");
 
 				if (e->fieldName != NULL)
 				{
-					fprintf(src, "        os << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->fieldName, e->fieldName);
+					fprintf(src, "\t\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->fieldName, e->fieldName);
 				}
 				else
 				{
-					fprintf(src, "        os << \"<%s -- void3 -- /%s>\" << std::endl;\n",
+					fprintf(src, "\t\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n",
 						e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->fieldName);
 				}
 
-				fprintf(src, "      }\n");
+				fprintf(src, "\t\t\t\t}\n");
 			}
 			else
-				fprintf(src, "      %s.PrintXML(os, \"%s\");\n", e->type->cxxTypeRefInfo->fieldName, e->fieldName);
+				fprintf(src, "\t\t\t\t%s.PrintXML(os, \"%s\");\n", e->type->cxxTypeRefInfo->fieldName, e->fieldName);
 
-			fprintf(src, "      break;\n\n");
+			fprintf(src, "\t\t\tbreak;\n\n");
 		}
-		fprintf(src, "  } // end of switch\n");
-		fprintf(src, "  if (lpszTitle)\n");
-		fprintf(src, "     os << \"</\" << lpszTitle << \">\";\n");
-		fprintf(src, "  else\n");
-		fprintf(src, "        os << \"</%s>\";\n", td->cxxTypeDefInfo->className);
-		fprintf(src, "} // %s::PrintXML\n\n", td->cxxTypeDefInfo->className);
+		fprintf(src, "\t\t} // end of switch\n");
+		fprintf(src, "\t\tif (lpszTitle)\n");
+		fprintf(src, "\t\t\tos << \"</\" << lpszTitle << \">\";\n");
+		fprintf(src, "\t\telse\n");
+		fprintf(src, "\t\t\tos << \"</%s>\";\n", td->cxxTypeDefInfo->className);
+		fprintf(src, "\t\t}\n");
 
 		/* END XML Print capability. */
 		/* ################################################################## */
@@ -3377,9 +3375,9 @@ void PrintSeqDefCodeBerDec(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Type 
 		fprintf(src, "\ttag = BDecTag(_b, bytesDecoded);\n");
 
 		if (tag->tclass == UNIV)
-			fprintf(src, "\tif (tag == MAKE_TAG_ID(%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 0));//RWC;Code2UnivCodeStr (tag->code));
+			fprintf(src, "\tif (tag != MAKE_TAG_ID(%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 0));//RWC;Code2UnivCodeStr (tag->code));
 		else
-			fprintf(src, "\tif (tag == MAKE_TAG_ID(%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+			fprintf(src, "\tif (tag != MAKE_TAG_ID(%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
 		fprintf(src, "\t\tthrow InvalidTagException(typeName(), tag, STACK_ENTRY);\n\n");
 
 		fprintf(src, "\telmtLen%d = BDecLen(_b, bytesDecoded);\n", ++elmtLevel);
@@ -3626,7 +3624,7 @@ static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 	PrintCheckConstraints(hdr, src, m, seq, td);
 
 	if(printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode) {
-		fprintf(hdr, "\n\t// Encoders & Decoders\n");
+		fprintf(hdr, "\t// Encoders & Decoders\n");
 		if (printEncodersG)
 			PrintSeqDefCodeBerEncodeContent(src, hdr, r, td, seq);
 		if (printDecodersG)
@@ -4877,8 +4875,15 @@ void PrintCxxCode(FILE *src,
 	}
 #endif /* META */
 
-	fprintf(hdr, "#include \"asn-incl.h\"\n");
-	fprintf(hdr, "#include \"asn-listset.h\"\n");
+	// Special for the SNACCROSE header as it is place in the include folder
+	// The generated code for the product that is using the snacc lib is placed into a different folder and thus needs a different place to look for the includes
+	if(strcmp(m->moduleName, "SNACCROSE") == 0) {
+		fprintf(hdr, "#include \"asn-incl.h\"\n");
+		fprintf(hdr, "#include \"asn-listset.h\"\n");
+	} else {
+		fprintf(hdr, "#include <%sasn-incl.h>\n", szCppHeaderIncludePath);
+		fprintf(hdr, "#include <%sasn-listset.h>\n", szCppHeaderIncludePath);
+	}
 	fprintf(src, "\n");    //RWC; PRINT before possible "namespace" designations.
 
 	PrintSrcIncludes (src, mods, m);
@@ -4886,7 +4891,12 @@ void PrintCxxCode(FILE *src,
 	bool bHasDeprecatedElements = false;
 	FOR_EACH_LIST_ELMT (td, m->typeDefs) {
 		if(IsDeprecatedFlaggedSequence(m, td->definedName)) {
-			fprintf(src, "#include \"SNACCDeprecated.h\"\n");
+			// Special for the SNACCROSE header as it is place in the include folder
+			// The generated code for the product that is using the snacc lib is placed into a different folder and thus needs a different place to look for the includes
+			if(strcmp(m->moduleName, "SNACCROSE") == 0)
+				fprintf(src, "#include \"SNACCDeprecated.h\"\n");
+			else
+				fprintf(src, "#include <%sSNACCDeprecated.h>\n", szCppHeaderIncludePath);
 			bHasDeprecatedElements = true;
 			break;
 		}
@@ -5296,8 +5306,7 @@ static void PrintCxxSeqSetPrintFunction(FILE* src, FILE* hdr, MyString className
 	NamedTypeList* pElmtList=NULL;
 	NamedType *e;
 
-	fprintf(hdr, "  void Print(std::ostream& os, unsigned short indent = 0) const;\n");
-
+	fprintf(hdr, "\tvoid Print(std::ostream& os, unsigned short indent = 0) const;\n");
 	fprintf(src, "void %s::Print(std::ostream& os, unsigned short indent) const\n",
 		className);
 	fprintf(src, "{\n");
@@ -5397,8 +5406,8 @@ void PrintSeqDefCodeXMLPrinter(FILE *src, FILE *hdr, TypeDef *td, Type *seq)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	fprintf(hdr, "\tvoid PrintXML(std::ostream &os, const char* lpszTitle = NULL) const;\n");
-	fprintf(src,"void %s::PrintXML (std::ostream &os, const char *lpszTitle) const\n", td->cxxTypeDefInfo->className);
+	fprintf(hdr, "\tvoid PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;\n");
+	fprintf(src,"void %s::PrintXML(std::ostream& os, const char* lpszTitle) const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	fprintf(src, "\tif (lpszTitle)\n");
 	fprintf(src, "\t{\n");
