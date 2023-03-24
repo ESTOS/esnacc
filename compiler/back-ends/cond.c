@@ -50,7 +50,7 @@ void PrintConditionalIncludeOpen(FILE *f, char *fileName)
             hdrFileDefSym[i] = '_';
 
     fprintf (f, "#ifndef _%s_\n", hdrFileDefSym);
-    fprintf(f, "#define _%s_\n\n\n", hdrFileDefSym);
+    fprintf(f, "#define _%s_\n\n", hdrFileDefSym);
 } /* PrintConditionalIncludeOpen */
 
 

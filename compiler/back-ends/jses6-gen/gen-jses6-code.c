@@ -660,9 +660,9 @@ void PrintJSES6Imports(FILE *src, ModuleList *mods, Module *m)
 
 void PrintJSES6Comments(FILE *src, Module *m) {
 	fprintf(src, "/*\n");
-	fprintf(src, " *    %s\n", RemovePath(m->jsFileName));
-	fprintf(src, " *    \"%s\" ASN.1 stubs.\n", m->modId->name);
-	write_snacc_header(src);
+	fprintf(src, " * %s\n", RemovePath(m->jsFileName));
+	fprintf(src, " * \"%s\" ASN.1 stubs.\n", m->modId->name);
+	write_snacc_header(src, " * ");
 	fprintf(src, " */\n\n");
 }
 

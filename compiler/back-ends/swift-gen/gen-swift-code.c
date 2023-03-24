@@ -584,7 +584,7 @@ void PrintSwiftComments(FILE* src, Module* m) {
 	fprintf(src, "/*\n");
 	fprintf(src, " * %s\n", RemovePath(m->swiftFileName));
 	fprintf(src, " * \"%s\" ASN.1 stubs.\n", m->modId->name);
-	write_snacc_header(src);
+	write_snacc_header(src, " * ");
 	fprintf(src, " */\n\n");
 
 	printModuleComment(src, RemovePath(m->baseFileName));

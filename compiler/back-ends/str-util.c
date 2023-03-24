@@ -558,13 +558,6 @@ const char *refName)
 }
 
 char *
-MakeHJSFileName PARAMS((refName),
-	const char *refName)
-{
-	return MakeFileName(refName, "");
-}
-
-char *
 MakeJSFileName PARAMS((refName),
 	const char *refName)
 {
