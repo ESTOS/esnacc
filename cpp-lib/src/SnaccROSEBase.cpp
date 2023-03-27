@@ -23,6 +23,10 @@ SnaccInvokeContext::~SnaccInvokeContext()
 		delete pInvokeAuth;
 	if (pRejectAuth)
 		delete pRejectAuth;
+	if (pCustom) {
+		// If you set data in pCustom ensure that it is deleted (freeed) before the object runs out of scope...
+		assert(0);
+	}
 }
 
 
@@ -713,6 +717,8 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEInvoke* pinvoke)
 	invokeContext.pInvokeAuth = pinvoke->authentication;
 	invokeContext.pInvoke = pinvoke;
 
+	bool bNotifyRunningOutOfScope = OnInvokeContextCreated(&invokeContext);
+
 	std::string strError;
 	try
 	{
@@ -765,9 +771,14 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEInvoke* pinvoke)
 	if (invokeContext.funcAfterResult)
 		invokeContext.funcAfterResult();
 
+	if (bNotifyRunningOutOfScope)
+		OnInvokeContextRunsOutOfScope(&invokeContext);
+
 	//prevent autodelete
 	invokeContext.pInvokeAuth = NULL;
 	invokeContext.pInvoke = NULL;
+
+
 }
 
 void SnaccROSEBase::OnResultMessage(SNACC::ROSEResult* presult)

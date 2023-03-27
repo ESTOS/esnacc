@@ -236,8 +236,6 @@ public:
 		Override from SnaccRoseSender */
 	virtual long SendError(int invokeID, SNACC::AsnType *value, const wchar_t* szSessionID = 0);
 
-
-public:
 	/*! Increment invoke counter
 		Override from SnaccRoseSender*/
 	virtual long GetNextInvokeID();
@@ -282,7 +280,6 @@ protected:
 	
 	/* Function is called when a received data Packet cannot be decoded (invalid Rose Message) */
 	virtual void OnRoseDecodeError(const char* /*lpBytes*/, unsigned long /*lSize*/, const std::string& /*strWhat */) {}
-protected:
 
 	/*! Add the invokeid and operationid the the log stream */
 	void AddInvokeHeaderLog(std::stringstream& strOut, SNACC::ROSEInvoke* pInvoke);
@@ -292,6 +289,22 @@ protected:
 		returns true if the message was processed.
 		set bAllowInvokes to false, if invokes are not processed. */
 	virtual bool OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowInvokes);
+
+	/*
+	 * This callback allows the implementer to enrich the invokecontext with data in case it wants to add or tune it
+	 *
+	 * @param pInvokeContext - the context that has just been created (some properties are already filled such as the pInvoke and the pInvokeAuth)
+	 * @return true in case you implement the fuction (the stub will then call)
+	 */
+	virtual bool OnInvokeContextCreated(SnaccInvokeContext* pInvokeContext) { return false; };
+
+	/*
+	 * This callback is called before the invokeContext runs out of scope.
+	 * It´s only called if the implementer implemented OnInvokeContextCreated and returned true there
+	 *
+	 * @param pInvokeContext - the context that is about to get deleted
+	 */
+	virtual void OnInvokeContextRunsOutOfScope(SnaccInvokeContext* pInvokeContext) {};
 
 private:
 	/*! The ROSE component messages.

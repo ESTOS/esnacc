@@ -24,13 +24,13 @@ void SNACCDeprecated::DeprecatedObject(const char* szModuleName, const char* szO
     m_pCallback->DeprecatedObject(szModuleName, szObjectName, callStack);
 }
 
-void SNACCDeprecated::DeprecatedMethod(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction) {
+void SNACCDeprecated::DeprecatedMethod(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext /* = NULL */) {
     if (!m_pCallback)
         return;
 
     std::list<std::string> callStack = GetStackTrace(2);
 
-    m_pCallback->DeprecatedMethod(szModuleName, szMethodName, direction, callStack);
+    m_pCallback->DeprecatedMethod(szModuleName, szMethodName, direction, callStack, pContext);
 }
 
 std::list<std::string> SNACCDeprecated::GetStackTrace(int remove /*= 1*/) {

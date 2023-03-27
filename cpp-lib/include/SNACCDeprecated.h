@@ -3,6 +3,7 @@
 
 #include <list>
 #include <string>
+#include "SnaccROSEBase.h"
 
 #ifdef _WIN32
     #pragma comment(lib, "Dbghelp.lib")
@@ -38,7 +39,7 @@ public:
 	 * @param direction - whether the call was inbound or outbound
 	 * @param callStack - the call stack that shows where the object has been created
 	 */
-	virtual void DeprecatedMethod(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const std::list<std::string>& callStack) = 0;
+	virtual void DeprecatedMethod(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const std::list<std::string>& callStack, const SnaccInvokeContext* pContext = NULL) = 0;
 };
 
 class SNACCDeprecated {
@@ -65,9 +66,9 @@ public:
 	 * @param moduleName - the module in which the object is located
 	 * @param methodName - the name of the method that has been called
 	 * @param direction - whether the call was inbound or outbound
-	 * @param invokeContext - the invokeContext that shows more details about the invoke
+	 * @param pContext - the invokeContext that shows more details about the invoke
 	 */
-	static void DeprecatedMethod(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction);
+	static void DeprecatedMethod(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext = NULL);
 
 private:
     /**
