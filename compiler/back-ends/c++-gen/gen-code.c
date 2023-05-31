@@ -134,6 +134,8 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules *r, TypeDef *td, Modul
 		NamedType *e = NULL;
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
 		{
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
 			fprintf(hdr, "\t\t");
 			PrintCxxType(hdr, mods, m, r, td, e->type);
 			fprintf(hdr, "%s;\n", e->type->cxxTypeRefInfo->fieldName);
@@ -144,6 +146,8 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules *r, TypeDef *td, Modul
 		fprintf(hdr, "\t{\n");
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
 		{
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
 			fprintf(hdr, "\t\t%s = %d", e->type->cxxTypeRefInfo->choiceIdSymbol, e->type->cxxTypeRefInfo->choiceIdValue);
 			if (e != (NamedType*)LAST_LIST_ELMT(t->basicType->a.choice))
 				fprintf(hdr, ",");
@@ -166,6 +170,9 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules *r, TypeDef *td, Modul
 			NamedType *e = NULL;
 			FOR_EACH_LIST_ELMT(e, pList)
 			{
+				if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+					continue;
+
 				fprintf(hdr, "\t");
 
 				/* JKG 7/31/03 */
@@ -1310,6 +1317,9 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 */
 static void PrintCxxSimpleDef(FILE *hdr, FILE *src, Module *m, CxxRules *r, TypeDef *td)
 {
+	if (IsDeprecatedNoOutputSequence(m, td->type->cxxTypeRefInfo->className))
+		return;
+
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
 
 	Tag *tag;
@@ -1670,7 +1680,7 @@ static void PrintCxxSimpleDef(FILE *hdr, FILE *src, Module *m, CxxRules *r, Type
 	}
 } /* PrintCxxSimpleDef */
 
-void PrintChoiceDefCodeBerEncodeContent(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Type *choice)
+void PrintChoiceDefCodeBerEncodeContent(FILE *src, FILE *hdr, Module* m, CxxRules *r, TypeDef *td, Type *choice)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
@@ -1689,6 +1699,9 @@ void PrintChoiceDefCodeBerEncodeContent(FILE *src, FILE *hdr, CxxRules *r, TypeD
 	fprintf(src, "\t{\n");
 	FOR_EACH_LIST_ELMT (e, choice->basicType->a.choice)
 	{
+		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+			continue;
+
 		cxxtri =  e->type->cxxTypeRefInfo;
 		fprintf(src, "\t\tcase %s:\n", cxxtri->choiceIdSymbol);
 
@@ -1754,7 +1767,7 @@ void PrintChoiceDefCodeBerEncodeContent(FILE *src, FILE *hdr, CxxRules *r, TypeD
 	fprintf(src, "}\n\n");
 }
 
-void PrintChoiceDefCodeBerDecodeContent(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Type *choice)
+void PrintChoiceDefCodeBerDecodeContent(FILE *src, FILE *hdr, Module* m, CxxRules *r, TypeDef *td, Type *choice)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
@@ -1798,13 +1811,15 @@ void PrintChoiceDefCodeBerDecodeContent(FILE *src, FILE *hdr, CxxRules *r, TypeD
 	fprintf(src, "\t{\n");
 	FOR_EACH_LIST_ELMT (e, choice->basicType->a.choice)
 	{
+		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+			continue;
+
 		if( e->type->basicType->choiceId == BASICTYPE_EXTENSION )
 		{
 			extensionsExist = TRUE;
 		}
 		else
 		{
-
 			cxxtri =  e->type->cxxTypeRefInfo;
 			tags = GetTags (e->type, &stoleChoiceTags);
 
@@ -2090,7 +2105,7 @@ void PrintChoiceDefCodeBerDec(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Ty
 	fprintf(src, "}\n\n");
 }
 
-void PrintChoiceDefCodeJsonEnc(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Type *choice)
+void PrintChoiceDefCodeJsonEnc(FILE *src, FILE *hdr, Module* m, CxxRules *r, TypeDef *td, Type *choice)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
@@ -2113,6 +2128,9 @@ void PrintChoiceDefCodeJsonEnc(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, T
 	fprintf(src, "\t{\n");
 	FOR_EACH_LIST_ELMT (e, choice->basicType->a.choice)
 	{
+		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+			continue;
+
 		cxxtri =  e->type->cxxTypeRefInfo;
 		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 		{
@@ -2138,7 +2156,7 @@ void PrintChoiceDefCodeJsonEnc(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, T
 	fprintf(src, "}\n\n");
 }
 
-void PrintChoiceDefCodeJsonDec(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Type *choice)
+void PrintChoiceDefCodeJsonDec(FILE *src, FILE *hdr, Module* m, CxxRules *r, TypeDef *td, Type *choice)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
@@ -2158,6 +2176,9 @@ void PrintChoiceDefCodeJsonDec(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, T
 
 	FOR_EACH_LIST_ELMT (e, choice->basicType->a.choice)
 	{
+		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+			continue;
+
 		cxxtri =  e->type->cxxTypeRefInfo;
 		varName = cxxtri->fieldName;
 
@@ -2501,17 +2522,17 @@ static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module
 	if(printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode) {
 		fprintf(hdr, "\n\t// Encoders & Decoders\n");
 		if (printEncodersG)
-			PrintChoiceDefCodeBerEncodeContent(src, hdr, r, td, choice);
+			PrintChoiceDefCodeBerEncodeContent(src, hdr, m, r, td, choice);
 		if (printDecodersG)
-			PrintChoiceDefCodeBerDecodeContent(src, hdr, r, td, choice);
+			PrintChoiceDefCodeBerDecodeContent(src, hdr, m, r, td, choice);
 		if (printEncodersG)
 			PrintChoiceDefCodeBerEnc(src, hdr, r, td, choice);
 		if (printDecodersG)
 			PrintChoiceDefCodeBerDec(src, hdr, r, td, choice);
 		if (printJSONEncDecG)
-			PrintChoiceDefCodeJsonEnc(src, hdr, r, td, choice);
+			PrintChoiceDefCodeJsonEnc(src, hdr, m, r, td, choice);
 		if (printJSONEncDecG)
-			PrintChoiceDefCodeJsonDec(src, hdr, r, td, choice);
+			PrintChoiceDefCodeJsonDec(src, hdr, m, r, td, choice);
 		if(genPERCode)
 		{
 			if (printEncodersG)
