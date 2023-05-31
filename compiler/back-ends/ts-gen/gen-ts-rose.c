@@ -654,7 +654,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 					if (operationComment.i64Deprecated || operationComment.iPrivate)
 					{
 						if (operationComment.i64Deprecated) {
-							fprintf(src, "\t * @deprecated %s\n", getDeprecated(operationComment.szDeprecated));
+							fprintf(src, "\t * @deprecated %s\n", getDeprecated(operationComment.szDeprecated, COMMENTSTYLE_JSON));
 							bDeprecated = true;
 						}
 						if (operationComment.iPrivate)
@@ -773,7 +773,7 @@ void PrintTSROSEInterfaceCode(FILE* src, ModuleList* mods, Module* m)
 void PrintTSROSEModuleComment(FILE* src, Module* m)
 {
 	fprintf(src, "\n// [%s]\n", __FUNCTION__);
-	printModuleComment(src, m->moduleName);
+	printModuleComment(src, m->moduleName, COMMENTSTYLE_JSON);
 }
 
 bool hasEvents(Module* m) {

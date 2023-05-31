@@ -415,6 +415,21 @@ Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod) {
 	return module;
 }
 
+bool IsDeprecatedFlaggedModule(Module* mod) {
+	asnmodulecomment comment;
+
+	if (GetModuleComment_UTF8(mod->moduleName, &comment)) {
+		if (comment.i64Deprecated){
+			if (gi64NoDeprecatedSymbols)
+				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
+			else
+				return true;
+		}
+	}
+
+	return false;
+}
+
 bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szElement) {
 	enum BasicTypeChoiceId type = td->cxxTypeDefInfo->asn1TypeId;
 
@@ -440,6 +455,17 @@ bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szEle
 	}
 				
 	return false;
+}
+
+bool IsDeprecatedNoOutputModule(Module* mod) {
+	if (!gi64NoDeprecatedSymbols)
+		return false;
+
+	asnmodulecomment comment;
+	if (GetModuleComment_UTF8(mod->moduleName, &comment))
+		return IsDeprecatedNoOutput(comment.i64Deprecated);
+	else
+		return false;
 }
 
 bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szElement) {
@@ -505,11 +531,10 @@ bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName) {
 		return false;
 
 	asnsequencecomment comment;
-	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
-		if (IsDeprecatedNoOutput(comment.i64Deprecated))
-			return true;
-	}
-	return false;
+	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment))
+		return IsDeprecatedNoOutput(comment.i64Deprecated);
+	else
+		return false;
 }
 
 bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName) {
@@ -530,9 +555,8 @@ bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName) {
 		return false;
 
 	asnoperationcomment comment;
-	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
-		if (IsDeprecatedNoOutput(comment.i64Deprecated))
-			return true;
-	}
-	return false;
+	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment))
+		return IsDeprecatedNoOutput(comment.i64Deprecated);
+	else
+		return false;
 }

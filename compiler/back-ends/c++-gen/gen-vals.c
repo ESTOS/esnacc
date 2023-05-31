@@ -95,7 +95,7 @@ int PrintROSEOperationRegistration(FILE *src, CxxRules *r, ValueDef *v)
 	/*
 	* put instantiation in src file
 	*/
-	fprintf (src, "\t\tSnaccRoseOperationLookup::RegisterOperation(");
+	fprintf (src, "\tSnaccRoseOperationLookup::RegisterOperation(");
 	fprintf (src, "%d, \"", v->value->basicValue->a.integer);
 	PrintCxxValueDefsName (src, r, v);
 	fprintf (src, "\", m_iid);\n");
