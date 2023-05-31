@@ -239,22 +239,22 @@ void Usage PARAMS ((prgName, fp),
 	fprintf (fp, "            [-tcl <type list>]\n");
 #endif
 #endif
-	fprintf (fp, "            <ASN.1 file list>\n\n");
-	fprintf (fp, "  -c   generate C encoders and decoders (default)\n");
-	fprintf (fp, "  -C   generate C++ encoders and decoders\n");
-	fprintf (fp, "  -Ch:<path>   header prefix for the generated cpp files (defaults to cpp-lib/include/ but you may e.g. define snacclib5/cpp-lib/include)\n");
+	fprintf(fp, "            <ASN.1 file list>\n\n");
+	fprintf(fp, "  -c   generate C encoders and decoders (default)\n");
+	fprintf(fp, "  -C   generate C++ encoders and decoders\n");
+	fprintf(fp, "  -Ch  <path> header prefix for the generated cpp files (defaults to cpp-lib/include/ but you may e.g. define libs/snacclib5/cpp-lib/include/)\n");
 	fprintf(fp, "  -S   generate Swift code\n");
 	fprintf(fp, "  -j   generate JSON encoders/decoders. Use with -J or -JT.\n");
 	fprintf(fp, "  -J   generate plain JavaScript code. For Java see -RJ.\n");
 	fprintf(fp, "  -JT  generate Javascript - Typescript code.\n");
 	fprintf(fp, "  -JD  generate JSON Documentation files.\n");
-	fprintf(fp, "  -T <filename> write a type table file for the ASN.1 modules to file filename\n");
-	fprintf (fp, "  -O <filename> writes the type table file in the original (<1.3b2) format\n");
-	fprintf(fp, "  -o  write output to a different folder, default is the current folder\n");
-	fprintf (fp, "  -b   turns on generation of PER support\n");
-	fprintf (fp, "  -R   generate c++ ROSE stub code\n");
-	fprintf (fp, "  -RCS   generate c# ROSE stub code\n");
-	fprintf (fp, "  -RJ   generate JAVA ROSE stub code. For JavaScript see -J.\n");
+	fprintf(fp, "  -T   <filename> write a type table file for the ASN.1 modules to file filename\n");
+	fprintf(fp, "  -O   <filename> writes the type table file in the original (<1.3b2) format\n");
+	fprintf(fp, "  -o   write output to a different folder, default is the current folder\n");
+	fprintf(fp, "  -b   turns on generation of PER support\n");
+	fprintf(fp, "  -R   generate c++ ROSE stub code\n");
+	fprintf(fp, "  -RCS generate c# ROSE stub code\n");
+	fprintf(fp, "  -RJ  generate JAVA ROSE stub code. For JavaScript see -J.\n");
 	fprintf(fp, "  -RTS_SERVER   generate Typescript ROSE server stub code.\n");
 	fprintf(fp, "  -RTS_CLIENT_NODE   generate Typescript ROSE client stub code for node.\n");
 	fprintf(fp, "  -RTS_CLIENT_BROWSER   generate Typescript ROSE client stub code for a browser.\n");
@@ -549,9 +549,12 @@ int main PARAMS ((argc, argv),
 				currArg++;
 				break;
 			case 'C': /* produce C++ code */
-				if (strncmp(argument, "-Ch:", 4) == 0)
-					szCppHeaderIncludePath = argument + 4;
-				else if(strcmp(argument, "-C") == 0)
+				if (strcmp(argument, "-Ch") == 0) {
+					currArg++;
+					szCppHeaderIncludePath = argv[currArg];
+					if(szCppHeaderIncludePath == 0 || strlen(szCppHeaderIncludePath) == 0)
+						goto error;
+				} else if(strcmp(argument, "-C") == 0)
 					genCxxCode = TRUE;
 				else
 					goto error;
@@ -637,12 +640,12 @@ int main PARAMS ((argc, argv),
 			case 'l':
 				if (argument[2] != '\0')  /* no space after -l */
 				{
-					longJmpVal = atoi (&argument[2]);
+					longJmpVal = atoi(&argument[2]);
 					currArg++;
 				}
 				else
 				{
-					longJmpVal = atoi (argv[currArg+1]);
+					longJmpVal = atoi(argv[currArg+1]);
 					currArg += 2;
 				}
 				break;

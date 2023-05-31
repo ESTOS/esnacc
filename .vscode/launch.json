@@ -25,6 +25,36 @@
             "console": "externalTerminal"
         },
         {
+            "name": "Visual Studio - meetings - client - compile asn1 files",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": ["-o", "..\\..\\econf-client\\src\\econf-lib\\stub\\", "-JT", "-j", "-RTS_CLIENT_BROWSER", "-comments", "interface\\*.asn1"],
+            "cwd": "X:\\dev\\conferencing\\econf-server\\interface",
+            "preLaunchTask": "CMake: build",
+            "console": "externalTerminal"
+        },
+        {
+            "name": "Visual Studio - meetings - server - compile asn1 files",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": ["-o", "..\\src\\stub\\", "-JT", "-j", "-RTS_SERVER", "-RTS_CLIENT_NODE", "-comments", "-nodeprecated:18.03.2023", "interface\\*.asn1"],
+            "cwd": "X:\\dev\\conferencing\\econf-server\\interface",
+            "preLaunchTask": "CMake: build",
+            "console": "externalTerminal"
+        },
+        {
+            "name": "Visual Studio - procall - compile asn1 files",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": ["-comments", "-ValidationLevel:1", "-C", "-Ch", "libs/snacclib5/cpp-lib/include/", "-R", "-e", "-d", "-j", "-stdafx", "X:\\tmp\\snacc_comparison\\asn1\\*.asn1"],
+            "cwd": "X:\\dev\\procall\\estos\\common\\libs\\enetctilib",
+            "preLaunchTask": "CMake: build",
+            "console": "externalTerminal"
+        },
+        {
             "name": "LLDB - ts-microservice-sample - server - compile asn1 files",
             "type": "cppdbg",
             "request": "launch",
@@ -41,7 +71,7 @@
             "args": ["-o", "${workspaceFolder}/samples/ts-microservice/client/src/stub", "-JT", "-j", "-RTS_CLIENT_BROWSER", "*.asn1"],
             "cwd": "${workspaceFolder}/samples/interface",
             "preLaunchTask": "CMake: build"
-        }
+        },
     ],
 	"tasks": [
 		{
