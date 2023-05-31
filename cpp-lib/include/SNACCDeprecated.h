@@ -29,7 +29,7 @@ public:
 	 * @param szObjectName - the name of the object that is about to get created
 	 * @param callStack - the call stack that shows where the object has been created
 	 */
-	virtual void DeprecatedObject(const char* szModuleName, const char* szObjectName, const std::list<std::string>& callStack) = 0;
+	virtual void DeprecatedASN1Object(const char* szModuleName, const char* szObjectName, const std::list<std::string>& callStack) = 0;
 
 	/**
 	 * A deprecated method has been called
@@ -39,7 +39,7 @@ public:
 	 * @param direction - whether the call was inbound or outbound
 	 * @param callStack - the call stack that shows where the object has been created
 	 */
-	virtual void DeprecatedMethod(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const std::list<std::string>& callStack, const SnaccInvokeContext* pContext = NULL) = 0;
+	virtual void DeprecatedASN1Method(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const std::list<std::string>& callStack, const SnaccInvokeContext* pContext = NULL) = 0;
 };
 
 class SNACCDeprecated {
@@ -50,7 +50,7 @@ public:
 	 *
      * @param pCallBack - the callback that should get notified
      */
-    static void SetCallback(SNACCDeprecatedNotify* pCallBack);
+    static void SetDeprecatedCallback(SNACCDeprecatedNotify* pCallBack);
 
 	/**
 	 * This method is called in case an object is created which is flagged deprecated
@@ -58,7 +58,7 @@ public:
 	 * @param moduleName - the module in which the object is located
 	 * @param obj - the object that has been created
 	 */
-	static void DeprecatedObject(const char* szModuleName, const char* szObjectName);
+	static void DeprecatedASN1Object(const char* szModuleName, const char* szObjectName);
 
 	/**
 	 * This method is called in case a method is called which is flagged deprecated
@@ -68,7 +68,7 @@ public:
 	 * @param direction - whether the call was inbound or outbound
 	 * @param pContext - the invokeContext that shows more details about the invoke
 	 */
-	static void DeprecatedMethod(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext = NULL);
+	static void DeprecatedASN1Method(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext = NULL);
 
 private:
     /**

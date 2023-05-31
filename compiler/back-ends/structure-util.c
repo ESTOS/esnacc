@@ -7,6 +7,9 @@
 bool IsDeprecatedNoOutput(const long long i64DeprecatedValue)  {
 	if (!gi64NoDeprecatedSymbols || !i64DeprecatedValue)
 		return false;
+	// If set to 1 no date has been specified on the command line, so we remove ANY deprecated value no matter when it was flagged deprecated
+	if (gi64NoDeprecatedSymbols == 1)
+		return true;
 	return gi64NoDeprecatedSymbols >= i64DeprecatedValue;
 }
 
@@ -462,13 +465,19 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 			if (type == BASICTYPE_SEQUENCE) {
 				// We need to check if the property is optional, if that is the case we can skip it
 				NamedType* e;
+				bool bReturn = false;
+				AsnListNode	*curr = td->type->basicType->a.sequence->curr;
 				FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
 				{
 					if (strcmp(e->fieldName, szElement) != 0)
 						continue;
-					if (e->type->optional)
-						return true;
+					if (e->type->optional) {
+						bReturn = true;
+						break;
+					}
 				}
+				td->type->basicType->a.sequence->curr = curr;
+				return bReturn;
 			}
 			else
 				return true;

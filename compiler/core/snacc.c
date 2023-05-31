@@ -196,9 +196,16 @@ int isInWithSyntax = 0;				/* Deepak: 26/Mar/2003 */
 int gPrivateSymbols = 1;
 
 //jan 10.1.2023 - if set deprecated symbols are removed from the generated code
-// The value contains a timestamp, either specified by the command line or set to the current day if no timestamp has been specified on the command line
-// When we parse the @deprecated flag we also search for a timestamp, if no timestamp is found the value of the deprecated timesamp is unix time 1
-// Any deprecated flag lower than the gi64NoDeprecatedSymbols will get removed in case gi64NoDeprecatedSymbols is set
+// The value contains a timestamp, either specified by the command line or set to 1 (if nodeprecated has been set!)
+// The comment parser reads @deprecated flags in association to sequences, attributes and operations and stores them with the comment content
+// When we parse the @deprecated flags in the asn1 we also search for a timestamp next to it -> the value is converted to unix time and used for deprecated comparison
+// If no timestamp is found next to the deprecate a warning is generated to add a timestamp -> the unix time stamp value expressing the deprecation is set to 1 and used for deprecated comparison
+
+// If the command line contains nodeprecated you may add a timestamp to the command line parameter: e.g. nodeprecated:31.05.2023
+// This value is converted to unix timestamp and stored in gi64NoDeprecatedSymbols
+// If no value has been specified all deprecated objects shall get remove from the output and therefore gi64NoDeprecatedSymbols is set to 1
+
+// Any deprecated information from a sequence, attribute or operation comment lower or equal than the gi64NoDeprecatedSymbols will get removed
 long long gi64NoDeprecatedSymbols = 0;
 
 //jan 11.1.2023 - Default level for validating the content of the asn1 files
@@ -616,9 +623,7 @@ int main PARAMS ((argc, argv),
 						}
 						gi64NoDeprecatedSymbols = i64Result;
 					} else {
-						time_t current_time;
-    					time(&current_time);
-    					gi64NoDeprecatedSymbols = (long long)difftime(current_time, 0);
+    					gi64NoDeprecatedSymbols = 1;
 					}
 					currArg++;
 				}

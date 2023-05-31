@@ -27,7 +27,6 @@ std::string trim(const std::string &s) {
 }
 
 void EDeprecated::handleDeprecated(const std::string& strParsedLine) {
-	i64Deprecated = 1;
 	std::string strComment = trim(strParsedLine);
 	// Check is ther a date in the value?
 	// @deprecated 1.1.2023 Some comment
@@ -46,6 +45,11 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine) {
 	}
 	if (strComment.length())
 		strDeprecated_UTF8 = escapeJsonString(strComment);
+
+	if (i64Deprecated == 0) {
+        fprintf(stderr, "WARNING - @deprecated flag is missing a timestamp. You need to add a timestamp in order to be able to deterministically remove deprecated things from the generated code!");
+		i64Deprecated = 1;
+	}
 }
 
 void replaceAll(std::string& str, const char* szSearch, const char* szReplace) {

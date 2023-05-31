@@ -11,26 +11,26 @@
 
 SNACCDeprecatedNotify* SNACCDeprecated::m_pCallback = NULL;
 
-void SNACCDeprecated::SetCallback(SNACCDeprecatedNotify* pCallBack) {
+void SNACCDeprecated::SetDeprecatedCallback(SNACCDeprecatedNotify* pCallBack) {
     m_pCallback = pCallBack;
 }
 
-void SNACCDeprecated::DeprecatedObject(const char* szModuleName, const char* szObjectName) {
+void SNACCDeprecated::DeprecatedASN1Object(const char* szModuleName, const char* szObjectName) {
     if (!m_pCallback)
         return;
 
     std::list<std::string> callStack = GetStackTrace(2);
 
-    m_pCallback->DeprecatedObject(szModuleName, szObjectName, callStack);
+    m_pCallback->DeprecatedASN1Object(szModuleName, szObjectName, callStack);
 }
 
-void SNACCDeprecated::DeprecatedMethod(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext /* = NULL */) {
+void SNACCDeprecated::DeprecatedASN1Method(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext /* = NULL */) {
     if (!m_pCallback)
         return;
 
     std::list<std::string> callStack = GetStackTrace(2);
 
-    m_pCallback->DeprecatedMethod(szModuleName, szMethodName, direction, callStack, pContext);
+    m_pCallback->DeprecatedASN1Method(szModuleName, szMethodName, direction, callStack, pContext);
 }
 
 std::list<std::string> SNACCDeprecated::GetStackTrace(int remove /*= 1*/) {

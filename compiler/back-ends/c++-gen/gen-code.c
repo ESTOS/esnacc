@@ -208,7 +208,7 @@ void PrintConstructor(FILE *hdr, FILE *src, Module *m, char *className)
 	fprintf(src,"%s::%s()\n{\n", className, className);
 
 	if (IsDeprecatedFlaggedSequence(m, className))
-		fprintf(src,"\tSNACCDeprecated::DeprecatedObject(\"%s\", \"%s\");\n", m->moduleName, className);
+		fprintf(src,"\tSNACCDeprecated::DeprecatedASN1Object(\"%s\", \"%s\");\n", m->moduleName, className);
 
 	fprintf(src,"\tInit();\n");
 	fprintf(src,"}\n\n");
@@ -221,7 +221,7 @@ void PrintCopyConstructor(FILE *hdr, FILE *src, Module *m, char *className)
 	fprintf(src,"%s::%s(const %s &that)\n{\n",className, className,className);
 
 	if (IsDeprecatedFlaggedSequence(m, className))
-		fprintf(src,"\tSNACCDeprecated::DeprecatedObject(\"%s\", \"%s\");\n", m->moduleName, className);
+		fprintf(src,"\tSNACCDeprecated::DeprecatedASN1Object(\"%s\", \"%s\");\n", m->moduleName, className);
 
 	fprintf(src,"\tInit();\n");
 	fprintf(src,"\t\n");
@@ -239,8 +239,10 @@ void PrintDestructor(FILE *hdr, FILE *src, Module *m, char *className)
 	fprintf(src, "}\n\n");
 }
 
-void PrintInit(FILE *hdr, FILE *src, Module *m, Type *t, char *className)
+void PrintInit(FILE *hdr, FILE *src, Module *m, TypeDef* td, Type *t)
 {
+	const char* className = td->cxxTypeDefInfo->className;
+
 	fprintf(hdr, "\tvoid Init();\n");
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "void %s::Init()\n", className);
@@ -275,6 +277,9 @@ void PrintInit(FILE *hdr, FILE *src, Module *m, Type *t, char *className)
 #else
 					/* Default member initialization is a work in progress for eSNACC 1.6
 					*/
+
+					if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+						continue;
 
 					/* initialize default members to their default values */
 					if (e->type->defaultVal != NULL)
@@ -356,8 +361,10 @@ void PrintInit(FILE *hdr, FILE *src, Module *m, Type *t, char *className)
 	fprintf(src, "}\n\n");
 }
 
-void PrintClear(FILE *hdr, FILE *src, Module *m, Type *t, char *className)
+void PrintClear(FILE *hdr, FILE *src, Module *m, TypeDef* td, Type *t)
 {
+	const char* className = td->cxxTypeDefInfo->className;
+
 	fprintf(hdr, "\tvoid Clear();\n");
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "void %s::Clear()\n", className);
@@ -368,6 +375,9 @@ void PrintClear(FILE *hdr, FILE *src, Module *m, Type *t, char *className)
 		NamedType *e = NULL;
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
 		{
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
+
 			enum BasicTypeChoiceId tmpTypeId = GetBuiltinType(e->type);
 
 			fprintf(src, "\t\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
@@ -390,6 +400,9 @@ void PrintClear(FILE *hdr, FILE *src, Module *m, Type *t, char *className)
 		NamedType *e = NULL;
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
 		{
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
+
 			enum BasicTypeChoiceId tmpTypeId = GetBuiltinType(e->type);
 			if (e->type->cxxTypeRefInfo->isPtr)
 			{
@@ -411,6 +424,9 @@ void PrintClear(FILE *hdr, FILE *src, Module *m, Type *t, char *className)
 		NamedType *e = NULL;
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.set)
 		{
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
+
 			enum BasicTypeChoiceId tmpTypeId = GetBuiltinType(e->type);
 			if (e->type->cxxTypeRefInfo->isPtr)
 			{
@@ -427,7 +443,6 @@ void PrintClear(FILE *hdr, FILE *src, Module *m, Type *t, char *className)
 			}
 		}
 	}
-
 
 	fprintf(src, "}\n\n");
 }
@@ -449,6 +464,9 @@ void PrintCheckConstraints(FILE *hdr, FILE *src, Module *m, Type *t, TypeDef *td
 	if(pList) {
 		NamedType *e = NULL;
 		FOR_EACH_LIST_ELMT(e, pList) {
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
+
 			if (e->type->cxxTypeRefInfo->isPtr)
 			{
 				fprintf(src, "\tif (%s)\n", e->type->cxxTypeRefInfo->fieldName);
@@ -612,6 +630,9 @@ static void PrintAssignmentOperator(FILE *hdr, FILE *src, Module *m, Type *t, Ty
 
 		FOR_EACH_LIST_ELMT (e, t->basicType->a.choice)
 		{
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
+
 			fprintf(src, "\t\t\t\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
 			if (e->type->cxxTypeRefInfo->isPtr)
 			{
@@ -639,6 +660,9 @@ static void PrintAssignmentOperator(FILE *hdr, FILE *src, Module *m, Type *t, Ty
 			NamedType *e = NULL;
 			FOR_EACH_LIST_ELMT(e, list)
 			{
+				if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+					continue;
+
 				if (e->type->cxxTypeRefInfo->isPtr)
 				{
 					fprintf(src, "\t\tif (that.%s)\n", e->type->cxxTypeRefInfo->fieldName);
@@ -1079,7 +1103,7 @@ static void PrintROSEOnInvokeswitchCase(FILE *src, int bEvents, Module* mod, Val
 
 			if(IsDeprecatedFlaggedOperation(mod, vd->definedName)) {
 				fprintf(src, "\t\t\t// This method has been flagged deprecated\n");
-				fprintf(src, "\t\t\tSNACCDeprecated::DeprecatedMethod(\"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::in%s);\n\n", mod->moduleName, vd->definedName, pszResult ? ", cxt" : "");
+				fprintf(src, "\t\t\tSNACCDeprecated::DeprecatedASN1Method(\"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::in%s);\n\n", mod->moduleName, vd->definedName, pszResult ? ", cxt" : "");
 			}
 
 			if (pszResult) {
@@ -1127,6 +1151,9 @@ static void PrintAllForwardDeclarations(FILE *hdr, Module *m)
 	//walk through all Type Definitions
 	FOR_EACH_LIST_ELMT (td, m->typeDefs)
 	{
+		if(IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
+			continue;
+
 		if (IsNewType (td->type)) {
 			if (HasTypeDecl(td)) {
 				//class
@@ -1137,6 +1164,9 @@ static void PrintAllForwardDeclarations(FILE *hdr, Module *m)
 	//Alle typedefs printen
 	FOR_EACH_LIST_ELMT (td, m->typeDefs)
 	{
+		if(IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
+			continue;
+
 		if (!IsNewType (td->type)) {
 
 			if (IsPrimitiveByDefOrRef(td->type) && gAlternateNamespaceString != 0)
@@ -1244,7 +1274,7 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 
 			if(IsDeprecatedFlaggedOperation(m, vd->definedName)) {
 				fprintf(src, "\t// This method has been flagged deprecated\n");
-				fprintf(src, "\tSNACCDeprecated::DeprecatedMethod(\"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out%s);\n\n", m->moduleName, vd->definedName, pszResult ? ", cxt" : "");
+				fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Method(\"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out%s);\n\n", m->moduleName, vd->definedName, pszResult ? ", cxt" : "");
 			}
 
 			if (pszResult)
@@ -1351,6 +1381,9 @@ static void PrintCxxSimpleDef(FILE *hdr, FILE *src, Module *m, CxxRules *r, Type
 			fprintf(hdr, "\t{\n");
 			FOR_EACH_LIST_ELMT (n, td->type->cxxTypeRefInfo->namedElmts)
 			{
+				if (IsDeprecatedNoOutputMember(m, td, n->name))
+					continue;
+
 				fprintf(hdr, "\t\t%s = %d", n->name, n->value);
 				if (n != (CNamedElmt *)LAST_LIST_ELMT (td->type->cxxTypeRefInfo->namedElmts))
 					fprintf(hdr, ",\n");
@@ -2411,6 +2444,9 @@ void PrintChoiceDefCodePERDec(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Ty
 static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m, CxxRules *r ,
 								  TypeDef *td,Type *parent, Type *choice, int novolatilefuncs)
 {
+	if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
+		return;
+
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
 
 	if (gAlternateNamespaceString == 0 &&
@@ -2455,9 +2491,9 @@ static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module
 	PrintCopyConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintDestructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	fprintf(hdr, "\n");
-	PrintInit(hdr, src, m, choice, td->cxxTypeDefInfo->className);
-	PrintClear(hdr, src, m, choice, td->cxxTypeDefInfo->className);
-	PrintClone (hdr, src, td);
+	PrintInit(hdr, src, m, td, choice);
+	PrintClear(hdr, src, m, td, choice);
+	PrintClone(hdr, src, td);
 	PrintAssignmentOperator(hdr, src, m, choice, td);
 	PrintTypeName(hdr, src, td->cxxTypeDefInfo->className, 0);
 	PrintCheckConstraints(hdr, src, m, choice, td);
@@ -2588,7 +2624,7 @@ static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module
 	fprintf(hdr, "};\n\n");
 }
 
-void PrintSeqDefCodeBerEncodeContent(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Type *seq)
+void PrintSeqDefCodeBerEncodeContent(FILE *src, FILE *hdr, Module *m, CxxRules *r, TypeDef *td, Type *seq)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
@@ -2608,6 +2644,9 @@ void PrintSeqDefCodeBerEncodeContent(FILE *src, FILE *hdr, CxxRules *r, TypeDef 
 
 	FOR_EACH_LIST_ELMT_RVS (e, seq->basicType->a.sequence)
 	{
+		if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+			continue;
+
 		cxxtri =  e->type->cxxTypeRefInfo;
 		varName = cxxtri->fieldName;
 
@@ -2743,7 +2782,7 @@ void PrintSeqDefCodeBerEncodeContent(FILE *src, FILE *hdr, CxxRules *r, TypeDef 
 	fprintf(src, "}\n\n");
 }
 
-void PrintSeqDefCodeBerDecodeContent(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Type *seq)
+void PrintSeqDefCodeBerDecodeContent(FILE *src, FILE *hdr, Module *m, CxxRules *r, TypeDef *td, Type *seq)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
@@ -2856,8 +2895,10 @@ void PrintSeqDefCodeBerDecodeContent(FILE *src, FILE *hdr, CxxRules *r, TypeDef 
 		/***********************************************************************/
 		FOR_EACH_LIST_ELMT (e, seq->basicType->a.sequence)
 		{
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
 
-			if( e->type->basicType->choiceId != BASICTYPE_EXTENSION )
+			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 			{
 				cxxtri =  e->type->cxxTypeRefInfo;
 				elmtLevel = 0;
@@ -3302,7 +3343,7 @@ void PrintSeqDefCodeBerDec(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Type 
 	fprintf(src, "}\n\n");
 }
 
-void PrintSeqDefCodeJsonEnc(FILE *src, FILE *hdr, TypeDef *td, Type *seq)
+void PrintSeqDefCodeJsonEnc(FILE *src, FILE *hdr, Module *m, TypeDef *td, Type *seq)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	
@@ -3318,6 +3359,9 @@ void PrintSeqDefCodeJsonEnc(FILE *src, FILE *hdr, TypeDef *td, Type *seq)
 	{
 		const CxxTRI* cxxtri = e->type->cxxTypeRefInfo;
 		const char* varName = cxxtri->fieldName;
+
+		if (IsDeprecatedNoOutputMember(m, td, varName))
+			continue;
 
 		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 		{
@@ -3406,7 +3450,7 @@ void PrintSeqDefCodeJsonEnc(FILE *src, FILE *hdr, TypeDef *td, Type *seq)
 	fprintf(src, "}\n\n");
 }
 
-void PrintSeqDefCodeJsonDec(FILE *src, FILE *hdr, TypeDef *td, Type *seq)
+void PrintSeqDefCodeJsonDec(FILE *src, FILE *hdr, Module *m, TypeDef *td, Type *seq)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
@@ -3424,6 +3468,9 @@ void PrintSeqDefCodeJsonDec(FILE *src, FILE *hdr, TypeDef *td, Type *seq)
 	{
 		const CxxTRI *cxxtri = e->type->cxxTypeRefInfo;
 		const char* varName = cxxtri->fieldName;
+
+		if (IsDeprecatedNoOutputMember(m, td, varName))
+			continue;
 
 		//do not print code for extensions (...)
 		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
@@ -3505,6 +3552,9 @@ void PrintSeqDefCodePERDec(FILE *src, FILE *hdr, CxxRules *r, TypeDef *td, Type 
 
 static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m, CxxRules *r ,TypeDef *td, Type *parent, Type *seq, int novolatilefuncs)
 {
+	if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
+		return;
+
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
 
 	if (gAlternateNamespaceString == 0 &&
@@ -3523,8 +3573,8 @@ static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 	PrintCopyConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintDestructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	fprintf(hdr, "\n");
-	PrintInit(hdr, src, m, seq, td->cxxTypeDefInfo->className);
-	PrintClear(hdr, src, m, seq, td->cxxTypeDefInfo->className);
+	PrintInit(hdr, src, m, td, seq);
+	PrintClear(hdr, src, m, td, seq);
 	PrintClone(hdr, src, td);
 	PrintAssignmentOperator(hdr, src, m, seq, td);
 	PrintTypeName(hdr, src, td->cxxTypeDefInfo->className, 0);
@@ -3533,17 +3583,17 @@ static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 	if(printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode) {
 		fprintf(hdr, "\t// Encoders & Decoders\n");
 		if (printEncodersG)
-			PrintSeqDefCodeBerEncodeContent(src, hdr, r, td, seq);
+			PrintSeqDefCodeBerEncodeContent(src, hdr, m, r, td, seq);
 		if (printDecodersG)
-			PrintSeqDefCodeBerDecodeContent(src, hdr, r, td, seq);
+			PrintSeqDefCodeBerDecodeContent(src, hdr, m, r, td, seq);
 		if (printEncodersG)
 			PrintSeqDefCodeBerEnc(src, hdr, r, td, seq);
 		if (printDecodersG)
 			PrintSeqDefCodeBerDec(src, hdr, r, td, seq);
 		if (printJSONEncDecG)
-			PrintSeqDefCodeJsonEnc(src, hdr, td, seq);
+			PrintSeqDefCodeJsonEnc(src, hdr, m, td, seq);
 		if (printJSONEncDecG)
-			PrintSeqDefCodeJsonDec(src, hdr, td, seq);
+			PrintSeqDefCodeJsonDec(src, hdr, m, td, seq);
 		if (genPERCode)
 			PrintSeqDefCodePEREncoderDecoder(src, hdr, r, td, seq);
 	}
@@ -3561,6 +3611,9 @@ static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 
 static void PrintCxxSetDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m, CxxRules *r, TypeDef *td, Type *parent, Type *set, int novolatilefuncs)
 {
+	if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
+		return;
+
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
 
 	NamedType *e;
@@ -3598,9 +3651,9 @@ static void PrintCxxSetDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 	PrintDestructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	fprintf(hdr, "\n");
 
-	PrintInit(hdr, src, m, set, td->cxxTypeDefInfo->className);
+	PrintInit(hdr, src, m, td, set);
 	PrintTypeName(hdr, src, td->cxxTypeDefInfo->className,0);
-	PrintClear(hdr, src, m, set, td->cxxTypeDefInfo->className);
+	PrintClear(hdr, src, m, td, set);
 	PrintCheckConstraints(hdr, src, m, set, td);
 	PrintClone (hdr, src, td);
 	PrintAssignmentOperator(hdr, src, m, set, td);
@@ -4189,6 +4242,9 @@ static void PrintCxxSetDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 */
 static void PrintCxxListClass (FILE *hdr, FILE * src, TypeDef *td, Type *lst, Module* m, ModuleList *mods)
 {
+	if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
+		return;
+
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
 
 	struct NamedType p_etemp;
@@ -4530,8 +4586,11 @@ void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, M
 	//print Operation defines
 	fprintf(hdr, "//------------------------------------------------------------------------------\n");
 	fprintf(hdr, "// Operation defines\n\n");
-	FOR_EACH_LIST_ELMT (vd, m->valueDefs)
+	FOR_EACH_LIST_ELMT (vd, m->valueDefs) {
+		if (IsDeprecatedNoOutputOperation(m, vd->definedName))
+			continue;
 		PrintROSEOperationDefines(hdr, r, vd, 0);
+	}
 	fflush(hdr);
 	fprintf(hdr, "\n");
 	fprintf(hdr, "//------------------------------------------------------------------------------\n");
@@ -4568,6 +4627,8 @@ void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, M
 	fprintf(src, "{\n");
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
+		if (IsDeprecatedNoOutputOperation(m, vd->definedName))
+			continue;
 		if (PrintROSEOperationRegistration(src, r, vd) && !iFirstIIDFound) {
 			iFirstIIDFound = 1;
 			fprintf(hdr, "\tstatic const int m_iid = %d;\n", vd->value->basicValue->a.integer);
@@ -4878,8 +4939,11 @@ void PrintCxxCode(FILE *src,
 
 	fprintf(hdr, "\n//------------------------------------------------------------------------------\n");
 	fprintf(hdr, "// forward declarations:\n");
-	FOR_EACH_LIST_ELMT (td, m->typeDefs)
+	FOR_EACH_LIST_ELMT (td, m->typeDefs) {
+		if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
+			continue;
 		PrintTypeDecl (hdr, td);
+	}
 	fprintf(hdr, "\n");
 
 #if META
