@@ -2205,12 +2205,8 @@ void GenTSCode(ModuleList *allMods, long longJmpVal, int genTypes, int genValues
 			{
 				if (HasROSEOperations(currMod))
 				{
-					asnmodulecomment moduleComment;
-					if (GetModuleComment_UTF8(RemovePath(currMod->baseFileName), &moduleComment))
-					{
-						if (moduleComment.i64Deprecated && gi64NoDeprecatedSymbols)
-							continue;
-					}
+					if (IsDeprecatedNoOutputModule(currMod))
+						continue;
 
 					saveMods = allMods->curr;
 

@@ -27,6 +27,7 @@
 #include "../../core/print.h"
 #include "../tag-util.h"  /* get GetTags/FreeTags/CountTags/TagByteLen */
 #include "../structure-util.h"
+#include "../comment-util.h"
 #include "cxxconstraints.h"
 #include "cxxmultipleconstraints.h"
 #include "../../core/asn_comments.h"
@@ -114,11 +115,12 @@ static Module *GetImportModuleRef (char *Impname, ModuleList *mods)
 	return currMod;
 }
 
-void PrintClassHeader(FILE* hdr, const char* className, const char* baseClass) {
+void PrintClassHeader(FILE* hdr, Module* m, TypeDef* td, const char* szBaseClass) {
+	printSequenceComment(hdr, m, td, COMMENTSTYLE_CPP);
 	fprintf(hdr, "class ");
 	if (bVDAGlobalDLLExport)
 		fprintf(hdr, "%s ", bVDAGlobalDLLExport);
-	fprintf(hdr, "%s : public %s\n", className, baseClass);
+	fprintf(hdr, "%s : public %s\n", td->cxxTypeDefInfo->className, szBaseClass);
 	fprintf(hdr, "{\n");
 	fprintf(hdr, "public:\n");
 }
@@ -173,8 +175,6 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules *r, TypeDef *td, Modul
 				if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
 					continue;
 
-				fprintf(hdr, "\t");
-
 				/* JKG 7/31/03 */
 				/*The following code enclosed in this if/else statement */
 				/*is constructed for constraint handling capability     */
@@ -188,11 +188,15 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules *r, TypeDef *td, Modul
 					case SUBTYPE_SINGLE:
 						if(!PrintCxxMultiConstraintOrHandler(hdr, src, td->definedName, e, 1))
 						{
+							printMemberComment(hdr, m, td, e->type->cxxTypeRefInfo->fieldName, "\t", COMMENTSTYLE_CPP);
+							fprintf(hdr, "\t");
 							PrintCxxType(hdr, mods, m, r, td, e->type);
 							fprintf(hdr, "%s;\n", e->type->cxxTypeRefInfo->fieldName);
 						}
 						break;
 					default:
+						printMemberComment(hdr, m, td, e->type->cxxTypeRefInfo->fieldName, "\t", COMMENTSTYLE_CPP);
+						fprintf(hdr, "\t");
 						PrintCxxType(hdr, mods, m, r, td, e->type);
 						fprintf(hdr, "%s;\n", e->type->cxxTypeRefInfo->fieldName);
 						break;
@@ -200,6 +204,8 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules *r, TypeDef *td, Modul
 				}
 				else
 				{
+					printMemberComment(hdr, m, td, e->type->cxxTypeRefInfo->fieldName, "\t", COMMENTSTYLE_CPP);
+					fprintf(hdr, "\t");
 					PrintCxxType(hdr, mods, m, r, td, e->type);
 					fprintf(hdr, "%s;\n", e->type->cxxTypeRefInfo->fieldName);
 				}
@@ -524,6 +530,7 @@ static void PrintHdrComment(FILE *hdr, Module *m)
 	fprintf(hdr, "//\n");
 	write_snacc_header(hdr, "// ");
 	fprintf(hdr, "\n");
+	printModuleComment(hdr, m->moduleName, COMMENTSTYLE_CPP);
 }
 
 static void PrintSrcComment(FILE *src, Module *m)
@@ -1348,7 +1355,7 @@ static void PrintCxxSimpleDef(FILE *hdr, FILE *src, Module *m, CxxRules *r, Type
 	{
 		int	hasNamedElmts;
 
-		PrintClassHeader(hdr, td->cxxTypeDefInfo->className, td->type->cxxTypeRefInfo->className);
+		PrintClassHeader(hdr, m, td, td->type->cxxTypeRefInfo->className);
 
 		/*
 		* must explicitly call constructors for base class
@@ -1394,6 +1401,7 @@ static void PrintCxxSimpleDef(FILE *hdr, FILE *src, Module *m, CxxRules *r, Type
 				if (IsDeprecatedNoOutputMember(m, td, n->name))
 					continue;
 
+				printMemberComment(hdr, m, td, n->name, "\t\t", COMMENTSTYLE_CPP);
 				fprintf(hdr, "\t\t%s = %d", n->name, n->value);
 				if (n != (CNamedElmt *)LAST_LIST_ELMT (td->type->cxxTypeRefInfo->namedElmts))
 					fprintf(hdr, ",\n");
@@ -2475,7 +2483,7 @@ static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module
 		strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParamChoice") == 0))
 		return;
 
-	PrintClassHeader(hdr, td->cxxTypeDefInfo->className, baseClassesG);
+	PrintClassHeader(hdr, m, td, baseClassesG);
 
 	/* write out choiceId enum type */
 	NamedType* e = NULL;
@@ -3583,7 +3591,7 @@ static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 		strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParameters") == 0))
 		return;
 
-	PrintClassHeader(hdr, td->cxxTypeDefInfo->className, baseClassesG);
+	PrintClassHeader(hdr, m, td, baseClassesG);
 
 #if META
 	if (printMetaG)
@@ -3602,7 +3610,7 @@ static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 	PrintCheckConstraints(hdr, src, m, seq, td);
 
 	if(printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode) {
-		fprintf(hdr, "\t// Encoders & Decoders\n");
+		fprintf(hdr, "\n\t// Encoders & Decoders\n");
 		if (printEncodersG)
 			PrintSeqDefCodeBerEncodeContent(src, hdr, m, r, td, seq);
 		if (printDecodersG)
@@ -3659,7 +3667,7 @@ static void PrintCxxSetDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 	NamedType **pSetElementNamedType=NULL;
 	int extensionAdditions = FALSE;
 
-	PrintClassHeader(hdr, td->cxxTypeDefInfo->className, baseClassesG);
+	PrintClassHeader(hdr, m, td, baseClassesG);
 	PrintMemberAttributes(hdr, src, r, td, mods, m, set);
 
 #if META
