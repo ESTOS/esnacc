@@ -27,6 +27,7 @@
 #include "../../core/print.h"
 #include "../tag-util.h"  /* get GetTags/FreeTags/CountTags/TagByteLen */
 #include "../structure-util.h"
+#include "../comment-util.h"
 #include "cxxconstraints.h"
 #include "cxxmultipleconstraints.h"
 #include "../../core/asn_comments.h"
@@ -114,11 +115,12 @@ static Module *GetImportModuleRef (char *Impname, ModuleList *mods)
 	return currMod;
 }
 
-void PrintClassHeader(FILE* hdr, const char* className, const char* baseClass) {
+void PrintClassHeader(FILE* hdr, Module* m, TypeDef* td, const char* szBaseClass) {
+	printSequenceComment(hdr, m, td, COMMENTSTYLE_CPP);
 	fprintf(hdr, "class ");
 	if (bVDAGlobalDLLExport)
 		fprintf(hdr, "%s ", bVDAGlobalDLLExport);
-	fprintf(hdr, "%s : public %s\n", className, baseClass);
+	fprintf(hdr, "%s : public %s\n", td->cxxTypeDefInfo->className, szBaseClass);
 	fprintf(hdr, "{\n");
 	fprintf(hdr, "public:\n");
 }
@@ -173,8 +175,6 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules *r, TypeDef *td, Modul
 				if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
 					continue;
 
-				fprintf(hdr, "\t");
-
 				/* JKG 7/31/03 */
 				/*The following code enclosed in this if/else statement */
 				/*is constructed for constraint handling capability     */
@@ -188,11 +188,15 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules *r, TypeDef *td, Modul
 					case SUBTYPE_SINGLE:
 						if(!PrintCxxMultiConstraintOrHandler(hdr, src, td->definedName, e, 1))
 						{
+							printMemberComment(hdr, m, td, e->type->cxxTypeRefInfo->fieldName, "\t", COMMENTSTYLE_CPP);
+							fprintf(hdr, "\t");
 							PrintCxxType(hdr, mods, m, r, td, e->type);
 							fprintf(hdr, "%s;\n", e->type->cxxTypeRefInfo->fieldName);
 						}
 						break;
 					default:
+						printMemberComment(hdr, m, td, e->type->cxxTypeRefInfo->fieldName, "\t", COMMENTSTYLE_CPP);
+						fprintf(hdr, "\t");
 						PrintCxxType(hdr, mods, m, r, td, e->type);
 						fprintf(hdr, "%s;\n", e->type->cxxTypeRefInfo->fieldName);
 						break;
@@ -200,6 +204,8 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules *r, TypeDef *td, Modul
 				}
 				else
 				{
+					printMemberComment(hdr, m, td, e->type->cxxTypeRefInfo->fieldName, "\t", COMMENTSTYLE_CPP);
+					fprintf(hdr, "\t");
 					PrintCxxType(hdr, mods, m, r, td, e->type);
 					fprintf(hdr, "%s;\n", e->type->cxxTypeRefInfo->fieldName);
 				}
@@ -524,6 +530,7 @@ static void PrintHdrComment(FILE *hdr, Module *m)
 	fprintf(hdr, "//\n");
 	write_snacc_header(hdr, "// ");
 	fprintf(hdr, "\n");
+	printModuleComment(hdr, m->moduleName, COMMENTSTYLE_CPP);
 }
 
 static void PrintSrcComment(FILE *src, Module *m)
@@ -1032,10 +1039,37 @@ static int RestAreTailOptional(NamedTypeList *e)
 	return retVal;
 }
 
+static bool IsValidROSEOnInvoke(Module* mod, ValueDef *vd, bool bEvents)
+{
+	char* pszArgument = NULL;
+	char* pszResult = NULL;
+	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, NULL, NULL, NULL, NULL, false))
+	{
+		if (pszResult && !bEvents)
+			return true;
+		else if (!pszResult && bEvents)
+			return true;
+	}
+	return false;
+}
+
+static bool HasValidROSEOnInvokes(Module* mod, bool bEvents) {
+	ValueDef *vd;
+	FOR_EACH_LIST_ELMT(vd, mod->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
+			if (IsValidROSEOnInvoke(mod, vd, bEvents))
+				return true;
+		}
+	}
+	return false;
+}
+
 /*
 * prints PrintROSEOnInvoke
 */
-static void PrintROSEOnInvoke(FILE *hdr, int bEvents, Module* mod, ValueDef *vd)
+static bool PrintROSEOnInvoke(FILE *hdr, int bEvents, Module* mod, ValueDef *vd, bool bCommentWasAdded)
 {
 	char* pszArgument = NULL;
 	char* pszResult = NULL;
@@ -1045,6 +1079,11 @@ static void PrintROSEOnInvoke(FILE *hdr, int bEvents, Module* mod, ValueDef *vd)
 	{
 		if (pszResult && !bEvents)
 		{
+			if (bCommentWasAdded)
+				fprintf(hdr, "\n");
+
+			bCommentWasAdded = printOperationComment(hdr, mod, vd->definedName, COMMENTSTYLE_CPP);
+
 			//there is a result -> it is a Funktion
 			//Header
 			if (pszError)
@@ -1060,12 +1099,18 @@ static void PrintROSEOnInvoke(FILE *hdr, int bEvents, Module* mod, ValueDef *vd)
 		}
 		else if (!pszResult && bEvents)
 		{
+			if (bCommentWasAdded)
+				fprintf(hdr, "\n");
+
+			bCommentWasAdded = printOperationComment(hdr, mod, vd->definedName, COMMENTSTYLE_CPP);
 			//there is no result -> it is an Event
 			//Header
 			fprintf(hdr, "\tvirtual void OnEvent_%s(%s* argument) { }\n", vd->definedName,
 				pszArgument);
 		}
 	}
+
+	return bCommentWasAdded;
 }
 
 /*
@@ -1151,7 +1196,7 @@ static void PrintROSEOnInvokeswitchCase(FILE *src, int bEvents, Module* mod, Val
 static void PrintAllForwardDeclarations(FILE *hdr, Module *m)
 {
 	TypeDef *td;
-	fprintf(hdr, "//------------------------------------------------------------------------------\n");
+	fprintf(hdr, "// ------------------------------------------------------------------------------\n");
 	fprintf(hdr, "// forward declarations:\n\n");
 
 	//Alle klassen printen
@@ -1222,7 +1267,34 @@ void PrintLongComment(FILE *hdr, const char* szLinePrefix, const char* szComment
 	fprintf(hdr, "%s", " */\n");
 }
 
-static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueDef *vd)
+static bool IsValidROSEInvoke(Module *m, ValueDef *vd, bool bEvents)
+{
+	char* pszArgument = NULL;
+	char* pszResult = NULL;
+
+	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, NULL, NULL, NULL, NULL, false))
+	{
+		if ((pszResult && !bEvents) || (!pszResult && bEvents))
+			return true;
+	}
+
+	return false;	
+}
+
+static bool HasValidROSEInvokes(Module* mod, bool bEvents) {
+	ValueDef *vd;
+	FOR_EACH_LIST_ELMT(vd, mod->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
+			if (IsValidROSEInvoke(mod, vd, bEvents))
+				return true;
+		}
+	}
+	return false;
+}
+
+static bool PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueDef *vd, bool bCommentWasAdded)
 {
 	char* pszArgument = NULL;
 	char* pszResult = NULL;
@@ -1233,13 +1305,11 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 		if ((pszResult && !bEvents) || (!pszResult && bEvents))
 		{
 			fprintf(src, "// [%s]\n", __FUNCTION__);
+			if (bCommentWasAdded)
+				fprintf(hdr, "\n");
 
-			asnoperationcomment com;
-			if (GetOperationComment_ASCII(m->moduleName, vd->definedName, &com))
-			{
-				fprintf(hdr, "\t//@method %s %s%s%s\n", vd->definedName, com.iPrivate ? "private " : "", com.i64Deprecated ? "deprecated " : "", com.szShort);
-				PrintLongComment(hdr, "\t", com.szLong);
-			}
+			bCommentWasAdded = printOperationComment(hdr, m, vd->definedName, COMMENTSTYLE_CPP);
+
 			//there is a result -> it is a Funktion
 			//Are there errors inside?
 			if (pszResult) {
@@ -1309,6 +1379,7 @@ static void PrintROSEInvoke(FILE *hdr, FILE *src, Module *m, int bEvents, ValueD
 			fprintf(src, "\n");
 		}
 	}
+	return bCommentWasAdded;
 }
 
 /*
@@ -1348,7 +1419,7 @@ static void PrintCxxSimpleDef(FILE *hdr, FILE *src, Module *m, CxxRules *r, Type
 	{
 		int	hasNamedElmts;
 
-		PrintClassHeader(hdr, td->cxxTypeDefInfo->className, td->type->cxxTypeRefInfo->className);
+		PrintClassHeader(hdr, m, td, td->type->cxxTypeRefInfo->className);
 
 		/*
 		* must explicitly call constructors for base class
@@ -1394,6 +1465,7 @@ static void PrintCxxSimpleDef(FILE *hdr, FILE *src, Module *m, CxxRules *r, Type
 				if (IsDeprecatedNoOutputMember(m, td, n->name))
 					continue;
 
+				printMemberComment(hdr, m, td, n->name, "\t\t", COMMENTSTYLE_CPP);
 				fprintf(hdr, "\t\t%s = %d", n->name, n->value);
 				if (n != (CNamedElmt *)LAST_LIST_ELMT (td->type->cxxTypeRefInfo->namedElmts))
 					fprintf(hdr, ",\n");
@@ -2475,7 +2547,7 @@ static void PrintCxxChoiceDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module
 		strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParamChoice") == 0))
 		return;
 
-	PrintClassHeader(hdr, td->cxxTypeDefInfo->className, baseClassesG);
+	PrintClassHeader(hdr, m, td, baseClassesG);
 
 	/* write out choiceId enum type */
 	NamedType* e = NULL;
@@ -3583,7 +3655,7 @@ static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 		strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParameters") == 0))
 		return;
 
-	PrintClassHeader(hdr, td->cxxTypeDefInfo->className, baseClassesG);
+	PrintClassHeader(hdr, m, td, baseClassesG);
 
 #if META
 	if (printMetaG)
@@ -3602,7 +3674,7 @@ static void PrintCxxSeqDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 	PrintCheckConstraints(hdr, src, m, seq, td);
 
 	if(printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode) {
-		fprintf(hdr, "\t// Encoders & Decoders\n");
+		fprintf(hdr, "\n\t// Encoders & Decoders\n");
 		if (printEncodersG)
 			PrintSeqDefCodeBerEncodeContent(src, hdr, m, r, td, seq);
 		if (printDecodersG)
@@ -3659,7 +3731,7 @@ static void PrintCxxSetDefCode(FILE *src, FILE *hdr, ModuleList *mods, Module *m
 	NamedType **pSetElementNamedType=NULL;
 	int extensionAdditions = FALSE;
 
-	PrintClassHeader(hdr, td->cxxTypeDefInfo->className, baseClassesG);
+	PrintClassHeader(hdr, m, td, baseClassesG);
 	PrintMemberAttributes(hdr, src, r, td, mods, m, set);
 
 #if META
@@ -4504,7 +4576,7 @@ void PrintROSENamespaceOpenCode(FILE *hfile, Module *m)
 		{
 			fprintf(hfile,"namespace SNACC {\n");
 		}
-		fprintf(hfile,"#endif\n");
+		fprintf(hfile,"#endif\n\n");
 	}
 }
 
@@ -4515,7 +4587,7 @@ void PrintROSENamespaceCloseCode(FILE *hfile)
 	if (gNO_NAMESPACE == 0)
 	{
 		fprintf(hfile, "#ifndef NO_NAMESPACE\n");
-		fprintf(hfile, "} // namespace close\n");
+		fprintf(hfile, "}\n");
 		fprintf(hfile, "#endif\n");
 	}
 }
@@ -4605,8 +4677,8 @@ void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, M
 	PrintROSENamespaceOpenCode(hdrInterface, m);
 
 	//print Operation defines
-	fprintf(hdr, "//------------------------------------------------------------------------------\n");
-	fprintf(hdr, "// Operation defines\n\n");
+	fprintf(hdr, "// ------------------------------------------------------------------------------\n");
+	fprintf(hdr, "// Operation defines\n");
 	FOR_EACH_LIST_ELMT (vd, m->valueDefs) {
 		if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 			continue;
@@ -4614,23 +4686,16 @@ void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, M
 	}
 	fflush(hdr);
 	fprintf(hdr, "\n");
-	fprintf(hdr, "//------------------------------------------------------------------------------\n");
-
-	/* nun alle Makro definitionen iterieren. */
-	fprintf(hdr, "//------------------------------------------------------------------------------\n");
 
 	//forward decl
-	fprintf(hdr, "class %sInterface;\n", m->ROSEClassName);
-
+	fprintf(hdr, "//------------------------------------------------------------------------------\n");
+	fprintf(hdr, "// forward declares:\n");
+	fprintf(hdr, "class %sInterface;\n\n", m->ROSEClassName);
 
 	fprintf(hdr, "//------------------------------------------------------------------------------\n");
-	fprintf(hdr, "// class definitions:\n\n");
-
-	fprintf(src, "//------------------------------------------------------------------------------\n");
-	fprintf(src, "// class member definitions:\n\n");
+	fprintf(hdr, "// class definitions:\n");
 
 	PrintCxxAnyCode (src, hdr, r, mods, m);
-
 
 	//Generate the ROSE class here.
 	fprintf(hdr, "class %s : public SnaccROSEComponent\n{\n", m->ROSEClassName);
@@ -4642,7 +4707,7 @@ void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, M
 	fprintf(src, "{\n}\n\n");
 
 	//Function for triggering the registration of all Operations (name/id)
-	fprintf(hdr, "\t//Function Registers all known operations in SnaccRoseOperationLookup\n");
+	fprintf(hdr, "\t// Function Registers all known operations in SnaccRoseOperationLookup\n");
 	fprintf(hdr, "\tstatic void RegisterOperations();\n");
 	fprintf(src, "void %s::RegisterOperations()\n", m->ROSEClassName);
 	fprintf(src, "{\n");
@@ -4661,7 +4726,7 @@ void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, M
 
 
 	//generate the InvokeHandler
-	fprintf(hdr, "\t//The main Invoke Dispatcher\n");
+	fprintf(hdr, "\t// The main Invoke Dispatcher\n");
 	fprintf(hdr, "\tstatic long OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt);\n", m->ROSEClassName);
 	fprintf(src, "long %s::OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt)\n", m->ROSEClassName, m->ROSEClassName);
 	fprintf(src, "{\n");
@@ -4698,54 +4763,66 @@ void PrintROSECode(FILE *src, FILE *hdr, FILE* hdrInterface, ModuleList *mods, M
 	fprintf(src, "\n");
 
 	fprintf(hdr, "\n");
-	fprintf(hdr, "\t//Invoke Messages\n");
-	//Now generate the invoke messages
-	FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-	{
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+
+	bool bCommentWasAdded = false;
+	bool bBlockWasAdded = false;
+	if (HasValidROSEInvokes(m, 0)) {
+		fprintf(hdr, "\t// ---- ROSE Invoke operations ----\n");
+		fprintf(hdr, "\t// --------------------------------\n\n");
+		//Now generate the invoke messages
+		FOR_EACH_LIST_ELMT (vd, m->valueDefs)
 		{
-			PrintROSEInvoke(hdr, src, m, 0, vd);
+			if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+				bCommentWasAdded = PrintROSEInvoke(hdr, src, m, 0, vd, bCommentWasAdded);
+		}
+		bBlockWasAdded = true;
+	}
+
+	if (HasValidROSEInvokes(m, 1)) {
+		if (bBlockWasAdded)
+			fprintf(hdr, "\n");
+		
+		fprintf(hdr, "\t// ---- ROSE Event operations ----\n");
+		fprintf(hdr, "\t// -------------------------------\n\n");
+		//Now generate the invoke messages
+		bCommentWasAdded = false;
+		FOR_EACH_LIST_ELMT (vd, m->valueDefs)
+		{
+			if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+				bCommentWasAdded = PrintROSEInvoke(hdr, src, m, 1, vd, bCommentWasAdded);
 		}
 	}
 
-	fprintf(hdr, "\t//Event Messages\n");
-	//Now generate the invoke messages
-	FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-	{
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+	bBlockWasAdded = false;
+	if (HasValidROSEOnInvokes(m, 0)) {
+		fprintf(hdrInterface, "\t// ---- ROSE OnInvoke handlers ----\n");
+		fprintf(hdrInterface, "\t// --------------------------------\n\n");
+		//Now generate the invoke handler messages
+		bCommentWasAdded = false;
+		FOR_EACH_LIST_ELMT (vd, m->valueDefs)
 		{
-			PrintROSEInvoke(hdr, src, m, 1, vd);
+			if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+				bCommentWasAdded = PrintROSEOnInvoke(hdrInterface, 0, m, vd, bCommentWasAdded);
+		}
+		bBlockWasAdded = true;
+	}
+
+	if (HasValidROSEOnInvokes(m, 1)) {
+		if (bBlockWasAdded)
+			fprintf(hdrInterface, "\n");
+		fprintf(hdrInterface, "\t// ---- ROSE OnEvent handlers ----\n");
+		fprintf(hdrInterface, "\t// -------------------------------\n\n");
+		//Now generate the Event handler messages
+		bCommentWasAdded = false;
+		FOR_EACH_LIST_ELMT (vd, m->valueDefs)
+		{
+			if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+				bCommentWasAdded = PrintROSEOnInvoke(hdrInterface, 1, m, vd, bCommentWasAdded);
 		}
 	}
 
-	fprintf(hdr, "\t//Invoke Handler Messages\n");
-	//Now generate the invoke handler messages
-	FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-	{
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-		{
-			PrintROSEOnInvoke(hdrInterface, 0, m, vd);
-		}
-	}
-	fprintf(hdr, "\t//Event Handler Messages\n");
-	//Now generate the Event handler messages
-	FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-	{
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-		{
-			PrintROSEOnInvoke(hdrInterface, 1, m, vd);
-		}
-	}
-
-	fprintf(hdr, "\n");
-	fprintf(hdr, "public:\n");
-	fprintf(hdr, "\t//Invoke Overrides\n");
-	fprintf(hdr, "}; //%s\n", m->ROSEClassName);
-
-	fprintf(hdrInterface, "\n");
-	fprintf(hdrInterface, "public:\n");
-	fprintf(hdrInterface, "\t//Invoke Overrides\n");
-	fprintf(hdrInterface, "}; //%s\n", m->ROSEClassName);
+	fprintf(hdr, "};\n");
+	fprintf(hdrInterface, "};\n");
 
 	fprintf(src, "\n");
 	fprintf(hdr, "\n");
@@ -4924,7 +5001,7 @@ void PrintCxxCode(FILE *src,
 			fprintf(hdr,"namespace SNACC {\n");
 			fprintf(src,"namespace SNACC{\n");
 		}
-		fprintf(hdr,"#endif\n");
+		fprintf(hdr,"#endif\n\n");
 	}
 
 	if (bVDAGlobalDLLExport)
@@ -5037,10 +5114,10 @@ void PrintCxxCode(FILE *src,
 	if (gNO_NAMESPACE == 0)
 	{
 		fprintf(hdr, "#ifndef NO_NAMESPACE\n");
-		fprintf(hdr, "} // namespace close\n");
+		fprintf(hdr, "}\n");
 		fprintf(hdr, "#endif\n");
 		fprintf(src, "#ifndef NO_NAMESPACE\n");
-		fprintf(src, "} // namespace close\n");
+		fprintf(src, "}\n");
 		fprintf(src, "#endif\n");
 	}
 
