@@ -56,6 +56,6 @@ void PrintConditionalIncludeOpen(FILE *f, char *fileName)
 
 void PrintConditionalIncludeClose(FILE *f, char *fileName)
 {
-    fprintf (f, "\n#endif /* conditional include of %s */\n", RemovePath(fileName));
+    fprintf (f, "\n#endif\n");
 
 } /* PrintConditionalIncludeClose */
