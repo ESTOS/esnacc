@@ -18,10 +18,10 @@
 #include "../../core/asn1module.h"
 #include "../../core/snacc-util.h"
 
-void PrintJSES6Code (FILE *src, ModuleList *mods, Module *m, long longJmpVal,
-				   int printTypes, int printValues, int printEncoders,
-				   int printDecoders, int printJSONEncDec, 
-				   int novolatilefuncs);
+void PrintJSES6Code(FILE* src, ModuleList* mods, Module* m, long longJmpVal,
+	int printTypes, int printValues, int printEncoders,
+	int printDecoders, int printJSONEncDec,
+	int novolatilefuncs);
 
 
 #endif //JSES6GENCODE_H_INCLUDED

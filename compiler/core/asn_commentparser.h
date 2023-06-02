@@ -13,7 +13,7 @@ class EDeprecated {
 public:
 	void handleDeprecated(const std::string& strParsedLine);
 	// Type is deprecated, the value shows the time in unix time when the property has been flagged deprecated
-	
+
 	// @deprecated [optional] 1.1.2023 [optional] comment
 	// e.g.
 	// @deprecated 1.1.2023 Superseeded by method xyz

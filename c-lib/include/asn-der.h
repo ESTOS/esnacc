@@ -1,7 +1,7 @@
 /*
  * asn-der.h
  *
- * Dean Povey 97/08 
+ * Dean Povey 97/08
  * Copyright (C) 1997 Dean Povey and the Distributed Systems Technology Centre
  *
  * This library is free software; you can redistribute it and/or
@@ -25,12 +25,12 @@ extern "C" {
 #endif
 
 
-typedef struct EncodedElmt {
-  GenBuf *b;
-  unsigned long len;
-} EncodedElmt;
+	typedef struct EncodedElmt {
+		GenBuf* b;
+		unsigned long len;
+	} EncodedElmt;
 
-int EncodedElmtCmp PROTO((const void* a1, const void* b));
+	int EncodedElmtCmp PROTO((const void* a1, const void* b));
 
 #ifdef __cplusplus
 }

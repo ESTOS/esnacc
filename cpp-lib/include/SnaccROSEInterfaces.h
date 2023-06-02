@@ -89,8 +89,8 @@ public:
 	virtual long GetNextInvokeID() = 0;
 
 	/* Log level 0 oder 1
-		bout=true for outgoing messages, 
-		bout=false for incoming messages, 
+		bout=true for outgoing messages,
+		bout=false for incoming messages,
 		Override to set a different log level */
 	virtual long GetLogLevel(bool /*bOut*/) = 0;
 
@@ -113,10 +113,10 @@ public:
 	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* pCtx = nullptr) = 0;
 
 	/* Send a Result Message. */
-	virtual long SendResult(int invokeID, SNACC::AsnType *value, const wchar_t* szSessionID = 0) = 0;
+	virtual long SendResult(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0) = 0;
 
 	/* Send a Error Message. */
-	virtual long SendError(int invokeID, SNACC::AsnType *value, const wchar_t* szSessionID = 0) = 0;
+	virtual long SendError(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0) = 0;
 
 	/*! Helper Funktion zur Behandlung des Result nach einem SendInvoke */
 	long HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEResult* pResultMsg, SNACC::ROSEError* pErrorMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt);
@@ -126,8 +126,8 @@ public:
 	for all generated ROSE Protocol Handlers (V2) that need OnInvoke
 	*/
 
-/*! SnaccROSEComponent is the base class for all generated ROSE Protocol Handlers (V2)
-*/
+	/*! SnaccROSEComponent is the base class for all generated ROSE Protocol Handlers (V2)
+	*/
 class SnaccROSEComponent
 {
 public:

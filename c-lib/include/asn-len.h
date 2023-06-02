@@ -29,13 +29,13 @@ extern "C" {
 #endif
 
 
-typedef unsigned long AsnLen;
+	typedef unsigned long AsnLen;
 
-/*
- * BER Encoding/Decoding routines
- */
+	/*
+	 * BER Encoding/Decoding routines
+	 */
 
-/* max unsigned value  - used for internal rep of indef len */
+	 /* max unsigned value  - used for internal rep of indef len */
 #define INDEFINITE_LEN		~0L
 
 
@@ -78,13 +78,13 @@ typedef unsigned long AsnLen;
     BufPutByteRvs (b, 0);
 #endif
 
-/*
- * use if you know the encoded length will be 0 >= len <= 127
- * Eg for booleans, nulls, any resonable integers and reals
- *
- * NOTE: this particular Encode Routine does NOT return the length
- * encoded (1).
- */
+ /*
+  * use if you know the encoded length will be 0 >= len <= 127
+  * Eg for booleans, nulls, any resonable integers and reals
+  *
+  * NOTE: this particular Encode Routine does NOT return the length
+  * encoded (1).
+  */
 #define BEncDefLenTo127( b, len)\
     BufPutByteRvs (b, (unsigned char) len)
 
@@ -97,26 +97,26 @@ typedef unsigned long AsnLen;
 }
 
 
-AsnLen BEncDefLen PROTO ((GenBuf *b, AsnLen len));
-AsnLen BEncDefLen2 PROTO ((GenBuf *b, long  len));
-AsnLen BDecLen PROTO ((GenBuf *b, AsnLen  *bytesDecoded, ENV_TYPE env));
+	AsnLen BEncDefLen PROTO((GenBuf* b, AsnLen len));
+	AsnLen BEncDefLen2 PROTO((GenBuf* b, long  len));
+	AsnLen BDecLen PROTO((GenBuf* b, AsnLen* bytesDecoded, ENV_TYPE env));
 
 #ifdef _DEBUG
-AsnLen BEncEoc PROTO ((GenBuf *b));
+	AsnLen BEncEoc PROTO((GenBuf* b));
 #endif
-void BDecEoc PROTO ((GenBuf *b, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecEoc PROTO((GenBuf* b, AsnLen* bytesDecoded, ENV_TYPE env));
 
 #if TTBL
-int PeekEoc PROTO ((GenBuf *b));
+	int PeekEoc PROTO((GenBuf* b));
 #endif
 
-/*
- * DER Encoding/Decoding routines 
- */
+	/*
+	 * DER Encoding/Decoding routines
+	 */
 
-/* We always use Definite length encoders */
+	 /* We always use Definite length encoders */
 
-/* do nothing since only using definite lens */
+	 /* do nothing since only using definite lens */
 #define DEncEocIfNec( b)
 
 #define DEncConsLen DEncDefLen
@@ -133,9 +133,9 @@ int PeekEoc PROTO ((GenBuf *b));
 
 #define DEncDefLen BEncDefLen
 
-AsnLen DDecLen PROTO ((GenBuf *b, AsnLen  *bytesDecoded, ENV_TYPE env));
+	AsnLen DDecLen PROTO((GenBuf* b, AsnLen* bytesDecoded, ENV_TYPE env));
 
-/* Error conditions */
+	/* Error conditions */
 #define DDecEoc(a, b, env) longjmp(env, -666)
 
 /* Should never happen */

@@ -5,7 +5,7 @@
  *
  * Facilities for including binary files into the current translation unit and
  * making use from them externally in other translation units.
- * 
+ *
  * This file comes from https://github.com/graphitemaster/incbin and is provided there
  * without any limitations as unlicensed.
  */
@@ -39,7 +39,7 @@
 # define INCBIN_ALIGNMENT_INDEX 2
 #endif
 
-/* Lookup table of (1 << n) where `n' is `INCBIN_ALIGNMENT_INDEX' */
+ /* Lookup table of (1 << n) where `n' is `INCBIN_ALIGNMENT_INDEX' */
 #define INCBIN_ALIGN_SHIFT_0 1
 #define INCBIN_ALIGN_SHIFT_1 2
 #define INCBIN_ALIGN_SHIFT_2 4
@@ -127,7 +127,7 @@
 /**
  * @brief Optionally override the linker section into which size and data is
  * emitted.
- * 
+ *
  * @warning If you use this facility, you might have to deal with
  * platform-specific linker output section naming on your own.
  */
@@ -139,26 +139,26 @@
 #  endif
 #endif
 
-/**
- * @brief Optionally override the linker section into which data is emitted.
- *
- * @warning If you use this facility, you might have to deal with
- * platform-specific linker output section naming on your own.
- */
+ /**
+  * @brief Optionally override the linker section into which data is emitted.
+  *
+  * @warning If you use this facility, you might have to deal with
+  * platform-specific linker output section naming on your own.
+  */
 #if !defined(INCBIN_OUTPUT_DATA_SECTION)
 #  define INCBIN_OUTPUT_DATA_SECTION INCBIN_OUTPUT_SECTION
 #endif
 
-/**
- * @brief Optionally override the linker section into which size is emitted.
- *
- * @warning If you use this facility, you might have to deal with
- * platform-specific linker output section naming on your own.
- * 
- * @note This is useful for Harvard architectures where program memory cannot
- * be directly read from the program without special instructions. With this you
- * can chose to put the size variable in RAM rather than ROM.
- */
+  /**
+   * @brief Optionally override the linker section into which size is emitted.
+   *
+   * @warning If you use this facility, you might have to deal with
+   * platform-specific linker output section naming on your own.
+   *
+   * @note This is useful for Harvard architectures where program memory cannot
+   * be directly read from the program without special instructions. With this you
+   * can chose to put the size variable in RAM rather than ROM.
+   */
 #if !defined(INCBIN_OUTPUT_SIZE_SECTION)
 #  define INCBIN_OUTPUT_SIZE_SECTION INCBIN_OUTPUT_SECTION
 #endif
@@ -189,13 +189,13 @@
 #    define INCBIN_MANGLE        ""
 #  endif
 #  if defined(INCBIN_ARM)
-/* On arm assemblers, `@' is used as a line comment token */
+   /* On arm assemblers, `@' is used as a line comment token */
 #    define INCBIN_TYPE(NAME)    ".type " INCBIN_STRINGIZE(INCBIN_PREFIX) #NAME ", %object\n"
 #  elif defined(__MINGW32__) || defined(__MINGW64__)
-/* Mingw doesn't support this directive either */
+   /* Mingw doesn't support this directive either */
 #    define INCBIN_TYPE(NAME)
 #  else
-/* It's safe to use `@' on other architectures */
+   /* It's safe to use `@' on other architectures */
 #    define INCBIN_TYPE(NAME)    ".type " INCBIN_STRINGIZE(INCBIN_PREFIX) #NAME ", @object\n"
 #  endif
 #  define INCBIN_BYTE            ".byte "
@@ -225,31 +225,31 @@
 #  define INCBIN_PREFIX g
 #endif
 
-/**
- * @brief Specify the style used for symbol names.
- *
- * Possible options are
- * - INCBIN_STYLE_CAMEL "CamelCase"
- * - INCBIN_STYLE_SNAKE "snake_case"
- *
- * @note By default this is INCBIN_STYLE_CAMEL
- *
- * @code
- * #define INCBIN_STYLE INCBIN_STYLE_SNAKE
- * #include "incbin.h"
- * INCBIN(foo, "foo.txt");
- *
- * // Now you have the following symbols:
- * // const unsigned char <prefix>foo_data[];
- * // const unsigned char *const <prefix>foo_end;
- * // const unsigned int <prefix>foo_size;
- * @endcode
- */
+ /**
+  * @brief Specify the style used for symbol names.
+  *
+  * Possible options are
+  * - INCBIN_STYLE_CAMEL "CamelCase"
+  * - INCBIN_STYLE_SNAKE "snake_case"
+  *
+  * @note By default this is INCBIN_STYLE_CAMEL
+  *
+  * @code
+  * #define INCBIN_STYLE INCBIN_STYLE_SNAKE
+  * #include "incbin.h"
+  * INCBIN(foo, "foo.txt");
+  *
+  * // Now you have the following symbols:
+  * // const unsigned char <prefix>foo_data[];
+  * // const unsigned char *const <prefix>foo_end;
+  * // const unsigned int <prefix>foo_size;
+  * @endcode
+  */
 #if !defined(INCBIN_STYLE)
 #  define INCBIN_STYLE INCBIN_STYLE_CAMEL
 #endif
 
-/* Style lookup tables */
+  /* Style lookup tables */
 #define INCBIN_STYLE_0_DATA Data
 #define INCBIN_STYLE_0_END End
 #define INCBIN_STYLE_0_SIZE Size
@@ -288,37 +288,37 @@
                 INCBIN_STYLE_IDENT, \
                 TYPE)))
 
-/**
- * @brief Externally reference binary data included in another translation unit.
- *
- * Produces three external symbols that reference the binary data included in
- * another translation unit.
- *
- * The symbol names are a concatenation of `INCBIN_PREFIX' before *NAME*; with
- * "Data", as well as "End" and "Size" after. An example is provided below.
- *
- * @param TYPE Optional array type. Omitting this picks a default of `unsigned char`.
- * @param NAME The name given for the binary data
- *
- * @code
- * INCBIN_EXTERN(Foo);
- *
- * // Now you have the following symbols:
- * // extern const unsigned char <prefix>Foo<data>[];
- * // extern const unsigned char *const <prefix>Foo<end>;
- * // extern const unsigned int <prefix>Foo<size>;
- * @endcode
- * 
- * You may specify a custom optional data type as well as the first argument.
- * @code
- * INCBIN_EXTERN(custom_type, Foo);
- * 
- * // Now you have the following symbols:
- * // extern const custom_type <prefix>Foo<data>[];
- * // extern const custom_type *const <prefix>Foo<end>;
- * // extern const unsigned int <prefix>Foo<size>;
- * @endcode
- */
+ /**
+  * @brief Externally reference binary data included in another translation unit.
+  *
+  * Produces three external symbols that reference the binary data included in
+  * another translation unit.
+  *
+  * The symbol names are a concatenation of `INCBIN_PREFIX' before *NAME*; with
+  * "Data", as well as "End" and "Size" after. An example is provided below.
+  *
+  * @param TYPE Optional array type. Omitting this picks a default of `unsigned char`.
+  * @param NAME The name given for the binary data
+  *
+  * @code
+  * INCBIN_EXTERN(Foo);
+  *
+  * // Now you have the following symbols:
+  * // extern const unsigned char <prefix>Foo<data>[];
+  * // extern const unsigned char *const <prefix>Foo<end>;
+  * // extern const unsigned int <prefix>Foo<size>;
+  * @endcode
+  *
+  * You may specify a custom optional data type as well as the first argument.
+  * @code
+  * INCBIN_EXTERN(custom_type, Foo);
+  *
+  * // Now you have the following symbols:
+  * // extern const custom_type <prefix>Foo<data>[];
+  * // extern const custom_type *const <prefix>Foo<end>;
+  * // extern const unsigned int <prefix>Foo<size>;
+  * @endcode
+  */
 #define INCBIN_EXTERN(...) \
     INCBIN_CONCATENATE(INCBIN_EXTERN_, INCBIN_VA_ARGC(__VA_ARGS__))(__VA_ARGS__)
 #define INCBIN_EXTERN_1(NAME, ...) \
@@ -337,68 +337,68 @@
             INCBIN_CONCATENATE(INCBIN_PREFIX, NAME), \
             INCBIN_STYLE_IDENT(SIZE))
 
-/**
- * @brief Externally reference textual data included in another translation unit.
- *
- * Produces three external symbols that reference the textual data included in
- * another translation unit.
- *
- * The symbol names are a concatenation of `INCBIN_PREFIX' before *NAME*; with
- * "Data", as well as "End" and "Size" after. An example is provided below.
- *
- * @param NAME The name given for the textual data
- *
- * @code
- * INCBIN_EXTERN(Foo);
- *
- * // Now you have the following symbols:
- * // extern const char <prefix>Foo<data>[];
- * // extern const char *const <prefix>Foo<end>;
- * // extern const unsigned int <prefix>Foo<size>;
- * @endcode
- */
+  /**
+   * @brief Externally reference textual data included in another translation unit.
+   *
+   * Produces three external symbols that reference the textual data included in
+   * another translation unit.
+   *
+   * The symbol names are a concatenation of `INCBIN_PREFIX' before *NAME*; with
+   * "Data", as well as "End" and "Size" after. An example is provided below.
+   *
+   * @param NAME The name given for the textual data
+   *
+   * @code
+   * INCBIN_EXTERN(Foo);
+   *
+   * // Now you have the following symbols:
+   * // extern const char <prefix>Foo<data>[];
+   * // extern const char *const <prefix>Foo<end>;
+   * // extern const unsigned int <prefix>Foo<size>;
+   * @endcode
+   */
 #define INCTXT_EXTERN(NAME) \
     INCBIN_EXTERN_2(char, NAME)
 
-/**
- * @brief Include a binary file into the current translation unit.
- *
- * Includes a binary file into the current translation unit, producing three symbols
- * for objects that encode the data and size respectively.
- *
- * The symbol names are a concatenation of `INCBIN_PREFIX' before *NAME*; with
- * "Data", as well as "End" and "Size" after. An example is provided below.
- *
- * @param TYPE Optional array type. Omitting this picks a default of `unsigned char`.
- * @param NAME The name to associate with this binary data (as an identifier.)
- * @param FILENAME The file to include (as a string literal.)
- *
- * @code
- * INCBIN(Icon, "icon.png");
- *
- * // Now you have the following symbols:
- * // const unsigned char <prefix>Icon<data>[];
- * // const unsigned char *const <prefix>Icon<end>;
- * // const unsigned int <prefix>Icon<size>;
- * @endcode
- * 
- * You may specify a custom optional data type as well as the first argument.
- * These macros are specialized by arity.
- * @code
- * INCBIN(custom_type, Icon, "icon.png");
- *
- * // Now you have the following symbols:
- * // const custom_type <prefix>Icon<data>[];
- * // const custom_type *const <prefix>Icon<end>;
- * // const unsigned int <prefix>Icon<size>;
- * @endcode
- *
- * @warning This must be used in global scope
- * @warning The identifiers may be different if INCBIN_STYLE is not default
- *
- * To externally reference the data included by this in another translation unit
- * please @see INCBIN_EXTERN.
- */
+   /**
+	* @brief Include a binary file into the current translation unit.
+	*
+	* Includes a binary file into the current translation unit, producing three symbols
+	* for objects that encode the data and size respectively.
+	*
+	* The symbol names are a concatenation of `INCBIN_PREFIX' before *NAME*; with
+	* "Data", as well as "End" and "Size" after. An example is provided below.
+	*
+	* @param TYPE Optional array type. Omitting this picks a default of `unsigned char`.
+	* @param NAME The name to associate with this binary data (as an identifier.)
+	* @param FILENAME The file to include (as a string literal.)
+	*
+	* @code
+	* INCBIN(Icon, "icon.png");
+	*
+	* // Now you have the following symbols:
+	* // const unsigned char <prefix>Icon<data>[];
+	* // const unsigned char *const <prefix>Icon<end>;
+	* // const unsigned int <prefix>Icon<size>;
+	* @endcode
+	*
+	* You may specify a custom optional data type as well as the first argument.
+	* These macros are specialized by arity.
+	* @code
+	* INCBIN(custom_type, Icon, "icon.png");
+	*
+	* // Now you have the following symbols:
+	* // const custom_type <prefix>Icon<data>[];
+	* // const custom_type *const <prefix>Icon<end>;
+	* // const unsigned int <prefix>Icon<size>;
+	* @endcode
+	*
+	* @warning This must be used in global scope
+	* @warning The identifiers may be different if INCBIN_STYLE is not default
+	*
+	* To externally reference the data included by this in another translation unit
+	* please @see INCBIN_EXTERN.
+	*/
 #ifdef _MSC_VER
 #  define INCBIN(NAME, FILENAME) \
       INCBIN_EXTERN(NAME)
@@ -437,37 +437,37 @@
     INCBIN_EXTERN(TYPE, NAME)
 #endif
 
-/**
- * @brief Include a textual file into the current translation unit.
- * 
- * This behaves the same as INCBIN except it produces char compatible arrays
- * and implicitly adds a null-terminator byte, thus the size of data included
- * by this is one byte larger than that of INCBIN.
- *
- * Includes a textual file into the current translation unit, producing three
- * symbols for objects that encode the data and size respectively.
- *
- * The symbol names are a concatenation of `INCBIN_PREFIX' before *NAME*; with
- * "Data", as well as "End" and "Size" after. An example is provided below.
- *
- * @param NAME The name to associate with this binary data (as an identifier.)
- * @param FILENAME The file to include (as a string literal.)
- *
- * @code
- * INCTXT(Readme, "readme.txt");
- *
- * // Now you have the following symbols:
- * // const char <prefix>Readme<data>[];
- * // const char *const <prefix>Readme<end>;
- * // const unsigned int <prefix>Readme<size>;
- * @endcode
- *
- * @warning This must be used in global scope
- * @warning The identifiers may be different if INCBIN_STYLE is not default
- *
- * To externally reference the data included by this in another translation unit
- * please @see INCBIN_EXTERN.
- */
+	/**
+	 * @brief Include a textual file into the current translation unit.
+	 *
+	 * This behaves the same as INCBIN except it produces char compatible arrays
+	 * and implicitly adds a null-terminator byte, thus the size of data included
+	 * by this is one byte larger than that of INCBIN.
+	 *
+	 * Includes a textual file into the current translation unit, producing three
+	 * symbols for objects that encode the data and size respectively.
+	 *
+	 * The symbol names are a concatenation of `INCBIN_PREFIX' before *NAME*; with
+	 * "Data", as well as "End" and "Size" after. An example is provided below.
+	 *
+	 * @param NAME The name to associate with this binary data (as an identifier.)
+	 * @param FILENAME The file to include (as a string literal.)
+	 *
+	 * @code
+	 * INCTXT(Readme, "readme.txt");
+	 *
+	 * // Now you have the following symbols:
+	 * // const char <prefix>Readme<data>[];
+	 * // const char *const <prefix>Readme<end>;
+	 * // const unsigned int <prefix>Readme<size>;
+	 * @endcode
+	 *
+	 * @warning This must be used in global scope
+	 * @warning The identifiers may be different if INCBIN_STYLE is not default
+	 *
+	 * To externally reference the data included by this in another translation unit
+	 * please @see INCBIN_EXTERN.
+	 */
 #if defined(_MSC_VER)
 #  define INCTXT(NAME, FILENAME) \
      INCBIN_EXTERN(NAME)

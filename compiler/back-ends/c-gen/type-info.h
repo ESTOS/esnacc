@@ -29,49 +29,49 @@
  */
 
 
-/*
-typedef struct CNamedElmt
-{
-    struct CNamedElmt *next;
-    int value;
-    char *name;
-} CNamedElmt;
+ /*
+ typedef struct CNamedElmt
+ {
+	 struct CNamedElmt *next;
+	 int value;
+	 char *name;
+ } CNamedElmt;
 
 
 
-typedef struct CTypeInfo
-{
-    CTypeId           cTypeId;
-    char             *cFieldName;
-    char             *cTypeName;
-    int               isPtr;
-    int               isEndCType;
-    CNamedElmt       *cNamedElmts;
-    int               choiceIdValue;
-    char             *choiceIdSymbol;
-    char             *choiceIdEnumName;
-    char             *choiceIdEnumFieldName;
-    char             *printRoutineName;
-    char             *encodeRoutineName;
-    char             *decodeRoutineName;
-}  CTypeInfo;
+ typedef struct CTypeInfo
+ {
+	 CTypeId           cTypeId;
+	 char             *cFieldName;
+	 char             *cTypeName;
+	 int               isPtr;
+	 int               isEndCType;
+	 CNamedElmt       *cNamedElmts;
+	 int               choiceIdValue;
+	 char             *choiceIdSymbol;
+	 char             *choiceIdEnumName;
+	 char             *choiceIdEnumFieldName;
+	 char             *printRoutineName;
+	 char             *encodeRoutineName;
+	 char             *decodeRoutineName;
+ }  CTypeInfo;
 
 
-*/
-
-/*
- * allows upto 9999 unamed fields of the same type in a single structure
- * or 9999 values (diff asn1 scopes -> global c scope) with same name
  */
 
-/*
-#define MAX_C_FIELD_NAME_DIGITS    4
-#define MAX_C_VALUE_NAME_DIGITS    4
-#define MAX_C_TYPE_NAME_DIGITS     4
-#define MAX_C_ROUTINE_NAME_DIGITS  4
+ /*
+  * allows upto 9999 unamed fields of the same type in a single structure
+  * or 9999 values (diff asn1 scopes -> global c scope) with same name
+  */
 
-*/
+  /*
+  #define MAX_C_FIELD_NAME_DIGITS    4
+  #define MAX_C_VALUE_NAME_DIGITS    4
+  #define MAX_C_TYPE_NAME_DIGITS     4
+  #define MAX_C_ROUTINE_NAME_DIGITS  4
 
-void PrintCTypeInfo PROTO ((FILE *f, Type *t));
+  */
 
-void FillCTypeInfo PROTO ((CRules *r, ModuleList *m));
+void PrintCTypeInfo PROTO((FILE* f, Type* t));
+
+void FillCTypeInfo PROTO((CRules* r, ModuleList* m));

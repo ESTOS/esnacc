@@ -26,43 +26,43 @@ extern "C" {
 #endif
 
 
-typedef AsnOcts AsnOid;  /* standard oid type  */
+	typedef AsnOcts AsnOid;  /* standard oid type  */
 
 
 #define ASNOID_PRESENT( aoid)	ASNOCTS_PRESENT (aoid)
 
-AsnLen BEncAsnOid PROTO ((GenBuf *b, AsnOid *data));
+	AsnLen BEncAsnOid PROTO((GenBuf* b, AsnOid* data));
 
-void BDecAsnOid PROTO ((GenBuf *b, AsnOid *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecAsnOid PROTO((GenBuf* b, AsnOid* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
 #define BEncAsnOidContent( b, oid)   BEncAsnOctsContent (b, oid)
 
 
-void BDecAsnOidContent PROTO ((GenBuf *b, AsnTag tag, AsnLen len, AsnOid  *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecAsnOidContent PROTO((GenBuf* b, AsnTag tag, AsnLen len, AsnOid* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
 
 #define FreeAsnOid	FreeAsnOcts
 
-void PrintAsnOid PROTO ((FILE *f, AsnOid *b, unsigned int indent));
+	void PrintAsnOid PROTO((FILE* f, AsnOid* b, unsigned int indent));
 
 #define AsnOidsEquiv( o1, o2) AsnOctsEquiv (o1, o2)
 
-/* linked oid type that may be easier to use in some circumstances */
+	/* linked oid type that may be easier to use in some circumstances */
 #define NULL_OID_ARCNUM	-1
-typedef struct OID
-{
-  struct OID	*next;
-  long arcNum;
+	typedef struct OID
+	{
+		struct OID* next;
+		long arcNum;
 #if COMPILER || TTBL
-  struct Value	*valueRef;
+		struct Value* valueRef;
 #endif
-} OID;
+	} OID;
 
-AsnLen EncodedOidLen PROTO ((OID *oid));
+	AsnLen EncodedOidLen PROTO((OID* oid));
 
-void BuildEncodedOid PROTO ((OID *oid, AsnOid *result));
+	void BuildEncodedOid PROTO((OID* oid, AsnOid* result));
 
-void UnbuildEncodedOid PROTO ((AsnOid *eoid, OID **result));
+	void UnbuildEncodedOid PROTO((AsnOid* eoid, OID** result));
 
 #ifdef __cplusplus
 }

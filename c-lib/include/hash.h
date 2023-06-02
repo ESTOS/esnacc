@@ -29,27 +29,27 @@ extern "C" {
 #define INDEXMASK 0xFF
 #define INDEXSHIFT 8
 
-typedef void *Table[TABLESIZE];
+	typedef void* Table[TABLESIZE];
 
-typedef unsigned int Hash;
+	typedef unsigned int Hash;
 
-typedef struct HashSlot
-{
-  int    leaf;
-  Hash   hash;
-  void  *value;
-  Table *table;
-} HashSlot;
+	typedef struct HashSlot
+	{
+		int    leaf;
+		Hash   hash;
+		void* value;
+		Table* table;
+	} HashSlot;
 
-Hash MakeHash PROTO ((char *str, size_t len));
+	Hash MakeHash PROTO((char* str, size_t len));
 
-Table *InitHash();
+	Table* InitHash();
 
-int Insert PROTO ((Table *table, void *element, Hash hash));
+	int Insert PROTO((Table* table, void* element, Hash hash));
 
-int CheckFor PROTO ((Table *table, Hash hash));
+	int CheckFor PROTO((Table* table, Hash hash));
 
-int CheckForAndReturnValue PROTO ((Table *table, Hash hash, void **value));
+	int CheckForAndReturnValue PROTO((Table* table, Hash hash, void** value));
 
 #ifdef __cplusplus
 }

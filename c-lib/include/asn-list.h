@@ -39,21 +39,21 @@ extern "C" {
 #endif
 
 
-typedef struct AsnListNode
-{
-    struct AsnListNode	*prev;
-    struct AsnListNode	*next;
-    void		*data;		/* this must be the last field of this structure  */
-} AsnListNode;
+	typedef struct AsnListNode
+	{
+		struct AsnListNode* prev;
+		struct AsnListNode* next;
+		void* data;		/* this must be the last field of this structure  */
+	} AsnListNode;
 
-typedef struct AsnList
-{
-    AsnListNode		*first;
-    AsnListNode		*last;
-    AsnListNode		*curr;
-    int			count;		/* number of elements in list               */
-    int			dataSize;	/* space required in each node for the data */
-} AsnList;
+	typedef struct AsnList
+	{
+		AsnListNode* first;
+		AsnListNode* last;
+		AsnListNode* curr;
+		int			count;		/* number of elements in list               */
+		int			dataSize;	/* space required in each node for the data */
+	} AsnList;
 
 #define FOR_EACH_LIST_ELMT(elmt, al)\
   if (al)\
@@ -77,11 +77,11 @@ typedef struct AsnList
 
 #define HAS_NEXT(list) if(list->curr->next && list->curr->next->data)
 
-/*
- * The following macros return the pointer stored in the
- * data part of the listNode.  The do not change the current
- * list pointer.
- */
+	/*
+	 * The following macros return the pointer stored in the
+	 * data part of the listNode.  The do not change the current
+	 * list pointer.
+	 */
 #define CURR_LIST_ELMT( al)			((al)->curr->data)
 #define NEXT_LIST_ELMT( al)			((al)->curr->next->data)
 #define PREV_LIST_ELMT( al)			((al)->curr->prev->data)
@@ -90,10 +90,10 @@ typedef struct AsnList
 #define LIST_EMPTY( al)				((al)->count == 0)
 #define LIST_COUNT( al)				((al)->count)
 
-/*
- * list nodes are the parts of the list that contain ptrs/data
- * to/of the list elmts.
- */
+	 /*
+	  * list nodes are the parts of the list that contain ptrs/data
+	  * to/of the list elmts.
+	  */
 #define CURR_LIST_NODE( al)			((al)->curr)
 #define FIRST_LIST_NODE( al)			((al)->first)
 #define LAST_LIST_NODE( al)			((al)->last)
@@ -101,27 +101,27 @@ typedef struct AsnList
 #define NEXT_LIST_NODE( al)			((al)->curr->next)
 #define SET_CURR_LIST_NODE( al, listNode)	((al)->curr = ((AsnListNode *)listNode))
 
-void	AsnListRemove PROTO ((AsnList *));
-void	*AsnListAdd PROTO ((AsnList *));
-void	*AsnListInsert PROTO ((AsnList *));
-void	AsnListInit PROTO ((AsnList *list, int dataSize));
-AsnList	*AsnListNew PROTO ((int));
-void	*AsnListPrev PROTO ((AsnList *));
-void	*AsnListNext PROTO ((AsnList *));
-void	*AsnListLast PROTO ((AsnList *));
-void	*AsnListFirst PROTO ((AsnList *));
-void	*AsnListPrepend PROTO ((AsnList *));
-void	*AsnListAppend PROTO ((AsnList *));
-void	*AsnListCurr PROTO ((AsnList *));
-AsnList *AsnListSort PROTO ((AsnList *list, int ((*cmp)(const void *, const void *))));
-int	AsnListCount PROTO ((AsnList *));
-AsnList	*AsnListConcat PROTO ((AsnList *, AsnList *));
-long GetAsnListElmtIndex PROTO ((void *elmt,AsnList *list));
-void	AsnListFree PROTO (( AsnList *));
-void	*GetAsnListElmt PROTO ((AsnList *list, unsigned int index));
+	void	AsnListRemove PROTO((AsnList*));
+	void* AsnListAdd PROTO((AsnList*));
+	void* AsnListInsert PROTO((AsnList*));
+	void	AsnListInit PROTO((AsnList* list, int dataSize));
+	AsnList* AsnListNew PROTO((int));
+	void* AsnListPrev PROTO((AsnList*));
+	void* AsnListNext PROTO((AsnList*));
+	void* AsnListLast PROTO((AsnList*));
+	void* AsnListFirst PROTO((AsnList*));
+	void* AsnListPrepend PROTO((AsnList*));
+	void* AsnListAppend PROTO((AsnList*));
+	void* AsnListCurr PROTO((AsnList*));
+	AsnList* AsnListSort PROTO((AsnList* list, int((*cmp)(const void*, const void*))));
+	int	AsnListCount PROTO((AsnList*));
+	AsnList* AsnListConcat PROTO((AsnList*, AsnList*));
+	long GetAsnListElmtIndex PROTO((void* elmt, AsnList* list));
+	void	AsnListFree PROTO((AsnList*));
+	void* GetAsnListElmt PROTO((AsnList* list, unsigned int index));
 
 #ifdef __cplusplus
-}
+	}
 #endif /* __cplusplus */
 #endif /* conditional include */
 

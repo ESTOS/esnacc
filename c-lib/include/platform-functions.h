@@ -6,8 +6,8 @@
 extern "C" {
 #endif
 
-char *mytolower(char *s);
-int myfopen(FILE **pFile, const char *filename, const char *mode);
+	char* mytolower(char* s);
+	int myfopen(FILE** pFile, const char* filename, const char* mode);
 
 #ifdef __cplusplus
 }

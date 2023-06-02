@@ -19,8 +19,8 @@
 #include "../../core/snacc-util.h"
 
 extern int gNO_NAMESPACE;
-extern const char *gAlternateNamespaceString;
+extern const char* gAlternateNamespaceString;
 
-void PrintROSECSCode (FILE *src, ModuleList *mods, Module *m_);
+void PrintROSECSCode(FILE* src, ModuleList* mods, Module* m_);
 
 #endif //CSGENCODE_H_INCLUDED

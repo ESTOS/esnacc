@@ -23,8 +23,8 @@
 #include <setjmp.h> /* for jmp_buf type, setjmp and longjmp */
 #include <stdlib.h>
 
-/* for pow() used in asn_real.c - must include to avoid casting err on pow */
-/* #include <math.h> */
+ /* for pow() used in asn_real.c - must include to avoid casting err on pow */
+ /* #include <math.h> */
 
 #include "../../snacc.h"
 
@@ -36,52 +36,52 @@
 // Replaces the microsoft specific "secure" string
 
 #ifndef strcpy_s
-	#define strcpy_s(dest, len, source) strncpy(dest, source, len)
+#define strcpy_s(dest, len, source) strncpy(dest, source, len)
 #endif
 
 #ifndef _strdup
-	#define _strdup(arg) strdup(arg)
+#define _strdup(arg) strdup(arg)
 #endif
 
 #ifndef strncpy_s
-	#define strncpy_s(dest, len, source, amount) strncpy(dest, source, amount)
+#define strncpy_s(dest, len, source, amount) strncpy(dest, source, amount)
 #endif
 
 #ifndef strcat_s
-	#define strcat_s(dest, len, source) strcat(dest, source)
+#define strcat_s(dest, len, source) strcat(dest, source)
 #endif
 
 #ifndef sprintf_s
-	#define sprintf_s(target, size, format, ...) snprintf(target, size, format, __VA_ARGS__)
+#define sprintf_s(target, size, format, ...) snprintf(target, size, format, __VA_ARGS__)
 #endif
 
 #ifndef _mkdir
-	#include <sys/stat.h>
-	#define _mkdir(path) mkdir(path, 777)
+#include <sys/stat.h>
+#define _mkdir(path) mkdir(path, 777)
 #endif
 
 #ifndef _isatty
-	#include <unistd.h>
-	#define _isatty(fd) isatty(fd)
+#include <unistd.h>
+#define _isatty(fd) isatty(fd)
 #endif
 
 #ifndef _fileno
-	#include <stdio.h>
-	#define _fileno(stream) fileno(stream)
+#include <stdio.h>
+#define _fileno(stream) fileno(stream)
 #endif
 
 #ifndef _MAX_PATH
-	#define _MAX_PATH 4096
+#define _MAX_PATH 4096
 #endif
 
 #ifndef _strlwr_s
-	#include "platform-functions.h"
-	#define _strlwr_s(buffer, size) mytolower(buffer)
+#include "platform-functions.h"
+#define _strlwr_s(buffer, size) mytolower(buffer)
 #endif
 
 #ifndef fopen_s
-	#include "platform-functions.h"
-	#define fopen_s(pFile, filename, mode) myfopen(pFile, filename, mode)
+#include "platform-functions.h"
+#define fopen_s(pFile, filename, mode) myfopen(pFile, filename, mode)
 #endif
 
 #endif // _WIN32
@@ -90,38 +90,38 @@
 extern "C" {
 #endif
 
-/*
- * Asn1Error (char *str) - configure error handler
- */
-void Asn1Error PROTO ((char* str));
+	/*
+	 * Asn1Error (char *str) - configure error handler
+	 */
+	void Asn1Error PROTO((char* str));
 
 
-/*
- * Asn1Warning (char *str) - configure warning mechanism
- * (currently never called)
- */
-void Asn1Warning PROTO ((char* str));
+	/*
+	 * Asn1Warning (char *str) - configure warning mechanism
+	 * (currently never called)
+	 */
+	void Asn1Warning PROTO((char* str));
 
-/*
- * Asn1ErrorHandler - procedure to call upon Asn1Warning (severity 0)
- * and Asn1Error (severity 1).
- */
-typedef void (*Asn1ErrorHandler) PROTO ((char* str, int severity));
+	/*
+	 * Asn1ErrorHandler - procedure to call upon Asn1Warning (severity 0)
+	 * and Asn1Error (severity 1).
+	 */
+	typedef void(*Asn1ErrorHandler) PROTO((char* str, int severity));
 
-/*
- * Asn1InstallErrorHandler - installs new error handler, returns former one
- */
-Asn1ErrorHandler Asn1InstallErrorHandler PROTO ((Asn1ErrorHandler handler));
+	/*
+	 * Asn1InstallErrorHandler - installs new error handler, returns former one
+	 */
+	Asn1ErrorHandler Asn1InstallErrorHandler PROTO((Asn1ErrorHandler handler));
 
-/*
- * configure memory scheme used by decoder to allocate memory
- * for the decoded value.
- * The Asn1Free will be called in the optionally generated
- * hierachical free routines.
- *
- * nibble_alloc allocs from a single buffer and EVERYTHING
- * is freed by a single fcn call. Individual elmts cannot be freed
- */
+	/*
+	 * configure memory scheme used by decoder to allocate memory
+	 * for the decoded value.
+	 * The Asn1Free will be called in the optionally generated
+	 * hierachical free routines.
+	 *
+	 * nibble_alloc allocs from a single buffer and EVERYTHING
+	 * is freed by a single fcn call. Individual elmts cannot be freed
+	 */
 
 #ifdef __cplusplus
 }
@@ -170,7 +170,7 @@ Asn1ErrorHandler Asn1InstallErrorHandler PROTO ((Asn1ErrorHandler handler));
  */
 #include "gen-buf.h"
 
-//#define BUF_TYPE			GenBuf *
+ //#define BUF_TYPE			GenBuf *
 #define BufGetByte( b)			GenBufGetByte (b)
 #define BufGetSeg( b, lenPtr)		GenBufGetSeg (b, lenPtr)
 #define BufCopy( dst, b, len)		GenBufCopy (dst, b, len)

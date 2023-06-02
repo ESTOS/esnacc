@@ -31,10 +31,10 @@
 # endif
 
 #ifdef I
-  typedef I		AsnInt;
-  typedef unsigned I	UAsnInt;
+typedef I		AsnInt;
+typedef unsigned I	UAsnInt;
 #else
-  #error "can't find integer type which is 4 bytes in size"
+#error "can't find integer type which is 4 bytes in size"
 #endif
 #undef I
 
@@ -44,34 +44,34 @@ extern "C" {
 #endif
 
 
-AsnLen BEncAsnInt PROTO ((GenBuf *b, AsnInt *data));
+	AsnLen BEncAsnInt PROTO((GenBuf* b, AsnInt* data));
 
-void BDecAsnInt PROTO ((GenBuf *b, AsnInt *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecAsnInt PROTO((GenBuf* b, AsnInt* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-AsnLen BEncAsnIntContent PROTO ((GenBuf *b, AsnInt *data));
+	AsnLen BEncAsnIntContent PROTO((GenBuf* b, AsnInt* data));
 
-void BDecAsnIntContent PROTO ((GenBuf *b, AsnTag tag, AsnLen elmtLen, AsnInt  *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecAsnIntContent PROTO((GenBuf* b, AsnTag tag, AsnLen elmtLen, AsnInt* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-/* do nothing  */
+	/* do nothing  */
 #define FreeAsnInt( v)
 
-void PrintAsnInt PROTO ((FILE *f, AsnInt *v, unsigned int indent));
+	void PrintAsnInt PROTO((FILE* f, AsnInt* v, unsigned int indent));
 
 
 
 
-AsnLen BEncUAsnInt PROTO ((GenBuf *b, UAsnInt *data));
+	AsnLen BEncUAsnInt PROTO((GenBuf* b, UAsnInt* data));
 
-void BDecUAsnInt PROTO ((GenBuf *b, UAsnInt *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecUAsnInt PROTO((GenBuf* b, UAsnInt* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-AsnLen BEncUAsnIntContent PROTO ((GenBuf *b, UAsnInt *data));
+	AsnLen BEncUAsnIntContent PROTO((GenBuf* b, UAsnInt* data));
 
-void BDecUAsnIntContent PROTO ((GenBuf *b, AsnTag tagId, AsnLen len, UAsnInt *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecUAsnIntContent PROTO((GenBuf* b, AsnTag tagId, AsnLen len, UAsnInt* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-/* do nothing  */
+	/* do nothing  */
 #define FreeUAsnInt( v)
 
-void PrintUAsnInt PROTO ((FILE *f, UAsnInt *v, unsigned int indent));
+	void PrintUAsnInt PROTO((FILE* f, UAsnInt* v, unsigned int indent));
 
 #ifdef __cplusplus
 }

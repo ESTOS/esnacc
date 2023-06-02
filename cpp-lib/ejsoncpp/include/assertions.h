@@ -19,7 +19,7 @@
  */
 #if EJSON_USE_EXCEPTION
 
-// @todo <= add detail about condition in exception
+ // @todo <= add detail about condition in exception
 # define EJSON_ASSERT(condition)                                                \
   {if (!(condition)) {EJson::throwLogicError( "assert json failed" );}}
 
@@ -33,8 +33,8 @@
 
 # define EJSON_ASSERT(condition) assert(condition)
 
-// The call to assert() will show the failure message in debug builds. In
-// release builds we abort, for a core-dump or debugger.
+ // The call to assert() will show the failure message in debug builds. In
+ // release builds we abort, for a core-dump or debugger.
 # define EJSON_FAIL_MESSAGE(message)                                            \
   {                                                                            \
     std::ostringstream oss; oss << message;                                    \

@@ -19,6 +19,6 @@
 
 extern
 #ifdef __cplusplus
-	"C"
+"C"
 #endif
-	     int Snacc_Init (Tcl_Interp *interp);
+int Snacc_Init(Tcl_Interp * interp);

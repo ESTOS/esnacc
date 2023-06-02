@@ -23,20 +23,20 @@ extern "C" {
 #endif
 
 
-typedef AsnInt AsnEnum;
+	typedef AsnInt AsnEnum;
 
-/*
- * ENUMERATED have a UNIVERSAL tag that is diff from INTEGERS
- * so need diff encoding routine tho content stuff is the same
- */
-AsnLen BEncAsnEnum PROTO ((GenBuf *b, AsnEnum *data));
+	/*
+	 * ENUMERATED have a UNIVERSAL tag that is diff from INTEGERS
+	 * so need diff encoding routine tho content stuff is the same
+	 */
+	AsnLen BEncAsnEnum PROTO((GenBuf* b, AsnEnum* data));
 
-void BDecAsnEnum PROTO ((GenBuf *b, AsnEnum *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecAsnEnum PROTO((GenBuf* b, AsnEnum* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-/* DAD - modified the two defines here so that enum Ptr's can
- * be resolved to the same size dest as what AsnInt gets
- * defined to be.
- */
+	/* DAD - modified the two defines here so that enum Ptr's can
+	 * be resolved to the same size dest as what AsnInt gets
+	 * defined to be.
+	 */
 #define BEncAsnEnumContent(a,b) BEncAsnIntContent((a),((AsnInt *) (b)))
 
 #define BDecAsnEnumContent(a,b,c,d,e,f)  BDecAsnIntContent((a),(b),(c),((AsnInt*)(d)),(e),(f))

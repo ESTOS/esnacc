@@ -19,7 +19,7 @@
 #include "../../core/asn1module.h"
 #include "../../core/snacc-util.h"
 
-void PrintDelphiCode(FILE *src, ModuleList *mods, Module *m);
+void PrintDelphiCode(FILE* src, ModuleList* mods, Module* m);
 
 
 #endif //DELPHIGENCODE_H_INCLUDED

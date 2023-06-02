@@ -6,13 +6,13 @@ extern "C" {
 #endif
 
 
-typedef AsnOcts VisibleString; /* [UNIVERSAL 26] IMPLICIT OCTET STRING */
+	typedef AsnOcts VisibleString; /* [UNIVERSAL 26] IMPLICIT OCTET STRING */
 
-AsnLen BEncVisibleString PROTO ((GenBuf *b, VisibleString *v));
-AsnLen BEncVisibleStringContent PROTO ((GenBuf *b, VisibleString *octs));
+	AsnLen BEncVisibleString PROTO((GenBuf* b, VisibleString* v));
+	AsnLen BEncVisibleStringContent PROTO((GenBuf* b, VisibleString* octs));
 
-void BDecVisibleString PROTO ((GenBuf *b, VisibleString *result, AsnLen *bytesDecoded, ENV_TYPE env));
-void BDecVisibleStringContent PROTO ((GenBuf *b, AsnTag tagId, AsnLen len, VisibleString *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecVisibleString PROTO((GenBuf* b, VisibleString* result, AsnLen* bytesDecoded, ENV_TYPE env));
+	void BDecVisibleStringContent PROTO((GenBuf* b, AsnTag tagId, AsnLen len, VisibleString* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
 #define PrintVisibleString PrintAsnOcts
 

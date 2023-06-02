@@ -26,7 +26,7 @@ namespace SNACC
 /*! Die Klasse SnaccROSEPendingOperation
 	dient zur Realisierung der Funktionsaufrufe.
 	Wird eine Funktion (Invoke) gerufen, so wird eine SnaccROSEPendingOperation
-	angelegt. Kommt nun die entsprechende Antwort vom Server, so 
+	angelegt. Kommt nun die entsprechende Antwort vom Server, so
 	wird Anhand der invokeID die Instanz gefunden und der m_CompletedEvent ausgelöst. */
 class SnaccROSEPendingOperation
 {
@@ -35,18 +35,18 @@ private:
 public:
 	SnaccROSEPendingOperation();
 	~SnaccROSEPendingOperation();
-	
+
 	long m_lInvokeID;
 
 	/*! The answer message. */
 	SNACC::ROSEMessage* m_pAnswerMessage;
-	
+
 	/*! Error code (one of the ROSE_ error codes. */
 	long m_lRoseResult;
 
 	/*! Async Operation completed.
 		Attention: The AnswerMessage will not be copied.
-		The AnswerMessage must be new allocated and will be deleted 
+		The AnswerMessage must be new allocated and will be deleted
 		when processed. */
 	void CompleteOperation(long lRoseResult, SNACC::ROSEMessage* pAnswerMessage);
 
@@ -126,11 +126,11 @@ enum class SnaccTransportEncoding {
 #define SNACC_TE_JSON	SnaccTransportEncoding::JSON
 
 /*! SnaccROSEBase implements the ROSE (ASN.1) protocol.
-	
+
 	To use this class do one of the following:
 	1. Derive it
 		Usage:
-		- OnBinaryDataBlock should be called with the binary data blocks, that have been received 
+		- OnBinaryDataBlock should be called with the binary data blocks, that have been received
 							by the transport layer (e.g. TCP - Inbound)
 		- virtual SendBinaryDataBlockEx should be overwritten and the data should be submitted (e.g. TCP Outbound)
 	2. Set a ISnaccROSETransport Interface for sending outbound data
@@ -145,7 +145,7 @@ enum class SnaccTransportEncoding {
 
 	This class is required for the automatically generated code for
 	ROSE OPERATIONS. (command line -R using esnacc).
-    
+
 	The generated class overrides OnInvoke to implement the OnInvoke_XXX handlers.
 	The generated class calls the Invoke function from the Invoke_XXX functions.
 	*/
@@ -175,7 +175,7 @@ public:
 	/*! Input of the binary data
 		This processes results and Invokes that are in the list of MultiThreadedInvokeIDs.
 		It is used for the Single thread mode.
-		First call this function to complete pending invokes and if not processed 
+		First call this function to complete pending invokes and if not processed
 		call OnBinaryDataBlock.
 		The data should be pure ASN.1 data without header.
 		The must be one call for each ROSEMessage. */
@@ -195,15 +195,15 @@ public:
 		This is an alternative to overriding SendBinaryDataBlock */
 	void SetSnaccROSETransport(ISnaccROSETransport* pTransport);
 
-	
+
 	/* Log output.
 		Override to print the log data out
 		All messages (in and out will be decoded to the logger */
 	virtual void PrintToLog(const std::string& /* strOutput*/) { return; }
 
 	/* Log level 0 oder 1
-		bout=true for outgoing messages, 
-		bout=false for incoming messages, 
+		bout=true for outgoing messages,
+		bout=false for incoming messages,
 		Override to set a different log level */
 	virtual long GetErrorLogLevel() { return 0; }
 
@@ -218,10 +218,10 @@ public:
 
 	/* Send a Result Message. */
 	virtual long SendResult(SNACC::ROSEResult* presult);
-	
+
 	/* Send a Result Message.
 		Override from SnaccRoseSender */
-	virtual long SendResult(int invokeID, SNACC::AsnType *value, const wchar_t* szSessionID = 0);
+	virtual long SendResult(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0);
 
 	/* Send a Reject Message. */
 	long SendReject(SNACC::ROSEReject* preject);
@@ -234,15 +234,15 @@ public:
 
 	/* Send a Error Message.
 		Override from SnaccRoseSender */
-	virtual long SendError(int invokeID, SNACC::AsnType *value, const wchar_t* szSessionID = 0);
+	virtual long SendError(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0);
 
 	/*! Increment invoke counter
 		Override from SnaccRoseSender*/
 	virtual long GetNextInvokeID();
 
 	/* Log level 0 oder 1
-		bout=true for outgoing messages, 
-		bout=false for incoming messages, 
+		bout=true for outgoing messages,
+		bout=false for incoming messages,
 		Override to set a different log level
 		Override from SnaccRoseSender*/
 	virtual long GetLogLevel(bool /*bOut*/) { return 0; }
@@ -265,7 +265,7 @@ public:
 	*/
 	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** ppresult, SNACC::ROSEError** pperror, int iTimeout = -1, SnaccInvokeContext* cxt = nullptr);
 
-	/* Send a Event Message. 
+	/* Send a Event Message.
 		Override from SnaccRoseSender*/
 	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt = nullptr);
 
@@ -274,10 +274,10 @@ protected:
 	std::string GetJsonAsnPrefix(std::string& strJson);
 
 	/*! Die functions and events.
-		The implementation of this functions is contained in the generated code from the 
+		The implementation of this functions is contained in the generated code from the
 		esnacc. */
 	virtual long OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt) = 0;
-	
+
 	/* Function is called when a received data Packet cannot be decoded (invalid Rose Message) */
 	virtual void OnRoseDecodeError(const char* /*lpBytes*/, unsigned long /*lSize*/, const std::string& /*strWhat */) {}
 
@@ -309,7 +309,7 @@ protected:
 private:
 	/*! The ROSE component messages.
 		These are called from the OnROSEMessage.
-		Do not dete the parameters. The functions are called 
+		Do not dete the parameters. The functions are called
 		before the CompleteOperation */
 	virtual void OnInvokeMessage(SNACC::ROSEInvoke* pinvoke);
 	virtual void OnResultMessage(SNACC::ROSEResult* presult);

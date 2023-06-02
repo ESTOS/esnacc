@@ -31,55 +31,55 @@
 extern "C" {
 #endif
 
-/*
- *  These are the standard buffer routines that the lib
- *  routines need. Note that the Peek routines have be
- *  added to the standard list - they are necessary
- *  to nicely support  the table oriented decoder.
- *  The "void *b" param's real type will be the buffer
- *  type that is used inside the GenBuf
- *  (ie ExpBuf ** have been defined).
- *
- *  Note that macros can not be used for these standard functions
- *  because the GenBuf keeps a pointer to these routines.
- *  Thus the exp_buf.[ch] and  files are somewhat
- *  differnt than those in snacc/c_lib and snacc/c_include
- *
- */
-typedef int (*BufCopyAnyFcn) PROTO ((void *b,  void *value, unsigned long *bytesDecoded, ENV_TYPE env));
-typedef unsigned char	(*BufGetByteFcn) PROTO ((void *b));
-typedef unsigned char	*(*BufGetSegFcn) PROTO ((void *b, unsigned long *lenPtr));
-typedef long 	(*BufCopyFcn) PROTO ((char *dst, void *b, unsigned long len));
-typedef void		(*BufSkipFcn) PROTO ((void *b, unsigned long len));
-typedef unsigned char	(*BufPeekByteFcn) PROTO ((void *b));
-typedef unsigned char	*(*BufPeekSegFcn) PROTO ((void *b, unsigned long lenPtr));
-typedef long 	(*BufPeekCopyFcn) PROTO ((char *dst, void *b, unsigned long len));
-typedef void		(*BufPutByteRvsFcn) PROTO ((void *b, unsigned char byte));
-typedef void		(*BufPutSegRvsFcn) PROTO ((void *b, char *data, size_t len));
-typedef int		(*BufReadErrorFcn) PROTO ((void *b));
-typedef int		(*BufWriteErrorFcn) PROTO ((void *b));
-typedef int		(*BufSetWriteErrorFcn) PROTO ((void *b, unsigned short Value));
-typedef void (*BufResetInReadModeFcn) PROTO ((void *b));
+	/*
+	 *  These are the standard buffer routines that the lib
+	 *  routines need. Note that the Peek routines have be
+	 *  added to the standard list - they are necessary
+	 *  to nicely support  the table oriented decoder.
+	 *  The "void *b" param's real type will be the buffer
+	 *  type that is used inside the GenBuf
+	 *  (ie ExpBuf ** have been defined).
+	 *
+	 *  Note that macros can not be used for these standard functions
+	 *  because the GenBuf keeps a pointer to these routines.
+	 *  Thus the exp_buf.[ch] and  files are somewhat
+	 *  differnt than those in snacc/c_lib and snacc/c_include
+	 *
+	 */
+	typedef int(*BufCopyAnyFcn) PROTO((void* b, void* value, unsigned long* bytesDecoded, ENV_TYPE env));
+	typedef unsigned char(*BufGetByteFcn) PROTO((void* b));
+	typedef unsigned char* (*BufGetSegFcn) PROTO((void* b, unsigned long* lenPtr));
+	typedef long(*BufCopyFcn) PROTO((char* dst, void* b, unsigned long len));
+	typedef void(*BufSkipFcn) PROTO((void* b, unsigned long len));
+	typedef unsigned char(*BufPeekByteFcn) PROTO((void* b));
+	typedef unsigned char* (*BufPeekSegFcn) PROTO((void* b, unsigned long lenPtr));
+	typedef long(*BufPeekCopyFcn) PROTO((char* dst, void* b, unsigned long len));
+	typedef void(*BufPutByteRvsFcn) PROTO((void* b, unsigned char byte));
+	typedef void(*BufPutSegRvsFcn) PROTO((void* b, char* data, size_t len));
+	typedef int(*BufReadErrorFcn) PROTO((void* b));
+	typedef int(*BufWriteErrorFcn) PROTO((void* b));
+	typedef int(*BufSetWriteErrorFcn) PROTO((void* b, unsigned short Value));
+	typedef void(*BufResetInReadModeFcn) PROTO((void* b));
 
-typedef struct GenBuf
-{
-  BufCopyAnyFcn		copyAny;
-  BufGetByteFcn		getByte;
-  BufGetSegFcn		getSeg;
-  BufCopyFcn		copy;
-  BufSkipFcn		skip;
-  BufPeekByteFcn	peekByte;
-  BufPeekSegFcn		peekSeg;
-  BufPeekCopyFcn	peekCopy;
-  BufPutByteRvsFcn	putByteRvs;
-  BufPutSegRvsFcn	putSegRvs;
-  BufReadErrorFcn	readError;
-  BufSetWriteErrorFcn setWriteError;
-  BufWriteErrorFcn	writeError;
-  BufResetInReadModeFcn resetInReadMode;
-  void			*bufInfo;
-  void			*spare; /* hack to save space for ExpBuf ** type */
-} GenBuf;
+	typedef struct GenBuf
+	{
+		BufCopyAnyFcn		copyAny;
+		BufGetByteFcn		getByte;
+		BufGetSegFcn		getSeg;
+		BufCopyFcn		copy;
+		BufSkipFcn		skip;
+		BufPeekByteFcn	peekByte;
+		BufPeekSegFcn		peekSeg;
+		BufPeekCopyFcn	peekCopy;
+		BufPutByteRvsFcn	putByteRvs;
+		BufPutSegRvsFcn	putSegRvs;
+		BufReadErrorFcn	readError;
+		BufSetWriteErrorFcn setWriteError;
+		BufWriteErrorFcn	writeError;
+		BufResetInReadModeFcn resetInReadMode;
+		void* bufInfo;
+		void* spare; /* hack to save space for ExpBuf ** type */
+	} GenBuf;
 
 
 #define GenBufCopyAny( b, value, bytesdecode, env)		((b)->copyAny ((b)->bufInfo, value, bytesDecoded, env))

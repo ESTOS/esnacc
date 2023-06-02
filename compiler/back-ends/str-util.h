@@ -40,64 +40,64 @@
 #include "../core/define.h"
 #include "../../snacc.h"
 
-char* Asn1TypeName2CTypeName PROTO ((const char *aName));
+char* Asn1TypeName2CTypeName PROTO((const char* aName));
 
-char *Asn1FieldName2CFieldName PROTO ((char *aName));
+char* Asn1FieldName2CFieldName PROTO((char* aName));
 
-char *Asn1ValueName2CValueName PROTO ((char *aName));
+char* Asn1ValueName2CValueName PROTO((char* aName));
 
-char *GetCaps PROTO ((char *str));
+char* GetCaps PROTO((char* str));
 
-char *GetCapsAndDigits PROTO ((char *str));
+char* GetCapsAndDigits PROTO((char* str));
 
-void  Str2UCase PROTO ((char *str, size_t len));
+void  Str2UCase PROTO((char* str, size_t len));
 
-void  Str2LCase PROTO ((char *str, size_t len));
+void  Str2LCase PROTO((char* str, size_t len));
 
-void  Dash2Underscore PROTO ((char *str, size_t len));
+void  Dash2Underscore PROTO((char* str, size_t len));
 
-void  AppendDigit PROTO ((char *str, size_t bufferSize, int digit));
+void  AppendDigit PROTO((char* str, size_t bufferSize, int digit));
 
-void  MakeCStrUnique PROTO ((DefinedObj *nameList, char *str, size_t bufferSize, int maxDigits, int startingDigit));
+void  MakeCStrUnique PROTO((DefinedObj* nameList, char* str, size_t bufferSize, int maxDigits, int startingDigit));
 
-void  MakeCxxStrUnique PROTO ((DefinedObj *nameList, char *str, size_t bufferSize, int maxDigits, int startingDigit));
+void  MakeCxxStrUnique PROTO((DefinedObj* nameList, char* str, size_t bufferSize, int maxDigits, int startingDigit));
 
 char* str_replace(const char* string, const char* substr, const char* replacement);
 
 char* getNakedCommentDupped(const char* szString);
 
-char *MakeBaseFileName PROTO ((const char *moduleName));
-char *MakeFileName PROTO ((const char *moduleName, const char *suffix));
-char *MakeFileNameWithoutOutputPath PROTO((const char *moduleName, const char *suffix));
-char *MakeCHdrFileName PROTO ((const char *moduleName));
-char *MakeCSrcFileName PROTO ((const char *moduleName));
-char *MakeCxxHdrFileName PROTO ((const char *moduleName));
-char *MakeCxxSrcFileName PROTO ((const char *moduleName));
-char *MakeSwiftFileName PROTO((const char *moduleName));
-char *MakeJSFileName PROTO((const char *moduleName));
-char *MakeTSFileName PROTO((const char *moduleName));
+char* MakeBaseFileName PROTO((const char* moduleName));
+char* MakeFileName PROTO((const char* moduleName, const char* suffix));
+char* MakeFileNameWithoutOutputPath PROTO((const char* moduleName, const char* suffix));
+char* MakeCHdrFileName PROTO((const char* moduleName));
+char* MakeCSrcFileName PROTO((const char* moduleName));
+char* MakeCxxHdrFileName PROTO((const char* moduleName));
+char* MakeCxxSrcFileName PROTO((const char* moduleName));
+char* MakeSwiftFileName PROTO((const char* moduleName));
+char* MakeJSFileName PROTO((const char* moduleName));
+char* MakeTSFileName PROTO((const char* moduleName));
 char* MakeTSEncDecFileName PROTO((const char* moduleName));
 char* MakeTSROSEClientFileName PROTO((const char* moduleName));
 char* MakeTSROSEServerFileName PROTO((const char* moduleName));
-char *MakeJsonDocFileName PROTO((const char *moduleName));
-char* MakeDelphiFileName PROTO((const char *moduleName));
-char *MakeROSEHdrFileName PROTO((const char *moduleName));
-char *MakeROSESrcFileName PROTO ((const char *moduleName));
-char* MakeROSEHdrInterfaceFileName(const char *refName);
-char* MakeROSEHdrForwardDeclFileName(const char *refName);
-const char* RemovePath(const char *refName);
-char* RemovePathNonConst(char *refName);
-char *MakeROSESrcCSFileName PROTO ((const char *moduleName));
-char *MakeROSESrcJAVAFileName PROTO ((const char *moduleName));
-char *MakeModuleName PROTO ((const char *moduleName));
-char *MakeROSEClassName PROTO ((const char *moduleName));
-char *MakeROSESwiftInterfaceFileName PROTO ((const char *moduleName));
+char* MakeJsonDocFileName PROTO((const char* moduleName));
+char* MakeDelphiFileName PROTO((const char* moduleName));
+char* MakeROSEHdrFileName PROTO((const char* moduleName));
+char* MakeROSESrcFileName PROTO((const char* moduleName));
+char* MakeROSEHdrInterfaceFileName(const char* refName);
+char* MakeROSEHdrForwardDeclFileName(const char* refName);
+const char* RemovePath(const char* refName);
+char* RemovePathNonConst(char* refName);
+char* MakeROSESrcCSFileName PROTO((const char* moduleName));
+char* MakeROSESrcJAVAFileName PROTO((const char* moduleName));
+char* MakeModuleName PROTO((const char* moduleName));
+char* MakeROSEClassName PROTO((const char* moduleName));
+char* MakeROSESwiftInterfaceFileName PROTO((const char* moduleName));
 char* FixName(const char* szName);
 char* GetPropertyName(const char* szName);
 char* GetPropertyAccessString(const char* szName);
 
 #if IDL
-char *MakeIDLFileName PROTO ((const char *moduleName));
+char* MakeIDLFileName PROTO((const char* moduleName));
 #endif
 
 #define UNUSED_ALWAYS(x) x

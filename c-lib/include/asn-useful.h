@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-typedef AsnOcts ObjectDescriptor; /* [UNIVERSAL 7] IMPLICIT OCTET STRING */
+	typedef AsnOcts ObjectDescriptor; /* [UNIVERSAL 7] IMPLICIT OCTET STRING */
 
 #define BEncObjectDescriptorContent BEncAsnOctsContent
 
@@ -32,11 +32,11 @@ typedef AsnOcts ObjectDescriptor; /* [UNIVERSAL 7] IMPLICIT OCTET STRING */
 
 
 
-typedef AsnOcts VideotexString; /* [UNIVERSAL 21] IMPLICIT OCTET STRING */
+	typedef AsnOcts VideotexString; /* [UNIVERSAL 21] IMPLICIT OCTET STRING */
 
-AsnLen BEncVideotexString PROTO ((GenBuf *b, VideotexString *v));
+	AsnLen BEncVideotexString PROTO((GenBuf* b, VideotexString* v));
 
-void BDecVideotexString PROTO ((GenBuf *b, VideotexString *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecVideotexString PROTO((GenBuf* b, VideotexString* result, AsnLen* bytesDecoded, ENV_TYPE env));
 #define BEncVideotexStringContent BEncAsnOctsContent
 
 #define BDecVideotexStringContent BDecAsnOctsContent
@@ -48,11 +48,11 @@ void BDecVideotexString PROTO ((GenBuf *b, VideotexString *result, AsnLen *bytes
 
 
 
-typedef AsnOcts GraphicString; /* [UNIVERSAL 25] IMPLICIT OCTET STRING */
+	typedef AsnOcts GraphicString; /* [UNIVERSAL 25] IMPLICIT OCTET STRING */
 
-AsnLen BEncGraphicString PROTO ((GenBuf *b, GraphicString *v));
+	AsnLen BEncGraphicString PROTO((GenBuf* b, GraphicString* v));
 
-void BDecGraphicString PROTO ((GenBuf *b, GraphicString *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecGraphicString PROTO((GenBuf* b, GraphicString* result, AsnLen* bytesDecoded, ENV_TYPE env));
 #define BEncGraphicStringContent BEncAsnOctsContent
 
 #define BDecGraphicStringContent BDecAsnOctsContent
@@ -64,14 +64,14 @@ void BDecGraphicString PROTO ((GenBuf *b, GraphicString *result, AsnLen *bytesDe
 
 
 
-/*typedef AsnOcts VisibleString;  [UNIVERSAL 26] IMPLICIT OCTET STRING */
+	/*typedef AsnOcts VisibleString;  [UNIVERSAL 26] IMPLICIT OCTET STRING */
 
-/*AsnLen BEncVisibleString PROTO ((GenBuf *b, VisibleString *v));*/
+	/*AsnLen BEncVisibleString PROTO ((GenBuf *b, VisibleString *v));*/
 
-/*void BDecVisibleString PROTO ((GenBuf *b, VisibleString *result, AsnLen *bytesDecoded, ENV_TYPE env));*/
-/*#define BEncVisibleStringContent BEncAsnOctsContent*/
+	/*void BDecVisibleString PROTO ((GenBuf *b, VisibleString *result, AsnLen *bytesDecoded, ENV_TYPE env));*/
+	/*#define BEncVisibleStringContent BEncAsnOctsContent*/
 
-/*#define BDecVisibleStringContent BDecAsnOctsContent */
+	/*#define BDecVisibleStringContent BDecAsnOctsContent */
 
 #define PrintVisibleString PrintAsnOcts
 
@@ -80,11 +80,11 @@ void BDecGraphicString PROTO ((GenBuf *b, GraphicString *result, AsnLen *bytesDe
 
 
 
-typedef AsnOcts ISO646String; /* [UNIVERSAL 26] IMPLICIT OCTET STRING */
+	typedef AsnOcts ISO646String; /* [UNIVERSAL 26] IMPLICIT OCTET STRING */
 
-AsnLen BEncISO646String PROTO ((GenBuf *b, ISO646String *v));
+	AsnLen BEncISO646String PROTO((GenBuf* b, ISO646String* v));
 
-void BDecISO646String PROTO ((GenBuf *b, ISO646String *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecISO646String PROTO((GenBuf* b, ISO646String* result, AsnLen* bytesDecoded, ENV_TYPE env));
 #define BEncISO646StringContent BEncAsnOctsContent
 
 #define BDecISO646StringContent BDecAsnOctsContent
@@ -96,11 +96,11 @@ void BDecISO646String PROTO ((GenBuf *b, ISO646String *result, AsnLen *bytesDeco
 
 
 
-typedef AsnOcts GeneralString; /* [UNIVERSAL 27] IMPLICIT OCTET STRING */
+	typedef AsnOcts GeneralString; /* [UNIVERSAL 27] IMPLICIT OCTET STRING */
 
-AsnLen BEncGeneralString PROTO ((GenBuf *b, GeneralString *v));
+	AsnLen BEncGeneralString PROTO((GenBuf* b, GeneralString* v));
 
-void BDecGeneralString PROTO ((GenBuf *b, GeneralString *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecGeneralString PROTO((GenBuf* b, GeneralString* result, AsnLen* bytesDecoded, ENV_TYPE env));
 #define BEncGeneralStringContent BEncAsnOctsContent
 
 #define BDecGeneralStringContent BDecAsnOctsContent
@@ -112,11 +112,11 @@ void BDecGeneralString PROTO ((GenBuf *b, GeneralString *result, AsnLen *bytesDe
 
 
 
-typedef AsnOcts UTCTime; /* [UNIVERSAL 23] IMPLICIT OCTET STRING */
+	typedef AsnOcts UTCTime; /* [UNIVERSAL 23] IMPLICIT OCTET STRING */
 
-AsnLen BEncUTCTime PROTO ((GenBuf *b, UTCTime *v));
+	AsnLen BEncUTCTime PROTO((GenBuf* b, UTCTime* v));
 
-void BDecUTCTime PROTO ((GenBuf *b, UTCTime *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecUTCTime PROTO((GenBuf* b, UTCTime* result, AsnLen* bytesDecoded, ENV_TYPE env));
 #define BEncUTCTimeContent BEncAsnOctsContent
 
 #define BDecUTCTimeContent BDecAsnOctsContent
@@ -128,11 +128,11 @@ void BDecUTCTime PROTO ((GenBuf *b, UTCTime *result, AsnLen *bytesDecoded, ENV_T
 
 
 
-typedef AsnOcts GeneralizedTime; /* [UNIVERSAL 24] IMPLICIT OCTET STRING */
+	typedef AsnOcts GeneralizedTime; /* [UNIVERSAL 24] IMPLICIT OCTET STRING */
 
-AsnLen BEncGeneralizedTime PROTO ((GenBuf *b, GeneralizedTime *v));
+	AsnLen BEncGeneralizedTime PROTO((GenBuf* b, GeneralizedTime* v));
 
-void BDecGeneralizedTime PROTO ((GenBuf *b, GeneralizedTime *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	void BDecGeneralizedTime PROTO((GenBuf* b, GeneralizedTime* result, AsnLen* bytesDecoded, ENV_TYPE env));
 #define BEncGeneralizedTimeContent BEncAsnOctsContent
 
 #define BDecGeneralizedTimeContent BDecAsnOctsContent
@@ -144,52 +144,52 @@ void BDecGeneralizedTime PROTO ((GenBuf *b, GeneralizedTime *result, AsnLen *byt
 
 
 
-typedef struct EXTERNALChoice /* CHOICE */
-{
-    enum EXTERNALChoiceChoiceId
-    {
-        EXTERNALCHOICE_SINGLE_ASN1_TYPE,
-        EXTERNALCHOICE_OCTET_ALIGNED,
-        EXTERNALCHOICE_ARBITRARY
-    } choiceId;
-    union EXTERNALChoiceChoiceUnion
-    {
-    AsnOcts* single_ASN1_type; /* [0] OCTET STRING */
-    AsnOcts* octet_aligned; /* [1] IMPLICIT OCTET STRING */
-    AsnBits* arbitrary; /* [2] IMPLICIT BIT STRING */
-    } a;
-} EXTERNALChoice;
+	typedef struct EXTERNALChoice /* CHOICE */
+	{
+		enum EXTERNALChoiceChoiceId
+		{
+			EXTERNALCHOICE_SINGLE_ASN1_TYPE,
+			EXTERNALCHOICE_OCTET_ALIGNED,
+			EXTERNALCHOICE_ARBITRARY
+		} choiceId;
+		union EXTERNALChoiceChoiceUnion
+		{
+			AsnOcts* single_ASN1_type; /* [0] OCTET STRING */
+			AsnOcts* octet_aligned; /* [1] IMPLICIT OCTET STRING */
+			AsnBits* arbitrary; /* [2] IMPLICIT BIT STRING */
+		} a;
+	} EXTERNALChoice;
 
-AsnLen BEncEXTERNALChoiceContent PROTO ((GenBuf *b, EXTERNALChoice *v));
+	AsnLen BEncEXTERNALChoiceContent PROTO((GenBuf* b, EXTERNALChoice* v));
 
-void BDecEXTERNALChoiceContent PROTO ((GenBuf *b, AsnTag tagId0, AsnLen elmtLen0, EXTERNALChoice *v, AsnLen *bytesDecoded, ENV_TYPE env));
-
-
-void PrintEXTERNALChoice PROTO ((FILE* f, EXTERNALChoice *v, unsigned int indent));
-void FreeEXTERNALChoice PROTO ((EXTERNALChoice *v));
+	void BDecEXTERNALChoiceContent PROTO((GenBuf* b, AsnTag tagId0, AsnLen elmtLen0, EXTERNALChoice* v, AsnLen* bytesDecoded, ENV_TYPE env));
 
 
+	void PrintEXTERNALChoice PROTO((FILE* f, EXTERNALChoice* v, unsigned int indent));
+	void FreeEXTERNALChoice PROTO((EXTERNALChoice* v));
 
 
 
-typedef struct EXTERNAL /* [UNIVERSAL 8] IMPLICIT SEQUENCE */
-{
-    AsnOid direct_reference; /* OBJECT IDENTIFIER OPTIONAL */
-    AsnInt* indirect_reference; /* INTEGER OPTIONAL */
-    ObjectDescriptor data_value_descriptor; /* ObjectDescriptor OPTIONAL */
-    struct EXTERNALChoice* encoding; /* EXTERNALChoice */
-} EXTERNAL;
-
-AsnLen BEncEXTERNAL PROTO ((GenBuf *b, EXTERNAL *v));
-
-void BDecEXTERNAL PROTO ((GenBuf *b, EXTERNAL *result, AsnLen *bytesDecoded, ENV_TYPE env));
-AsnLen BEncEXTERNALContent PROTO ((GenBuf *b, EXTERNAL *v));
-
-void BDecEXTERNALContent PROTO ((GenBuf *b, AsnTag tagId0, AsnLen elmtLen0, EXTERNAL *v, AsnLen *bytesDecoded, ENV_TYPE env));
 
 
-void PrintEXTERNAL PROTO ((FILE* f, EXTERNAL *v, unsigned int indent));
-void FreeEXTERNAL PROTO ((EXTERNAL *v));
+	typedef struct EXTERNAL /* [UNIVERSAL 8] IMPLICIT SEQUENCE */
+	{
+		AsnOid direct_reference; /* OBJECT IDENTIFIER OPTIONAL */
+		AsnInt* indirect_reference; /* INTEGER OPTIONAL */
+		ObjectDescriptor data_value_descriptor; /* ObjectDescriptor OPTIONAL */
+		struct EXTERNALChoice* encoding; /* EXTERNALChoice */
+	} EXTERNAL;
+
+	AsnLen BEncEXTERNAL PROTO((GenBuf* b, EXTERNAL* v));
+
+	void BDecEXTERNAL PROTO((GenBuf* b, EXTERNAL* result, AsnLen* bytesDecoded, ENV_TYPE env));
+	AsnLen BEncEXTERNALContent PROTO((GenBuf* b, EXTERNAL* v));
+
+	void BDecEXTERNALContent PROTO((GenBuf* b, AsnTag tagId0, AsnLen elmtLen0, EXTERNAL* v, AsnLen* bytesDecoded, ENV_TYPE env));
+
+
+	void PrintEXTERNAL PROTO((FILE* f, EXTERNAL* v, unsigned int indent));
+	void FreeEXTERNAL PROTO((EXTERNAL* v));
 
 
 
