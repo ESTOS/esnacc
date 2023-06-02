@@ -10,19 +10,19 @@
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 
-std::string ltrim(const std::string &s)
+std::string ltrim(const std::string& s)
 {
 	size_t start = s.find_first_not_of(WHITESPACE);
 	return (start == std::string::npos) ? "" : s.substr(start);
 }
 
-std::string rtrim(const std::string &s)
+std::string rtrim(const std::string& s)
 {
 	size_t end = s.find_last_not_of(WHITESPACE);
 	return (end == std::string::npos) ? "" : s.substr(0, end + 1);
 }
 
-std::string trim(const std::string &s) {
+std::string trim(const std::string& s) {
 	return rtrim(ltrim(s));
 }
 
@@ -31,10 +31,10 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine) {
 	// Check is ther a date in the value?
 	// @deprecated 1.1.2023 Some comment
 	auto pos = strComment.find(" ");
-	if(pos == std::string::npos)
+	if (pos == std::string::npos)
 		pos = strComment.length();
 	// Longest is 31.12.2023 (10), shortest is 1.1.2000 (8)
-	if(pos >= 8 && pos <= 10) {
+	if (pos >= 8 && pos <= 10) {
 		// Okay, let´s see if this is timestamp value...
 		std::string strDate = strComment.substr(0, pos);
 		long long i64UnixTime = ConvertDateToUnixTime(strDate.c_str());
@@ -47,20 +47,20 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine) {
 		strDeprecated_UTF8 = escapeJsonString(strComment);
 
 	if (i64Deprecated == 0) {
-        fprintf(stderr, "WARNING - @deprecated flag is missing a timestamp. You need to add a timestamp in order to be able to deterministically remove deprecated things from the generated code!");
+		fprintf(stderr, "WARNING - @deprecated flag is missing a timestamp. You need to add a timestamp in order to be able to deterministically remove deprecated things from the generated code!");
 		i64Deprecated = 1;
 	}
 }
 
 void replaceAll(std::string& str, const char* szSearch, const char* szReplace) {
-	if(!szSearch)
+	if (!szSearch)
 		return;
 	auto searchLen = strlen(szSearch);
-	if(!searchLen)
+	if (!searchLen)
 		return;
 	auto replaceLen = strlen(szReplace);
 	size_t start_pos = 0;
-	while((start_pos = str.find(szSearch, start_pos)) != std::string::npos) {
+	while ((start_pos = str.find(szSearch, start_pos)) != std::string::npos) {
 		str.replace(start_pos, searchLen, szReplace);
 		start_pos += replaceLen; // In case 'to' contains 'from', like replacing 'x' with 'yx'
 	}
@@ -85,7 +85,7 @@ std::vector<std::string> explode(std::string const& s, char delim)
 	for (std::string token; std::getline(iss, token, delim); ) {
 		// leere tokens auslassen, brauchen wir nicht
 		auto element = trim(token);
-		if(element.size())
+		if (element.size())
 			result.push_back(element);
 	}
 
@@ -312,7 +312,7 @@ int EAsnStackElementFile::ProcessLine(const char* szModuleName, std::string& szL
 		return 0;
 	}
 
-	if(szLine.length() >= 5) {
+	if (szLine.length() >= 5) {
 		std::string strBegin = szLine.substr(szLine.length() - 5);
 		if (strBegin == "BEGIN")
 		{
@@ -419,13 +419,13 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		}
 		iterTokens++;
 		std::string strBasicType1 = iterTokens != tokens.end() ? *iterTokens : "";
-		if(iterTokens != tokens.end())
+		if (iterTokens != tokens.end())
 			iterTokens++;
 		std::string strBasicType2 = iterTokens != tokens.end() ? *iterTokens : "";
-		if(iterTokens != tokens.end())
+		if (iterTokens != tokens.end())
 			iterTokens++;
 		std::string strBasicType3 = iterTokens != tokens.end() ? *iterTokens : "";
-		if(iterTokens != tokens.end())
+		if (iterTokens != tokens.end())
 			iterTokens++;
 
 		if (strBasicType1 == "SEQUENCE" && strBasicType2 == "OF")
@@ -511,7 +511,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 			if (pos != std::string::npos)
 				strKey = strKey.substr(0, pos);
 			strKey += "::";
-			strKey += comment.strTypeName_UTF8;		
+			strKey += comment.strTypeName_UTF8;
 			gComments.mapSequences[strKey] = comment;
 
 			m_CollectComments.clear();
@@ -522,7 +522,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 	{
 		//Lower Letter Identifier
 		std::string strType = iterTokens != tokens.end() ? *iterTokens : "";
-		if(iterTokens != tokens.end()) iterTokens++;
+		if (iterTokens != tokens.end()) iterTokens++;
 
 		if (iterTokens != tokens.end() && *iterTokens == "OPERATION")
 		{
@@ -602,13 +602,13 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 			m_comment.mapMembers[strMember] = member;
 
 			std::string strBasicType1 = "";
-			if(iter != tokens.end())
+			if (iter != tokens.end())
 			{
 				strBasicType1 = *iter;
 				iter++;
 			}
 			std::string strBasicType2 = "";
-			if(iter != tokens.end())
+			if (iter != tokens.end())
 			{
 				strBasicType2 = *iter;
 				iter++;
@@ -685,7 +685,7 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 		if (pos != std::string::npos)
 			strKey = strKey.substr(0, pos);
 		strKey += "::";
-		strKey += m_comment.strTypeName_UTF8;		
+		strKey += m_comment.strTypeName_UTF8;
 		gComments.mapSequences[strKey] = m_comment;
 
 		bElementEnd = true;

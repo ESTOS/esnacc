@@ -70,20 +70,20 @@
 #include "../include/asn-null.h"
 
 
-/*
- * encodes universal TAG LENGTH and Contents of and ASN.1 NULL
- */
+ /*
+  * encodes universal TAG LENGTH and Contents of and ASN.1 NULL
+  */
 AsnLen
-BEncAsnNull PARAMS ((b, data),
-    GenBuf *b _AND_
-    AsnNull *data)
+BEncAsnNull PARAMS((b, data),
+	GenBuf* b _AND_
+	AsnNull* data)
 {
-    AsnLen len;
+	AsnLen len;
 
-    len =  BEncAsnNullContent (b, data);
-    len += BEncDefLen (b, len);
-    len += BEncTag1 (b, UNIV, PRIM, NULLTYPE_TAG_CODE);
-    return len;
+	len = BEncAsnNullContent(b, data);
+	len += BEncDefLen(b, len);
+	len += BEncTag1(b, UNIV, PRIM, NULLTYPE_TAG_CODE);
+	return len;
 }  /* BEncAsnNull */
 
 
@@ -91,41 +91,41 @@ BEncAsnNull PARAMS ((b, data),
  * decodes universal TAG LENGTH and Contents of and ASN.1 NULL
  */
 void
-BDecAsnNull PARAMS ((b, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnNull *result _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecAsnNull PARAMS((b, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnNull* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    AsnTag tag;
-    AsnLen elmtLen;
+	AsnTag tag;
+	AsnLen elmtLen;
 
-    if ((tag = BDecTag (b, bytesDecoded, env)) != MAKE_TAG_ID (UNIV, PRIM, NULLTYPE_TAG_CODE))
-    {
-         Asn1Error ("BDecAsnNull: ERROR wrong tag on NULL.\n");
-         longjmp (env, -40);
-    }
+	if ((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, NULLTYPE_TAG_CODE))
+	{
+		Asn1Error("BDecAsnNull: ERROR wrong tag on NULL.\n");
+		longjmp(env, -40);
+	}
 
-    elmtLen = BDecLen (b, bytesDecoded, env);
-    BDecAsnNullContent (b, tag, elmtLen, result, bytesDecoded, env);
+	elmtLen = BDecLen(b, bytesDecoded, env);
+	BDecAsnNullContent(b, tag, elmtLen, result, bytesDecoded, env);
 
 }  /* BDecAsnNull */
 
 
 void
-BDecAsnNullContent PARAMS ((b, tagId, len, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnTag tagId _AND_
-    AsnLen len _AND_
-    AsnNull *result _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecAsnNullContent PARAMS((b, tagId, len, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnTag tagId _AND_
+	AsnLen len _AND_
+	AsnNull* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    if (len != 0)
-    {
-        Asn1Error ("BDecAsnNullContent: ERROR - NULL type's len must be 0\n");
-        longjmp (env, -17);
-    }
+	if (len != 0)
+	{
+		Asn1Error("BDecAsnNullContent: ERROR - NULL type's len must be 0\n");
+		longjmp(env, -17);
+	}
 }  /* BDecAsnNullContent */
 
 /*
@@ -133,16 +133,16 @@ BDecAsnNullContent PARAMS ((b, tagId, len, result, bytesDecoded, env),
  * ignores the indent.
  */
 void
-PrintAsnNull PARAMS ((f,v, indent),
-    FILE *f _AND_
-    AsnNull *v _AND_
-    unsigned int indent)
+PrintAsnNull PARAMS((f, v, indent),
+	FILE* f _AND_
+	AsnNull* v _AND_
+	unsigned int indent)
 {
-    fprintf (f, "NULL");
+	fprintf(f, "NULL");
 }
 
 
-void FreeAsnNull PARAMS ((b), AsnNull *b) 
+void FreeAsnNull PARAMS((b), AsnNull* b)
 {
 }
 

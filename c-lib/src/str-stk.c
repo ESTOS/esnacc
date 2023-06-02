@@ -42,7 +42,7 @@
 #include "../include/asn-config.h"
 #include "../include/str-stk.h"
 
-/* global for use by AsnBits and AsnOcts */
+ /* global for use by AsnBits and AsnOcts */
 
 StrStk strStkG = { NULL, 128, 0, 64, 0, 0 };
 

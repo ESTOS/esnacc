@@ -370,19 +370,19 @@ public:
   AsnType* Clone() const			{ return new AsnNull(*this); }
   const char* typeName() const		{ return "AsnNull"; }
 
-  AsnLen         BEncContent (AsnBuf &) const      { return 0; }
-  void           BDecContent (const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
-  AsnLen         BEnc (AsnBuf &b) const;
-  void           BDec (const AsnBuf &b, AsnLen &bytesDecoded);
+  AsnLen BEncContent(AsnBuf &) const      { return 0; }
+  void BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
+  AsnLen BEnc(AsnBuf &b) const;
+  void BDec(const AsnBuf &b, AsnLen &bytesDecoded);
 
-  void           JEnc (EJson::Value &b) const;
-  bool           JDec (const EJson::Value &b);
+  void JEnc (EJson::Value &b) const;
+  bool JDec (const EJson::Value &b);
 
-  AsnLen	     PEnc (AsnBufBits &b) const;
-  void  		 PDec (AsnBufBits &b, AsnLen &bitsDecoded);
+  AsnLen PEnc (AsnBufBits &b) const;
+  void PDec (AsnBufBits &b, AsnLen &bitsDecoded);
 
-  void           Print(std::ostream& os, unsigned short indent = 0) const;
-  void           PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
+  void Print(std::ostream& os, unsigned short indent = 0) const;
+  void PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
 
 #if META
   static const AsnNullTypeDesc   _desc;
@@ -410,22 +410,22 @@ public:
 
 	operator bool() const						{ return value; }
 
-   AsnBool         &operator = (bool newvalue)      { value = newvalue; return *this; }
+   AsnBool& operator=(bool newvalue)      { value = newvalue; return *this; }
 
-   AsnLen         BEnc (AsnBuf &b) const;
-   void           BDec (const AsnBuf &b, AsnLen &bytesDecoded);
-   AsnLen         BEncContent (AsnBuf &b) const;
-   void           BDecContent (const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
+   AsnLen BEnc(AsnBuf &b) const;
+   void BDec(const AsnBuf &b, AsnLen &bytesDecoded);
+   AsnLen BEncContent(AsnBuf &b) const;
+   void BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
 
-   void           JEnc (EJson::Value &b) const;
-   bool           JDec (const EJson::Value &b);
+   void JEnc (EJson::Value &b) const;
+   bool JDec (const EJson::Value &b);
 
-   AsnLen         PEnc (AsnBufBits &b) const;
-   void		      PDec (AsnBufBits &b, AsnLen &bitsDecoded);
+   AsnLen PEnc(AsnBufBits &b) const;
+   void	PDec(AsnBufBits &b, AsnLen &bitsDecoded);
 
 
-   void           Print(std::ostream& os, unsigned short indent = 0) const;
-   void           PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
+   void Print(std::ostream& os, unsigned short indent = 0) const;
+   void PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
    char* checkBoolSingleVal(const bool m_SingleVal)const;
 
 #if META
@@ -458,41 +458,41 @@ public:
    AsnType* Clone() const				{ return new AsnOcts(*this); }
    const char* typeName() const			{ return "AsnOcts"; }
 
-   AsnOcts		&operator = (const AsnOcts &o)	{ return SetEqual(o); }
-   AsnOcts		&operator = (const char *str)	{ return SetEqual(str); }
+   AsnOcts& operator=(const AsnOcts &o)	{ return SetEqual(o); }
+   AsnOcts& operator=(const char *str)	{ return SetEqual(str); }
 
-   AsnOcts      &SetEqual(const AsnOcts &o)  { m_str = o.m_str; return *this; }
-   AsnOcts      &SetEqual(const char *str)   { m_str.assign(str); return *this; }
+   AsnOcts& SetEqual(const AsnOcts &o)  { m_str = o.m_str; return *this; }
+   AsnOcts& SetEqual(const char *str)   { m_str.assign(str); return *this; }
 
 
-   void         Set (const char *str, size_t len);
+   void Set(const char *str, size_t len);
 
-   size_t       Len() const;
-   long			length(){return (long)Len();}
-   long			length()const{return (long)Len();}
+   size_t Len() const;
+   long length() {return (long)Len();}
+   long length() const{return (long)Len();}
 
-   void			clear(){m_str.erase();}
+   void clear() {m_str.erase();}
 
-   const std::string &   data() const;
-   const char *          c_str() const;
-   const unsigned char * c_ustr() const;
+   const std::string& data() const;
+   const char* c_str() const;
+   const unsigned char* c_ustr() const;
 
-   bool operator == (const AsnOcts &o) const;
-   bool operator != (const AsnOcts &o) const;
+   bool operator==(const AsnOcts &o) const;
+   bool operator!=(const AsnOcts &o) const;
 
-   AsnLen         BEncContent (AsnBuf &b) const;
-   void           BDecContent (const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
-   AsnLen         BEnc (AsnBuf &b) const ;
-   void           BDec (const AsnBuf &b, AsnLen &bytesDecoded);
+   AsnLen BEncContent(AsnBuf &b) const;
+   void BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
+   AsnLen BEnc(AsnBuf &b) const ;
+   void BDec(const AsnBuf &b, AsnLen &bytesDecoded);
 
-   void           JEnc (EJson::Value &b) const;
-   bool           JDec (const EJson::Value &b);
+   void JEnc (EJson::Value &b) const;
+   bool JDec (const EJson::Value &b);
 
-   AsnLen		  PEnc (AsnBufBits &b)const;
+   AsnLen PEnc(AsnBufBits &b)const;
    void			  PDec (AsnBufBits &b, AsnLen &bitsDecoded);
 
-   void           Print(std::ostream& os, unsigned short indent = 0) const;
-   void           PrintXML (std::ostream &os, const char *lpszTitle=NULL,
+   void Print(std::ostream& os, unsigned short indent = 0) const;
+   void PrintXML (std::ostream &os, const char *lpszTitle=NULL,
                      const char *lpszType=NULL) const;
 
 protected:
@@ -503,8 +503,8 @@ protected:
 	long	FindSizeConstraintBounds(int &iSCLowerBound, int &iSCUpperBound)const;
 
 protected:
-  void           BDecConsOcts (const AsnBuf &b, AsnLen elmtLen, AsnLen &bytesDecoded);
-  void           FillStringDeck(AsnBuf &b, AsnLen elmtLen, AsnLen &bytesDecoded);
+  void BDecConsOcts (const AsnBuf &b, AsnLen elmtLen, AsnLen &bytesDecoded);
+  void FillStringDeck(AsnBuf &b, AsnLen elmtLen, AsnLen &bytesDecoded);
 
 
   // IF AsnOcts length is < MAX_OCTS, store in AsnString base
@@ -529,17 +529,17 @@ public:
 	AsnType* Clone() const				{ return new AsnStringOcts(*this); }
 	const char* typeName() const			{ return "AsnStringOcts"; }
 
-	AsnStringOcts		&operator = (const AsnStringOcts &o)	{ return SetEqual(o); }
-	AsnStringOcts		&operator = (const char *str)	{ return SetEqual(str); }
+	AsnStringOcts& operator=(const AsnStringOcts &o)	{ return SetEqual(o); }
+	AsnStringOcts& operator=(const char *str)	{ return SetEqual(str); }
 
-	AsnStringOcts      &SetEqual(const AsnStringOcts &o)  { m_str = o.m_str; return *this; }
-	AsnStringOcts      &SetEqual(const char *str)   { m_str.assign(str); return *this; }
+	AsnStringOcts& SetEqual(const AsnStringOcts &o)  { m_str = o.m_str; return *this; }
+	AsnStringOcts& SetEqual(const char *str)   { m_str.assign(str); return *this; }
 
 	bool operator== (const AsnStringOcts &o) const { return AsnOcts::operator==(o); }
 	bool operator!= (const AsnStringOcts &o) const { return AsnOcts::operator!=(o); };
 
-	virtual void           JEnc(EJson::Value &b) const;
-	virtual bool           JDec(const EJson::Value &b);
+	virtual void JEnc(EJson::Value &b) const;
+	virtual bool JDec(const EJson::Value &b);
 };
 
 //########################################################################
@@ -561,29 +561,29 @@ public:
   AsnType* Clone() const				{ return new AsnBits(*this); }
   const char* typeName() const			{ return "AsnBits"; }
 
-  AsnBits         &operator = (const AsnBits &b)      { Set (b); return *this; }
+  AsnBits& operator=(const AsnBits &b)      { Set (b); return *this; }
 
   // overwrite existing bits and bitLen values
-  void            Set (size_t numBits);
-  void            Set (const unsigned char *bitOcts, size_t numBits);
-  void            Set (const AsnBits &b);
+  void  Set (size_t numBits);
+  void  Set (const unsigned char *bitOcts, size_t numBits);
+  void  Set (const AsnBits &b);
 
   AsnBits &		  SetEqual(const char *stringForm);
 
   AsnBits &       operator = (const char *stringForm);
-  bool            operator == (const AsnBits &ab) const   { return BitsEquiv (ab); }
-  bool            operator != (const AsnBits &ab) const   { return !BitsEquiv (ab); }
+  bool  operator==(const AsnBits &ab) const   { return BitsEquiv (ab); }
+  bool  operator!=(const AsnBits &ab) const   { return !BitsEquiv (ab); }
 
-  void            SetSize(size_t);
-  bool            soloBitCheck(size_t);
-  void            SetBit (size_t);
-  void            ClrBit (size_t);
-  bool            GetBit (size_t) const;
-  bool            IsEmpty() const;
+  void  SetSize(size_t);
+  bool  soloBitCheck(size_t);
+  void  SetBit (size_t);
+  void  ClrBit (size_t);
+  bool  GetBit (size_t) const;
+  bool  IsEmpty() const;
   long			  FindSizeConstraintBounds(int &iSCLowerBound, int &iSCUpperBound)const;
 
 
-  void            UseNamedBitListRules(bool flag) { nblFlag = flag; }
+  void  UseNamedBitListRules(bool flag) { nblFlag = flag; }
 
   void			 clear(){if(bits) delete[] bits; bits = NULL; bitLen = 0;}
 
@@ -594,24 +594,24 @@ public:
   virtual void	 Allocate(long size);
 
 
-  AsnLen         BEncContent (AsnBuf &b) const;
-  void           BDecContent (const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
-  AsnLen         BEnc (AsnBuf &b) const;
-  void           BDec (const AsnBuf &b, AsnLen &bytesDecoded);
+  AsnLen BEncContent(AsnBuf &b) const;
+  void BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
+  AsnLen BEnc(AsnBuf &b) const;
+  void BDec(const AsnBuf &b, AsnLen &bytesDecoded);
 
-  void           JEnc (EJson::Value &b) const;
-  bool           JDec (const EJson::Value &b);
+  void JEnc (EJson::Value &b) const;
+  bool JDec (const EJson::Value &b);
 
   AsnLen		 EncodeGeneral (AsnBufBits &b)const;
   void			 DecodeGeneral (AsnBufBits &b, AsnLen &bitsDecoded);
-  AsnLen	     EncodeWithSizeConstraint (AsnBufBits &b)const;
+  AsnLen EncodeWithSizeConstraint (AsnBufBits &b)const;
   void			 DecodeWithSizeConstraint (AsnBufBits &b, AsnLen &bitsDecoded);
   AsnLen		 PEnc (AsnBufBits &b) const;
   void			 PDec (AsnBufBits &b, AsnLen &bitsDecoded);
 
 
-  void            Print(std::ostream& os, unsigned short indent = 0) const;
-  void            PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
+  void  Print(std::ostream& os, unsigned short indent = 0) const;
+  void  PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
 
 #if META
   static const AsnBitsTypeDesc   _desc;
@@ -625,13 +625,13 @@ public:
 #endif /* META */
 
 private:
-  bool            BitsEquiv (const AsnBits &ab) const;
-  void            BDecConsBits (const AsnBuf &b, AsnLen elmtLen, AsnLen &bytesDecoded);
+  bool  BitsEquiv (const AsnBits &ab) const;
+  void  BDecConsBits (const AsnBuf &b, AsnLen elmtLen, AsnLen &bytesDecoded);
 
 protected:
   size_t         bitLen;
   unsigned char* bits;
-  bool           nblFlag;
+  bool nblFlag;
 };
 
 extern SNACCDLL_API char	numToHexCharTblG[];
@@ -674,10 +674,10 @@ public:
    operator AsnIntType() const;
    long long GetLongLong() const;
 
-   bool        operator == (AsnIntType o) const;
-   bool        operator != (AsnIntType o) const		{ return !operator==(o);}
-   bool        operator == (const AsnInt &o) const;
-   bool        operator != (const AsnInt &o) const;
+   bool        operator==(AsnIntType o) const;
+   bool        operator!=(AsnIntType o) const		{ return !operator==(o);}
+   bool        operator==(const AsnInt &o) const;
+   bool        operator!=(const AsnInt &o) const;
    bool        operator < (const AsnInt &o) const;
    AsnInt &    operator = (const AsnInt &o);//generate this
    //unsigned char*  Append_m_bytes(const unsigned char* AppendBytes, unsigned long templen);
@@ -693,13 +693,13 @@ public:
    void        Set(AsnIntType i);
    void        Set(long long i);
 
-   AsnLen         BEnc (AsnBuf &b) const;
-   void           BDec (const AsnBuf &b, AsnLen &bytesDecoded);
-   AsnLen         BEncContent (AsnBuf &b) const;
-   void           BDecContent (const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
+   AsnLen BEnc(AsnBuf &b) const;
+   void BDec(const AsnBuf &b, AsnLen &bytesDecoded);
+   AsnLen BEncContent(AsnBuf &b) const;
+   void BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
 
-   void           JEnc (EJson::Value &b) const;
-   bool           JDec (const EJson::Value &b);
+   void JEnc (EJson::Value &b) const;
+   bool JDec (const EJson::Value &b);
 
    virtual AsnLen PEnc (AsnBufBits &b)const;
    AsnLen         PEncSemiConstrained (AsnBufBits &b, long lowerBound )const;
@@ -769,19 +769,19 @@ public:
                   operator double() const         { return value; }
    AsnReal       &operator = (double newvalue)    { value = newvalue; return *this; }
 
-   AsnLen         BEncContent (AsnBuf &b) const;
-   void           BDecContent (const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
-   AsnLen         BEnc (AsnBuf &b) const;
-   void           BDec (const AsnBuf &b, AsnLen &bytesDecoded);
+   AsnLen BEncContent(AsnBuf &b) const;
+   void BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded);
+   AsnLen BEnc(AsnBuf &b) const;
+   void BDec(const AsnBuf &b, AsnLen &bytesDecoded);
 
-   void           JEnc (EJson::Value &b) const;
-   bool           JDec (const EJson::Value &b);
+   void JEnc (EJson::Value &b) const;
+   bool JDec (const EJson::Value &b);
 
-   AsnLen		  PEnc (AsnBufBits &b)const;
+   AsnLen PEnc(AsnBufBits &b)const;
    void			  PDec (AsnBufBits &b, AsnLen &bitsDecoded);
 
-   void           Print(std::ostream& os, unsigned short indent = 0) const;
-   void           PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
+   void Print(std::ostream& os, unsigned short indent = 0) const;
+   void PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
 
    char* checkRealSingleVal(const double m_SingleVal)const;
    char* checkRealValRange(const double m_Lower, const double m_Upper) const;
@@ -821,8 +821,8 @@ public:
 	void JEnc (EJson::Value &b) const;
 	bool JDec (const EJson::Value &b);
 
-	void           Print(std::ostream& os, unsigned short indent = 0) const;
-	void           PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML (std::ostream &os, const char *lpszTitle=NULL) const;
 };
 
 
@@ -864,8 +864,8 @@ public:
 	void   BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen,
 		AsnLen& bytesDecoded);
 
-	void           JEnc (EJson::Value &b) const;
-	bool           JDec (const EJson::Value &b);
+	void JEnc (EJson::Value &b) const;
+	bool JDec (const EJson::Value &b);
 
 	AsnLen PEnc(AsnBufBits& b) const;
 	void   PDec(AsnBufBits& b, AsnLen& bitsDecoded);
@@ -993,22 +993,22 @@ public:
    static void         InstallAnyByOid (AsnOid &oid,  int anyId, AsnType *type);
 
    int            GetId()   const            { return ai ? ai->anyId : -1; }
-   void           SetTypeByInt (const AsnInt& id) const;
-   void           SetTypeByOid (const AsnOid &id) const;
+   void SetTypeByInt (const AsnInt& id) const;
+   void SetTypeByOid (const AsnOid &id) const;
 
-   AsnLen         BEnc (AsnBuf &b) const;
-   void           BDec (const AsnBuf &b, AsnLen &bytesDecoded);
+   AsnLen BEnc(AsnBuf &b) const;
+   void BDec(const AsnBuf &b, AsnLen &bytesDecoded);
 
-   void           JEnc (EJson::Value &b) const;
-   bool           JDec (const EJson::Value &b);
+   void JEnc (EJson::Value &b) const;
+   bool JDec (const EJson::Value &b);
 
-   void           BDecContent (const AsnBuf &b, AsnTag tag, AsnLen len, AsnLen &bytesDecoded);
+   void BDecContent(const AsnBuf &b, AsnTag tag, AsnLen len, AsnLen &bytesDecoded);
 
-   AsnLen	      PEnc (AsnBufBits &b) const;
-   void           PDec (AsnBufBits &b, AsnLen &bitsDecoded);
+   AsnLen  PEnc (AsnBufBits &b) const;
+   void PDec (AsnBufBits &b, AsnLen &bitsDecoded);
 
-   void           Print(std::ostream& os, unsigned short indent = 0) const;
-   void           PrintXML(std::ostream &os, const char *lpszTitle=NULL) const;
+   void Print(std::ostream& os, unsigned short indent = 0) const;
+   void PrintXML(std::ostream &os, const char *lpszTitle=NULL) const;
 
 #if TCL
    int            TclGetDesc (Tcl_DString *) const;
@@ -1046,8 +1046,8 @@ public:
 	void   BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
 		AsnLen& bytesDecoded);
 
-	void           JEnc (EJson::Value &b) const;
-	bool           JDec (const EJson::Value &b);
+	void JEnc (EJson::Value &b) const;
+	bool JDec (const EJson::Value &b);
 
 	AsnLen PEnc(AsnBufBits &b)const;
 	void   PDec(AsnBufBits &b, AsnLen &bitsDecoded);
@@ -1314,8 +1314,8 @@ public:
 	virtual void   BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
 		AsnLen &bytesDecoded) = 0;
 
-	void           JEnc (EJson::Value &b) const;
-	bool           JDec (const EJson::Value &b);
+	void JEnc (EJson::Value &b) const;
+	bool JDec (const EJson::Value &b);
 
 	AsnLen PEnc(AsnBufBits &b)const;
 	void   PDec(AsnBufBits &b, AsnLen &bitsDecoded);
@@ -1428,8 +1428,8 @@ public:
 	const char* typeName() const		{ return "UTF8String"; }
 	BER_UNIV_CODE tagCode() const		{ return UTF8STRING_TAG_CODE; }
 
-	void           JEnc (EJson::Value &b) const;
-	bool           JDec (const EJson::Value &b);
+	void JEnc (EJson::Value &b) const;
+	bool JDec (const EJson::Value &b);
 
 	AsnLen BEncContent(AsnBuf &b) const;
 	void   BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
@@ -1558,7 +1558,7 @@ public:
 
 	AsnType		*Clone() const;
 
-	AsnOptionalParamChoice		&operator = (const AsnOptionalParamChoice &that);
+	AsnOptionalParamChoice& operator=(const AsnOptionalParamChoice &that);
 	AsnLen		BEncContent (AsnBuf &_b) const;
 	void			BDecContent (const AsnBuf &_b, AsnTag tag, AsnLen elmtLen, AsnLen &bytesDecoded /*, s env*/);
 	AsnLen		BEnc (AsnBuf &_b) const;
@@ -1588,7 +1588,7 @@ public:
 	const char* typeName() const	{ return "AsnOptionalParam"; }
 	AsnType		*Clone() const;
 
-	AsnOptionalParam		&operator = (const AsnOptionalParam &that);
+	AsnOptionalParam& operator=(const AsnOptionalParam &that);
 	AsnLen		BEncContent (AsnBuf &_b) const;
 	void			BDecContent (const AsnBuf &_b, AsnTag tag, AsnLen elmtLen, AsnLen &bytesDecoded);
 

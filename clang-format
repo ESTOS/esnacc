@@ -1,0 +1,95 @@
+# Centralized coding style defines for the esnacc compiler
+# The initial code uses pretty wierd coding style and did not enforce any dedicated style so this is the aim to achive a common same style for all the files
+#
+# The file requires a pretty new clang format, at least 15.
+# At the time of writing the document it is based on 15.0.7
+#
+# https://releases.llvm.org/download.html
+#
+
+---
+# We'll use defaults from the LLVM style
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Always
+
+---
+Language: Cpp
+# Zusammenhaengende Assignments stehen immer untereinander auf gleicher Hoehe
+AlignConsecutiveAssignments: false
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+  
+# Constructor und Initializer sollten dem gleichen folgen
+BreakInheritanceList: AfterColon
+BreakConstructorInitializers: AfterColon
+
+# public private protected ganz linksbündig 
+AccessModifierOffset: -4
+
+# Aligning:
+IndentCaseBlocks: true
+IndentCaseLabels: true
+NamespaceIndentation: All
+
+# Die Zeilen sind genau so lang wie der Entwickler es in dem Kontext in dem er sich gerade aufhält für nötig erachtet
+ColumnLimit: 500
+
+# Mehrere Argumente in einer Methode die nicht in eine Zeile passen
+AlignAfterOpenBracket: Align
+
+# Kommentare
+AlignTrailingComments: true
+
+# Klammersetzung, bei uns Ausnahmslos immer in neuer Zeile
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: true
+  AfterStruct: true
+  AfterFunction: true
+  AfterClass: true
+  AfterNamespace: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeElse: true
+  BeforeCatch: true
+  AfterControlStatement: true
+  SplitEmptyFunction: true
+
+# Keine Klammern um one liner statements
+RemoveBracesLLVM: true
+
+# Pointer und Referenzen stehen immer neben dem Type int* variable, CStdString& strData
+PointerAlignment: Left
+
+# Konstruktor intialisierer umbrüche
+BreakConstructorInitializers: BeforeComma
+
+# Alle Singleliner verbieten
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+
+# Sorting von Headern deaktivieren
+SortIncludes: CaseInsensitive
+IncludeCategories:
+  - Regex:        'stdafx.h|pch.h'
+    Priority:     -1
+    SortPriority: -1
+  - Regex:        'wincrypt.h|softpub.h'
+    Priority:     100
+    SortPriority: 100
+  - Regex:        '^<'
+    Priority:     2
+    SortPriority: 2
+  - Regex:        '\.\.'
+    Priority:     3
+    SortPriority: 3
+  - Regex:        '.*'
+    Priority:     4
+    SortPriority: 4

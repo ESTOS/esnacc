@@ -60,53 +60,53 @@
 #include "../include/asn-config.h"
 #include "../include/asn-len.h"
 
-/* 
- * BER encode/decode routines
- */
+ /*
+  * BER encode/decode routines
+  */
 AsnLen
-BEncDefLen PARAMS ((b, len),
-    GenBuf *b _AND_
-    AsnLen len)
+BEncDefLen PARAMS((b, len),
+	GenBuf* b _AND_
+	AsnLen len)
 {
-    /*
-     * unrolled for efficiency
-     * check each possibitlity of the 4 byte integer
-     */
-    if (len < 128)
-    {
-        BufPutByteRvs (b, (unsigned char)len);
-        return 1;
-    }
-    else if (len < 256)
-    {
-        BufPutByteRvs (b, (unsigned char)len);
-        BufPutByteRvs (b, 0x81);
-        return 2;
-    }
-    else if (len < 65536)
-    {
-        BufPutByteRvs (b, (unsigned char)len);
-        BufPutByteRvs (b, (unsigned char)(len >> 8));
-        BufPutByteRvs (b, 0x82);
-        return 3;
-    }
-    else if (len < 16777126)
-    {
-        BufPutByteRvs (b, (unsigned char)len);
-        BufPutByteRvs (b, (unsigned char)(len >> 8));
-        BufPutByteRvs (b, (unsigned char)(len >> 16));
-        BufPutByteRvs (b, 0x83);
-        return 4;
-    }
-    else
-    {
-        BufPutByteRvs (b, (unsigned char)len);
-        BufPutByteRvs (b, (unsigned char)(len >> 8));
-        BufPutByteRvs (b, (unsigned char)(len >> 16));
-        BufPutByteRvs (b, (unsigned char)(len >> 24));
-        BufPutByteRvs (b, 0x84);
-        return 5;
-    }
+	/*
+	 * unrolled for efficiency
+	 * check each possibitlity of the 4 byte integer
+	 */
+	if (len < 128)
+	{
+		BufPutByteRvs(b, (unsigned char)len);
+		return 1;
+	}
+	else if (len < 256)
+	{
+		BufPutByteRvs(b, (unsigned char)len);
+		BufPutByteRvs(b, 0x81);
+		return 2;
+	}
+	else if (len < 65536)
+	{
+		BufPutByteRvs(b, (unsigned char)len);
+		BufPutByteRvs(b, (unsigned char)(len >> 8));
+		BufPutByteRvs(b, 0x82);
+		return 3;
+	}
+	else if (len < 16777126)
+	{
+		BufPutByteRvs(b, (unsigned char)len);
+		BufPutByteRvs(b, (unsigned char)(len >> 8));
+		BufPutByteRvs(b, (unsigned char)(len >> 16));
+		BufPutByteRvs(b, 0x83);
+		return 4;
+	}
+	else
+	{
+		BufPutByteRvs(b, (unsigned char)len);
+		BufPutByteRvs(b, (unsigned char)(len >> 8));
+		BufPutByteRvs(b, (unsigned char)(len >> 16));
+		BufPutByteRvs(b, (unsigned char)(len >> 24));
+		BufPutByteRvs(b, 0x84);
+		return 5;
+	}
 } /*  BEncDefLen */
 
 
@@ -114,26 +114,26 @@ BEncDefLen PARAMS ((b, len),
  * non unrolled version
  */
 AsnLen
-BEncDefLen2 PARAMS ((b, len),
-    GenBuf *b _AND_
-    long len)
+BEncDefLen2 PARAMS((b, len),
+	GenBuf* b _AND_
+	long len)
 {
-    int i;
-    unsigned long j;
+	int i;
+	unsigned long j;
 
-    if (len < 128)
-    {
-        BufPutByteRvs (b, (unsigned char)len);
-        return 1;
-    }
-    else
-    {
-        for (i = 0, j = len; j > 0; j >>= 8, i++)
-            BufPutByteRvs (b, (unsigned char)j);
+	if (len < 128)
+	{
+		BufPutByteRvs(b, (unsigned char)len);
+		return 1;
+	}
+	else
+	{
+		for (i = 0, j = len; j > 0; j >>= 8, i++)
+			BufPutByteRvs(b, (unsigned char)j);
 
-        BufPutByteRvs (b, (unsigned char)(0x80 | i));
-        return i + 1;
-    }
+		BufPutByteRvs(b, (unsigned char)(0x80 | i));
+		return i + 1;
+	}
 
 } /*  BEncDefLen2 */
 
@@ -142,69 +142,69 @@ BEncDefLen2 PARAMS ((b, len),
  * decodes and returns an ASN.1 length
  */
 AsnLen
-BDecLen PARAMS ((b, bytesDecoded, env),
-    GenBuf *b _AND_
-    unsigned long  *bytesDecoded _AND_
-    jmp_buf env)
+BDecLen PARAMS((b, bytesDecoded, env),
+	GenBuf* b _AND_
+	unsigned long* bytesDecoded _AND_
+	jmp_buf env)
 {
-    AsnLen len;
-    AsnLen byte;
-    int lenBytes;
+	AsnLen len;
+	AsnLen byte;
+	int lenBytes;
 
-    byte = (unsigned long) BufGetByte (b);
+	byte = (unsigned long)BufGetByte(b);
 
-    if (BufReadError (b))
-    {
-        Asn1Error ("BDecLen: ERROR - decoded past end of data\n");
-        longjmp (env, -13);
-    }
+	if (BufReadError(b))
+	{
+		Asn1Error("BDecLen: ERROR - decoded past end of data\n");
+		longjmp(env, -13);
+	}
 
-    (*bytesDecoded)++;
-    if (byte < 128)   /* short length */
-        return byte;
+	(*bytesDecoded)++;
+	if (byte < 128)   /* short length */
+		return byte;
 
-    else if (byte == (AsnLen) 0x080)  /* indef len indicator */
-        return (unsigned long)INDEFINITE_LEN;
+	else if (byte == (AsnLen)0x080)  /* indef len indicator */
+		return (unsigned long)INDEFINITE_LEN;
 
-    else  /* long len form */
-    {
-        /*
-         * strip high bit to get # bytes left in len
-         */
-        lenBytes = byte & (AsnLen) 0x7f;
+	else  /* long len form */
+	{
+		/*
+		 * strip high bit to get # bytes left in len
+		 */
+		lenBytes = byte & (AsnLen)0x7f;
 
-        if (lenBytes > sizeof (AsnLen))
-        {
-            Asn1Error ("BDecLen: ERROR - length overflow\n");
-            longjmp (env, -14);
-        }
+		if (lenBytes > sizeof(AsnLen))
+		{
+			Asn1Error("BDecLen: ERROR - length overflow\n");
+			longjmp(env, -14);
+		}
 
-        (*bytesDecoded) += lenBytes;
+		(*bytesDecoded) += lenBytes;
 
-        for (len = 0; lenBytes > 0; lenBytes--)
-            len = (len << 8) | (AsnLen) BufGetByte (b);
+		for (len = 0; lenBytes > 0; lenBytes--)
+			len = (len << 8) | (AsnLen)BufGetByte(b);
 
 
-        if (BufReadError (b))
-        {
-            Asn1Error ("BDecLen: ERROR - decoded past end of data\n");
-            longjmp (env, -15);
-        }
+		if (BufReadError(b))
+		{
+			Asn1Error("BDecLen: ERROR - decoded past end of data\n");
+			longjmp(env, -15);
+		}
 
-        return len;
-    }
-    /* not reached */
+		return len;
+	}
+	/* not reached */
 } /* BDecLen */
 
 
 #ifdef _DEBUG
 AsnLen
-BEncEoc PARAMS ((b),
-    GenBuf *b)
+BEncEoc PARAMS((b),
+	GenBuf* b)
 {
-    BufPutByteRvs (b, 0);
-    BufPutByteRvs (b, 0);
-    return 2;
+	BufPutByteRvs(b, 0);
+	BufPutByteRvs(b, 0);
+	return 2;
 }   /* BEncEoc */
 #endif
 /*
@@ -214,26 +214,26 @@ BEncEoc PARAMS ((b),
  */
 
 void
-BDecEoc PARAMS ((b, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecEoc PARAMS((b, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    if ((BufGetByte (b) != 0) || (BufGetByte (b) != 0) || BufReadError (b))
-    {
-        Asn1Error ("BDecEoc: ERROR - non zero byte in EOC or end of data reached\n");
-        longjmp (env, -16);
-    }
-    (*bytesDecoded) += 2;
+	if ((BufGetByte(b) != 0) || (BufGetByte(b) != 0) || BufReadError(b))
+	{
+		Asn1Error("BDecEoc: ERROR - non zero byte in EOC or end of data reached\n");
+		longjmp(env, -16);
+	}
+	(*bytesDecoded) += 2;
 
 }  /* BDecEoc */
 
 #if TTBL
 /* returns true if the next tag is actually and EOC */
-int PeekEoc PARAMS ((b),
-    GenBuf *b)
+int PeekEoc PARAMS((b),
+	GenBuf* b)
 {
-    return BufPeekByte (b) == 0;
+	return BufPeekByte(b) == 0;
 }  /* PeekEoc */
 #endif
 
@@ -243,63 +243,63 @@ int PeekEoc PARAMS ((b),
  */
 
 
-/*
- * decodes and returns a DER encoded ASN.1 length
- */
+ /*
+  * decodes and returns a DER encoded ASN.1 length
+  */
 AsnLen
-DDecLen PARAMS ((b, bytesDecoded, env),
-    GenBuf *b _AND_
-    unsigned long  *bytesDecoded _AND_
-    jmp_buf env)
+DDecLen PARAMS((b, bytesDecoded, env),
+	GenBuf* b _AND_
+	unsigned long* bytesDecoded _AND_
+	jmp_buf env)
 {
-    AsnLen len;
-    AsnLen byte;
-    int lenBytes;
+	AsnLen len;
+	AsnLen byte;
+	int lenBytes;
 
-    byte = (AsnLen) BufGetByte (b);
+	byte = (AsnLen)BufGetByte(b);
 
-    if (BufReadError (b))
-    {
-        Asn1Error ("DDecLen: ERROR - decoded past end of data\n");
-        longjmp (env, -13);
-    }
+	if (BufReadError(b))
+	{
+		Asn1Error("DDecLen: ERROR - decoded past end of data\n");
+		longjmp(env, -13);
+	}
 
-    (*bytesDecoded)++;
-    if (byte < 128)   /* short length */
-        return byte;
+	(*bytesDecoded)++;
+	if (byte < 128)   /* short length */
+		return byte;
 
-    else if (byte == (AsnLen) 0x080)  {/* indef len indicator */
-      Asn1Error("DDecLen: ERROR - Indefinite length decoded");
-      longjmp(env, -666);
-    }
+	else if (byte == (AsnLen)0x080) {/* indef len indicator */
+		Asn1Error("DDecLen: ERROR - Indefinite length decoded");
+		longjmp(env, -666);
+	}
 
-    else  /* long len form */
-    {
-        /*
-         * strip high bit to get # bytes left in len
-         */
-        lenBytes = byte & (AsnLen) 0x7f;
+	else  /* long len form */
+	{
+		/*
+		 * strip high bit to get # bytes left in len
+		 */
+		lenBytes = byte & (AsnLen)0x7f;
 
-        if (lenBytes > sizeof (AsnLen))
-        {
-            Asn1Error ("DDecLen: ERROR - length overflow\n");
-            longjmp (env, -14);
-        }
+		if (lenBytes > sizeof(AsnLen))
+		{
+			Asn1Error("DDecLen: ERROR - length overflow\n");
+			longjmp(env, -14);
+		}
 
-        (*bytesDecoded) += lenBytes;
+		(*bytesDecoded) += lenBytes;
 
-        for (len = 0; lenBytes > 0; lenBytes--)
-            len = (len << 8) | (AsnLen) BufGetByte (b);
+		for (len = 0; lenBytes > 0; lenBytes--)
+			len = (len << 8) | (AsnLen)BufGetByte(b);
 
 
-        if (BufReadError (b))
-        {
-            Asn1Error ("DDecLen: ERROR - decoded past end of data\n");
-            longjmp (env, -15);
-        }
+		if (BufReadError(b))
+		{
+			Asn1Error("DDecLen: ERROR - decoded past end of data\n");
+			longjmp(env, -15);
+		}
 
-        return len;
-    }
-    /* not reached */
+		return len;
+	}
+	/* not reached */
 } /* DDecLen */
 

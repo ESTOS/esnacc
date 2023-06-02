@@ -58,106 +58,104 @@
 #include "../include/asn-len.h"
 #include "../include/asn-tag.h"
 
-/*
- * Returns an AsnTag.  An AsnTag is simply an encoded tag
- * shifted to fill up an unsigned long int (first tag byte
- * in most sig byte of long int)
- * This rep permits easy case stmt comparison of tags.
- * NOTE: The unsigned long rep for tag BREAKS if the
- *       the tag's code is over 2^21 (very unlikely)
- *
- * RETURNS 0 if decoded a 0 byte (ie first byte of an EOC)
- */
+ /*
+  * Returns an AsnTag.  An AsnTag is simply an encoded tag
+  * shifted to fill up an unsigned long int (first tag byte
+  * in most sig byte of long int)
+  * This rep permits easy case stmt comparison of tags.
+  * NOTE: The unsigned long rep for tag BREAKS if the
+  *       the tag's code is over 2^21 (very unlikely)
+  *
+  * RETURNS 0 if decoded a 0 byte (ie first byte of an EOC)
+  */
 AsnTag
-BDecTag PARAMS ((b, bytesDecoded, env),
-    GenBuf * b _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecTag PARAMS((b, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    AsnTag tagId;
-    AsnTag tmpTagId;
-    int i;
+	AsnTag tagId;
+	AsnTag tmpTagId;
+	int i;
 
-    tagId = ((AsnTag)BufGetByte (b)) << ((sizeof (AsnTag)-1)*8);
-    (*bytesDecoded)++;
+	tagId = ((AsnTag)BufGetByte(b)) << ((sizeof(AsnTag) - 1) * 8);
+	(*bytesDecoded)++;
 
-    /* check if long tag format (ie code > 31) */
-    if ((tagId & (((AsnTag) 0x1f) << ((sizeof (AsnTag)-1)*8))) == (((AsnTag)0x1f) << ((sizeof (AsnTag)-1)*8)))
-    {
-        i = 2;
-        do
-        {
-            tmpTagId = (AsnTag) BufGetByte (b);
-            tagId |= (tmpTagId << ((sizeof (AsnTag)-i)*8));
-            (*bytesDecoded)++;
-            i++;
-        }
-        while ((tmpTagId & (AsnTag)0x80) && (i <= sizeof (AsnTag)));
+	/* check if long tag format (ie code > 31) */
+	if ((tagId & (((AsnTag)0x1f) << ((sizeof(AsnTag) - 1) * 8))) == (((AsnTag)0x1f) << ((sizeof(AsnTag) - 1) * 8)))
+	{
+		i = 2;
+		do
+		{
+			tmpTagId = (AsnTag)BufGetByte(b);
+			tagId |= (tmpTagId << ((sizeof(AsnTag) - i) * 8));
+			(*bytesDecoded)++;
+			i++;
+		} while ((tmpTagId & (AsnTag)0x80) && (i <= sizeof(AsnTag)));
 
-        /*
-         * check for tag that is too long
-         */
-        if (i > (sizeof (AsnTag)+1))
-        {
-            Asn1Error ("BDecTag: ERROR - tag value overflow\n");
-            longjmp (env, -25);
-        }
-    }
+		/*
+		 * check for tag that is too long
+		 */
+		if (i > (sizeof(AsnTag) + 1))
+		{
+			Asn1Error("BDecTag: ERROR - tag value overflow\n");
+			longjmp(env, -25);
+		}
+	}
 
-    if (BufReadError (b))
-    {
-        Asn1Error ("BDecTag: ERROR - decoded past the end of data\n");
-        longjmp (env, -26);
-    }
+	if (BufReadError(b))
+	{
+		Asn1Error("BDecTag: ERROR - decoded past the end of data\n");
+		longjmp(env, -26);
+	}
 
-    return tagId;
+	return tagId;
 
 }  /* BDecTag */
 
 
 #if TTBL
-AsnTag PeekTag PARAMS ((b, env),
-    GenBuf *b _AND_
-    ENV_TYPE env)
+AsnTag PeekTag PARAMS((b, env),
+	GenBuf* b _AND_
+	ENV_TYPE env)
 {
-    AsnTag tagId, tmpTagId;
-    int i;
-    unsigned char buf[sizeof(AsnTag)];
-    unsigned char* p = buf;
+	AsnTag tagId, tmpTagId;
+	int i;
+	unsigned char buf[sizeof(AsnTag)];
+	unsigned char* p = buf;
 
-    /*
-     * peek/copy the next (max size of tag) bytes
-     * to get the tag info.  The Peek buffer routines
-     * were added to the standard set for this function.
-     */
+	/*
+	 * peek/copy the next (max size of tag) bytes
+	 * to get the tag info.  The Peek buffer routines
+	 * were added to the standard set for this function.
+	 */
 
-    BufPeekCopy ((char*)buf, b, 1);
-    tagId = ((AsnTag)*p++) << ((sizeof (AsnTag)-1)*8);
+	BufPeekCopy((char*)buf, b, 1);
+	tagId = ((AsnTag)*p++) << ((sizeof(AsnTag) - 1) * 8);
 
-    /* check if long tag format (ie code > 31) */
-    if ((tagId & (((AsnTag) 0x1f) << ((sizeof (AsnTag)-1)*8))) == (((AsnTag)0x1f) << ((sizeof (AsnTag)-1)*8)))
-    {
-        i = 2;
-        do
-        {
-	    BufPeekCopy ((char*)buf, b, i);
-            tmpTagId = (AsnTag) *p++;
-            tagId |= (tmpTagId << ((sizeof (AsnTag)-i)*8));
-            i++;
-        }
-        while ((tmpTagId & (AsnTag)0x80) && (i <= sizeof (AsnTag)));
+	/* check if long tag format (ie code > 31) */
+	if ((tagId & (((AsnTag)0x1f) << ((sizeof(AsnTag) - 1) * 8))) == (((AsnTag)0x1f) << ((sizeof(AsnTag) - 1) * 8)))
+	{
+		i = 2;
+		do
+		{
+			BufPeekCopy((char*)buf, b, i);
+			tmpTagId = (AsnTag)*p++;
+			tagId |= (tmpTagId << ((sizeof(AsnTag) - i) * 8));
+			i++;
+		} while ((tmpTagId & (AsnTag)0x80) && (i <= sizeof(AsnTag)));
 
-        /*
-         * check for tag that is too long
-         */
-        if (i > (sizeof (AsnTag)+1))
-        {
-            Asn1Error ("BDecTag: ERROR - tag value overflow\n");
-            longjmp (env, -1004);
-        }
-    }
+		/*
+		 * check for tag that is too long
+		 */
+		if (i > (sizeof(AsnTag) + 1))
+		{
+			Asn1Error("BDecTag: ERROR - tag value overflow\n");
+			longjmp(env, -1004);
+		}
+	}
 
-    return tagId;
+	return tagId;
 
 } /* PeekTag */
 #endif /* TTBL */

@@ -37,21 +37,21 @@
 
 #if META
 
-int isMetaPDU PARAMS ((module, type, pdus),
-  const char *module _AND_
-  const char *type _AND_
-  MetaPDU *pdus)
+int isMetaPDU PARAMS((module, type, pdus),
+	const char* module _AND_
+	const char* type _AND_
+	MetaPDU* pdus)
 {
-  MetaPDU *pdu;
+	MetaPDU* pdu;
 
-  for (pdu=pdus; pdu; pdu=pdu->next)
-    if (!strcmp (pdu->module, module) && !strcmp (pdu->type, type))
-    {
-      pdu->used = TRUE;
-      return TRUE;
-    }
+	for (pdu = pdus; pdu; pdu = pdu->next)
+		if (!strcmp(pdu->module, module) && !strcmp(pdu->type, type))
+		{
+			pdu->used = TRUE;
+			return TRUE;
+		}
 
-  return FALSE;
+	return FALSE;
 }
 
 #endif /* META */

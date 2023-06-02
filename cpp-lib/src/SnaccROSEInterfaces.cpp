@@ -11,14 +11,14 @@ long SnaccROSESender::HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pI
 		if (pResultMsg && pResultMsg->result && result)
 		{
 			AsnLen len;
-			try	
+			try
 			{
 				if (pResultMsg->result->result.anyBuf)
 					result->BDec(*pResultMsg->result->result.anyBuf, len);
 				else if (pResultMsg->result->result.jsonBuf)
 					result->JDec(*pResultMsg->result->result.jsonBuf);
 
-				if(GetLogLevel(true))
+				if (GetLogLevel(true))
 					PrintAsnType(false, result, pInvokeMsg);
 
 			}
@@ -33,7 +33,7 @@ long SnaccROSESender::HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pI
 		if (pErrorMsg && pErrorMsg->error && error)
 		{
 			AsnLen len;
-			try	
+			try
 			{
 				if (pErrorMsg->error->anyBuf)
 					error->BDec(*pErrorMsg->error->anyBuf, len);

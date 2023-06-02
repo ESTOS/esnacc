@@ -22,7 +22,7 @@
 void SNACC::Indent(std::ostream& os, unsigned short i)
 {
 	while (i-- > 0)
-		os <<  '\t';
+		os << '\t';
 }
 
 std::ostream& operator<<(std::ostream& os, const SNACC::AsnType& v)

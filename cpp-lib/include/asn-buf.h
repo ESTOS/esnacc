@@ -136,7 +136,7 @@ class SNACCDLL_API AsnBufBits
 private:
 	std::streambuf* m_pbuf;				// Stream buffer containing the bits
 	bool			m_isInternalBuf;	// Indicates if streambuf is internal
-    bool            bAlign;
+    bool  bAlign;
 	unsigned char   m_ucWriteCharBuf[2];
 	int             m_iWriteBitPos;
 	unsigned char   m_ucReadCharBuf[2];	// Read character buffer

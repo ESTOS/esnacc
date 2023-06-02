@@ -48,42 +48,42 @@
 #include "../include/asn-int.h"
 #include "../include/asn-enum.h"
 
-/*
- * encodes universal TAG LENGTH and Contents of and ASN.1 ENUMERATED
- */
+ /*
+  * encodes universal TAG LENGTH and Contents of and ASN.1 ENUMERATED
+  */
 AsnLen
-BEncAsnEnum PARAMS ((b, data),
-    GenBuf *b _AND_
-    AsnEnum *data)
+BEncAsnEnum PARAMS((b, data),
+	GenBuf* b _AND_
+	AsnEnum* data)
 {
-    AsnLen len;
+	AsnLen len;
 
-    len =  BEncAsnEnumContent (b, data);
-    len += BEncDefLen (b, len);
-    len += BEncTag1 (b, UNIV, PRIM, ENUM_TAG_CODE);
-    return len;
+	len = BEncAsnEnumContent(b, data);
+	len += BEncDefLen(b, len);
+	len += BEncTag1(b, UNIV, PRIM, ENUM_TAG_CODE);
+	return len;
 }  /* BEncAsnEnum */
 
 /*
  * decodes universal TAG LENGTH and Contents of and ASN.1 ENUMERATED
  */
 void
-BDecAsnEnum PARAMS ((b, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnEnum    *result _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecAsnEnum PARAMS((b, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnEnum* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    AsnTag tag;
-    AsnLen elmtLen;
+	AsnTag tag;
+	AsnLen elmtLen;
 
-    if ((tag = BDecTag (b, bytesDecoded, env)) != MAKE_TAG_ID (UNIV, PRIM, ENUM_TAG_CODE))
-    {
-         Asn1Error ("BDecAsnInt: ERROR wrong tag on ENUMERATED.\n");
-         longjmp (env, -40);
-    }
+	if ((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, ENUM_TAG_CODE))
+	{
+		Asn1Error("BDecAsnInt: ERROR wrong tag on ENUMERATED.\n");
+		longjmp(env, -40);
+	}
 
-    elmtLen = BDecLen (b, bytesDecoded, env);
-    BDecAsnEnumContent (b, tag, elmtLen, result, bytesDecoded, env);
+	elmtLen = BDecLen(b, bytesDecoded, env);
+	BDecAsnEnumContent(b, tag, elmtLen, result, bytesDecoded, env);
 
 }  /* BDecAsnEnum */

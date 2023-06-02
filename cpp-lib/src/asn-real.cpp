@@ -154,14 +154,14 @@ _BEGIN_SNACC_NAMESPACE
 #ifndef IEEE_REAL_LIB
 /* ieee functions (in case not in math.h)*/
 extern "C" {
-extern int iszero (double);
+	extern int iszero(double);
 #ifdef VDAIEEE_NOT_GPP_30
-extern int isinf (double);
-extern int signbit (double);
+	extern int isinf(double);
+	extern int signbit(double);
 #endif
 #ifdef IEEE_REAL_LIB
-extern int ilogb (double);
-extern double scalbn (double, int);
+	extern int ilogb(double);
+	extern double scalbn(double, int);
 #endif
 }
 #endif
@@ -173,8 +173,8 @@ double AsnMinusInfinity();
  * Declare and init the PLUS and MINUS INFINITY values.
  *
  */
-const AsnReal PLUS_INFINITY (AsnPlusInfinity());
-const AsnReal MINUS_INFINITY (AsnMinusInfinity());
+const AsnReal PLUS_INFINITY(AsnPlusInfinity());
+const AsnReal MINUS_INFINITY(AsnMinusInfinity());
 
 #define ENC_PLUS_INFINITY	0x40
 #define ENC_MINUS_INFINITY	0x41
@@ -194,21 +194,21 @@ const AsnReal MINUS_INFINITY (AsnMinusInfinity());
 
 // Returns the smallest octet length needed to hold the given long int value
 unsigned int
-SignedIntOctetLen (long int val)
+SignedIntOctetLen(long int val)
 {
-    unsigned long int mask = (0x7f80L << ((sizeof (long int) - 2) * 8));
-    unsigned int retVal = sizeof (long int);
+	unsigned long int mask = (0x7f80L << ((sizeof(long int) - 2) * 8));
+	unsigned int retVal = sizeof(long int);
 
-    if (val < 0)
-        val = val ^ (~0L);  /* XOR val with all 1's */
+	if (val < 0)
+		val = val ^ (~0L);  /* XOR val with all 1's */
 
-    while ((retVal > 1) && ((val & mask) == 0))
-    {
-        mask >>= 8;
-        retVal--;
-    }
+	while ((retVal > 1) && ((val & mask) == 0))
+	{
+		mask >>= 8;
+		retVal--;
+	}
 
-    return retVal;
+	return retVal;
 
 } /* SignedIntOctetLen */
 
@@ -222,202 +222,202 @@ SignedIntOctetLen (long int val)
 // 0x7ff0000000000000
 double AsnPlusInfinity()
 {
-    double d;
-    unsigned char *c = (unsigned char *)&d;
+	double d;
+	unsigned char* c = (unsigned char*)&d;
 
 #if WORDS_BIGENDIAN
-    c[0] = 0x7f;
-    c[1] = 0xf0;
-    c[2] = 0x0;
-    c[3] = 0x0;
-    c[4] = 0x0;
-    c[5] = 0x0;
-    c[6] = 0x0;
-    c[7] = 0x0;
+	c[0] = 0x7f;
+	c[1] = 0xf0;
+	c[2] = 0x0;
+	c[3] = 0x0;
+	c[4] = 0x0;
+	c[5] = 0x0;
+	c[6] = 0x0;
+	c[7] = 0x0;
 #else
-    c[7] = 0x7f;
-    c[6] = 0xf0;
-    c[5] = 0x0;
-    c[4] = 0x0;
-    c[3] = 0x0;
-    c[2] = 0x0;
-    c[1] = 0x0;
-    c[0] = 0x0;
+	c[7] = 0x7f;
+	c[6] = 0xf0;
+	c[5] = 0x0;
+	c[4] = 0x0;
+	c[3] = 0x0;
+	c[2] = 0x0;
+	c[1] = 0x0;
+	c[0] = 0x0;
 #endif
 
-    return d;
+	return d;
 } /* AsnPlusInfinity */
 
 double AsnMinusInfinity()
 {
-    return -AsnPlusInfinity();
+	return -AsnPlusInfinity();
 }
 
 #if SIZEOF_DOUBLE != 8
-  #error oops: doubles are expected to be 8 bytes in size!
+#error oops: doubles are expected to be 8 bytes in size!
 #endif
 
 /*
  * Use this routine if you system/compiler represents doubles in the IEEE format.
  */
-AsnLen AsnReal::BEncContent (AsnBuf &b) const
+AsnLen AsnReal::BEncContent(AsnBuf& b) const
 {
-    int	exponent;
-    int isNeg;
+	int	exponent;
+	int isNeg;
 #if SIZEOF_LONG == 8
-    unsigned long mantissa, val, *p;
-    int i;
+	unsigned long mantissa, val, * p;
+	int i;
 #elif SIZEOF_LONG == 4
-    unsigned char *dbl;
-    unsigned long int *first4;
-    unsigned long int *second4;
+	unsigned char* dbl;
+	unsigned long int* first4;
+	unsigned long int* second4;
 #else
-  #error long neither 8 nor 4 bytes in size?
+#error long neither 8 nor 4 bytes in size?
 #endif
 
-    /* no contents for 0.0 reals */
-    if (value == 0.0) /* all bits zero, disregarding top/sign bit */
-        return 0;
+	/* no contents for 0.0 reals */
+	if (value == 0.0) /* all bits zero, disregarding top/sign bit */
+		return 0;
 
 #if SIZEOF_LONG == 8
-    /*
-     * this part assumes that sizeof (long) == sizeof (double) == 8
-     * It shouldn't be endian-dependent but I haven't verified that
-     */
+	/*
+	 * this part assumes that sizeof (long) == sizeof (double) == 8
+	 * It shouldn't be endian-dependent but I haven't verified that
+	 */
 
-    p = (unsigned long*) &value;
-    val = *p;
+	p = (unsigned long*)&value;
+	val = *p;
 
-    isNeg = (val >> 63) & 1;
-    /* special real values for +/- oo */
-    if (!finite (value))
-    {
-        if (isNeg)
+	isNeg = (val >> 63) & 1;
+	/* special real values for +/- oo */
+	if (!finite(value))
+	{
+		if (isNeg)
 		{
 			b.PutByteRvs(ENC_MINUS_INFINITY);
 		}
 		else
-        {
+		{
 			b.PutByteRvs(ENC_PLUS_INFINITY);
 		}
 
 		return 1;
-    }
-    else /* encode a binary real value */
-    {
-	exponent = (val >> 52) & 0x7ff;
-	mantissa = (val & 0xfffffffffffffL) | 0x10000000000000L;
-
-	for (i = 0; i < 7; i++)
+	}
+	else /* encode a binary real value */
 	{
-          b.PutByteRvs(mantissa & 0xff);
-	  mantissa >>= 8;
-        }
-        exponent -= (1023 + 52);
+		exponent = (val >> 52) & 0x7ff;
+		mantissa = (val & 0xfffffffffffffL) | 0x10000000000000L;
+
+		for (i = 0; i < 7; i++)
+		{
+			b.PutByteRvs(mantissa & 0xff);
+			mantissa >>= 8;
+		}
+		exponent -= (1023 + 52);
 
 #elif SIZEOF_LONG == 4
-    /*
-     * this part assumes that sizeof (long) == 4 and
-     * that sizeof (double) == 8
-     *
-     * sign  exponent
-     *     b 2-12 incl
-     *  Sv-----------v----- rest is mantissa
-     * -------------------------------------------
-     * |         |
-     * -------------------------------------------
-     *  123456878 1234
-     *
-     * sign bit is 1 if real is < 0
-     * exponent is an 11 bit unsigned value (subtract 1023 to get correct exp value)
-     * decimal pt implied before mantissa (ie mantissa is all fractional)
-     * and implicit 1 bit to left of decimal
-     *
-     * when given NaN (not a number - ie oo/oo) it encodes the wrong value
-     * instead of checking for the error. If you want to check for it,
-     *  a NaN is any sign bit with a max exponent (all bits a 1) followed
-     *  by any non-zero mantissa. (a zero mantissa is used for infinity)
-     *
-     */
+	/*
+	 * this part assumes that sizeof (long) == 4 and
+	 * that sizeof (double) == 8
+	 *
+	 * sign  exponent
+	 *     b 2-12 incl
+	 *  Sv-----------v----- rest is mantissa
+	 * -------------------------------------------
+	 * |         |
+	 * -------------------------------------------
+	 *  123456878 1234
+	 *
+	 * sign bit is 1 if real is < 0
+	 * exponent is an 11 bit unsigned value (subtract 1023 to get correct exp value)
+	 * decimal pt implied before mantissa (ie mantissa is all fractional)
+	 * and implicit 1 bit to left of decimal
+	 *
+	 * when given NaN (not a number - ie oo/oo) it encodes the wrong value
+	 * instead of checking for the error. If you want to check for it,
+	 *  a NaN is any sign bit with a max exponent (all bits a 1) followed
+	 *  by any non-zero mantissa. (a zero mantissa is used for infinity)
+	 *
+	 */
 
-    first4 = (unsigned long int*) (dbl = (unsigned char*) &value);
-    second4 = (unsigned long int *) (dbl + sizeof (long int));
+	first4 = (unsigned long int*) (dbl = (unsigned char*)&value);
+	second4 = (unsigned long int*) (dbl + sizeof(long int));
 
-    /* no contents for 0.0 reals */
-    if (value == 0.0) /* all bits zero, disregarding top/sign bit */
-        return 0;
+	/* no contents for 0.0 reals */
+	if (value == 0.0) /* all bits zero, disregarding top/sign bit */
+		return 0;
 
-    isNeg = dbl[0] & 0x80;
+	isNeg = dbl[0] & 0x80;
 
-    /* special real values for +/- oo */
-    if (((*first4 & 0x7fffffff) == 0x7ff00000) && (*second4 == 0))
-    {
-        if (isNeg)
-            b.PutByteRvs (ENC_MINUS_INFINITY);
-        else
-            b.PutByteRvs (ENC_PLUS_INFINITY);
+	/* special real values for +/- oo */
+	if (((*first4 & 0x7fffffff) == 0x7ff00000) && (*second4 == 0))
+	{
+		if (isNeg)
+			b.PutByteRvs(ENC_MINUS_INFINITY);
+		else
+			b.PutByteRvs(ENC_PLUS_INFINITY);
 
-        return 1;
-    }
-    else  /* encode a binary real value */
-    {
-        exponent = (((*first4) >> 20) & 0x07ff);
+		return 1;
+	}
+	else  /* encode a binary real value */
+	{
+		exponent = (((*first4) >> 20) & 0x07ff);
 
-        /* write the mantissa (N value) */
-        b.PutSegRvs ((char*)(dbl+2), sizeof (double)-2);
+		/* write the mantissa (N value) */
+		b.PutSegRvs((char*)(dbl + 2), sizeof(double) - 2);
 
-        /*
-         * The rightmost 4 bits of a double 2nd octet are the
-         * most sig bits of the mantissa.
-         * write the most signficant byte of the asn1 real manitssa,
-         * adding implicit bit to 'left of decimal' if not de-normalized
-         * (de normalized if exponent == 0)
-         *
-         * if the double is not in de-normalized form subtract 1023
-         * from the exponent to get proper signed exponent.
-         *
-         * for both the normalized and de-norm forms
-         * correct the exponent by subtracting 52 since:
-         *   1. mantissa is 52 bits in the double (56 in ASN.1 REAL form)
-         *   2. implicit decimal at the beginning of double's mantissa
-         *   3. ASN.1 REAL's implicit decimal is after its mantissa
-         * so converting the double mantissa to the ASN.1 form has the
-         * effect of multiplying it by 2^52. Subtracting 52 from the
-         * exponent corrects this.
-         */
-        if (exponent == 0) /* de-normalized - no implicit 1 to left of dec.*/
-        {
-            b.PutByteRvs (dbl[1] & 0x0f);
-            exponent -= 52;
-        }
-        else
-        {
-            b.PutByteRvs ((dbl[1] & 0x0f) | 0x10); /* 0x10 adds implicit bit */
-            exponent -= (1023 + 52);
-        }
+		/*
+		 * The rightmost 4 bits of a double 2nd octet are the
+		 * most sig bits of the mantissa.
+		 * write the most signficant byte of the asn1 real manitssa,
+		 * adding implicit bit to 'left of decimal' if not de-normalized
+		 * (de normalized if exponent == 0)
+		 *
+		 * if the double is not in de-normalized form subtract 1023
+		 * from the exponent to get proper signed exponent.
+		 *
+		 * for both the normalized and de-norm forms
+		 * correct the exponent by subtracting 52 since:
+		 *   1. mantissa is 52 bits in the double (56 in ASN.1 REAL form)
+		 *   2. implicit decimal at the beginning of double's mantissa
+		 *   3. ASN.1 REAL's implicit decimal is after its mantissa
+		 * so converting the double mantissa to the ASN.1 form has the
+		 * effect of multiplying it by 2^52. Subtracting 52 from the
+		 * exponent corrects this.
+		 */
+		if (exponent == 0) /* de-normalized - no implicit 1 to left of dec.*/
+		{
+			b.PutByteRvs(dbl[1] & 0x0f);
+			exponent -= 52;
+		}
+		else
+		{
+			b.PutByteRvs((dbl[1] & 0x0f) | 0x10); /* 0x10 adds implicit bit */
+			exponent -= (1023 + 52);
+		}
 
 #else
-  #error long neither 8 nor 4 bytes in size?
+#error long neither 8 nor 4 bytes in size?
 #endif
 
-        /*  write the exponent  */
-        b.PutByteRvs (exponent & 0xff);
-        b.PutByteRvs (exponent >> 8);
+	/*  write the exponent  */
+	b.PutByteRvs(exponent & 0xff);
+	b.PutByteRvs(exponent >> 8);
 
-        /* write format octet */
-        /* bb is 00 since base is 2 so do nothing */
-        /* ff is 00 since no other shifting is nec */
-        if (isNeg)
-            b.PutByteRvs (REAL_BINARY | REAL_EXPLEN_2 | REAL_SIGN);
-        else
-            b.PutByteRvs (REAL_BINARY | REAL_EXPLEN_2);
+	/* write format octet */
+	/* bb is 00 since base is 2 so do nothing */
+	/* ff is 00 since no other shifting is nec */
+	if (isNeg)
+		b.PutByteRvs(REAL_BINARY | REAL_EXPLEN_2 | REAL_SIGN);
+	else
+		b.PutByteRvs(REAL_BINARY | REAL_EXPLEN_2);
 
-        return sizeof (double) + 2;
-    }
+	return sizeof(double) + 2;
+	}
 
-    /* not reached */
+/* not reached */
 
-}  /*  AsnReal::BEncContent */
+	}  /*  AsnReal::BEncContent */
 
 #else  /* IEEE_REAL_FMT not def */
 
@@ -428,166 +428,166 @@ AsnLen AsnReal::BEncContent (AsnBuf &b) const
 // the math lib
 double AsnPlusInfinity()
 {
-    return infinity();
+	return infinity();
 } /* AsnPlusInfinity */
 
 double AsnMinusInfinity()
 {
-    return -AsnPlusInfinity();
+	return -AsnPlusInfinity();
 }
 
 // This routine uses the ieee library routines to encode
 // this AsnReal's double value
-AsnLen AsnReal::BEncContent (AsnBuf &b) const
+AsnLen AsnReal::BEncContent(AsnBuf & b) const
 {
-    AsnLen encLen;
-    double mantissa;
-    double tmpMantissa;
-    unsigned int truncatedMantissa;
-    int exponent;
-    unsigned int expLen;
-    int sign;
-    unsigned char buf[sizeof (double)];
-    int i, mantissaLen;
-    unsigned char firstOctet;
+	AsnLen encLen;
+	double mantissa;
+	double tmpMantissa;
+	unsigned int truncatedMantissa;
+	int exponent;
+	unsigned int expLen;
+	int sign;
+	unsigned char buf[sizeof(double)];
+	int i, mantissaLen;
+	unsigned char firstOctet;
 
-    /* no contents for 0.0 reals */
-    if (iszero (value))
-        return 0;
+	/* no contents for 0.0 reals */
+	if (iszero(value))
+		return 0;
 
-    /* special real values for +/- oo */
-    if (isinf (value))
-    {
-        if (signbit (value)) /* neg */
-            b.PutByteRvs (ENC_MINUS_INFINITY);
-        else
-            b.PutByteRvs (ENC_PLUS_INFINITY);
+	/* special real values for +/- oo */
+	if (isinf(value))
+	{
+		if (signbit(value)) /* neg */
+			b.PutByteRvs(ENC_MINUS_INFINITY);
+		else
+			b.PutByteRvs(ENC_PLUS_INFINITY);
 
-        encLen = 1;
-    }
-    else  /* encode a binary real value */
-    {
-        if (signbit (value))
-            sign = -1;
-        else
-            sign = 1;
+		encLen = 1;
+	}
+	else  /* encode a binary real value */
+	{
+		if (signbit(value))
+			sign = -1;
+		else
+			sign = 1;
 
-        exponent =  ilogb (value);
+		exponent = ilogb(value);
 
-        /* get the absolute value of the mantissa (subtract 1 to make < 1) */
-        mantissa = scalbn (fabs (value), -exponent-1);
+		/* get the absolute value of the mantissa (subtract 1 to make < 1) */
+		mantissa = scalbn(fabs(value), -exponent - 1);
 
 
-        tmpMantissa = mantissa;
+		tmpMantissa = mantissa;
 
-        /* convert mantissa into an unsigned integer */
-        for (i = 0; i < sizeof (double); i++)
-        {
-            /* normalizied so shift 8 bits worth to the left of the decimal */
-            tmpMantissa *= (1<<8);
+		/* convert mantissa into an unsigned integer */
+		for (i = 0; i < sizeof(double); i++)
+		{
+			/* normalizied so shift 8 bits worth to the left of the decimal */
+			tmpMantissa *= (1 << 8);
 
-            /* grab only (octet sized) the integer part */
-            truncatedMantissa = (unsigned int) tmpMantissa;
+			/* grab only (octet sized) the integer part */
+			truncatedMantissa = (unsigned int)tmpMantissa;
 
-            /* remove part to left of decimal now for next iteration */
-            tmpMantissa -= truncatedMantissa;
+			/* remove part to left of decimal now for next iteration */
+			tmpMantissa -= truncatedMantissa;
 
-            /* write into tmp buffer */
-            buf[i] = truncatedMantissa;
+			/* write into tmp buffer */
+			buf[i] = truncatedMantissa;
 
-            /* keep track of last non zero octet so can zap trailing zeros */
-            if (truncatedMantissa)
-                mantissaLen = i+1;
-        }
+			/* keep track of last non zero octet so can zap trailing zeros */
+			if (truncatedMantissa)
+				mantissaLen = i + 1;
+		}
 
-        /*
-         * write format octet  (first octet of content)
-         *  field  1 S bb ff ee
-         *  bit#   8 7 65 43 21
-         *
-         * 1 in bit#1 means binary rep
-         * 1 in bit#2 means the mantissa is neg, 0 pos
-         * bb is the base:    65  base
-         *                    00    2
-         *                    01    8
-         *                    10    16
-         *                    11    future ext.
-         *
-         * ff is the Value of F where  Mantissa = sign x N x 2^F
-         *    FF can be one of 0 to 3 inclusive. (used to save re-alignment)
-         *
-         * ee is the length of the exponent:  21   length
-         *                                    00     1
-         *                                    01     2
-         *                                    10     3
-         *                                    11     long form
-         *
-         *
-         * encoded binary real value looks like
-         *
-         *     fmt oct
-         *   --------------------------------------------------------
-         *   |1Sbbffee|  exponent (2's comp)  |   N (unsigned int)  |
-         *   --------------------------------------------------------
-         *    87654321
-         */
-        firstOctet = REAL_BINARY;
-        if (signbit (value))
-            firstOctet |= REAL_SIGN;
+		/*
+		 * write format octet  (first octet of content)
+		 *  field  1 S bb ff ee
+		 *  bit#   8 7 65 43 21
+		 *
+		 * 1 in bit#1 means binary rep
+		 * 1 in bit#2 means the mantissa is neg, 0 pos
+		 * bb is the base:    65  base
+		 *                    00    2
+		 *                    01    8
+		 *                    10    16
+		 *                    11    future ext.
+		 *
+		 * ff is the Value of F where  Mantissa = sign x N x 2^F
+		 *    FF can be one of 0 to 3 inclusive. (used to save re-alignment)
+		 *
+		 * ee is the length of the exponent:  21   length
+		 *                                    00     1
+		 *                                    01     2
+		 *                                    10     3
+		 *                                    11     long form
+		 *
+		 *
+		 * encoded binary real value looks like
+		 *
+		 *     fmt oct
+		 *   --------------------------------------------------------
+		 *   |1Sbbffee|  exponent (2's comp)  |   N (unsigned int)  |
+		 *   --------------------------------------------------------
+		 *    87654321
+		 */
+		firstOctet = REAL_BINARY;
+		if (signbit(value))
+			firstOctet |= REAL_SIGN;
 
-        /* bb is 00 since base is 2 so do nothing */
-        /* ff is 00 since no other shifting is nec */
+		/* bb is 00 since base is 2 so do nothing */
+		/* ff is 00 since no other shifting is nec */
 
-        /*
-         * get exponent calculate its encoded length
-         * Note that the process of converting the mantissa
-         * double to an int shifted the decimal mantissaLen * 8
-         * to the right - so correct that here
-         */
-        exponent++; /* compensate for trick to put mantissa < 1 */
-        exponent -= (mantissaLen * 8);
-        expLen = SignedIntOctetLen (exponent);
+		/*
+		 * get exponent calculate its encoded length
+		 * Note that the process of converting the mantissa
+		 * double to an int shifted the decimal mantissaLen * 8
+		 * to the right - so correct that here
+		 */
+		exponent++; /* compensate for trick to put mantissa < 1 */
+		exponent -= (mantissaLen * 8);
+		expLen = SignedIntOctetLen(exponent);
 
-        switch (expLen)
-        {
-            case 1:
-                firstOctet |= REAL_EXPLEN_1;
-                break;
-            case 2:
-                firstOctet |= REAL_EXPLEN_2;
-                break;
-            case 3:
-                firstOctet |= REAL_EXPLEN_3;
-                break;
-            default:
-                firstOctet |= REAL_EXPLEN_LONG;
-                break;
-        }
+		switch (expLen)
+		{
+		case 1:
+			firstOctet |= REAL_EXPLEN_1;
+			break;
+		case 2:
+			firstOctet |= REAL_EXPLEN_2;
+			break;
+		case 3:
+			firstOctet |= REAL_EXPLEN_3;
+			break;
+		default:
+			firstOctet |= REAL_EXPLEN_LONG;
+			break;
+		}
 
-        encLen = mantissaLen + expLen + 1;
+		encLen = mantissaLen + expLen + 1;
 
-        /* write the mantissa (N value) */
-        b.PutSegRvs ((char*)buf, mantissaLen);
+		/* write the mantissa (N value) */
+		b.PutSegRvs((char*)buf, mantissaLen);
 
-        /* write the exponent */
-        for (i = expLen; i > 0; i--)
-        {
-            b.PutByteRvs (exponent);
-            exponent >> 8;
-        }
+		/* write the exponent */
+		for (i = expLen; i > 0; i--)
+		{
+			b.PutByteRvs(exponent);
+			exponent >> 8;
+		}
 
-        /* write the exponents length if nec */
-        if (expLen > 3)
-        {
-            encLen++;
-            b.PutByteRvs (expLen);
-        }
+		/* write the exponents length if nec */
+		if (expLen > 3)
+		{
+			encLen++;
+			b.PutByteRvs(expLen);
+		}
 
-        /* write the format octet */
-        b.PutByteRvs (firstOctet);
+		/* write the format octet */
+		b.PutByteRvs(firstOctet);
 
-    }
-    return encLen;
+	}
+	return encLen;
 
 }  /*  AsnReal::BEncContent */
 
@@ -602,21 +602,21 @@ AsnLen AsnReal::BEncContent (AsnBuf &b) const
 // your architecture
 double AsnPlusInfinity()
 {
-    double d;
-    unsigned char *c;
-    unsigned long i;
+	double d;
+	unsigned char* c;
+	unsigned long i;
 
-    c = (unsigned char*)&d;
-    c[0] = 0x7f;
-    c[1] = 0xf0;
-    for (i = 2; i < sizeof (double); i++)
-        c[i] = 0;
-    return d;
+	c = (unsigned char*)&d;
+	c[0] = 0x7f;
+	c[1] = 0xf0;
+	for (i = 2; i < sizeof(double); i++)
+		c[i] = 0;
+	return d;
 } /* AsnPlusInfinity */
 
 double AsnMinusInfinity()
 {
-    return -AsnPlusInfinity();
+	return -AsnPlusInfinity();
 }
 
 /*
@@ -625,166 +625,166 @@ double AsnMinusInfinity()
  * or the existence of the IEEE library routines.  Uses old style
  * UNIX frexp etc.
  */
-AsnLen AsnReal::BEncContent (AsnBuf &b) const
+AsnLen AsnReal::BEncContent(AsnBuf & b) const
 {
-    unsigned long int encLen;
-    double mantissa;
-    double tmpMantissa;
-    unsigned int truncatedMantissa;
-    int exponent;
-    unsigned int expLen;
-    int sign;
-    unsigned char buf[sizeof (double)];
-    unsigned int i, mantissaLen=0;
-    unsigned char firstOctet;
+	unsigned long int encLen;
+	double mantissa;
+	double tmpMantissa;
+	unsigned int truncatedMantissa;
+	int exponent;
+	unsigned int expLen;
+	int sign;
+	unsigned char buf[sizeof(double)];
+	unsigned int i, mantissaLen = 0;
+	unsigned char firstOctet;
 
-    /* no contents for 0.0 reals */
-    if (value == 0.0)
-        return 0;
+	/* no contents for 0.0 reals */
+	if (value == 0.0)
+		return 0;
 
-    /* special real values for +/- oo */
-    if (value == MINUS_INFINITY)
-    {
-        b.PutByteRvs (ENC_MINUS_INFINITY);
-        encLen = 1;
-    }
-    else if (value == PLUS_INFINITY)
-    {
-        b.PutByteRvs (ENC_PLUS_INFINITY);
-        encLen = 1;
-    }
-    else  /* encode a binary real value */
-    {
-        /*
-         * this is what frexp gets from value
-         * value == mantissa * 2^exponent
-         * where 0.5 <= |manitissa| < 1.0
-         */
-        mantissa = frexp (value, &exponent);
+	/* special real values for +/- oo */
+	if (value == MINUS_INFINITY)
+	{
+		b.PutByteRvs(ENC_MINUS_INFINITY);
+		encLen = 1;
+	}
+	else if (value == PLUS_INFINITY)
+	{
+		b.PutByteRvs(ENC_PLUS_INFINITY);
+		encLen = 1;
+	}
+	else  /* encode a binary real value */
+	{
+		/*
+		 * this is what frexp gets from value
+		 * value == mantissa * 2^exponent
+		 * where 0.5 <= |manitissa| < 1.0
+		 */
+		mantissa = frexp(value, &exponent);
 
-        /* set sign and make mantissa = | mantissa | */
-        if (mantissa < 0.0)
-        {
-            sign = -1;
-            mantissa *= -1;
-        }
-        else
-            sign = 1;
+		/* set sign and make mantissa = | mantissa | */
+		if (mantissa < 0.0)
+		{
+			sign = -1;
+			mantissa *= -1;
+		}
+		else
+			sign = 1;
 
 
-        tmpMantissa = mantissa;
+		tmpMantissa = mantissa;
 
-        /* convert mantissa into an unsigned integer */
-        for (i = 0; i < sizeof (double); i++)
-        {
-            /* normalizied so shift 8 bits worth to the left of the decimal */
-            tmpMantissa *= (1<<8);
+		/* convert mantissa into an unsigned integer */
+		for (i = 0; i < sizeof(double); i++)
+		{
+			/* normalizied so shift 8 bits worth to the left of the decimal */
+			tmpMantissa *= (1 << 8);
 
-            /* grab only (octet sized) the integer part */
-            truncatedMantissa = (unsigned int) tmpMantissa;
+			/* grab only (octet sized) the integer part */
+			truncatedMantissa = (unsigned int)tmpMantissa;
 
-            /* remove part to left of decimal now for next iteration */
-            tmpMantissa -= truncatedMantissa;
+			/* remove part to left of decimal now for next iteration */
+			tmpMantissa -= truncatedMantissa;
 
-            /* write into tmp buffer */
-            buf[i] = (unsigned char)truncatedMantissa;
+			/* write into tmp buffer */
+			buf[i] = (unsigned char)truncatedMantissa;
 
-            /* keep track of last non zero octet so can zap trailing zeros */
-            if (truncatedMantissa)
-                mantissaLen = i+1;
-        }
+			/* keep track of last non zero octet so can zap trailing zeros */
+			if (truncatedMantissa)
+				mantissaLen = i + 1;
+		}
 
 		/* adjust the exponent. */
 		exponent -= (mantissaLen * 8);
 
-        /*
-         * write format octet  (first octet of content)
-         *  field  1 S bb ff ee
-         *  bit#   8 7 65 43 21
-         *
-         * 1 in bit#1 means binary rep
-         * 1 in bit#2 means the mantissa is neg, 0 pos
-         * bb is the base:    65  base
-         *                    00    2
-         *                    01    8
-         *                    10    16
-         *                    11    future ext.
-         *
-         * ff is the Value of F where  Mantissa = sign x N x 2^F
-         *    FF can be one of 0 to 3 inclusive. (used to save re-alignment)
-         *
-         * ee is the length of the exponent:  21   length
-         *                                    00     1
-         *                                    01     2
-         *                                    10     3
-         *                                    11     long form
-         *
-         *
-         * encoded binary real value looks like
-         *
-         *     fmt oct
-         *   --------------------------------------------------------
-         *   |1Sbbffee|  exponent (2's comp)  |   N (unsigned int)  |
-         *   --------------------------------------------------------
-         *    87654321
-         */
-        firstOctet = REAL_BINARY;
-        if (sign == -1)
-            firstOctet |= REAL_SIGN;
+		/*
+		 * write format octet  (first octet of content)
+		 *  field  1 S bb ff ee
+		 *  bit#   8 7 65 43 21
+		 *
+		 * 1 in bit#1 means binary rep
+		 * 1 in bit#2 means the mantissa is neg, 0 pos
+		 * bb is the base:    65  base
+		 *                    00    2
+		 *                    01    8
+		 *                    10    16
+		 *                    11    future ext.
+		 *
+		 * ff is the Value of F where  Mantissa = sign x N x 2^F
+		 *    FF can be one of 0 to 3 inclusive. (used to save re-alignment)
+		 *
+		 * ee is the length of the exponent:  21   length
+		 *                                    00     1
+		 *                                    01     2
+		 *                                    10     3
+		 *                                    11     long form
+		 *
+		 *
+		 * encoded binary real value looks like
+		 *
+		 *     fmt oct
+		 *   --------------------------------------------------------
+		 *   |1Sbbffee|  exponent (2's comp)  |   N (unsigned int)  |
+		 *   --------------------------------------------------------
+		 *    87654321
+		 */
+		firstOctet = REAL_BINARY;
+		if (sign == -1)
+			firstOctet |= REAL_SIGN;
 
-        /* bb is 00 since base is 2 so do nothing */
-        /* ff is 00 since no other shifting is nec */
+		/* bb is 00 since base is 2 so do nothing */
+		/* ff is 00 since no other shifting is nec */
 
-        /*
-         * get exponent calculate its encoded length
-         * Note that the process of converting the mantissa
-         * double to an int shifted the decimal mantissaLen * 8
-         * to the right - so correct that here
-         */
-        //exponent -= (mantissaLen * 8);
-        expLen = SignedIntOctetLen (exponent);
+		/*
+		 * get exponent calculate its encoded length
+		 * Note that the process of converting the mantissa
+		 * double to an int shifted the decimal mantissaLen * 8
+		 * to the right - so correct that here
+		 */
+		 //exponent -= (mantissaLen * 8);
+		expLen = SignedIntOctetLen(exponent);
 
-        switch (expLen)
-        {
-            case 1:
-                firstOctet |= REAL_EXPLEN_1;
-                break;
-            case 2:
-                firstOctet |= REAL_EXPLEN_2;
-                break;
-            case 3:
-                firstOctet |= REAL_EXPLEN_3;
-                break;
-            default:
-                firstOctet |= REAL_EXPLEN_LONG;
-                break;
-        }
+		switch (expLen)
+		{
+		case 1:
+			firstOctet |= REAL_EXPLEN_1;
+			break;
+		case 2:
+			firstOctet |= REAL_EXPLEN_2;
+			break;
+		case 3:
+			firstOctet |= REAL_EXPLEN_3;
+			break;
+		default:
+			firstOctet |= REAL_EXPLEN_LONG;
+			break;
+		}
 
-        encLen = mantissaLen + expLen + 1;
+		encLen = mantissaLen + expLen + 1;
 
-        /* write the mantissa (N value) */
-        b.PutSegRvs ((char*)buf, mantissaLen);
+		/* write the mantissa (N value) */
+		b.PutSegRvs((char*)buf, mantissaLen);
 
-        /* write the exponent */
-        for (i = expLen; i > 0; i--)
-        {
-            b.PutByteRvs ((unsigned char)exponent);
-            //RWC;10/10/00;I suspect we need this for multi-byte exponents... 
-            exponent = exponent >> 8;
-        }
+		/* write the exponent */
+		for (i = expLen; i > 0; i--)
+		{
+			b.PutByteRvs((unsigned char)exponent);
+			//RWC;10/10/00;I suspect we need this for multi-byte exponents... 
+			exponent = exponent >> 8;
+		}
 
-        /* write the exponents length if nec */
-        if (expLen > 3)
-        {
-            encLen++;
-            b.PutByteRvs ((unsigned char)expLen);
-        }
+		/* write the exponents length if nec */
+		if (expLen > 3)
+		{
+			encLen++;
+			b.PutByteRvs((unsigned char)expLen);
+		}
 
-        /* write the format octet */
-        b.PutByteRvs (firstOctet);
+		/* write the format octet */
+		b.PutByteRvs(firstOctet);
 
-    }
-    return encLen;
+	}
+	return encLen;
 
 }  /*  AsnReal::BEncContent */
 
@@ -796,116 +796,116 @@ AsnLen AsnReal::BEncContent (AsnBuf &b) const
 
 // Decode a REAL value's content from the given buffer.
 // places the result in this object.
-void AsnReal::BDecContent (const AsnBuf &b, AsnTag /* tagId */, AsnLen elmtLen, AsnLen &bytesDecoded)
+void AsnReal::BDecContent(const AsnBuf & b, AsnTag /* tagId */, AsnLen elmtLen, AsnLen & bytesDecoded)
 {
-    FUNC("AsnReal::BDecContent()");
+	FUNC("AsnReal::BDecContent()");
 
-    unsigned char firstOctet;
-    unsigned char firstExpOctet;
-    int i = 0;
-    unsigned int expLen = 0;
-    double mantissa = 0.0;
-    unsigned short base;
-    long int exponent = 0;
+	unsigned char firstOctet;
+	unsigned char firstExpOctet;
+	int i = 0;
+	unsigned int expLen = 0;
+	double mantissa = 0.0;
+	unsigned short base;
+	long int exponent = 0;
 	double numberN = 0;
 	unsigned int scaleF = 0;
 	double sign = 0;
 
-    if (elmtLen == 0)
-    {
-        value = 0.0;
-        return;
-    }
-    else if (elmtLen == INDEFINITE_LEN)
-       throw EXCEPT("indefinite length on primitive", DECODE_ERROR);
-    firstOctet = b.GetByte();
-    if (elmtLen == 1)
-    {
-        bytesDecoded += 1;
-        if (firstOctet == ENC_PLUS_INFINITY)
-            value = PLUS_INFINITY;
-        else if (firstOctet == ENC_MINUS_INFINITY)
-            value = MINUS_INFINITY;
-        else
-        {
-            throw EXCEPT("unrecognized 1 octet length real number", DECODE_ERROR);
-        }
-    }
-    else
-    {
-        if (firstOctet & REAL_BINARY)
-        {
+	if (elmtLen == 0)
+	{
+		value = 0.0;
+		return;
+	}
+	else if (elmtLen == INDEFINITE_LEN)
+		throw EXCEPT("indefinite length on primitive", DECODE_ERROR);
+	firstOctet = b.GetByte();
+	if (elmtLen == 1)
+	{
+		bytesDecoded += 1;
+		if (firstOctet == ENC_PLUS_INFINITY)
+			value = PLUS_INFINITY;
+		else if (firstOctet == ENC_MINUS_INFINITY)
+			value = MINUS_INFINITY;
+		else
+		{
+			throw EXCEPT("unrecognized 1 octet length real number", DECODE_ERROR);
+		}
+	}
+	else
+	{
+		if (firstOctet & REAL_BINARY)
+		{
 			sign = (firstOctet & REAL_SIGN) ? -1 : 1;	/* bit 7 */
 			scaleF = (firstOctet & REAL_FACTOR_MASK) >> 2;	/* bits 4 to 3 */
 
-            firstExpOctet = b.GetByte();
-            if (firstExpOctet & 0x80)
-                exponent = -1;
-            switch (firstOctet & REAL_EXPLEN_MASK)
-            {
-                case REAL_EXPLEN_1:
-                    expLen = 1;
-                    exponent =  (exponent << 8) | firstExpOctet;
-                    break;
+			firstExpOctet = b.GetByte();
+			if (firstExpOctet & 0x80)
+				exponent = -1;
+			switch (firstOctet & REAL_EXPLEN_MASK)
+			{
+			case REAL_EXPLEN_1:
+				expLen = 1;
+				exponent = (exponent << 8) | firstExpOctet;
+				break;
 
-                case REAL_EXPLEN_2:
-                    expLen = 2;
-                    exponent =  (exponent << 16) | (((unsigned long int) firstExpOctet) << 8) | b.GetByte();
-                    break;
+			case REAL_EXPLEN_2:
+				expLen = 2;
+				exponent = (exponent << 16) | (((unsigned long int) firstExpOctet) << 8) | b.GetByte();
+				break;
 
-                case REAL_EXPLEN_3:
-                    expLen = 3;
-                    exponent =  (exponent << 16) | (((unsigned long int) firstExpOctet) << 8) | b.GetByte();
-                    exponent =  (exponent << 8) | b.GetByte();
-                    break;
+			case REAL_EXPLEN_3:
+				expLen = 3;
+				exponent = (exponent << 16) | (((unsigned long int) firstExpOctet) << 8) | b.GetByte();
+				exponent = (exponent << 8) | b.GetByte();
+				break;
 
-                default:  /* long form */
-                    // The following code makese no sense and needs to get validated...
-                    // -1 << 8 is undefined in certain compilers
-                    // the loop below is checking i > 0 but is not touching i inside the loop
-                    // The same implementation is in the asn-real.c in the c-lib, please address them both!
-                    assert(0);
-                    /*
-                        expLen = firstExpOctet +1;
-                        i = firstExpOctet-1;
-                        firstExpOctet =  b.GetByte();
-                        if (firstExpOctet & 0x80)
-                            exponent = (-1 <<8) | firstExpOctet;
-                        else
-                            exponent = firstExpOctet;
-                        for (;i > 0; firstExpOctet--)
-                            exponent = (exponent << 8) | b.GetByte();
-                    */
-                    break;
-            }
+			default:  /* long form */
+				// The following code makese no sense and needs to get validated...
+				// -1 << 8 is undefined in certain compilers
+				// the loop below is checking i > 0 but is not touching i inside the loop
+				// The same implementation is in the asn-real.c in the c-lib, please address them both!
+				assert(0);
+				/*
+					expLen = firstExpOctet +1;
+					i = firstExpOctet-1;
+					firstExpOctet =  b.GetByte();
+					if (firstExpOctet & 0x80)
+						exponent = (-1 <<8) | firstExpOctet;
+					else
+						exponent = firstExpOctet;
+					for (;i > 0; firstExpOctet--)
+						exponent = (exponent << 8) | b.GetByte();
+				*/
+				break;
+			}
 
-            unsigned char cValue;
-            for (i = 1 + expLen; i < (int)elmtLen; i++)
-            {
-                cValue = b.GetByte();
+			unsigned char cValue;
+			for (i = 1 + expLen; i < (int)elmtLen; i++)
+			{
+				cValue = b.GetByte();
 				numberN = numberN * 256;
 				numberN += cValue;
-            }
+			}
 
-            switch (firstOctet & REAL_BASE_MASK)
-            {
-                case REAL_BASE_2:
-                    base = 2;
-                    break;
+			switch (firstOctet & REAL_BASE_MASK)
+			{
+			case REAL_BASE_2:
+				base = 2;
+				break;
 
-                case REAL_BASE_8:
-                    base = 8;
-                    break;
+			case REAL_BASE_8:
+				base = 8;
+				break;
 
-                case REAL_BASE_16:
-                    base = 16;
-                    break;
+			case REAL_BASE_16:
+				base = 16;
+				break;
 
-                default:
-                    throw EXCEPT("unsupported base for a binary real number.", DECODE_ERROR);
-                   break;
+			default:
+				throw EXCEPT("unsupported base for a binary real number.", DECODE_ERROR);
+				break;
 
-            }
+			}
 
 			//M = S x N x 2^F
 			//mantissa = sign * numberN * pow(2, scaleF);
@@ -921,21 +921,21 @@ void AsnReal::BDecContent (const AsnBuf &b, AsnTag /* tagId */, AsnLen elmtLen, 
 				value = mantissa * pow((double)base, (double)exponent);
 			}
 
-            bytesDecoded += elmtLen;
-        }
-        else /* decimal version */
-        {
-            throw EXCEPT("decimal REAL form is not currently supported" , DECODE_ERROR);
-        }
-    }
+			bytesDecoded += elmtLen;
+		}
+		else /* decimal version */
+		{
+			throw EXCEPT("decimal REAL form is not currently supported", DECODE_ERROR);
+		}
+	}
 } /* AsnInt::BDecContent */
 
-void AsnReal::JEnc (EJson::Value &b) const
+void AsnReal::JEnc(EJson::Value & b) const
 {
 	b = EJson::Value(value);
 }
 
-bool AsnReal::JDec (const EJson::Value &b)
+bool AsnReal::JDec(const EJson::Value & b)
 {
 	value = 0;
 	if (b.isConvertibleTo(EJson::realValue))
@@ -946,10 +946,10 @@ bool AsnReal::JDec (const EJson::Value &b)
 	return false;
 }
 
-AsnLen AsnReal::PEnc (AsnBufBits &b) const
+AsnLen AsnReal::PEnc(AsnBufBits & b) const
 {
-	AsnLen len=0;
-    long templen = 0;
+	AsnLen len = 0;
+	long templen = 0;
 	AsnBuf tempBuf;
 	char* seg = NULL;
 
@@ -958,10 +958,10 @@ AsnLen AsnReal::PEnc (AsnBufBits &b) const
 	seg = new char[templen + 1];
 
 	tempBuf.GetSeg(seg, templen);
-	
+
 	len += PEncDefLenTo127(b, templen);
 
-	if(templen > 0)
+	if (templen > 0)
 	{
 
 		templen *= 8;
@@ -969,15 +969,15 @@ AsnLen AsnReal::PEnc (AsnBufBits &b) const
 		len += b.OctetAlignWrite();
 
 
-		len += b.PutBits((unsigned char*) seg, templen);
+		len += b.PutBits((unsigned char*)seg, templen);
 	}
 
-    delete[] seg;
+	delete[] seg;
 	return len;
 }
 
 
-void AsnReal::PDec (AsnBufBits &b, AsnLen &bitsDecoded)
+void AsnReal::PDec(AsnBufBits & b, AsnLen & bitsDecoded)
 {
 	AsnBuf tempBuf;
 	AsnLen bytesDecoded = 0;
@@ -987,59 +987,59 @@ void AsnReal::PDec (AsnBufBits &b, AsnLen &bitsDecoded)
 	seg = b.GetBits(8);
 	lseg = (unsigned long)seg[0];
 	bitsDecoded += 8;
-	
+
 	bitsDecoded += b.OctetAlignRead();
 
-    free(seg);
+	free(seg);
 	seg = b.GetBits(lseg * 8);
 
 	tempBuf.PutSegRvs((char*)seg, lseg);
 
-	
-	BDecContent (tempBuf, MAKE_TAG_ID (UNIV, PRIM, REAL_TAG_CODE), lseg, bytesDecoded);
+
+	BDecContent(tempBuf, MAKE_TAG_ID(UNIV, PRIM, REAL_TAG_CODE), lseg, bytesDecoded);
 
 	bitsDecoded += (bytesDecoded * 8);
-    free(seg);
+	free(seg);
 }
 
 
-AsnLen AsnReal::BEnc (AsnBuf &b) const
+AsnLen AsnReal::BEnc(AsnBuf & b) const
 {
-    AsnLen l;
-    l =  BEncContent (b);
-    l += BEncDefLen (b, l);
-    l += BEncTag1 (b, UNIV, PRIM, REAL_TAG_CODE);
-    return l;
+	AsnLen l;
+	l = BEncContent(b);
+	l += BEncDefLen(b, l);
+	l += BEncTag1(b, UNIV, PRIM, REAL_TAG_CODE);
+	return l;
 }
 
-void AsnReal::BDec (const AsnBuf &b, AsnLen &bytesDecoded)
+void AsnReal::BDec(const AsnBuf & b, AsnLen & bytesDecoded)
 {
-    FUNC("AsnReal::BDec()");
+	FUNC("AsnReal::BDec()");
 
-    AsnLen elmtLen;
-    AsnTag tagId;
+	AsnLen elmtLen;
+	AsnTag tagId;
 
-    tagId = BDecTag (b, bytesDecoded); 
-    if (tagId != MAKE_TAG_ID (UNIV, PRIM, REAL_TAG_CODE))
-    {
-        throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
-    }
-    elmtLen = BDecLen (b, bytesDecoded);
+	tagId = BDecTag(b, bytesDecoded);
+	if (tagId != MAKE_TAG_ID(UNIV, PRIM, REAL_TAG_CODE))
+	{
+		throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
+	}
+	elmtLen = BDecLen(b, bytesDecoded);
 
-    BDecContent (b, MAKE_TAG_ID (UNIV, PRIM, REAL_TAG_CODE), elmtLen, bytesDecoded);
+	BDecContent(b, MAKE_TAG_ID(UNIV, PRIM, REAL_TAG_CODE), elmtLen, bytesDecoded);
 }
 
-void AsnReal::Print(std::ostream& os, unsigned short /*indent*/) const
+void AsnReal::Print(std::ostream & os, unsigned short /*indent*/) const
 {
 	os << value;
 }
 
-void AsnReal::PrintXML (std::ostream &os, const char *lpszTitle) const 
+void AsnReal::PrintXML(std::ostream & os, const char* lpszTitle) const
 {
-   os << "<REAL>"; 
-   if (lpszTitle) os << lpszTitle; 
-   os << "-"; 
-   Print(os); os << "</REAL>\n"; 
+	os << "<REAL>";
+	if (lpszTitle) os << lpszTitle;
+	os << "-";
+	Print(os); os << "</REAL>\n";
 }
 
 
@@ -1047,58 +1047,58 @@ char* AsnReal::checkRealValRange(const double m_Lower, const double m_Upper) con
 {
 
 	double ltemp;
-    char* pError=NULL;
-    char cTmperr[200];
+	char* pError = NULL;
+	char cTmperr[200];
 
 
-   ltemp=value;
+	ltemp = value;
 
-   if(ltemp<=m_Upper && ltemp >= m_Lower)
-   {
-	return pError;
-   }
-   else
-   {
-	if(ltemp>m_Upper)
-    {
-        sprintf_s(cTmperr, 200, "_______\nREAL--Valuerange Constraints:\n_______\nError: --Value out of range--\nValue: %.5f is above the Upper Limit: %.5f \n", ltemp, m_Upper);
-        pError = _strdup(cTmperr);
-        return pError;
-    }
-    else if(ltemp<m_Lower)
-    {
-        sprintf_s(cTmperr, 200, "_______\nREAL--Valuerange Constraints:\n_______\nError: --Value out of range--\nValue: %.5f is below the Lower Limit: %.5f \n", ltemp, m_Lower);
-        pError = _strdup(cTmperr);
-        return pError;
-    }
-    else
-    {
-        return pError;
-    }
-   }
+	if (ltemp <= m_Upper && ltemp >= m_Lower)
+	{
+		return pError;
+	}
+	else
+	{
+		if (ltemp > m_Upper)
+		{
+			sprintf_s(cTmperr, 200, "_______\nREAL--Valuerange Constraints:\n_______\nError: --Value out of range--\nValue: %.5f is above the Upper Limit: %.5f \n", ltemp, m_Upper);
+			pError = _strdup(cTmperr);
+			return pError;
+		}
+		else if (ltemp < m_Lower)
+		{
+			sprintf_s(cTmperr, 200, "_______\nREAL--Valuerange Constraints:\n_______\nError: --Value out of range--\nValue: %.5f is below the Lower Limit: %.5f \n", ltemp, m_Lower);
+			pError = _strdup(cTmperr);
+			return pError;
+		}
+		else
+		{
+			return pError;
+		}
+	}
 }
 
 char* AsnReal::checkRealSingleVal(const double m_SingleVal) const
 {
 
 	double ltemp;
-    char* pError=NULL;
-    char cTmperr[200];
+	char* pError = NULL;
+	char cTmperr[200];
 
 
-   ltemp=value;
+	ltemp = value;
 
-   if(ltemp==m_SingleVal)
-   {
-	return pError;
-   }
-   else
-   {
-        sprintf_s(cTmperr, 200, "_______\nREAL--SingleValue Constraints:\n_______\nError: --Values must match--\nValue: %.5f is not equal to the Constraint Single Value:  %.5f \n", ltemp, m_SingleVal);
-        pError = _strdup(cTmperr);
-        return pError;
-   
-   }
+	if (ltemp == m_SingleVal)
+	{
+		return pError;
+	}
+	else
+	{
+		sprintf_s(cTmperr, 200, "_______\nREAL--SingleValue Constraints:\n_______\nError: --Values must match--\nValue: %.5f is not equal to the Constraint Single Value:  %.5f \n", ltemp, m_SingleVal);
+		pError = _strdup(cTmperr);
+		return pError;
+
+	}
 }
 
 
@@ -1106,40 +1106,40 @@ char* AsnReal::checkRealSingleVal(const double m_SingleVal) const
 
 #if META
 
-const AsnRealTypeDesc AsnReal::_desc (NULL, NULL, false, AsnTypeDesc::REAL, NULL);
+const AsnRealTypeDesc AsnReal::_desc(NULL, NULL, false, AsnTypeDesc::REAL, NULL);
 
-const AsnTypeDesc *AsnReal::_getdesc() const
+const AsnTypeDesc* AsnReal::_getdesc() const
 {
-  return &_desc;
+	return &_desc;
 }
 
 #if TCL
 
-int AsnReal::TclGetVal (Tcl_Interp *interp) const
+int AsnReal::TclGetVal(Tcl_Interp * interp) const
 {
-  if (value == PLUS_INFINITY)
-    strcpy (interp->result, "+inf");
-  else if (value == MINUS_INFINITY)
-    strcpy (interp->result, "-inf");
-  else
-    sprintf (interp->result, "%g", value);
-  return TCL_OK;
+	if (value == PLUS_INFINITY)
+		strcpy(interp->result, "+inf");
+	else if (value == MINUS_INFINITY)
+		strcpy(interp->result, "-inf");
+	else
+		sprintf(interp->result, "%g", value);
+	return TCL_OK;
 }
 
-int AsnReal::TclSetVal (Tcl_Interp *interp, const char *valstr)
+int AsnReal::TclSetVal(Tcl_Interp * interp, const char* valstr)
 {
-  double valval;
+	double valval;
 
-  if (!strcmp (valstr, "+inf"))
-    valval = PLUS_INFINITY;
-  else if (!strcmp (valstr, "-inf"))
-    valval = MINUS_INFINITY;
-  else if (Tcl_GetDouble (interp, (char*)valstr, &valval) != TCL_OK)
-    return TCL_ERROR;
+	if (!strcmp(valstr, "+inf"))
+		valval = PLUS_INFINITY;
+	else if (!strcmp(valstr, "-inf"))
+		valval = MINUS_INFINITY;
+	else if (Tcl_GetDouble(interp, (char*)valstr, &valval) != TCL_OK)
+		return TCL_ERROR;
 
-  value = valval;
+	value = valval;
 
-  return TCL_OK;
+	return TCL_OK;
 }
 
 #endif /* TCL */

@@ -65,43 +65,43 @@
 #include "../include/asn-tag.h"
 #include "../include/asn-bool.h"
 
-/*
- * encodes universal TAG LENGTH and Contents of and ASN.1 BOOLEAN
- */
+ /*
+  * encodes universal TAG LENGTH and Contents of and ASN.1 BOOLEAN
+  */
 AsnLen
-BEncAsnBool PARAMS ((b, data),
-    GenBuf *b _AND_
-    AsnBool *data)
+BEncAsnBool PARAMS((b, data),
+	GenBuf* b _AND_
+	AsnBool* data)
 {
-    AsnLen len;
+	AsnLen len;
 
-    len =  BEncAsnBoolContent (b, data);
-    len += BEncDefLen (b, len);
-    len += BEncTag1 (b, UNIV, PRIM, BOOLEAN_TAG_CODE);
-    return len;
+	len = BEncAsnBoolContent(b, data);
+	len += BEncDefLen(b, len);
+	len += BEncTag1(b, UNIV, PRIM, BOOLEAN_TAG_CODE);
+	return len;
 }  /* BEncAsnBool */
 
 /*
  * decodes universal TAG LENGTH and Contents of and ASN.1 BOOLEAN
  */
 void
-BDecAsnBool PARAMS ((b, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnBool    *result _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecAsnBool PARAMS((b, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnBool* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    AsnTag tag;
-    AsnLen elmtLen;
+	AsnTag tag;
+	AsnLen elmtLen;
 
-    if ((tag = BDecTag (b, bytesDecoded, env)) != MAKE_TAG_ID (UNIV, PRIM, BOOLEAN_TAG_CODE))
-    {
-         Asn1Error ("BDecAsnBool: ERROR - wrong tag on BOOLEAN.\n");
-         longjmp (env, -40);
-    }
+	if ((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, BOOLEAN_TAG_CODE))
+	{
+		Asn1Error("BDecAsnBool: ERROR - wrong tag on BOOLEAN.\n");
+		longjmp(env, -40);
+	}
 
-    elmtLen = BDecLen (b, bytesDecoded, env);
-    BDecAsnBoolContent (b, tag, elmtLen, result, bytesDecoded, env);
+	elmtLen = BDecLen(b, bytesDecoded, env);
+	BDecAsnBoolContent(b, tag, elmtLen, result, bytesDecoded, env);
 
 }  /* BDecAsnBool */
 
@@ -109,12 +109,12 @@ BDecAsnBool PARAMS ((b, result, bytesDecoded, env),
  * Encodes just the content of the given BOOLEAN value to the given buffer.
  */
 AsnLen
-BEncAsnBoolContent PARAMS ((b, data),
-    GenBuf *b _AND_
-    AsnBool  *data)
+BEncAsnBoolContent PARAMS((b, data),
+	GenBuf* b _AND_
+	AsnBool* data)
 {
-    BufPutByteRvs (b, (unsigned char)(*data ? 0xFF : 0));
-    return 1;
+	BufPutByteRvs(b, (unsigned char)(*data ? 0xFF : 0));
+	return 1;
 }  /* BEncAsnBoolContent */
 
 /*
@@ -122,28 +122,28 @@ BEncAsnBoolContent PARAMS ((b, data),
  * longjmps if there is a buffer reading problem
  */
 void
-BDecAsnBoolContent PARAMS ((b, tagId, len, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnTag tagId _AND_
-    AsnLen len _AND_
-    AsnBool  *result _AND_
-    AsnLen  *bytesDecoded _AND_
-    jmp_buf env)
+BDecAsnBoolContent PARAMS((b, tagId, len, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnTag tagId _AND_
+	AsnLen len _AND_
+	AsnBool* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    if (len != 1)
-    {
-        Asn1Error ("BDecAsnBoolContent: ERROR - BOOLEAN length must be 1\n");
-        longjmp (env,-5);
-    }
+	if (len != 1)
+	{
+		Asn1Error("BDecAsnBoolContent: ERROR - BOOLEAN length must be 1\n");
+		longjmp(env, -5);
+	}
 
-    (*bytesDecoded)++;
-    *result = (unsigned char)(BufGetByte (b) != 0);
+	(*bytesDecoded)++;
+	*result = (unsigned char)(BufGetByte(b) != 0);
 
-    if (BufReadError (b))
-    {
-         Asn1Error ("BDecAsnBoolContent: ERROR - decoded past end of data\n");
-         longjmp (env, -6);
-    }
+	if (BufReadError(b))
+	{
+		Asn1Error("BDecAsnBoolContent: ERROR - decoded past end of data\n");
+		longjmp(env, -6);
+	}
 }  /* BDecAsnBoolContent */
 
 /*
@@ -151,18 +151,18 @@ BDecAsnBoolContent PARAMS ((b, tagId, len, result, bytesDecoded, env),
  * Does not use the indent.
  */
 void
-PrintAsnBool PARAMS ((f, v, indent),
-    FILE *f _AND_
-    AsnBool *v _AND_
-    unsigned int indent)
+PrintAsnBool PARAMS((f, v, indent),
+	FILE* f _AND_
+	AsnBool* v _AND_
+	unsigned int indent)
 {
-    if (*v)
-        fprintf (f, "TRUE");
-    else
-        fprintf (f, "FALSE");
+	if (*v)
+		fprintf(f, "TRUE");
+	else
+		fprintf(f, "FALSE");
 }
 
-void FreeAsnBool PARAMS ((b), AsnBool* b) 
+void FreeAsnBool PARAMS((b), AsnBool* b)
 {
 }
 

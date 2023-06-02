@@ -6,25 +6,25 @@
 #include "stdafx.h"
 #include "snaccdll.h"
 
-BOOL APIENTRY DllMain( HANDLE hModule, 
-                       DWORD  ul_reason_for_call, 
-                       LPVOID lpReserved
-					 )
+BOOL APIENTRY DllMain(HANDLE hModule,
+	DWORD  ul_reason_for_call,
+	LPVOID lpReserved
+)
 {
-    switch (ul_reason_for_call)
+	switch (ul_reason_for_call)
 	{
-		case DLL_PROCESS_ATTACH:
-		case DLL_THREAD_ATTACH:
-		case DLL_THREAD_DETACH:
-		case DLL_PROCESS_DETACH:
-			break;
-    }
-    return TRUE;
+	case DLL_PROCESS_ATTACH:
+	case DLL_THREAD_ATTACH:
+	case DLL_THREAD_DETACH:
+	case DLL_PROCESS_DETACH:
+		break;
+	}
+	return TRUE;
 }
 
 
 // This is an example of an exported variable
-SNACCDLL_API int nSnaccDLL=0;
+SNACCDLL_API int nSnaccDLL = 0;
 
 // This is an example of an exported function.
 SNACCDLL_API int fnSnaccDLL(void)
@@ -35,8 +35,8 @@ SNACCDLL_API int fnSnaccDLL(void)
 // This is the constructor of a class that has been exported.
 // see snaccDLL.h for the class definition
 CSnaccDLL::CSnaccDLL()
-{ 
-	return; 
+{
+	return;
 }
 #endif // SNACCDLL_NONE
 #endif // _WIN32

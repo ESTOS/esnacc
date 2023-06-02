@@ -17,28 +17,28 @@
 
 
 AsnLen
-BEncTBLTypeRefContent PARAMS ((b, v),
-GenBuf *b _AND_
-TBLTypeRef *v)
+BEncTBLTypeRefContent PARAMS((b, v),
+	GenBuf* b _AND_
+	TBLTypeRef* v)
 {
-    AsnLen totalLen = 0;
-    AsnLen itemLen;
+	AsnLen totalLen = 0;
+	AsnLen itemLen;
 
-    itemLen = BEncAsnBoolContent (b, (&v->implicit));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, UNIV, PRIM, BOOLEAN_TAG_CODE);
+	itemLen = BEncAsnBoolContent(b, (&v->implicit));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, UNIV, PRIM, BOOLEAN_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    itemLen = BEncTBLTypeDefIdContent (b, (&v->typeDef));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, UNIV, PRIM, INTEGER_TAG_CODE);
+	itemLen = BEncTBLTypeDefIdContent(b, (&v->typeDef));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, UNIV, PRIM, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    return totalLen;
+	return totalLen;
 
 }  /* BEncTBLTypeRefContent */
 
@@ -46,28 +46,28 @@ TBLTypeRef *v)
 
 
 AsnLen
-BEncTBLTagContent PARAMS ((b, v),
-GenBuf *b _AND_
-TBLTag *v)
+BEncTBLTagContent PARAMS((b, v),
+	GenBuf* b _AND_
+	TBLTag* v)
 {
-    AsnLen totalLen = 0;
-    AsnLen itemLen;
+	AsnLen totalLen = 0;
+	AsnLen itemLen;
 
-    itemLen = BEncAsnIntContent (b, (&v->code));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, UNIV, PRIM, INTEGER_TAG_CODE);
+	itemLen = BEncAsnIntContent(b, (&v->code));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, UNIV, PRIM, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    itemLen = BEncTBLTagClassContent (b, (&v->tclass));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, UNIV, PRIM, ENUM_TAG_CODE);
+	itemLen = BEncTBLTagClassContent(b, (&v->tclass));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, UNIV, PRIM, ENUM_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    return totalLen;
+	return totalLen;
 
 }  /* BEncTBLTagContent */
 
@@ -75,25 +75,25 @@ TBLTag *v)
 
 
 AsnLen
-BEncTBLTypeSeqOfContent PARAMS ((b, v),
-GenBuf *b _AND_
-TBLTypeSeqOf *v)
+BEncTBLTypeSeqOfContent PARAMS((b, v),
+	GenBuf* b _AND_
+	TBLTypeSeqOf* v)
 {
-    AsnLen itemLen;
-    AsnLen listLen;
-    void *component;
+	AsnLen itemLen;
+	AsnLen listLen;
+	void* component;
 
-    listLen = 0;
-    FOR_EACH_LIST_ELMT_RVS (component, v)
-    {
-    BEncEocIfNec (b);
-    itemLen = BEncTBLTagContent (b, component);
-    itemLen += BEncConsLen (b, itemLen);
-    itemLen += BEncTag1 (b, UNIV, CONS, SEQ_TAG_CODE);
+	listLen = 0;
+	FOR_EACH_LIST_ELMT_RVS(component, v)
+	{
+		BEncEocIfNec(b);
+		itemLen = BEncTBLTagContent(b, component);
+		itemLen += BEncConsLen(b, itemLen);
+		itemLen += BEncTag1(b, UNIV, CONS, SEQ_TAG_CODE);
 
-        listLen += itemLen;
-    }
-    return listLen;
+		listLen += itemLen;
+	}
+	return listLen;
 
 }  /* BEncTBLTypeSeqOfContent */
 
@@ -101,25 +101,25 @@ TBLTypeSeqOf *v)
 
 
 AsnLen
-BEncTBLTypeContentSeqOfContent PARAMS ((b, v),
-GenBuf *b _AND_
-TBLTypeContentSeqOf *v)
+BEncTBLTypeContentSeqOfContent PARAMS((b, v),
+	GenBuf* b _AND_
+	TBLTypeContentSeqOf* v)
 {
-    AsnLen itemLen;
-    AsnLen listLen;
-    void *component;
+	AsnLen itemLen;
+	AsnLen listLen;
+	void* component;
 
-    listLen = 0;
-    FOR_EACH_LIST_ELMT_RVS (component, v)
-    {
-    BEncEocIfNec (b);
-    itemLen = BEncTBLTypeContent (b, component);
-    itemLen += BEncConsLen (b, itemLen);
-    itemLen += BEncTag1 (b, UNIV, CONS, SEQ_TAG_CODE);
+	listLen = 0;
+	FOR_EACH_LIST_ELMT_RVS(component, v)
+	{
+		BEncEocIfNec(b);
+		itemLen = BEncTBLTypeContent(b, component);
+		itemLen += BEncConsLen(b, itemLen);
+		itemLen += BEncTag1(b, UNIV, CONS, SEQ_TAG_CODE);
 
-        listLen += itemLen;
-    }
-    return listLen;
+		listLen += itemLen;
+	}
+	return listLen;
 
 }  /* BEncTBLTypeContentSeqOfContent */
 
@@ -127,54 +127,54 @@ TBLTypeContentSeqOf *v)
 
 
 AsnLen
-BEncTBLTypeContent PARAMS ((b, v),
-GenBuf *b _AND_
-TBLType *v)
+BEncTBLTypeContent PARAMS((b, v),
+	GenBuf* b _AND_
+	TBLType* v)
 {
-    AsnLen totalLen = 0;
-    AsnLen itemLen;
+	AsnLen totalLen = 0;
+	AsnLen itemLen;
 
-    if (ASNOCTS_PRESENT ((&v->fieldName)))
-    {
-    itemLen = BEncPrintableStringContent (b, (&v->fieldName));
-    itemLen += BEncDefLen (b, itemLen);
-    itemLen += BEncTag1 (b, CNTX, PRIM, OCTETSTRING_TAG_CODE);
+	if (ASNOCTS_PRESENT((&v->fieldName)))
+	{
+		itemLen = BEncPrintableStringContent(b, (&v->fieldName));
+		itemLen += BEncDefLen(b, itemLen);
+		itemLen += BEncTag1(b, CNTX, PRIM, OCTETSTRING_TAG_CODE);
 
-    totalLen += itemLen;
-    }
+		totalLen += itemLen;
+	}
 
-    BEncEocIfNec (b);
-    itemLen = BEncTBLTypeContentContent (b, (v->content));
-    itemLen += BEncConsLen (b, itemLen);
-    itemLen += BEncTag1 (b, CNTX, CONS, BITSTRING_TAG_CODE);
+	BEncEocIfNec(b);
+	itemLen = BEncTBLTypeContentContent(b, (v->content));
+	itemLen += BEncConsLen(b, itemLen);
+	itemLen += BEncTag1(b, CNTX, CONS, BITSTRING_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    if (NOT_NULL ((v->tagList)))
-    {
-    BEncEocIfNec (b);
-    itemLen = BEncTBLTypeSeqOfContent (b, (v->tagList));
-    itemLen += BEncConsLen (b, itemLen);
-    itemLen += BEncTag1 (b, CNTX, CONS, INTEGER_TAG_CODE);
+	if (NOT_NULL((v->tagList)))
+	{
+		BEncEocIfNec(b);
+		itemLen = BEncTBLTypeSeqOfContent(b, (v->tagList));
+		itemLen += BEncConsLen(b, itemLen);
+		itemLen += BEncTag1(b, CNTX, CONS, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
-    }
+		totalLen += itemLen;
+	}
 
-    itemLen = BEncAsnBoolContent (b, (&v->optional));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, CNTX, PRIM, BOOLEAN_TAG_CODE);
+	itemLen = BEncAsnBoolContent(b, (&v->optional));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, CNTX, PRIM, BOOLEAN_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    itemLen = BEncTBLTypeIdContent (b, (&v->typeId));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, CNTX, PRIM, 0);
+	itemLen = BEncTBLTypeIdContent(b, (&v->typeId));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, CNTX, PRIM, 0);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    return totalLen;
+	return totalLen;
 
 }  /* BEncTBLTypeContent */
 
@@ -182,47 +182,47 @@ TBLType *v)
 
 
 AsnLen
-BEncTBLTypeContentContent PARAMS ((b, v),
-GenBuf *b _AND_
-TBLTypeContent *v)
+BEncTBLTypeContentContent PARAMS((b, v),
+	GenBuf* b _AND_
+	TBLTypeContent* v)
 {
-    AsnLen totalLen = 0;
-    AsnLen itemLen;
+	AsnLen totalLen = 0;
+	AsnLen itemLen;
 
-    switch (v->choiceId)
-    {
-       case TBLTYPECONTENT_PRIMTYPE:
-    itemLen = BEncAsnNullContent (b, (&v->a.primType));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, CNTX, PRIM, 0);
+	switch (v->choiceId)
+	{
+	case TBLTYPECONTENT_PRIMTYPE:
+		itemLen = BEncAsnNullContent(b, (&v->a.primType));
+		BEncDefLenTo127(b, itemLen);
+		itemLen++;
+		itemLen += BEncTag1(b, CNTX, PRIM, 0);
 
-    totalLen += itemLen;
+		totalLen += itemLen;
 
-    break;
+		break;
 
-       case TBLTYPECONTENT_ELMTS:
-    BEncEocIfNec (b);
-    itemLen = BEncTBLTypeContentSeqOfContent (b, (v->a.elmts));
-    itemLen += BEncConsLen (b, itemLen);
-    itemLen += BEncTag1 (b, CNTX, CONS, BOOLEAN_TAG_CODE);
+	case TBLTYPECONTENT_ELMTS:
+		BEncEocIfNec(b);
+		itemLen = BEncTBLTypeContentSeqOfContent(b, (v->a.elmts));
+		itemLen += BEncConsLen(b, itemLen);
+		itemLen += BEncTag1(b, CNTX, CONS, BOOLEAN_TAG_CODE);
 
-    totalLen += itemLen;
+		totalLen += itemLen;
 
-    break;
+		break;
 
-       case TBLTYPECONTENT_TYPEREF:
-    BEncEocIfNec (b);
-    itemLen = BEncTBLTypeRefContent (b, (v->a.typeRef));
-    itemLen += BEncConsLen (b, itemLen);
-    itemLen += BEncTag1 (b, CNTX, CONS, INTEGER_TAG_CODE);
+	case TBLTYPECONTENT_TYPEREF:
+		BEncEocIfNec(b);
+		itemLen = BEncTBLTypeRefContent(b, (v->a.typeRef));
+		itemLen += BEncConsLen(b, itemLen);
+		itemLen += BEncTag1(b, CNTX, CONS, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
+		totalLen += itemLen;
 
-    break;
+		break;
 
-    }
-    return totalLen;
+	}
+	return totalLen;
 
 }  /* BEncTBLTypeContentContent */
 
@@ -230,37 +230,37 @@ TBLTypeContent *v)
 
 
 AsnLen
-BEncTBLTypeDefContent PARAMS ((b, v),
-GenBuf *b _AND_
-TBLTypeDef *v)
+BEncTBLTypeDefContent PARAMS((b, v),
+	GenBuf* b _AND_
+	TBLTypeDef* v)
 {
-    AsnLen totalLen = 0;
-    AsnLen itemLen;
+	AsnLen totalLen = 0;
+	AsnLen itemLen;
 
-    BEncEocIfNec (b);
-    itemLen = BEncTBLTypeContent (b, (v->type));
-    itemLen += BEncConsLen (b, itemLen);
-    itemLen += BEncTag1 (b, UNIV, CONS, SEQ_TAG_CODE);
+	BEncEocIfNec(b);
+	itemLen = BEncTBLTypeContent(b, (v->type));
+	itemLen += BEncConsLen(b, itemLen);
+	itemLen += BEncTag1(b, UNIV, CONS, SEQ_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    if (ASNOCTS_PRESENT ((&v->typeName)))
-    {
-    itemLen = BEncPrintableStringContent (b, (&v->typeName));
-    itemLen += BEncDefLen (b, itemLen);
-    itemLen += BEncTag1 (b, UNIV, PRIM, PRINTABLESTRING_TAG_CODE);
+	if (ASNOCTS_PRESENT((&v->typeName)))
+	{
+		itemLen = BEncPrintableStringContent(b, (&v->typeName));
+		itemLen += BEncDefLen(b, itemLen);
+		itemLen += BEncTag1(b, UNIV, PRIM, PRINTABLESTRING_TAG_CODE);
 
-    totalLen += itemLen;
-    }
+		totalLen += itemLen;
+	}
 
-    itemLen = BEncTBLTypeDefIdContent (b, (&v->typeDefId));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, UNIV, PRIM, INTEGER_TAG_CODE);
+	itemLen = BEncTBLTypeDefIdContent(b, (&v->typeDefId));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, UNIV, PRIM, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    return totalLen;
+	return totalLen;
 
 }  /* BEncTBLTypeDefContent */
 
@@ -268,25 +268,25 @@ TBLTypeDef *v)
 
 
 AsnLen
-BEncTBLModuleSeqOfContent PARAMS ((b, v),
-GenBuf *b _AND_
-TBLModuleSeqOf *v)
+BEncTBLModuleSeqOfContent PARAMS((b, v),
+	GenBuf* b _AND_
+	TBLModuleSeqOf* v)
 {
-    AsnLen itemLen;
-    AsnLen listLen;
-    void *component;
+	AsnLen itemLen;
+	AsnLen listLen;
+	void* component;
 
-    listLen = 0;
-    FOR_EACH_LIST_ELMT_RVS (component, v)
-    {
-    BEncEocIfNec (b);
-    itemLen = BEncTBLTypeDefContent (b, component);
-    itemLen += BEncConsLen (b, itemLen);
-    itemLen += BEncTag1 (b, UNIV, CONS, SEQ_TAG_CODE);
+	listLen = 0;
+	FOR_EACH_LIST_ELMT_RVS(component, v)
+	{
+		BEncEocIfNec(b);
+		itemLen = BEncTBLTypeDefContent(b, component);
+		itemLen += BEncConsLen(b, itemLen);
+		itemLen += BEncTag1(b, UNIV, CONS, SEQ_TAG_CODE);
 
-        listLen += itemLen;
-    }
-    return listLen;
+		listLen += itemLen;
+	}
+	return listLen;
 
 }  /* BEncTBLModuleSeqOfContent */
 
@@ -294,43 +294,43 @@ TBLModuleSeqOf *v)
 
 
 AsnLen
-BEncTBLModuleContent PARAMS ((b, v),
-GenBuf *b _AND_
-TBLModule *v)
+BEncTBLModuleContent PARAMS((b, v),
+	GenBuf* b _AND_
+	TBLModule* v)
 {
-    AsnLen totalLen = 0;
-    AsnLen itemLen;
+	AsnLen totalLen = 0;
+	AsnLen itemLen;
 
-    BEncEocIfNec (b);
-    itemLen = BEncTBLModuleSeqOfContent (b, (v->typeDefs));
-    itemLen += BEncConsLen (b, itemLen);
-    itemLen += BEncTag1 (b, CNTX, CONS, BITSTRING_TAG_CODE);
+	BEncEocIfNec(b);
+	itemLen = BEncTBLModuleSeqOfContent(b, (v->typeDefs));
+	itemLen += BEncConsLen(b, itemLen);
+	itemLen += BEncTag1(b, CNTX, CONS, BITSTRING_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    itemLen = BEncAsnBoolContent (b, (&v->isUseful));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, CNTX, PRIM, INTEGER_TAG_CODE);
+	itemLen = BEncAsnBoolContent(b, (&v->isUseful));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, CNTX, PRIM, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    if (ASNOID_PRESENT ((&v->id)))
-    {
-    itemLen = BEncAsnOidContent (b, (&v->id));
-    itemLen += BEncDefLen (b, itemLen);
-    itemLen += BEncTag1 (b, CNTX, PRIM, BOOLEAN_TAG_CODE);
+	if (ASNOID_PRESENT((&v->id)))
+	{
+		itemLen = BEncAsnOidContent(b, (&v->id));
+		itemLen += BEncDefLen(b, itemLen);
+		itemLen += BEncTag1(b, CNTX, PRIM, BOOLEAN_TAG_CODE);
 
-    totalLen += itemLen;
-    }
+		totalLen += itemLen;
+	}
 
-    itemLen = BEncPrintableStringContent (b, (&v->name));
-    itemLen += BEncDefLen (b, itemLen);
-    itemLen += BEncTag1 (b, CNTX, PRIM, 0);
+	itemLen = BEncPrintableStringContent(b, (&v->name));
+	itemLen += BEncDefLen(b, itemLen);
+	itemLen += BEncTag1(b, CNTX, PRIM, 0);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    return totalLen;
+	return totalLen;
 
 }  /* BEncTBLModuleContent */
 
@@ -338,101 +338,101 @@ TBLModule *v)
 
 
 AsnLen
-BEncTBLSeqOfContent PARAMS ((b, v),
-GenBuf *b _AND_
-TBLSeqOf *v)
+BEncTBLSeqOfContent PARAMS((b, v),
+	GenBuf* b _AND_
+	TBLSeqOf* v)
 {
-    AsnLen itemLen;
-    AsnLen listLen;
-    void *component;
+	AsnLen itemLen;
+	AsnLen listLen;
+	void* component;
 
-    listLen = 0;
-    FOR_EACH_LIST_ELMT_RVS (component, v)
-    {
-    BEncEocIfNec (b);
-    itemLen = BEncTBLModuleContent (b, component);
-    itemLen += BEncConsLen (b, itemLen);
-    itemLen += BEncTag1 (b, UNIV, CONS, SEQ_TAG_CODE);
+	listLen = 0;
+	FOR_EACH_LIST_ELMT_RVS(component, v)
+	{
+		BEncEocIfNec(b);
+		itemLen = BEncTBLModuleContent(b, component);
+		itemLen += BEncConsLen(b, itemLen);
+		itemLen += BEncTag1(b, UNIV, CONS, SEQ_TAG_CODE);
 
-        listLen += itemLen;
-    }
-    return listLen;
+		listLen += itemLen;
+	}
+	return listLen;
 
 }  /* BEncTBLSeqOfContent */
 
 
 
 
-AsnLen BEncTBL PARAMS ((b, v),
-GenBuf *b _AND_
-TBL *v)
+AsnLen BEncTBL PARAMS((b, v),
+	GenBuf* b _AND_
+	TBL* v)
 {
-    AsnLen l=0;
-    BEncEocIfNec (b);
-    l = BEncTBLContent (b, v);
-    l += BEncConsLen (b, l);
-    l += BEncTag1 (b, UNIV, CONS, SEQ_TAG_CODE);
-    return l;
+	AsnLen l = 0;
+	BEncEocIfNec(b);
+	l = BEncTBLContent(b, v);
+	l += BEncConsLen(b, l);
+	l += BEncTag1(b, UNIV, CONS, SEQ_TAG_CODE);
+	return l;
 } /* BEncTBL */
 
 AsnLen
-BEncTBLContent PARAMS ((b, v),
-GenBuf *b _AND_
-TBL *v)
+BEncTBLContent PARAMS((b, v),
+	GenBuf* b _AND_
+	TBL* v)
 {
-    AsnLen totalLen = 0;
-    AsnLen itemLen;
+	AsnLen totalLen = 0;
+	AsnLen itemLen;
 
-    BEncEocIfNec (b);
-    itemLen = BEncTBLSeqOfContent (b, (v->modules));
-    itemLen += BEncConsLen (b, itemLen);
-    itemLen += BEncTag1 (b, UNIV, CONS, SEQ_TAG_CODE);
+	BEncEocIfNec(b);
+	itemLen = BEncTBLSeqOfContent(b, (v->modules));
+	itemLen += BEncConsLen(b, itemLen);
+	itemLen += BEncTag1(b, UNIV, CONS, SEQ_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    itemLen = BEncAsnIntContent (b, (&v->totalLenStrings));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, UNIV, PRIM, INTEGER_TAG_CODE);
+	itemLen = BEncAsnIntContent(b, (&v->totalLenStrings));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, UNIV, PRIM, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    itemLen = BEncAsnIntContent (b, (&v->totalNumStrings));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, UNIV, PRIM, INTEGER_TAG_CODE);
+	itemLen = BEncAsnIntContent(b, (&v->totalNumStrings));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, UNIV, PRIM, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    itemLen = BEncAsnIntContent (b, (&v->totalNumTags));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, UNIV, PRIM, INTEGER_TAG_CODE);
+	itemLen = BEncAsnIntContent(b, (&v->totalNumTags));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, UNIV, PRIM, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    itemLen = BEncAsnIntContent (b, (&v->totalNumTypes));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, UNIV, PRIM, INTEGER_TAG_CODE);
+	itemLen = BEncAsnIntContent(b, (&v->totalNumTypes));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, UNIV, PRIM, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    itemLen = BEncAsnIntContent (b, (&v->totalNumTypeDefs));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, UNIV, PRIM, INTEGER_TAG_CODE);
+	itemLen = BEncAsnIntContent(b, (&v->totalNumTypeDefs));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, UNIV, PRIM, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    itemLen = BEncAsnIntContent (b, (&v->totalNumModules));
-    BEncDefLenTo127 (b, itemLen);
-    itemLen++;
-    itemLen += BEncTag1 (b, UNIV, PRIM, INTEGER_TAG_CODE);
+	itemLen = BEncAsnIntContent(b, (&v->totalNumModules));
+	BEncDefLenTo127(b, itemLen);
+	itemLen++;
+	itemLen += BEncTag1(b, UNIV, PRIM, INTEGER_TAG_CODE);
 
-    totalLen += itemLen;
+	totalLen += itemLen;
 
-    return totalLen;
+	return totalLen;
 
 }  /* BEncTBLContent */
 

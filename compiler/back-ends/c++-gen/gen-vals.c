@@ -67,97 +67,97 @@
 #include "rules.h"
 
 
-extern char *bVDAGlobalDLLExport;
+extern char* bVDAGlobalDLLExport;
 
 
-void PrintCxxValuesClass(FILE *f, CxxRules *r, Value *v);
-void PrintCxxValueInstantiation(FILE *f, CxxRules *r, Value *v);
-void PrintCxxOidValue(FILE *f, CxxRules *r, AsnOid *oid, int parenOrQuote);
-void PrintCxxIntValue(FILE *f, CxxRules *r, AsnInt oid);
-static void PrintCxxValueDefsName(FILE *f, CxxRules *r, ValueDef *v);
+void PrintCxxValuesClass(FILE* f, CxxRules* r, Value* v);
+void PrintCxxValueInstantiation(FILE* f, CxxRules* r, Value* v);
+void PrintCxxOidValue(FILE* f, CxxRules* r, AsnOid* oid, int parenOrQuote);
+void PrintCxxIntValue(FILE* f, CxxRules* r, AsnInt oid);
+static void PrintCxxValueDefsName(FILE* f, CxxRules* r, ValueDef* v);
 
 
-int PrintROSEOperationRegistration(FILE *src, CxxRules *r, ValueDef *v)
+int PrintROSEOperationRegistration(FILE* src, CxxRules* r, ValueDef* v)
 {
-    /* just do ints */
-    if (v->value->basicValue->choiceId != BASICVALUE_INTEGER) {
-        return 0;
-    }
+	/* just do ints */
+	if (v->value->basicValue->choiceId != BASICVALUE_INTEGER) {
+		return 0;
+	}
 
 	if (v->value->type->basicType->choiceId != BASICTYPE_MACROTYPE) {
 		return 0;
-    }
+	}
 
 	if (v->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION) {
 		return 0;
-    }
+	}
 
 	/*
 	* put instantiation in src file
 	*/
-	fprintf (src, "\tSnaccRoseOperationLookup::RegisterOperation(");
-	fprintf (src, "%d, \"", v->value->basicValue->a.integer);
-	PrintCxxValueDefsName (src, r, v);
-	fprintf (src, "\", m_iid);\n");
+	fprintf(src, "\tSnaccRoseOperationLookup::RegisterOperation(");
+	fprintf(src, "%d, \"", v->value->basicValue->a.integer);
+	PrintCxxValueDefsName(src, r, v);
+	fprintf(src, "\", m_iid);\n");
 	return 1;
 }
 
-void PrintROSEOperationDefines(FILE *hdr, CxxRules *r, ValueDef *v, int bCS)
+void PrintROSEOperationDefines(FILE* hdr, CxxRules* r, ValueDef* v, int bCS)
 {
-    /* just do ints */
-    if (v->value->basicValue->choiceId != BASICVALUE_INTEGER) {
-        return;
-    }
+	/* just do ints */
+	if (v->value->basicValue->choiceId != BASICVALUE_INTEGER) {
+		return;
+	}
 
 	if (v->value->type->basicType->choiceId != BASICTYPE_MACROTYPE) {
 		return;
-    }
+	}
 
 	if (v->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION) {
 		return;
-    }
+	}
 
 
 	/*
 	* put instantiation in hdr file
 	*/
-	if(!bCS)
+	if (!bCS)
 	{
-		fprintf (hdr, "#define OPID_");
-		PrintCxxValueDefsName (hdr, r, v);
-		fprintf (hdr, " %d\n", v->value->basicValue->a.integer);
+		fprintf(hdr, "#define OPID_");
+		PrintCxxValueDefsName(hdr, r, v);
+		fprintf(hdr, " %d\n", v->value->basicValue->a.integer);
 	}
 	else
 	{
-		fprintf (hdr, "\t\t\tpublic const int OPID_");
-		PrintCxxValueDefsName (hdr, r, v);
-		fprintf (hdr, " = %d;\n", v->value->basicValue->a.integer);
+		fprintf(hdr, "\t\t\tpublic const int OPID_");
+		PrintCxxValueDefsName(hdr, r, v);
+		fprintf(hdr, " = %d;\n", v->value->basicValue->a.integer);
 
 	}
 
 }
 
-void PrintCxxValueDef(FILE *src, CxxRules *r, ValueDef *v)
+void PrintCxxValueDef(FILE* src, CxxRules* r, ValueDef* v)
 {
-    /* just do oid's, ints and bools for now */
-    if ((v->value->basicValue->choiceId != BASICVALUE_OID) &&
-        (v->value->basicValue->choiceId != BASICVALUE_INTEGER) &&
-        (v->value->basicValue->choiceId != BASICVALUE_BOOLEAN) &&
+	/* just do oid's, ints and bools for now */
+	if ((v->value->basicValue->choiceId != BASICVALUE_OID) &&
+		(v->value->basicValue->choiceId != BASICVALUE_INTEGER) &&
+		(v->value->basicValue->choiceId != BASICVALUE_BOOLEAN) &&
 		(v->value->basicValue->choiceId != BASICVALUE_ASCIITEXT)) {
-        return;
-    }
+		return;
+	}
 
 	/* ESTOS do not print values for macros */
 	if (v->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
 		return;
-    }
+	}
 
 	if (v->value->basicValue->choiceId == BASICVALUE_OID)
 	{
 		fprintf(src, "const char *");
-		PrintCxxValueDefsName (src, r, v);
+		PrintCxxValueDefsName(src, r, v);
 		fprintf(src, " =""");
-		PrintCxxOidValue (src, r, v->value->basicValue->a.oid, 2);
+		PrintCxxOidValue(src, r, v->value->basicValue->a.oid, 2);
 		fprintf(src, """;\n\n");
 	}
 	else
@@ -165,121 +165,122 @@ void PrintCxxValueDef(FILE *src, CxxRules *r, ValueDef *v)
 		/*
 		* put instantiation in src file
 		*/
-		fprintf (src, "const ");
-		PrintCxxValuesClass (src, r, v->value);
-		fprintf (src, " ");
-		PrintCxxValueDefsName (src, r, v);
-		fprintf (src, " ");
-		PrintCxxValueInstantiation (src, r, v->value);
-		fprintf (src, ";\n\n");
+		fprintf(src, "const ");
+		PrintCxxValuesClass(src, r, v->value);
+		fprintf(src, " ");
+		PrintCxxValueDefsName(src, r, v);
+		fprintf(src, " ");
+		PrintCxxValueInstantiation(src, r, v->value);
+		fprintf(src, ";\n\n");
 	}
 
 
 }  /* PrintCxxValueDef */
 
 void
-PrintCxxValueExtern PARAMS ((hdr, r, v),
-    FILE *hdr _AND_
-    CxxRules *r _AND_
-    ValueDef *v)
+PrintCxxValueExtern PARAMS((hdr, r, v),
+	FILE* hdr _AND_
+	CxxRules* r _AND_
+	ValueDef* v)
 {
-    /* just do oid's, ints and bools for now */
-    if ((v->value->basicValue->choiceId != BASICVALUE_OID) &&
-        (v->value->basicValue->choiceId != BASICVALUE_INTEGER) &&
-        (v->value->basicValue->choiceId != BASICVALUE_BOOLEAN)) {
-        return;
-    }
+	/* just do oid's, ints and bools for now */
+	if ((v->value->basicValue->choiceId != BASICVALUE_OID) &&
+		(v->value->basicValue->choiceId != BASICVALUE_INTEGER) &&
+		(v->value->basicValue->choiceId != BASICVALUE_BOOLEAN)) {
+		return;
+	}
 
 	/* ESTOS do not print values for macros */
 	if (v->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
 		return;
-    }
+	}
 
-    /*
-     * put extern declaration in hdr file
-     */
-    if (bVDAGlobalDLLExport != NULL) {
-        fprintf (hdr, "extern const %s ", bVDAGlobalDLLExport);
-    } else {
-        fprintf (hdr, "extern const ");
-    }
+	/*
+	 * put extern declaration in hdr file
+	 */
+	if (bVDAGlobalDLLExport != NULL) {
+		fprintf(hdr, "extern const %s ", bVDAGlobalDLLExport);
+	}
+	else {
+		fprintf(hdr, "extern const ");
+	}
 
 	if (v->value->basicValue->choiceId == BASICVALUE_OID)
 	{
 		fprintf(hdr, "char *");
-		PrintCxxValueDefsName (hdr, r, v);
+		PrintCxxValueDefsName(hdr, r, v);
 		fprintf(hdr, ";\n");
 	}
 	else
 	{
-		PrintCxxValuesClass (hdr, r, v->value);
-		fprintf (hdr, " ");
-		PrintCxxValueDefsName (hdr, r, v);
-		fprintf (hdr, ";\n");
+		PrintCxxValuesClass(hdr, r, v->value);
+		fprintf(hdr, " ");
+		PrintCxxValueDefsName(hdr, r, v);
+		fprintf(hdr, ";\n");
 	}
 
 }  /* PrintCxxValueExtern */
 
 
-static void PrintCxxValueDefsName(FILE *f, CxxRules *r, ValueDef *v)
+static void PrintCxxValueDefsName(FILE* f, CxxRules* r, ValueDef* v)
 {
-    char *cName;
-    cName = Asn1ValueName2CValueName (v->definedName);
-    fprintf (f, "%s", cName);
-    Free (cName);
+	char* cName;
+	cName = Asn1ValueName2CValueName(v->definedName);
+	fprintf(f, "%s", cName);
+	Free(cName);
 }
 
 void
-PrintCxxValuesClass PARAMS ((f, r, v),
-    FILE *f _AND_
-    CxxRules *r _AND_
-    Value *v)
+PrintCxxValuesClass PARAMS((f, r, v),
+	FILE* f _AND_
+	CxxRules* r _AND_
+	Value* v)
 {
-    /* needs work - just do ints bools and oid's for now */
-    switch (v->basicValue->choiceId)
-    {
-        case BASICVALUE_OID:
-            fprintf (f, "%s", r->typeConvTbl[BASICTYPE_OID].className);
-            break;
+	/* needs work - just do ints bools and oid's for now */
+	switch (v->basicValue->choiceId)
+	{
+	case BASICVALUE_OID:
+		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_OID].className);
+		break;
 
-        case BASICVALUE_INTEGER:
-            fprintf (f, "%s", r->typeConvTbl[BASICTYPE_INTEGER].className);
-            break;
+	case BASICVALUE_INTEGER:
+		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_INTEGER].className);
+		break;
 
-        case BASICVALUE_BOOLEAN:
-            fprintf (f, "%s", r->typeConvTbl[BASICTYPE_BOOLEAN].className);
-            break;
+	case BASICVALUE_BOOLEAN:
+		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_BOOLEAN].className);
+		break;
 
-        default:
-           break;
-    }
+	default:
+		break;
+	}
 }
 
 
 void
-PrintCxxValueInstantiation PARAMS ((f, r, v),
-    FILE *f _AND_
-    CxxRules *r _AND_
-    Value *v)
+PrintCxxValueInstantiation PARAMS((f, r, v),
+	FILE* f _AND_
+	CxxRules* r _AND_
+	Value* v)
 {
-    /* needs work - just do oids, ints and bools for now */
-    switch (v->basicValue->choiceId)
-    {
-        case BASICVALUE_OID:
-            PrintCxxOidValue (f, r, v->basicValue->a.oid, 1);
-            break;
+	/* needs work - just do oids, ints and bools for now */
+	switch (v->basicValue->choiceId)
+	{
+	case BASICVALUE_OID:
+		PrintCxxOidValue(f, r, v->basicValue->a.oid, 1);
+		break;
 
-        case BASICVALUE_INTEGER:
-            PrintCxxIntValue (f, r, v->basicValue->a.integer);
-            break;
+	case BASICVALUE_INTEGER:
+		PrintCxxIntValue(f, r, v->basicValue->a.integer);
+		break;
 
-        case BASICVALUE_BOOLEAN:
-	    fprintf (f, "(%s)", v->basicValue->a.boolean ? "true" : "false");
-            break;
+	case BASICVALUE_BOOLEAN:
+		fprintf(f, "(%s)", v->basicValue->a.boolean ? "true" : "false");
+		break;
 
-        default:
-           break;
-    }
+	default:
+		break;
+	}
 }
 
 
@@ -298,60 +299,60 @@ PrintCxxValueInstantiation PARAMS ((f, r, v),
  * To wrap the dotted notation in quotes pass in a parenOrQuote value of 2
  */
 void
-PrintCxxOidValue (FILE *f, CxxRules *r, AsnOid *v, int parenOrQuote)
+PrintCxxOidValue(FILE* f, CxxRules* r, AsnOid* v, int parenOrQuote)
 {
-    unsigned short int firstArcNum;
-    unsigned long arcNum;
-    int i;
+	unsigned short int firstArcNum;
+	unsigned long arcNum;
+	int i;
 
 	if (parenOrQuote == 1)
-		fprintf (f, "(\"");
+		fprintf(f, "(\"");
 	else
-		fprintf (f, "\"");
+		fprintf(f, "\"");
 
-    /* un-munge first two arc numbers */
-    for (arcNum = 0, i=0; (i < (int)v->octetLen) && (v->octs[i] & 0x80);i++)
-        arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
+	/* un-munge first two arc numbers */
+	for (arcNum = 0, i = 0; (i < (int)v->octetLen) && (v->octs[i] & 0x80); i++)
+		arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
 
-    arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
-    i++;
-    firstArcNum = (unsigned short)(arcNum/40);
-    if (firstArcNum > 2)
-        firstArcNum = 2;
-
-#ifdef NOW_CONST_OIDS_ARE_STRINGS
-    fprintf (f, "%u, %u", firstArcNum, arcNum - (firstArcNum * 40));
-#else
-    fprintf (f, "%u.%lu", firstArcNum, arcNum - (firstArcNum * 40));
-#endif
-    for (; i < (int)v->octetLen; )
-    {
-        for (arcNum = 0; (i < (int)v->octetLen) && (v->octs[i] & 0x80);i++)
-            arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
-
-        arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
-        i++;
+	arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
+	i++;
+	firstArcNum = (unsigned short)(arcNum / 40);
+	if (firstArcNum > 2)
+		firstArcNum = 2;
 
 #ifdef NOW_CONST_OIDS_ARE_STRINGS
-        fprintf (f, ", %u", arcNum);
+	fprintf(f, "%u, %u", firstArcNum, arcNum - (firstArcNum * 40));
 #else
-        fprintf (f, ".%lu", arcNum);
+	fprintf(f, "%u.%lu", firstArcNum, arcNum - (firstArcNum * 40));
 #endif
-    }
+	for (; i < (int)v->octetLen; )
+	{
+		for (arcNum = 0; (i < (int)v->octetLen) && (v->octs[i] & 0x80); i++)
+			arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
+
+		arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
+		i++;
+
+#ifdef NOW_CONST_OIDS_ARE_STRINGS
+		fprintf(f, ", %u", arcNum);
+#else
+		fprintf(f, ".%lu", arcNum);
+#endif
+	}
 
 	if (parenOrQuote == 1)
-		fprintf (f, "\")");
+		fprintf(f, "\")");
 	else
-		fprintf (f, "\"");
+		fprintf(f, "\"");
 } /* PrintCxxOidValue */
 
 
 
 void
-PrintCxxIntValue PARAMS ((f, r, v),
-    FILE *f _AND_
-    CxxRules *r _AND_
-    AsnInt v)
+PrintCxxIntValue PARAMS((f, r, v),
+	FILE* f _AND_
+	CxxRules* r _AND_
+	AsnInt v)
 {
-    fprintf (f, "(%d)", v);
+	fprintf(f, "(%d)", v);
 } /* PrintCxxIntValue */

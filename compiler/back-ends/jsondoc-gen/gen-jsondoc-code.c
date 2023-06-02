@@ -25,9 +25,9 @@
 #include "../../core/asn_comments.h"
 #include "../str-util.h"
 
-static Module *GetImportModuleRef(char *Impname, ModuleList *mods)
+static Module* GetImportModuleRef(char* Impname, ModuleList* mods)
 {
-	Module *currMod = NULL;
+	Module* currMod = NULL;
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
 		/* Find the import Module in the Modules and
@@ -42,7 +42,7 @@ static Module *GetImportModuleRef(char *Impname, ModuleList *mods)
 }
 
 
-static void PrintJsonDocNativeType(FILE *hdr, int basicTypeChoiseId) {
+static void PrintJsonDocNativeType(FILE* hdr, int basicTypeChoiseId) {
 	switch (basicTypeChoiseId) {
 	case BASICTYPE_BOOLEAN:
 		fprintf(hdr, "boolean");
@@ -76,7 +76,7 @@ static void PrintJsonDocNativeType(FILE *hdr, int basicTypeChoiseId) {
 	}
 }
 
-static void PrintJsonDocType(FILE *hdr, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *t)
+static void PrintJsonDocType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t)
 {
 	// fprintf(hdr, "{type: '");
 
@@ -156,11 +156,11 @@ static void PrintJsonDocType(FILE *hdr, ModuleList *mods, Module *m, TypeDef *td
 } /* PrintCxxType */
 
 
-static void PrintJsonDocBitstringDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *enumerated, int novolatilefuncs)
+static void PrintJsonDocBitstringDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* enumerated, int novolatilefuncs)
 {
 	//	NamedType *e;
 	//	enum BasicTypeChoiceId tmpTypeId;
-	CNamedElmt *n;
+	CNamedElmt* n;
 
 	fprintf(src, "\t\t\t\"type\" : \"bitstring\",\n");
 	fprintf(src, "\t\t\t\"values\" : [\n");
@@ -197,12 +197,12 @@ static void PrintJsonDocBitstringDefCode(FILE *src, ModuleList *mods, Module *m,
 	fprintf(src, "\t\t\t]\n");
 } /* PrintJsonDocBitstringDefCode */
 
-static void PrintJsonDocEnumDefCode(FILE *src, ModuleList *mods, Module *m,
-	TypeDef *td, Type *parent, Type *enumerated, int novolatilefuncs)
+static void PrintJsonDocEnumDefCode(FILE* src, ModuleList* mods, Module* m,
+	TypeDef* td, Type* parent, Type* enumerated, int novolatilefuncs)
 {
 	//	NamedType *e;
 	//	enum BasicTypeChoiceId tmpTypeId;
-	CNamedElmt *n;
+	CNamedElmt* n;
 
 	fprintf(src, "\t\t\t\"type\" : \"enum\",\n");
 	fprintf(src, "\t\t\t\"values\" : [\n");
@@ -236,9 +236,9 @@ static void PrintJsonDocEnumDefCode(FILE *src, ModuleList *mods, Module *m,
 	fprintf(src, "\t\t\t]\n");
 } /* PrintJsonDocEnumDefCode */
 
-static void PrintJsonDocChoiceDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *choice, int novolatilefuncs)
+static void PrintJsonDocChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* choice, int novolatilefuncs)
 {
-	NamedType *e;
+	NamedType* e;
 
 	fprintf(src, "\t\t\t\"type\" : \"choice\",\n");
 	fprintf(src, "\t\t\t\"values\" : [\n");
@@ -275,9 +275,9 @@ static void PrintJsonDocChoiceDefCode(FILE *src, ModuleList *mods, Module *m, Ty
 	fprintf(src, "\t\t\t]\n");
 } /* PrintJsonDocChoiceDefCode */
 
-static void PrintJsonDocSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *seq, int novolatilefuncs)
+static void PrintJsonDocSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* seq, int novolatilefuncs)
 {
-	NamedType *e;
+	NamedType* e;
 
 
 	fprintf(src, "\t\t\t\"type\" : \"sequence\",\n");
@@ -341,7 +341,7 @@ static void PrintJsonDocSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeD
 	*/
 } /* PrintCxxSeqDefCode */
 
-static void PrintJsonDocListClass(FILE *src, TypeDef *td, Type *lst, Module* m, ModuleList *mods)
+static void PrintJsonDocListClass(FILE* src, TypeDef* td, Type* lst, Module* m, ModuleList* mods)
 {
 	struct NamedType p_etemp;
 	NamedType* p_e;
@@ -349,31 +349,31 @@ static void PrintJsonDocListClass(FILE *src, TypeDef *td, Type *lst, Module* m, 
 	p_e->type = lst->basicType->a.setOf;
 
 	switch (lst->basicType->a.setOf->basicType->choiceId) {
-		case BASICTYPE_BOOLEAN:
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
-		case BASICTYPE_ENUMERATED:
-		case BASICTYPE_REAL:
-		case BASICTYPE_UTF8_STR:
-		case BASICTYPE_UTCTIME:
-		case BASICTYPE_UNKNOWN:
-		case BASICTYPE_NULL:
-			fprintf(src, "\t\t\t\"type\" : \"array\",\n");
-			fprintf(src, "\t\t\t\"elementType\" : \"");
-			PrintJsonDocNativeType(src, lst->basicType->a.setOf->basicType->choiceId);
-			fprintf(src, "\"\n");
+	case BASICTYPE_BOOLEAN:
+	case BASICTYPE_INTEGER:
+	case BASICTYPE_OCTETSTRING:
+	case BASICTYPE_OCTETCONTAINING:
+	case BASICTYPE_ENUMERATED:
+	case BASICTYPE_REAL:
+	case BASICTYPE_UTF8_STR:
+	case BASICTYPE_UTCTIME:
+	case BASICTYPE_UNKNOWN:
+	case BASICTYPE_NULL:
+		fprintf(src, "\t\t\t\"type\" : \"array\",\n");
+		fprintf(src, "\t\t\t\"elementType\" : \"");
+		PrintJsonDocNativeType(src, lst->basicType->a.setOf->basicType->choiceId);
+		fprintf(src, "\"\n");
 
-			return;
-		default:
-			break;
+		return;
+	default:
+		break;
 	}
 
 	fprintf(src, "\t\t\t\"type\" : \"array\",\n");
 	fprintf(src, "\t\t\t\"elementType\" : \"%s\"\n", p_e->type->cxxTypeRefInfo->className);
 }
 
-static void PrintJsonDocSetOfDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *setOf, int novolatilefuncs)
+static void PrintJsonDocSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
 {
 	/*
 	if (strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParameters") == 0) // ESTOS special 'native Object' AsnOptionalParamaters
@@ -388,14 +388,14 @@ static void PrintJsonDocSetOfDefCode(FILE *src, ModuleList *mods, Module *m, Typ
 
 } /* PrintJsonDocSetOfDefCode */
 
-static void PrintJsonDocimpleDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *setOf, int novolatilefuncs)
+static void PrintJsonDocimpleDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
 {
 	fprintf(src, "\t\t\t\"type\" : \"");
 	PrintJsonDocNativeType(src, td->type->basicType->choiceId);
 	fprintf(src, "\"\n");
 }
 
-static void PrintJsonDocTypeDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, int novolatilefuncs)
+static void PrintJsonDocTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs)
 {
 	fprintf(src, "\t\t{\n");
 	fprintf(src, "\t\t\t\"typeName\" : \"%s\",\n", td->definedName);
@@ -447,7 +447,7 @@ static void PrintJsonDocTypeDefCode(FILE *src, ModuleList *mods, Module *m, Type
 	case BASICTYPE_SEQUENCEOF:  /* list types */
 	case BASICTYPE_SETOF:
 		// fprintf(src, "// [BASICTYPE_SEQUENCEOF/BASICTYPE_SETOF]\n");
-		PrintJsonDocSetOfDefCode (src, mods, m, td, NULL, td->type, novolatilefuncs);
+		PrintJsonDocSetOfDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
 		break;
 	case BASICTYPE_IMPORTTYPEREF:  /* type references */
 
@@ -496,7 +496,7 @@ static void PrintJsonDocTypeDefCode(FILE *src, ModuleList *mods, Module *m, Type
 	fprintf(src, "\t\t}");
 } /* PrintCxxTypeDefCode */
 
-int GetJsonROSEDetails(ValueDef *vd, char** ppszArgument, char** ppszResult, char** ppszError, Type** argumentType, Type** resultType, Type** errorType)
+int GetJsonROSEDetails(ValueDef* vd, char** ppszArgument, char** ppszResult, char** ppszError, Type** argumentType, Type** resultType, Type** errorType)
 {
 	int bRetval = 0;
 	if (vd->value->type != NULL)
@@ -549,7 +549,7 @@ int GetJsonROSEDetails(ValueDef *vd, char** ppszArgument, char** ppszResult, cha
 					if (vd->value->type->basicType->a.macroType->a.rosOperation->errors &&
 						vd->value->type->basicType->a.macroType->a.rosOperation->errors->count)
 					{
-						TypeOrValue *first = (TypeOrValue*)FIRST_LIST_ELMT(vd->value->type->basicType->a.macroType->a.rosOperation->errors);
+						TypeOrValue* first = (TypeOrValue*)FIRST_LIST_ELMT(vd->value->type->basicType->a.macroType->a.rosOperation->errors);
 						if (first->choiceId == TYPEORVALUE_TYPE)
 						{
 							if (first->a.type->basicType->choiceId == BASICTYPE_LOCALTYPEREF &&
@@ -581,7 +581,7 @@ int GetJsonROSEDetails(ValueDef *vd, char** ppszArgument, char** ppszResult, cha
 }
 
 
-static int PrintJsonDocOperation(FILE *src, Module* mod, ValueDef *vd)
+static int PrintJsonDocOperation(FILE* src, Module* mod, ValueDef* vd)
 {
 	char* pszArgument = NULL;
 	char* pszResult = NULL;
@@ -633,7 +633,7 @@ static int PrintJsonDocOperation(FILE *src, Module* mod, ValueDef *vd)
 /*
 * prints PrintJsonDocOperations
 */
-static void PrintJsonDocOperations(FILE *src, Module *m)
+static void PrintJsonDocOperations(FILE* src, Module* m)
 {
 	/*
 	hdr = hdr;
@@ -641,7 +641,7 @@ static void PrintJsonDocOperations(FILE *src, Module *m)
 	bEvents = bEvents;
 	m = m;
 	*/
-	ValueDef *vd;
+	ValueDef* vd;
 
 	fprintf(src, "\t\"operations\": [\n");
 
@@ -665,7 +665,7 @@ static void PrintJsonDocOperations(FILE *src, Module *m)
 
 } /* PrintROSEInvoke */
 
-void PrintJsonDocModule(FILE *src, ModuleList *mods, Module *m)
+void PrintJsonDocModule(FILE* src, ModuleList* mods, Module* m)
 {
 	fprintf(src, "\t\"module\": {\n");
 
@@ -689,10 +689,10 @@ void PrintJsonDocModule(FILE *src, ModuleList *mods, Module *m)
 	fprintf(src, "\t},\n");
 }
 
-void PrintJsonDocImports(FILE *src, ModuleList *mods, Module *m)
+void PrintJsonDocImports(FILE* src, ModuleList* mods, Module* m)
 {
-	Module *currMod;
-	AsnListNode *currModTmp;
+	Module* currMod;
+	AsnListNode* currModTmp;
 
 	fprintf(src, "\t\"imports\": [\n");
 
@@ -701,14 +701,14 @@ void PrintJsonDocImports(FILE *src, ModuleList *mods, Module *m)
 		if ((strcmp(m->jsFileName, currMod->jsFileName) == 0))
 		{
 			// Code to see the import module list AND load possible "namespace" refs.
-			ImportModuleList *ModLists;
-			ImportModule *impMod;
+			ImportModuleList* ModLists;
+			ImportModule* impMod;
 
 			ModLists = currMod->imports;
 			currModTmp = mods->curr;    //RWC;
 			FOR_EACH_LIST_ELMT(impMod, ModLists)
 			{
-				ImportElmt *impElmt;
+				ImportElmt* impElmt;
 
 				//fprintf(src, "// Imports from %s\n", impMod->modId->name);
 
@@ -755,11 +755,11 @@ void PrintJsonDocImports(FILE *src, ModuleList *mods, Module *m)
 	fprintf(src, "\t],\n");
 }
 
-void PrintJsonDocTypeDefinitions(FILE *src, ModuleList *mods, Module *m)
+void PrintJsonDocTypeDefinitions(FILE* src, ModuleList* mods, Module* m)
 {
 	fprintf(src, "\t\"types\": [\n");
 
-	TypeDef *td;
+	TypeDef* td;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
 		PrintJsonDocTypeDefCode(src, mods, m, td, 0);
@@ -772,7 +772,7 @@ void PrintJsonDocTypeDefinitions(FILE *src, ModuleList *mods, Module *m)
 	fprintf(src, "\t]\n");
 }
 
-void PrintJsonDocCode(FILE *src, ModuleList *mods, Module *m)
+void PrintJsonDocCode(FILE* src, ModuleList* mods, Module* m)
 {
 	//Top Open
 	fprintf(src, "{\n");

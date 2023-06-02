@@ -31,40 +31,40 @@
 #include <memory.h>
 
 void*
-Malloc PARAMS ((size), size_t size)
+Malloc PARAMS((size), size_t size)
 {
-    void *retVal = malloc (size);
+	void* retVal = malloc(size);
 
-    if (retVal == NULL)
-    {
-        fprintf (stderr, "out of memory! bye!\n");
-        fprintf (stderr, "tried to allocate %zd byes\n", size);
-        exit (1);
-    }
+	if (retVal == NULL)
+	{
+		fprintf(stderr, "out of memory! bye!\n");
+		fprintf(stderr, "tried to allocate %zd byes\n", size);
+		exit(1);
+	}
 
-    memset(retVal, 0, size);
-    return retVal;
+	memset(retVal, 0, size);
+	return retVal;
 
 }  /* Malloc */
 
-void *Realloc PARAMS ((ptr, newsize),
-    void *ptr _AND_
+void* Realloc PARAMS((ptr, newsize),
+	void* ptr _AND_
 	size_t newsize)
 {
-    void *retval = realloc (ptr, newsize);
+	void* retval = realloc(ptr, newsize);
 
-    if (retval == NULL)
-    {
-        fprintf (stderr, "out of memory! bye!\n");
-        fprintf (stderr, "tried to reallocate %zd byes\n", newsize);
-        exit (1);
-    }
+	if (retval == NULL)
+	{
+		fprintf(stderr, "out of memory! bye!\n");
+		fprintf(stderr, "tried to reallocate %zd byes\n", newsize);
+		exit(1);
+	}
 
-    return retval;
+	return retval;
 }
 
-void Free PARAMS ((ptr),
-    void *ptr)
+void Free PARAMS((ptr),
+	void* ptr)
 {
-    free (ptr);
+	free(ptr);
 }

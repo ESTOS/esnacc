@@ -41,77 +41,77 @@ AsnType::~AsnType()
 {
 }
 
-bool AsnType::BEncPdu (AsnBuf &b, AsnLen &bytesEncoded) const
-{
-   try 
-   {
-   	bytesEncoded = BEnc (b);
-  	return true;
-   }
-   catch (...)
-   {
-      return false;
-   }
-}
-
-bool AsnType::BDecPdu (const AsnBuf &b, AsnLen &bytesDecoded)
+bool AsnType::BEncPdu(AsnBuf& b, AsnLen& bytesEncoded) const
 {
 	try
-   {
-      bytesDecoded = 0;
-      {		  
-         BDec (b, bytesDecoded);
-	     return true;
-      }
-   }
-   catch (...)
-   {
-      return false;
-   }
+	{
+		bytesEncoded = BEnc(b);
+		return true;
+	}
+	catch (...)
+	{
+		return false;
+	}
+}
+
+bool AsnType::BDecPdu(const AsnBuf& b, AsnLen& bytesDecoded)
+{
+	try
+	{
+		bytesDecoded = 0;
+		{
+			BDec(b, bytesDecoded);
+			return true;
+		}
+	}
+	catch (...)
+	{
+		return false;
+	}
 }
 
 #if META
 
-const AsnTypeDesc AsnType::_desc (NULL, NULL, false, AsnTypeDesc::VOID, NULL);
+const AsnTypeDesc AsnType::_desc(NULL, NULL, false, AsnTypeDesc::VOID, NULL);
 
-const AsnTypeDesc *AsnType::_getdesc() const
+const AsnTypeDesc* AsnType::_getdesc() const
 {
-  return &_desc;
+	return &_desc;
 }
 
-AsnType	*AsnType::_getref (const char *membername, bool create)
+AsnType* AsnType::_getref(const char* membername, bool create)
 {
-  return NULL;
+	return NULL;
 }
 
-const char *AsnType::_typename() const
+const char* AsnType::_typename() const
 {
-  return _desc.typenames[_getdesc()->type];
+	return _desc.typenames[_getdesc()->type];
 }
 
 #if TCL
 
-int AsnType::TclGetDesc (Tcl_DString *valstr) const
+int AsnType::TclGetDesc(Tcl_DString* valstr) const
 {
-  return TCL_OK;
+	return TCL_OK;
 }
 
-int AsnType::TclGetVal (Tcl_Interp *interp) const
+int AsnType::TclGetVal(Tcl_Interp* interp) const
 {
-  Tcl_AppendResult (interp, "can't get value from ", _typename(), NULL);
-  return TCL_ERROR;
+	Tcl_AppendResult(interp, "can't get value from ", _typename(), NULL);
+	return TCL_ERROR;
 }
 
-int AsnType::TclSetVal (Tcl_Interp *interp, const char *)
+int AsnType::TclSetVal(Tcl_Interp* interp, const char*)
 {
-  Tcl_AppendResult (interp, "can't set value in ", _typename(), NULL);
-  return TCL_ERROR;
+	Tcl_AppendResult(interp, "can't set value in ", _typename(), NULL);
+	return TCL_ERROR;
 }
 
-int AsnType::TclUnsetVal (Tcl_Interp *interp, const char *)
+int AsnType::TclUnsetVal(Tcl_Interp* interp, const char*)
 {
-  Tcl_AppendResult (interp, "can't unset member(s) in ", _typename(), NULL);
-  return TCL_ERROR;
+	Tcl_AppendResult(interp, "can't unset member(s) in ", _typename(), NULL);
+	return TCL_ERROR;
 }
 
 #endif /* TCL */

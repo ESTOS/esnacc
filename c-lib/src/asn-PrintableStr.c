@@ -3,70 +3,70 @@
 #include "../include/asn-incl.h"
 
 /* Function Prototypes */
-static int chkPrintableString (PrintableString *checkBuf);
+static int chkPrintableString(PrintableString* checkBuf);
 
 
-AsnLen BEncPrintableStringContent(GenBuf *b, PrintableString *octs)
+AsnLen BEncPrintableStringContent(GenBuf* b, PrintableString* octs)
 {
-	if (chkPrintableString (octs) < 0)
+	if (chkPrintableString(octs) < 0)
 	{
-        Asn1Error ("BEncPrintableStringContent: ERROR - Format Error");
-		GenBufSetWriteError (b, TRUE);
+		Asn1Error("BEncPrintableStringContent: ERROR - Format Error");
+		GenBufSetWriteError(b, TRUE);
 
 	}
 	return BEncAsnOctsContent(b, octs);
 } /* end of BEncPrintableStringContent() */
 
 
-AsnLen BEncPrintableString(GenBuf *b, PrintableString *v)
+AsnLen BEncPrintableString(GenBuf* b, PrintableString* v)
 {
-    AsnLen l;
-    l = BEncPrintableStringContent (b, v);
-    l += BEncDefLen (b, l);
-    l += BEncTag1 (b, UNIV, PRIM, PRINTABLESTRING_TAG_CODE);
-    return l;
+	AsnLen l;
+	l = BEncPrintableStringContent(b, v);
+	l += BEncDefLen(b, l);
+	l += BEncTag1(b, UNIV, PRIM, PRINTABLESTRING_TAG_CODE);
+	return l;
 } /* end of BEncPrintableString() */
 
 
-void BDecPrintableStringContent(GenBuf *b, AsnTag tagId, AsnLen len,
-								PrintableString *result, AsnLen *bytesDecoded,
-								ENV_TYPE env)
+void BDecPrintableStringContent(GenBuf* b, AsnTag tagId, AsnLen len,
+	PrintableString* result, AsnLen* bytesDecoded,
+	ENV_TYPE env)
 {
-	BDecAsnOctsContent (b, tagId, len, result, bytesDecoded, env);
-	if (chkPrintableString (result) < 0)
+	BDecAsnOctsContent(b, tagId, len, result, bytesDecoded, env);
+	if (chkPrintableString(result) < 0)
 	{
-        Asn1Error ("BDecPrintableStringContent: ERROR - Format Error");
-        longjmp (env, -40);
+		Asn1Error("BDecPrintableStringContent: ERROR - Format Error");
+		longjmp(env, -40);
 	}
 } /* end of BDecPrintableStringContent() */
 
 
-void BDecPrintableString(GenBuf *b, PrintableString *result,
-						 AsnLen *bytesDecoded, ENV_TYPE env)
+void BDecPrintableString(GenBuf* b, PrintableString* result,
+	AsnLen* bytesDecoded, ENV_TYPE env)
 {
-    AsnTag tag;
-    AsnLen elmtLen1;
+	AsnTag tag;
+	AsnLen elmtLen1;
 
-    if (((tag = BDecTag (b, bytesDecoded, env)) != 
-		MAKE_TAG_ID (UNIV, PRIM, PRINTABLESTRING_TAG_CODE)) &&
-		(tag != MAKE_TAG_ID (UNIV, CONS, PRINTABLESTRING_TAG_CODE)))
-    {
-        Asn1Error ("BDecPrintableString: ERROR - wrong tag\n");
-        longjmp (env, -101);
-    }
-    elmtLen1 = BDecLen (b, bytesDecoded, env);
-    BDecPrintableStringContent (b, tag, elmtLen1, result, bytesDecoded, env);
+	if (((tag = BDecTag(b, bytesDecoded, env)) !=
+		MAKE_TAG_ID(UNIV, PRIM, PRINTABLESTRING_TAG_CODE)) &&
+		(tag != MAKE_TAG_ID(UNIV, CONS, PRINTABLESTRING_TAG_CODE)))
+	{
+		Asn1Error("BDecPrintableString: ERROR - wrong tag\n");
+		longjmp(env, -101);
+	}
+	elmtLen1 = BDecLen(b, bytesDecoded, env);
+	BDecPrintableStringContent(b, tag, elmtLen1, result, bytesDecoded, env);
 }  /* end of BDecPrintableString() */
 
 
-static int chkPrintableString(PrintableString *checkBuf)
+static int chkPrintableString(PrintableString* checkBuf)
 {
 	unsigned int i;
 	char temp;
 
 	if (checkBuf == NULL)
 		return -1;
-	
+
 	for (i = 0; i < checkBuf->octetLen; i++)
 	{
 		temp = checkBuf->octs[i];

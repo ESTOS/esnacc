@@ -33,7 +33,7 @@ public:
 	AsnType* Clone() const				{ return new EXTERNALChoice(*this); }
 	const char* typeName() const		{ return "EXTERNALChoice"; }
 
-  EXTERNALChoice		&operator = (const EXTERNALChoice &that);
+  EXTERNALChoice& operator=(const EXTERNALChoice &that);
   AsnLen		BEncContent (AsnBuf &b) const;
   void			BDecContent (const AsnBuf &b, AsnTag tag, AsnLen elmtLen, AsnLen &bytesDecoded/*, s env*/);
   AsnLen		BEnc (AsnBuf &b) const;
@@ -63,7 +63,7 @@ public:
 	AsnType* Clone() const					{ return new EXTERNAL(*this); }
 	const char* typeName() const			{ return "EXTERNAL"; }
 
-  EXTERNAL		&operator = (const EXTERNAL &that);
+  EXTERNAL& operator=(const EXTERNAL &that);
   AsnLen		BEncContent (AsnBuf &b) const;
   void	   BDecContent (const AsnBuf &b, AsnTag tag, AsnLen elmtLen, AsnLen &bytesDecoded/*, s env*/);
 

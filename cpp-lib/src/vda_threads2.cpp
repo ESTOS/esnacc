@@ -41,7 +41,7 @@ pthread_mutex_t gMutex;
 #ifndef _WIN32
 void initMutex(void)
 {
-  pthread_mutex_init(&gMutex, NULL);
+	pthread_mutex_init(&gMutex, NULL);
 }
 #endif
 
@@ -50,9 +50,9 @@ void initMutex(void)
 void threadDestroy()
 {
 #ifdef _WIN32
-   CloseHandle(gMutex);
+	CloseHandle(gMutex);
 #else
-   pthread_mutex_destroy(&gMutex);
+	pthread_mutex_destroy(&gMutex);
 #endif
 }
 
@@ -62,29 +62,29 @@ void threadLock()
 {
 #ifdef _WIN32
 
-   gMutex = CreateMutex(NULL, false, "Win32_Mutex");
-   WaitForSingleObject(gMutex, INFINITE);
+	gMutex = CreateMutex(NULL, false, "Win32_Mutex");
+	WaitForSingleObject(gMutex, INFINITE);
 
 #else // _WIN32
 
 #ifdef SUNOS
-    pthread_once_t once_block = {PTHREAD_ONCE_INIT};
+	pthread_once_t once_block = { PTHREAD_ONCE_INIT };
 #else
-    pthread_once_t once_block = PTHREAD_ONCE_INIT;
+	pthread_once_t once_block = PTHREAD_ONCE_INIT;
 #endif
 
-    pthread_once(&once_block, initMutex);
+	pthread_once(&once_block, initMutex);
 
-    pthread_mutex_lock(&gMutex);
+	pthread_mutex_lock(&gMutex);
 #endif  // _WIN32
 }
 
 void threadUnlock()
 {
 #ifdef _WIN32
-    ReleaseMutex(gMutex);
+	ReleaseMutex(gMutex);
 #else   //UNIX
-    pthread_mutex_unlock(&gMutex);
+	pthread_mutex_unlock(&gMutex);
 #endif  // _WIN32
 }
 

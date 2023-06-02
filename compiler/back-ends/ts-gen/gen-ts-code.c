@@ -253,7 +253,7 @@ void PrintTSEnumDefCode(FILE* src, ModuleList* mods, Module* m,
 		{
 			if (IsDeprecatedNoOutputMember(m, td, n->name))
 				continue;
-			if(!bFirst)
+			if (!bFirst)
 				fprintf(src, ",\n");
 			printMemberComment(src, m, td, n->name, "\t", COMMENTSTYLE_JSON);
 			char* szConverted = FixName(n->name);
@@ -372,13 +372,13 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	//	int allOpt;
 
 	// DEFINE PER encode/decode tmp vars.
-		NamedType** pSeqElementNamedType = NULL;
+	NamedType** pSeqElementNamedType = NULL;
 
 	char* szConverted = FixName(td->definedName);
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	printSequenceComment(src, m, td, COMMENTSTYLE_JSON);
-	
+
 	/* put class spec in hdr file */
 	fprintf(src, "export class %s {\n", szConverted);
 	// fprintf(src, "\ttype: \"%s\",\n", td->definedName);
@@ -643,7 +643,8 @@ void PrintTSListClass(FILE* src, TypeDef* td, Type* type, Module* m, ModuleList*
 			fprintf(src, "\t\t\tvalue: new asn1ts.%s()\n", GetBERType(pSubBase->choiceId));
 		else
 			fprintf(src, "\t\t\tvalue: %s.getASN1Schema()\n", szBaseName2);
-	} else if (pBase->choiceId == BASICTYPE_IMPORTTYPEREF) {
+	}
+	else if (pBase->choiceId == BASICTYPE_IMPORTTYPEREF) {
 		Module* mod = GetImportModuleRefByClassName(pBase->a.importTypeRef->typeName, mods, m);
 		if (mod)
 		{
@@ -742,8 +743,8 @@ void PrintTSTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int
 	case BASICTYPE_SEQUENCE:
 		PrintTSSeqDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
 		break;
-    case BASICTYPE_BITSTRING:
-        snacc_exit("Unknown td->type->basicType->choiceId %s not supported for TypeScript!", "BASICTYPE_BITSTRING");
+	case BASICTYPE_BITSTRING:
+		snacc_exit("Unknown td->type->basicType->choiceId %s not supported for TypeScript!", "BASICTYPE_BITSTRING");
 		break;
 	default:
 		snacc_exit("Unknown td->type->basicType->choiceId %d", td->type->basicType->choiceId);
@@ -810,9 +811,9 @@ void PrintTSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int pr
 	TypeDef* td;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs) {
 		if (IsDeprecatedNoOutputSequence(m, td->definedName))
-		if (!bIsFirst)
-			continue;
-			fprintf(src, "\n");
+			if (!bIsFirst)
+				continue;
+		fprintf(src, "\n");
 		PrintTSTypeDefCode(src, mods, m, td, novolatilefuncs);
 		bIsFirst = false;
 	}

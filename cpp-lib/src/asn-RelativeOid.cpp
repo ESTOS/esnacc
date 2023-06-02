@@ -28,7 +28,7 @@ AsnRelativeOid::~AsnRelativeOid()
 		delete[] m_lpszOidString;
 }
 
-AsnRelativeOid::operator const char*() const
+AsnRelativeOid::operator const char* () const
 {
 	if (m_lpszOidString == NULL)
 		createDottedOidStr();
@@ -46,7 +46,7 @@ bool AsnRelativeOid::operator==(const char* o) const
 		createDottedOidStr();
 
 	if (strcmp(m_lpszOidString, o) == 0)
-		return true; 
+		return true;
 	else
 		return false;
 }
@@ -211,7 +211,7 @@ void AsnRelativeOid::Set(const AsnRelativeOid& o)
 	}
 }
 
-void AsnRelativeOid::Set (unsigned long arcNumArr[], unsigned long arrLength)
+void AsnRelativeOid::Set(unsigned long arcNumArr[], unsigned long arrLength)
 {
 	FUNC("AsnRelativeOid::Set()");
 
@@ -221,8 +221,8 @@ void AsnRelativeOid::Set (unsigned long arcNumArr[], unsigned long arrLength)
 			STACK_ENTRY);
 	}
 
-	char *buf = new char[arrLength * 5];	// Sized according to length
-	char *tmpBuf = buf;
+	char* buf = new char[arrLength * 5];	// Sized according to length
+	char* tmpBuf = buf;
 
 	// For each arc number...
 	unsigned int totalLen = 0;
@@ -246,7 +246,7 @@ void AsnRelativeOid::Set (unsigned long arcNumArr[], unsigned long arrLength)
 			tmpArcNum *= 40;
 			tmpArcNum += arcNumArr[++i];
 		}
-		
+
 		// Calculate encoded length for this arc number
 		unsigned long tmpNum = tmpArcNum;
 		unsigned int arcLen = 0;
@@ -263,7 +263,7 @@ void AsnRelativeOid::Set (unsigned long arcNumArr[], unsigned long arrLength)
 		do
 		{
 			tmpBuf[--j] = (char)(tmpArcNum & 0x7F);
-            tmpArcNum >>= 7;
+			tmpArcNum >>= 7;
 			if (!isLast)
 				tmpBuf[j] |= 0x80;
 			else
@@ -295,7 +295,7 @@ AsnLen AsnRelativeOid::BEnc(AsnBuf& b) const
 	{
 		l += BEncTag1(b, UNIV, PRIM, OID_TAG_CODE);
 	}
-    return l;
+	return l;
 }
 
 void AsnRelativeOid::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
@@ -313,7 +313,7 @@ void AsnRelativeOid::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	BDecContent(b, tagId, elmtLen, bytesDecoded);
 }
 
-void AsnRelativeOid::JEnc (EJson::Value &b) const
+void AsnRelativeOid::JEnc(EJson::Value& b) const
 {
 	std::string str;
 	if (oid && octetLen)
@@ -321,7 +321,7 @@ void AsnRelativeOid::JEnc (EJson::Value &b) const
 	b = EJson::Value(str);
 }
 
-bool AsnRelativeOid::JDec (const EJson::Value &b)
+bool AsnRelativeOid::JDec(const EJson::Value& b)
 {
 	if (b.isConvertibleTo(EJson::stringValue))
 	{
@@ -338,7 +338,7 @@ AsnLen AsnRelativeOid::BEncContent(AsnBuf& b) const
 }
 
 void AsnRelativeOid::BDecContent(const AsnBuf& b, AsnTag /* tagId */,
-								 AsnLen elmtLen, AsnLen& bytesDecoded)
+	AsnLen elmtLen, AsnLen& bytesDecoded)
 {
 	FUNC("AsnRelativeOid::BDecContent()");
 
@@ -356,7 +356,7 @@ void AsnRelativeOid::BDecContent(const AsnBuf& b, AsnTag /* tagId */,
 	oid = new char[octetLen];
 	if (oid == NULL)
 		throw MemoryException((long)octetLen, "AsnRelativeOid::oid", STACK_ENTRY);
-    b.GetSeg(oid, (long)octetLen);
+	b.GetSeg(oid, (long)octetLen);
 	bytesDecoded += elmtLen;
 } // end of AsnRelativeOid::BDecContent()
 
@@ -370,17 +370,17 @@ AsnLen AsnRelativeOid::PEnc(AsnBufBits& b) const
 	return len;
 }
 
-void AsnRelativeOid::PDec (AsnBufBits &b, AsnLen &bitsDecoded)
+void AsnRelativeOid::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 {
 	unsigned char* seg = b.GetBits(8);
 	bitsDecoded += 8;
 	unsigned long lseg = (unsigned long)seg[0];
 	free(seg);
-	
+
 	if (lseg > 0)
 	{
 		bitsDecoded += b.OctetAlignRead();
-        
+
 		seg = b.GetBits(lseg * 8);
 		bitsDecoded += lseg * 8;
 
@@ -400,10 +400,10 @@ void AsnRelativeOid::Print(std::ostream& os, unsigned short /*indent*/) const
 	if (numArcs > 0)
 	{
 		unsigned long* arcArray = new unsigned long[numArcs];
-        for(unsigned long n = 0; n < numArcs; n++)
-            arcArray[n] = 0;
-		
-        GetOidArray(arcArray);
+		for (unsigned long n = 0; n < numArcs; n++)
+			arcArray[n] = 0;
+
+		GetOidArray(arcArray);
 
 		for (unsigned long i = 0; i < numArcs; ++i)
 			os << " " << arcArray[i];
@@ -416,7 +416,7 @@ void AsnRelativeOid::Print(std::ostream& os, unsigned short /*indent*/) const
 	os << "}";
 } // AsnRelativeOid::Print
 
-void AsnRelativeOid::PrintXML (std::ostream &os, const char *lpszTitle) const
+void AsnRelativeOid::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	const char* xmlTag;
 	if (m_isRelative)
@@ -438,63 +438,63 @@ void AsnRelativeOid::PrintXML (std::ostream &os, const char *lpszTitle) const
 
 #if META
 const AsnRelativeOidTypeDesc AsnRelativeOid::_desc(NULL, NULL, false,
-												   AsnTypeDesc::RELATIVE_OID,
-												   NULL);
-const AsnTypeDesc *AsnRelativeOid::_getdesc() const
+	AsnTypeDesc::RELATIVE_OID,
+	NULL);
+const AsnTypeDesc* AsnRelativeOid::_getdesc() const
 {
 	return &_desc;
 }
 
 #if TCL
 
-int AsnRelativeOid::TclGetVal (Tcl_Interp *interp) const
+int AsnRelativeOid::TclGetVal(Tcl_Interp* interp) const
 {
-  if (oid)
-  {
-    strstream buf;
-    buf << *this;
-    buf.str()[strlen(buf.str())-1] = '\0';			// chop the trailing '}'
-    Tcl_SetResult (interp, buf.str()+1, TCL_VOLATILE);	// copy without leading '{'
-  }
-  return TCL_OK;
+	if (oid)
+	{
+		strstream buf;
+		buf << *this;
+		buf.str()[strlen(buf.str()) - 1] = '\0';			// chop the trailing '}'
+		Tcl_SetResult(interp, buf.str() + 1, TCL_VOLATILE);	// copy without leading '{'
+	}
+	return TCL_OK;
 }
 
-int AsnRelativeOid::TclSetVal (Tcl_Interp *interp, const char *valstr)
+int AsnRelativeOid::TclSetVal(Tcl_Interp* interp, const char* valstr)
 {
-  if (!*valstr)
-  {
-    delete[] oid;
-    oid = NULL;
-    octetLen = 0;
-	delete[] m_lpszOidString;
-	m_lpszOidString = NULL;
-    return TCL_OK;
-  }
+	if (!*valstr)
+	{
+		delete[] oid;
+		oid = NULL;
+		octetLen = 0;
+		delete[] m_lpszOidString;
+		m_lpszOidString = NULL;
+		return TCL_OK;
+	}
 
-  Args arc;
-  if (Tcl_SplitList (interp, (char*)valstr, &arc.c, &arc.v) != TCL_OK)
-    return TCL_ERROR;
-  if (m_isRelative && (arc.c < 1))
-  {
-    Tcl_AppendResult (interp, "relative oid must contain at least one number", NULL);
-    Tcl_SetErrorCode (interp, "SNACC", "ILLARC", "<1", NULL);
-    return TCL_ERROR;
-  }
-  if (!m_isRelative && (arc.c < 2))
-  {
-    Tcl_AppendResult (interp, "oid must contain at least two numbers", NULL);
-    Tcl_SetErrorCode (interp, "SNACC", "ILLARC", "<2", NULL);
-    return TCL_ERROR;
-  }
+	Args arc;
+	if (Tcl_SplitList(interp, (char*)valstr, &arc.c, &arc.v) != TCL_OK)
+		return TCL_ERROR;
+	if (m_isRelative && (arc.c < 1))
+	{
+		Tcl_AppendResult(interp, "relative oid must contain at least one number", NULL);
+		Tcl_SetErrorCode(interp, "SNACC", "ILLARC", "<1", NULL);
+		return TCL_ERROR;
+	}
+	if (!m_isRelative && (arc.c < 2))
+	{
+		Tcl_AppendResult(interp, "oid must contain at least two numbers", NULL);
+		Tcl_SetErrorCode(interp, "SNACC", "ILLARC", "<2", NULL);
+		return TCL_ERROR;
+	}
 
-  unsigned long* pLongArray = new unsigned long[arc.c];
-  for (int i=0; i<arc.c; i++)
-    if (Tcl_GetInt (interp, arc.v[i], pLongArray[i]) != TCL_OK)
-      return TCL_ERROR;
+	unsigned long* pLongArray = new unsigned long[arc.c];
+	for (int i = 0; i < arc.c; i++)
+		if (Tcl_GetInt(interp, arc.v[i], pLongArray[i]) != TCL_OK)
+			return TCL_ERROR;
 
-  Set(pLongArray, arc.c);
-  delete[] pLongArray;
-  return TCL_OK;
+	Set(pLongArray, arc.c);
+	delete[] pLongArray;
+	return TCL_OK;
 }
 
 #endif /* TCL */
@@ -513,10 +513,10 @@ bool AsnRelativeOid::OidEquiv(const AsnRelativeOid& o) const
 //
 void AsnRelativeOid::createDottedOidStr() const
 {
-    FUNC("AsnRelativeOid::createDottedOidStr()");
+	FUNC("AsnRelativeOid::createDottedOidStr()");
 
-    if (oid == NULL) {
-        throw OidException("NULL pointer in AsnRelativeOid", STACK_ENTRY);
+	if (oid == NULL) {
+		throw OidException("NULL pointer in AsnRelativeOid", STACK_ENTRY);
 	}
 
 	if (m_lpszOidString != NULL)
@@ -524,7 +524,7 @@ void AsnRelativeOid::createDottedOidStr() const
 		delete[] m_lpszOidString;
 		m_lpszOidString = NULL;
 	}
-    
+
 	bool isFirst = true;
 	std::string tempBuf;
 	char tempArcStr[40];

@@ -59,7 +59,7 @@ std::string DateToISO8601(DATE dt)
 
 	//2012-04-23T18:25:43.511Z
 	//2012-04-23T18:25:43.500Z		// Nullen am Ende rein technisch überflüssig, erleichtern aber die Lesbarkeit.
-	char szDateTime[40] = {0};
+	char szDateTime[40] = { 0 };
 	SYSTEMTIME sysTime;
 	memset(&sysTime, 0x00, sizeof(sysTime));
 	if (VariantTimeToSystemTimeWithMilliseconds(dt, sysTime))
@@ -149,18 +149,18 @@ void AsnSystemTime::set_time_t(time_t tim)
 	value = dbltmp + 25569;
 }
 
-void AsnSystemTime::JEnc (EJson::Value &b) const
+void AsnSystemTime::JEnc(EJson::Value& b) const
 {
 	//ISO 8601
 	//2012-04-23T18:25:43.511Z
-	#ifdef _WIN32
-		b = EJson::Value(DateToISO8601(value));
-	#else
-		b = EJson::Value(value);
-	#endif
+#ifdef _WIN32
+	b = EJson::Value(DateToISO8601(value));
+#else
+	b = EJson::Value(value);
+#endif
 }
 
-bool AsnSystemTime::JDec (const EJson::Value &b)
+bool AsnSystemTime::JDec(const EJson::Value& b)
 {
 	value = 0;
 	if (b.isConvertibleTo(EJson::realValue))
@@ -168,7 +168,7 @@ bool AsnSystemTime::JDec (const EJson::Value &b)
 		value = b.asDouble();
 		return true;
 	}
-	#ifdef _WIN32
+#ifdef _WIN32
 	else if (b.isString())
 	{
 		//ISO 8601
@@ -176,7 +176,7 @@ bool AsnSystemTime::JDec (const EJson::Value &b)
 		value = ISO8601ToDATE(b.asCString());
 		return true;
 	}
-	#endif
+#endif
 	return false;
 }
 
@@ -185,12 +185,12 @@ void AsnSystemTime::Print(std::ostream& os, unsigned short /*indent*/) const
 	os << value;
 }
 
-void AsnSystemTime::PrintXML (std::ostream &os, const char *lpszTitle) const 
+void AsnSystemTime::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
-	os << "<REAL>"; 
-	if (lpszTitle) os << lpszTitle; 
-	os << "-"; 
-	Print(os); os << "</REAL>\n"; 
+	os << "<REAL>";
+	if (lpszTitle) os << lpszTitle;
+	os << "-";
+	Print(os); os << "</REAL>\n";
 }
 
 

@@ -9,76 +9,76 @@
 
 #include "../include/SNACCROSE.h"
 
-namespace SNACC{
-// [PrintDerivedConstructors]
-GeneralProblem::GeneralProblem(): AsnInt()
-{
-}
-
-GeneralProblem::GeneralProblem(const int i): AsnInt(i)
-{
-}
-
-// [PrintDerivedConstructors]
-InvokeProblem::InvokeProblem(): AsnInt()
-{
-}
-
-InvokeProblem::InvokeProblem(const int i): AsnInt(i)
-{
-}
-
-// [PrintDerivedConstructors]
-ReturnResultProblem::ReturnResultProblem(): AsnInt()
-{
-}
-
-ReturnResultProblem::ReturnResultProblem(const int i): AsnInt(i)
-{
-}
-
-// [PrintDerivedConstructors]
-ReturnErrorProblem::ReturnErrorProblem(): AsnInt()
-{
-}
-
-ReturnErrorProblem::ReturnErrorProblem(const int i): AsnInt(i)
-{
-}
-
-// [PrintConstructor]
-ROSERejectChoice::ROSERejectChoice()
-{
-	Init();
-}
-
-// [PrintCopyConstructor]
-ROSERejectChoice::ROSERejectChoice(const ROSERejectChoice &that)
-{
-	Init();
-	
-	*this = that;
-}
-
-// [PrintDestructor]
-ROSERejectChoice::~ROSERejectChoice()
-{
-	Clear();
-}
-
-// [PrintInit]
-void ROSERejectChoice::Init()
-{
-	// initialize choice to no choiceId to first choice and set pointer to NULL
-	choiceId = invokedIDCid;
-	invokedID = NULL;
-}
-
-// [PrintClear]
-void ROSERejectChoice::Clear()
-{
-	switch (choiceId)
+namespace SNACC {
+	// [PrintDerivedConstructors]
+	GeneralProblem::GeneralProblem() : AsnInt()
 	{
+	}
+
+	GeneralProblem::GeneralProblem(const int i) : AsnInt(i)
+	{
+	}
+
+	// [PrintDerivedConstructors]
+	InvokeProblem::InvokeProblem() : AsnInt()
+	{
+	}
+
+	InvokeProblem::InvokeProblem(const int i) : AsnInt(i)
+	{
+	}
+
+	// [PrintDerivedConstructors]
+	ReturnResultProblem::ReturnResultProblem() : AsnInt()
+	{
+	}
+
+	ReturnResultProblem::ReturnResultProblem(const int i) : AsnInt(i)
+	{
+	}
+
+	// [PrintDerivedConstructors]
+	ReturnErrorProblem::ReturnErrorProblem() : AsnInt()
+	{
+	}
+
+	ReturnErrorProblem::ReturnErrorProblem(const int i) : AsnInt(i)
+	{
+	}
+
+	// [PrintConstructor]
+	ROSERejectChoice::ROSERejectChoice()
+	{
+		Init();
+	}
+
+	// [PrintCopyConstructor]
+	ROSERejectChoice::ROSERejectChoice(const ROSERejectChoice& that)
+	{
+		Init();
+
+		*this = that;
+	}
+
+	// [PrintDestructor]
+	ROSERejectChoice::~ROSERejectChoice()
+	{
+		Clear();
+	}
+
+	// [PrintInit]
+	void ROSERejectChoice::Init()
+	{
+		// initialize choice to no choiceId to first choice and set pointer to NULL
+		choiceId = invokedIDCid;
+		invokedID = NULL;
+	}
+
+	// [PrintClear]
+	void ROSERejectChoice::Clear()
+	{
+		switch (choiceId)
+		{
 		case invokedIDCid:
 			delete invokedID;
 			invokedID = NULL;
@@ -88,219 +88,219 @@ void ROSERejectChoice::Clear()
 			invokednull = NULL;
 			break;
 		}
-}
+	}
 
-// [PrintClone]
-ROSERejectChoice* ROSERejectChoice::Clone() const
-{
-	return new ROSERejectChoice(*this);
-}
-
-// [PrintAssignmentOperator]
-ROSERejectChoice& ROSERejectChoice::operator=(const ROSERejectChoice& that)
-{
-	if (this != &that)
+	// [PrintClone]
+	ROSERejectChoice* ROSERejectChoice::Clone() const
 	{
-		Clear();
-		// Check if the choice is empty or not (c union, any element can be checked)
-		if (that.invokedID)
+		return new ROSERejectChoice(*this);
+	}
+
+	// [PrintAssignmentOperator]
+	ROSERejectChoice& ROSERejectChoice::operator=(const ROSERejectChoice& that)
+	{
+		if (this != &that)
 		{
-			switch (choiceId = that.choiceId)
+			Clear();
+			// Check if the choice is empty or not (c union, any element can be checked)
+			if (that.invokedID)
 			{
+				switch (choiceId = that.choiceId)
+				{
 				case invokedIDCid:
 					invokedID = new AsnInt(*that.invokedID);
 					break;
 				case invokednullCid:
 					invokednull = new AsnNull(*that.invokednull);
 					break;
+				}
 			}
 		}
+
+		return *this;
 	}
 
-	return *this;
-}
-
-// [PrintTypeName]
-const char* ROSERejectChoice::typeName() const
-{
-	return "ROSERejectChoice";
-}
-
-// [PrintCheckConstraints]
-int ROSERejectChoice::checkConstraints(ConstraintFailList* pConstraintFails) const
-{
-	if (invokedID)
-		invokedID->checkConstraints(pConstraintFails);
-	if (invokednull)
-		invokednull->checkConstraints(pConstraintFails);
-	return 0;
-}
-
-// [PrintChoiceDefCodeBerEncodeContent]
-AsnLen ROSERejectChoice::BEncContent(AsnBuf& _b) const
-{
-	AsnLen l = 0;
-	switch (choiceId)
+	// [PrintTypeName]
+	const char* ROSERejectChoice::typeName() const
 	{
+		return "ROSERejectChoice";
+	}
+
+	// [PrintCheckConstraints]
+	int ROSERejectChoice::checkConstraints(ConstraintFailList* pConstraintFails) const
+	{
+		if (invokedID)
+			invokedID->checkConstraints(pConstraintFails);
+		if (invokednull)
+			invokednull->checkConstraints(pConstraintFails);
+		return 0;
+	}
+
+	// [PrintChoiceDefCodeBerEncodeContent]
+	AsnLen ROSERejectChoice::BEncContent(AsnBuf& _b) const
+	{
+		AsnLen l = 0;
+		switch (choiceId)
+		{
 		case invokedIDCid:
 			l = invokedID->BEncContent(_b);
 			l += BEncDefLen(_b, l);
 			l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
-		break;
+			break;
 		case invokednullCid:
 			l = invokednull->BEncContent(_b);
 			BEncDefLenTo127(_b, l);
 			l++;
 			l += BEncTag1(_b, UNIV, PRIM, NULLTYPE_TAG_CODE);
-		break;
+			break;
 		default:
 			throw EXCEPT("Choice is empty", ENCODE_ERROR);
+		}
+		return l;
 	}
-	return l;
-}
 
-// [PrintChoiceDefCodeBerDecodeContent]
-void ROSERejectChoice::BDecContent(const AsnBuf &_b, AsnTag tag, AsnLen elmtLen0, AsnLen& bytesDecoded)
-{
-	Clear();
-	switch (tag)
+	// [PrintChoiceDefCodeBerDecodeContent]
+	void ROSERejectChoice::BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen0, AsnLen& bytesDecoded)
 	{
+		Clear();
+		switch (tag)
+		{
 		case MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE):
 			choiceId = invokedIDCid;
 			invokedID = new AsnInt;
 			invokedID->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(UNIV, PRIM, NULLTYPE_TAG_CODE):
 			choiceId = invokednullCid;
 			invokednull = new AsnNull;
 			invokednull->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		default:
 			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-		break;
+			break;
+		}
 	}
-}
 
-// [PrintChoiceDefCodeBerEnc]
-AsnLen ROSERejectChoice::BEnc(AsnBuf &_b) const
-{
-	AsnLen l = BEncContent(_b);
-	return l;
-}
-
-// [PrintChoiceDefCodeBerDec]
-void ROSERejectChoice::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
-{
-	AsnLen elmtLen = 0;
-	AsnTag tag;
-
-	/*  CHOICEs are a special case - grab identifying tag */
-	/*  this allows easier handling of nested CHOICEs */
-	tag = BDecTag(_b, bytesDecoded);
-	elmtLen = BDecLen(_b, bytesDecoded);
-	BDecContent(_b, tag, elmtLen, bytesDecoded);
-}
-
-// [PrintChoiceDefCodeJsonEnc]
-void ROSERejectChoice::JEnc(EJson::Value& b) const
-{
-	b = EJson::Value(EJson::objectValue);
-
-	EJson::Value tmp;
-
-	switch (choiceId)
+	// [PrintChoiceDefCodeBerEnc]
+	AsnLen ROSERejectChoice::BEnc(AsnBuf& _b) const
 	{
+		AsnLen l = BEncContent(_b);
+		return l;
+	}
+
+	// [PrintChoiceDefCodeBerDec]
+	void ROSERejectChoice::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
+	{
+		AsnLen elmtLen = 0;
+		AsnTag tag;
+
+		/*  CHOICEs are a special case - grab identifying tag */
+		/*  this allows easier handling of nested CHOICEs */
+		tag = BDecTag(_b, bytesDecoded);
+		elmtLen = BDecLen(_b, bytesDecoded);
+		BDecContent(_b, tag, elmtLen, bytesDecoded);
+	}
+
+	// [PrintChoiceDefCodeJsonEnc]
+	void ROSERejectChoice::JEnc(EJson::Value& b) const
+	{
+		b = EJson::Value(EJson::objectValue);
+
+		EJson::Value tmp;
+
+		switch (choiceId)
+		{
 		case invokedIDCid:
 			invokedID->JEnc(tmp);
 			b["invokedID"] = tmp;
-		break;
+			break;
 		case invokednullCid:
 			invokednull->JEnc(tmp);
 			b["invokednull"] = tmp;
-		break;
+			break;
 		default:
 			throw EXCEPT("Choice is empty", ENCODE_ERROR);
+		}
 	}
-}
 
-// [PrintChoiceDefCodeJsonDec]
-bool ROSERejectChoice::JDec(const EJson::Value& b){
-	Clear();
-	if (!b.isObject())
-		return false;
+	// [PrintChoiceDefCodeJsonDec]
+	bool ROSERejectChoice::JDec(const EJson::Value& b) {
+		Clear();
+		if (!b.isObject())
+			return false;
 
-	EJson::Value tmp;
-	if (b.isMember("invokedID"))
-	{
-		choiceId = invokedIDCid;
-		delete invokedID;
-		invokedID = new AsnInt;
-		if (!invokedID->JDec(b["invokedID"]))
-			throw InvalidTagException(typeName(), "decode failed: invokedID", STACK_ENTRY);
-	}
-	else if (b.isMember("invokednull"))
-	{
-		choiceId = invokednullCid;
-		delete invokednull;
-		invokednull = new AsnNull;
-		if (!invokednull->JDec(b["invokednull"]))
-			throw InvalidTagException(typeName(), "decode failed: invokednull", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "no valid choice member", STACK_ENTRY);
-	return true;
-}
-
-void ROSERejectChoice::Print(std::ostream& os, unsigned short indent) const
-{
-	switch (choiceId)
-	{
-	case invokedIDCid:
-		os << "invokedID ";
-		if (invokedID)
-			invokedID->Print(os, indent);
+		EJson::Value tmp;
+		if (b.isMember("invokedID"))
+		{
+			choiceId = invokedIDCid;
+			delete invokedID;
+			invokedID = new AsnInt;
+			if (!invokedID->JDec(b["invokedID"]))
+				throw InvalidTagException(typeName(), "decode failed: invokedID", STACK_ENTRY);
+		}
+		else if (b.isMember("invokednull"))
+		{
+			choiceId = invokednullCid;
+			delete invokednull;
+			invokednull = new AsnNull;
+			if (!invokednull->JDec(b["invokednull"]))
+				throw InvalidTagException(typeName(), "decode failed: invokednull", STACK_ENTRY);
+		}
 		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case invokednullCid:
-		os << "invokednull ";
-		if (invokednull)
-			invokednull->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	} // end of switch
-} // end of ROSERejectChoice::Print()
-
-void ROSERejectChoice::PrintXML(std::ostream& os, const char* lpszTitle) const
-{
-	if (lpszTitle)
-	{
-		os << "<" << lpszTitle;
-		os << " typeName=\"ROSERejectChoice\" type=\"CHOICE\">";
+			throw InvalidTagException(typeName(), "no valid choice member", STACK_ENTRY);
+		return true;
 	}
-	else
-		os << "<ROSERejectChoice type=\"CHOICE\">";
+
+	void ROSERejectChoice::Print(std::ostream& os, unsigned short indent) const
+	{
 		switch (choiceId)
 		{
-			case invokedIDCid:
-				if (invokedID)
-					invokedID->PrintXML(os,"invokedID");
-				else
-				{
-					os << "<invokedID -- void3 -- /invokedID>" << std::endl;
-				}
+		case invokedIDCid:
+			os << "invokedID ";
+			if (invokedID)
+				invokedID->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
 			break;
 
-			case invokednullCid:
-				if (invokednull)
-					invokednull->PrintXML(os,"invokednull");
-				else
-				{
-					os << "<invokednull -- void3 -- /invokednull>" << std::endl;
-				}
+		case invokednullCid:
+			os << "invokednull ";
+			if (invokednull)
+				invokednull->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+
+		} // end of switch
+	} // end of ROSERejectChoice::Print()
+
+	void ROSERejectChoice::PrintXML(std::ostream& os, const char* lpszTitle) const
+	{
+		if (lpszTitle)
+		{
+			os << "<" << lpszTitle;
+			os << " typeName=\"ROSERejectChoice\" type=\"CHOICE\">";
+		}
+		else
+			os << "<ROSERejectChoice type=\"CHOICE\">";
+		switch (choiceId)
+		{
+		case invokedIDCid:
+			if (invokedID)
+				invokedID->PrintXML(os, "invokedID");
+			else
+			{
+				os << "<invokedID -- void3 -- /invokedID>" << std::endl;
+			}
+			break;
+
+		case invokednullCid:
+			if (invokednull)
+				invokednull->PrintXML(os, "invokednull");
+			else
+			{
+				os << "<invokednull -- void3 -- /invokednull>" << std::endl;
+			}
 			break;
 
 		} // end of switch
@@ -308,2516 +308,2516 @@ void ROSERejectChoice::PrintXML(std::ostream& os, const char* lpszTitle) const
 			os << "</" << lpszTitle << ">";
 		else
 			os << "</ROSERejectChoice>";
-		}
-// [PrintConstructor]
-ROSEResultSeq::ROSEResultSeq()
-{
-	Init();
-}
+	}
+	// [PrintConstructor]
+	ROSEResultSeq::ROSEResultSeq()
+	{
+		Init();
+	}
 
-// [PrintCopyConstructor]
-ROSEResultSeq::ROSEResultSeq(const ROSEResultSeq &that)
-{
-	Init();
-	
-	*this = that;
-}
+	// [PrintCopyConstructor]
+	ROSEResultSeq::ROSEResultSeq(const ROSEResultSeq& that)
+	{
+		Init();
 
-// [PrintDestructor]
-ROSEResultSeq::~ROSEResultSeq()
-{
-	Clear();
-}
+		*this = that;
+	}
 
-// [PrintInit]
-void ROSEResultSeq::Init()
-{
-}
-
-// [PrintClear]
-void ROSEResultSeq::Clear()
-{
-}
-
-// [PrintClone]
-ROSEResultSeq* ROSEResultSeq::Clone() const
-{
-	return new ROSEResultSeq(*this);
-}
-
-// [PrintAssignmentOperator]
-ROSEResultSeq& ROSEResultSeq::operator=(const ROSEResultSeq& that)
-{
-	if (this != &that)
+	// [PrintDestructor]
+	ROSEResultSeq::~ROSEResultSeq()
 	{
 		Clear();
-		resultValue = that.resultValue;
-		result = that.result;
 	}
 
-	return *this;
-}
-
-// [PrintTypeName]
-const char* ROSEResultSeq::typeName() const
-{
-	return "ROSEResultSeq";
-}
-
-// [PrintCheckConstraints]
-int ROSEResultSeq::checkConstraints(ConstraintFailList* pConstraintFails) const
-{
-	resultValue.checkConstraints(pConstraintFails);
-	result.checkConstraints(pConstraintFails);
-	return 0;
-}
-
-// [PrintSeqDefCodeBerEncodeContent]
-AsnLen ROSEResultSeq::BEncContent(AsnBuf &_b) const
-{
-	AsnLen totalLen = 0;
-	AsnLen l = 0;
-
-	l = result.BEnc(_b);
-	totalLen += l;
-
-	l = resultValue.BEncContent(_b);
-	l += BEncDefLen(_b, l);
-	l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
-	totalLen += l;
-
-	return totalLen;
-}
-
-// [PrintSeqDefCodeBerDecodeContent]
-void ROSEResultSeq::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
-{
-	Clear();
-	AsnTag tag1 = AsnTag();
-	AsnLen seqBytesDecoded = 0;
-	AsnLen elmtLen1 = 0;
-	if (elmtLen0 == 0)
-		return;
-	tag1 = BDecTag(_b, seqBytesDecoded);
-
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
+	// [PrintInit]
+	void ROSEResultSeq::Init()
 	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		resultValue.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
 	}
-	else
-		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
-  // ANY type
+	// [PrintClear]
+	void ROSEResultSeq::Clear()
+	{
+	}
+
+	// [PrintClone]
+	ROSEResultSeq* ROSEResultSeq::Clone() const
+	{
+		return new ROSEResultSeq(*this);
+	}
+
+	// [PrintAssignmentOperator]
+	ROSEResultSeq& ROSEResultSeq::operator=(const ROSEResultSeq& that)
+	{
+		if (this != &that)
+		{
+			Clear();
+			resultValue = that.resultValue;
+			result = that.result;
+		}
+
+		return *this;
+	}
+
+	// [PrintTypeName]
+	const char* ROSEResultSeq::typeName() const
+	{
+		return "ROSEResultSeq";
+	}
+
+	// [PrintCheckConstraints]
+	int ROSEResultSeq::checkConstraints(ConstraintFailList* pConstraintFails) const
+	{
+		resultValue.checkConstraints(pConstraintFails);
+		result.checkConstraints(pConstraintFails);
+		return 0;
+	}
+
+	// [PrintSeqDefCodeBerEncodeContent]
+	AsnLen ROSEResultSeq::BEncContent(AsnBuf& _b) const
+	{
+		AsnLen totalLen = 0;
+		AsnLen l = 0;
+
+		l = result.BEnc(_b);
+		totalLen += l;
+
+		l = resultValue.BEncContent(_b);
+		l += BEncDefLen(_b, l);
+		l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
+		totalLen += l;
+
+		return totalLen;
+	}
+
+	// [PrintSeqDefCodeBerDecodeContent]
+	void ROSEResultSeq::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
+	{
+		Clear();
+		AsnTag tag1 = AsnTag();
+		AsnLen seqBytesDecoded = 0;
+		AsnLen elmtLen1 = 0;
+		if (elmtLen0 == 0)
+			return;
+		tag1 = BDecTag(_b, seqBytesDecoded);
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			resultValue.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+		}
+		else
+			throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+
+		// ANY type
 		result.BDec(_b, seqBytesDecoded);
 
 
-	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
-	else if (seqBytesDecoded != elmtLen0)
-	{
-		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
-	else
-	{
-		// nothing more to read, just add the bytes read previously
-		bytesDecoded += seqBytesDecoded;
-	}
-}
-
-// [PrintSeqDefCodeBerEnc]
-AsnLen ROSEResultSeq::BEnc(AsnBuf& _b) const
-{
-	AsnLen l=0;
-	l = BEncContent (_b);
-	l += BEncConsLen(_b, l);
-	l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-	return l;
-}
-
-// [PrintSeqDefCodeBerDec]
-void ROSEResultSeq::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
-{
-	AsnTag tag;
-	AsnLen elmtLen1;
-
-	tag = BDecTag(_b, bytesDecoded);
-	if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
-		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-
-	elmtLen1 = BDecLen(_b, bytesDecoded);
-	BDecContent(_b, tag, elmtLen1, bytesDecoded);
-}
-
-// [PrintSeqDefCodeJsonEnc]
-void ROSEResultSeq::JEnc(EJson::Value& b) const
-{
-	b = EJson::Value(EJson::objectValue);
-
-	EJson::Value tmp;
-
-	resultValue.JEnc(tmp);
-	b["resultValue"] = tmp;
-
-	result.JEnc(tmp);
-	b["result"] = tmp;
-}
-
-// [PrintSeqDefCodeJsonDec]
-bool ROSEResultSeq::JDec(const EJson::Value& b){
-	Clear();
-
-	if (!b.isObject())
-		return false;
-
-	EJson::Value tmp;
-	if (b.isMember("resultValue"))
-	{
-		if (!resultValue.JDec(b["resultValue"]))
-			throw InvalidTagException(typeName(), "decode failed: resultValue", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "not found: resultValue", STACK_ENTRY);
-
-	if (b.isMember("result"))
-	{
-		if (!result.JDec(b["result"]))
-			throw InvalidTagException(typeName(), "decode failed: result", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "not found: result", STACK_ENTRY);
-
-	return true;
-}
-
-// [PrintCxxSeqSetPrintFunction]
-void ROSEResultSeq::Print(std::ostream& os, unsigned short indent) const
-{
-	os << std::endl;
-	Indent(os, indent);
-	os << "{ -- SEQUENCE --" << std::endl;
-	++indent;
-
-	Indent(os, indent);
-	os << "resultValue ";
-	resultValue.Print(os, indent);
-	os << std::endl;
-
-	Indent(os, indent);
-	os << "result ";
-	result.Print(os, indent);
-	os << std::endl;
-
-	--indent;
-	Indent(os, indent);
-	os << "}\n";
-} // end of ROSEResultSeq::Print()
-
-// [PrintSeqDefCodeXMLPrinter]
-void ROSEResultSeq::PrintXML(std::ostream& os, const char* lpszTitle) const
-{
-	if (lpszTitle)
-	{
-		os << "<" << lpszTitle;
-		if (typeName() && strlen(typeName()))
+		if (elmtLen0 == INDEFINITE_LEN)
 		{
-			os << " typeName=\"" << typeName() << "\"";
+			BDecEoc(_b, bytesDecoded);
+			return;
+		}
+		else if (seqBytesDecoded != elmtLen0)
+		{
+			throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
+		}
+		else
+		{
+			// nothing more to read, just add the bytes read previously
+			bytesDecoded += seqBytesDecoded;
 		}
 	}
-	else
+
+	// [PrintSeqDefCodeBerEnc]
+	AsnLen ROSEResultSeq::BEnc(AsnBuf& _b) const
 	{
-		os << "<NONE";
+		AsnLen l = 0;
+		l = BEncContent(_b);
+		l += BEncConsLen(_b, l);
+		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+		return l;
 	}
-	if (typeName() && strlen(typeName()))
+
+	// [PrintSeqDefCodeBerDec]
+	void ROSEResultSeq::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	{
+		AsnTag tag;
+		AsnLen elmtLen1;
+
+		tag = BDecTag(_b, bytesDecoded);
+		if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
+
+		elmtLen1 = BDecLen(_b, bytesDecoded);
+		BDecContent(_b, tag, elmtLen1, bytesDecoded);
+	}
+
+	// [PrintSeqDefCodeJsonEnc]
+	void ROSEResultSeq::JEnc(EJson::Value& b) const
+	{
+		b = EJson::Value(EJson::objectValue);
+
+		EJson::Value tmp;
+
+		resultValue.JEnc(tmp);
+		b["resultValue"] = tmp;
+
+		result.JEnc(tmp);
+		b["result"] = tmp;
+	}
+
+	// [PrintSeqDefCodeJsonDec]
+	bool ROSEResultSeq::JDec(const EJson::Value& b) {
+		Clear();
+
+		if (!b.isObject())
+			return false;
+
+		EJson::Value tmp;
+		if (b.isMember("resultValue"))
+		{
+			if (!resultValue.JDec(b["resultValue"]))
+				throw InvalidTagException(typeName(), "decode failed: resultValue", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: resultValue", STACK_ENTRY);
+
+		if (b.isMember("result"))
+		{
+			if (!result.JDec(b["result"]))
+				throw InvalidTagException(typeName(), "decode failed: result", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: result", STACK_ENTRY);
+
+		return true;
+	}
+
+	// [PrintCxxSeqSetPrintFunction]
+	void ROSEResultSeq::Print(std::ostream& os, unsigned short indent) const
+	{
+		os << std::endl;
+		Indent(os, indent);
+		os << "{ -- SEQUENCE --" << std::endl;
+		++indent;
+
+		Indent(os, indent);
+		os << "resultValue ";
+		resultValue.Print(os, indent);
+		os << std::endl;
+
+		Indent(os, indent);
+		os << "result ";
+		result.Print(os, indent);
+		os << std::endl;
+
+		--indent;
+		Indent(os, indent);
+		os << "}\n";
+	} // end of ROSEResultSeq::Print()
+
+	// [PrintSeqDefCodeXMLPrinter]
+	void ROSEResultSeq::PrintXML(std::ostream& os, const char* lpszTitle) const
+	{
+		if (lpszTitle)
+		{
+			os << "<" << lpszTitle;
+			if (typeName() && strlen(typeName()))
+			{
+				os << " typeName=\"" << typeName() << "\"";
+			}
+		}
+		else
+		{
+			os << "<NONE";
+		}
 		if (typeName() && strlen(typeName()))
 		{
-			os << "<" << typeName();
+			if (typeName() && strlen(typeName()))
+			{
+				os << "<" << typeName();
+			}
 		}
-	}
-os << " type=\"SEQUENCE\">" << std::endl;
-	resultValue.PrintXML(os, "resultValue");
+		os << " type=\"SEQUENCE\">" << std::endl;
+		resultValue.PrintXML(os, "resultValue");
 
-	result.PrintXML(os, "result");
+		result.PrintXML(os, "result");
 
-	if (lpszTitle)
-	{
-		os << "</" << lpszTitle << ">" << std::endl;
-	}
-	else
-		if (typeName() && strlen(typeName()))
+		if (lpszTitle)
 		{
-			os << "</" << typeName() << ">" << std::endl;
+			os << "</" << lpszTitle << ">" << std::endl;
 		}
-}
+		else
+			if (typeName() && strlen(typeName()))
+			{
+				os << "</" << typeName() << ">" << std::endl;
+			}
+	}
 
-// [PrintConstructor]
-ROSEAuth::ROSEAuth()
-{
-	Init();
-}
+	// [PrintConstructor]
+	ROSEAuth::ROSEAuth()
+	{
+		Init();
+	}
 
-// [PrintCopyConstructor]
-ROSEAuth::ROSEAuth(const ROSEAuth &that)
-{
-	Init();
-	
-	*this = that;
-}
+	// [PrintCopyConstructor]
+	ROSEAuth::ROSEAuth(const ROSEAuth& that)
+	{
+		Init();
 
-// [PrintDestructor]
-ROSEAuth::~ROSEAuth()
-{
-	Clear();
-}
+		*this = that;
+	}
 
-// [PrintInit]
-void ROSEAuth::Init()
-{
-}
-
-// [PrintClear]
-void ROSEAuth::Clear()
-{
-}
-
-// [PrintClone]
-ROSEAuth* ROSEAuth::Clone() const
-{
-	return new ROSEAuth(*this);
-}
-
-// [PrintAssignmentOperator]
-ROSEAuth& ROSEAuth::operator=(const ROSEAuth& that)
-{
-	if (this != &that)
+	// [PrintDestructor]
+	ROSEAuth::~ROSEAuth()
 	{
 		Clear();
-		method = that.method;
-		authdata = that.authdata;
 	}
 
-	return *this;
-}
-
-// [PrintTypeName]
-const char* ROSEAuth::typeName() const
-{
-	return "ROSEAuth";
-}
-
-// [PrintCheckConstraints]
-int ROSEAuth::checkConstraints(ConstraintFailList* pConstraintFails) const
-{
-	method.checkConstraints(pConstraintFails);
-	authdata.checkConstraints(pConstraintFails);
-	return 0;
-}
-
-// [PrintSeqDefCodeBerEncodeContent]
-AsnLen ROSEAuth::BEncContent(AsnBuf &_b) const
-{
-	AsnLen totalLen = 0;
-	AsnLen l = 0;
-
-	l = authdata.BEncContent(_b);
-	l += BEncDefLen(_b, l);
-	l += BEncTag1(_b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
-	totalLen += l;
-
-	l = method.BEncContent(_b);
-	l += BEncDefLen(_b, l);
-	l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
-	totalLen += l;
-
-	return totalLen;
-}
-
-// [PrintSeqDefCodeBerDecodeContent]
-void ROSEAuth::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
-{
-	Clear();
-	AsnTag tag1 = AsnTag();
-	AsnLen seqBytesDecoded = 0;
-	AsnLen elmtLen1 = 0;
-	if (elmtLen0 == 0)
-		return;
-	tag1 = BDecTag(_b, seqBytesDecoded);
-
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE) || (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+	// [PrintInit]
+	void ROSEAuth::Init()
 	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		method.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		tag1 = BDecTag (_b, seqBytesDecoded);
 	}
-	else
-		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE) || (tag1 == MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE)))
+	// [PrintClear]
+	void ROSEAuth::Clear()
 	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		authdata.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
 	}
-	else
-		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
-	if (elmtLen0 == INDEFINITE_LEN)
+	// [PrintClone]
+	ROSEAuth* ROSEAuth::Clone() const
 	{
-		BDecEoc (_b, bytesDecoded);
-		return;
+		return new ROSEAuth(*this);
 	}
-	else if (seqBytesDecoded != elmtLen0)
+
+	// [PrintAssignmentOperator]
+	ROSEAuth& ROSEAuth::operator=(const ROSEAuth& that)
 	{
-		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
-	else
-	{
-		// nothing more to read, just add the bytes read previously
-		bytesDecoded += seqBytesDecoded;
-	}
-}
-
-// [PrintSeqDefCodeBerEnc]
-AsnLen ROSEAuth::BEnc(AsnBuf& _b) const
-{
-	AsnLen l=0;
-	l = BEncContent (_b);
-	l += BEncConsLen(_b, l);
-	l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-	return l;
-}
-
-// [PrintSeqDefCodeBerDec]
-void ROSEAuth::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
-{
-	AsnTag tag;
-	AsnLen elmtLen1;
-
-	tag = BDecTag(_b, bytesDecoded);
-	if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
-		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-
-	elmtLen1 = BDecLen(_b, bytesDecoded);
-	BDecContent(_b, tag, elmtLen1, bytesDecoded);
-}
-
-// [PrintSeqDefCodeJsonEnc]
-void ROSEAuth::JEnc(EJson::Value& b) const
-{
-	b = EJson::Value(EJson::objectValue);
-
-	EJson::Value tmp;
-
-	method.JEnc(tmp);
-	b["method"] = tmp;
-
-	authdata.JEnc(tmp);
-	b["authdata"] = tmp;
-}
-
-// [PrintSeqDefCodeJsonDec]
-bool ROSEAuth::JDec(const EJson::Value& b){
-	Clear();
-
-	if (!b.isObject())
-		return false;
-
-	EJson::Value tmp;
-	if (b.isMember("method"))
-	{
-		if (!method.JDec(b["method"]))
-			throw InvalidTagException(typeName(), "decode failed: method", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "not found: method", STACK_ENTRY);
-
-	if (b.isMember("authdata"))
-	{
-		if (!authdata.JDec(b["authdata"]))
-			throw InvalidTagException(typeName(), "decode failed: authdata", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "not found: authdata", STACK_ENTRY);
-
-	return true;
-}
-
-// [PrintCxxSeqSetPrintFunction]
-void ROSEAuth::Print(std::ostream& os, unsigned short indent) const
-{
-	os << std::endl;
-	Indent(os, indent);
-	os << "{ -- SEQUENCE --" << std::endl;
-	++indent;
-
-	Indent(os, indent);
-	os << "method ";
-	method.Print(os, indent);
-	os << std::endl;
-
-	Indent(os, indent);
-	os << "authdata ";
-	authdata.Print(os, indent);
-	os << std::endl;
-
-	--indent;
-	Indent(os, indent);
-	os << "}\n";
-} // end of ROSEAuth::Print()
-
-// [PrintSeqDefCodeXMLPrinter]
-void ROSEAuth::PrintXML(std::ostream& os, const char* lpszTitle) const
-{
-	if (lpszTitle)
-	{
-		os << "<" << lpszTitle;
-		if (typeName() && strlen(typeName()))
+		if (this != &that)
 		{
-			os << " typeName=\"" << typeName() << "\"";
+			Clear();
+			method = that.method;
+			authdata = that.authdata;
+		}
+
+		return *this;
+	}
+
+	// [PrintTypeName]
+	const char* ROSEAuth::typeName() const
+	{
+		return "ROSEAuth";
+	}
+
+	// [PrintCheckConstraints]
+	int ROSEAuth::checkConstraints(ConstraintFailList* pConstraintFails) const
+	{
+		method.checkConstraints(pConstraintFails);
+		authdata.checkConstraints(pConstraintFails);
+		return 0;
+	}
+
+	// [PrintSeqDefCodeBerEncodeContent]
+	AsnLen ROSEAuth::BEncContent(AsnBuf& _b) const
+	{
+		AsnLen totalLen = 0;
+		AsnLen l = 0;
+
+		l = authdata.BEncContent(_b);
+		l += BEncDefLen(_b, l);
+		l += BEncTag1(_b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
+		totalLen += l;
+
+		l = method.BEncContent(_b);
+		l += BEncDefLen(_b, l);
+		l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+		totalLen += l;
+
+		return totalLen;
+	}
+
+	// [PrintSeqDefCodeBerDecodeContent]
+	void ROSEAuth::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
+	{
+		Clear();
+		AsnTag tag1 = AsnTag();
+		AsnLen seqBytesDecoded = 0;
+		AsnLen elmtLen1 = 0;
+		if (elmtLen0 == 0)
+			return;
+		tag1 = BDecTag(_b, seqBytesDecoded);
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE) || (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			method.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			tag1 = BDecTag(_b, seqBytesDecoded);
+		}
+		else
+			throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE) || (tag1 == MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE)))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			authdata.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+		}
+		else
+			throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+
+		if (elmtLen0 == INDEFINITE_LEN)
+		{
+			BDecEoc(_b, bytesDecoded);
+			return;
+		}
+		else if (seqBytesDecoded != elmtLen0)
+		{
+			throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
+		}
+		else
+		{
+			// nothing more to read, just add the bytes read previously
+			bytesDecoded += seqBytesDecoded;
 		}
 	}
-	else
+
+	// [PrintSeqDefCodeBerEnc]
+	AsnLen ROSEAuth::BEnc(AsnBuf& _b) const
 	{
-		os << "<NONE";
+		AsnLen l = 0;
+		l = BEncContent(_b);
+		l += BEncConsLen(_b, l);
+		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+		return l;
 	}
-	if (typeName() && strlen(typeName()))
+
+	// [PrintSeqDefCodeBerDec]
+	void ROSEAuth::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	{
+		AsnTag tag;
+		AsnLen elmtLen1;
+
+		tag = BDecTag(_b, bytesDecoded);
+		if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
+
+		elmtLen1 = BDecLen(_b, bytesDecoded);
+		BDecContent(_b, tag, elmtLen1, bytesDecoded);
+	}
+
+	// [PrintSeqDefCodeJsonEnc]
+	void ROSEAuth::JEnc(EJson::Value& b) const
+	{
+		b = EJson::Value(EJson::objectValue);
+
+		EJson::Value tmp;
+
+		method.JEnc(tmp);
+		b["method"] = tmp;
+
+		authdata.JEnc(tmp);
+		b["authdata"] = tmp;
+	}
+
+	// [PrintSeqDefCodeJsonDec]
+	bool ROSEAuth::JDec(const EJson::Value& b) {
+		Clear();
+
+		if (!b.isObject())
+			return false;
+
+		EJson::Value tmp;
+		if (b.isMember("method"))
+		{
+			if (!method.JDec(b["method"]))
+				throw InvalidTagException(typeName(), "decode failed: method", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: method", STACK_ENTRY);
+
+		if (b.isMember("authdata"))
+		{
+			if (!authdata.JDec(b["authdata"]))
+				throw InvalidTagException(typeName(), "decode failed: authdata", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: authdata", STACK_ENTRY);
+
+		return true;
+	}
+
+	// [PrintCxxSeqSetPrintFunction]
+	void ROSEAuth::Print(std::ostream& os, unsigned short indent) const
+	{
+		os << std::endl;
+		Indent(os, indent);
+		os << "{ -- SEQUENCE --" << std::endl;
+		++indent;
+
+		Indent(os, indent);
+		os << "method ";
+		method.Print(os, indent);
+		os << std::endl;
+
+		Indent(os, indent);
+		os << "authdata ";
+		authdata.Print(os, indent);
+		os << std::endl;
+
+		--indent;
+		Indent(os, indent);
+		os << "}\n";
+	} // end of ROSEAuth::Print()
+
+	// [PrintSeqDefCodeXMLPrinter]
+	void ROSEAuth::PrintXML(std::ostream& os, const char* lpszTitle) const
+	{
+		if (lpszTitle)
+		{
+			os << "<" << lpszTitle;
+			if (typeName() && strlen(typeName()))
+			{
+				os << " typeName=\"" << typeName() << "\"";
+			}
+		}
+		else
+		{
+			os << "<NONE";
+		}
 		if (typeName() && strlen(typeName()))
 		{
-			os << "<" << typeName();
+			if (typeName() && strlen(typeName()))
+			{
+				os << "<" << typeName();
+			}
 		}
-	}
-os << " type=\"SEQUENCE\">" << std::endl;
-	method.PrintXML(os, "method");
+		os << " type=\"SEQUENCE\">" << std::endl;
+		method.PrintXML(os, "method");
 
-	authdata.PrintXML(os, "authdata");
+		authdata.PrintXML(os, "authdata");
 
-	if (lpszTitle)
-	{
-		os << "</" << lpszTitle << ">" << std::endl;
-	}
-	else
-		if (typeName() && strlen(typeName()))
+		if (lpszTitle)
 		{
-			os << "</" << typeName() << ">" << std::endl;
+			os << "</" << lpszTitle << ">" << std::endl;
 		}
-}
+		else
+			if (typeName() && strlen(typeName()))
+			{
+				os << "</" << typeName() << ">" << std::endl;
+			}
+	}
 
-// [PrintConstructor]
-ROSEError::ROSEError()
-{
-	Init();
-}
-
-// [PrintCopyConstructor]
-ROSEError::ROSEError(const ROSEError &that)
-{
-	Init();
-	
-	*this = that;
-}
-
-// [PrintDestructor]
-ROSEError::~ROSEError()
-{
-	Clear();
-}
-
-// [PrintInit]
-void ROSEError::Init()
-{
-	sessionID = NULL;
-	error = NULL;
-}
-
-// [PrintClear]
-void ROSEError::Clear()
-{
-	if (sessionID)
+	// [PrintConstructor]
+	ROSEError::ROSEError()
 	{
-		delete sessionID;
+		Init();
+	}
+
+	// [PrintCopyConstructor]
+	ROSEError::ROSEError(const ROSEError& that)
+	{
+		Init();
+
+		*this = that;
+	}
+
+	// [PrintDestructor]
+	ROSEError::~ROSEError()
+	{
+		Clear();
+	}
+
+	// [PrintInit]
+	void ROSEError::Init()
+	{
 		sessionID = NULL;
-	}
-	if (error)
-	{
-		delete error;
 		error = NULL;
 	}
-}
 
-// [PrintClone]
-ROSEError* ROSEError::Clone() const
-{
-	return new ROSEError(*this);
-}
-
-// [PrintAssignmentOperator]
-ROSEError& ROSEError::operator=(const ROSEError& that)
-{
-	if (this != &that)
+	// [PrintClear]
+	void ROSEError::Clear()
 	{
-		Clear();
-		if (that.sessionID)
-		{
-			if (!sessionID)
-				sessionID = new UTF8String();
-			*sessionID = *that.sessionID;
-		}
-		else if (sessionID)
+		if (sessionID)
 		{
 			delete sessionID;
 			sessionID = NULL;
 		}
-		invokedID = that.invokedID;
-		error_value = that.error_value;
-		if (that.error)
-		{
-			if (!error)
-				error = new AsnAny();
-			*error = *that.error;
-		}
-		else if (error)
+		if (error)
 		{
 			delete error;
 			error = NULL;
 		}
 	}
 
-	return *this;
-}
-
-// [PrintTypeName]
-const char* ROSEError::typeName() const
-{
-	return "ROSEError";
-}
-
-// [PrintCheckConstraints]
-int ROSEError::checkConstraints(ConstraintFailList* pConstraintFails) const
-{
-	if (sessionID)
-		sessionID->checkConstraints(pConstraintFails);
-	invokedID.checkConstraints(pConstraintFails);
-	error_value.checkConstraints(pConstraintFails);
-	if (error)
-		error->checkConstraints(pConstraintFails);
-	return 0;
-}
-
-// [PrintSeqDefCodeBerEncodeContent]
-AsnLen ROSEError::BEncContent(AsnBuf &_b) const
-{
-	AsnLen totalLen = 0;
-	AsnLen l = 0;
-
-	if (NOT_NULL(error))
+	// [PrintClone]
+	ROSEError* ROSEError::Clone() const
 	{
-		l = error->BEnc(_b);
-		totalLen += l;
+		return new ROSEError(*this);
 	}
 
-	l = error_value.BEncContent(_b);
-	l += BEncDefLen(_b, l);
-	l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
-	totalLen += l;
-
-	l = invokedID.BEncContent(_b);
-	l += BEncDefLen(_b, l);
-	l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
-	totalLen += l;
-
-	if (NOT_NULL(sessionID))
+	// [PrintAssignmentOperator]
+	ROSEError& ROSEError::operator=(const ROSEError& that)
 	{
-		l = sessionID->BEncContent(_b);
+		if (this != &that)
+		{
+			Clear();
+			if (that.sessionID)
+			{
+				if (!sessionID)
+					sessionID = new UTF8String();
+				*sessionID = *that.sessionID;
+			}
+			else if (sessionID)
+			{
+				delete sessionID;
+				sessionID = NULL;
+			}
+			invokedID = that.invokedID;
+			error_value = that.error_value;
+			if (that.error)
+			{
+				if (!error)
+					error = new AsnAny();
+				*error = *that.error;
+			}
+			else if (error)
+			{
+				delete error;
+				error = NULL;
+			}
+		}
+
+		return *this;
+	}
+
+	// [PrintTypeName]
+	const char* ROSEError::typeName() const
+	{
+		return "ROSEError";
+	}
+
+	// [PrintCheckConstraints]
+	int ROSEError::checkConstraints(ConstraintFailList* pConstraintFails) const
+	{
+		if (sessionID)
+			sessionID->checkConstraints(pConstraintFails);
+		invokedID.checkConstraints(pConstraintFails);
+		error_value.checkConstraints(pConstraintFails);
+		if (error)
+			error->checkConstraints(pConstraintFails);
+		return 0;
+	}
+
+	// [PrintSeqDefCodeBerEncodeContent]
+	AsnLen ROSEError::BEncContent(AsnBuf& _b) const
+	{
+		AsnLen totalLen = 0;
+		AsnLen l = 0;
+
+		if (NOT_NULL(error))
+		{
+			l = error->BEnc(_b);
+			totalLen += l;
+		}
+
+		l = error_value.BEncContent(_b);
 		l += BEncDefLen(_b, l);
-		l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
-		l += BEncConsLen(_b, l);
-		l += BEncTag1(_b, CNTX, CONS, 1);
+		l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
 		totalLen += l;
+
+		l = invokedID.BEncContent(_b);
+		l += BEncDefLen(_b, l);
+		l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
+		totalLen += l;
+
+		if (NOT_NULL(sessionID))
+		{
+			l = sessionID->BEncContent(_b);
+			l += BEncDefLen(_b, l);
+			l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+			l += BEncConsLen(_b, l);
+			l += BEncTag1(_b, CNTX, CONS, 1);
+			totalLen += l;
+		}
+
+		return totalLen;
 	}
 
-	return totalLen;
-}
-
-// [PrintSeqDefCodeBerDecodeContent]
-void ROSEError::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
-{
-	Clear();
-	AsnTag tag1 = AsnTag();
-	AsnLen seqBytesDecoded = 0;
-	AsnLen elmtLen1 = 0;
-	AsnLen elmtLen2 = 0;
-	if (elmtLen0 == 0)
-		return;
-	tag1 = BDecTag(_b, seqBytesDecoded);
-
-	if (tag1 == MAKE_TAG_ID(CNTX, CONS, 1))
+	// [PrintSeqDefCodeBerDecodeContent]
+	void ROSEError::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
+		Clear();
+		AsnTag tag1 = AsnTag();
+		AsnLen seqBytesDecoded = 0;
+		AsnLen elmtLen1 = 0;
+		AsnLen elmtLen2 = 0;
+		if (elmtLen0 == 0)
+			return;
 		tag1 = BDecTag(_b, seqBytesDecoded);
 
-		if ((tag1 != MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
-			&& (tag1 != MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
-			throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
-
-		elmtLen2 = BDecLen(_b, seqBytesDecoded);
-		sessionID = new UTF8String();
-		sessionID->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
-	if (elmtLen1 == INDEFINITE_LEN)
-		BDecEoc(_b, seqBytesDecoded);
-
-		tag1 = BDecTag (_b, seqBytesDecoded);
-	}
-
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		invokedID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		tag1 = BDecTag (_b, seqBytesDecoded);
-	}
-	else
-		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
-
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		error_value.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
+		if (tag1 == MAKE_TAG_ID(CNTX, CONS, 1))
 		{
-			bytesDecoded += seqBytesDecoded;
-			return;
-		}
-		else
-		{
-			tag1 = _b.PeekByte();
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
-			{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			tag1 = BDecTag(_b, seqBytesDecoded);
+
+			if ((tag1 != MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
+				&& (tag1 != MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+				throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
+
+			elmtLen2 = BDecLen(_b, seqBytesDecoded);
+			sessionID = new UTF8String();
+			sessionID->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
+			if (elmtLen1 == INDEFINITE_LEN)
 				BDecEoc(_b, seqBytesDecoded);
 
+			tag1 = BDecTag(_b, seqBytesDecoded);
+		}
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			invokedID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			tag1 = BDecTag(_b, seqBytesDecoded);
+		}
+		else
+			throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			error_value.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			if (seqBytesDecoded == elmtLen0)
+			{
 				bytesDecoded += seqBytesDecoded;
 				return;
 			}
-		}
-	}
-	else
-		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+			else
+			{
+				tag1 = _b.PeekByte();
+				if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+				{
+					BDecEoc(_b, seqBytesDecoded);
 
-  // ANY type
+					bytesDecoded += seqBytesDecoded;
+					return;
+				}
+			}
+		}
+		else
+			throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+
+		// ANY type
 		error = new AsnAny();
 		error->BDec(_b, seqBytesDecoded);
 
 
-	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
-	else if (seqBytesDecoded != elmtLen0)
-	{
-		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
-	else
-	{
-		// nothing more to read, just add the bytes read previously
-		bytesDecoded += seqBytesDecoded;
-	}
-}
-
-// [PrintSeqDefCodeBerEnc]
-AsnLen ROSEError::BEnc(AsnBuf& _b) const
-{
-	AsnLen l=0;
-	l = BEncContent (_b);
-	l += BEncConsLen(_b, l);
-	l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-	return l;
-}
-
-// [PrintSeqDefCodeBerDec]
-void ROSEError::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
-{
-	AsnTag tag;
-	AsnLen elmtLen1;
-
-	tag = BDecTag(_b, bytesDecoded);
-	if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
-		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-
-	elmtLen1 = BDecLen(_b, bytesDecoded);
-	BDecContent(_b, tag, elmtLen1, bytesDecoded);
-}
-
-// [PrintSeqDefCodeJsonEnc]
-void ROSEError::JEnc(EJson::Value& b) const
-{
-	b = EJson::Value(EJson::objectValue);
-
-	EJson::Value tmp;
-
-	if (NOT_NULL(sessionID))
-	{
-		sessionID->JEnc(tmp);
-		b["sessionID"] = tmp;
+		if (elmtLen0 == INDEFINITE_LEN)
+		{
+			BDecEoc(_b, bytesDecoded);
+			return;
+		}
+		else if (seqBytesDecoded != elmtLen0)
+		{
+			throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
+		}
+		else
+		{
+			// nothing more to read, just add the bytes read previously
+			bytesDecoded += seqBytesDecoded;
+		}
 	}
 
-	invokedID.JEnc(tmp);
-	b["invokedID"] = tmp;
-
-	error_value.JEnc(tmp);
-	b["error_value"] = tmp;
-
-	if (NOT_NULL(error))
+	// [PrintSeqDefCodeBerEnc]
+	AsnLen ROSEError::BEnc(AsnBuf& _b) const
 	{
-		error->JEnc(tmp);
-		b["error"] = tmp;
-	}
-}
-
-// [PrintSeqDefCodeJsonDec]
-bool ROSEError::JDec(const EJson::Value& b){
-	Clear();
-
-	if (!b.isObject())
-		return false;
-
-	EJson::Value tmp;
-	if (b.isMember("sessionID"))
-	{
-		delete sessionID;
-		sessionID = new UTF8String;
-		if (!sessionID->JDec(b["sessionID"]))
-			throw InvalidTagException(typeName(), "decode failed: sessionID", STACK_ENTRY);
+		AsnLen l = 0;
+		l = BEncContent(_b);
+		l += BEncConsLen(_b, l);
+		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+		return l;
 	}
 
-	if (b.isMember("invokedID"))
+	// [PrintSeqDefCodeBerDec]
+	void ROSEError::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	{
-		if (!invokedID.JDec(b["invokedID"]))
-			throw InvalidTagException(typeName(), "decode failed: invokedID", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "not found: invokedID", STACK_ENTRY);
+		AsnTag tag;
+		AsnLen elmtLen1;
 
-	if (b.isMember("error_value"))
-	{
-		if (!error_value.JDec(b["error_value"]))
-			throw InvalidTagException(typeName(), "decode failed: error_value", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "not found: error_value", STACK_ENTRY);
+		tag = BDecTag(_b, bytesDecoded);
+		if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
 
-	if (b.isMember("error"))
-	{
-		delete error;
-		error = new AsnAny;
-		if (!error->JDec(b["error"]))
-			throw InvalidTagException(typeName(), "decode failed: error", STACK_ENTRY);
+		elmtLen1 = BDecLen(_b, bytesDecoded);
+		BDecContent(_b, tag, elmtLen1, bytesDecoded);
 	}
 
-	return true;
-}
-
-// [PrintCxxSeqSetPrintFunction]
-void ROSEError::Print(std::ostream& os, unsigned short indent) const
-{
-	os << std::endl;
-	Indent(os, indent);
-	os << "{ -- SEQUENCE --" << std::endl;
-	++indent;
-
-	if (NOT_NULL (sessionID))
+	// [PrintSeqDefCodeJsonEnc]
+	void ROSEError::JEnc(EJson::Value& b) const
 	{
-		Indent(os, indent);
-		os << "sessionID ";
-		sessionID->Print(os, indent);
+		b = EJson::Value(EJson::objectValue);
+
+		EJson::Value tmp;
+
+		if (NOT_NULL(sessionID))
+		{
+			sessionID->JEnc(tmp);
+			b["sessionID"] = tmp;
+		}
+
+		invokedID.JEnc(tmp);
+		b["invokedID"] = tmp;
+
+		error_value.JEnc(tmp);
+		b["error_value"] = tmp;
+
+		if (NOT_NULL(error))
+		{
+			error->JEnc(tmp);
+			b["error"] = tmp;
+		}
+	}
+
+	// [PrintSeqDefCodeJsonDec]
+	bool ROSEError::JDec(const EJson::Value& b) {
+		Clear();
+
+		if (!b.isObject())
+			return false;
+
+		EJson::Value tmp;
+		if (b.isMember("sessionID"))
+		{
+			delete sessionID;
+			sessionID = new UTF8String;
+			if (!sessionID->JDec(b["sessionID"]))
+				throw InvalidTagException(typeName(), "decode failed: sessionID", STACK_ENTRY);
+		}
+
+		if (b.isMember("invokedID"))
+		{
+			if (!invokedID.JDec(b["invokedID"]))
+				throw InvalidTagException(typeName(), "decode failed: invokedID", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: invokedID", STACK_ENTRY);
+
+		if (b.isMember("error_value"))
+		{
+			if (!error_value.JDec(b["error_value"]))
+				throw InvalidTagException(typeName(), "decode failed: error_value", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: error_value", STACK_ENTRY);
+
+		if (b.isMember("error"))
+		{
+			delete error;
+			error = new AsnAny;
+			if (!error->JDec(b["error"]))
+				throw InvalidTagException(typeName(), "decode failed: error", STACK_ENTRY);
+		}
+
+		return true;
+	}
+
+	// [PrintCxxSeqSetPrintFunction]
+	void ROSEError::Print(std::ostream& os, unsigned short indent) const
+	{
 		os << std::endl;
-	}
-
-	Indent(os, indent);
-	os << "invokedID ";
-	invokedID.Print(os, indent);
-	os << std::endl;
-
-	Indent(os, indent);
-	os << "error-value ";
-	error_value.Print(os, indent);
-	os << std::endl;
-
-	if (NOT_NULL (error))
-	{
 		Indent(os, indent);
-		os << "error ";
-		error->Print(os, indent);
+		os << "{ -- SEQUENCE --" << std::endl;
+		++indent;
+
+		if (NOT_NULL(sessionID))
+		{
+			Indent(os, indent);
+			os << "sessionID ";
+			sessionID->Print(os, indent);
+			os << std::endl;
+		}
+
+		Indent(os, indent);
+		os << "invokedID ";
+		invokedID.Print(os, indent);
 		os << std::endl;
-	}
 
-	--indent;
-	Indent(os, indent);
-	os << "}\n";
-} // end of ROSEError::Print()
+		Indent(os, indent);
+		os << "error-value ";
+		error_value.Print(os, indent);
+		os << std::endl;
 
-// [PrintSeqDefCodeXMLPrinter]
-void ROSEError::PrintXML(std::ostream& os, const char* lpszTitle) const
-{
-	if (lpszTitle)
+		if (NOT_NULL(error))
+		{
+			Indent(os, indent);
+			os << "error ";
+			error->Print(os, indent);
+			os << std::endl;
+		}
+
+		--indent;
+		Indent(os, indent);
+		os << "}\n";
+	} // end of ROSEError::Print()
+
+	// [PrintSeqDefCodeXMLPrinter]
+	void ROSEError::PrintXML(std::ostream& os, const char* lpszTitle) const
 	{
-		os << "<" << lpszTitle;
+		if (lpszTitle)
+		{
+			os << "<" << lpszTitle;
+			if (typeName() && strlen(typeName()))
+			{
+				os << " typeName=\"" << typeName() << "\"";
+			}
+		}
+		else
+		{
+			os << "<NONE";
+		}
 		if (typeName() && strlen(typeName()))
 		{
-			os << " typeName=\"" << typeName() << "\"";
+			if (typeName() && strlen(typeName()))
+			{
+				os << "<" << typeName();
+			}
 		}
-	}
-	else
-	{
-		os << "<NONE";
-	}
-	if (typeName() && strlen(typeName()))
-	{
-		if (typeName() && strlen(typeName()))
+		os << " type=\"SEQUENCE\">" << std::endl;
+		if (NOT_NULL(sessionID))
 		{
-			os << "<" << typeName();
+			sessionID->PrintXML(os, "sessionID");
 		}
-	}
-os << " type=\"SEQUENCE\">" << std::endl;
-	if (NOT_NULL (sessionID))
-	{
-		sessionID->PrintXML(os, "sessionID");
-	}
 
-	invokedID.PrintXML(os, "invokedID");
+		invokedID.PrintXML(os, "invokedID");
 
-	error_value.PrintXML(os, "error-value");
+		error_value.PrintXML(os, "error-value");
 
-	if (NOT_NULL (error))
-	{
-		error->PrintXML(os, "error");
-	}
-
-	if (lpszTitle)
-	{
-		os << "</" << lpszTitle << ">" << std::endl;
-	}
-	else
-		if (typeName() && strlen(typeName()))
+		if (NOT_NULL(error))
 		{
-			os << "</" << typeName() << ">" << std::endl;
+			error->PrintXML(os, "error");
 		}
-}
 
-// [PrintClone]
-ROSEAuthList* ROSEAuthList::Clone() const
-{
-	return new ROSEAuthList(*this);
-}
-
-// [PrintTypeName]
-const char* ROSEAuthList::typeName() const
-{
-	return "ROSEAuthList";
-}
-
-// [PrintConstructor]
-ROSEAuthRequest::ROSEAuthRequest()
-{
-	Init();
-}
-
-// [PrintCopyConstructor]
-ROSEAuthRequest::ROSEAuthRequest(const ROSEAuthRequest &that)
-{
-	Init();
-	
-	*this = that;
-}
-
-// [PrintDestructor]
-ROSEAuthRequest::~ROSEAuthRequest()
-{
-	Clear();
-}
-
-// [PrintInit]
-void ROSEAuthRequest::Init()
-{
-	context = NULL;
-}
-
-// [PrintClear]
-void ROSEAuthRequest::Clear()
-{
-	auth.Clear();
-	if (context)
-	{
-		delete context;
-		context = NULL;
+		if (lpszTitle)
+		{
+			os << "</" << lpszTitle << ">" << std::endl;
+		}
+		else
+			if (typeName() && strlen(typeName()))
+			{
+				os << "</" << typeName() << ">" << std::endl;
+			}
 	}
-}
 
-// [PrintClone]
-ROSEAuthRequest* ROSEAuthRequest::Clone() const
-{
-	return new ROSEAuthRequest(*this);
-}
+	// [PrintClone]
+	ROSEAuthList* ROSEAuthList::Clone() const
+	{
+		return new ROSEAuthList(*this);
+	}
 
-// [PrintAssignmentOperator]
-ROSEAuthRequest& ROSEAuthRequest::operator=(const ROSEAuthRequest& that)
-{
-	if (this != &that)
+	// [PrintTypeName]
+	const char* ROSEAuthList::typeName() const
+	{
+		return "ROSEAuthList";
+	}
+
+	// [PrintConstructor]
+	ROSEAuthRequest::ROSEAuthRequest()
+	{
+		Init();
+	}
+
+	// [PrintCopyConstructor]
+	ROSEAuthRequest::ROSEAuthRequest(const ROSEAuthRequest& that)
+	{
+		Init();
+
+		*this = that;
+	}
+
+	// [PrintDestructor]
+	ROSEAuthRequest::~ROSEAuthRequest()
 	{
 		Clear();
-		auth = that.auth;
-		if (that.context)
-		{
-			if (!context)
-				context = new UTF8String();
-			*context = *that.context;
-		}
-		else if (context)
+	}
+
+	// [PrintInit]
+	void ROSEAuthRequest::Init()
+	{
+		context = NULL;
+	}
+
+	// [PrintClear]
+	void ROSEAuthRequest::Clear()
+	{
+		auth.Clear();
+		if (context)
 		{
 			delete context;
 			context = NULL;
 		}
 	}
 
-	return *this;
-}
-
-// [PrintTypeName]
-const char* ROSEAuthRequest::typeName() const
-{
-	return "ROSEAuthRequest";
-}
-
-// [PrintCheckConstraints]
-int ROSEAuthRequest::checkConstraints(ConstraintFailList* pConstraintFails) const
-{
-	auth.checkConstraints(pConstraintFails);
-	if (context)
-		context->checkConstraints(pConstraintFails);
-	return 0;
-}
-
-// [PrintSeqDefCodeBerEncodeContent]
-AsnLen ROSEAuthRequest::BEncContent(AsnBuf &_b) const
-{
-	AsnLen totalLen = 0;
-	AsnLen l = 0;
-
-	if (NOT_NULL(context))
+	// [PrintClone]
+	ROSEAuthRequest* ROSEAuthRequest::Clone() const
 	{
-		l = context->BEncContent(_b);
-		l += BEncDefLen(_b, l);
-		l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
-		totalLen += l;
+		return new ROSEAuthRequest(*this);
 	}
 
-	l = auth.BEncContent(_b);
-	l += BEncConsLen(_b, l);
-	l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-	totalLen += l;
-
-	return totalLen;
-}
-
-// [PrintSeqDefCodeBerDecodeContent]
-void ROSEAuthRequest::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
-{
-	Clear();
-	AsnTag tag1 = AsnTag();
-	AsnLen seqBytesDecoded = 0;
-	AsnLen elmtLen1 = 0;
-	if (elmtLen0 == 0)
-		return;
-	tag1 = BDecTag(_b, seqBytesDecoded);
-
-	if (tag1 == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+	// [PrintAssignmentOperator]
+	ROSEAuthRequest& ROSEAuthRequest::operator=(const ROSEAuthRequest& that)
 	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		auth.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
+		if (this != &that)
 		{
-			bytesDecoded += seqBytesDecoded;
-			return;
-		}
-		else
-		{
-			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+			Clear();
+			auth = that.auth;
+			if (that.context)
 			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
+				if (!context)
+					context = new UTF8String();
+				*context = *that.context;
+			}
+			else if (context)
+			{
+				delete context;
+				context = NULL;
+			}
+		}
+
+		return *this;
+	}
+
+	// [PrintTypeName]
+	const char* ROSEAuthRequest::typeName() const
+	{
+		return "ROSEAuthRequest";
+	}
+
+	// [PrintCheckConstraints]
+	int ROSEAuthRequest::checkConstraints(ConstraintFailList* pConstraintFails) const
+	{
+		auth.checkConstraints(pConstraintFails);
+		if (context)
+			context->checkConstraints(pConstraintFails);
+		return 0;
+	}
+
+	// [PrintSeqDefCodeBerEncodeContent]
+	AsnLen ROSEAuthRequest::BEncContent(AsnBuf& _b) const
+	{
+		AsnLen totalLen = 0;
+		AsnLen l = 0;
+
+		if (NOT_NULL(context))
+		{
+			l = context->BEncContent(_b);
+			l += BEncDefLen(_b, l);
+			l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+			totalLen += l;
+		}
+
+		l = auth.BEncContent(_b);
+		l += BEncConsLen(_b, l);
+		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+		totalLen += l;
+
+		return totalLen;
+	}
+
+	// [PrintSeqDefCodeBerDecodeContent]
+	void ROSEAuthRequest::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
+	{
+		Clear();
+		AsnTag tag1 = AsnTag();
+		AsnLen seqBytesDecoded = 0;
+		AsnLen elmtLen1 = 0;
+		if (elmtLen0 == 0)
+			return;
+		tag1 = BDecTag(_b, seqBytesDecoded);
+
+		if (tag1 == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			auth.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			if (seqBytesDecoded == elmtLen0)
+			{
 				bytesDecoded += seqBytesDecoded;
 				return;
 			}
+			else
+			{
+				tag1 = BDecTag(_b, seqBytesDecoded);
+				if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+				{
+					BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
+					bytesDecoded += seqBytesDecoded;
+					return;
+				}
+			}
+		}
+		else
+			throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE) || (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			context = new UTF8String();
+			context->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+		}
+
+		if (elmtLen0 == INDEFINITE_LEN)
+		{
+			BDecEoc(_b, bytesDecoded);
+			return;
+		}
+		else if (seqBytesDecoded != elmtLen0)
+		{
+			throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
+		}
+		else
+		{
+			// nothing more to read, just add the bytes read previously
+			bytesDecoded += seqBytesDecoded;
 		}
 	}
-	else
-		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE) || (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+	// [PrintSeqDefCodeBerEnc]
+	AsnLen ROSEAuthRequest::BEnc(AsnBuf& _b) const
 	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		context = new UTF8String();
-		context->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+		AsnLen l = 0;
+		l = BEncContent(_b);
+		l += BEncConsLen(_b, l);
+		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+		return l;
 	}
 
-	if (elmtLen0 == INDEFINITE_LEN)
+	// [PrintSeqDefCodeBerDec]
+	void ROSEAuthRequest::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
-	else if (seqBytesDecoded != elmtLen0)
-	{
-		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
-	else
-	{
-		// nothing more to read, just add the bytes read previously
-		bytesDecoded += seqBytesDecoded;
-	}
-}
+		AsnTag tag;
+		AsnLen elmtLen1;
 
-// [PrintSeqDefCodeBerEnc]
-AsnLen ROSEAuthRequest::BEnc(AsnBuf& _b) const
-{
-	AsnLen l=0;
-	l = BEncContent (_b);
-	l += BEncConsLen(_b, l);
-	l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-	return l;
-}
+		tag = BDecTag(_b, bytesDecoded);
+		if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
 
-// [PrintSeqDefCodeBerDec]
-void ROSEAuthRequest::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
-{
-	AsnTag tag;
-	AsnLen elmtLen1;
-
-	tag = BDecTag(_b, bytesDecoded);
-	if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
-		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-
-	elmtLen1 = BDecLen(_b, bytesDecoded);
-	BDecContent(_b, tag, elmtLen1, bytesDecoded);
-}
-
-// [PrintSeqDefCodeJsonEnc]
-void ROSEAuthRequest::JEnc(EJson::Value& b) const
-{
-	b = EJson::Value(EJson::objectValue);
-
-	EJson::Value tmp;
-
-	auth.JEnc(tmp);
-	b["auth"] = tmp;
-
-	if (NOT_NULL(context))
-	{
-		context->JEnc(tmp);
-		b["context"] = tmp;
-	}
-}
-
-// [PrintSeqDefCodeJsonDec]
-bool ROSEAuthRequest::JDec(const EJson::Value& b){
-	Clear();
-
-	if (!b.isObject())
-		return false;
-
-	EJson::Value tmp;
-	if (b.isMember("auth"))
-	{
-		if (!auth.JDec(b["auth"]))
-			throw InvalidTagException(typeName(), "decode failed: auth", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "not found: auth", STACK_ENTRY);
-
-	if (b.isMember("context"))
-	{
-		delete context;
-		context = new UTF8String;
-		if (!context->JDec(b["context"]))
-			throw InvalidTagException(typeName(), "decode failed: context", STACK_ENTRY);
+		elmtLen1 = BDecLen(_b, bytesDecoded);
+		BDecContent(_b, tag, elmtLen1, bytesDecoded);
 	}
 
-	return true;
-}
-
-// [PrintCxxSeqSetPrintFunction]
-void ROSEAuthRequest::Print(std::ostream& os, unsigned short indent) const
-{
-	os << std::endl;
-	Indent(os, indent);
-	os << "{ -- SEQUENCE --" << std::endl;
-	++indent;
-
-	Indent(os, indent);
-	os << "auth ";
-	auth.Print(os, indent);
-	os << std::endl;
-
-	if (NOT_NULL (context))
+	// [PrintSeqDefCodeJsonEnc]
+	void ROSEAuthRequest::JEnc(EJson::Value& b) const
 	{
-		Indent(os, indent);
-		os << "context ";
-		context->Print(os, indent);
+		b = EJson::Value(EJson::objectValue);
+
+		EJson::Value tmp;
+
+		auth.JEnc(tmp);
+		b["auth"] = tmp;
+
+		if (NOT_NULL(context))
+		{
+			context->JEnc(tmp);
+			b["context"] = tmp;
+		}
+	}
+
+	// [PrintSeqDefCodeJsonDec]
+	bool ROSEAuthRequest::JDec(const EJson::Value& b) {
+		Clear();
+
+		if (!b.isObject())
+			return false;
+
+		EJson::Value tmp;
+		if (b.isMember("auth"))
+		{
+			if (!auth.JDec(b["auth"]))
+				throw InvalidTagException(typeName(), "decode failed: auth", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: auth", STACK_ENTRY);
+
+		if (b.isMember("context"))
+		{
+			delete context;
+			context = new UTF8String;
+			if (!context->JDec(b["context"]))
+				throw InvalidTagException(typeName(), "decode failed: context", STACK_ENTRY);
+		}
+
+		return true;
+	}
+
+	// [PrintCxxSeqSetPrintFunction]
+	void ROSEAuthRequest::Print(std::ostream& os, unsigned short indent) const
+	{
 		os << std::endl;
-	}
+		Indent(os, indent);
+		os << "{ -- SEQUENCE --" << std::endl;
+		++indent;
 
-	--indent;
-	Indent(os, indent);
-	os << "}\n";
-} // end of ROSEAuthRequest::Print()
+		Indent(os, indent);
+		os << "auth ";
+		auth.Print(os, indent);
+		os << std::endl;
 
-// [PrintSeqDefCodeXMLPrinter]
-void ROSEAuthRequest::PrintXML(std::ostream& os, const char* lpszTitle) const
-{
-	if (lpszTitle)
+		if (NOT_NULL(context))
+		{
+			Indent(os, indent);
+			os << "context ";
+			context->Print(os, indent);
+			os << std::endl;
+		}
+
+		--indent;
+		Indent(os, indent);
+		os << "}\n";
+	} // end of ROSEAuthRequest::Print()
+
+	// [PrintSeqDefCodeXMLPrinter]
+	void ROSEAuthRequest::PrintXML(std::ostream& os, const char* lpszTitle) const
 	{
-		os << "<" << lpszTitle;
+		if (lpszTitle)
+		{
+			os << "<" << lpszTitle;
+			if (typeName() && strlen(typeName()))
+			{
+				os << " typeName=\"" << typeName() << "\"";
+			}
+		}
+		else
+		{
+			os << "<NONE";
+		}
 		if (typeName() && strlen(typeName()))
 		{
-			os << " typeName=\"" << typeName() << "\"";
+			if (typeName() && strlen(typeName()))
+			{
+				os << "<" << typeName();
+			}
 		}
-	}
-	else
-	{
-		os << "<NONE";
-	}
-	if (typeName() && strlen(typeName()))
-	{
-		if (typeName() && strlen(typeName()))
+		os << " type=\"SEQUENCE\">" << std::endl;
+		auth.PrintXML(os, "auth");
+
+		if (NOT_NULL(context))
 		{
-			os << "<" << typeName();
+			context->PrintXML(os, "context");
 		}
-	}
-os << " type=\"SEQUENCE\">" << std::endl;
-	auth.PrintXML(os, "auth");
 
-	if (NOT_NULL (context))
-	{
-		context->PrintXML(os, "context");
-	}
-
-	if (lpszTitle)
-	{
-		os << "</" << lpszTitle << ">" << std::endl;
-	}
-	else
-		if (typeName() && strlen(typeName()))
+		if (lpszTitle)
 		{
-			os << "</" << typeName() << ">" << std::endl;
+			os << "</" << lpszTitle << ">" << std::endl;
 		}
-}
-
-// [PrintConstructor]
-ROSEAuthResult::ROSEAuthResult()
-{
-	Init();
-}
-
-// [PrintCopyConstructor]
-ROSEAuthResult::ROSEAuthResult(const ROSEAuthResult &that)
-{
-	Init();
-	
-	*this = that;
-}
-
-// [PrintDestructor]
-ROSEAuthResult::~ROSEAuthResult()
-{
-	Clear();
-}
-
-// [PrintInit]
-void ROSEAuthResult::Init()
-{
-	context = NULL;
-}
-
-// [PrintClear]
-void ROSEAuthResult::Clear()
-{
-	if (context)
-	{
-		delete context;
-		context = NULL;
+		else
+			if (typeName() && strlen(typeName()))
+			{
+				os << "</" << typeName() << ">" << std::endl;
+			}
 	}
-}
 
-// [PrintClone]
-ROSEAuthResult* ROSEAuthResult::Clone() const
-{
-	return new ROSEAuthResult(*this);
-}
+	// [PrintConstructor]
+	ROSEAuthResult::ROSEAuthResult()
+	{
+		Init();
+	}
 
-// [PrintAssignmentOperator]
-ROSEAuthResult& ROSEAuthResult::operator=(const ROSEAuthResult& that)
-{
-	if (this != &that)
+	// [PrintCopyConstructor]
+	ROSEAuthResult::ROSEAuthResult(const ROSEAuthResult& that)
+	{
+		Init();
+
+		*this = that;
+	}
+
+	// [PrintDestructor]
+	ROSEAuthResult::~ROSEAuthResult()
 	{
 		Clear();
-		authList = that.authList;
-		if (that.context)
-		{
-			if (!context)
-				context = new UTF8String();
-			*context = *that.context;
-		}
-		else if (context)
+	}
+
+	// [PrintInit]
+	void ROSEAuthResult::Init()
+	{
+		context = NULL;
+	}
+
+	// [PrintClear]
+	void ROSEAuthResult::Clear()
+	{
+		if (context)
 		{
 			delete context;
 			context = NULL;
 		}
 	}
 
-	return *this;
-}
-
-// [PrintTypeName]
-const char* ROSEAuthResult::typeName() const
-{
-	return "ROSEAuthResult";
-}
-
-// [PrintCheckConstraints]
-int ROSEAuthResult::checkConstraints(ConstraintFailList* pConstraintFails) const
-{
-	authList.checkConstraints(pConstraintFails);
-	if (context)
-		context->checkConstraints(pConstraintFails);
-	return 0;
-}
-
-// [PrintSeqDefCodeBerEncodeContent]
-AsnLen ROSEAuthResult::BEncContent(AsnBuf &_b) const
-{
-	AsnLen totalLen = 0;
-	AsnLen l = 0;
-
-	if (NOT_NULL(context))
+	// [PrintClone]
+	ROSEAuthResult* ROSEAuthResult::Clone() const
 	{
-		l = context->BEncContent(_b);
-		l += BEncDefLen(_b, l);
-		l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
-		totalLen += l;
+		return new ROSEAuthResult(*this);
 	}
 
-	l = authList.BEncContent(_b);
-	l += BEncConsLen(_b, l);
-	l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-	totalLen += l;
-
-	return totalLen;
-}
-
-// [PrintSeqDefCodeBerDecodeContent]
-void ROSEAuthResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
-{
-	Clear();
-	AsnTag tag1 = AsnTag();
-	AsnLen seqBytesDecoded = 0;
-	AsnLen elmtLen1 = 0;
-	if (elmtLen0 == 0)
-		return;
-	tag1 = BDecTag(_b, seqBytesDecoded);
-
-	if (tag1 == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+	// [PrintAssignmentOperator]
+	ROSEAuthResult& ROSEAuthResult::operator=(const ROSEAuthResult& that)
 	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		authList.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
+		if (this != &that)
 		{
-			bytesDecoded += seqBytesDecoded;
-			return;
-		}
-		else
-		{
-			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+			Clear();
+			authList = that.authList;
+			if (that.context)
 			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
+				if (!context)
+					context = new UTF8String();
+				*context = *that.context;
+			}
+			else if (context)
+			{
+				delete context;
+				context = NULL;
+			}
+		}
+
+		return *this;
+	}
+
+	// [PrintTypeName]
+	const char* ROSEAuthResult::typeName() const
+	{
+		return "ROSEAuthResult";
+	}
+
+	// [PrintCheckConstraints]
+	int ROSEAuthResult::checkConstraints(ConstraintFailList* pConstraintFails) const
+	{
+		authList.checkConstraints(pConstraintFails);
+		if (context)
+			context->checkConstraints(pConstraintFails);
+		return 0;
+	}
+
+	// [PrintSeqDefCodeBerEncodeContent]
+	AsnLen ROSEAuthResult::BEncContent(AsnBuf& _b) const
+	{
+		AsnLen totalLen = 0;
+		AsnLen l = 0;
+
+		if (NOT_NULL(context))
+		{
+			l = context->BEncContent(_b);
+			l += BEncDefLen(_b, l);
+			l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+			totalLen += l;
+		}
+
+		l = authList.BEncContent(_b);
+		l += BEncConsLen(_b, l);
+		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+		totalLen += l;
+
+		return totalLen;
+	}
+
+	// [PrintSeqDefCodeBerDecodeContent]
+	void ROSEAuthResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
+	{
+		Clear();
+		AsnTag tag1 = AsnTag();
+		AsnLen seqBytesDecoded = 0;
+		AsnLen elmtLen1 = 0;
+		if (elmtLen0 == 0)
+			return;
+		tag1 = BDecTag(_b, seqBytesDecoded);
+
+		if (tag1 == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			authList.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			if (seqBytesDecoded == elmtLen0)
+			{
 				bytesDecoded += seqBytesDecoded;
 				return;
 			}
+			else
+			{
+				tag1 = BDecTag(_b, seqBytesDecoded);
+				if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+				{
+					BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
+					bytesDecoded += seqBytesDecoded;
+					return;
+				}
+			}
+		}
+		else
+			throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE) || (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			context = new UTF8String();
+			context->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+		}
+
+		if (elmtLen0 == INDEFINITE_LEN)
+		{
+			BDecEoc(_b, bytesDecoded);
+			return;
+		}
+		else if (seqBytesDecoded != elmtLen0)
+		{
+			throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
+		}
+		else
+		{
+			// nothing more to read, just add the bytes read previously
+			bytesDecoded += seqBytesDecoded;
 		}
 	}
-	else
-		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE) || (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+	// [PrintSeqDefCodeBerEnc]
+	AsnLen ROSEAuthResult::BEnc(AsnBuf& _b) const
 	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		context = new UTF8String();
-		context->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+		AsnLen l = 0;
+		l = BEncContent(_b);
+		l += BEncConsLen(_b, l);
+		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+		return l;
 	}
 
-	if (elmtLen0 == INDEFINITE_LEN)
+	// [PrintSeqDefCodeBerDec]
+	void ROSEAuthResult::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
-	else if (seqBytesDecoded != elmtLen0)
-	{
-		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
-	else
-	{
-		// nothing more to read, just add the bytes read previously
-		bytesDecoded += seqBytesDecoded;
-	}
-}
+		AsnTag tag;
+		AsnLen elmtLen1;
 
-// [PrintSeqDefCodeBerEnc]
-AsnLen ROSEAuthResult::BEnc(AsnBuf& _b) const
-{
-	AsnLen l=0;
-	l = BEncContent (_b);
-	l += BEncConsLen(_b, l);
-	l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-	return l;
-}
+		tag = BDecTag(_b, bytesDecoded);
+		if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
 
-// [PrintSeqDefCodeBerDec]
-void ROSEAuthResult::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
-{
-	AsnTag tag;
-	AsnLen elmtLen1;
-
-	tag = BDecTag(_b, bytesDecoded);
-	if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
-		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-
-	elmtLen1 = BDecLen(_b, bytesDecoded);
-	BDecContent(_b, tag, elmtLen1, bytesDecoded);
-}
-
-// [PrintSeqDefCodeJsonEnc]
-void ROSEAuthResult::JEnc(EJson::Value& b) const
-{
-	b = EJson::Value(EJson::objectValue);
-
-	EJson::Value tmp;
-
-	authList.JEnc(tmp);
-	b["authList"] = tmp;
-
-	if (NOT_NULL(context))
-	{
-		context->JEnc(tmp);
-		b["context"] = tmp;
-	}
-}
-
-// [PrintSeqDefCodeJsonDec]
-bool ROSEAuthResult::JDec(const EJson::Value& b){
-	Clear();
-
-	if (!b.isObject())
-		return false;
-
-	EJson::Value tmp;
-	if (b.isMember("authList"))
-	{
-		if (!authList.JDec(b["authList"]))
-			throw InvalidTagException(typeName(), "decode failed: authList", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "not found: authList", STACK_ENTRY);
-
-	if (b.isMember("context"))
-	{
-		delete context;
-		context = new UTF8String;
-		if (!context->JDec(b["context"]))
-			throw InvalidTagException(typeName(), "decode failed: context", STACK_ENTRY);
+		elmtLen1 = BDecLen(_b, bytesDecoded);
+		BDecContent(_b, tag, elmtLen1, bytesDecoded);
 	}
 
-	return true;
-}
-
-// [PrintCxxSeqSetPrintFunction]
-void ROSEAuthResult::Print(std::ostream& os, unsigned short indent) const
-{
-	os << std::endl;
-	Indent(os, indent);
-	os << "{ -- SEQUENCE --" << std::endl;
-	++indent;
-
-	Indent(os, indent);
-	os << "authList ";
-	authList.Print(os, indent);
-	os << std::endl;
-
-	if (NOT_NULL (context))
+	// [PrintSeqDefCodeJsonEnc]
+	void ROSEAuthResult::JEnc(EJson::Value& b) const
 	{
-		Indent(os, indent);
-		os << "context ";
-		context->Print(os, indent);
+		b = EJson::Value(EJson::objectValue);
+
+		EJson::Value tmp;
+
+		authList.JEnc(tmp);
+		b["authList"] = tmp;
+
+		if (NOT_NULL(context))
+		{
+			context->JEnc(tmp);
+			b["context"] = tmp;
+		}
+	}
+
+	// [PrintSeqDefCodeJsonDec]
+	bool ROSEAuthResult::JDec(const EJson::Value& b) {
+		Clear();
+
+		if (!b.isObject())
+			return false;
+
+		EJson::Value tmp;
+		if (b.isMember("authList"))
+		{
+			if (!authList.JDec(b["authList"]))
+				throw InvalidTagException(typeName(), "decode failed: authList", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: authList", STACK_ENTRY);
+
+		if (b.isMember("context"))
+		{
+			delete context;
+			context = new UTF8String;
+			if (!context->JDec(b["context"]))
+				throw InvalidTagException(typeName(), "decode failed: context", STACK_ENTRY);
+		}
+
+		return true;
+	}
+
+	// [PrintCxxSeqSetPrintFunction]
+	void ROSEAuthResult::Print(std::ostream& os, unsigned short indent) const
+	{
 		os << std::endl;
-	}
+		Indent(os, indent);
+		os << "{ -- SEQUENCE --" << std::endl;
+		++indent;
 
-	--indent;
-	Indent(os, indent);
-	os << "}\n";
-} // end of ROSEAuthResult::Print()
+		Indent(os, indent);
+		os << "authList ";
+		authList.Print(os, indent);
+		os << std::endl;
 
-// [PrintSeqDefCodeXMLPrinter]
-void ROSEAuthResult::PrintXML(std::ostream& os, const char* lpszTitle) const
-{
-	if (lpszTitle)
+		if (NOT_NULL(context))
+		{
+			Indent(os, indent);
+			os << "context ";
+			context->Print(os, indent);
+			os << std::endl;
+		}
+
+		--indent;
+		Indent(os, indent);
+		os << "}\n";
+	} // end of ROSEAuthResult::Print()
+
+	// [PrintSeqDefCodeXMLPrinter]
+	void ROSEAuthResult::PrintXML(std::ostream& os, const char* lpszTitle) const
 	{
-		os << "<" << lpszTitle;
+		if (lpszTitle)
+		{
+			os << "<" << lpszTitle;
+			if (typeName() && strlen(typeName()))
+			{
+				os << " typeName=\"" << typeName() << "\"";
+			}
+		}
+		else
+		{
+			os << "<NONE";
+		}
 		if (typeName() && strlen(typeName()))
 		{
-			os << " typeName=\"" << typeName() << "\"";
+			if (typeName() && strlen(typeName()))
+			{
+				os << "<" << typeName();
+			}
 		}
-	}
-	else
-	{
-		os << "<NONE";
-	}
-	if (typeName() && strlen(typeName()))
-	{
-		if (typeName() && strlen(typeName()))
+		os << " type=\"SEQUENCE\">" << std::endl;
+		authList.PrintXML(os, "authList");
+
+		if (NOT_NULL(context))
 		{
-			os << "<" << typeName();
+			context->PrintXML(os, "context");
 		}
-	}
-os << " type=\"SEQUENCE\">" << std::endl;
-	authList.PrintXML(os, "authList");
 
-	if (NOT_NULL (context))
-	{
-		context->PrintXML(os, "context");
-	}
-
-	if (lpszTitle)
-	{
-		os << "</" << lpszTitle << ">" << std::endl;
-	}
-	else
-		if (typeName() && strlen(typeName()))
+		if (lpszTitle)
 		{
-			os << "</" << typeName() << ">" << std::endl;
+			os << "</" << lpszTitle << ">" << std::endl;
 		}
-}
+		else
+			if (typeName() && strlen(typeName()))
+			{
+				os << "</" << typeName() << ">" << std::endl;
+			}
+	}
 
-// [PrintConstructor]
-ROSEInvoke::ROSEInvoke()
-{
-	Init();
-}
-
-// [PrintCopyConstructor]
-ROSEInvoke::ROSEInvoke(const ROSEInvoke &that)
-{
-	Init();
-	
-	*this = that;
-}
-
-// [PrintDestructor]
-ROSEInvoke::~ROSEInvoke()
-{
-	Clear();
-}
-
-// [PrintInit]
-void ROSEInvoke::Init()
-{
-	sessionID = NULL;
-	linked_ID = NULL;
-	operationName = NULL;
-	authentication = NULL;
-	argument = NULL;
-}
-
-// [PrintClear]
-void ROSEInvoke::Clear()
-{
-	if (sessionID)
+	// [PrintConstructor]
+	ROSEInvoke::ROSEInvoke()
 	{
-		delete sessionID;
+		Init();
+	}
+
+	// [PrintCopyConstructor]
+	ROSEInvoke::ROSEInvoke(const ROSEInvoke& that)
+	{
+		Init();
+
+		*this = that;
+	}
+
+	// [PrintDestructor]
+	ROSEInvoke::~ROSEInvoke()
+	{
+		Clear();
+	}
+
+	// [PrintInit]
+	void ROSEInvoke::Init()
+	{
 		sessionID = NULL;
-	}
-	if (linked_ID)
-	{
-		delete linked_ID;
 		linked_ID = NULL;
-	}
-	if (operationName)
-	{
-		delete operationName;
 		operationName = NULL;
-	}
-	if (authentication)
-	{
-		delete authentication;
 		authentication = NULL;
-	}
-	if (argument)
-	{
-		delete argument;
 		argument = NULL;
 	}
-}
 
-// [PrintClone]
-ROSEInvoke* ROSEInvoke::Clone() const
-{
-	return new ROSEInvoke(*this);
-}
-
-// [PrintAssignmentOperator]
-ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
-{
-	if (this != &that)
+	// [PrintClear]
+	void ROSEInvoke::Clear()
 	{
-		Clear();
-		if (that.sessionID)
-		{
-			if (!sessionID)
-				sessionID = new UTF8String();
-			*sessionID = *that.sessionID;
-		}
-		else if (sessionID)
+		if (sessionID)
 		{
 			delete sessionID;
 			sessionID = NULL;
 		}
-		invokeID = that.invokeID;
-		if (that.linked_ID)
-		{
-			if (!linked_ID)
-				linked_ID = new AsnInt();
-			*linked_ID = *that.linked_ID;
-		}
-		else if (linked_ID)
+		if (linked_ID)
 		{
 			delete linked_ID;
 			linked_ID = NULL;
 		}
-		if (that.operationName)
-		{
-			if (!operationName)
-				operationName = new UTF8String();
-			*operationName = *that.operationName;
-		}
-		else if (operationName)
+		if (operationName)
 		{
 			delete operationName;
 			operationName = NULL;
 		}
-		if (that.authentication)
-		{
-			if (!authentication)
-				authentication = new ROSEAuthRequest();
-			*authentication = *that.authentication;
-		}
-		else if (authentication)
+		if (authentication)
 		{
 			delete authentication;
 			authentication = NULL;
 		}
-		operationID = that.operationID;
-		if (that.argument)
-		{
-			if (!argument)
-				argument = new AsnAny();
-			*argument = *that.argument;
-		}
-		else if (argument)
+		if (argument)
 		{
 			delete argument;
 			argument = NULL;
 		}
 	}
 
-	return *this;
-}
-
-// [PrintTypeName]
-const char* ROSEInvoke::typeName() const
-{
-	return "ROSEInvoke";
-}
-
-// [PrintCheckConstraints]
-int ROSEInvoke::checkConstraints(ConstraintFailList* pConstraintFails) const
-{
-	if (sessionID)
-		sessionID->checkConstraints(pConstraintFails);
-	invokeID.checkConstraints(pConstraintFails);
-	if (linked_ID)
-		linked_ID->checkConstraints(pConstraintFails);
-	if (operationName)
-		operationName->checkConstraints(pConstraintFails);
-	if (authentication)
-		authentication->checkConstraints(pConstraintFails);
-	operationID.checkConstraints(pConstraintFails);
-	if (argument)
-		argument->checkConstraints(pConstraintFails);
-	return 0;
-}
-
-// [PrintSeqDefCodeBerEncodeContent]
-AsnLen ROSEInvoke::BEncContent(AsnBuf &_b) const
-{
-	AsnLen totalLen = 0;
-	AsnLen l = 0;
-
-	if (NOT_NULL(argument))
+	// [PrintClone]
+	ROSEInvoke* ROSEInvoke::Clone() const
 	{
-		l = argument->BEnc(_b);
-		totalLen += l;
+		return new ROSEInvoke(*this);
 	}
 
-	l = operationID.BEncContent(_b);
-	l += BEncDefLen(_b, l);
-	l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
-	totalLen += l;
-
-	if (NOT_NULL(authentication))
+	// [PrintAssignmentOperator]
+	ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
 	{
-		l = authentication->BEncContent(_b);
-		l += BEncConsLen(_b, l);
-		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-		l += BEncConsLen(_b, l);
-		l += BEncTag1(_b, CNTX, CONS, 3);
-		totalLen += l;
-	}
-
-	if (NOT_NULL(operationName))
-	{
-		l = operationName->BEncContent(_b);
-		l += BEncDefLen(_b, l);
-		l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
-		l += BEncConsLen(_b, l);
-		l += BEncTag1(_b, CNTX, CONS, 2);
-		totalLen += l;
-	}
-
-	if (NOT_NULL(linked_ID))
-	{
-		l = linked_ID->BEncContent(_b);
-		l += BEncDefLen(_b, l);
-		l += BEncTag1(_b, CNTX, PRIM, 0);
-		totalLen += l;
-	}
-
-	l = invokeID.BEncContent(_b);
-	l += BEncDefLen(_b, l);
-	l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
-	totalLen += l;
-
-	if (NOT_NULL(sessionID))
-	{
-		l = sessionID->BEncContent(_b);
-		l += BEncDefLen(_b, l);
-		l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
-		l += BEncConsLen(_b, l);
-		l += BEncTag1(_b, CNTX, CONS, 1);
-		totalLen += l;
-	}
-
-	return totalLen;
-}
-
-// [PrintSeqDefCodeBerDecodeContent]
-void ROSEInvoke::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
-{
-	Clear();
-	AsnTag tag1 = AsnTag();
-	AsnLen seqBytesDecoded = 0;
-	AsnLen elmtLen1 = 0;
-	AsnLen elmtLen2 = 0;
-	if (elmtLen0 == 0)
-		return;
-	tag1 = BDecTag(_b, seqBytesDecoded);
-
-	if (tag1 == MAKE_TAG_ID(CNTX, CONS, 1))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		tag1 = BDecTag(_b, seqBytesDecoded);
-
-		if ((tag1 != MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
-			&& (tag1 != MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
-			throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
-
-		elmtLen2 = BDecLen(_b, seqBytesDecoded);
-		sessionID = new UTF8String();
-		sessionID->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
-	if (elmtLen1 == INDEFINITE_LEN)
-		BDecEoc(_b, seqBytesDecoded);
-
-		tag1 = BDecTag (_b, seqBytesDecoded);
-	}
-
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		invokeID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		tag1 = BDecTag (_b, seqBytesDecoded);
-	}
-	else
-		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
-
-	if (tag1 == MAKE_TAG_ID(CNTX, PRIM, 0))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		linked_ID = new AsnInt();
-		linked_ID->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		tag1 = BDecTag (_b, seqBytesDecoded);
-	}
-
-	if (tag1 == MAKE_TAG_ID(CNTX, CONS, 2))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		tag1 = BDecTag(_b, seqBytesDecoded);
-
-		if ((tag1 != MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
-			&& (tag1 != MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
-			throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
-
-		elmtLen2 = BDecLen(_b, seqBytesDecoded);
-		operationName = new UTF8String();
-		operationName->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
-	if (elmtLen1 == INDEFINITE_LEN)
-		BDecEoc(_b, seqBytesDecoded);
-
-		tag1 = BDecTag (_b, seqBytesDecoded);
-	}
-
-	if (tag1 == MAKE_TAG_ID(CNTX, CONS, 3))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		tag1 = BDecTag(_b, seqBytesDecoded);
-
-		if (tag1 != MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
-			throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
-
-		elmtLen2 = BDecLen(_b, seqBytesDecoded);
-		authentication = new ROSEAuthRequest();
-		authentication->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
-	if (elmtLen1 == INDEFINITE_LEN)
-		BDecEoc(_b, seqBytesDecoded);
-
-		tag1 = BDecTag (_b, seqBytesDecoded);
-	}
-
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		operationID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
+		if (this != &that)
 		{
-			bytesDecoded += seqBytesDecoded;
-			return;
-		}
-		else
-		{
-			tag1 = _b.PeekByte();
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+			Clear();
+			if (that.sessionID)
 			{
+				if (!sessionID)
+					sessionID = new UTF8String();
+				*sessionID = *that.sessionID;
+			}
+			else if (sessionID)
+			{
+				delete sessionID;
+				sessionID = NULL;
+			}
+			invokeID = that.invokeID;
+			if (that.linked_ID)
+			{
+				if (!linked_ID)
+					linked_ID = new AsnInt();
+				*linked_ID = *that.linked_ID;
+			}
+			else if (linked_ID)
+			{
+				delete linked_ID;
+				linked_ID = NULL;
+			}
+			if (that.operationName)
+			{
+				if (!operationName)
+					operationName = new UTF8String();
+				*operationName = *that.operationName;
+			}
+			else if (operationName)
+			{
+				delete operationName;
+				operationName = NULL;
+			}
+			if (that.authentication)
+			{
+				if (!authentication)
+					authentication = new ROSEAuthRequest();
+				*authentication = *that.authentication;
+			}
+			else if (authentication)
+			{
+				delete authentication;
+				authentication = NULL;
+			}
+			operationID = that.operationID;
+			if (that.argument)
+			{
+				if (!argument)
+					argument = new AsnAny();
+				*argument = *that.argument;
+			}
+			else if (argument)
+			{
+				delete argument;
+				argument = NULL;
+			}
+		}
+
+		return *this;
+	}
+
+	// [PrintTypeName]
+	const char* ROSEInvoke::typeName() const
+	{
+		return "ROSEInvoke";
+	}
+
+	// [PrintCheckConstraints]
+	int ROSEInvoke::checkConstraints(ConstraintFailList* pConstraintFails) const
+	{
+		if (sessionID)
+			sessionID->checkConstraints(pConstraintFails);
+		invokeID.checkConstraints(pConstraintFails);
+		if (linked_ID)
+			linked_ID->checkConstraints(pConstraintFails);
+		if (operationName)
+			operationName->checkConstraints(pConstraintFails);
+		if (authentication)
+			authentication->checkConstraints(pConstraintFails);
+		operationID.checkConstraints(pConstraintFails);
+		if (argument)
+			argument->checkConstraints(pConstraintFails);
+		return 0;
+	}
+
+	// [PrintSeqDefCodeBerEncodeContent]
+	AsnLen ROSEInvoke::BEncContent(AsnBuf& _b) const
+	{
+		AsnLen totalLen = 0;
+		AsnLen l = 0;
+
+		if (NOT_NULL(argument))
+		{
+			l = argument->BEnc(_b);
+			totalLen += l;
+		}
+
+		l = operationID.BEncContent(_b);
+		l += BEncDefLen(_b, l);
+		l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
+		totalLen += l;
+
+		if (NOT_NULL(authentication))
+		{
+			l = authentication->BEncContent(_b);
+			l += BEncConsLen(_b, l);
+			l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+			l += BEncConsLen(_b, l);
+			l += BEncTag1(_b, CNTX, CONS, 3);
+			totalLen += l;
+		}
+
+		if (NOT_NULL(operationName))
+		{
+			l = operationName->BEncContent(_b);
+			l += BEncDefLen(_b, l);
+			l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+			l += BEncConsLen(_b, l);
+			l += BEncTag1(_b, CNTX, CONS, 2);
+			totalLen += l;
+		}
+
+		if (NOT_NULL(linked_ID))
+		{
+			l = linked_ID->BEncContent(_b);
+			l += BEncDefLen(_b, l);
+			l += BEncTag1(_b, CNTX, PRIM, 0);
+			totalLen += l;
+		}
+
+		l = invokeID.BEncContent(_b);
+		l += BEncDefLen(_b, l);
+		l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
+		totalLen += l;
+
+		if (NOT_NULL(sessionID))
+		{
+			l = sessionID->BEncContent(_b);
+			l += BEncDefLen(_b, l);
+			l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+			l += BEncConsLen(_b, l);
+			l += BEncTag1(_b, CNTX, CONS, 1);
+			totalLen += l;
+		}
+
+		return totalLen;
+	}
+
+	// [PrintSeqDefCodeBerDecodeContent]
+	void ROSEInvoke::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
+	{
+		Clear();
+		AsnTag tag1 = AsnTag();
+		AsnLen seqBytesDecoded = 0;
+		AsnLen elmtLen1 = 0;
+		AsnLen elmtLen2 = 0;
+		if (elmtLen0 == 0)
+			return;
+		tag1 = BDecTag(_b, seqBytesDecoded);
+
+		if (tag1 == MAKE_TAG_ID(CNTX, CONS, 1))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			tag1 = BDecTag(_b, seqBytesDecoded);
+
+			if ((tag1 != MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
+				&& (tag1 != MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+				throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
+
+			elmtLen2 = BDecLen(_b, seqBytesDecoded);
+			sessionID = new UTF8String();
+			sessionID->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
+			if (elmtLen1 == INDEFINITE_LEN)
 				BDecEoc(_b, seqBytesDecoded);
 
+			tag1 = BDecTag(_b, seqBytesDecoded);
+		}
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			invokeID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			tag1 = BDecTag(_b, seqBytesDecoded);
+		}
+		else
+			throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+
+		if (tag1 == MAKE_TAG_ID(CNTX, PRIM, 0))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			linked_ID = new AsnInt();
+			linked_ID->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			tag1 = BDecTag(_b, seqBytesDecoded);
+		}
+
+		if (tag1 == MAKE_TAG_ID(CNTX, CONS, 2))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			tag1 = BDecTag(_b, seqBytesDecoded);
+
+			if ((tag1 != MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
+				&& (tag1 != MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+				throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
+
+			elmtLen2 = BDecLen(_b, seqBytesDecoded);
+			operationName = new UTF8String();
+			operationName->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
+			if (elmtLen1 == INDEFINITE_LEN)
+				BDecEoc(_b, seqBytesDecoded);
+
+			tag1 = BDecTag(_b, seqBytesDecoded);
+		}
+
+		if (tag1 == MAKE_TAG_ID(CNTX, CONS, 3))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			tag1 = BDecTag(_b, seqBytesDecoded);
+
+			if (tag1 != MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+				throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
+
+			elmtLen2 = BDecLen(_b, seqBytesDecoded);
+			authentication = new ROSEAuthRequest();
+			authentication->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
+			if (elmtLen1 == INDEFINITE_LEN)
+				BDecEoc(_b, seqBytesDecoded);
+
+			tag1 = BDecTag(_b, seqBytesDecoded);
+		}
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			operationID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			if (seqBytesDecoded == elmtLen0)
+			{
 				bytesDecoded += seqBytesDecoded;
 				return;
 			}
-		}
-	}
-	else
-		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+			else
+			{
+				tag1 = _b.PeekByte();
+				if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+				{
+					BDecEoc(_b, seqBytesDecoded);
 
-  // ANY type
+					bytesDecoded += seqBytesDecoded;
+					return;
+				}
+			}
+		}
+		else
+			throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+
+		// ANY type
 		argument = new AsnAny();
 		argument->BDec(_b, seqBytesDecoded);
 
 
-	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
-	else if (seqBytesDecoded != elmtLen0)
-	{
-		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
-	else
-	{
-		// nothing more to read, just add the bytes read previously
-		bytesDecoded += seqBytesDecoded;
-	}
-}
-
-// [PrintSeqDefCodeBerEnc]
-AsnLen ROSEInvoke::BEnc(AsnBuf& _b) const
-{
-	AsnLen l=0;
-	l = BEncContent (_b);
-	l += BEncConsLen(_b, l);
-	l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-	return l;
-}
-
-// [PrintSeqDefCodeBerDec]
-void ROSEInvoke::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
-{
-	AsnTag tag;
-	AsnLen elmtLen1;
-
-	tag = BDecTag(_b, bytesDecoded);
-	if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
-		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-
-	elmtLen1 = BDecLen(_b, bytesDecoded);
-	BDecContent(_b, tag, elmtLen1, bytesDecoded);
-}
-
-// [PrintSeqDefCodeJsonEnc]
-void ROSEInvoke::JEnc(EJson::Value& b) const
-{
-	b = EJson::Value(EJson::objectValue);
-
-	EJson::Value tmp;
-
-	if (NOT_NULL(sessionID))
-	{
-		sessionID->JEnc(tmp);
-		b["sessionID"] = tmp;
-	}
-
-	invokeID.JEnc(tmp);
-	b["invokeID"] = tmp;
-
-	if (NOT_NULL(linked_ID))
-	{
-		linked_ID->JEnc(tmp);
-		b["linked_ID"] = tmp;
-	}
-
-	if (NOT_NULL(operationName))
-	{
-		operationName->JEnc(tmp);
-		b["operationName"] = tmp;
-	}
-
-	if (NOT_NULL(authentication))
-	{
-		authentication->JEnc(tmp);
-		b["authentication"] = tmp;
-	}
-
-	operationID.JEnc(tmp);
-	b["operationID"] = tmp;
-
-	if (NOT_NULL(argument))
-	{
-		argument->JEnc(tmp);
-		b["argument"] = tmp;
-	}
-}
-
-// [PrintSeqDefCodeJsonDec]
-bool ROSEInvoke::JDec(const EJson::Value& b){
-	Clear();
-
-	if (!b.isObject())
-		return false;
-
-	EJson::Value tmp;
-	if (b.isMember("sessionID"))
-	{
-		delete sessionID;
-		sessionID = new UTF8String;
-		if (!sessionID->JDec(b["sessionID"]))
-			throw InvalidTagException(typeName(), "decode failed: sessionID", STACK_ENTRY);
-	}
-
-	if (b.isMember("invokeID"))
-	{
-		if (!invokeID.JDec(b["invokeID"]))
-			throw InvalidTagException(typeName(), "decode failed: invokeID", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "not found: invokeID", STACK_ENTRY);
-
-	if (b.isMember("linked_ID"))
-	{
-		delete linked_ID;
-		linked_ID = new AsnInt;
-		if (!linked_ID->JDec(b["linked_ID"]))
-			throw InvalidTagException(typeName(), "decode failed: linked_ID", STACK_ENTRY);
-	}
-
-	if (b.isMember("operationName"))
-	{
-		delete operationName;
-		operationName = new UTF8String;
-		if (!operationName->JDec(b["operationName"]))
-			throw InvalidTagException(typeName(), "decode failed: operationName", STACK_ENTRY);
-	}
-
-	if (b.isMember("authentication"))
-	{
-		delete authentication;
-		authentication = new ROSEAuthRequest;
-		if (!authentication->JDec(b["authentication"]))
-			throw InvalidTagException(typeName(), "decode failed: authentication", STACK_ENTRY);
-	}
-
-	if (b.isMember("operationID"))
-	{
-		if (!operationID.JDec(b["operationID"]))
-			throw InvalidTagException(typeName(), "decode failed: operationID", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "not found: operationID", STACK_ENTRY);
-
-	if (b.isMember("argument"))
-	{
-		delete argument;
-		argument = new AsnAny;
-		if (!argument->JDec(b["argument"]))
-			throw InvalidTagException(typeName(), "decode failed: argument", STACK_ENTRY);
-	}
-
-	return true;
-}
-
-// [PrintCxxSeqSetPrintFunction]
-void ROSEInvoke::Print(std::ostream& os, unsigned short indent) const
-{
-	os << std::endl;
-	Indent(os, indent);
-	os << "{ -- SEQUENCE --" << std::endl;
-	++indent;
-
-	if (NOT_NULL (sessionID))
-	{
-		Indent(os, indent);
-		os << "sessionID ";
-		sessionID->Print(os, indent);
-		os << std::endl;
-	}
-
-	Indent(os, indent);
-	os << "invokeID ";
-	invokeID.Print(os, indent);
-	os << std::endl;
-
-	if (NOT_NULL (linked_ID))
-	{
-		Indent(os, indent);
-		os << "linked-ID ";
-		linked_ID->Print(os, indent);
-		os << std::endl;
-	}
-
-	if (NOT_NULL (operationName))
-	{
-		Indent(os, indent);
-		os << "operationName ";
-		operationName->Print(os, indent);
-		os << std::endl;
-	}
-
-	if (NOT_NULL (authentication))
-	{
-		Indent(os, indent);
-		os << "authentication ";
-		authentication->Print(os, indent);
-		os << std::endl;
-	}
-
-	Indent(os, indent);
-	os << "operationID ";
-	operationID.Print(os, indent);
-	os << std::endl;
-
-	if (NOT_NULL (argument))
-	{
-		Indent(os, indent);
-		os << "argument ";
-		argument->Print(os, indent);
-		os << std::endl;
-	}
-
-	--indent;
-	Indent(os, indent);
-	os << "}\n";
-} // end of ROSEInvoke::Print()
-
-// [PrintSeqDefCodeXMLPrinter]
-void ROSEInvoke::PrintXML(std::ostream& os, const char* lpszTitle) const
-{
-	if (lpszTitle)
-	{
-		os << "<" << lpszTitle;
-		if (typeName() && strlen(typeName()))
+		if (elmtLen0 == INDEFINITE_LEN)
 		{
-			os << " typeName=\"" << typeName() << "\"";
+			BDecEoc(_b, bytesDecoded);
+			return;
+		}
+		else if (seqBytesDecoded != elmtLen0)
+		{
+			throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
+		}
+		else
+		{
+			// nothing more to read, just add the bytes read previously
+			bytesDecoded += seqBytesDecoded;
 		}
 	}
-	else
+
+	// [PrintSeqDefCodeBerEnc]
+	AsnLen ROSEInvoke::BEnc(AsnBuf& _b) const
 	{
-		os << "<NONE";
+		AsnLen l = 0;
+		l = BEncContent(_b);
+		l += BEncConsLen(_b, l);
+		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+		return l;
 	}
-	if (typeName() && strlen(typeName()))
+
+	// [PrintSeqDefCodeBerDec]
+	void ROSEInvoke::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	{
-		if (typeName() && strlen(typeName()))
+		AsnTag tag;
+		AsnLen elmtLen1;
+
+		tag = BDecTag(_b, bytesDecoded);
+		if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
+
+		elmtLen1 = BDecLen(_b, bytesDecoded);
+		BDecContent(_b, tag, elmtLen1, bytesDecoded);
+	}
+
+	// [PrintSeqDefCodeJsonEnc]
+	void ROSEInvoke::JEnc(EJson::Value& b) const
+	{
+		b = EJson::Value(EJson::objectValue);
+
+		EJson::Value tmp;
+
+		if (NOT_NULL(sessionID))
 		{
-			os << "<" << typeName();
+			sessionID->JEnc(tmp);
+			b["sessionID"] = tmp;
+		}
+
+		invokeID.JEnc(tmp);
+		b["invokeID"] = tmp;
+
+		if (NOT_NULL(linked_ID))
+		{
+			linked_ID->JEnc(tmp);
+			b["linked_ID"] = tmp;
+		}
+
+		if (NOT_NULL(operationName))
+		{
+			operationName->JEnc(tmp);
+			b["operationName"] = tmp;
+		}
+
+		if (NOT_NULL(authentication))
+		{
+			authentication->JEnc(tmp);
+			b["authentication"] = tmp;
+		}
+
+		operationID.JEnc(tmp);
+		b["operationID"] = tmp;
+
+		if (NOT_NULL(argument))
+		{
+			argument->JEnc(tmp);
+			b["argument"] = tmp;
 		}
 	}
-os << " type=\"SEQUENCE\">" << std::endl;
-	if (NOT_NULL (sessionID))
-	{
-		sessionID->PrintXML(os, "sessionID");
+
+	// [PrintSeqDefCodeJsonDec]
+	bool ROSEInvoke::JDec(const EJson::Value& b) {
+		Clear();
+
+		if (!b.isObject())
+			return false;
+
+		EJson::Value tmp;
+		if (b.isMember("sessionID"))
+		{
+			delete sessionID;
+			sessionID = new UTF8String;
+			if (!sessionID->JDec(b["sessionID"]))
+				throw InvalidTagException(typeName(), "decode failed: sessionID", STACK_ENTRY);
+		}
+
+		if (b.isMember("invokeID"))
+		{
+			if (!invokeID.JDec(b["invokeID"]))
+				throw InvalidTagException(typeName(), "decode failed: invokeID", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: invokeID", STACK_ENTRY);
+
+		if (b.isMember("linked_ID"))
+		{
+			delete linked_ID;
+			linked_ID = new AsnInt;
+			if (!linked_ID->JDec(b["linked_ID"]))
+				throw InvalidTagException(typeName(), "decode failed: linked_ID", STACK_ENTRY);
+		}
+
+		if (b.isMember("operationName"))
+		{
+			delete operationName;
+			operationName = new UTF8String;
+			if (!operationName->JDec(b["operationName"]))
+				throw InvalidTagException(typeName(), "decode failed: operationName", STACK_ENTRY);
+		}
+
+		if (b.isMember("authentication"))
+		{
+			delete authentication;
+			authentication = new ROSEAuthRequest;
+			if (!authentication->JDec(b["authentication"]))
+				throw InvalidTagException(typeName(), "decode failed: authentication", STACK_ENTRY);
+		}
+
+		if (b.isMember("operationID"))
+		{
+			if (!operationID.JDec(b["operationID"]))
+				throw InvalidTagException(typeName(), "decode failed: operationID", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: operationID", STACK_ENTRY);
+
+		if (b.isMember("argument"))
+		{
+			delete argument;
+			argument = new AsnAny;
+			if (!argument->JDec(b["argument"]))
+				throw InvalidTagException(typeName(), "decode failed: argument", STACK_ENTRY);
+		}
+
+		return true;
 	}
 
-	invokeID.PrintXML(os, "invokeID");
-
-	if (NOT_NULL (linked_ID))
+	// [PrintCxxSeqSetPrintFunction]
+	void ROSEInvoke::Print(std::ostream& os, unsigned short indent) const
 	{
-		linked_ID->PrintXML(os, "linked-ID");
-	}
+		os << std::endl;
+		Indent(os, indent);
+		os << "{ -- SEQUENCE --" << std::endl;
+		++indent;
 
-	if (NOT_NULL (operationName))
+		if (NOT_NULL(sessionID))
+		{
+			Indent(os, indent);
+			os << "sessionID ";
+			sessionID->Print(os, indent);
+			os << std::endl;
+		}
+
+		Indent(os, indent);
+		os << "invokeID ";
+		invokeID.Print(os, indent);
+		os << std::endl;
+
+		if (NOT_NULL(linked_ID))
+		{
+			Indent(os, indent);
+			os << "linked-ID ";
+			linked_ID->Print(os, indent);
+			os << std::endl;
+		}
+
+		if (NOT_NULL(operationName))
+		{
+			Indent(os, indent);
+			os << "operationName ";
+			operationName->Print(os, indent);
+			os << std::endl;
+		}
+
+		if (NOT_NULL(authentication))
+		{
+			Indent(os, indent);
+			os << "authentication ";
+			authentication->Print(os, indent);
+			os << std::endl;
+		}
+
+		Indent(os, indent);
+		os << "operationID ";
+		operationID.Print(os, indent);
+		os << std::endl;
+
+		if (NOT_NULL(argument))
+		{
+			Indent(os, indent);
+			os << "argument ";
+			argument->Print(os, indent);
+			os << std::endl;
+		}
+
+		--indent;
+		Indent(os, indent);
+		os << "}\n";
+	} // end of ROSEInvoke::Print()
+
+	// [PrintSeqDefCodeXMLPrinter]
+	void ROSEInvoke::PrintXML(std::ostream& os, const char* lpszTitle) const
 	{
-		operationName->PrintXML(os, "operationName");
-	}
-
-	if (NOT_NULL (authentication))
-	{
-		authentication->PrintXML(os, "authentication");
-	}
-
-	operationID.PrintXML(os, "operationID");
-
-	if (NOT_NULL (argument))
-	{
-		argument->PrintXML(os, "argument");
-	}
-
-	if (lpszTitle)
-	{
-		os << "</" << lpszTitle << ">" << std::endl;
-	}
-	else
+		if (lpszTitle)
+		{
+			os << "<" << lpszTitle;
+			if (typeName() && strlen(typeName()))
+			{
+				os << " typeName=\"" << typeName() << "\"";
+			}
+		}
+		else
+		{
+			os << "<NONE";
+		}
 		if (typeName() && strlen(typeName()))
 		{
-			os << "</" << typeName() << ">" << std::endl;
+			if (typeName() && strlen(typeName()))
+			{
+				os << "<" << typeName();
+			}
 		}
-}
+		os << " type=\"SEQUENCE\">" << std::endl;
+		if (NOT_NULL(sessionID))
+		{
+			sessionID->PrintXML(os, "sessionID");
+		}
 
-// [PrintConstructor]
-ROSEResult::ROSEResult()
-{
-	Init();
-}
+		invokeID.PrintXML(os, "invokeID");
 
-// [PrintCopyConstructor]
-ROSEResult::ROSEResult(const ROSEResult &that)
-{
-	Init();
-	
-	*this = that;
-}
+		if (NOT_NULL(linked_ID))
+		{
+			linked_ID->PrintXML(os, "linked-ID");
+		}
 
-// [PrintDestructor]
-ROSEResult::~ROSEResult()
-{
-	Clear();
-}
+		if (NOT_NULL(operationName))
+		{
+			operationName->PrintXML(os, "operationName");
+		}
 
-// [PrintInit]
-void ROSEResult::Init()
-{
-	sessionID = NULL;
-	result = NULL;
-}
+		if (NOT_NULL(authentication))
+		{
+			authentication->PrintXML(os, "authentication");
+		}
 
-// [PrintClear]
-void ROSEResult::Clear()
-{
-	if (sessionID)
-	{
-		delete sessionID;
-		sessionID = NULL;
+		operationID.PrintXML(os, "operationID");
+
+		if (NOT_NULL(argument))
+		{
+			argument->PrintXML(os, "argument");
+		}
+
+		if (lpszTitle)
+		{
+			os << "</" << lpszTitle << ">" << std::endl;
+		}
+		else
+			if (typeName() && strlen(typeName()))
+			{
+				os << "</" << typeName() << ">" << std::endl;
+			}
 	}
-	if (result)
+
+	// [PrintConstructor]
+	ROSEResult::ROSEResult()
 	{
-		delete result;
-		result = NULL;
+		Init();
 	}
-}
 
-// [PrintClone]
-ROSEResult* ROSEResult::Clone() const
-{
-	return new ROSEResult(*this);
-}
+	// [PrintCopyConstructor]
+	ROSEResult::ROSEResult(const ROSEResult& that)
+	{
+		Init();
 
-// [PrintAssignmentOperator]
-ROSEResult& ROSEResult::operator=(const ROSEResult& that)
-{
-	if (this != &that)
+		*this = that;
+	}
+
+	// [PrintDestructor]
+	ROSEResult::~ROSEResult()
 	{
 		Clear();
-		if (that.sessionID)
-		{
-			if (!sessionID)
-				sessionID = new UTF8String();
-			*sessionID = *that.sessionID;
-		}
-		else if (sessionID)
+	}
+
+	// [PrintInit]
+	void ROSEResult::Init()
+	{
+		sessionID = NULL;
+		result = NULL;
+	}
+
+	// [PrintClear]
+	void ROSEResult::Clear()
+	{
+		if (sessionID)
 		{
 			delete sessionID;
 			sessionID = NULL;
 		}
-		invokeID = that.invokeID;
-		if (that.result)
-		{
-			if (!result)
-				result = new ROSEResultSeq();
-			*result = *that.result;
-		}
-		else if (result)
+		if (result)
 		{
 			delete result;
 			result = NULL;
 		}
 	}
 
-	return *this;
-}
-
-// [PrintTypeName]
-const char* ROSEResult::typeName() const
-{
-	return "ROSEResult";
-}
-
-// [PrintCheckConstraints]
-int ROSEResult::checkConstraints(ConstraintFailList* pConstraintFails) const
-{
-	if (sessionID)
-		sessionID->checkConstraints(pConstraintFails);
-	invokeID.checkConstraints(pConstraintFails);
-	if (result)
-		result->checkConstraints(pConstraintFails);
-	return 0;
-}
-
-// [PrintSeqDefCodeBerEncodeContent]
-AsnLen ROSEResult::BEncContent(AsnBuf &_b) const
-{
-	AsnLen totalLen = 0;
-	AsnLen l = 0;
-
-	if (NOT_NULL(result))
+	// [PrintClone]
+	ROSEResult* ROSEResult::Clone() const
 	{
-		l = result->BEncContent(_b);
-		l += BEncConsLen(_b, l);
-		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-		totalLen += l;
+		return new ROSEResult(*this);
 	}
 
-	l = invokeID.BEncContent(_b);
-	l += BEncDefLen(_b, l);
-	l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
-	totalLen += l;
-
-	if (NOT_NULL(sessionID))
+	// [PrintAssignmentOperator]
+	ROSEResult& ROSEResult::operator=(const ROSEResult& that)
 	{
-		l = sessionID->BEncContent(_b);
+		if (this != &that)
+		{
+			Clear();
+			if (that.sessionID)
+			{
+				if (!sessionID)
+					sessionID = new UTF8String();
+				*sessionID = *that.sessionID;
+			}
+			else if (sessionID)
+			{
+				delete sessionID;
+				sessionID = NULL;
+			}
+			invokeID = that.invokeID;
+			if (that.result)
+			{
+				if (!result)
+					result = new ROSEResultSeq();
+				*result = *that.result;
+			}
+			else if (result)
+			{
+				delete result;
+				result = NULL;
+			}
+		}
+
+		return *this;
+	}
+
+	// [PrintTypeName]
+	const char* ROSEResult::typeName() const
+	{
+		return "ROSEResult";
+	}
+
+	// [PrintCheckConstraints]
+	int ROSEResult::checkConstraints(ConstraintFailList* pConstraintFails) const
+	{
+		if (sessionID)
+			sessionID->checkConstraints(pConstraintFails);
+		invokeID.checkConstraints(pConstraintFails);
+		if (result)
+			result->checkConstraints(pConstraintFails);
+		return 0;
+	}
+
+	// [PrintSeqDefCodeBerEncodeContent]
+	AsnLen ROSEResult::BEncContent(AsnBuf& _b) const
+	{
+		AsnLen totalLen = 0;
+		AsnLen l = 0;
+
+		if (NOT_NULL(result))
+		{
+			l = result->BEncContent(_b);
+			l += BEncConsLen(_b, l);
+			l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+			totalLen += l;
+		}
+
+		l = invokeID.BEncContent(_b);
 		l += BEncDefLen(_b, l);
-		l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
-		l += BEncConsLen(_b, l);
-		l += BEncTag1(_b, CNTX, CONS, 1);
+		l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
 		totalLen += l;
+
+		if (NOT_NULL(sessionID))
+		{
+			l = sessionID->BEncContent(_b);
+			l += BEncDefLen(_b, l);
+			l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+			l += BEncConsLen(_b, l);
+			l += BEncTag1(_b, CNTX, CONS, 1);
+			totalLen += l;
+		}
+
+		return totalLen;
 	}
 
-	return totalLen;
-}
-
-// [PrintSeqDefCodeBerDecodeContent]
-void ROSEResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
-{
-	Clear();
-	AsnTag tag1 = AsnTag();
-	AsnLen seqBytesDecoded = 0;
-	AsnLen elmtLen1 = 0;
-	AsnLen elmtLen2 = 0;
-	if (elmtLen0 == 0)
-		return;
-	tag1 = BDecTag(_b, seqBytesDecoded);
-
-	if (tag1 == MAKE_TAG_ID(CNTX, CONS, 1))
+	// [PrintSeqDefCodeBerDecodeContent]
+	void ROSEResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
+		Clear();
+		AsnTag tag1 = AsnTag();
+		AsnLen seqBytesDecoded = 0;
+		AsnLen elmtLen1 = 0;
+		AsnLen elmtLen2 = 0;
+		if (elmtLen0 == 0)
+			return;
 		tag1 = BDecTag(_b, seqBytesDecoded);
 
-		if ((tag1 != MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
-			&& (tag1 != MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
-			throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
-
-		elmtLen2 = BDecLen(_b, seqBytesDecoded);
-		sessionID = new UTF8String();
-		sessionID->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
-	if (elmtLen1 == INDEFINITE_LEN)
-		BDecEoc(_b, seqBytesDecoded);
-
-		tag1 = BDecTag (_b, seqBytesDecoded);
-	}
-
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		invokeID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
+		if (tag1 == MAKE_TAG_ID(CNTX, CONS, 1))
 		{
-			bytesDecoded += seqBytesDecoded;
-			return;
-		}
-		else
-		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
 			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+
+			if ((tag1 != MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
+				&& (tag1 != MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+				throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
+
+			elmtLen2 = BDecLen(_b, seqBytesDecoded);
+			sessionID = new UTF8String();
+			sessionID->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
+			if (elmtLen1 == INDEFINITE_LEN)
+				BDecEoc(_b, seqBytesDecoded);
+
+			tag1 = BDecTag(_b, seqBytesDecoded);
+		}
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			invokeID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			if (seqBytesDecoded == elmtLen0)
 			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
 				bytesDecoded += seqBytesDecoded;
 				return;
 			}
+			else
+			{
+				tag1 = BDecTag(_b, seqBytesDecoded);
+				if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+				{
+					BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
+					bytesDecoded += seqBytesDecoded;
+					return;
+				}
+			}
+		}
+		else
+			throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+
+		if (tag1 == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			result = new ROSEResultSeq();
+			result->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+		}
+
+		if (elmtLen0 == INDEFINITE_LEN)
+		{
+			BDecEoc(_b, bytesDecoded);
+			return;
+		}
+		else if (seqBytesDecoded != elmtLen0)
+		{
+			throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
+		}
+		else
+		{
+			// nothing more to read, just add the bytes read previously
+			bytesDecoded += seqBytesDecoded;
 		}
 	}
-	else
-		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
-	if (tag1 == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+	// [PrintSeqDefCodeBerEnc]
+	AsnLen ROSEResult::BEnc(AsnBuf& _b) const
 	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		result = new ROSEResultSeq();
-		result->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+		AsnLen l = 0;
+		l = BEncContent(_b);
+		l += BEncConsLen(_b, l);
+		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+		return l;
 	}
 
-	if (elmtLen0 == INDEFINITE_LEN)
+	// [PrintSeqDefCodeBerDec]
+	void ROSEResult::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
-	else if (seqBytesDecoded != elmtLen0)
-	{
-		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
-	else
-	{
-		// nothing more to read, just add the bytes read previously
-		bytesDecoded += seqBytesDecoded;
-	}
-}
+		AsnTag tag;
+		AsnLen elmtLen1;
 
-// [PrintSeqDefCodeBerEnc]
-AsnLen ROSEResult::BEnc(AsnBuf& _b) const
-{
-	AsnLen l=0;
-	l = BEncContent (_b);
-	l += BEncConsLen(_b, l);
-	l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-	return l;
-}
+		tag = BDecTag(_b, bytesDecoded);
+		if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
 
-// [PrintSeqDefCodeBerDec]
-void ROSEResult::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
-{
-	AsnTag tag;
-	AsnLen elmtLen1;
-
-	tag = BDecTag(_b, bytesDecoded);
-	if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
-		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-
-	elmtLen1 = BDecLen(_b, bytesDecoded);
-	BDecContent(_b, tag, elmtLen1, bytesDecoded);
-}
-
-// [PrintSeqDefCodeJsonEnc]
-void ROSEResult::JEnc(EJson::Value& b) const
-{
-	b = EJson::Value(EJson::objectValue);
-
-	EJson::Value tmp;
-
-	if (NOT_NULL(sessionID))
-	{
-		sessionID->JEnc(tmp);
-		b["sessionID"] = tmp;
+		elmtLen1 = BDecLen(_b, bytesDecoded);
+		BDecContent(_b, tag, elmtLen1, bytesDecoded);
 	}
 
-	invokeID.JEnc(tmp);
-	b["invokeID"] = tmp;
-
-	if (NOT_NULL(result))
+	// [PrintSeqDefCodeJsonEnc]
+	void ROSEResult::JEnc(EJson::Value& b) const
 	{
-		result->JEnc(tmp);
-		b["result"] = tmp;
-	}
-}
+		b = EJson::Value(EJson::objectValue);
 
-// [PrintSeqDefCodeJsonDec]
-bool ROSEResult::JDec(const EJson::Value& b){
-	Clear();
+		EJson::Value tmp;
 
-	if (!b.isObject())
-		return false;
+		if (NOT_NULL(sessionID))
+		{
+			sessionID->JEnc(tmp);
+			b["sessionID"] = tmp;
+		}
 
-	EJson::Value tmp;
-	if (b.isMember("sessionID"))
-	{
-		delete sessionID;
-		sessionID = new UTF8String;
-		if (!sessionID->JDec(b["sessionID"]))
-			throw InvalidTagException(typeName(), "decode failed: sessionID", STACK_ENTRY);
+		invokeID.JEnc(tmp);
+		b["invokeID"] = tmp;
+
+		if (NOT_NULL(result))
+		{
+			result->JEnc(tmp);
+			b["result"] = tmp;
+		}
 	}
 
-	if (b.isMember("invokeID"))
-	{
-		if (!invokeID.JDec(b["invokeID"]))
-			throw InvalidTagException(typeName(), "decode failed: invokeID", STACK_ENTRY);
+	// [PrintSeqDefCodeJsonDec]
+	bool ROSEResult::JDec(const EJson::Value& b) {
+		Clear();
+
+		if (!b.isObject())
+			return false;
+
+		EJson::Value tmp;
+		if (b.isMember("sessionID"))
+		{
+			delete sessionID;
+			sessionID = new UTF8String;
+			if (!sessionID->JDec(b["sessionID"]))
+				throw InvalidTagException(typeName(), "decode failed: sessionID", STACK_ENTRY);
+		}
+
+		if (b.isMember("invokeID"))
+		{
+			if (!invokeID.JDec(b["invokeID"]))
+				throw InvalidTagException(typeName(), "decode failed: invokeID", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: invokeID", STACK_ENTRY);
+
+		if (b.isMember("result"))
+		{
+			delete result;
+			result = new ROSEResultSeq;
+			if (!result->JDec(b["result"]))
+				throw InvalidTagException(typeName(), "decode failed: result", STACK_ENTRY);
+		}
+
+		return true;
 	}
-	else
-		throw InvalidTagException(typeName(), "not found: invokeID", STACK_ENTRY);
 
-	if (b.isMember("result"))
+	// [PrintCxxSeqSetPrintFunction]
+	void ROSEResult::Print(std::ostream& os, unsigned short indent) const
 	{
-		delete result;
-		result = new ROSEResultSeq;
-		if (!result->JDec(b["result"]))
-			throw InvalidTagException(typeName(), "decode failed: result", STACK_ENTRY);
-	}
-
-	return true;
-}
-
-// [PrintCxxSeqSetPrintFunction]
-void ROSEResult::Print(std::ostream& os, unsigned short indent) const
-{
-	os << std::endl;
-	Indent(os, indent);
-	os << "{ -- SEQUENCE --" << std::endl;
-	++indent;
-
-	if (NOT_NULL (sessionID))
-	{
-		Indent(os, indent);
-		os << "sessionID ";
-		sessionID->Print(os, indent);
 		os << std::endl;
-	}
-
-	Indent(os, indent);
-	os << "invokeID ";
-	invokeID.Print(os, indent);
-	os << std::endl;
-
-	if (NOT_NULL (result))
-	{
 		Indent(os, indent);
-		os << "result ";
-		result->Print(os, indent);
+		os << "{ -- SEQUENCE --" << std::endl;
+		++indent;
+
+		if (NOT_NULL(sessionID))
+		{
+			Indent(os, indent);
+			os << "sessionID ";
+			sessionID->Print(os, indent);
+			os << std::endl;
+		}
+
+		Indent(os, indent);
+		os << "invokeID ";
+		invokeID.Print(os, indent);
 		os << std::endl;
-	}
 
-	--indent;
-	Indent(os, indent);
-	os << "}\n";
-} // end of ROSEResult::Print()
+		if (NOT_NULL(result))
+		{
+			Indent(os, indent);
+			os << "result ";
+			result->Print(os, indent);
+			os << std::endl;
+		}
 
-// [PrintSeqDefCodeXMLPrinter]
-void ROSEResult::PrintXML(std::ostream& os, const char* lpszTitle) const
-{
-	if (lpszTitle)
+		--indent;
+		Indent(os, indent);
+		os << "}\n";
+	} // end of ROSEResult::Print()
+
+	// [PrintSeqDefCodeXMLPrinter]
+	void ROSEResult::PrintXML(std::ostream& os, const char* lpszTitle) const
 	{
-		os << "<" << lpszTitle;
+		if (lpszTitle)
+		{
+			os << "<" << lpszTitle;
+			if (typeName() && strlen(typeName()))
+			{
+				os << " typeName=\"" << typeName() << "\"";
+			}
+		}
+		else
+		{
+			os << "<NONE";
+		}
 		if (typeName() && strlen(typeName()))
 		{
-			os << " typeName=\"" << typeName() << "\"";
+			if (typeName() && strlen(typeName()))
+			{
+				os << "<" << typeName();
+			}
 		}
-	}
-	else
-	{
-		os << "<NONE";
-	}
-	if (typeName() && strlen(typeName()))
-	{
-		if (typeName() && strlen(typeName()))
+		os << " type=\"SEQUENCE\">" << std::endl;
+		if (NOT_NULL(sessionID))
 		{
-			os << "<" << typeName();
+			sessionID->PrintXML(os, "sessionID");
 		}
-	}
-os << " type=\"SEQUENCE\">" << std::endl;
-	if (NOT_NULL (sessionID))
-	{
-		sessionID->PrintXML(os, "sessionID");
-	}
 
-	invokeID.PrintXML(os, "invokeID");
+		invokeID.PrintXML(os, "invokeID");
 
-	if (NOT_NULL (result))
-	{
-		result->PrintXML(os, "result");
-	}
-
-	if (lpszTitle)
-	{
-		os << "</" << lpszTitle << ">" << std::endl;
-	}
-	else
-		if (typeName() && strlen(typeName()))
+		if (NOT_NULL(result))
 		{
-			os << "</" << typeName() << ">" << std::endl;
+			result->PrintXML(os, "result");
 		}
-}
 
-// [PrintConstructor]
-RejectProblem::RejectProblem()
-{
-	Init();
-}
+		if (lpszTitle)
+		{
+			os << "</" << lpszTitle << ">" << std::endl;
+		}
+		else
+			if (typeName() && strlen(typeName()))
+			{
+				os << "</" << typeName() << ">" << std::endl;
+			}
+	}
 
-// [PrintCopyConstructor]
-RejectProblem::RejectProblem(const RejectProblem &that)
-{
-	Init();
-	
-	*this = that;
-}
-
-// [PrintDestructor]
-RejectProblem::~RejectProblem()
-{
-	Clear();
-}
-
-// [PrintInit]
-void RejectProblem::Init()
-{
-	// initialize choice to no choiceId to first choice and set pointer to NULL
-	choiceId = generalProblemCid;
-	generalProblem = NULL;
-}
-
-// [PrintClear]
-void RejectProblem::Clear()
-{
-	switch (choiceId)
+	// [PrintConstructor]
+	RejectProblem::RejectProblem()
 	{
+		Init();
+	}
+
+	// [PrintCopyConstructor]
+	RejectProblem::RejectProblem(const RejectProblem& that)
+	{
+		Init();
+
+		*this = that;
+	}
+
+	// [PrintDestructor]
+	RejectProblem::~RejectProblem()
+	{
+		Clear();
+	}
+
+	// [PrintInit]
+	void RejectProblem::Init()
+	{
+		// initialize choice to no choiceId to first choice and set pointer to NULL
+		choiceId = generalProblemCid;
+		generalProblem = NULL;
+	}
+
+	// [PrintClear]
+	void RejectProblem::Clear()
+	{
+		switch (choiceId)
+		{
 		case generalProblemCid:
 			delete generalProblem;
 			generalProblem = NULL;
@@ -2835,25 +2835,25 @@ void RejectProblem::Clear()
 			returnErrorProblem = NULL;
 			break;
 		}
-}
+	}
 
-// [PrintClone]
-RejectProblem* RejectProblem::Clone() const
-{
-	return new RejectProblem(*this);
-}
-
-// [PrintAssignmentOperator]
-RejectProblem& RejectProblem::operator=(const RejectProblem& that)
-{
-	if (this != &that)
+	// [PrintClone]
+	RejectProblem* RejectProblem::Clone() const
 	{
-		Clear();
-		// Check if the choice is empty or not (c union, any element can be checked)
-		if (that.generalProblem)
+		return new RejectProblem(*this);
+	}
+
+	// [PrintAssignmentOperator]
+	RejectProblem& RejectProblem::operator=(const RejectProblem& that)
+	{
+		if (this != &that)
 		{
-			switch (choiceId = that.choiceId)
+			Clear();
+			// Check if the choice is empty or not (c union, any element can be checked)
+			if (that.generalProblem)
 			{
+				switch (choiceId = that.choiceId)
+				{
 				case generalProblemCid:
 					generalProblem = new GeneralProblem(*that.generalProblem);
 					break;
@@ -2866,275 +2866,275 @@ RejectProblem& RejectProblem::operator=(const RejectProblem& that)
 				case returnErrorProblemCid:
 					returnErrorProblem = new ReturnErrorProblem(*that.returnErrorProblem);
 					break;
+				}
 			}
 		}
+
+		return *this;
 	}
 
-	return *this;
-}
-
-// [PrintTypeName]
-const char* RejectProblem::typeName() const
-{
-	return "RejectProblem";
-}
-
-// [PrintCheckConstraints]
-int RejectProblem::checkConstraints(ConstraintFailList* pConstraintFails) const
-{
-	if (generalProblem)
-		generalProblem->checkConstraints(pConstraintFails);
-	if (invokeProblem)
-		invokeProblem->checkConstraints(pConstraintFails);
-	if (returnResultProblem)
-		returnResultProblem->checkConstraints(pConstraintFails);
-	if (returnErrorProblem)
-		returnErrorProblem->checkConstraints(pConstraintFails);
-	return 0;
-}
-
-// [PrintChoiceDefCodeBerEncodeContent]
-AsnLen RejectProblem::BEncContent(AsnBuf& _b) const
-{
-	AsnLen l = 0;
-	switch (choiceId)
+	// [PrintTypeName]
+	const char* RejectProblem::typeName() const
 	{
+		return "RejectProblem";
+	}
+
+	// [PrintCheckConstraints]
+	int RejectProblem::checkConstraints(ConstraintFailList* pConstraintFails) const
+	{
+		if (generalProblem)
+			generalProblem->checkConstraints(pConstraintFails);
+		if (invokeProblem)
+			invokeProblem->checkConstraints(pConstraintFails);
+		if (returnResultProblem)
+			returnResultProblem->checkConstraints(pConstraintFails);
+		if (returnErrorProblem)
+			returnErrorProblem->checkConstraints(pConstraintFails);
+		return 0;
+	}
+
+	// [PrintChoiceDefCodeBerEncodeContent]
+	AsnLen RejectProblem::BEncContent(AsnBuf& _b) const
+	{
+		AsnLen l = 0;
+		switch (choiceId)
+		{
 		case generalProblemCid:
 			l = generalProblem->BEncContent(_b);
 			l += BEncDefLen(_b, l);
 			l += BEncTag1(_b, CNTX, PRIM, 0);
-		break;
+			break;
 		case invokeProblemCid:
 			l = invokeProblem->BEncContent(_b);
 			l += BEncDefLen(_b, l);
 			l += BEncTag1(_b, CNTX, PRIM, 1);
-		break;
+			break;
 		case returnResultProblemCid:
 			l = returnResultProblem->BEncContent(_b);
 			l += BEncDefLen(_b, l);
 			l += BEncTag1(_b, CNTX, PRIM, 2);
-		break;
+			break;
 		case returnErrorProblemCid:
 			l = returnErrorProblem->BEncContent(_b);
 			l += BEncDefLen(_b, l);
 			l += BEncTag1(_b, CNTX, PRIM, 3);
-		break;
+			break;
 		default:
 			throw EXCEPT("Choice is empty", ENCODE_ERROR);
+		}
+		return l;
 	}
-	return l;
-}
 
-// [PrintChoiceDefCodeBerDecodeContent]
-void RejectProblem::BDecContent(const AsnBuf &_b, AsnTag tag, AsnLen elmtLen0, AsnLen& bytesDecoded)
-{
-	Clear();
-	switch (tag)
+	// [PrintChoiceDefCodeBerDecodeContent]
+	void RejectProblem::BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen0, AsnLen& bytesDecoded)
 	{
+		Clear();
+		switch (tag)
+		{
 		case MAKE_TAG_ID(CNTX, PRIM, 0):
 			choiceId = generalProblemCid;
 			generalProblem = new GeneralProblem;
 			generalProblem->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, PRIM, 1):
 			choiceId = invokeProblemCid;
 			invokeProblem = new InvokeProblem;
 			invokeProblem->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, PRIM, 2):
 			choiceId = returnResultProblemCid;
 			returnResultProblem = new ReturnResultProblem;
 			returnResultProblem->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, PRIM, 3):
 			choiceId = returnErrorProblemCid;
 			returnErrorProblem = new ReturnErrorProblem;
 			returnErrorProblem->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		default:
 			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-		break;
+			break;
+		}
 	}
-}
 
-// [PrintChoiceDefCodeBerEnc]
-AsnLen RejectProblem::BEnc(AsnBuf &_b) const
-{
-	AsnLen l = BEncContent(_b);
-	return l;
-}
-
-// [PrintChoiceDefCodeBerDec]
-void RejectProblem::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
-{
-	AsnLen elmtLen = 0;
-	AsnTag tag;
-
-	/*  CHOICEs are a special case - grab identifying tag */
-	/*  this allows easier handling of nested CHOICEs */
-	tag = BDecTag(_b, bytesDecoded);
-	elmtLen = BDecLen(_b, bytesDecoded);
-	BDecContent(_b, tag, elmtLen, bytesDecoded);
-}
-
-// [PrintChoiceDefCodeJsonEnc]
-void RejectProblem::JEnc(EJson::Value& b) const
-{
-	b = EJson::Value(EJson::objectValue);
-
-	EJson::Value tmp;
-
-	switch (choiceId)
+	// [PrintChoiceDefCodeBerEnc]
+	AsnLen RejectProblem::BEnc(AsnBuf& _b) const
 	{
+		AsnLen l = BEncContent(_b);
+		return l;
+	}
+
+	// [PrintChoiceDefCodeBerDec]
+	void RejectProblem::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
+	{
+		AsnLen elmtLen = 0;
+		AsnTag tag;
+
+		/*  CHOICEs are a special case - grab identifying tag */
+		/*  this allows easier handling of nested CHOICEs */
+		tag = BDecTag(_b, bytesDecoded);
+		elmtLen = BDecLen(_b, bytesDecoded);
+		BDecContent(_b, tag, elmtLen, bytesDecoded);
+	}
+
+	// [PrintChoiceDefCodeJsonEnc]
+	void RejectProblem::JEnc(EJson::Value& b) const
+	{
+		b = EJson::Value(EJson::objectValue);
+
+		EJson::Value tmp;
+
+		switch (choiceId)
+		{
 		case generalProblemCid:
 			generalProblem->JEnc(tmp);
 			b["generalProblem"] = tmp;
-		break;
+			break;
 		case invokeProblemCid:
 			invokeProblem->JEnc(tmp);
 			b["invokeProblem"] = tmp;
-		break;
+			break;
 		case returnResultProblemCid:
 			returnResultProblem->JEnc(tmp);
 			b["returnResultProblem"] = tmp;
-		break;
+			break;
 		case returnErrorProblemCid:
 			returnErrorProblem->JEnc(tmp);
 			b["returnErrorProblem"] = tmp;
-		break;
+			break;
 		default:
 			throw EXCEPT("Choice is empty", ENCODE_ERROR);
+		}
 	}
-}
 
-// [PrintChoiceDefCodeJsonDec]
-bool RejectProblem::JDec(const EJson::Value& b){
-	Clear();
-	if (!b.isObject())
-		return false;
+	// [PrintChoiceDefCodeJsonDec]
+	bool RejectProblem::JDec(const EJson::Value& b) {
+		Clear();
+		if (!b.isObject())
+			return false;
 
-	EJson::Value tmp;
-	if (b.isMember("generalProblem"))
-	{
-		choiceId = generalProblemCid;
-		delete generalProblem;
-		generalProblem = new GeneralProblem;
-		if (!generalProblem->JDec(b["generalProblem"]))
-			throw InvalidTagException(typeName(), "decode failed: generalProblem", STACK_ENTRY);
-	}
-	else if (b.isMember("invokeProblem"))
-	{
-		choiceId = invokeProblemCid;
-		delete invokeProblem;
-		invokeProblem = new InvokeProblem;
-		if (!invokeProblem->JDec(b["invokeProblem"]))
-			throw InvalidTagException(typeName(), "decode failed: invokeProblem", STACK_ENTRY);
-	}
-	else if (b.isMember("returnResultProblem"))
-	{
-		choiceId = returnResultProblemCid;
-		delete returnResultProblem;
-		returnResultProblem = new ReturnResultProblem;
-		if (!returnResultProblem->JDec(b["returnResultProblem"]))
-			throw InvalidTagException(typeName(), "decode failed: returnResultProblem", STACK_ENTRY);
-	}
-	else if (b.isMember("returnErrorProblem"))
-	{
-		choiceId = returnErrorProblemCid;
-		delete returnErrorProblem;
-		returnErrorProblem = new ReturnErrorProblem;
-		if (!returnErrorProblem->JDec(b["returnErrorProblem"]))
-			throw InvalidTagException(typeName(), "decode failed: returnErrorProblem", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "no valid choice member", STACK_ENTRY);
-	return true;
-}
-
-void RejectProblem::Print(std::ostream& os, unsigned short indent) const
-{
-	switch (choiceId)
-	{
-	case generalProblemCid:
-		os << "generalProblem ";
-		if (generalProblem)
-			generalProblem->Print(os, indent);
+		EJson::Value tmp;
+		if (b.isMember("generalProblem"))
+		{
+			choiceId = generalProblemCid;
+			delete generalProblem;
+			generalProblem = new GeneralProblem;
+			if (!generalProblem->JDec(b["generalProblem"]))
+				throw InvalidTagException(typeName(), "decode failed: generalProblem", STACK_ENTRY);
+		}
+		else if (b.isMember("invokeProblem"))
+		{
+			choiceId = invokeProblemCid;
+			delete invokeProblem;
+			invokeProblem = new InvokeProblem;
+			if (!invokeProblem->JDec(b["invokeProblem"]))
+				throw InvalidTagException(typeName(), "decode failed: invokeProblem", STACK_ENTRY);
+		}
+		else if (b.isMember("returnResultProblem"))
+		{
+			choiceId = returnResultProblemCid;
+			delete returnResultProblem;
+			returnResultProblem = new ReturnResultProblem;
+			if (!returnResultProblem->JDec(b["returnResultProblem"]))
+				throw InvalidTagException(typeName(), "decode failed: returnResultProblem", STACK_ENTRY);
+		}
+		else if (b.isMember("returnErrorProblem"))
+		{
+			choiceId = returnErrorProblemCid;
+			delete returnErrorProblem;
+			returnErrorProblem = new ReturnErrorProblem;
+			if (!returnErrorProblem->JDec(b["returnErrorProblem"]))
+				throw InvalidTagException(typeName(), "decode failed: returnErrorProblem", STACK_ENTRY);
+		}
 		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case invokeProblemCid:
-		os << "invokeProblem ";
-		if (invokeProblem)
-			invokeProblem->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case returnResultProblemCid:
-		os << "returnResultProblem ";
-		if (returnResultProblem)
-			returnResultProblem->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case returnErrorProblemCid:
-		os << "returnErrorProblem ";
-		if (returnErrorProblem)
-			returnErrorProblem->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	} // end of switch
-} // end of RejectProblem::Print()
-
-void RejectProblem::PrintXML(std::ostream& os, const char* lpszTitle) const
-{
-	if (lpszTitle)
-	{
-		os << "<" << lpszTitle;
-		os << " typeName=\"RejectProblem\" type=\"CHOICE\">";
+			throw InvalidTagException(typeName(), "no valid choice member", STACK_ENTRY);
+		return true;
 	}
-	else
-		os << "<RejectProblem type=\"CHOICE\">";
+
+	void RejectProblem::Print(std::ostream& os, unsigned short indent) const
+	{
 		switch (choiceId)
 		{
-			case generalProblemCid:
-				if (generalProblem)
-					generalProblem->PrintXML(os,"generalProblem");
-				else
-				{
-					os << "<generalProblem -- void3 -- /generalProblem>" << std::endl;
-				}
+		case generalProblemCid:
+			os << "generalProblem ";
+			if (generalProblem)
+				generalProblem->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
 			break;
 
-			case invokeProblemCid:
-				if (invokeProblem)
-					invokeProblem->PrintXML(os,"invokeProblem");
-				else
-				{
-					os << "<invokeProblem -- void3 -- /invokeProblem>" << std::endl;
-				}
+		case invokeProblemCid:
+			os << "invokeProblem ";
+			if (invokeProblem)
+				invokeProblem->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
 			break;
 
-			case returnResultProblemCid:
-				if (returnResultProblem)
-					returnResultProblem->PrintXML(os,"returnResultProblem");
-				else
-				{
-					os << "<returnResultProblem -- void3 -- /returnResultProblem>" << std::endl;
-				}
+		case returnResultProblemCid:
+			os << "returnResultProblem ";
+			if (returnResultProblem)
+				returnResultProblem->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
 			break;
 
-			case returnErrorProblemCid:
-				if (returnErrorProblem)
-					returnErrorProblem->PrintXML(os,"returnErrorProblem");
-				else
-				{
-					os << "<returnErrorProblem -- void3 -- /returnErrorProblem>" << std::endl;
-				}
+		case returnErrorProblemCid:
+			os << "returnErrorProblem ";
+			if (returnErrorProblem)
+				returnErrorProblem->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+
+		} // end of switch
+	} // end of RejectProblem::Print()
+
+	void RejectProblem::PrintXML(std::ostream& os, const char* lpszTitle) const
+	{
+		if (lpszTitle)
+		{
+			os << "<" << lpszTitle;
+			os << " typeName=\"RejectProblem\" type=\"CHOICE\">";
+		}
+		else
+			os << "<RejectProblem type=\"CHOICE\">";
+		switch (choiceId)
+		{
+		case generalProblemCid:
+			if (generalProblem)
+				generalProblem->PrintXML(os, "generalProblem");
+			else
+			{
+				os << "<generalProblem -- void3 -- /generalProblem>" << std::endl;
+			}
+			break;
+
+		case invokeProblemCid:
+			if (invokeProblem)
+				invokeProblem->PrintXML(os, "invokeProblem");
+			else
+			{
+				os << "<invokeProblem -- void3 -- /invokeProblem>" << std::endl;
+			}
+			break;
+
+		case returnResultProblemCid:
+			if (returnResultProblem)
+				returnResultProblem->PrintXML(os, "returnResultProblem");
+			else
+			{
+				os << "<returnResultProblem -- void3 -- /returnResultProblem>" << std::endl;
+			}
+			break;
+
+		case returnErrorProblemCid:
+			if (returnErrorProblem)
+				returnErrorProblem->PrintXML(os, "returnErrorProblem");
+			else
+			{
+				os << "<returnErrorProblem -- void3 -- /returnErrorProblem>" << std::endl;
+			}
 			break;
 
 		} // end of switch
@@ -3142,573 +3142,573 @@ void RejectProblem::PrintXML(std::ostream& os, const char* lpszTitle) const
 			os << "</" << lpszTitle << ">";
 		else
 			os << "</RejectProblem>";
-		}
-// [PrintConstructor]
-ROSEReject::ROSEReject()
-{
-	Init();
-}
-
-// [PrintCopyConstructor]
-ROSEReject::ROSEReject(const ROSEReject &that)
-{
-	Init();
-	
-	*this = that;
-}
-
-// [PrintDestructor]
-ROSEReject::~ROSEReject()
-{
-	Clear();
-}
-
-// [PrintInit]
-void ROSEReject::Init()
-{
-	sessionID = NULL;
-	reject = NULL;
-	details = NULL;
-	authentication = NULL;
-}
-
-// [PrintClear]
-void ROSEReject::Clear()
-{
-	if (sessionID)
-	{
-		delete sessionID;
-		sessionID = NULL;
 	}
-	invokedID.Clear();
-	if (reject)
+	// [PrintConstructor]
+	ROSEReject::ROSEReject()
 	{
-		delete reject;
-		reject = NULL;
+		Init();
 	}
-	if (details)
-	{
-		delete details;
-		details = NULL;
-	}
-	if (authentication)
-	{
-		delete authentication;
-		authentication = NULL;
-	}
-}
 
-// [PrintClone]
-ROSEReject* ROSEReject::Clone() const
-{
-	return new ROSEReject(*this);
-}
+	// [PrintCopyConstructor]
+	ROSEReject::ROSEReject(const ROSEReject& that)
+	{
+		Init();
 
-// [PrintAssignmentOperator]
-ROSEReject& ROSEReject::operator=(const ROSEReject& that)
-{
-	if (this != &that)
+		*this = that;
+	}
+
+	// [PrintDestructor]
+	ROSEReject::~ROSEReject()
 	{
 		Clear();
-		if (that.sessionID)
-		{
-			if (!sessionID)
-				sessionID = new UTF8String();
-			*sessionID = *that.sessionID;
-		}
-		else if (sessionID)
+	}
+
+	// [PrintInit]
+	void ROSEReject::Init()
+	{
+		sessionID = NULL;
+		reject = NULL;
+		details = NULL;
+		authentication = NULL;
+	}
+
+	// [PrintClear]
+	void ROSEReject::Clear()
+	{
+		if (sessionID)
 		{
 			delete sessionID;
 			sessionID = NULL;
 		}
-		invokedID = that.invokedID;
-		if (that.reject)
-		{
-			if (!reject)
-				reject = new RejectProblem();
-			*reject = *that.reject;
-		}
-		else if (reject)
+		invokedID.Clear();
+		if (reject)
 		{
 			delete reject;
 			reject = NULL;
 		}
-		if (that.details)
-		{
-			if (!details)
-				details = new UTF8String();
-			*details = *that.details;
-		}
-		else if (details)
+		if (details)
 		{
 			delete details;
 			details = NULL;
 		}
-		if (that.authentication)
-		{
-			if (!authentication)
-				authentication = new ROSEAuthResult();
-			*authentication = *that.authentication;
-		}
-		else if (authentication)
+		if (authentication)
 		{
 			delete authentication;
 			authentication = NULL;
 		}
 	}
 
-	return *this;
-}
-
-// [PrintTypeName]
-const char* ROSEReject::typeName() const
-{
-	return "ROSEReject";
-}
-
-// [PrintCheckConstraints]
-int ROSEReject::checkConstraints(ConstraintFailList* pConstraintFails) const
-{
-	if (sessionID)
-		sessionID->checkConstraints(pConstraintFails);
-	invokedID.checkConstraints(pConstraintFails);
-	if (reject)
-		reject->checkConstraints(pConstraintFails);
-	if (details)
-		details->checkConstraints(pConstraintFails);
-	if (authentication)
-		authentication->checkConstraints(pConstraintFails);
-	return 0;
-}
-
-// [PrintSeqDefCodeBerEncodeContent]
-AsnLen ROSEReject::BEncContent(AsnBuf &_b) const
-{
-	AsnLen totalLen = 0;
-	AsnLen l = 0;
-
-	if (NOT_NULL(authentication))
+	// [PrintClone]
+	ROSEReject* ROSEReject::Clone() const
 	{
-		l = authentication->BEncContent(_b);
+		return new ROSEReject(*this);
+	}
+
+	// [PrintAssignmentOperator]
+	ROSEReject& ROSEReject::operator=(const ROSEReject& that)
+	{
+		if (this != &that)
+		{
+			Clear();
+			if (that.sessionID)
+			{
+				if (!sessionID)
+					sessionID = new UTF8String();
+				*sessionID = *that.sessionID;
+			}
+			else if (sessionID)
+			{
+				delete sessionID;
+				sessionID = NULL;
+			}
+			invokedID = that.invokedID;
+			if (that.reject)
+			{
+				if (!reject)
+					reject = new RejectProblem();
+				*reject = *that.reject;
+			}
+			else if (reject)
+			{
+				delete reject;
+				reject = NULL;
+			}
+			if (that.details)
+			{
+				if (!details)
+					details = new UTF8String();
+				*details = *that.details;
+			}
+			else if (details)
+			{
+				delete details;
+				details = NULL;
+			}
+			if (that.authentication)
+			{
+				if (!authentication)
+					authentication = new ROSEAuthResult();
+				*authentication = *that.authentication;
+			}
+			else if (authentication)
+			{
+				delete authentication;
+				authentication = NULL;
+			}
+		}
+
+		return *this;
+	}
+
+	// [PrintTypeName]
+	const char* ROSEReject::typeName() const
+	{
+		return "ROSEReject";
+	}
+
+	// [PrintCheckConstraints]
+	int ROSEReject::checkConstraints(ConstraintFailList* pConstraintFails) const
+	{
+		if (sessionID)
+			sessionID->checkConstraints(pConstraintFails);
+		invokedID.checkConstraints(pConstraintFails);
+		if (reject)
+			reject->checkConstraints(pConstraintFails);
+		if (details)
+			details->checkConstraints(pConstraintFails);
+		if (authentication)
+			authentication->checkConstraints(pConstraintFails);
+		return 0;
+	}
+
+	// [PrintSeqDefCodeBerEncodeContent]
+	AsnLen ROSEReject::BEncContent(AsnBuf& _b) const
+	{
+		AsnLen totalLen = 0;
+		AsnLen l = 0;
+
+		if (NOT_NULL(authentication))
+		{
+			l = authentication->BEncContent(_b);
+			l += BEncConsLen(_b, l);
+			l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
+			l += BEncConsLen(_b, l);
+			l += BEncTag1(_b, CNTX, CONS, 4);
+			totalLen += l;
+		}
+
+		if (NOT_NULL(details))
+		{
+			l = details->BEncContent(_b);
+			l += BEncDefLen(_b, l);
+			l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+			totalLen += l;
+		}
+
+		if (NOT_NULL(reject))
+		{
+			l = reject->BEncContent(_b);
+			totalLen += l;
+		}
+
+		l = invokedID.BEncContent(_b);
+		totalLen += l;
+
+		if (NOT_NULL(sessionID))
+		{
+			l = sessionID->BEncContent(_b);
+			l += BEncDefLen(_b, l);
+			l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+			l += BEncConsLen(_b, l);
+			l += BEncTag1(_b, CNTX, CONS, 1);
+			totalLen += l;
+		}
+
+		return totalLen;
+	}
+
+	// [PrintSeqDefCodeBerDecodeContent]
+	void ROSEReject::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
+	{
+		Clear();
+		AsnTag tag1 = AsnTag();
+		AsnLen seqBytesDecoded = 0;
+		AsnLen elmtLen1 = 0;
+		AsnLen elmtLen2 = 0;
+		if (elmtLen0 == 0)
+			return;
+		tag1 = BDecTag(_b, seqBytesDecoded);
+
+		if (tag1 == MAKE_TAG_ID(CNTX, CONS, 1))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			tag1 = BDecTag(_b, seqBytesDecoded);
+
+			if ((tag1 != MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
+				&& (tag1 != MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+				throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
+
+			elmtLen2 = BDecLen(_b, seqBytesDecoded);
+			sessionID = new UTF8String();
+			sessionID->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
+			if (elmtLen1 == INDEFINITE_LEN)
+				BDecEoc(_b, seqBytesDecoded);
+
+			tag1 = BDecTag(_b, seqBytesDecoded);
+		}
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE)
+			|| tag1 == MAKE_TAG_ID(UNIV, PRIM, NULLTYPE_TAG_CODE))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			invokedID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			if (seqBytesDecoded == elmtLen0)
+			{
+				bytesDecoded += seqBytesDecoded;
+				return;
+			}
+			else
+			{
+				tag1 = BDecTag(_b, seqBytesDecoded);
+				if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+				{
+					BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
+					bytesDecoded += seqBytesDecoded;
+					return;
+				}
+			}
+		}
+		else
+			throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
+
+		if (tag1 == MAKE_TAG_ID(CNTX, PRIM, 0)
+			|| tag1 == MAKE_TAG_ID(CNTX, PRIM, 1)
+			|| tag1 == MAKE_TAG_ID(CNTX, PRIM, 2)
+			|| tag1 == MAKE_TAG_ID(CNTX, PRIM, 3))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			reject = new RejectProblem();
+			reject->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			if (seqBytesDecoded == elmtLen0)
+			{
+				bytesDecoded += seqBytesDecoded;
+				return;
+			}
+			else
+			{
+				tag1 = BDecTag(_b, seqBytesDecoded);
+				if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+				{
+					BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
+					bytesDecoded += seqBytesDecoded;
+					return;
+				}
+			}
+		}
+
+		if (tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE) || (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			details = new UTF8String();
+			details->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+			if (seqBytesDecoded == elmtLen0)
+			{
+				bytesDecoded += seqBytesDecoded;
+				return;
+			}
+			else
+			{
+				tag1 = BDecTag(_b, seqBytesDecoded);
+				if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+				{
+					BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
+					bytesDecoded += seqBytesDecoded;
+					return;
+				}
+			}
+		}
+
+		if (tag1 == MAKE_TAG_ID(CNTX, CONS, 4))
+		{
+			elmtLen1 = BDecLen(_b, seqBytesDecoded);
+			tag1 = BDecTag(_b, seqBytesDecoded);
+
+			if (tag1 != MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+				throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
+
+			elmtLen2 = BDecLen(_b, seqBytesDecoded);
+			authentication = new ROSEAuthResult();
+			authentication->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
+			if (elmtLen1 == INDEFINITE_LEN)
+				BDecEoc(_b, seqBytesDecoded);
+
+		}
+
+		if (elmtLen0 == INDEFINITE_LEN)
+		{
+			BDecEoc(_b, bytesDecoded);
+			return;
+		}
+		else if (seqBytesDecoded != elmtLen0)
+		{
+			throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
+		}
+		else
+		{
+			// nothing more to read, just add the bytes read previously
+			bytesDecoded += seqBytesDecoded;
+		}
+	}
+
+	// [PrintSeqDefCodeBerEnc]
+	AsnLen ROSEReject::BEnc(AsnBuf& _b) const
+	{
+		AsnLen l = 0;
+		l = BEncContent(_b);
 		l += BEncConsLen(_b, l);
 		l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-		l += BEncConsLen(_b, l);
-		l += BEncTag1(_b, CNTX, CONS, 4);
-		totalLen += l;
+		return l;
 	}
 
-	if (NOT_NULL(details))
+	// [PrintSeqDefCodeBerDec]
+	void ROSEReject::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	{
-		l = details->BEncContent(_b);
-		l += BEncDefLen(_b, l);
-		l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
-		totalLen += l;
+		AsnTag tag;
+		AsnLen elmtLen1;
+
+		tag = BDecTag(_b, bytesDecoded);
+		if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
+			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
+
+		elmtLen1 = BDecLen(_b, bytesDecoded);
+		BDecContent(_b, tag, elmtLen1, bytesDecoded);
 	}
 
-	if (NOT_NULL(reject))
+	// [PrintSeqDefCodeJsonEnc]
+	void ROSEReject::JEnc(EJson::Value& b) const
 	{
-		l = reject->BEncContent(_b);
-		totalLen += l;
-	}
+		b = EJson::Value(EJson::objectValue);
 
-	l = invokedID.BEncContent(_b);
-	totalLen += l;
+		EJson::Value tmp;
 
-	if (NOT_NULL(sessionID))
-	{
-		l = sessionID->BEncContent(_b);
-		l += BEncDefLen(_b, l);
-		l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
-		l += BEncConsLen(_b, l);
-		l += BEncTag1(_b, CNTX, CONS, 1);
-		totalLen += l;
-	}
-
-	return totalLen;
-}
-
-// [PrintSeqDefCodeBerDecodeContent]
-void ROSEReject::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
-{
-	Clear();
-	AsnTag tag1 = AsnTag();
-	AsnLen seqBytesDecoded = 0;
-	AsnLen elmtLen1 = 0;
-	AsnLen elmtLen2 = 0;
-	if (elmtLen0 == 0)
-		return;
-	tag1 = BDecTag(_b, seqBytesDecoded);
-
-	if (tag1 == MAKE_TAG_ID(CNTX, CONS, 1))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		tag1 = BDecTag(_b, seqBytesDecoded);
-
-		if ((tag1 != MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
-			&& (tag1 != MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
-			throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
-
-		elmtLen2 = BDecLen(_b, seqBytesDecoded);
-		sessionID = new UTF8String();
-		sessionID->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
-	if (elmtLen1 == INDEFINITE_LEN)
-		BDecEoc(_b, seqBytesDecoded);
-
-		tag1 = BDecTag (_b, seqBytesDecoded);
-	}
-
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE)
-		||tag1 == MAKE_TAG_ID(UNIV, PRIM, NULLTYPE_TAG_CODE))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		invokedID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
+		if (NOT_NULL(sessionID))
 		{
-			bytesDecoded += seqBytesDecoded;
-			return;
+			sessionID->JEnc(tmp);
+			b["sessionID"] = tmp;
+		}
+
+		invokedID.JEnc(tmp);
+		b["invokedID"] = tmp;
+
+		if (NOT_NULL(reject))
+		{
+			reject->JEnc(tmp);
+			b["reject"] = tmp;
+		}
+
+		if (NOT_NULL(details))
+		{
+			details->JEnc(tmp);
+			b["details"] = tmp;
+		}
+
+		if (NOT_NULL(authentication))
+		{
+			authentication->JEnc(tmp);
+			b["authentication"] = tmp;
+		}
+	}
+
+	// [PrintSeqDefCodeJsonDec]
+	bool ROSEReject::JDec(const EJson::Value& b) {
+		Clear();
+
+		if (!b.isObject())
+			return false;
+
+		EJson::Value tmp;
+		if (b.isMember("sessionID"))
+		{
+			delete sessionID;
+			sessionID = new UTF8String;
+			if (!sessionID->JDec(b["sessionID"]))
+				throw InvalidTagException(typeName(), "decode failed: sessionID", STACK_ENTRY);
+		}
+
+		if (b.isMember("invokedID"))
+		{
+			if (!invokedID.JDec(b["invokedID"]))
+				throw InvalidTagException(typeName(), "decode failed: invokedID", STACK_ENTRY);
+		}
+		else
+			throw InvalidTagException(typeName(), "not found: invokedID", STACK_ENTRY);
+
+		if (b.isMember("reject"))
+		{
+			delete reject;
+			reject = new RejectProblem;
+			if (!reject->JDec(b["reject"]))
+				throw InvalidTagException(typeName(), "decode failed: reject", STACK_ENTRY);
+		}
+
+		if (b.isMember("details"))
+		{
+			delete details;
+			details = new UTF8String;
+			if (!details->JDec(b["details"]))
+				throw InvalidTagException(typeName(), "decode failed: details", STACK_ENTRY);
+		}
+
+		if (b.isMember("authentication"))
+		{
+			delete authentication;
+			authentication = new ROSEAuthResult;
+			if (!authentication->JDec(b["authentication"]))
+				throw InvalidTagException(typeName(), "decode failed: authentication", STACK_ENTRY);
+		}
+
+		return true;
+	}
+
+	// [PrintCxxSeqSetPrintFunction]
+	void ROSEReject::Print(std::ostream& os, unsigned short indent) const
+	{
+		os << std::endl;
+		Indent(os, indent);
+		os << "{ -- SEQUENCE --" << std::endl;
+		++indent;
+
+		if (NOT_NULL(sessionID))
+		{
+			Indent(os, indent);
+			os << "sessionID ";
+			sessionID->Print(os, indent);
+			os << std::endl;
+		}
+
+		Indent(os, indent);
+		os << "invokedID ";
+		invokedID.Print(os, indent);
+		os << std::endl;
+
+		if (NOT_NULL(reject))
+		{
+			Indent(os, indent);
+			os << "reject ";
+			reject->Print(os, indent);
+			os << std::endl;
+		}
+
+		if (NOT_NULL(details))
+		{
+			Indent(os, indent);
+			os << "details ";
+			details->Print(os, indent);
+			os << std::endl;
+		}
+
+		if (NOT_NULL(authentication))
+		{
+			Indent(os, indent);
+			os << "authentication ";
+			authentication->Print(os, indent);
+			os << std::endl;
+		}
+
+		--indent;
+		Indent(os, indent);
+		os << "}\n";
+	} // end of ROSEReject::Print()
+
+	// [PrintSeqDefCodeXMLPrinter]
+	void ROSEReject::PrintXML(std::ostream& os, const char* lpszTitle) const
+	{
+		if (lpszTitle)
+		{
+			os << "<" << lpszTitle;
+			if (typeName() && strlen(typeName()))
+			{
+				os << " typeName=\"" << typeName() << "\"";
+			}
 		}
 		else
 		{
-			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+			os << "<NONE";
+		}
+		if (typeName() && strlen(typeName()))
+		{
+			if (typeName() && strlen(typeName()))
 			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
-				bytesDecoded += seqBytesDecoded;
-				return;
+				os << "<" << typeName();
 			}
 		}
-	}
-	else
-		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
-
-	if (tag1 == MAKE_TAG_ID(CNTX, PRIM, 0)
-		||tag1 == MAKE_TAG_ID(CNTX, PRIM, 1)
-		||tag1 == MAKE_TAG_ID(CNTX, PRIM, 2)
-		||tag1 == MAKE_TAG_ID(CNTX, PRIM, 3))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		reject = new RejectProblem();
-		reject->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
+		os << " type=\"SEQUENCE\">" << std::endl;
+		if (NOT_NULL(sessionID))
 		{
-			bytesDecoded += seqBytesDecoded;
-			return;
+			sessionID->PrintXML(os, "sessionID");
+		}
+
+		invokedID.PrintXML(os, "invokedID");
+
+		if (NOT_NULL(reject))
+		{
+			reject->PrintXML(os, "reject");
+		}
+
+		if (NOT_NULL(details))
+		{
+			details->PrintXML(os, "details");
+		}
+
+		if (NOT_NULL(authentication))
+		{
+			authentication->PrintXML(os, "authentication");
+		}
+
+		if (lpszTitle)
+		{
+			os << "</" << lpszTitle << ">" << std::endl;
 		}
 		else
-		{
-			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+			if (typeName() && strlen(typeName()))
 			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
-				bytesDecoded += seqBytesDecoded;
-				return;
+				os << "</" << typeName() << ">" << std::endl;
 			}
-		}
 	}
 
-	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE) || (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+	// [PrintConstructor]
+	ROSEMessage::ROSEMessage()
 	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		details = new UTF8String();
-		details->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
+		Init();
+	}
+
+	// [PrintCopyConstructor]
+	ROSEMessage::ROSEMessage(const ROSEMessage& that)
+	{
+		Init();
+
+		*this = that;
+	}
+
+	// [PrintDestructor]
+	ROSEMessage::~ROSEMessage()
+	{
+		Clear();
+	}
+
+	// [PrintInit]
+	void ROSEMessage::Init()
+	{
+		// initialize choice to no choiceId to first choice and set pointer to NULL
+		choiceId = invokeCid;
+		invoke = NULL;
+	}
+
+	// [PrintClear]
+	void ROSEMessage::Clear()
+	{
+		switch (choiceId)
 		{
-			bytesDecoded += seqBytesDecoded;
-			return;
-		}
-		else
-		{
-			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
-			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
-				bytesDecoded += seqBytesDecoded;
-				return;
-			}
-		}
-	}
-
-	if (tag1 == MAKE_TAG_ID(CNTX, CONS, 4))
-	{
-		elmtLen1 = BDecLen(_b, seqBytesDecoded);
-		tag1 = BDecTag(_b, seqBytesDecoded);
-
-		if (tag1 != MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
-			throw InvalidTagException(typeName(), tag1, STACK_ENTRY);
-
-		elmtLen2 = BDecLen(_b, seqBytesDecoded);
-		authentication = new ROSEAuthResult();
-		authentication->BDecContent(_b, tag1, elmtLen2, seqBytesDecoded);
-	if (elmtLen1 == INDEFINITE_LEN)
-		BDecEoc(_b, seqBytesDecoded);
-
-	}
-
-	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
-	else if (seqBytesDecoded != elmtLen0)
-	{
-		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
-	else
-	{
-		// nothing more to read, just add the bytes read previously
-		bytesDecoded += seqBytesDecoded;
-	}
-}
-
-// [PrintSeqDefCodeBerEnc]
-AsnLen ROSEReject::BEnc(AsnBuf& _b) const
-{
-	AsnLen l=0;
-	l = BEncContent (_b);
-	l += BEncConsLen(_b, l);
-	l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
-	return l;
-}
-
-// [PrintSeqDefCodeBerDec]
-void ROSEReject::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
-{
-	AsnTag tag;
-	AsnLen elmtLen1;
-
-	tag = BDecTag(_b, bytesDecoded);
-	if (tag == MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
-		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-
-	elmtLen1 = BDecLen(_b, bytesDecoded);
-	BDecContent(_b, tag, elmtLen1, bytesDecoded);
-}
-
-// [PrintSeqDefCodeJsonEnc]
-void ROSEReject::JEnc(EJson::Value& b) const
-{
-	b = EJson::Value(EJson::objectValue);
-
-	EJson::Value tmp;
-
-	if (NOT_NULL(sessionID))
-	{
-		sessionID->JEnc(tmp);
-		b["sessionID"] = tmp;
-	}
-
-	invokedID.JEnc(tmp);
-	b["invokedID"] = tmp;
-
-	if (NOT_NULL(reject))
-	{
-		reject->JEnc(tmp);
-		b["reject"] = tmp;
-	}
-
-	if (NOT_NULL(details))
-	{
-		details->JEnc(tmp);
-		b["details"] = tmp;
-	}
-
-	if (NOT_NULL(authentication))
-	{
-		authentication->JEnc(tmp);
-		b["authentication"] = tmp;
-	}
-}
-
-// [PrintSeqDefCodeJsonDec]
-bool ROSEReject::JDec(const EJson::Value& b){
-	Clear();
-
-	if (!b.isObject())
-		return false;
-
-	EJson::Value tmp;
-	if (b.isMember("sessionID"))
-	{
-		delete sessionID;
-		sessionID = new UTF8String;
-		if (!sessionID->JDec(b["sessionID"]))
-			throw InvalidTagException(typeName(), "decode failed: sessionID", STACK_ENTRY);
-	}
-
-	if (b.isMember("invokedID"))
-	{
-		if (!invokedID.JDec(b["invokedID"]))
-			throw InvalidTagException(typeName(), "decode failed: invokedID", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "not found: invokedID", STACK_ENTRY);
-
-	if (b.isMember("reject"))
-	{
-		delete reject;
-		reject = new RejectProblem;
-		if (!reject->JDec(b["reject"]))
-			throw InvalidTagException(typeName(), "decode failed: reject", STACK_ENTRY);
-	}
-
-	if (b.isMember("details"))
-	{
-		delete details;
-		details = new UTF8String;
-		if (!details->JDec(b["details"]))
-			throw InvalidTagException(typeName(), "decode failed: details", STACK_ENTRY);
-	}
-
-	if (b.isMember("authentication"))
-	{
-		delete authentication;
-		authentication = new ROSEAuthResult;
-		if (!authentication->JDec(b["authentication"]))
-			throw InvalidTagException(typeName(), "decode failed: authentication", STACK_ENTRY);
-	}
-
-	return true;
-}
-
-// [PrintCxxSeqSetPrintFunction]
-void ROSEReject::Print(std::ostream& os, unsigned short indent) const
-{
-	os << std::endl;
-	Indent(os, indent);
-	os << "{ -- SEQUENCE --" << std::endl;
-	++indent;
-
-	if (NOT_NULL (sessionID))
-	{
-		Indent(os, indent);
-		os << "sessionID ";
-		sessionID->Print(os, indent);
-		os << std::endl;
-	}
-
-	Indent(os, indent);
-	os << "invokedID ";
-	invokedID.Print(os, indent);
-	os << std::endl;
-
-	if (NOT_NULL (reject))
-	{
-		Indent(os, indent);
-		os << "reject ";
-		reject->Print(os, indent);
-		os << std::endl;
-	}
-
-	if (NOT_NULL (details))
-	{
-		Indent(os, indent);
-		os << "details ";
-		details->Print(os, indent);
-		os << std::endl;
-	}
-
-	if (NOT_NULL (authentication))
-	{
-		Indent(os, indent);
-		os << "authentication ";
-		authentication->Print(os, indent);
-		os << std::endl;
-	}
-
-	--indent;
-	Indent(os, indent);
-	os << "}\n";
-} // end of ROSEReject::Print()
-
-// [PrintSeqDefCodeXMLPrinter]
-void ROSEReject::PrintXML(std::ostream& os, const char* lpszTitle) const
-{
-	if (lpszTitle)
-	{
-		os << "<" << lpszTitle;
-		if (typeName() && strlen(typeName()))
-		{
-			os << " typeName=\"" << typeName() << "\"";
-		}
-	}
-	else
-	{
-		os << "<NONE";
-	}
-	if (typeName() && strlen(typeName()))
-	{
-		if (typeName() && strlen(typeName()))
-		{
-			os << "<" << typeName();
-		}
-	}
-os << " type=\"SEQUENCE\">" << std::endl;
-	if (NOT_NULL (sessionID))
-	{
-		sessionID->PrintXML(os, "sessionID");
-	}
-
-	invokedID.PrintXML(os, "invokedID");
-
-	if (NOT_NULL (reject))
-	{
-		reject->PrintXML(os, "reject");
-	}
-
-	if (NOT_NULL (details))
-	{
-		details->PrintXML(os, "details");
-	}
-
-	if (NOT_NULL (authentication))
-	{
-		authentication->PrintXML(os, "authentication");
-	}
-
-	if (lpszTitle)
-	{
-		os << "</" << lpszTitle << ">" << std::endl;
-	}
-	else
-		if (typeName() && strlen(typeName()))
-		{
-			os << "</" << typeName() << ">" << std::endl;
-		}
-}
-
-// [PrintConstructor]
-ROSEMessage::ROSEMessage()
-{
-	Init();
-}
-
-// [PrintCopyConstructor]
-ROSEMessage::ROSEMessage(const ROSEMessage &that)
-{
-	Init();
-	
-	*this = that;
-}
-
-// [PrintDestructor]
-ROSEMessage::~ROSEMessage()
-{
-	Clear();
-}
-
-// [PrintInit]
-void ROSEMessage::Init()
-{
-	// initialize choice to no choiceId to first choice and set pointer to NULL
-	choiceId = invokeCid;
-	invoke = NULL;
-}
-
-// [PrintClear]
-void ROSEMessage::Clear()
-{
-	switch (choiceId)
-	{
 		case invokeCid:
 			delete invoke;
 			invoke = NULL;
@@ -3726,25 +3726,25 @@ void ROSEMessage::Clear()
 			reject = NULL;
 			break;
 		}
-}
+	}
 
-// [PrintClone]
-ROSEMessage* ROSEMessage::Clone() const
-{
-	return new ROSEMessage(*this);
-}
-
-// [PrintAssignmentOperator]
-ROSEMessage& ROSEMessage::operator=(const ROSEMessage& that)
-{
-	if (this != &that)
+	// [PrintClone]
+	ROSEMessage* ROSEMessage::Clone() const
 	{
-		Clear();
-		// Check if the choice is empty or not (c union, any element can be checked)
-		if (that.invoke)
+		return new ROSEMessage(*this);
+	}
+
+	// [PrintAssignmentOperator]
+	ROSEMessage& ROSEMessage::operator=(const ROSEMessage& that)
+	{
+		if (this != &that)
 		{
-			switch (choiceId = that.choiceId)
+			Clear();
+			// Check if the choice is empty or not (c union, any element can be checked)
+			if (that.invoke)
 			{
+				switch (choiceId = that.choiceId)
+				{
 				case invokeCid:
 					invoke = new ROSEInvoke(*that.invoke);
 					break;
@@ -3757,275 +3757,275 @@ ROSEMessage& ROSEMessage::operator=(const ROSEMessage& that)
 				case rejectCid:
 					reject = new ROSEReject(*that.reject);
 					break;
+				}
 			}
 		}
+
+		return *this;
 	}
 
-	return *this;
-}
-
-// [PrintTypeName]
-const char* ROSEMessage::typeName() const
-{
-	return "ROSEMessage";
-}
-
-// [PrintCheckConstraints]
-int ROSEMessage::checkConstraints(ConstraintFailList* pConstraintFails) const
-{
-	if (invoke)
-		invoke->checkConstraints(pConstraintFails);
-	if (result)
-		result->checkConstraints(pConstraintFails);
-	if (error)
-		error->checkConstraints(pConstraintFails);
-	if (reject)
-		reject->checkConstraints(pConstraintFails);
-	return 0;
-}
-
-// [PrintChoiceDefCodeBerEncodeContent]
-AsnLen ROSEMessage::BEncContent(AsnBuf& _b) const
-{
-	AsnLen l = 0;
-	switch (choiceId)
+	// [PrintTypeName]
+	const char* ROSEMessage::typeName() const
 	{
+		return "ROSEMessage";
+	}
+
+	// [PrintCheckConstraints]
+	int ROSEMessage::checkConstraints(ConstraintFailList* pConstraintFails) const
+	{
+		if (invoke)
+			invoke->checkConstraints(pConstraintFails);
+		if (result)
+			result->checkConstraints(pConstraintFails);
+		if (error)
+			error->checkConstraints(pConstraintFails);
+		if (reject)
+			reject->checkConstraints(pConstraintFails);
+		return 0;
+	}
+
+	// [PrintChoiceDefCodeBerEncodeContent]
+	AsnLen ROSEMessage::BEncContent(AsnBuf& _b) const
+	{
+		AsnLen l = 0;
+		switch (choiceId)
+		{
 		case invokeCid:
 			l = invoke->BEncContent(_b);
 			l += BEncConsLen(_b, l);
 			l += BEncTag1(_b, CNTX, CONS, 1);
-		break;
+			break;
 		case resultCid:
 			l = result->BEncContent(_b);
 			l += BEncConsLen(_b, l);
 			l += BEncTag1(_b, CNTX, CONS, 2);
-		break;
+			break;
 		case errorCid:
 			l = error->BEncContent(_b);
 			l += BEncConsLen(_b, l);
 			l += BEncTag1(_b, CNTX, CONS, 3);
-		break;
+			break;
 		case rejectCid:
 			l = reject->BEncContent(_b);
 			l += BEncConsLen(_b, l);
 			l += BEncTag1(_b, CNTX, CONS, 4);
-		break;
+			break;
 		default:
 			throw EXCEPT("Choice is empty", ENCODE_ERROR);
+		}
+		return l;
 	}
-	return l;
-}
 
-// [PrintChoiceDefCodeBerDecodeContent]
-void ROSEMessage::BDecContent(const AsnBuf &_b, AsnTag tag, AsnLen elmtLen0, AsnLen& bytesDecoded)
-{
-	Clear();
-	switch (tag)
+	// [PrintChoiceDefCodeBerDecodeContent]
+	void ROSEMessage::BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen0, AsnLen& bytesDecoded)
 	{
+		Clear();
+		switch (tag)
+		{
 		case MAKE_TAG_ID(CNTX, CONS, 1):
 			choiceId = invokeCid;
 			invoke = new ROSEInvoke;
 			invoke->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, CONS, 2):
 			choiceId = resultCid;
 			result = new ROSEResult;
 			result->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, CONS, 3):
 			choiceId = errorCid;
 			error = new ROSEError;
 			error->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, CONS, 4):
 			choiceId = rejectCid;
 			reject = new ROSEReject;
 			reject->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		default:
 			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-		break;
+			break;
+		}
 	}
-}
 
-// [PrintChoiceDefCodeBerEnc]
-AsnLen ROSEMessage::BEnc(AsnBuf &_b) const
-{
-	AsnLen l = BEncContent(_b);
-	return l;
-}
-
-// [PrintChoiceDefCodeBerDec]
-void ROSEMessage::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
-{
-	AsnLen elmtLen = 0;
-	AsnTag tag;
-
-	/*  CHOICEs are a special case - grab identifying tag */
-	/*  this allows easier handling of nested CHOICEs */
-	tag = BDecTag(_b, bytesDecoded);
-	elmtLen = BDecLen(_b, bytesDecoded);
-	BDecContent(_b, tag, elmtLen, bytesDecoded);
-}
-
-// [PrintChoiceDefCodeJsonEnc]
-void ROSEMessage::JEnc(EJson::Value& b) const
-{
-	b = EJson::Value(EJson::objectValue);
-
-	EJson::Value tmp;
-
-	switch (choiceId)
+	// [PrintChoiceDefCodeBerEnc]
+	AsnLen ROSEMessage::BEnc(AsnBuf& _b) const
 	{
+		AsnLen l = BEncContent(_b);
+		return l;
+	}
+
+	// [PrintChoiceDefCodeBerDec]
+	void ROSEMessage::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
+	{
+		AsnLen elmtLen = 0;
+		AsnTag tag;
+
+		/*  CHOICEs are a special case - grab identifying tag */
+		/*  this allows easier handling of nested CHOICEs */
+		tag = BDecTag(_b, bytesDecoded);
+		elmtLen = BDecLen(_b, bytesDecoded);
+		BDecContent(_b, tag, elmtLen, bytesDecoded);
+	}
+
+	// [PrintChoiceDefCodeJsonEnc]
+	void ROSEMessage::JEnc(EJson::Value& b) const
+	{
+		b = EJson::Value(EJson::objectValue);
+
+		EJson::Value tmp;
+
+		switch (choiceId)
+		{
 		case invokeCid:
 			invoke->JEnc(tmp);
 			b["invoke"] = tmp;
-		break;
+			break;
 		case resultCid:
 			result->JEnc(tmp);
 			b["result"] = tmp;
-		break;
+			break;
 		case errorCid:
 			error->JEnc(tmp);
 			b["error"] = tmp;
-		break;
+			break;
 		case rejectCid:
 			reject->JEnc(tmp);
 			b["reject"] = tmp;
-		break;
+			break;
 		default:
 			throw EXCEPT("Choice is empty", ENCODE_ERROR);
+		}
 	}
-}
 
-// [PrintChoiceDefCodeJsonDec]
-bool ROSEMessage::JDec(const EJson::Value& b){
-	Clear();
-	if (!b.isObject())
-		return false;
+	// [PrintChoiceDefCodeJsonDec]
+	bool ROSEMessage::JDec(const EJson::Value& b) {
+		Clear();
+		if (!b.isObject())
+			return false;
 
-	EJson::Value tmp;
-	if (b.isMember("invoke"))
-	{
-		choiceId = invokeCid;
-		delete invoke;
-		invoke = new ROSEInvoke;
-		if (!invoke->JDec(b["invoke"]))
-			throw InvalidTagException(typeName(), "decode failed: invoke", STACK_ENTRY);
-	}
-	else if (b.isMember("result"))
-	{
-		choiceId = resultCid;
-		delete result;
-		result = new ROSEResult;
-		if (!result->JDec(b["result"]))
-			throw InvalidTagException(typeName(), "decode failed: result", STACK_ENTRY);
-	}
-	else if (b.isMember("error"))
-	{
-		choiceId = errorCid;
-		delete error;
-		error = new ROSEError;
-		if (!error->JDec(b["error"]))
-			throw InvalidTagException(typeName(), "decode failed: error", STACK_ENTRY);
-	}
-	else if (b.isMember("reject"))
-	{
-		choiceId = rejectCid;
-		delete reject;
-		reject = new ROSEReject;
-		if (!reject->JDec(b["reject"]))
-			throw InvalidTagException(typeName(), "decode failed: reject", STACK_ENTRY);
-	}
-	else
-		throw InvalidTagException(typeName(), "no valid choice member", STACK_ENTRY);
-	return true;
-}
-
-void ROSEMessage::Print(std::ostream& os, unsigned short indent) const
-{
-	switch (choiceId)
-	{
-	case invokeCid:
-		os << "invoke ";
-		if (invoke)
-			invoke->Print(os, indent);
+		EJson::Value tmp;
+		if (b.isMember("invoke"))
+		{
+			choiceId = invokeCid;
+			delete invoke;
+			invoke = new ROSEInvoke;
+			if (!invoke->JDec(b["invoke"]))
+				throw InvalidTagException(typeName(), "decode failed: invoke", STACK_ENTRY);
+		}
+		else if (b.isMember("result"))
+		{
+			choiceId = resultCid;
+			delete result;
+			result = new ROSEResult;
+			if (!result->JDec(b["result"]))
+				throw InvalidTagException(typeName(), "decode failed: result", STACK_ENTRY);
+		}
+		else if (b.isMember("error"))
+		{
+			choiceId = errorCid;
+			delete error;
+			error = new ROSEError;
+			if (!error->JDec(b["error"]))
+				throw InvalidTagException(typeName(), "decode failed: error", STACK_ENTRY);
+		}
+		else if (b.isMember("reject"))
+		{
+			choiceId = rejectCid;
+			delete reject;
+			reject = new ROSEReject;
+			if (!reject->JDec(b["reject"]))
+				throw InvalidTagException(typeName(), "decode failed: reject", STACK_ENTRY);
+		}
 		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case resultCid:
-		os << "result ";
-		if (result)
-			result->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case errorCid:
-		os << "error ";
-		if (error)
-			error->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case rejectCid:
-		os << "reject ";
-		if (reject)
-			reject->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	} // end of switch
-} // end of ROSEMessage::Print()
-
-void ROSEMessage::PrintXML(std::ostream& os, const char* lpszTitle) const
-{
-	if (lpszTitle)
-	{
-		os << "<" << lpszTitle;
-		os << " typeName=\"ROSEMessage\" type=\"CHOICE\">";
+			throw InvalidTagException(typeName(), "no valid choice member", STACK_ENTRY);
+		return true;
 	}
-	else
-		os << "<ROSEMessage type=\"CHOICE\">";
+
+	void ROSEMessage::Print(std::ostream& os, unsigned short indent) const
+	{
 		switch (choiceId)
 		{
-			case invokeCid:
-				if (invoke)
-					invoke->PrintXML(os,"invoke");
-				else
-				{
-					os << "<invoke -- void3 -- /invoke>" << std::endl;
-				}
+		case invokeCid:
+			os << "invoke ";
+			if (invoke)
+				invoke->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
 			break;
 
-			case resultCid:
-				if (result)
-					result->PrintXML(os,"result");
-				else
-				{
-					os << "<result -- void3 -- /result>" << std::endl;
-				}
+		case resultCid:
+			os << "result ";
+			if (result)
+				result->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
 			break;
 
-			case errorCid:
-				if (error)
-					error->PrintXML(os,"error");
-				else
-				{
-					os << "<error -- void3 -- /error>" << std::endl;
-				}
+		case errorCid:
+			os << "error ";
+			if (error)
+				error->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
 			break;
 
-			case rejectCid:
-				if (reject)
-					reject->PrintXML(os,"reject");
-				else
-				{
-					os << "<reject -- void3 -- /reject>" << std::endl;
-				}
+		case rejectCid:
+			os << "reject ";
+			if (reject)
+				reject->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+
+		} // end of switch
+	} // end of ROSEMessage::Print()
+
+	void ROSEMessage::PrintXML(std::ostream& os, const char* lpszTitle) const
+	{
+		if (lpszTitle)
+		{
+			os << "<" << lpszTitle;
+			os << " typeName=\"ROSEMessage\" type=\"CHOICE\">";
+		}
+		else
+			os << "<ROSEMessage type=\"CHOICE\">";
+		switch (choiceId)
+		{
+		case invokeCid:
+			if (invoke)
+				invoke->PrintXML(os, "invoke");
+			else
+			{
+				os << "<invoke -- void3 -- /invoke>" << std::endl;
+			}
+			break;
+
+		case resultCid:
+			if (result)
+				result->PrintXML(os, "result");
+			else
+			{
+				os << "<result -- void3 -- /result>" << std::endl;
+			}
+			break;
+
+		case errorCid:
+			if (error)
+				error->PrintXML(os, "error");
+			else
+			{
+				os << "<error -- void3 -- /error>" << std::endl;
+			}
+			break;
+
+		case rejectCid:
+			if (reject)
+				reject->PrintXML(os, "reject");
+			else
+			{
+				os << "<reject -- void3 -- /reject>" << std::endl;
+			}
 			break;
 
 		} // end of switch
@@ -4033,7 +4033,7 @@ void ROSEMessage::PrintXML(std::ostream& os, const char* lpszTitle) const
 			os << "</" << lpszTitle << ">";
 		else
 			os << "</ROSEMessage>";
-		}
+	}
 #ifndef NO_NAMESPACE
 } // namespace close
 #endif

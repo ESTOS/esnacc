@@ -89,25 +89,25 @@
 
 char gszOutputPath[100] = { 0 };
 
-int IsCKeyWord PROTO ((char *str));
-int IsCxxKeyWord PROTO ((char *str));
+int IsCKeyWord PROTO((char* str));
+int IsCxxKeyWord PROTO((char* str));
 
 /*
  * allocates new and returns a copy of the given
  * string with '-'s (dashes) replaced by  '_'s (underscores)
  */
-char *
-Asn1TypeName2CTypeName PARAMS ((aName),
-	const char *aName)
+char*
+Asn1TypeName2CTypeName PARAMS((aName),
+	const char* aName)
 {
-	char *retVal;
+	char* retVal;
 	if (aName == NULL)
 		return NULL;
 
 	size_t size = strlen(aName) + 1;
-	retVal = Malloc (size);
+	retVal = Malloc(size);
 	strcpy_s(retVal, size, aName);
-	Dash2Underscore (retVal, strlen (retVal));
+	Dash2Underscore(retVal, strlen(retVal));
 
 	return retVal;
 }  /* Asn1TypeName2CTypeName */
@@ -117,18 +117,18 @@ Asn1TypeName2CTypeName PARAMS ((aName),
  * allocates new str and returns a copy of the given
  * string with '-'s (dashes) replaced by  '_'s (underscores)
  */
-char *
-Asn1FieldName2CFieldName PARAMS ((aName),
-	char *aName)
+char*
+Asn1FieldName2CFieldName PARAMS((aName),
+	char* aName)
 {
-	char *retVal;
+	char* retVal;
 	if (aName == NULL)
 		return NULL;
 
 	size_t size = strlen(aName) + 1;
-	retVal = Malloc (size);
+	retVal = Malloc(size);
 	strcpy_s(retVal, size, aName);
-	Dash2Underscore (retVal, strlen (retVal));
+	Dash2Underscore(retVal, strlen(retVal));
 
 	return retVal;
 }  /* Asn1FieldName2CFieldName */
@@ -138,18 +138,18 @@ Asn1FieldName2CFieldName PARAMS ((aName),
  * allocates new str and returns a copy of the given
  * string with '-'s (dashes) replaced by  '_'s (underscores)
  */
-char *
-Asn1ValueName2CValueName PARAMS ((aName),
-	char *aName)
+char*
+Asn1ValueName2CValueName PARAMS((aName),
+	char* aName)
 {
-	char *retVal;
+	char* retVal;
 	if (aName == NULL)
 		return NULL;
 
 	size_t size = strlen(aName) + 1;
-	retVal = Malloc (size);
+	retVal = Malloc(size);
 	strcpy_s(retVal, size, aName);
-	Dash2Underscore (retVal, strlen (retVal));
+	Dash2Underscore(retVal, strlen(retVal));
 
 	return retVal;
 }  /* Asn1FieldName2CFieldName */
@@ -159,21 +159,21 @@ Asn1ValueName2CValueName PARAMS ((aName),
  * allocates and returns a string with all of
  * the caps from the given string
  */
-char *
-GetCaps PARAMS ((str),
-	char *str)
+char*
+GetCaps PARAMS((str),
+	char* str)
 {
 	int i, j;
-	char *retVal;
+	char* retVal;
 
 	if (str == NULL)
 		return NULL;
 
-	retVal = Malloc (strlen (str) + 1);
+	retVal = Malloc(strlen(str) + 1);
 
-	for (j = 0, i = 0; i < (int)strlen (str); i++)
+	for (j = 0, i = 0; i < (int)strlen(str); i++)
 	{
-		if (isupper (str[i]))
+		if (isupper(str[i]))
 			retVal[j++] = str[i];
 	}
 
@@ -188,21 +188,21 @@ GetCaps PARAMS ((str),
  * allocates and returns a string with all of
  * the caps and digits from the given string
  */
-char *
-GetCapsAndDigits PARAMS ((str),
-	char *str)
+char*
+GetCapsAndDigits PARAMS((str),
+	char* str)
 {
 	int i, j;
-	char *retVal;
+	char* retVal;
 
 	if (str == NULL)
 		return NULL;
 
-	retVal = Malloc (strlen (str) + 1);
+	retVal = Malloc(strlen(str) + 1);
 
-	for (j = 0, i = 0; i < (int)strlen (str); i++)
+	for (j = 0, i = 0; i < (int)strlen(str); i++)
 	{
-		if ((isupper (str[i])) ||  (isdigit (str[i])))
+		if ((isupper(str[i])) || (isdigit(str[i])))
 			retVal[j++] = str[i];
 	}
 
@@ -219,15 +219,15 @@ GetCapsAndDigits PARAMS ((str),
  * NOTE: modifies given str
  */
 void
-Str2UCase PARAMS ((str, len),
-	char *str _AND_
+Str2UCase PARAMS((str, len),
+	char* str _AND_
 	size_t len)
 {
 	size_t i;
-	for (i=0; i < len; i++)
+	for (i = 0; i < len; i++)
 	{
-		if (islower (str[i]))
-			str[i] = (char)toupper (str[i]);
+		if (islower(str[i]))
+			str[i] = (char)toupper(str[i]);
 	}
 } /* Str2UCase */
 
@@ -238,15 +238,15 @@ Str2UCase PARAMS ((str, len),
  * NOTE: modifies given str
  */
 void
-Str2LCase PARAMS ((str, len),
-	char *str _AND_
+Str2LCase PARAMS((str, len),
+	char* str _AND_
 	size_t len)
 {
 	size_t  i;
-	for (i=0; i < len; i++)
+	for (i = 0; i < len; i++)
 	{
-		if (isupper (str[i]))
-			str[i] = (char)tolower (str[i]);
+		if (isupper(str[i]))
+			str[i] = (char)tolower(str[i]);
 	}
 } /* Str2LCase */
 
@@ -257,12 +257,12 @@ Str2LCase PARAMS ((str, len),
  * NOTE: modifies given str
  */
 void
-Dash2Underscore PARAMS ((str, len),
-	char *str _AND_
+Dash2Underscore PARAMS((str, len),
+	char* str _AND_
 	size_t len)
 {
 	size_t i;
-	for (i=0; i < len; i++)
+	for (i = 0; i < len; i++)
 	{
 		if (str[i] == '-')
 			str[i] = '_';
@@ -276,7 +276,7 @@ Dash2Underscore PARAMS ((str, len),
  * NOTE: make sure the str you give has enough space
  * for the digits
  */
-void AppendDigit(char *str, size_t bufferSize, int digit)
+void AppendDigit(char* str, size_t bufferSize, int digit)
 {
 	int high = 1000000000;
 	int currDigit;
@@ -291,10 +291,10 @@ void AppendDigit(char *str, size_t bufferSize, int digit)
 	{
 		value = digit / high;
 		if (value != 0)
-			digitStr[currDigit++]= (char)DIGIT_TO_ASCII (value);
+			digitStr[currDigit++] = (char)DIGIT_TO_ASCII(value);
 
 		digit = digit % high;
-		high  = high/10;
+		high = high / 10;
 	}
 
 	if (currDigit == 0)
@@ -323,9 +323,9 @@ void AppendDigit(char *str, size_t bufferSize, int digit)
  *         modifies the the Str "Foo" to "Foo1"
  */
 void
-MakeCStrUnique PARAMS ((nameList, str, bufferSize, maxDigits, startingDigit),
-	DefinedObj *nameList _AND_
-	char *str _AND_
+MakeCStrUnique PARAMS((nameList, str, bufferSize, maxDigits, startingDigit),
+	DefinedObj* nameList _AND_
+	char* str _AND_
 	size_t bufferSize _AND_
 	int maxDigits _AND_
 	int startingDigit)
@@ -333,18 +333,18 @@ MakeCStrUnique PARAMS ((nameList, str, bufferSize, maxDigits, startingDigit),
 	int digit, maxDigitVal;
 	size_t len;
 
-	if (ObjIsDefined (nameList, str, StrObjCmp) || IsCKeyWord (str))
+	if (ObjIsDefined(nameList, str, StrObjCmp) || IsCKeyWord(str))
 	{
 		for (maxDigitVal = 1; maxDigits > 0; maxDigits--)
 			maxDigitVal *= 10;
 
-		len = strlen (str);
+		len = strlen(str);
 		digit = startingDigit;
 		do
 		{
 			str[len] = '\0';
-			AppendDigit (str, bufferSize, digit++);
-		} while (ObjIsDefined (nameList, str, StrObjCmp) &&  (digit < maxDigitVal));
+			AppendDigit(str, bufferSize, digit++);
+		} while (ObjIsDefined(nameList, str, StrObjCmp) && (digit < maxDigitVal));
 	}
 }  /* MakeCStrUnique */
 
@@ -353,9 +353,9 @@ MakeCStrUnique PARAMS ((nameList, str, bufferSize, maxDigits, startingDigit),
  * same as MakeCStrUnique except checks against C++ keywords
  */
 void
-MakeCxxStrUnique PARAMS ((nameList, str, bufferSize, maxDigits, startingDigit),
-	DefinedObj *nameList _AND_
-	char *str _AND_
+MakeCxxStrUnique PARAMS((nameList, str, bufferSize, maxDigits, startingDigit),
+	DefinedObj* nameList _AND_
+	char* str _AND_
 	size_t bufferSize _AND_
 	int maxDigits _AND_
 	int startingDigit)
@@ -363,18 +363,18 @@ MakeCxxStrUnique PARAMS ((nameList, str, bufferSize, maxDigits, startingDigit),
 	int digit, maxDigitVal;
 	size_t len;
 
-	if (ObjIsDefined (nameList, str, StrObjCmp) || IsCxxKeyWord (str))
+	if (ObjIsDefined(nameList, str, StrObjCmp) || IsCxxKeyWord(str))
 	{
 		for (maxDigitVal = 1; maxDigits > 0; maxDigits--)
 			maxDigitVal *= 10;
 
-		len = strlen (str);
+		len = strlen(str);
 		digit = startingDigit;
 		do
 		{
 			str[len] = '\0';
-			AppendDigit (str, bufferSize, digit++);
-		} while (ObjIsDefined (nameList, str, StrObjCmp) &&  (digit < maxDigitVal));
+			AppendDigit(str, bufferSize, digit++);
+		} while (ObjIsDefined(nameList, str, StrObjCmp) && (digit < maxDigitVal));
 	}
 }  /* MakeCxxStrUnique */
 
@@ -425,34 +425,34 @@ char* getNakedCommentDupped(const char* szString)
 }
 
 
-char * MakeBaseFileName PARAMS ((refName), const char *refName)
+char* MakeBaseFileName PARAMS((refName), const char* refName)
 {
-	char	*base, *dot;
+	char* base, * dot;
 	size_t		stublen;
 	size_t		pathLen = 0;
-	char	*stub;
+	char* stub;
 
 	char szSeperator;
-	#ifdef _WIN32
-		szSeperator = '\\';
-	#else
-		szSeperator = '/';
-	#endif
+#ifdef _WIN32
+	szSeperator = '\\';
+#else
+	szSeperator = '/';
+#endif
 
-	if ((base = strrchr (refName, szSeperator)) != NULL)
-	  base++;
+	if ((base = strrchr(refName, szSeperator)) != NULL)
+		base++;
 	else
-	  base = (char *)refName;
+		base = (char*)refName;
 
-	if ((dot = strrchr (base, '.')) != NULL)
-	  stublen = dot - base;
+	if ((dot = strrchr(base, '.')) != NULL)
+		stublen = dot - base;
 	else
-	  stublen = strlen (base);
+		stublen = strlen(base);
 
 	pathLen = strlen(gszOutputPath);
 
 	size_t size = pathLen + stublen + 1;
-	stub = Malloc (size);
+	stub = Malloc(size);
 	strcpy_s(stub, size, gszOutputPath);
 	memcpy(stub + pathLen, base, stublen);
 	stub[pathLen + stublen] = '\0';
@@ -460,19 +460,19 @@ char * MakeBaseFileName PARAMS ((refName), const char *refName)
 	return stub;
 } /* MakeBaseFileName */
 
-const char *
-FileNameOnly(const char *path)
+const char*
+FileNameOnly(const char* path)
 {
 	size_t i = strlen(path);
-   for (; i != 0; i--)
-   {
-	 if (path[i] == '\\' || path[i] == '/')
-	 {
-		i++;
-		break;
-	 }
-   }
-   return &path[i];
+	for (; i != 0; i--)
+	{
+		if (path[i] == '\\' || path[i] == '/')
+		{
+			i++;
+			break;
+		}
+	}
+	return &path[i];
 }
 
 
@@ -483,18 +483,18 @@ FileNameOnly(const char *path)
  * and underscores are inserted in likely places
  * (ie MTSAbstractSvc.h -> mts_abstract_svc.h)
  */
-char *
-MakeFileName PARAMS ((refName, suffix),
-	const char *refName _AND_
-	const char *suffix)
+char*
+MakeFileName PARAMS((refName, suffix),
+	const char* refName _AND_
+	const char* suffix)
 {
-	const char *fn = FileNameOnly(refName);
+	const char* fn = FileNameOnly(refName);
 
-	size_t	baselen = strlen (fn);
-	size_t  sufflen = strlen (suffix);
+	size_t	baselen = strlen(fn);
+	size_t  sufflen = strlen(suffix);
 	size_t  pathLen = strlen(gszOutputPath);
 	size_t size = pathLen + baselen + sufflen + 1;
-	char *filename = Malloc (size);
+	char* filename = Malloc(size);
 
 	strcpy_s(filename, size, gszOutputPath);
 	strcat_s(filename, size, fn);
@@ -503,17 +503,17 @@ MakeFileName PARAMS ((refName, suffix),
 	return filename;
 }  /* MakeFileName */
 
-char *
+char*
 MakeFileNameWithoutOutputPath PARAMS((refName, suffix),
-	const char *refName _AND_
-	const char *suffix)
+	const char* refName _AND_
+	const char* suffix)
 {
-	const char *fn = FileNameOnly(refName);
+	const char* fn = FileNameOnly(refName);
 
 	size_t	baselen = strlen(fn);
 	size_t  sufflen = strlen(suffix);
 	size_t size = baselen + sufflen + 1;
-	char *filename = Malloc(size);
+	char* filename = Malloc(size);
 
 	strcpy_s(filename, size, fn);
 	strcat_s(filename, size, suffix);
@@ -522,51 +522,51 @@ MakeFileNameWithoutOutputPath PARAMS((refName, suffix),
 }  /* MakeFileName */
 
 
-char *
-MakeCHdrFileName PARAMS ((refName),
-	const char *refName)
+char*
+MakeCHdrFileName PARAMS((refName),
+	const char* refName)
 {
-	return MakeFileName (refName, ".h");
+	return MakeFileName(refName, ".h");
 }
 
-char *
-MakeCSrcFileName PARAMS ((refName),
-	const char *refName)
+char*
+MakeCSrcFileName PARAMS((refName),
+	const char* refName)
 {
-	return MakeFileName (refName, ".c");
+	return MakeFileName(refName, ".c");
 }
 
-char *
-MakeCxxHdrFileName PARAMS ((refName),
-	const char *refName)
+char*
+MakeCxxHdrFileName PARAMS((refName),
+	const char* refName)
 {
-	return MakeFileName (refName, ".h");
+	return MakeFileName(refName, ".h");
 }
 
-char *
-MakeCxxSrcFileName PARAMS ((refName),
-	const char *refName)
+char*
+MakeCxxSrcFileName PARAMS((refName),
+	const char* refName)
 {
-	return MakeFileName (refName, ".cpp");
+	return MakeFileName(refName, ".cpp");
 }
 
-char *
+char*
 MakeSwiftFileName PARAMS((refName),
-const char *refName)
+	const char* refName)
 {
 	return MakeFileName(refName, ".swift");
 }
 
-char *
+char*
 MakeJSFileName PARAMS((refName),
-	const char *refName)
+	const char* refName)
 {
 	return MakeFileName(refName, ".js");
 }
 
-char *
+char*
 MakeTSFileName PARAMS((refName),
-	const char *refName)
+	const char* refName)
 {
 	return MakeFileName(refName, ".ts");
 }
@@ -578,16 +578,16 @@ MakeTSEncDecFileName PARAMS((refName),
 	return MakeFileName(refName, "_Converter.ts");
 }
 
-char *
+char*
 MakeJsonDocFileName PARAMS((refName),
-	const char *refName)
+	const char* refName)
 {
 	return MakeFileName(refName, ".json");
 }
 
-char *
+char*
 MakeDelphiFileName PARAMS((refName),
-	const char *refName)
+	const char* refName)
 {
 	char* retVal = MakeFileName(refName, ".pas");
 	// BUILDSYS-151: Dash2Underscore must only be applied to filename not to path:
@@ -596,24 +596,24 @@ MakeDelphiFileName PARAMS((refName),
 	return retVal;
 }
 
-char *
-MakeROSEHdrFileName PARAMS ((refName),
-	const char *refName)
+char*
+MakeROSEHdrFileName PARAMS((refName),
+	const char* refName)
 {
-	return MakeFileName (refName, "ROSE.h");
+	return MakeFileName(refName, "ROSE.h");
 }
 
-char* MakeROSEHdrInterfaceFileName(const char *refName)
+char* MakeROSEHdrInterfaceFileName(const char* refName)
 {
-	return MakeFileName (refName, "ROSEInterface.h");
+	return MakeFileName(refName, "ROSEInterface.h");
 }
 
-char* MakeROSEHdrForwardDeclFileName(const char *refName)
+char* MakeROSEHdrForwardDeclFileName(const char* refName)
 {
-	return MakeFileName (refName, "Decl.h");
+	return MakeFileName(refName, "Decl.h");
 }
 
-const char* RemovePath(const char *refName)
+const char* RemovePath(const char* refName)
 {
 	const char* szFileNameWithoutPath = strrchr(refName, '\\');
 	if (szFileNameWithoutPath)
@@ -623,7 +623,7 @@ const char* RemovePath(const char *refName)
 	return szFileNameWithoutPath;
 }
 
-char* RemovePathNonConst(char *refName)
+char* RemovePathNonConst(char* refName)
 {
 	char* szFileNameWithoutPath = strrchr(refName, '\\');
 	if (szFileNameWithoutPath)
@@ -634,47 +634,47 @@ char* RemovePathNonConst(char *refName)
 }
 
 
-char *
-MakeROSESrcFileName PARAMS ((refName),
-	const char *refName)
+char*
+MakeROSESrcFileName PARAMS((refName),
+	const char* refName)
 {
-	return MakeFileName (refName, "ROSE.cpp");
+	return MakeFileName(refName, "ROSE.cpp");
 }
 
-char *
-MakeROSESrcCSFileName PARAMS ((refName),
-							  const char *refName)
+char*
+MakeROSESrcCSFileName PARAMS((refName),
+	const char* refName)
 {
-	return MakeFileName (refName, "ROSE.cs");
+	return MakeFileName(refName, "ROSE.cs");
 }
 
-char *
-MakeROSESrcJAVAFileName PARAMS ((refName),
-							  const char *refName)
+char*
+MakeROSESrcJAVAFileName PARAMS((refName),
+	const char* refName)
 {
-	return MakeFileName (refName, "ROSE.java");
+	return MakeFileName(refName, "ROSE.java");
 }
 
 
-char *
-MakeModuleName PARAMS ((refName),
-	const char *refName)
+char*
+MakeModuleName PARAMS((refName),
+	const char* refName)
 {
 	char* szClassName = MakeFileNameWithoutOutputPath(Asn1TypeName2CTypeName(refName), "");
 	Dash2Underscore(szClassName, strlen(szClassName));
 	return szClassName;
 }
 
-char *
-MakeROSEClassName PARAMS ((refName),
-	const char *refName)
+char*
+MakeROSEClassName PARAMS((refName),
+	const char* refName)
 {
 	return MakeFileNameWithoutOutputPath(Asn1TypeName2CTypeName(refName), "ROSE");
 }
 
-char* MakeROSESwiftInterfaceFileName(const char *refName)
+char* MakeROSESwiftInterfaceFileName(const char* refName)
 {
-	return MakeFileName (refName, "ROSEInterface.swift");
+	return MakeFileName(refName, "ROSEInterface.swift");
 }
 
 // Converts sz-Name -> sz_Name
@@ -747,7 +747,7 @@ char* GetPropertyName(const char* szName)
 			break;
 		}
 	while (*szCheck++);
-		
+
 	// "sz-Name" OR szName -> we need in maximum 2 chars more for "" + nullchar
 	size_t iLen = strlen(szName) + 2 + 1;
 
@@ -767,10 +767,10 @@ char* GetPropertyName(const char* szName)
 
 
 #if IDL
-char *
-MakeIDLFileName PARAMS ((refName),
-	const char *refName)
+char*
+MakeIDLFileName PARAMS((refName),
+	const char* refName)
 {
-	return MakeFileName (refName, ".idl");
+	return MakeFileName(refName, ".idl");
 }
 #endif

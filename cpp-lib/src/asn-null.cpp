@@ -106,60 +106,60 @@
 
 _BEGIN_SNACC_NAMESPACE
 
-void AsnNull::BDecContent (const AsnBuf &/*b*/, AsnTag /*tagId*/, AsnLen elmtLen, AsnLen &/*bytesDecoded*/)
+void AsnNull::BDecContent(const AsnBuf&/*b*/, AsnTag /*tagId*/, AsnLen elmtLen, AsnLen&/*bytesDecoded*/)
 {
-   FUNC("AsnNull::BDecContent()");
+	FUNC("AsnNull::BDecContent()");
 
-   if (elmtLen != 0)
-   {
-    throw BoundsException("AsnNull has non-zero length", STACK_ENTRY);
-   }
+	if (elmtLen != 0)
+	{
+		throw BoundsException("AsnNull has non-zero length", STACK_ENTRY);
+	}
 } /* AsnNull::BDecContent */
 
-void AsnNull::JEnc (EJson::Value &b) const
+void AsnNull::JEnc(EJson::Value& b) const
 {
 	b = EJson::Value((int)0);
 }
 
-bool AsnNull::JDec (const EJson::Value &b)
+bool AsnNull::JDec(const EJson::Value& b)
 {
 	return true;
 }
 
-AsnLen AsnNull::PEnc (AsnBufBits &b) const
+AsnLen AsnNull::PEnc(AsnBufBits& b) const
 {
 	AsnLen len = 0;
 	return len;
 }
 
-void AsnNull::PDec (AsnBufBits &b, AsnLen &bitsDecoded)
+void AsnNull::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 {
 }
 
-AsnLen AsnNull::BEnc (AsnBuf &b) const
+AsnLen AsnNull::BEnc(AsnBuf& b) const
 {
-    AsnLen l;
-    l = BEncContent (b);
-    BEncDefLenTo127 (b, l);
-    l++;
-    l += BEncTag1 (b, UNIV, PRIM, NULLTYPE_TAG_CODE);
-    return l;
+	AsnLen l;
+	l = BEncContent(b);
+	BEncDefLenTo127(b, l);
+	l++;
+	l += BEncTag1(b, UNIV, PRIM, NULLTYPE_TAG_CODE);
+	return l;
 }
 
-void AsnNull::BDec (const AsnBuf &b, AsnLen &bytesDecoded)
+void AsnNull::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 {
-    FUNC("AsnNull::BDec()");
+	FUNC("AsnNull::BDec()");
 
-    AsnLen elmtLen;
-    AsnTag tagId;
-    tagId = BDecTag (b, bytesDecoded); 
-    if (tagId != MAKE_TAG_ID (UNIV, PRIM, NULLTYPE_TAG_CODE))
-    {
-       throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
-    }
+	AsnLen elmtLen;
+	AsnTag tagId;
+	tagId = BDecTag(b, bytesDecoded);
+	if (tagId != MAKE_TAG_ID(UNIV, PRIM, NULLTYPE_TAG_CODE))
+	{
+		throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
+	}
 
-    elmtLen = BDecLen (b, bytesDecoded);
-    BDecContent (b, MAKE_TAG_ID (UNIV, PRIM, NULLTYPE_TAG_CODE), elmtLen, bytesDecoded);
+	elmtLen = BDecLen(b, bytesDecoded);
+	BDecContent(b, MAKE_TAG_ID(UNIV, PRIM, NULLTYPE_TAG_CODE), elmtLen, bytesDecoded);
 }
 
 void AsnNull::Print(std::ostream& os, unsigned short /*indent*/) const
@@ -167,40 +167,40 @@ void AsnNull::Print(std::ostream& os, unsigned short /*indent*/) const
 	os << "NULL";
 }
 
-void AsnNull::PrintXML (std::ostream &os, const char *lpszTitle) const
+void AsnNull::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
-   os << "<NULL>"; 
-   if (lpszTitle) os << lpszTitle; 
-   os << "-"; 
-   Print(os); os << "</NULL>\n"; 
+	os << "<NULL>";
+	if (lpszTitle) os << lpszTitle;
+	os << "-";
+	Print(os); os << "</NULL>\n";
 }
 
 #if META
 
-const AsnNullTypeDesc AsnNull::_desc (NULL, NULL, false, AsnTypeDesc::NUL_, NULL);
+const AsnNullTypeDesc AsnNull::_desc(NULL, NULL, false, AsnTypeDesc::NUL_, NULL);
 
-const AsnTypeDesc *AsnNull::_getdesc() const
+const AsnTypeDesc* AsnNull::_getdesc() const
 {
-  return &_desc;
+	return &_desc;
 }
 
 #if TCL
 
-int AsnNull::TclGetVal (Tcl_Interp *interp) const
+int AsnNull::TclGetVal(Tcl_Interp* interp) const
 {
-  return TCL_OK;
+	return TCL_OK;
 }
 
-int AsnNull::TclSetVal (Tcl_Interp *interp, const char *valstr)
+int AsnNull::TclSetVal(Tcl_Interp* interp, const char* valstr)
 {
-  if (*valstr)
-  {
-    Tcl_AppendResult (interp, "illegal non-null value `", valstr, "' for type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
-    Tcl_SetErrorCode (interp, "SNACC", "ILLNULL", NULL);
-    return TCL_ERROR;
-  }
+	if (*valstr)
+	{
+		Tcl_AppendResult(interp, "illegal non-null value `", valstr, "' for type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
+		Tcl_SetErrorCode(interp, "SNACC", "ILLNULL", NULL);
+		return TCL_ERROR;
+	}
 
-  return TCL_OK;
+	return TCL_OK;
 }
 
 #endif /* TCL */

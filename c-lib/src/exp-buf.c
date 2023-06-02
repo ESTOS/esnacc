@@ -143,7 +143,7 @@
 #include <memory.h>
 
 
-/* default buffer data block size (used when allocating) */
+ /* default buffer data block size (used when allocating) */
 unsigned long expBufDataBlkSizeG = 1024;
 
 
@@ -155,20 +155,20 @@ unsigned long expBufDataBlkSizeG = 1024;
  */
 static struct GenBuf expBufOpsG =
 {
-  (BufCopyAnyFcn)	 ExpBufCopyAny,
-  (BufGetByteFcn)    ExpBufGetByte,
-  (BufGetSegFcn)     ExpBufGetSeg,
-  (BufCopyFcn)       ExpBufCopy,
-  (BufSkipFcn)       ExpBufSkip,
-  (BufPeekByteFcn)   ExpBufPeekByte,
-  (BufPeekSegFcn)    ExpBufPeekSeg,
-  (BufPeekCopyFcn)   ExpBufPeekCopy,
-  (BufPutByteRvsFcn) ExpBufPutByteRvs,
-  (BufPutSegRvsFcn)  ExpBufPutSegRvs,
-  (BufReadErrorFcn)  ExpBufReadError,
-  (BufSetWriteErrorFcn) ExpBufSetWriteError,
-  (BufWriteErrorFcn) ExpBufWriteError,
-  (BufResetInReadModeFcn) ExpBufResetInReadMode,
+  (BufCopyAnyFcn)ExpBufCopyAny,
+  (BufGetByteFcn)ExpBufGetByte,
+  (BufGetSegFcn)ExpBufGetSeg,
+  (BufCopyFcn)ExpBufCopy,
+  (BufSkipFcn)ExpBufSkip,
+  (BufPeekByteFcn)ExpBufPeekByte,
+  (BufPeekSegFcn)ExpBufPeekSeg,
+  (BufPeekCopyFcn)ExpBufPeekCopy,
+  (BufPutByteRvsFcn)ExpBufPutByteRvs,
+  (BufPutSegRvsFcn)ExpBufPutSegRvs,
+  (BufReadErrorFcn)ExpBufReadError,
+  (BufSetWriteErrorFcn)ExpBufSetWriteError,
+  (BufWriteErrorFcn)ExpBufWriteError,
+  (BufResetInReadModeFcn)ExpBufResetInReadMode,
   NULL,
   NULL
 };
@@ -182,28 +182,28 @@ static struct GenBuf expBufOpsG =
  * the head or tail given any expbuf in the list
  */
 void
-PutExpBufInGenBuf PARAMS ((eb, gb),
-    ExpBuf *eb _AND_
-    GenBuf *gb)
+PutExpBufInGenBuf PARAMS((eb, gb),
+	ExpBuf* eb _AND_
+	GenBuf* gb)
 {
-    *gb = expBufOpsG; /* structure assignemnt */
-    gb->bufInfo = &gb->spare;  /* handle to expbuf */
-    gb->spare = eb;
+	*gb = expBufOpsG; /* structure assignemnt */
+	gb->bufInfo = &gb->spare;  /* handle to expbuf */
+	gb->spare = eb;
 } /* PutExpBufInGenBuf */
 
 
 /*
- * Allocate a GenBuf structure and copy in 
+ * Allocate a GenBuf structure and copy in
  * the function pointers
  */
 void
-ExpBuftoGenBuf PARAMS ((eb, gb),
-    ExpBuf *eb _AND_
-    GenBuf **gb)
+ExpBuftoGenBuf PARAMS((eb, gb),
+	ExpBuf* eb _AND_
+	GenBuf** gb)
 {
 	if (gb != NULL)
 	{
-		*gb = (struct GenBuf *) malloc (sizeof (struct GenBuf));
+		*gb = (struct GenBuf*)malloc(sizeof(struct GenBuf));
 		if (*gb != NULL)
 			PutExpBufInGenBuf(eb, *gb);
 	}
@@ -214,10 +214,10 @@ ExpBuftoGenBuf PARAMS ((eb, gb),
  * an ExpBuf when allocating a new one
  */
 void
-ExpBufInit PARAMS ((dataBlkSize),
-    unsigned long dataBlkSize)
+ExpBufInit PARAMS((dataBlkSize),
+	unsigned long dataBlkSize)
 {
-    expBufDataBlkSizeG = dataBlkSize;
+	expBufDataBlkSizeG = dataBlkSize;
 }  /* InitBuffers */
 
 
@@ -228,71 +228,71 @@ ExpBufInit PARAMS ((dataBlkSize),
 ExpBuf*
 ExpBufAllocBuf()
 {
-    return (ExpBuf*)malloc (sizeof (ExpBuf));
+	return (ExpBuf*)malloc(sizeof(ExpBuf));
 }
 
 
 void
-ExpBufFreeBuf PARAMS ((ptr),
-    ExpBuf *ptr)
+ExpBufFreeBuf PARAMS((ptr),
+	ExpBuf* ptr)
 {
 	if (ptr != NULL)
-		free (ptr);
+		free(ptr);
 }
 
 char*
 ExpBufAllocData()
 {
-    return (char*)malloc (expBufDataBlkSizeG);
+	return (char*)malloc(expBufDataBlkSizeG);
 }
 
 void
-ExpBufFreeData PARAMS ((ptr),
-    char *ptr)
+ExpBufFreeData PARAMS((ptr),
+	char* ptr)
 {
 	if (ptr != NULL)
-		free (ptr);
+		free(ptr);
 }
 
 void
-ExpBufFreeBufAndData PARAMS ((b),
-    ExpBuf *b)
+ExpBufFreeBufAndData PARAMS((b),
+	ExpBuf* b)
 {
-    ExpBufFreeData ((b)->blkStart);
-    ExpBufFreeBuf (b);
+	ExpBufFreeData((b)->blkStart);
+	ExpBufFreeBuf(b);
 } /* ExpBufFreeBufAndData */
 
 ExpBuf*
-ExpBufNext PARAMS ((b),
-    ExpBuf *b)
+ExpBufNext PARAMS((b),
+	ExpBuf* b)
 {
-    return b->next;
+	return b->next;
 }
 
 ExpBuf*
-ExpBufPrev PARAMS ((b),
-    ExpBuf *b)
+ExpBufPrev PARAMS((b),
+	ExpBuf* b)
 {
-    return b->prev;
+	return b->prev;
 }
 
 int
-ExpBufReadError PARAMS ((b),
-    ExpBuf **b)
+ExpBufReadError PARAMS((b),
+	ExpBuf** b)
 {
-    return (*b)->readError;
+	return (*b)->readError;
 } /* ExpBufReadError */
 
-size_t ExpBufCopyAny PARAMS ((b, value, *bytesDecoded, env),
-ExpBuf **b _AND_        // RWC; ADDED 2nd "*" to work properly...
-void *value _AND_
-size_t *bytesDecoded _AND_
-ENV_TYPE env)
+size_t ExpBufCopyAny PARAMS((b, value, *bytesDecoded, env),
+	ExpBuf** b _AND_        // RWC; ADDED 2nd "*" to work properly...
+	void* value _AND_
+	size_t* bytesDecoded _AND_
+	ENV_TYPE env)
 {
-    AsnLen totalElmtsLen1 = 0;
-    AsnOcts	*data = 0;	/* where we will store the stuff */
+	AsnLen totalElmtsLen1 = 0;
+	AsnOcts* data = 0;	/* where we will store the stuff */
 	GenBuf gb;    // Our GenBuf
-	char *loc = 0;
+	char* loc = 0;
 
 
 	if (b == 0)
@@ -302,40 +302,40 @@ ENV_TYPE env)
 	}
 
 	// Put the ExpBuf into a GenBuf so we can use BDecTag & BDecLen
-	PutExpBufInGenBuf (*b, &gb);
+	PutExpBufInGenBuf(*b, &gb);
 
 
 	loc = (*b)->curr;  // Get the buffer pointer
 
 	BDecTag(&gb, &totalElmtsLen1, env);			/* item tag */
-	AsnLen elmtLen1 = BDecLen (&gb, &totalElmtsLen1, env);		/* len of item */
+	AsnLen elmtLen1 = BDecLen(&gb, &totalElmtsLen1, env);		/* len of item */
 	if (elmtLen1 == INDEFINITE_LEN)
 	{
 		/* can't deal with indef len unknown types here (at least for now) */
 		Asn1Error("BDecUnknownAsnAny: ERROR - indef length object found\n");
 		longjmp(env, -910);
 	}
-	
+
 	/* and now decode the contents */
-	data = (AsnOcts *) value;	/* allocated by the any routine */
+	data = (AsnOcts*)value;	/* allocated by the any routine */
 	data->octetLen = elmtLen1 + totalElmtsLen1;	/* tag+len+data lengths */
-	data->octs = (char *)Asn1Alloc(data->octetLen +1);
-    CheckAsn1Alloc (data->octs, env);
+	data->octs = (char*)Asn1Alloc(data->octetLen + 1);
+	CheckAsn1Alloc(data->octs, env);
 
 	/* use normal buffer reading to copy the any */
-    /*RWC;RESET current pointer to be sure to get tag/length AND data.*/
-    (*b)->curr = loc;
-    ExpBufCopy(&data->octs[0/*RWC;totalElmtsLen1*/] , b, totalElmtsLen1+elmtLen1);
+	/*RWC;RESET current pointer to be sure to get tag/length AND data.*/
+	(*b)->curr = loc;
+	ExpBufCopy(&data->octs[0/*RWC;totalElmtsLen1*/], b, totalElmtsLen1 + elmtLen1);
 
-    if (ExpBufReadError(b))
-    {
-        Asn1Error("BDecUnknownAsnAny: ERROR - decoded past end of data\n");
-        longjmp(env, -920);
-    }
+	if (ExpBufReadError(b))
+	{
+		Asn1Error("BDecUnknownAsnAny: ERROR - decoded past end of data\n");
+		longjmp(env, -920);
+	}
 
-    /* add null terminator - this is not included in the str's len */
-    data->octs[data->octetLen] = '\0';
-    (*bytesDecoded) += (AsnLen)data->octetLen;
+	/* add null terminator - this is not included in the str's len */
+	data->octs[data->octetLen] = '\0';
+	(*bytesDecoded) += (AsnLen)data->octetLen;
 	/* (*bytesDecoded) += totalElmtsLen1; just use the total blob length */
 
 
@@ -343,8 +343,8 @@ ENV_TYPE env)
 }
 
 int
-ExpBufSetWriteError PARAMS ((b, Value),
-	ExpBuf *b _AND_
+ExpBufSetWriteError PARAMS((b, Value),
+	ExpBuf* b _AND_
 	unsigned short Value)
 {
 	if (b == NULL)
@@ -354,10 +354,10 @@ ExpBufSetWriteError PARAMS ((b, Value),
 }
 
 int
-ExpBufWriteError PARAMS ((b),
-    ExpBuf **b)
+ExpBufWriteError PARAMS((b),
+	ExpBuf** b)
 {
-    return (*b)->writeError;
+	return (*b)->writeError;
 } /* ExpBufWriteError */
 
 /*
@@ -365,14 +365,14 @@ ExpBufWriteError PARAMS ((b),
  * to be read
  */
 void
-ExpBufResetInReadMode PARAMS ((b),
-    ExpBuf **b)
+ExpBufResetInReadMode PARAMS((b),
+	ExpBuf** b)
 {
-	ExpBuf *nextPtr = (ExpBuf *)0;
-	ExpBuf *retVal = (ExpBuf *)0;
-    (*b)->curr = (*b)->dataStart;
-    (*b)->readError = 0;
-    (*b)->writeError = 1; /* catch wrong mode errors */
+	ExpBuf* nextPtr = (ExpBuf*)0;
+	ExpBuf* retVal = (ExpBuf*)0;
+	(*b)->curr = (*b)->dataStart;
+	(*b)->readError = 0;
+	(*b)->writeError = 1; /* catch wrong mode errors */
 	/* Get the Previous Pointer */
 	nextPtr = (*b)->next;
 	if (nextPtr == NULL)
@@ -408,12 +408,12 @@ ExpBufResetInReadMode PARAMS ((b),
  * the buffer
  */
 void
-ExpBufResetInWriteRvsMode PARAMS ((b),
-    ExpBuf *b)
+ExpBufResetInWriteRvsMode PARAMS((b),
+	ExpBuf* b)
 {
-    b->dataEnd = b->dataStart = b->blkEnd;
-    b->writeError = 0;
-    b->readError = 1;  /* catch wrong mode errors */
+	b->dataEnd = b->dataStart = b->blkEnd;
+	b->writeError = 0;
+	b->readError = 1;  /* catch wrong mode errors */
 }
 
 
@@ -423,10 +423,10 @@ ExpBufResetInWriteRvsMode PARAMS ((b),
  * mode.
  */
 int
-ExpBufAtEod PARAMS ((b),
-    ExpBuf *b)
+ExpBufAtEod PARAMS((b),
+	ExpBuf* b)
 {
-    return b->curr == b->dataEnd;
+	return b->curr == b->dataEnd;
 }
 
 
@@ -436,10 +436,10 @@ ExpBufAtEod PARAMS ((b),
  * write mode
  */
 int
-ExpBufFull PARAMS ((b),
-    ExpBuf *b)
+ExpBufFull PARAMS((b),
+	ExpBuf* b)
 {
-    return (b)->dataStart == (b)->blkStart;
+	return (b)->dataStart == (b)->blkStart;
 }
 
 
@@ -448,10 +448,10 @@ ExpBufFull PARAMS ((b),
  * valid data in it's data block
  */
 int
-ExpBufHasNoData PARAMS ((b),
-    ExpBuf *b)
+ExpBufHasNoData PARAMS((b),
+	ExpBuf* b)
 {
-    return b->dataStart == b->dataEnd;
+	return b->dataStart == b->dataEnd;
 }
 
 
@@ -460,10 +460,10 @@ ExpBufHasNoData PARAMS ((b),
  * given buffer's data block
  */
 size_t
-ExpBufDataSize PARAMS ((b),
-    ExpBuf *b)
+ExpBufDataSize PARAMS((b),
+	ExpBuf* b)
 {
-    return b->dataEnd - b->dataStart;
+	return b->dataEnd - b->dataStart;
 }
 
 /*
@@ -471,10 +471,10 @@ ExpBufDataSize PARAMS ((b),
  * the given buffer.
  */
 size_t
-ExpBufDataBlkSize PARAMS ((b),
-    ExpBuf *b)
+ExpBufDataBlkSize PARAMS((b),
+	ExpBuf* b)
 {
-    return b->blkEnd - b->blkStart;
+	return b->blkEnd - b->blkStart;
 }
 
 /*
@@ -483,13 +483,13 @@ ExpBufDataBlkSize PARAMS ((b),
  * returns NULL is there is no valid data.
  */
 char*
-ExpBufDataPtr PARAMS ((b),
-    ExpBuf *b)
+ExpBufDataPtr PARAMS((b),
+	ExpBuf* b)
 {
-    if (ExpBufHasNoData (b))
-        return NULL;
-    else
-        return b->dataStart;
+	if (ExpBufHasNoData(b))
+		return NULL;
+	else
+		return b->dataStart;
 }
 
 
@@ -499,12 +499,12 @@ ExpBufDataPtr PARAMS ((b),
  * The given buf can be any buf in the list.
  */
 ExpBuf*
-ExpBufListLastBuf PARAMS ((b),
-    ExpBuf *b)
+ExpBufListLastBuf PARAMS((b),
+	ExpBuf* b)
 {
-    for (; b->next != NULL; b = b->next)
-	;
-    return b;
+	for (; b->next != NULL; b = b->next)
+		;
+	return b;
 }
 
 /*
@@ -512,12 +512,12 @@ ExpBufListLastBuf PARAMS ((b),
  * The given buf can be any buf in the list
  */
 ExpBuf*
-ExpBufListFirstBuf PARAMS ((b),
-    ExpBuf *b)
+ExpBufListFirstBuf PARAMS((b),
+	ExpBuf* b)
 {
-    for (; b->prev != NULL; b = b->prev)
-	;
-    return b;
+	for (; b->prev != NULL; b = b->prev)
+		;
+	return b;
 }
 
 /*
@@ -529,29 +529,29 @@ ExpBufListFirstBuf PARAMS ((b),
 ExpBuf*
 ExpBufAllocBufAndData()
 {
-    ExpBuf *retVal;
+	ExpBuf* retVal;
 
-    retVal = ExpBufAllocBuf();
+	retVal = ExpBufAllocBuf();
 
-    if (retVal == NULL)
-        return NULL;
+	if (retVal == NULL)
+		return NULL;
 
-    retVal->readError = 0;
-    retVal->writeError = 0;
-    retVal->blkStart = ExpBufAllocData();
+	retVal->readError = 0;
+	retVal->writeError = 0;
+	retVal->blkStart = ExpBufAllocData();
 
-    if (retVal->blkStart == NULL)
-    {
-        ExpBufFreeBuf (retVal);
-        return NULL;
-    }
+	if (retVal->blkStart == NULL)
+	{
+		ExpBufFreeBuf(retVal);
+		return NULL;
+	}
 
-    retVal->next = NULL;
-    retVal->prev = NULL;
-    retVal->curr = retVal->blkEnd = retVal->dataStart = retVal->dataEnd =
-        retVal->blkStart + expBufDataBlkSizeG;
+	retVal->next = NULL;
+	retVal->prev = NULL;
+	retVal->curr = retVal->blkEnd = retVal->dataStart = retVal->dataEnd =
+		retVal->blkStart + expBufDataBlkSizeG;
 
-    return retVal;
+	return retVal;
 } /* ExpBufAllocBufAndData */
 
 
@@ -560,17 +560,17 @@ ExpBufAllocBufAndData()
  * after (next ptr) and including the given buffer, b.
  */
 void
-ExpBufFreeBufAndDataList PARAMS ((b),
-    ExpBuf *b)
+ExpBufFreeBufAndDataList PARAMS((b),
+	ExpBuf* b)
 {
-    ExpBuf *tmp;
+	ExpBuf* tmp;
 
-    for (; b != NULL;)
-    {
-        tmp = b->next;
-        ExpBufFreeBufAndData (b);
-        b = tmp;
-    }
+	for (; b != NULL;)
+	{
+		tmp = b->next;
+		ExpBufFreeBufAndData(b);
+		b = tmp;
+	}
 }  /* ExpBufFreeBufAndDataList */
 
 
@@ -580,17 +580,17 @@ ExpBufFreeBufAndDataList PARAMS ((b),
  * blk size of given data's len
  */
 void
-ExpBufInstallDataInBuf PARAMS ((buf, data, len),
-    ExpBuf *buf _AND_
-    char *data _AND_
-    unsigned long len)
+ExpBufInstallDataInBuf PARAMS((buf, data, len),
+	ExpBuf* buf _AND_
+	char* data _AND_
+	unsigned long len)
 {
-    buf->readError = 0;
-    buf->writeError = 0;
-    buf->blkStart = buf->dataStart = buf->curr = data;
-    buf->next = NULL;
-    buf->prev = NULL;
-    buf->blkEnd = buf->dataEnd = data + len;
+	buf->readError = 0;
+	buf->writeError = 0;
+	buf->blkStart = buf->dataStart = buf->curr = data;
+	buf->next = NULL;
+	buf->prev = NULL;
+	buf->blkEnd = buf->dataEnd = data + len;
 }  /* ExpBufInstallDataInBuf */
 
 
@@ -603,12 +603,12 @@ ExpBufInstallDataInBuf PARAMS ((buf, data, len),
  * data - this is lame
  */
 unsigned char
-ExpBufPeekByte PARAMS ((b),
-    ExpBuf **b)
+ExpBufPeekByte PARAMS((b),
+	ExpBuf** b)
 {
-    if ((*b)->curr == (*b)->dataEnd)
-        (*b)->readError = 1;
-    return *(*b)->curr;
+	if ((*b)->curr == (*b)->dataEnd)
+		(*b)->readError = 1;
+	return *(*b)->curr;
 }  /* ExpBufPeek */
 
 
@@ -626,23 +626,23 @@ ExpBufPeekByte PARAMS ((b),
  *
  */
 char*
-ExpBufPeekSeg PARAMS ((b, len),
-    ExpBuf **b _AND_
-	size_t *len)
+ExpBufPeekSeg PARAMS((b, len),
+	ExpBuf** b _AND_
+	size_t* len)
 {
 	size_t bytesLeft = 0;
 
-    if (ExpBufAtEod (*b))
-    {
-        *len = 0;
-        return NULL;
-    }
+	if (ExpBufAtEod(*b))
+	{
+		*len = 0;
+		return NULL;
+	}
 
-    /* check for "buffer fault" and adjust "peeked" len */
-    if (((size_t)(*b)->dataEnd - (size_t)(*b)->curr) <= *len)
-        *len = bytesLeft;
+	/* check for "buffer fault" and adjust "peeked" len */
+	if (((size_t)(*b)->dataEnd - (size_t)(*b)->curr) <= *len)
+		*len = bytesLeft;
 
-    return (*b)->curr;
+	return (*b)->curr;
 
 }  /* ExpBufPeekSeg */
 
@@ -653,51 +653,51 @@ ExpBufPeekSeg PARAMS ((b, len),
  *  NOT advanced so the next read will get the same bytes.
  */
 size_t
-ExpBufPeekCopy PARAMS ((dst, b, len),
-    char *dst _AND_
-    ExpBuf **b _AND_
+ExpBufPeekCopy PARAMS((dst, b, len),
+	char* dst _AND_
+	ExpBuf** b _AND_
 	size_t len)
 {
 	size_t gotLen;
 	size_t totalGotLen = 0;
-    char *srcPtr;
-    ExpBuf *origBuf;
+	char* srcPtr;
+	ExpBuf* origBuf;
 
-    origBuf = *b;
+	origBuf = *b;
 
-    gotLen = len;
-    while (1)   /* optimize std path - eg only one ExpBufGetPeekSeg needed */
-    {
-        srcPtr = ExpBufPeekSeg (b, &gotLen);
-        memcpy (dst + totalGotLen, srcPtr, gotLen);
+	gotLen = len;
+	while (1)   /* optimize std path - eg only one ExpBufGetPeekSeg needed */
+	{
+		srcPtr = ExpBufPeekSeg(b, &gotLen);
+		memcpy(dst + totalGotLen, srcPtr, gotLen);
 
-        totalGotLen += gotLen;
+		totalGotLen += gotLen;
 
-        if ((totalGotLen >= len) ||  ((*b)->next == NULL))
-        {
-            *b = origBuf;
-            return totalGotLen;
-        }
+		if ((totalGotLen >= len) || ((*b)->next == NULL))
+		{
+			*b = origBuf;
+			return totalGotLen;
+		}
 
-        if (gotLen == 0)  /* eod */
-        {
-            (*b)->readError = 1;
-            *b = origBuf;
-            return totalGotLen;
-        }
+		if (gotLen == 0)  /* eod */
+		{
+			(*b)->readError = 1;
+			*b = origBuf;
+			return totalGotLen;
+		}
 
-        *b = (*b)->next;
-        /* get next buffer with valid data */
-        while (((*b)->next != NULL) && ExpBufHasNoData (*b))
-            *b = (*b)->next;
+		*b = (*b)->next;
+		/* get next buffer with valid data */
+		while (((*b)->next != NULL) && ExpBufHasNoData(*b))
+			*b = (*b)->next;
 
-        /* reset current pointer to beggining of data if nec */
-        (*b)->curr = (*b)->dataStart;
+		/* reset current pointer to beggining of data if nec */
+		(*b)->curr = (*b)->dataStart;
 
-        gotLen = len - totalGotLen;
-    }
+		gotLen = len - totalGotLen;
+	}
 
-    /* not reached */
+	/* not reached */
 
 }  /* ExpBufPeekCopy */
 
@@ -708,36 +708,36 @@ ExpBufPeekCopy PARAMS ((dst, b, len),
  *  appropriately
  */
 size_t
-ExpBufCopy PARAMS ((dst, b, len),
-    char *dst _AND_
-    ExpBuf **b _AND_
+ExpBufCopy PARAMS((dst, b, len),
+	char* dst _AND_
+	ExpBuf** b _AND_
 	size_t len)
 {
-    size_t gotLen;
+	size_t gotLen;
 	size_t totalGotLen = 0;
-    char *srcPtr;
+	char* srcPtr;
 
-    gotLen = len;
-    while (1)         /* optimize std path - eg only one ExpBufGetSeg needed */
-    {
-        srcPtr = ExpBufGetSeg (b, &gotLen);
-        memcpy (dst + totalGotLen, srcPtr, gotLen);
+	gotLen = len;
+	while (1)         /* optimize std path - eg only one ExpBufGetSeg needed */
+	{
+		srcPtr = ExpBufGetSeg(b, &gotLen);
+		memcpy(dst + totalGotLen, srcPtr, gotLen);
 
-        totalGotLen += gotLen;
+		totalGotLen += gotLen;
 
-        if (totalGotLen >= (int)len)
-            return totalGotLen;
+		if (totalGotLen >= (int)len)
+			return totalGotLen;
 
-        if (gotLen == 0)  /* eod */
-        {
-            (*b)->readError = 1;
-            return totalGotLen;
-        }
+		if (gotLen == 0)  /* eod */
+		{
+			(*b)->readError = 1;
+			return totalGotLen;
+		}
 
-        gotLen = len - totalGotLen;
-    }
+		gotLen = len - totalGotLen;
+	}
 
-    /* not reached */
+	/* not reached */
 
 }  /* ExpBufCopy */
 
@@ -747,25 +747,25 @@ ExpBufCopy PARAMS ((dst, b, len),
  * len bytes
  */
 void
-ExpBufSkip PARAMS ((b, len),
-    ExpBuf **b _AND_
+ExpBufSkip PARAMS((b, len),
+	ExpBuf** b _AND_
 	size_t len)
 {
 	size_t lenRemaining;
 
-    lenRemaining = len;
-    while ((len > 0) && ExpBufGetSeg (b, &lenRemaining))
-    {
-        len -= lenRemaining;
+	lenRemaining = len;
+	while ((len > 0) && ExpBufGetSeg(b, &lenRemaining))
+	{
+		len -= lenRemaining;
 
-        if (lenRemaining == 0)
-        {
-            (*b)->readError = 1;
-            return;
-        }
+		if (lenRemaining == 0)
+		{
+			(*b)->readError = 1;
+			return;
+		}
 
-        lenRemaining = len;
-    }
+		lenRemaining = len;
+	}
 }  /* ExpBufSkip */
 
 
@@ -784,45 +784,45 @@ ExpBufSkip PARAMS ((b, len),
  */
 
 char*
-ExpBufGetSeg PARAMS ((b, len),
-    ExpBuf **b _AND_
-	size_t *len)
+ExpBufGetSeg PARAMS((b, len),
+	ExpBuf** b _AND_
+	size_t* len)
 {
 	size_t bytesLeft;
-    char *retVal;
+	char* retVal;
 
-    if (ExpBufAtEod (*b))
-    {
-        *len = 0;
-        return NULL;
-    }
+	if (ExpBufAtEod(*b))
+	{
+		*len = 0;
+		return NULL;
+	}
 
-    bytesLeft = (*b)->dataEnd - (*b)->curr;
-    retVal = (*b)->curr;
+	bytesLeft = (*b)->dataEnd - (*b)->curr;
+	retVal = (*b)->curr;
 
-    /* check for "buffer fault" */
-    if (bytesLeft <= (int)*len)
-    {
-        *len = bytesLeft;
+	/* check for "buffer fault" */
+	if (bytesLeft <= (int)*len)
+	{
+		*len = bytesLeft;
 
-        if ((*b)->next != NULL)
-        {
-            *b = (*b)->next;
+		if ((*b)->next != NULL)
+		{
+			*b = (*b)->next;
 
-            /* get next buffer with valid data */
-            while (((*b)->next != NULL) && ExpBufHasNoData (*b))
-                *b = (*b)->next;
+			/* get next buffer with valid data */
+			while (((*b)->next != NULL) && ExpBufHasNoData(*b))
+				*b = (*b)->next;
 
-            /* reset current pointer to beggining of data if nec */
-            (*b)->curr = (*b)->dataStart;
-        }
-        else
-            (*b)->curr += *len;
-    }
-    else
-        (*b)->curr += *len;
+			/* reset current pointer to beggining of data if nec */
+			(*b)->curr = (*b)->dataStart;
+		}
+		else
+			(*b)->curr += *len;
+	}
+	else
+		(*b)->curr += *len;
 
-    return retVal;
+	return retVal;
 
 }  /* ExpBufGetSeg */
 
@@ -844,71 +844,70 @@ ExpBufGetSeg PARAMS ((b, len),
  */
 
 void
-ExpBufPutSegRvs PARAMS ((b, data, len),
-    ExpBuf **b _AND_
-    char *data _AND_
+ExpBufPutSegRvs PARAMS((b, data, len),
+	ExpBuf** b _AND_
+	char* data _AND_
 	size_t len)
 {
 	size_t bytesLeft;
-    ExpBuf *buf;
-    char *dataPtr;
+	ExpBuf* buf;
+	char* dataPtr;
 
-    buf = *b;
+	buf = *b;
 
-    if (buf->writeError)
-        return;
+	if (buf->writeError)
+		return;
 
-    bytesLeft = buf->dataStart - buf->blkStart;
-    dataPtr = data + len;  /* pts to end of data to be written */
+	bytesLeft = buf->dataStart - buf->blkStart;
+	dataPtr = data + len;  /* pts to end of data to be written */
 
-    /* optimize fast path */
+	/* optimize fast path */
 
-    do
-    {
-        if (bytesLeft > (int)len) /* enough room in this buffer for write */
-        {
-            buf->dataStart -= len;
-            memcpy (buf->dataStart, data, len);
-            break; /* this is the normal exit from this loop */
-        }
-        else
-        {
-            /*
-             * going to fill this buffer completely,
-             * so alloc other one (only if one is not
-             * already linked in)
-             */
-            dataPtr  = dataPtr - bytesLeft;
-            buf->dataStart = buf->blkStart;
-            memcpy (buf->dataStart, dataPtr, bytesLeft);
+	do
+	{
+		if (bytesLeft > (int)len) /* enough room in this buffer for write */
+		{
+			buf->dataStart -= len;
+			memcpy(buf->dataStart, data, len);
+			break; /* this is the normal exit from this loop */
+		}
+		else
+		{
+			/*
+			 * going to fill this buffer completely,
+			 * so alloc other one (only if one is not
+			 * already linked in)
+			 */
+			dataPtr = dataPtr - bytesLeft;
+			buf->dataStart = buf->blkStart;
+			memcpy(buf->dataStart, dataPtr, bytesLeft);
 
-            len -= bytesLeft;
+			len -= bytesLeft;
 
-            if (buf->prev == NULL)
-            {
-                /* alloc & insert new buf at head of buffer list */
-                buf = ExpBufAllocBufAndData();
+			if (buf->prev == NULL)
+			{
+				/* alloc & insert new buf at head of buffer list */
+				buf = ExpBufAllocBufAndData();
 
-                if (buf == NULL)
-                {
-                    (*b)->writeError = 1;
-                    return;
-                }
+				if (buf == NULL)
+				{
+					(*b)->writeError = 1;
+					return;
+				}
 
-                buf->next = *b;
-                (*b)->prev = buf;
-            }
-            else
-                buf = buf->prev;
+				buf->next = *b;
+				(*b)->prev = buf;
+			}
+			else
+				buf = buf->prev;
 
-            *b = buf; /* update head of list */
+			*b = buf; /* update head of list */
 
-            bytesLeft = buf->dataStart - buf->blkStart;
-        }
-    }
-    while (1);
+			bytesLeft = buf->dataStart - buf->blkStart;
+		}
+	} while (1);
 
-    /* not reached */
+	/* not reached */
 
 }  /* ExpBufPutSegRvs */
 
@@ -920,34 +919,34 @@ ExpBufPutSegRvs PARAMS ((b, data, len),
  *   (ie at end of data)
  */
 unsigned char
-ExpBufGetByte PARAMS ((b),
-    ExpBuf **b)
+ExpBufGetByte PARAMS((b),
+	ExpBuf** b)
 {
-    unsigned char retVal;
+	unsigned char retVal;
 
 
-    if (ExpBufAtEod (*b))
-    {
-        (*b)->readError = 1;
-        return (unsigned char)0;
-    }
+	if (ExpBufAtEod(*b))
+	{
+		(*b)->readError = 1;
+		return (unsigned char)0;
+	}
 
-    retVal = *(*b)->curr++;
+	retVal = *(*b)->curr++;
 
-    /* "buffer fault" - if end of this buf, go on to next, if any */
-    if (ExpBufAtEod (*b) && ((*b)->next != NULL))
-    {
-        *b = (*b)->next;
+	/* "buffer fault" - if end of this buf, go on to next, if any */
+	if (ExpBufAtEod(*b) && ((*b)->next != NULL))
+	{
+		*b = (*b)->next;
 
-        /* get next buffer with valid data */
-        while (((*b)->next != NULL) && ExpBufHasNoData (*b))
-            *b = (*b)->next;
+		/* get next buffer with valid data */
+		while (((*b)->next != NULL) && ExpBufHasNoData(*b))
+			*b = (*b)->next;
 
-        /* reset current pointer to beggining of data if nec */
-        (*b)->curr = (*b)->dataStart;
-    }
+		/* reset current pointer to beggining of data if nec */
+		(*b)->curr = (*b)->dataStart;
+	}
 
-    return retVal;
+	return retVal;
 
 }  /* ExpBufGetByte */
 
@@ -959,66 +958,66 @@ ExpBufGetByte PARAMS ((b),
  * (*b) to new buffer since writing backwards
  */
 void
-ExpBufPutByteRvs PARAMS ((b, byte),
-    ExpBuf **b _AND_
-    unsigned char byte)
+ExpBufPutByteRvs PARAMS((b, byte),
+	ExpBuf** b _AND_
+	unsigned char byte)
 {
-    ExpBuf *newBuf;
+	ExpBuf* newBuf;
 
-    if ((*b)->writeError)
-        return;
+	if ((*b)->writeError)
+		return;
 
-    *(--(*b)->dataStart) = byte;
+	*(--(*b)->dataStart) = byte;
 
-    /*
-     * check if buffer is full and alloc new one if nec
-     * and insert it before this one since writing backwards
-     */
-    if (ExpBufFull (*b))
-    {
-        if ((*b)->prev == NULL)
-        {
-            /*
-             * no prev buf so alloc & insert
-             * new buf as head of buffer list
-             */
-            newBuf = ExpBufAllocBufAndData();
-            if (newBuf == NULL)
-            {
-                (*b)->writeError = 1;
-                return;
-            }
+	/*
+	 * check if buffer is full and alloc new one if nec
+	 * and insert it before this one since writing backwards
+	 */
+	if (ExpBufFull(*b))
+	{
+		if ((*b)->prev == NULL)
+		{
+			/*
+			 * no prev buf so alloc & insert
+			 * new buf as head of buffer list
+			 */
+			newBuf = ExpBufAllocBufAndData();
+			if (newBuf == NULL)
+			{
+				(*b)->writeError = 1;
+				return;
+			}
 
-            newBuf->next = *b;
-            (*b)->prev = newBuf;
-            *b = newBuf;
-        }
-        else
-        {
-            (*b) = (*b)->prev;
-            ExpBufResetInWriteRvsMode (*b);
-        }
+			newBuf->next = *b;
+			(*b)->prev = newBuf;
+			*b = newBuf;
+		}
+		else
+		{
+			(*b) = (*b)->prev;
+			ExpBufResetInWriteRvsMode(*b);
+		}
 
-    }
+	}
 } /* ExpBufPutByteRvs */
 
 
 void
-ExpBufCopyToFile PARAMS ((b, f),
-    ExpBuf *b _AND_
-    FILE *f)
+ExpBufCopyToFile PARAMS((b, f),
+	ExpBuf* b _AND_
+	FILE* f)
 {
 	size_t writeLen;
 
-    b = ExpBufListFirstBuf (b);
+	b = ExpBufListFirstBuf(b);
 
-    for ( ; b != NULL; b = ExpBufNext (b))
-    {
-        writeLen = fwrite (ExpBufDataPtr (b), sizeof (char), ExpBufDataSize (b), f);
+	for (; b != NULL; b = ExpBufNext(b))
+	{
+		writeLen = fwrite(ExpBufDataPtr(b), sizeof(char), ExpBufDataSize(b), f);
 
-        if (writeLen != ExpBufDataSize (b))
-            fprintf (stderr, "ExpBufCopyToFile: error during writing\n");
-    }
+		if (writeLen != ExpBufDataSize(b))
+			fprintf(stderr, "ExpBufCopyToFile: error during writing\n");
+	}
 }
 
 

@@ -71,67 +71,67 @@
 #include "exports.h"
 
 
-/*
- * called from main in snacc.c to set exported flags for
- * typeDefs and valueDefs in the given module
- */
+ /*
+  * called from main in snacc.c to set exported flags for
+  * typeDefs and valueDefs in the given module
+  */
 void
-SetExports PARAMS ((m, e, exportsParsed),
-    Module *m _AND_
-    ExportElmt *e _AND_
-    int exportsParsed)
+SetExports PARAMS((m, e, exportsParsed),
+	Module* m _AND_
+	ExportElmt* e _AND_
+	int exportsParsed)
 {
-    TypeDef *td;
-    ValueDef *vd;
+	TypeDef* td;
+	ValueDef* vd;
 
-    if (!exportsParsed)  /* export everything */
-    {
-        /*
-         * set all typedefs', valuedefs' and macrodefs' exported flag
-         */
-        m->exportStatus = EXPORTS_ALL;
-        FOR_EACH_LIST_ELMT (td, m->typeDefs)
-        {
-            td->exported = TRUE;
-        }
+	if (!exportsParsed)  /* export everything */
+	{
+		/*
+		 * set all typedefs', valuedefs' and macrodefs' exported flag
+		 */
+		m->exportStatus = EXPORTS_ALL;
+		FOR_EACH_LIST_ELMT(td, m->typeDefs)
+		{
+			td->exported = TRUE;
+		}
 
-        FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-        {
-            vd->exported = TRUE;
-        }
-    }
-    else  /* EXPORTS sym parsed */
-    {
-        /* init every exports flag to false */
-        FOR_EACH_LIST_ELMT (td, m->typeDefs)
-        {
-            td->exported = FALSE;
-        }
-        FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-        {
-            vd->exported = FALSE;
-        }
+		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+		{
+			vd->exported = TRUE;
+		}
+	}
+	else  /* EXPORTS sym parsed */
+	{
+		/* init every exports flag to false */
+		FOR_EACH_LIST_ELMT(td, m->typeDefs)
+		{
+			td->exported = FALSE;
+		}
+		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+		{
+			vd->exported = FALSE;
+		}
 
-        if (e == NULL) /* export nothing */
-        {
-            m->exportStatus = EXPORTS_NOTHING;
-        }
-        else /* just export types/values in export list */
-        {
-            m->exportStatus = EXPORTS_SOME;
-            for (; e != NULL; e = e->next)
-            {
-                if ((td = LookupType (m->typeDefs,  e->name)) != NULL)
-                    td->exported = TRUE;
+		if (e == NULL) /* export nothing */
+		{
+			m->exportStatus = EXPORTS_NOTHING;
+		}
+		else /* just export types/values in export list */
+		{
+			m->exportStatus = EXPORTS_SOME;
+			for (; e != NULL; e = e->next)
+			{
+				if ((td = LookupType(m->typeDefs, e->name)) != NULL)
+					td->exported = TRUE;
 
-                else if ((vd = LookupValue (m->valueDefs,  e->name)) != NULL)
-                    vd->exported = TRUE;
-                else
-                {
-                    PrintErrLoc (m->asn1SrcFileName, (long)e->lineNo);
-                    fprintf (errFileG, "ERROR - exporting undefined type/value \"%s\"\n", e->name);
-                }
-            }
-        }
-    }
+				else if ((vd = LookupValue(m->valueDefs, e->name)) != NULL)
+					vd->exported = TRUE;
+				else
+				{
+					PrintErrLoc(m->asn1SrcFileName, (long)e->lineNo);
+					fprintf(errFileG, "ERROR - exporting undefined type/value \"%s\"\n", e->name);
+				}
+			}
+		}
+	}
 }  /* SetExports */

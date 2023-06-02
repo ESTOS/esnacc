@@ -69,11 +69,11 @@
 #include "tbl.h"
 
 
-int FlattenLinkedOid PARAMS ((o, asn1FileName, lineNo, quiet),
-    OID *o _AND_
-    const char *asn1FileName _AND_
-    AsnInt lineNo _AND_
-    int quiet);
+int FlattenLinkedOid PARAMS((o, asn1FileName, lineNo, quiet),
+	OID* o _AND_
+	const char* asn1FileName _AND_
+	AsnInt lineNo _AND_
+	int quiet);
 
 extern FILE* errFileG;			// Defined in snacc.c
 
@@ -81,11 +81,11 @@ extern FILE* errFileG;			// Defined in snacc.c
 const char* GetDirectiveName(SnaccDirectiveEnum dirType);
 
 /* non-exported routine protos */
-void GenTypeDefIds  PROTO ((TBL *tbl, Module *m));
-int  GenTblModule   PROTO ((TBL *tbl, Module *m, TBLModule **newTbl));
-int  GenTblTypeDefs PROTO ((TBL *tbl, Module *m, TBLModule *tblMod));
-int  GenTblTypes    PROTO ((TBL *tbl, Module *m, TBLModule *tblMod, TypeDef *td, TBLTypeDef *tblTd));
-TBLType *GenTblTypesRec PROTO ((TBL *tbl,Module *m, TBLModule *tblMod, TypeDef *td, TBLTypeDef *tblTd, Type *t));
+void GenTypeDefIds  PROTO((TBL* tbl, Module* m));
+int  GenTblModule   PROTO((TBL* tbl, Module* m, TBLModule** newTbl));
+int  GenTblTypeDefs PROTO((TBL* tbl, Module* m, TBLModule* tblMod));
+int  GenTblTypes    PROTO((TBL* tbl, Module* m, TBLModule* tblMod, TypeDef* td, TBLTypeDef* tblTd));
+TBLType* GenTblTypesRec PROTO((TBL* tbl, Module* m, TBLModule* tblMod, TypeDef* td, TBLTypeDef* tblTd, Type* t));
 
 
 static int abortTblTypeDefG;
@@ -96,21 +96,21 @@ static int tblStringLenTotalG;
 
 static int tableFileVersionG;
 
-void GenTypeTbls PARAMS ((mods, fileName, tableFileVersion),
-	ModuleList *mods _AND_
-	char *fileName _AND_
+void GenTypeTbls PARAMS((mods, fileName, tableFileVersion),
+	ModuleList* mods _AND_
+	char* fileName _AND_
 	int tableFileVersion)
 {
 	TBL tbl;
-	TBLModule *newTblMod;
-	FILE *tblFile;
-	GenBuf *buf;
-	ExpBuf *expBuf, *tmpBuf;
-	Module *m;
+	TBLModule* newTblMod;
+	FILE* tblFile;
+	GenBuf* buf;
+	ExpBuf* expBuf, * tmpBuf;
+	Module* m;
 
 	tableFileVersionG = tableFileVersion;
 
-	tbl.modules = AsnListNew (sizeof (void*));
+	tbl.modules = AsnListNew(sizeof(void*));
 	tbl.totalNumModules = 0;
 	tbl.totalNumTypeDefs = 0;
 	tbl.totalNumTypes = 0;
@@ -125,31 +125,31 @@ void GenTypeTbls PARAMS ((mods, fileName, tableFileVersion),
 	* Also updates tbl.totalNumModules and
 	* tbl.totalNumTypeDefs appropriately
 	*/
-	FOR_EACH_LIST_ELMT (m, mods)
+	FOR_EACH_LIST_ELMT(m, mods)
 	{
-		GenTypeDefIds (&tbl, m);
+		GenTypeDefIds(&tbl, m);
 	}
 
 	/* convert each module from parse format to simpler table format */
-	FOR_EACH_LIST_ELMT (m, mods)
+	FOR_EACH_LIST_ELMT(m, mods)
 	{
-		if (!GenTblModule (&tbl, m, &newTblMod))
+		if (!GenTblModule(&tbl, m, &newTblMod))
 		{
-			fprintf (errFileG, "ERROR: type table generator failed for module \"%s\", so file \"%s\" will not be written.\n",
+			fprintf(errFileG, "ERROR: type table generator failed for module \"%s\", so file \"%s\" will not be written.\n",
 				m->modId->name, fileName);
 			return;
 		}
 	}
 
 	/* encode the TBLModules */
-	ExpBufInit (1024);
+	ExpBufInit(1024);
 	expBuf = ExpBufAllocBufAndData();
 	ExpBuftoGenBuf(expBuf, &buf);
-	BEncTBL (buf, &tbl);
+	BEncTBL(buf, &tbl);
 
-	if (GenBufWriteError (buf))
+	if (GenBufWriteError(buf))
 	{
-		fprintf (errFileG, "ERROR: buffer write error during encoding of type table.\n");
+		fprintf(errFileG, "ERROR: buffer write error during encoding of type table.\n");
 		ExpBufFreeBufAndDataList(expBuf);
 		GenBufFree(buf);
 		return;
@@ -161,17 +161,17 @@ void GenTypeTbls PARAMS ((mods, fileName, tableFileVersion),
 #ifdef _WIN32
 	if (fopen_s(&tblFile, fileName, "w") != 0 || tblFile == NULL)
 	{
-		fprintf (errFileG, "ERROR: Could not open file \"%s\" for the type table.\n",
+		fprintf(errFileG, "ERROR: Could not open file \"%s\" for the type table.\n",
 			fileName);
 		ExpBufFreeBufAndDataList(expBuf);
 		GenBufFree(buf);
 		return;
 	}
 #else // _WIN32
-    tblFile = fopen(fileName, "w");
+	tblFile = fopen(fileName, "w");
 	if (tblFile == NULL)
 	{
-		fprintf (errFileG, "ERROR: Could not open file \"%s\" for the type table.\n",
+		fprintf(errFileG, "ERROR: Could not open file \"%s\" for the type table.\n",
 			fileName);
 		ExpBufFreeBufAndDataList(expBuf);
 		GenBufFree(buf);
@@ -187,10 +187,10 @@ void GenTypeTbls PARAMS ((mods, fileName, tableFileVersion),
 	expBuf = ExpBufListFirstBuf(expBuf);
 	for (tmpBuf = expBuf; tmpBuf != NULL; tmpBuf = tmpBuf->next)
 	{
-		fwrite (tmpBuf->dataStart, tmpBuf->dataEnd - tmpBuf->dataStart, 1, tblFile);
+		fwrite(tmpBuf->dataStart, tmpBuf->dataEnd - tmpBuf->dataStart, 1, tblFile);
 	}
 
-	fclose (tblFile);
+	fclose(tblFile);
 
 	ExpBufFreeBufAndDataList(expBuf);
 	GenBufFree(buf);
@@ -221,18 +221,18 @@ void GenTypeTbls PARAMS ((mods, fileName, tableFileVersion),
  *  (the type ids range from 0 to tbl->totalNumTypeDefs-1 (inclusive))
  */
 void
-GenTypeDefIds PARAMS ((tbl,m),
-    TBL *tbl _AND_
-    Module *m)
+GenTypeDefIds PARAMS((tbl, m),
+	TBL* tbl _AND_
+	Module* m)
 {
-    TypeDef *td;
+	TypeDef* td;
 
-    tbl->totalNumModules++;
-    FOR_EACH_LIST_ELMT (td, m->typeDefs)
-    {
-        td->tmpRefCount = tbl->totalNumTypeDefs;
-        tbl->totalNumTypeDefs++;
-    }
+	tbl->totalNumModules++;
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+	{
+		td->tmpRefCount = tbl->totalNumTypeDefs;
+		tbl->totalNumTypeDefs++;
+	}
 
 } /* GenTypeDefIds */
 
@@ -244,53 +244,53 @@ GenTypeDefIds PARAMS ((tbl,m),
  * Returns TRUE is succeeded. FALSE is failed.
  */
 int
-GenTblModule PARAMS ((tbl, m, newTblMod),
-    TBL *tbl _AND_
-    Module *m _AND_
-    TBLModule **newTblMod)
+GenTblModule PARAMS((tbl, m, newTblMod),
+	TBL* tbl _AND_
+	Module* m _AND_
+	TBLModule** newTblMod)
 {
-    TBLModule **mHndl;
-    TBLModule *tblMod;
-    int eLen;
+	TBLModule** mHndl;
+	TBLModule* tblMod;
+	int eLen;
 
-    mHndl = AsnListAppend (tbl->modules);
+	mHndl = AsnListAppend(tbl->modules);
 
-    tblMod = MT (TBLModule);
-    *newTblMod = *mHndl = tblMod;
+	tblMod = MT(TBLModule);
+	*newTblMod = *mHndl = tblMod;
 
-    /* copy the name */
-    tblMod->name.octetLen = strlen (m->modId->name);
+	/* copy the name */
+	tblMod->name.octetLen = strlen(m->modId->name);
 	size_t size = tblMod->name.octetLen + 1;
-    tblMod->name.octs = Malloc (size);
-    strcpy_s(tblMod->name.octs, size, m->modId->name);
-    tbl->totalNumStrings++;
-    tbl->totalLenStrings += (AsnInt)tblMod->name.octetLen;
+	tblMod->name.octs = Malloc(size);
+	strcpy_s(tblMod->name.octs, size, m->modId->name);
+	tbl->totalNumStrings++;
+	tbl->totalLenStrings += (AsnInt)tblMod->name.octetLen;
 
-    /* copy the OBJECT IDENTIFIER (if any) */
-    if (m->modId->oid != NULL)
-    {
-        /* convert the (linked) OID into a (encoded) AsnOid */
-        /* RWC;10/16/00; UPDATED NULL,0,0 to avoid compiler error
-            after proto added (??? UNTESTED ???).*/
-        if (FlattenLinkedOid (m->modId->oid, NULL, 0, 0 ))
-        {
-            eLen = EncodedOidLen (m->modId->oid);
-            tblMod->id.octetLen = eLen;
-            tblMod->id.octs = (char*)Malloc (eLen);
-            BuildEncodedOid (m->modId->oid, &tblMod->id);
-            tbl->totalNumStrings++;
-            tbl->totalLenStrings += eLen;
-        }
-    }
+	/* copy the OBJECT IDENTIFIER (if any) */
+	if (m->modId->oid != NULL)
+	{
+		/* convert the (linked) OID into a (encoded) AsnOid */
+		/* RWC;10/16/00; UPDATED NULL,0,0 to avoid compiler error
+			after proto added (??? UNTESTED ???).*/
+		if (FlattenLinkedOid(m->modId->oid, NULL, 0, 0))
+		{
+			eLen = EncodedOidLen(m->modId->oid);
+			tblMod->id.octetLen = eLen;
+			tblMod->id.octs = (char*)Malloc(eLen);
+			BuildEncodedOid(m->modId->oid, &tblMod->id);
+			tbl->totalNumStrings++;
+			tbl->totalLenStrings += eLen;
+		}
+	}
 
-    /*
-     * useful defaults to false
-     * (ie assume the it is not the usefultypes modules)
-     */
-    tblMod->isUseful = FALSE;
+	/*
+	 * useful defaults to false
+	 * (ie assume the it is not the usefultypes modules)
+	 */
+	tblMod->isUseful = FALSE;
 
-    /* now copy each of the type defs */
-    return GenTblTypeDefs (tbl, m, tblMod);
+	/* now copy each of the type defs */
+	return GenTblTypeDefs(tbl, m, tblMod);
 
 } /* GenTblModule */
 
@@ -300,39 +300,39 @@ GenTblModule PARAMS ((tbl, m, newTblMod),
  * returns TRUE for success, FALSE for failure.
  */
 int
-GenTblTypeDefs PARAMS ((tbl, m, tblMod),
-    TBL *tbl _AND_
-    Module *m _AND_
-    TBLModule *tblMod)
+GenTblTypeDefs PARAMS((tbl, m, tblMod),
+	TBL* tbl _AND_
+	Module* m _AND_
+	TBLModule* tblMod)
 {
-	TypeDef *td;
-	TBLTypeDef **tblTdHndl;
-	TBLTypeDef *tblTd;
+	TypeDef* td;
+	TBLTypeDef** tblTdHndl;
+	TBLTypeDef* tblTd;
 	SnaccDirective* pDirective;
 	int isOk = TRUE;  /* init to no errors */
 
-    tblMod->typeDefs = AsnListNew (sizeof (void*));
-    FOR_EACH_LIST_ELMT (td, m->typeDefs)
+	tblMod->typeDefs = AsnListNew(sizeof(void*));
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
-		tblTd = MT (TBLTypeDef);
+		tblTd = MT(TBLTypeDef);
 
 		/* set type def id */
 		tblTd->typeDefId = td->tmpRefCount;
 
 		/* copy type def name */
-		tblTd->typeName.octetLen = strlen (td->definedName);
+		tblTd->typeName.octetLen = strlen(td->definedName);
 		size_t size = tblTd->typeName.octetLen + 1;
-		tblTd->typeName.octs = Malloc (size);
+		tblTd->typeName.octs = Malloc(size);
 		strcpy_s(tblTd->typeName.octs, size, td->definedName);
 		tbl->totalNumStrings++;
 		tbl->totalLenStrings += (AsnInt)tblTd->typeName.octetLen;
 
-/*
-		if (td->isPdu)
-		tblTd->isPdu = MT (AsnNull);
-*/
+		/*
+				if (td->isPdu)
+				tblTd->isPdu = MT (AsnNull);
+		*/
 
-	    FOR_EACH_LIST_ELMT (pDirective, td->attrList)
+		FOR_EACH_LIST_ELMT(pDirective, td->attrList)
 		{
 			switch (pDirective->type)
 			{
@@ -341,35 +341,35 @@ GenTblTypeDefs PARAMS ((tbl, m, tblMod),
 				break;
 
 			default:
-				fprintf (errFileG, "Warning: ignoring unrecognized type def attribute '%s'\n",
+				fprintf(errFileG, "Warning: ignoring unrecognized type def attribute '%s'\n",
 					GetDirectiveName(pDirective->type));
 			}
 		}
 
-        /* fill in type portion */
-        if (!GenTblTypes (tbl, m, tblMod, td, tblTd) && !abortTblTypeDefG)
-            isOk = FALSE;
+		/* fill in type portion */
+		if (!GenTblTypes(tbl, m, tblMod, td, tblTd) && !abortTblTypeDefG)
+			isOk = FALSE;
 
 
-        /*
-         * add TBLtypeDef to TBLModule
-         * if no weird types were found
-         * (weird types are skipped)
-         */
-        if (!abortTblTypeDefG)
-        {
-            tblTdHndl = AsnListAppend (tblMod->typeDefs);
-            *tblTdHndl = tblTd;
-            tbl->totalNumTypes += tblTypesTotalG;
-            tbl->totalNumTags += tblTagsTotalG;
-            tbl->totalNumStrings += tblStringsTotalG;
-            tbl->totalLenStrings += tblStringLenTotalG;
-        }
-        /* else could free it */
+		/*
+		 * add TBLtypeDef to TBLModule
+		 * if no weird types were found
+		 * (weird types are skipped)
+		 */
+		if (!abortTblTypeDefG)
+		{
+			tblTdHndl = AsnListAppend(tblMod->typeDefs);
+			*tblTdHndl = tblTd;
+			tbl->totalNumTypes += tblTypesTotalG;
+			tbl->totalNumTags += tblTagsTotalG;
+			tbl->totalNumStrings += tblStringsTotalG;
+			tbl->totalLenStrings += tblStringLenTotalG;
+		}
+		/* else could free it */
 
-    }
+	}
 
-    return isOk;
+	return isOk;
 } /* GenTblTypeDefs */
 
 
@@ -379,298 +379,298 @@ GenTblTypeDefs PARAMS ((tbl, m, tblMod),
  * Returns TRUE for success, FALSE for failure.
  */
 int
-GenTblTypes PARAMS ((tbl, m, tblMod, td, tblTd),
-    TBL *tbl _AND_
-    Module *m _AND_
-    TBLModule *tblMod _AND_
-    TypeDef *td _AND_
-    TBLTypeDef *tblTd)
+GenTblTypes PARAMS((tbl, m, tblMod, td, tblTd),
+	TBL* tbl _AND_
+	Module* m _AND_
+	TBLModule* tblMod _AND_
+	TypeDef* td _AND_
+	TBLTypeDef* tblTd)
 {
-    abortTblTypeDefG = FALSE;
-    tblTypesTotalG = 0;
-    tblTagsTotalG = 0;
-    tblStringsTotalG = 0;
-    tblStringLenTotalG = 0;
+	abortTblTypeDefG = FALSE;
+	tblTypesTotalG = 0;
+	tblTagsTotalG = 0;
+	tblStringsTotalG = 0;
+	tblStringLenTotalG = 0;
 
-    tblTd->type = GenTblTypesRec (tbl, m, tblMod, td, tblTd, td->type);
+	tblTd->type = GenTblTypesRec(tbl, m, tblMod, td, tblTd, td->type);
 
-    if (tblTd->type == NULL)
-        return FALSE; /* failed */
-    else
-        return TRUE;
+	if (tblTd->type == NULL)
+		return FALSE; /* failed */
+	else
+		return TRUE;
 
 } /* GenTblTypes */
 
 BasicValue*
-GetTblValue PARAMS ((v),
-    Value* v)
+GetTblValue PARAMS((v),
+	Value* v)
 {
-    switch (v->basicValue->choiceId)
-    {
+	switch (v->basicValue->choiceId)
+	{
 	case BASICVALUE_INTEGER:
-	    return v->basicValue;
+		return v->basicValue;
 	default:
-	    return NULL;
-    }
+		return NULL;
+	}
 }
 
 enum BasicTypeChoiceId
-GetTblBasicType PARAMS ((bt),
-    BasicType* bt)
+	GetTblBasicType PARAMS((bt),
+		BasicType* bt)
 {
-    switch (bt->choiceId)
-    {
-    case BASICTYPE_LOCALTYPEREF:
-    case BASICTYPE_IMPORTTYPEREF:
-	return GetTblBasicType (bt->a.localTypeRef->link->type->basicType);
-    default:
-	return bt->choiceId;
-    }
+	switch (bt->choiceId)
+	{
+	case BASICTYPE_LOCALTYPEREF:
+	case BASICTYPE_IMPORTTYPEREF:
+		return GetTblBasicType(bt->a.localTypeRef->link->type->basicType);
+	default:
+		return bt->choiceId;
+	}
 }
 
 
 
 TBLType*
-GenTblTypesRec PARAMS ((tbl, m, tblMod, td, tblTd, t),
-    TBL *tbl _AND_
-    Module *m _AND_
-    TBLModule *tblMod _AND_
-    TypeDef *td _AND_
-    TBLTypeDef *tblTd _AND_
-    Type *t)
+GenTblTypesRec PARAMS((tbl, m, tblMod, td, tblTd, t),
+	TBL* tbl _AND_
+	Module* m _AND_
+	TBLModule* tblMod _AND_
+	TypeDef* td _AND_
+	TBLTypeDef* tblTd _AND_
+	Type* t)
 {
-    TBLType *tblT;
-    NamedType *e;
-    TBLType **tblTHndl;
-    Tag *tag;
-    TBLTag **tblTagHndl;
+	TBLType* tblT;
+	NamedType* e;
+	TBLType** tblTHndl;
+	Tag* tag;
+	TBLTag** tblTagHndl;
 
-    tblTypesTotalG++;
-    tblT = MT (TBLType);
-    tblT->content = MT (TBLTypeContent);
-    switch (t->basicType->choiceId)
-    {
-      case BASICTYPE_BOOLEAN:
-          tblT->typeId = TBL_BOOLEAN;
-          tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
-          break;
-
-      case BASICTYPE_INTEGER:
-          tblT->typeId = TBL_INTEGER;
-          tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
-          break;
-
-      case BASICTYPE_BITSTRING:
-          tblT->typeId = TBL_BITSTRING;
-          tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
-/*	  tblT->values = GenTblValues(tbl,m,tblMod,t->basicType->a.bitString); */
-          break;
-
-      case BASICTYPE_OCTETSTRING:
-          tblT->typeId = TBL_OCTETSTRING;
-          tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
-/*	  if (t->subtypes)
-  	      tblT->constraint = GenTblValueRange(tbl, m, tblMod,t->subtypes,1); */
-          break;
-
-      case BASICTYPE_NULL:
-          tblT->typeId = TBL_NULL;
-          tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
-          break;
-
-      case BASICTYPE_OID:
-          tblT->typeId = TBL_OID;
-          tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
-          break;
-
-      case BASICTYPE_RELATIVE_OID:
-           tblT->typeId = TBL_RELATIVE_OID;
-           tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
-           break;
-
-      case BASICTYPE_REAL:
-          tblT->typeId = TBL_REAL;
-          tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
-          break;
-
-      case BASICTYPE_ENUMERATED:
-          tblT->typeId = TBL_ENUMERATED;
-          tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
-/*	  tblT->values = GenTblValues(tbl,m,tblMod,t->basicType->a.enumerated); */
-          break;
-
-      case BASICTYPE_SEQUENCE:
-          tblT->typeId = TBL_SEQUENCE;
-          tblT->content->choiceId = TBLTYPECONTENT_ELMTS;
-          tblT->content->a.elmts = AsnListNew (sizeof (void*));
-          FOR_EACH_LIST_ELMT (e, t->basicType->a.sequence)
-          {
-              tblTHndl = AsnListAppend (tblT->content->a.elmts);
-              *tblTHndl = GenTblTypesRec (tbl, m, tblMod, td, tblTd, e->type);
-
-              if (*tblTHndl == NULL)
-                  break;
-
-              if (e->fieldName != NULL)
-              {
-                  (**tblTHndl).fieldName.octetLen = strlen (e->fieldName);
-				  size_t size = (**tblTHndl).fieldName.octetLen + 1;
-                  (**tblTHndl).fieldName.octs = Malloc (size);
-                  strcpy_s((**tblTHndl).fieldName.octs, size, e->fieldName);
-                  tblStringsTotalG++;
-                  tblStringLenTotalG += (int)((**tblTHndl).fieldName.octetLen);
-              }
-
-             (**tblTHndl).optional = (unsigned char)
-                 ((e->type->optional) || (e->type->defaultVal != NULL));
-          }
-
-          break;
-
-      case BASICTYPE_SET:
-          tblT->typeId = TBL_SET;
-          tblT->content->choiceId = TBLTYPECONTENT_ELMTS;
-          tblT->content->a.elmts = AsnListNew (sizeof (void*));
-          FOR_EACH_LIST_ELMT (e, t->basicType->a.set)
-          {
-              tblTHndl = AsnListAppend (tblT->content->a.elmts);
-              *tblTHndl = GenTblTypesRec (tbl, m, tblMod, td, tblTd, e->type);
-
-              if (*tblTHndl == NULL)
-                  break;
-
-              if (e->fieldName != NULL)
-              {
-                  (**tblTHndl).fieldName.octetLen = strlen (e->fieldName);
-				  size_t size = (**tblTHndl).fieldName.octetLen + 1;
-                  (**tblTHndl).fieldName.octs = Malloc(size);
-                  strcpy_s((**tblTHndl).fieldName.octs, size, e->fieldName);
-                  tblStringsTotalG++;
-                  tblStringLenTotalG += (int)((**tblTHndl).fieldName.octetLen);
-			  }
-
-             (**tblTHndl).optional = (unsigned char)
-                 ((e->type->optional) || (e->type->defaultVal != NULL));
-
-          }
-          break;
-
-      case BASICTYPE_SEQUENCEOF:
-          tblT->typeId = TBL_SEQUENCEOF;
-          tblT->content->choiceId = TBLTYPECONTENT_ELMTS;
-          tblT->content->a.elmts = AsnListNew (sizeof (void*));
-          tblTHndl = AsnListAppend (tblT->content->a.elmts);
-          *tblTHndl = GenTblTypesRec (tbl, m, tblMod, td, tblTd, t->basicType->a.sequenceOf);
-/*	  if (t->subtypes)
-  	      tblT->constraint = GenTblValueRange(tbl, m, tblMod,t->subtypes,1); */
-          break;
-
-      case BASICTYPE_SETOF:
-          tblT->typeId = TBL_SETOF;
-          tblT->content->choiceId = TBLTYPECONTENT_ELMTS;
-          tblT->content->a.elmts = AsnListNew (sizeof (void*));
-          tblTHndl = AsnListAppend (tblT->content->a.elmts);
-          *tblTHndl = GenTblTypesRec (tbl, m, tblMod, td, tblTd, t->basicType->a.setOf);
-/*	  if (t->subtypes)
-  	      tblT->constraint = GenTblValueRange(tbl, m, tblMod,t->subtypes,1); */
-          break;
-
-      case BASICTYPE_CHOICE:
-          tblT->typeId = TBL_CHOICE;
-          tblT->content->choiceId = TBLTYPECONTENT_ELMTS;
-          tblT->content->a.elmts = AsnListNew (sizeof (void*));
-          FOR_EACH_LIST_ELMT (e, t->basicType->a.set)
-          {
-              tblTHndl = AsnListAppend (tblT->content->a.elmts);
-              *tblTHndl = GenTblTypesRec (tbl, m, tblMod, td, tblTd, e->type);
-
-              if (*tblTHndl == NULL)
-                  break;
-
-              if (e->fieldName != NULL)
-              {
-                  (**tblTHndl).fieldName.octetLen = strlen (e->fieldName);
-				  size_t size = (**tblTHndl).fieldName.octetLen + 1;
-                  (**tblTHndl).fieldName.octs = Malloc (size);
-                  strcpy_s((**tblTHndl).fieldName.octs, size, e->fieldName);
-                  tblStringsTotalG++;
-                  tblStringLenTotalG += (int)((**tblTHndl).fieldName.octetLen);
-              }
-
-             (**tblTHndl).optional = (unsigned char)
-                 ((e->type->optional) || (e->type->defaultVal != NULL));
-
-          }
-          break;
-
-      case BASICTYPE_LOCALTYPEREF:
-      case BASICTYPE_IMPORTTYPEREF:
-          tblT->typeId = TBL_TYPEREF;
-          tblT->content->choiceId = TBLTYPECONTENT_TYPEREF;
-          tblT->content->a.typeRef = MT (TBLTypeRef);
-          tblT->content->a.typeRef->implicit = t->implicit;
-          tblT->content->a.typeRef->typeDef  =
-              t->basicType->a.localTypeRef->link->tmpRefCount;
-          break;
-
-      default:
-          if (!abortTblTypeDefG) /* only print first time  */
-		  {
-              fprintf (errFileG, "WARNING: Type definition \"%s\" will not be included in the type table because it contains a weird type.\n",
-				  td->definedName);
-		  }
-          abortTblTypeDefG = TRUE;
-          Free (tblT->content);
-          Free (tblT);
-          tblT = NULL;
-          break;
-    }
-
-    /* handle constraints */
-    if (t->subtypes)
-    {
-	switch (GetTblBasicType(t->basicType))
+	tblTypesTotalG++;
+	tblT = MT(TBLType);
+	tblT->content = MT(TBLTypeContent);
+	switch (t->basicType->choiceId)
 	{
+	case BASICTYPE_BOOLEAN:
+		tblT->typeId = TBL_BOOLEAN;
+		tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
+		break;
+
 	case BASICTYPE_INTEGER:
-/*	    tblT->constraint = GenTblValueRange(tbl,m,tblMod,t->subtypes,0); */
-	    break;
+		tblT->typeId = TBL_INTEGER;
+		tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
+		break;
+
+	case BASICTYPE_BITSTRING:
+		tblT->typeId = TBL_BITSTRING;
+		tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
+		/*	  tblT->values = GenTblValues(tbl,m,tblMod,t->basicType->a.bitString); */
+		break;
+
 	case BASICTYPE_OCTETSTRING:
+		tblT->typeId = TBL_OCTETSTRING;
+		tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
+		/*	  if (t->subtypes)
+				  tblT->constraint = GenTblValueRange(tbl, m, tblMod,t->subtypes,1); */
+		break;
+
+	case BASICTYPE_NULL:
+		tblT->typeId = TBL_NULL;
+		tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
+		break;
+
+	case BASICTYPE_OID:
+		tblT->typeId = TBL_OID;
+		tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
+		break;
+
+	case BASICTYPE_RELATIVE_OID:
+		tblT->typeId = TBL_RELATIVE_OID;
+		tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
+		break;
+
+	case BASICTYPE_REAL:
+		tblT->typeId = TBL_REAL;
+		tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
+		break;
+
+	case BASICTYPE_ENUMERATED:
+		tblT->typeId = TBL_ENUMERATED;
+		tblT->content->choiceId = TBLTYPECONTENT_PRIMTYPE;
+		/*	  tblT->values = GenTblValues(tbl,m,tblMod,t->basicType->a.enumerated); */
+		break;
+
+	case BASICTYPE_SEQUENCE:
+		tblT->typeId = TBL_SEQUENCE;
+		tblT->content->choiceId = TBLTYPECONTENT_ELMTS;
+		tblT->content->a.elmts = AsnListNew(sizeof(void*));
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
+		{
+			tblTHndl = AsnListAppend(tblT->content->a.elmts);
+			*tblTHndl = GenTblTypesRec(tbl, m, tblMod, td, tblTd, e->type);
+
+			if (*tblTHndl == NULL)
+				break;
+
+			if (e->fieldName != NULL)
+			{
+				(**tblTHndl).fieldName.octetLen = strlen(e->fieldName);
+				size_t size = (**tblTHndl).fieldName.octetLen + 1;
+				(**tblTHndl).fieldName.octs = Malloc(size);
+				strcpy_s((**tblTHndl).fieldName.octs, size, e->fieldName);
+				tblStringsTotalG++;
+				tblStringLenTotalG += (int)((**tblTHndl).fieldName.octetLen);
+			}
+
+			(**tblTHndl).optional = (unsigned char)
+				((e->type->optional) || (e->type->defaultVal != NULL));
+		}
+
+		break;
+
+	case BASICTYPE_SET:
+		tblT->typeId = TBL_SET;
+		tblT->content->choiceId = TBLTYPECONTENT_ELMTS;
+		tblT->content->a.elmts = AsnListNew(sizeof(void*));
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.set)
+		{
+			tblTHndl = AsnListAppend(tblT->content->a.elmts);
+			*tblTHndl = GenTblTypesRec(tbl, m, tblMod, td, tblTd, e->type);
+
+			if (*tblTHndl == NULL)
+				break;
+
+			if (e->fieldName != NULL)
+			{
+				(**tblTHndl).fieldName.octetLen = strlen(e->fieldName);
+				size_t size = (**tblTHndl).fieldName.octetLen + 1;
+				(**tblTHndl).fieldName.octs = Malloc(size);
+				strcpy_s((**tblTHndl).fieldName.octs, size, e->fieldName);
+				tblStringsTotalG++;
+				tblStringLenTotalG += (int)((**tblTHndl).fieldName.octetLen);
+			}
+
+			(**tblTHndl).optional = (unsigned char)
+				((e->type->optional) || (e->type->defaultVal != NULL));
+
+		}
+		break;
+
 	case BASICTYPE_SEQUENCEOF:
-/*	    tblT->constraint = GenTblValueRange(tbl,m,tblMod,t->subtypes,1); */
-	    break;
+		tblT->typeId = TBL_SEQUENCEOF;
+		tblT->content->choiceId = TBLTYPECONTENT_ELMTS;
+		tblT->content->a.elmts = AsnListNew(sizeof(void*));
+		tblTHndl = AsnListAppend(tblT->content->a.elmts);
+		*tblTHndl = GenTblTypesRec(tbl, m, tblMod, td, tblTd, t->basicType->a.sequenceOf);
+		/*	  if (t->subtypes)
+				  tblT->constraint = GenTblValueRange(tbl, m, tblMod,t->subtypes,1); */
+		break;
+
+	case BASICTYPE_SETOF:
+		tblT->typeId = TBL_SETOF;
+		tblT->content->choiceId = TBLTYPECONTENT_ELMTS;
+		tblT->content->a.elmts = AsnListNew(sizeof(void*));
+		tblTHndl = AsnListAppend(tblT->content->a.elmts);
+		*tblTHndl = GenTblTypesRec(tbl, m, tblMod, td, tblTd, t->basicType->a.setOf);
+		/*	  if (t->subtypes)
+				  tblT->constraint = GenTblValueRange(tbl, m, tblMod,t->subtypes,1); */
+		break;
+
+	case BASICTYPE_CHOICE:
+		tblT->typeId = TBL_CHOICE;
+		tblT->content->choiceId = TBLTYPECONTENT_ELMTS;
+		tblT->content->a.elmts = AsnListNew(sizeof(void*));
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.set)
+		{
+			tblTHndl = AsnListAppend(tblT->content->a.elmts);
+			*tblTHndl = GenTblTypesRec(tbl, m, tblMod, td, tblTd, e->type);
+
+			if (*tblTHndl == NULL)
+				break;
+
+			if (e->fieldName != NULL)
+			{
+				(**tblTHndl).fieldName.octetLen = strlen(e->fieldName);
+				size_t size = (**tblTHndl).fieldName.octetLen + 1;
+				(**tblTHndl).fieldName.octs = Malloc(size);
+				strcpy_s((**tblTHndl).fieldName.octs, size, e->fieldName);
+				tblStringsTotalG++;
+				tblStringLenTotalG += (int)((**tblTHndl).fieldName.octetLen);
+			}
+
+			(**tblTHndl).optional = (unsigned char)
+				((e->type->optional) || (e->type->defaultVal != NULL));
+
+		}
+		break;
+
+	case BASICTYPE_LOCALTYPEREF:
+	case BASICTYPE_IMPORTTYPEREF:
+		tblT->typeId = TBL_TYPEREF;
+		tblT->content->choiceId = TBLTYPECONTENT_TYPEREF;
+		tblT->content->a.typeRef = MT(TBLTypeRef);
+		tblT->content->a.typeRef->implicit = t->implicit;
+		tblT->content->a.typeRef->typeDef =
+			t->basicType->a.localTypeRef->link->tmpRefCount;
+		break;
+
 	default:
-	    break;
+		if (!abortTblTypeDefG) /* only print first time  */
+		{
+			fprintf(errFileG, "WARNING: Type definition \"%s\" will not be included in the type table because it contains a weird type.\n",
+				td->definedName);
+		}
+		abortTblTypeDefG = TRUE;
+		Free(tblT->content);
+		Free(tblT);
+		tblT = NULL;
+		break;
 	}
-    }
 
-    /* copy the tags */
-    if ((tblT != NULL) &&
-        ((t->tags != NULL) && (!LIST_EMPTY (t->tags))))
-    {
-        tblT->tagList = AsnListNew (sizeof (void*));
-        FOR_EACH_LIST_ELMT (tag, t->tags)
-        {
-            tblTagsTotalG++;
-            tblTagHndl = AsnListAppend (tblT->tagList);
-            *tblTagHndl = MT (TBLTag);
-            switch (tag->tclass)
-            {
-              case UNIV:
-                (**tblTagHndl).tclass = UNIVERSAL;
-                break;
-              case APPL:
-                (**tblTagHndl).tclass = APPLICATION;
-                break;
-              case CNTX:
-                (**tblTagHndl).tclass = CONTEXT;
-                break;
-              case PRIV:
-                (**tblTagHndl).tclass = PRIVATE;
-                break;
-            }
-            (**tblTagHndl).code = tag->code;
-        }
-    }
+	/* handle constraints */
+	if (t->subtypes)
+	{
+		switch (GetTblBasicType(t->basicType))
+		{
+		case BASICTYPE_INTEGER:
+			/*	    tblT->constraint = GenTblValueRange(tbl,m,tblMod,t->subtypes,0); */
+			break;
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_SEQUENCEOF:
+			/*	    tblT->constraint = GenTblValueRange(tbl,m,tblMod,t->subtypes,1); */
+			break;
+		default:
+			break;
+		}
+	}
 
-    return tblT;
+	/* copy the tags */
+	if ((tblT != NULL) &&
+		((t->tags != NULL) && (!LIST_EMPTY(t->tags))))
+	{
+		tblT->tagList = AsnListNew(sizeof(void*));
+		FOR_EACH_LIST_ELMT(tag, t->tags)
+		{
+			tblTagsTotalG++;
+			tblTagHndl = AsnListAppend(tblT->tagList);
+			*tblTagHndl = MT(TBLTag);
+			switch (tag->tclass)
+			{
+			case UNIV:
+				(**tblTagHndl).tclass = UNIVERSAL;
+				break;
+			case APPL:
+				(**tblTagHndl).tclass = APPLICATION;
+				break;
+			case CNTX:
+				(**tblTagHndl).tclass = CONTEXT;
+				break;
+			case PRIV:
+				(**tblTagHndl).tclass = PRIVATE;
+				break;
+			}
+			(**tblTagHndl).code = tag->code;
+		}
+	}
+
+	return tblT;
 } /* GenTblTypesRec */

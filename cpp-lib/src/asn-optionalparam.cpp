@@ -31,7 +31,7 @@ New JSON Format:
 */
 
 //Implementation from asn-listset.h
-void AsnOptionalParameters::JEnc (EJson::Value &b) const
+void AsnOptionalParameters::JEnc(EJson::Value& b) const
 {
 	/*
 	b = EJson::Value(EJson::arrayValue);
@@ -55,7 +55,7 @@ void AsnOptionalParameters::JEnc (EJson::Value &b) const
 	}
 }
 
-bool AsnOptionalParameters::JDec (const EJson::Value &b)
+bool AsnOptionalParameters::JDec(const EJson::Value& b)
 {
 	Clear();
 
@@ -95,7 +95,7 @@ void AsnOptionalParam::Init(void)
 }
 
 
-int AsnOptionalParam::checkConstraints(ConstraintFailList* pConstraintFails) const{
+int AsnOptionalParam::checkConstraints(ConstraintFailList* pConstraintFails) const {
 	key.checkConstraints(pConstraintFails);
 
 	value.checkConstraints(pConstraintFails);
@@ -109,17 +109,17 @@ void AsnOptionalParam::Clear()
 	value.Clear();
 }
 
-AsnOptionalParam::AsnOptionalParam(const AsnOptionalParam &that)
+AsnOptionalParam::AsnOptionalParam(const AsnOptionalParam& that)
 {
 	Init();
 	*this = that;
 }
-AsnType *AsnOptionalParam::Clone() const
+AsnType* AsnOptionalParam::Clone() const
 {
 	return new AsnOptionalParam(*this);
 }
 
-AsnOptionalParam &AsnOptionalParam::operator = (const AsnOptionalParam &that)
+AsnOptionalParam& AsnOptionalParam::operator = (const AsnOptionalParam& that)
 {
 	if (this != &that)
 	{
@@ -132,57 +132,57 @@ AsnOptionalParam &AsnOptionalParam::operator = (const AsnOptionalParam &that)
 }
 
 AsnLen
-	AsnOptionalParam::BEncContent (AsnBuf &_b) const
+AsnOptionalParam::BEncContent(AsnBuf& _b) const
 {
 	AsnLen totalLen = 0;
-	AsnLen l=0;
+	AsnLen l = 0;
 
-	l = value.BEncContent (_b);
+	l = value.BEncContent(_b);
 	totalLen += l;
 
-	l = key.BEncContent (_b);
-	l += BEncDefLen (_b, l);
+	l = key.BEncContent(_b);
+	l += BEncDefLen(_b, l);
 
-	l += BEncTag1 (_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+	l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
 	totalLen += l;
 
 	return totalLen;
 } // AsnOptionalParam::BEncContent
 
 
-void AsnOptionalParam::BDecContent (const AsnBuf &_b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen &bytesDecoded)
+void AsnOptionalParam::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 {
 	FUNC(" AsnOptionalParam::BDecContent");
 	Clear();
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
 	// Wenn nix da ist, brauchen wir nicht weiter machen --> raus
-    if (elmtLen0 == 0) {
-        return;
+	if (elmtLen0 == 0) {
+		return;
 	}
 
-	AsnTag tag1 = BDecTag (_b, seqBytesDecoded);
+	AsnTag tag1 = BDecTag(_b, seqBytesDecoded);
 
-	if ((tag1 == MAKE_TAG_ID (UNIV, PRIM, UTF8STRING_TAG_CODE))
-		|| (tag1 == MAKE_TAG_ID (UNIV, CONS, UTF8STRING_TAG_CODE)))
+	if ((tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
+		|| (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
 	{
-		elmtLen1 = BDecLen (_b, seqBytesDecoded);
-		key.BDecContent (_b, tag1, elmtLen1, seqBytesDecoded);
-		tag1 = BDecTag (_b, seqBytesDecoded);
+		elmtLen1 = BDecLen(_b, seqBytesDecoded);
+		key.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 	else
 	{
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 	}
 
-	if ((tag1 == MAKE_TAG_ID (UNIV, PRIM, UTF8STRING_TAG_CODE))
-		|| (tag1 == MAKE_TAG_ID (UNIV, CONS, UTF8STRING_TAG_CODE))
-		|| (tag1 == MAKE_TAG_ID (UNIV, PRIM, OCTETSTRING_TAG_CODE))
-		|| (tag1 == MAKE_TAG_ID (UNIV, CONS, OCTETSTRING_TAG_CODE))
-		|| (tag1 == MAKE_TAG_ID (UNIV, PRIM, INTEGER_TAG_CODE)))
+	if ((tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
+		|| (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE))
+		|| (tag1 == MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE))
+		|| (tag1 == MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE))
+		|| (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE)))
 	{
-		elmtLen1 = BDecLen (_b, seqBytesDecoded);
-		value.BDecContent (_b, tag1, elmtLen1, seqBytesDecoded);
+		elmtLen1 = BDecLen(_b, seqBytesDecoded);
+		value.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
 	}
 	else
 	{
@@ -192,7 +192,7 @@ void AsnOptionalParam::BDecContent (const AsnBuf &_b, AsnTag /*tag0*/, AsnLen el
 	bytesDecoded += seqBytesDecoded;
 	if (elmtLen0 == INDEFINITE_LEN)
 	{
-		BDecEoc (_b, bytesDecoded);
+		BDecEoc(_b, bytesDecoded);
 		return;
 	}
 	else if (seqBytesDecoded != elmtLen0)
@@ -203,45 +203,45 @@ void AsnOptionalParam::BDecContent (const AsnBuf &_b, AsnTag /*tag0*/, AsnLen el
 		return;
 } // AsnOptionalParam::BDecContent
 
-AsnLen AsnOptionalParam::BEnc (AsnBuf &_b) const
+AsnLen AsnOptionalParam::BEnc(AsnBuf& _b) const
 {
-	AsnLen l=0;
-	l = BEncContent (_b);
-	l += BEncConsLen (_b, l);
-	l += BEncTag1 (_b, UNIV, CONS, SEQ_TAG_CODE);
+	AsnLen l = 0;
+	l = BEncContent(_b);
+	l += BEncConsLen(_b, l);
+	l += BEncTag1(_b, UNIV, CONS, SEQ_TAG_CODE);
 	return l;
 }
 
-void AsnOptionalParam::JEnc (EJson::Value &b) const
+void AsnOptionalParam::JEnc(EJson::Value& b) const
 {
 	b = EJson::Value(EJson::objectValue);
 
 	EJson::Value tmp;
 
-	key.JEnc (tmp);
+	key.JEnc(tmp);
 	b["key"] = tmp;
 
-	value.JEnc (tmp);
+	value.JEnc(tmp);
 	b["value"] = tmp;
 
 }
 
 
-void AsnOptionalParam::BDec (const AsnBuf &_b, AsnLen &bytesDecoded)
+void AsnOptionalParam::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 {
 	FUNC(" AsnOptionalParam::BDec");
 	AsnTag tag;
 	AsnLen elmtLen1;
 
-	if ((tag = BDecTag (_b, bytesDecoded)) != MAKE_TAG_ID (UNIV, CONS, SEQ_TAG_CODE))
+	if ((tag = BDecTag(_b, bytesDecoded)) != MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
 	{
 		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
 	}
-	elmtLen1 = BDecLen (_b, bytesDecoded);
-	BDecContent (_b, tag, elmtLen1, bytesDecoded);
+	elmtLen1 = BDecLen(_b, bytesDecoded);
+	BDecContent(_b, tag, elmtLen1, bytesDecoded);
 }
 
-bool AsnOptionalParam::JDec (const EJson::Value &b){
+bool AsnOptionalParam::JDec(const EJson::Value& b) {
 	Clear();
 	if (!b.isObject()) return false;
 
@@ -280,7 +280,7 @@ void AsnOptionalParam::Print(std::ostream& os, unsigned short indent) const
 } // end of AsnOptionalParam::Print()
 
 
-AsnOptionalParamChoice::AsnOptionalParamChoice(const AsnOptionalParamChoice &that)
+AsnOptionalParamChoice::AsnOptionalParamChoice(const AsnOptionalParamChoice& that)
 {
 	Init();
 	*this = that;
@@ -327,12 +327,12 @@ void AsnOptionalParamChoice::Clear()
 	} // end of switch
 } // end of Clear()
 
-AsnType *AsnOptionalParamChoice::Clone() const
+AsnType* AsnOptionalParamChoice::Clone() const
 {
 	return new AsnOptionalParamChoice(*this);
 }
 
-AsnOptionalParamChoice &AsnOptionalParamChoice::operator = (const AsnOptionalParamChoice &that)
+AsnOptionalParamChoice& AsnOptionalParamChoice::operator = (const AsnOptionalParamChoice& that)
 {
 	if (this != &that)
 	{
@@ -359,31 +359,31 @@ AsnOptionalParamChoice &AsnOptionalParamChoice::operator = (const AsnOptionalPar
 }
 
 AsnLen
-	AsnOptionalParamChoice::BEncContent (AsnBuf &_b) const
+AsnOptionalParamChoice::BEncContent(AsnBuf& _b) const
 {
 	FUNC("AsnOptionalParamChoice::BEncContent (AsnBuf &_b)");
-	AsnLen l=0;
+	AsnLen l = 0;
 	switch (choiceId)
 	{
 	case stringdataCid:
-		l = stringdata->BEncContent (_b);
-		l += BEncDefLen (_b, l);
+		l = stringdata->BEncContent(_b);
+		l += BEncDefLen(_b, l);
 
-		l += BEncTag1 (_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+		l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
 		break;
 
 	case binarydataCid:
-		l = binarydata->BEncContent (_b);
-		l += BEncDefLen (_b, l);
+		l = binarydata->BEncContent(_b);
+		l += BEncDefLen(_b, l);
 
-		l += BEncTag1 (_b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
+		l += BEncTag1(_b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
 		break;
 
 	case integerdataCid:
-		l = integerdata->BEncContent (_b);
-		l += BEncDefLen (_b, l);
+		l = integerdata->BEncContent(_b);
+		l += BEncDefLen(_b, l);
 
-		l += BEncTag1 (_b, UNIV, PRIM, INTEGER_TAG_CODE);
+		l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
 		break;
 
 	default:
@@ -393,48 +393,48 @@ AsnLen
 } // AsnOptionalParamChoice::BEncContent
 
 
-void AsnOptionalParamChoice::BDecContent (const AsnBuf &_b, AsnTag tag, AsnLen elmtLen0, AsnLen &bytesDecoded /*, s env*/)
+void AsnOptionalParamChoice::BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen0, AsnLen& bytesDecoded /*, s env*/)
 {
 	FUNC("AsnOptionalParamChoice::BDecContent()");
 	Clear();
 	switch (tag)
 	{
-	case MAKE_TAG_ID (UNIV, PRIM, UTF8STRING_TAG_CODE):
-	case MAKE_TAG_ID (UNIV, CONS, UTF8STRING_TAG_CODE):
+	case MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE):
+	case MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE):
 		choiceId = stringdataCid;
 		stringdata = new UTF8String;
-		stringdata->BDecContent (_b, tag, elmtLen0, bytesDecoded);
+		stringdata->BDecContent(_b, tag, elmtLen0, bytesDecoded);
 		break;
 
-	case MAKE_TAG_ID (UNIV, PRIM, OCTETSTRING_TAG_CODE):
-	case MAKE_TAG_ID (UNIV, CONS, OCTETSTRING_TAG_CODE):
+	case MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE):
+	case MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE):
 		choiceId = binarydataCid;
 		binarydata = new AsnOcts;
-		binarydata->BDecContent (_b, tag, elmtLen0, bytesDecoded);
+		binarydata->BDecContent(_b, tag, elmtLen0, bytesDecoded);
 		break;
 
-	case MAKE_TAG_ID (UNIV, PRIM, INTEGER_TAG_CODE):
+	case MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE):
 		choiceId = integerdataCid;
 		integerdata = new AsnInt;
-		integerdata->BDecContent (_b, tag, elmtLen0, bytesDecoded);
+		integerdata->BDecContent(_b, tag, elmtLen0, bytesDecoded);
 		break;
 
 	default:
-		{        throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-		break;
-		}
+	{        throw InvalidTagException(typeName(), tag, STACK_ENTRY);
+	break;
+	}
 	} // end switch
 } // AsnOptionalParamChoice::BDecContent
 
 
-AsnLen AsnOptionalParamChoice::BEnc (AsnBuf &_b) const
+AsnLen AsnOptionalParamChoice::BEnc(AsnBuf& _b) const
 {
-	AsnLen l=0;
-	l = BEncContent (_b);
+	AsnLen l = 0;
+	l = BEncContent(_b);
 	return l;
 }
 
-void AsnOptionalParamChoice::JEnc (EJson::Value &b) const
+void AsnOptionalParamChoice::JEnc(EJson::Value& b) const
 {
 	FUNC("AsnOptionalParamChoice::JEnc()");
 	/*
@@ -466,20 +466,20 @@ void AsnOptionalParamChoice::JEnc (EJson::Value &b) const
 	switch (choiceId)
 	{
 	case stringdataCid:
-		stringdata->JEnc (b);
+		stringdata->JEnc(b);
 		break;
 
 	case binarydataCid:
-		{
-			b = EJson::Value(EJson::objectValue);
-			EJson::Value tmp;
-			binarydata->JEnc (tmp);
-			b["binarydata"] = tmp;
-			break;
-		}
+	{
+		b = EJson::Value(EJson::objectValue);
+		EJson::Value tmp;
+		binarydata->JEnc(tmp);
+		b["binarydata"] = tmp;
+		break;
+	}
 
 	case integerdataCid:
-		integerdata->JEnc (b);
+		integerdata->JEnc(b);
 		break;
 
 	default:
@@ -489,19 +489,19 @@ void AsnOptionalParamChoice::JEnc (EJson::Value &b) const
 } // AsnOptionalParamChoice::JEnc
 
 
-void AsnOptionalParamChoice::BDec (const AsnBuf &_b, AsnLen &bytesDecoded)
+void AsnOptionalParamChoice::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 {
 	AsnLen elmtLen = 0;
 	AsnTag tag;
 
 	/*  CHOICEs are a special case - grab identifying tag */
 	/*  this allows easier handling of nested CHOICEs */
-	tag = BDecTag (_b, bytesDecoded);
-	elmtLen = BDecLen (_b, bytesDecoded);
-	BDecContent (_b, tag, elmtLen, bytesDecoded);
+	tag = BDecTag(_b, bytesDecoded);
+	elmtLen = BDecLen(_b, bytesDecoded);
+	BDecContent(_b, tag, elmtLen, bytesDecoded);
 }
 
-bool AsnOptionalParamChoice::JDec (const EJson::Value &b){
+bool AsnOptionalParamChoice::JDec(const EJson::Value& b) {
 	FUNC("AsnOptionalParamChoice::JDec()");
 	Clear();
 	if (b.isObject()) {

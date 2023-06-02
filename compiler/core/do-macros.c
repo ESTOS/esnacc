@@ -80,70 +80,70 @@
 #include "snacc-util.h"
 #include "lib-types.h"
 
-/* Function Prototypes */
-void AddAnyRefByOid PROTO ((AnyRefList **arl, char *enumIdName, AsnOid *oid));
-void AddAnyRefByInt PROTO ((AnyRefList **arl, char *enumIdName, AsnInt intId));
-void NormalizeValue PROTO ((Module *m, ValueDef *vd, Value *v, int quiet));
-void ProcessMacrosInTypeDef PROTO ((Module *m, TypeDef *td));
-void ProcessMacrosInValueDef PROTO ((Module *m, ValueDef *vd));
-void ProcessMacrosInType PROTO ((Module *m, TypeDef *td, Type *t,
-								ValueDef *v));
-void ProcessMacrosInElmtTypes PROTO ((Module *m, TypeDef *td, NamedTypeList *e,
-									 ValueDef *v));
-void ProcessMacrosInBasicType PROTO ((Module  *m, TypeDef *td, Type *type,
-									 BasicType *bt, ValueDef *v));
-void DefineType PROTO ((Module *m, TypeDef *td, Type *t, char *name));
-void ProcessRosOperationMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-										 BasicType *bt, RosOperationMacroType *op, ValueDef *v));
-void ProcessRosErrorMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-									 BasicType *bt, RosErrorMacroType *err,
-									 ValueDef *v));
-void ProcessRosBindMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-									BasicType *bt, RosBindMacroType *bind,
-									ValueDef *v));
-void ProcessRosAseMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-								   BasicType *bt, RosAseMacroType *ase,
-								   ValueDef *v));
-void ProcessRosAcMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-								  BasicType *bt, RosAcMacroType *ac,
-								  ValueDef *v));
-void ProcessMtsasExtensionsMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-											BasicType *bt,
-											MtsasExtensionsMacroType *exts,
-											ValueDef *v));
-void ProcessMtsasExtensionMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-										   BasicType *bt,
-										   MtsasExtensionMacroType *ext,
-										   ValueDef *v));
-void ProcessMtsasExtensionAttributeMacroType PROTO ((Module *m, TypeDef *td,
-													Type *t, BasicType *bt,
-													MtsasExtensionAttributeMacroType *ext,
-													ValueDef *v));
-void ProcessMtsasTokenMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-									   BasicType *bt, MtsasTokenMacroType *tok,
-									   ValueDef *v));
-void ProcessMtsasTokenDataMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-										   BasicType *bt,
-										   MtsasTokenDataMacroType *tok,
-										   ValueDef *v));
-void ProcessMtsasSecurityCategoryMacroType PROTO ((Module *m, TypeDef *td,
-												  Type *t, BasicType *bt,
-												  MtsasSecurityCategoryMacroType *sec,
-												  ValueDef *v));
-void ProcessAsnObjectMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-									  BasicType *bt, AsnObjectMacroType *obj,
-									  ValueDef *v));
-void ProcessAsnPortMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-									BasicType *bt, AsnPortMacroType *p,
-									ValueDef *v));
-void ProcessAsnAbstractBindMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-											BasicType *bt,
-											AsnAbstractBindMacroType *bind,
-											ValueDef *v));
-void ProcessSnmpObjectTypeMacroType PROTO ((Module *m, TypeDef *td, Type *t,
-										   BasicType *bt,
-										   SnmpObjectTypeMacroType *bind,
-										   ValueDef *v));
+ /* Function Prototypes */
+void AddAnyRefByOid PROTO((AnyRefList** arl, char* enumIdName, AsnOid* oid));
+void AddAnyRefByInt PROTO((AnyRefList** arl, char* enumIdName, AsnInt intId));
+void NormalizeValue PROTO((Module* m, ValueDef* vd, Value* v, int quiet));
+void ProcessMacrosInTypeDef PROTO((Module* m, TypeDef* td));
+void ProcessMacrosInValueDef PROTO((Module* m, ValueDef* vd));
+void ProcessMacrosInType PROTO((Module* m, TypeDef* td, Type* t,
+	ValueDef* v));
+void ProcessMacrosInElmtTypes PROTO((Module* m, TypeDef* td, NamedTypeList* e,
+	ValueDef* v));
+void ProcessMacrosInBasicType PROTO((Module* m, TypeDef* td, Type* type,
+	BasicType* bt, ValueDef* v));
+void DefineType PROTO((Module* m, TypeDef* td, Type* t, char* name));
+void ProcessRosOperationMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt, RosOperationMacroType* op, ValueDef* v));
+void ProcessRosErrorMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt, RosErrorMacroType* err,
+	ValueDef* v));
+void ProcessRosBindMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt, RosBindMacroType* bind,
+	ValueDef* v));
+void ProcessRosAseMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt, RosAseMacroType* ase,
+	ValueDef* v));
+void ProcessRosAcMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt, RosAcMacroType* ac,
+	ValueDef* v));
+void ProcessMtsasExtensionsMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt,
+	MtsasExtensionsMacroType* exts,
+	ValueDef* v));
+void ProcessMtsasExtensionMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt,
+	MtsasExtensionMacroType* ext,
+	ValueDef* v));
+void ProcessMtsasExtensionAttributeMacroType PROTO((Module* m, TypeDef* td,
+	Type* t, BasicType* bt,
+	MtsasExtensionAttributeMacroType* ext,
+	ValueDef* v));
+void ProcessMtsasTokenMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt, MtsasTokenMacroType* tok,
+	ValueDef* v));
+void ProcessMtsasTokenDataMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt,
+	MtsasTokenDataMacroType* tok,
+	ValueDef* v));
+void ProcessMtsasSecurityCategoryMacroType PROTO((Module* m, TypeDef* td,
+	Type* t, BasicType* bt,
+	MtsasSecurityCategoryMacroType* sec,
+	ValueDef* v));
+void ProcessAsnObjectMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt, AsnObjectMacroType* obj,
+	ValueDef* v));
+void ProcessAsnPortMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt, AsnPortMacroType* p,
+	ValueDef* v));
+void ProcessAsnAbstractBindMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt,
+	AsnAbstractBindMacroType* bind,
+	ValueDef* v));
+void ProcessSnmpObjectTypeMacroType PROTO((Module* m, TypeDef* td, Type* t,
+	BasicType* bt,
+	SnmpObjectTypeMacroType* bind,
+	ValueDef* v));
 
 
 /*
@@ -155,33 +155,33 @@ static TypeDef  *snmpObjectSyntaxesG = NULL;
  * might do something with them.
  */
 void
-ProcessMacros PARAMS ((m),
-    Module *m)
+ProcessMacros PARAMS((m),
+	Module* m)
 {
-    TypeDef *td;
-    ValueDef *vd;
+	TypeDef* td;
+	ValueDef* vd;
 
-    /*
-     * go through each type in typeList
-     */
-    FOR_EACH_LIST_ELMT (td, m->typeDefs)
-    {
-        ProcessMacrosInTypeDef (m, td);
-    }
+	/*
+	 * go through each type in typeList
+	 */
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+	{
+		ProcessMacrosInTypeDef(m, td);
+	}
 
-    /*
-     *  go through each value in valueList and link
-     */
-    FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-    {
-        ProcessMacrosInValueDef (m, vd);
-    }
+	/*
+	 *  go through each value in valueList and link
+	 */
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		ProcessMacrosInValueDef(m, vd);
+	}
 
-    /* add snmp object syntaxes choice to typedef list */
+	/* add snmp object syntaxes choice to typedef list */
 /*
-    tmpTypeDefHndl = (TypeDef**) AsnListAppend (m->typeDefs);
-    *tmpTypeDefHndl =  snmpObjectSyntaxesG;
-    snmpObjectSyntaxesG = NULL;
+	tmpTypeDefHndl = (TypeDef**) AsnListAppend (m->typeDefs);
+	*tmpTypeDefHndl =  snmpObjectSyntaxesG;
+	snmpObjectSyntaxesG = NULL;
 */
 
 
@@ -199,29 +199,29 @@ ProcessMacros PARAMS ((m),
  * the ANY type by the user.
  */
 void
-AddAnyRefByOid PARAMS ((arl, enumId, oid),
-    AnyRefList **arl _AND_
-    char *enumId _AND_
-    AsnOid *oid)
+AddAnyRefByOid PARAMS((arl, enumId, oid),
+	AnyRefList** arl _AND_
+	char* enumId _AND_
+	AsnOid* oid)
 {
-    AnyRef **anyRefHndl;
+	AnyRef** anyRefHndl;
 
-    if (*arl == NULL)
-        *arl = AsnListNew (sizeof (void*));
+	if (*arl == NULL)
+		*arl = AsnListNew(sizeof(void*));
 
-    anyRefHndl = (AnyRef**)AsnListAppend (*arl);
-    *anyRefHndl = MT (AnyRef);
+	anyRefHndl = (AnyRef**)AsnListAppend(*arl);
+	*anyRefHndl = MT(AnyRef);
 
 	size_t size = strlen(enumId) + 1;
-    (*anyRefHndl)->anyIdName = Malloc (size);
-    strcpy_s((*anyRefHndl)->anyIdName, size, enumId);
+	(*anyRefHndl)->anyIdName = Malloc(size);
+	strcpy_s((*anyRefHndl)->anyIdName, size, enumId);
 
-    (*anyRefHndl)->id = MT (OidOrInt);
-    (*anyRefHndl)->id->choiceId = OIDORINT_OID;
-    (*anyRefHndl)->id->a.oid = MT (AsnOid);
-    (*anyRefHndl)->id->a.oid->octs = Malloc (oid->octetLen);
-    memcpy ((*anyRefHndl)->id->a.oid->octs, oid->octs, oid->octetLen);
-    (*anyRefHndl)->id->a.oid->octetLen =  oid->octetLen;
+	(*anyRefHndl)->id = MT(OidOrInt);
+	(*anyRefHndl)->id->choiceId = OIDORINT_OID;
+	(*anyRefHndl)->id->a.oid = MT(AsnOid);
+	(*anyRefHndl)->id->a.oid->octs = Malloc(oid->octetLen);
+	memcpy((*anyRefHndl)->id->a.oid->octs, oid->octs, oid->octetLen);
+	(*anyRefHndl)->id->a.oid->octetLen = oid->octetLen;
 
 } /* AddAnyRefByOid */
 
@@ -230,203 +230,203 @@ AddAnyRefByOid PARAMS ((arl, enumId, oid),
  * instead of an OBJECT IDENTIFIER
  */
 void
-AddAnyRefByInt PARAMS ((arl, enumId, intId),
-    AnyRefList **arl _AND_
-    char *enumId _AND_
-    AsnInt intId)
+AddAnyRefByInt PARAMS((arl, enumId, intId),
+	AnyRefList** arl _AND_
+	char* enumId _AND_
+	AsnInt intId)
 {
-    AnyRef **anyRefHndl;
+	AnyRef** anyRefHndl;
 
-    if (*arl == NULL)
-        *arl = AsnListNew (sizeof (void*));
+	if (*arl == NULL)
+		*arl = AsnListNew(sizeof(void*));
 
-    anyRefHndl = (AnyRef**)AsnListAppend (*arl);
-    *anyRefHndl = MT (AnyRef);
+	anyRefHndl = (AnyRef**)AsnListAppend(*arl);
+	*anyRefHndl = MT(AnyRef);
 
 	size_t size = strlen(enumId) + 1;
-    (*anyRefHndl)->anyIdName = Malloc (size);
-    strcpy_s((*anyRefHndl)->anyIdName, size, enumId);
-    (*anyRefHndl)->id = MT (OidOrInt);
-    (*anyRefHndl)->id->choiceId = OIDORINT_INTID;
-    (*anyRefHndl)->id->a.intId = intId;
+	(*anyRefHndl)->anyIdName = Malloc(size);
+	strcpy_s((*anyRefHndl)->anyIdName, size, enumId);
+	(*anyRefHndl)->id = MT(OidOrInt);
+	(*anyRefHndl)->id->choiceId = OIDORINT_INTID;
+	(*anyRefHndl)->id->a.intId = intId;
 
 } /* AddAnyRefByInt */
 
 
 void
-ProcessMacrosInValueDef PARAMS ((m, vd),
-    Module *m _AND_
-    ValueDef *vd)
+ProcessMacrosInValueDef PARAMS((m, vd),
+	Module* m _AND_
+	ValueDef* vd)
 {
-   if (vd == NULL)
-       return;
+	if (vd == NULL)
+		return;
 
-   /* turn linked oid's into encoded oids */
-    if (vd->value->basicValue->choiceId == BASICVALUE_LINKEDOID)
-        NormalizeValue (m, vd, vd->value, FALSE);
+	/* turn linked oid's into encoded oids */
+	if (vd->value->basicValue->choiceId == BASICVALUE_LINKEDOID)
+		NormalizeValue(m, vd, vd->value, FALSE);
 
-   ProcessMacrosInType (m, NULL, vd->value->type, vd);
+	ProcessMacrosInType(m, NULL, vd->value->type, vd);
 
 } /* ProcessMacrosInValueDef */
 
 
 
 void
-ProcessMacrosInTypeDef PARAMS ((m,td),
-    Module *m _AND_
-    TypeDef *td)
+ProcessMacrosInTypeDef PARAMS((m, td),
+	Module* m _AND_
+	TypeDef* td)
 {
-   if (td == NULL)
-       return;
+	if (td == NULL)
+		return;
 
-   ProcessMacrosInType (m, td, td->type, NULL);	
+	ProcessMacrosInType(m, td, td->type, NULL);
 
 } /* ProcessMacrosInTypeDef */
 
 
 
 void
-ProcessMacrosInType PARAMS ((m, td,t, v),
-	Module *m _AND_
-	TypeDef *td _AND_
-	Type *t _AND_
-	ValueDef *v)
+ProcessMacrosInType PARAMS((m, td, t, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	ValueDef* v)
 {
 	if (t == NULL)
 		return;
 
-	ProcessMacrosInBasicType (m, td, t, t->basicType, v);
+	ProcessMacrosInBasicType(m, td, t, t->basicType, v);
 
 } /* ProcessMacrosInTypeDef */
 
 
 
 void
-ProcessMacrosInElmtTypes PARAMS ((m, td, e, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    NamedTypeList *e _AND_
-    ValueDef *v)
+ProcessMacrosInElmtTypes PARAMS((m, td, e, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	NamedTypeList* e _AND_
+	ValueDef* v)
 {
-    NamedType *nt;
-    FOR_EACH_LIST_ELMT (nt, e)
-    {
-        ProcessMacrosInType (m, td, nt->type, v);
-    }
+	NamedType* nt;
+	FOR_EACH_LIST_ELMT(nt, e)
+	{
+		ProcessMacrosInType(m, td, nt->type, v);
+	}
 }  /* ProcessElmtTypes */
 
 
 
 void
-ProcessMacrosInBasicType PARAMS ((m,td,type,bt, v),
-    Module  *m _AND_
-    TypeDef *td _AND_
-    Type *type _AND_
-    BasicType *bt _AND_
-    ValueDef *v)
+ProcessMacrosInBasicType PARAMS((m, td, type, bt, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* type _AND_
+	BasicType* bt _AND_
+	ValueDef* v)
 {
 
-    if (bt == NULL)
-        return;
+	if (bt == NULL)
+		return;
 
-    switch (bt->choiceId)
-    {
-        case BASICTYPE_SEQUENCE:
-        case BASICTYPE_SET:
-        case BASICTYPE_CHOICE:
-            ProcessMacrosInElmtTypes (m, td, bt->a.set,v);
-            break;
-
-
-
-        case BASICTYPE_SEQUENCEOF:
-        case BASICTYPE_SETOF:
-            ProcessMacrosInType (m, td, bt->a.setOf, v);
-            break;
+	switch (bt->choiceId)
+	{
+	case BASICTYPE_SEQUENCE:
+	case BASICTYPE_SET:
+	case BASICTYPE_CHOICE:
+		ProcessMacrosInElmtTypes(m, td, bt->a.set, v);
+		break;
 
 
 
-        case BASICTYPE_MACROTYPE:
-            switch (bt->a.macroType->choiceId)
-            {
-        case MACROTYPE_ASNABSTRACTOPERATION:
-        case MACROTYPE_ROSOPERATION:
+	case BASICTYPE_SEQUENCEOF:
+	case BASICTYPE_SETOF:
+		ProcessMacrosInType(m, td, bt->a.setOf, v);
+		break;
 
-            ProcessRosOperationMacroType (m, td, type, bt, bt->a.macroType->a.rosOperation, v);
-            break;
 
-        case MACROTYPE_ROSERROR:
-        case MACROTYPE_ASNABSTRACTERROR:
-            ProcessRosErrorMacroType (m, td, type, bt, bt->a.macroType->a.rosError, v);
-             break;
 
-        case MACROTYPE_ROSBIND:
-        case MACROTYPE_ROSUNBIND:
-            ProcessRosBindMacroType (m, td, type, bt, bt->a.macroType->a.rosBind,v);
-             break;
+	case BASICTYPE_MACROTYPE:
+		switch (bt->a.macroType->choiceId)
+		{
+		case MACROTYPE_ASNABSTRACTOPERATION:
+		case MACROTYPE_ROSOPERATION:
 
-        case MACROTYPE_ROSASE:
-            ProcessRosAseMacroType (m, td, type, bt, bt->a.macroType->a.rosAse,v);
-             break;
+			ProcessRosOperationMacroType(m, td, type, bt, bt->a.macroType->a.rosOperation, v);
+			break;
 
-        case MACROTYPE_MTSASEXTENSIONS:
-            ProcessMtsasExtensionsMacroType (m, td, type, bt, bt->a.macroType->a.mtsasExtensions,v);
-            break;
+		case MACROTYPE_ROSERROR:
+		case MACROTYPE_ASNABSTRACTERROR:
+			ProcessRosErrorMacroType(m, td, type, bt, bt->a.macroType->a.rosError, v);
+			break;
 
-        case MACROTYPE_MTSASEXTENSION:
-            ProcessMtsasExtensionMacroType (m, td, type, bt, bt->a.macroType->a.mtsasExtension,v);
-            break;
+		case MACROTYPE_ROSBIND:
+		case MACROTYPE_ROSUNBIND:
+			ProcessRosBindMacroType(m, td, type, bt, bt->a.macroType->a.rosBind, v);
+			break;
 
-        case MACROTYPE_MTSASEXTENSIONATTRIBUTE:
-            ProcessMtsasExtensionAttributeMacroType (m, td, type, bt, bt->a.macroType->a.mtsasExtensionAttribute,v);
-            break;
+		case MACROTYPE_ROSASE:
+			ProcessRosAseMacroType(m, td, type, bt, bt->a.macroType->a.rosAse, v);
+			break;
 
-        case MACROTYPE_MTSASTOKEN:
-            ProcessMtsasTokenMacroType (m, td, type, bt, bt->a.macroType->a.mtsasToken,v);
-            break;
+		case MACROTYPE_MTSASEXTENSIONS:
+			ProcessMtsasExtensionsMacroType(m, td, type, bt, bt->a.macroType->a.mtsasExtensions, v);
+			break;
 
-        case MACROTYPE_MTSASTOKENDATA:
-            ProcessMtsasTokenDataMacroType (m, td, type, bt, bt->a.macroType->a.mtsasTokenData,v);
-            break;
+		case MACROTYPE_MTSASEXTENSION:
+			ProcessMtsasExtensionMacroType(m, td, type, bt, bt->a.macroType->a.mtsasExtension, v);
+			break;
 
-        case MACROTYPE_MTSASSECURITYCATEGORY:
-            ProcessMtsasSecurityCategoryMacroType (m, td, type, bt, bt->a.macroType->a.mtsasSecurityCategory,v);
-            break;
+		case MACROTYPE_MTSASEXTENSIONATTRIBUTE:
+			ProcessMtsasExtensionAttributeMacroType(m, td, type, bt, bt->a.macroType->a.mtsasExtensionAttribute, v);
+			break;
 
-        case MACROTYPE_ASNOBJECT:
-            ProcessAsnObjectMacroType (m, td, type, bt, bt->a.macroType->a.asnObject,v);
-            break;
+		case MACROTYPE_MTSASTOKEN:
+			ProcessMtsasTokenMacroType(m, td, type, bt, bt->a.macroType->a.mtsasToken, v);
+			break;
 
-        case MACROTYPE_ASNPORT:
-            ProcessAsnPortMacroType (m, td, type, bt, bt->a.macroType->a.asnPort,v);
-            break;
+		case MACROTYPE_MTSASTOKENDATA:
+			ProcessMtsasTokenDataMacroType(m, td, type, bt, bt->a.macroType->a.mtsasTokenData, v);
+			break;
 
-        case MACROTYPE_ASNABSTRACTBIND:
-        case MACROTYPE_ASNABSTRACTUNBIND:
-            ProcessAsnAbstractBindMacroType (m, td, type, bt, bt->a.macroType->a.asnAbstractBind,v);
-            break;
+		case MACROTYPE_MTSASSECURITYCATEGORY:
+			ProcessMtsasSecurityCategoryMacroType(m, td, type, bt, bt->a.macroType->a.mtsasSecurityCategory, v);
+			break;
 
-        case MACROTYPE_AFALGORITHM:
-        case MACROTYPE_AFENCRYPTED:
-        case MACROTYPE_AFPROTECTED:
-        case MACROTYPE_AFSIGNATURE:
-        case MACROTYPE_AFSIGNED:
-            break;
+		case MACROTYPE_ASNOBJECT:
+			ProcessAsnObjectMacroType(m, td, type, bt, bt->a.macroType->a.asnObject, v);
+			break;
 
-        case MACROTYPE_SNMPOBJECTTYPE:
-            ProcessSnmpObjectTypeMacroType (m, td, type, bt, bt->a.macroType->a.snmpObjectType,v);
-            break;
+		case MACROTYPE_ASNPORT:
+			ProcessAsnPortMacroType(m, td, type, bt, bt->a.macroType->a.asnPort, v);
+			break;
 
-        default:
-           /* ignore any others */
-        break;
-    }
+		case MACROTYPE_ASNABSTRACTBIND:
+		case MACROTYPE_ASNABSTRACTUNBIND:
+			ProcessAsnAbstractBindMacroType(m, td, type, bt, bt->a.macroType->a.asnAbstractBind, v);
+			break;
 
-        default:
-          /* the rest do not need processing */
+		case MACROTYPE_AFALGORITHM:
+		case MACROTYPE_AFENCRYPTED:
+		case MACROTYPE_AFPROTECTED:
+		case MACROTYPE_AFSIGNATURE:
+		case MACROTYPE_AFSIGNED:
+			break;
 
-        break;
-    }
+		case MACROTYPE_SNMPOBJECTTYPE:
+			ProcessSnmpObjectTypeMacroType(m, td, type, bt, bt->a.macroType->a.snmpObjectType, v);
+			break;
+
+		default:
+			/* ignore any others */
+			break;
+		}
+
+	default:
+		/* the rest do not need processing */
+
+		break;
+	}
 }  /* ProcessMacrosInBasicType */
 
 
@@ -437,213 +437,213 @@ ProcessMacrosInBasicType PARAMS ((m,td,type,bt, v),
  * be from the typeref if t was a local or import type ref)
  */
 void
-DefineType PARAMS ((m, td, t, name),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    char *name)
+DefineType PARAMS((m, td, t, name),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	char* name)
 {
-   int digit;
-   TypeDef *newDef;
-   TypeDef **tmpTypeDefHndl;
-   Type *tmpType;
+	int digit;
+	TypeDef* newDef;
+	TypeDef** tmpTypeDefHndl;
+	Type* tmpType;
 
-   if (IsNewType (t))
-   {
-       newDef = (TypeDef*)Malloc (sizeof (TypeDef));
-       newDef->exported = FALSE;
-       newDef->type = (Type*)Malloc (sizeof (Type));
-       memcpy (newDef->type, t, sizeof (Type));
+	if (IsNewType(t))
+	{
+		newDef = (TypeDef*)Malloc(sizeof(TypeDef));
+		newDef->exported = FALSE;
+		newDef->type = (Type*)Malloc(sizeof(Type));
+		memcpy(newDef->type, t, sizeof(Type));
 
-	   size_t size = strlen(name) + 4;
-	   newDef->definedName = Malloc (size);
-       strcpy_s(newDef->definedName, size, name);
+		size_t size = strlen(name) + 4;
+		newDef->definedName = Malloc(size);
+		strcpy_s(newDef->definedName, size, name);
 
-       if (islower (newDef->definedName[0]))
-           newDef->definedName[0] =
-               (char)toupper (newDef->definedName[0]);
+		if (islower(newDef->definedName[0]))
+			newDef->definedName[0] =
+			(char)toupper(newDef->definedName[0]);
 
 
-       /* set up unique type name for new type */
-       for (digit = 0;
-           (LookupType (m->typeDefs, newDef->definedName) != NULL);
-           digit++)
-           AppendDigit (newDef->definedName, size, digit);
+		/* set up unique type name for new type */
+		for (digit = 0;
+			(LookupType(m->typeDefs, newDef->definedName) != NULL);
+			digit++)
+			AppendDigit(newDef->definedName, size, digit);
 
-       /*
-        * now put new typedef  at head of list
-        */
-       tmpTypeDefHndl = (TypeDef**)AsnListPrepend (m->typeDefs);
-       *tmpTypeDefHndl = newDef;
+		/*
+		 * now put new typedef  at head of list
+		 */
+		tmpTypeDefHndl = (TypeDef**)AsnListPrepend(m->typeDefs);
+		*tmpTypeDefHndl = newDef;
 
-       /* convert macro's type def into a ref */
+		/* convert macro's type def into a ref */
 
-       SetupType (&tmpType, BASICTYPE_LOCALTYPEREF, 0);
-       memcpy (t, tmpType, sizeof (Type));
-       Free (tmpType);
-       t->implicit = FALSE;
-       t->basicType->a.localTypeRef = (TypeRef*)Malloc (sizeof (TypeRef));
-       t->basicType->a.localTypeRef->link = newDef;
-       t->basicType->a.localTypeRef->module = m;
-       t->basicType->a.localTypeRef->typeName = newDef->definedName;
-   }
+		SetupType(&tmpType, BASICTYPE_LOCALTYPEREF, 0);
+		memcpy(t, tmpType, sizeof(Type));
+		Free(tmpType);
+		t->implicit = FALSE;
+		t->basicType->a.localTypeRef = (TypeRef*)Malloc(sizeof(TypeRef));
+		t->basicType->a.localTypeRef->link = newDef;
+		t->basicType->a.localTypeRef->module = m;
+		t->basicType->a.localTypeRef->typeName = newDef->definedName;
+	}
 } /* DefineType */
 
 
 void
-ProcessRosOperationMacroType PARAMS ((m, td, t, bt, op, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    RosOperationMacroType *op _AND_
-    ValueDef *v)
+ProcessRosOperationMacroType PARAMS((m, td, t, bt, op, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	RosOperationMacroType* op _AND_
+	ValueDef* v)
 {
 	if (v == NULL)
 		return;
 
-    if (op->arguments != NULL)
-        DefineType (m, td, op->arguments->type, v->definedName);
+	if (op->arguments != NULL)
+		DefineType(m, td, op->arguments->type, v->definedName);
 
-    if (op->result != NULL)
-        DefineType (m, td, op->result->type, v->definedName);
+	if (op->result != NULL)
+		DefineType(m, td, op->result->type, v->definedName);
 }  /* ProcessRosOperationMacroType */
 
 
 
 void
-ProcessRosErrorMacroType PARAMS ((m, td, t, bt, err, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    RosErrorMacroType *err _AND_
-    ValueDef *v)
+ProcessRosErrorMacroType PARAMS((m, td, t, bt, err, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	RosErrorMacroType* err _AND_
+	ValueDef* v)
 {
 	if (v == NULL)
 		return;
 
-    if ((err != NULL) && (err->parameter != NULL))
-        DefineType (m, td, err->parameter->type, v->definedName);
+	if ((err != NULL) && (err->parameter != NULL))
+		DefineType(m, td, err->parameter->type, v->definedName);
 
 }   /* ProcessRosErrorMacroType */
 
 
 void
-ProcessRosBindMacroType PARAMS ((m, td, t, bt, bind, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    RosBindMacroType *bind _AND_
-    ValueDef *v)
+ProcessRosBindMacroType PARAMS((m, td, t, bt, bind, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	RosBindMacroType* bind _AND_
+	ValueDef* v)
 {
 	if (v == NULL)
 		return;
 
-    if (bind != NULL)
-    {
-        DefineType (m, td, bind->argument->type, v->definedName);
-        DefineType (m, td, bind->result->type, v->definedName);
-        DefineType (m, td, bind->error->type, v->definedName);
-    }
+	if (bind != NULL)
+	{
+		DefineType(m, td, bind->argument->type, v->definedName);
+		DefineType(m, td, bind->result->type, v->definedName);
+		DefineType(m, td, bind->error->type, v->definedName);
+	}
 }   /* ProcessRosBindMacroType */
 
 
 void
-ProcessRosAseMacroType PARAMS ((m, td, t, bt, ase, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    RosAseMacroType *ase _AND_
-    ValueDef *v)
+ProcessRosAseMacroType PARAMS((m, td, t, bt, ase, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	RosAseMacroType* ase _AND_
+	ValueDef* v)
 {
 }  /* ProcessRosAseMacroType */
 
 
 
 void
-ProcessRosAcMacroType PARAMS ((m, td, t, bt, ac, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    RosAcMacroType *ac  _AND_
-    ValueDef *v)
+ProcessRosAcMacroType PARAMS((m, td, t, bt, ac, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	RosAcMacroType* ac  _AND_
+	ValueDef* v)
 {
 }  /* ProcessRosAcMacroType */
 
 
 
 void
-ProcessMtsasExtensionsMacroType PARAMS ((m, td, t, bt, exts, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    MtsasExtensionsMacroType *exts _AND_
-    ValueDef *v)
+ProcessMtsasExtensionsMacroType PARAMS((m, td, t, bt, exts, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	MtsasExtensionsMacroType* exts _AND_
+	ValueDef* v)
 {
 }  /* ProcessMtsasExtensionsMacroType */
 
 
 void
-ProcessMtsasExtensionMacroType PARAMS ((m, td, t, bt, ext, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    MtsasExtensionMacroType *ext _AND_
-    ValueDef *v)
+ProcessMtsasExtensionMacroType PARAMS((m, td, t, bt, ext, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	MtsasExtensionMacroType* ext _AND_
+	ValueDef* v)
 {
 }  /* ProcessMtsasExtensionMacroType */
 
 
 void
-ProcessMtsasExtensionAttributeMacroType PARAMS ((m, td, t, bt, ext, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    MtsasExtensionAttributeMacroType *ext _AND_
-    ValueDef *v)
+ProcessMtsasExtensionAttributeMacroType PARAMS((m, td, t, bt, ext, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	MtsasExtensionAttributeMacroType* ext _AND_
+	ValueDef* v)
 {
 }  /* ProcessMtsasExtensionAttributeMacroType */
 
 
 void
-ProcessMtsasTokenMacroType PARAMS ((m, td, t, bt, tok, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    MtsasTokenMacroType *tok _AND_
-    ValueDef *v)
+ProcessMtsasTokenMacroType PARAMS((m, td, t, bt, tok, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	MtsasTokenMacroType* tok _AND_
+	ValueDef* v)
 {
 }  /* ProcessMtsasTokenMacroType */
 
 
 void
-ProcessMtsasTokenDataMacroType PARAMS ((m, td, t, bt, tok, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    MtsasTokenDataMacroType *tok _AND_
-    ValueDef *v)
+ProcessMtsasTokenDataMacroType PARAMS((m, td, t, bt, tok, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	MtsasTokenDataMacroType* tok _AND_
+	ValueDef* v)
 {
 }  /* ProcessMtsasTokenDataMacroType */
 
 
 void
-ProcessMtsasSecurityCategoryMacroType PARAMS ((m, td, t, bt, sec, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    MtsasSecurityCategoryMacroType *sec _AND_
-    ValueDef *v)
+ProcessMtsasSecurityCategoryMacroType PARAMS((m, td, t, bt, sec, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	MtsasSecurityCategoryMacroType* sec _AND_
+	ValueDef* v)
 {
 
 }  /* ProcessMtsasSecurityCategoryMacroType */
@@ -651,129 +651,129 @@ ProcessMtsasSecurityCategoryMacroType PARAMS ((m, td, t, bt, sec, v),
 
 
 void
-ProcessAsnObjectMacroType PARAMS ((m, td, t, bt, obj, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    AsnObjectMacroType *obj _AND_
-    ValueDef *v)
+ProcessAsnObjectMacroType PARAMS((m, td, t, bt, obj, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	AsnObjectMacroType* obj _AND_
+	ValueDef* v)
 {
 }  /* ProcessAsnObjectMacroType */
 
 
 void
-ProcessAsnPortMacroType PARAMS ((m, td, t, bt, p, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    AsnPortMacroType *p _AND_
-    ValueDef *v)
+ProcessAsnPortMacroType PARAMS((m, td, t, bt, p, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	AsnPortMacroType* p _AND_
+	ValueDef* v)
 {
 }  /* ProcessAsnPortMacroType */
 
 
 
 void
-ProcessAsnAbstractBindMacroType PARAMS ((m, td, t, bt, bind, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    AsnAbstractBindMacroType *bind _AND_
-    ValueDef *v)
+ProcessAsnAbstractBindMacroType PARAMS((m, td, t, bt, bind, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	AsnAbstractBindMacroType* bind _AND_
+	ValueDef* v)
 {
 }  /* ProcessAsnBindMacroType */
 
 
 void
-ProcessSnmpObjectTypeMacroType  PARAMS ((m, td, t, bt, ot, v),
-    Module *m _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    BasicType *bt _AND_
-    SnmpObjectTypeMacroType *ot _AND_
-    ValueDef *v)
+ProcessSnmpObjectTypeMacroType  PARAMS((m, td, t, bt, ot, v),
+	Module* m _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	BasicType* bt _AND_
+	SnmpObjectTypeMacroType* ot _AND_
+	ValueDef* v)
 {
-    char anyId[256];
-    AnyRefList **arlHndl;
+	char anyId[256];
+	AnyRefList** arlHndl;
 
-    if ((ot != NULL) && (ot->syntax != NULL))
-         DefineType (m, td, ot->syntax, v->definedName);
+	if ((ot != NULL) && (ot->syntax != NULL))
+		DefineType(m, td, ot->syntax, v->definedName);
 
-    /*
-     * add ANY ref stuff to type ref'd by this macro so it is
-     * included in the ANY hash table.
-     */
+	/*
+	 * add ANY ref stuff to type ref'd by this macro so it is
+	 * included in the ANY hash table.
+	 */
 
-    /*
-     * do this since the SNMP spec doesn't have an ANY type
-     * but uses the mechanism. (SNMP uses an OCTET STRING
-     * where the 'ANY' value is
-     */
-    m->hasAnys = TRUE;
+	 /*
+	  * do this since the SNMP spec doesn't have an ANY type
+	  * but uses the mechanism. (SNMP uses an OCTET STRING
+	  * where the 'ANY' value is
+	  */
+	m->hasAnys = TRUE;
 
-    strcpy_s(anyId, 256, v->definedName);
-    Dash2Underscore (anyId, strlen (anyId));
-    strcat_s(anyId, 256, "_ANY_ID");
+	strcpy_s(anyId, 256, v->definedName);
+	Dash2Underscore(anyId, strlen(anyId));
+	strcat_s(anyId, 256, "_ANY_ID");
 
-    arlHndl = GetAnyRefListHndl (ot->syntax);
+	arlHndl = GetAnyRefListHndl(ot->syntax);
 
 
-    if (v->value->basicValue->choiceId == BASICVALUE_OID)
-        AddAnyRefByOid (arlHndl, anyId, v->value->basicValue->a.oid);
+	if (v->value->basicValue->choiceId == BASICVALUE_OID)
+		AddAnyRefByOid(arlHndl, anyId, v->value->basicValue->a.oid);
 
-    /*  integer types are not allowed, but relax constraints anyway */
-    else
-        AddAnyRefByInt (arlHndl, anyId, v->value->basicValue->a.integer);
+	/*  integer types are not allowed, but relax constraints anyway */
+	else
+		AddAnyRefByInt(arlHndl, anyId, v->value->basicValue->a.integer);
 
-/* REN -- 1/12/98 -- Also need to add a reference to the global ref table
-for importTypeRefs since GetAnyRefListHndl() and 
-AddAnyRefByInt() only adds the ref to the Type (basic or localTypeRef).  
-Note:  For imported Types, GetAnyRefListHndl() will never return a handle 
-into the global ref table. */
-	
+	/* REN -- 1/12/98 -- Also need to add a reference to the global ref table
+	for importTypeRefs since GetAnyRefListHndl() and
+	AddAnyRefByInt() only adds the ref to the Type (basic or localTypeRef).
+	Note:  For imported Types, GetAnyRefListHndl() will never return a handle
+	into the global ref table. */
+
 	/* Only add this type if it's an importTypeRef  */
-    if ((ot->syntax != NULL) && 
+	if ((ot->syntax != NULL) &&
 		(ot->syntax->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 	{
 		arlHndl = LIBTYPE_GET_ANY_REFS_HNDL(ot->syntax->basicType->choiceId);
 		if (v->value->basicValue->choiceId == BASICVALUE_OID)
-			AddAnyRefByOid (arlHndl, anyId, v->value->basicValue->a.oid);
+			AddAnyRefByOid(arlHndl, anyId, v->value->basicValue->a.oid);
 		else
-			AddAnyRefByInt (arlHndl, anyId, v->value->basicValue->a.integer);
+			AddAnyRefByInt(arlHndl, anyId, v->value->basicValue->a.integer);
 	}
-/* REN -- end */
+	/* REN -- end */
 
-    /* make a choice with all the object type elmts */
-    /*   USING THE ANY HASH TABLE NOW
-    if (snmpObjectSyntaxesG == NULL)
-    {
-        snmpObjectSyntaxesG = (TypeDef*) Malloc (sizeof (TypeDef));
-        SetupType (&snmpObjectSyntaxesG->type, BASICTYPE_CHOICE, 0);
-        snmpObjectSyntaxesG->type->basicType->a.choice =
-            AsnListNew (sizeof (void*));
-        snmpObjectSyntaxesG->definedName = "SnmpOpaqueTypes";
+		/* make a choice with all the object type elmts */
+		/*   USING THE ANY HASH TABLE NOW
+		if (snmpObjectSyntaxesG == NULL)
+		{
+			snmpObjectSyntaxesG = (TypeDef*) Malloc (sizeof (TypeDef));
+			SetupType (&snmpObjectSyntaxesG->type, BASICTYPE_CHOICE, 0);
+			snmpObjectSyntaxesG->type->basicType->a.choice =
+				AsnListNew (sizeof (void*));
+			snmpObjectSyntaxesG->definedName = "SnmpOpaqueTypes";
 
-    }
-    */
+		}
+		*/
 
-    /*  NOT DONE ANYMORE
-     * make each field in the choice the same as the object
-     * types SYNTAX field type (adjusted by Define type)
-     * make choice field name same as OBJ-TYPE value Defs name
-     *
-     * NOTE - using ptrs to type/fieldname, not duplicating them
-     * this may cause freeing probs
-     */
-    /*
-    nt = MT (NamedType);
-    nt->fieldName = v->definedName;
-    nt->type = ot->syntax;
+		/*  NOT DONE ANYMORE
+		 * make each field in the choice the same as the object
+		 * types SYNTAX field type (adjusted by Define type)
+		 * make choice field name same as OBJ-TYPE value Defs name
+		 *
+		 * NOTE - using ptrs to type/fieldname, not duplicating them
+		 * this may cause freeing probs
+		 */
+		 /*
+		 nt = MT (NamedType);
+		 nt->fieldName = v->definedName;
+		 nt->type = ot->syntax;
 
-    tmpNtHndl = (NamedType**)
-        AsnListAppend (snmpObjectSyntaxesG->type->basicType->a.choice);
-    *tmpNtHndl = nt;
-    */
+		 tmpNtHndl = (NamedType**)
+			 AsnListAppend (snmpObjectSyntaxesG->type->basicType->a.choice);
+		 *tmpNtHndl = nt;
+		 */
 }  /* ProcessSnmpObjectTypeMacro */

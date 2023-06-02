@@ -78,7 +78,7 @@
 #include "snacc-util.h"
 
 
-int OidArcNameToNum PROTO ((char *name));
+int OidArcNameToNum PROTO((char* name));
 
 
 /*
@@ -110,28 +110,28 @@ int OidArcNameToNum PROTO ((char *name));
 #define PRINT_VAL(vd)\
     PrintValueDef (errFileG, vd);
 
-/*
- * globals
- */
-static ValueDefList *newValsG;
+ /*
+  * globals
+  */
+static ValueDefList* newValsG;
 static int parseValuesErrG;
 static unsigned long valLineNoG;
-static char *farthestPosG;
+static char* farthestPosG;
 
 /*
  * prototypes for non-exported routines
  */
-char *StripComments PROTO ((char *asn1Str, size_t len));
-Value *ParseValue PROTO ((ModuleList *mods, Module *m, ValueDef *vd, Type *t, char *valueNotation, size_t len));
+char* StripComments PROTO((char* asn1Str, size_t len));
+Value* ParseValue PROTO((ModuleList* mods, Module* m, ValueDef* vd, Type* t, char* valueNotation, size_t len));
 
-Value *ParseValueInternal PROTO ((ModuleList *mods, Module *m, ValueDef *vd, Type *t, char **valueNotation, char *eof));
+Value* ParseValueInternal PROTO((ModuleList* mods, Module* m, ValueDef* vd, Type* t, char** valueNotation, char* eof));
 
-int ParseOidValue PROTO ((ModuleList *mods, Module *m, ValueDef *vd, Type *t, char **valueNotation, char *eof, Value **result));
+int ParseOidValue PROTO((ModuleList* mods, Module* m, ValueDef* vd, Type* t, char** valueNotation, char* eof, Value** result));
 
-void SkipWht PROTO ((char **vStr, char *eof));
-int  ParseIdentifier PROTO ((char **valueNotation, char *eof, char **result));
-int  ParseNum PROTO ((char **valueNotation, char *eof, char **result));
-void AddNewValueDef PROTO ((ValueDefList *vdl, char *name, Value *value));
+void SkipWht PROTO((char** vStr, char* eof));
+int  ParseIdentifier PROTO((char** valueNotation, char* eof, char** result));
+int  ParseNum PROTO((char** valueNotation, char* eof, char** result));
+void AddNewValueDef PROTO((ValueDefList* vdl, char* name, Value* value));
 
 
 
@@ -140,46 +140,46 @@ void AddNewValueDef PROTO ((ValueDefList *vdl, char *name, Value *value));
  * otherwise returns non-zero
  */
 int
-ParseValues PARAMS ((mods, m),
-    ModuleList *mods _AND_
-    Module *m)
+ParseValues PARAMS((mods, m),
+	ModuleList* mods _AND_
+	Module* m)
 {
-    ValueDef *v;
-    Value *pv;
+	ValueDef* v;
+	Value* pv;
 
-    newValsG = AsnListNew (sizeof (void*));
+	newValsG = AsnListNew(sizeof(void*));
 
-    FOR_EACH_LIST_ELMT (v, m->valueDefs)
-    {
-        if (v->value->basicValue->choiceId == BASICVALUE_VALUENOTATION)
-        {
-            valLineNoG = v->value->lineNo;
-            pv = ParseValue (mods, m, v, v->value->type, v->value->basicValue->a.valueNotation->octs, v->value->basicValue->a.valueNotation->octetLen);
+	FOR_EACH_LIST_ELMT(v, m->valueDefs)
+	{
+		if (v->value->basicValue->choiceId == BASICVALUE_VALUENOTATION)
+		{
+			valLineNoG = v->value->lineNo;
+			pv = ParseValue(mods, m, v, v->value->type, v->value->basicValue->a.valueNotation->octs, v->value->basicValue->a.valueNotation->octetLen);
 
-            /* replace value notation value with parsed version */
-            if (pv != NULL)
-            {
-                pv->lineNo = v->value->lineNo;
-                pv->type = v->value->type;
-                Free (v->value->basicValue->a.valueNotation->octs);
-                Free (v->value->basicValue->a.valueNotation);
-                Free (v->value->basicValue);
-                Free (v->value);
-                v->value = pv;
-            }
-        }
-    }
+			/* replace value notation value with parsed version */
+			if (pv != NULL)
+			{
+				pv->lineNo = v->value->lineNo;
+				pv->type = v->value->type;
+				Free(v->value->basicValue->a.valueNotation->octs);
+				Free(v->value->basicValue->a.valueNotation);
+				Free(v->value->basicValue);
+				Free(v->value);
+				v->value = pv;
+			}
+		}
+	}
 
-    /*
-     * should traverse type structures for default values etc
-     * that need parsing
-     */
+	/*
+	 * should traverse type structures for default values etc
+	 * that need parsing
+	 */
 
-    /* add any new value defs */
-    m->valueDefs = AsnListConcat (m->valueDefs, newValsG);
-    Free (newValsG);
+	 /* add any new value defs */
+	m->valueDefs = AsnListConcat(m->valueDefs, newValsG);
+	Free(newValsG);
 
-    return parseValuesErrG;
+	return parseValuesErrG;
 
 } /* ParseValues */
 
@@ -190,30 +190,30 @@ ParseValues PARAMS ((mods, m),
  * value notation string
  */
 Value*
-ParseValue PARAMS ((mods, m, vd, t, valueNotationStr, vnLen),
-    ModuleList *mods _AND_
-    Module *m _AND_
-    ValueDef *vd _AND_
-    Type *t _AND_
-    char *valueNotationStr _AND_
-    size_t vnLen)
+ParseValue PARAMS((mods, m, vd, t, valueNotationStr, vnLen),
+	ModuleList* mods _AND_
+	Module* m _AND_
+	ValueDef* vd _AND_
+	Type* t _AND_
+	char* valueNotationStr _AND_
+	size_t vnLen)
 {
-    char *vStr;
-    char *vStrOrig;
-    size_t vStrLen;
-    Value *retVal;
+	char* vStr;
+	char* vStrOrig;
+	size_t vStrLen;
+	Value* retVal;
 
-    /* make copy of value notation with ASN.1 comments zapped */
-    vStrOrig = vStr = StripComments (valueNotationStr, vnLen);
-    vStrLen = strlen (vStr);
+	/* make copy of value notation with ASN.1 comments zapped */
+	vStrOrig = vStr = StripComments(valueNotationStr, vnLen);
+	vStrLen = strlen(vStr);
 
-    retVal = ParseValueInternal (mods, m, vd, t, &vStr, (vStr + vStrLen));
+	retVal = ParseValueInternal(mods, m, vd, t, &vStr, (vStr + vStrLen));
 
-    /* use original since parsing has changed vStr */
+	/* use original since parsing has changed vStr */
 	// Deepak: changed from free to Free
-    Free (vStrOrig);
+	Free(vStrOrig);
 
-    return retVal;
+	return retVal;
 }
 
 /*
@@ -222,97 +222,97 @@ ParseValue PARAMS ((mods, m, vd, t, valueNotationStr, vnLen),
  * in vStr.  vStr will be advanced to the current parse location.
  */
 Value*
-ParseValueInternal PARAMS ((mods, m, vd, t, vStr, eof),
-    ModuleList *mods _AND_
-    Module *m _AND_
-    ValueDef *vd _AND_
-    Type *t _AND_
-    char **vStr _AND_
-    char *eof)
+ParseValueInternal PARAMS((mods, m, vd, t, vStr, eof),
+	ModuleList* mods _AND_
+	Module* m _AND_
+	ValueDef* vd _AND_
+	Type* t _AND_
+	char** vStr _AND_
+	char* eof)
 {
-    Type *dT;
-    Value *retVal;
-    int parseResult = FALSE;
+	Type* dT;
+	Value* retVal;
+	int parseResult = FALSE;
 
-    dT = ParanoidGetType (t); /* skip type refs to get defining type */
+	dT = ParanoidGetType(t); /* skip type refs to get defining type */
 
-    if (dT == NULL)
-        return NULL;
+	if (dT == NULL)
+		return NULL;
 
-    retVal = NULL;
+	retVal = NULL;
 
-    switch (dT->basicType->choiceId)
-    {
-        case BASICTYPE_SEQUENCE:
-        case BASICTYPE_SET:
-        case BASICTYPE_CHOICE:
-        case BASICTYPE_SEQUENCEOF:
-        case BASICTYPE_SETOF:
-            /* don't do constructed types yet */
-            break;
-
-
-        case BASICTYPE_SELECTION:
-        case BASICTYPE_COMPONENTSOF:
-        case BASICTYPE_ANYDEFINEDBY:
-        case BASICTYPE_UNKNOWN:
-        case BASICTYPE_ANY:
-            /* don't do weird types */
-            break;
+	switch (dT->basicType->choiceId)
+	{
+	case BASICTYPE_SEQUENCE:
+	case BASICTYPE_SET:
+	case BASICTYPE_CHOICE:
+	case BASICTYPE_SEQUENCEOF:
+	case BASICTYPE_SETOF:
+		/* don't do constructed types yet */
+		break;
 
 
-        /*
-         * The following simple types will need to be filled in
-         * when the constructed types are parsed.
-         * (ie ParseValueInternal becomes recursive)
-         * (currenly all simple types not in {}'s are parsed
-         * in the main yacc parser.)
-         */
-
-        case BASICTYPE_BOOLEAN:
-            break;
-
-        case BASICTYPE_INTEGER:
-        case BASICTYPE_ENUMERATED:
-            break;
-
-        case BASICTYPE_REAL:
-            break;
-
-        case BASICTYPE_BITSTRING:
-            break;
-
-        case BASICTYPE_NULL:
-            break;
-
-        case BASICTYPE_OCTETSTRING:
-            break;
-
-		case BASICTYPE_OCTETCONTAINING:
-			break;
+	case BASICTYPE_SELECTION:
+	case BASICTYPE_COMPONENTSOF:
+	case BASICTYPE_ANYDEFINEDBY:
+	case BASICTYPE_UNKNOWN:
+	case BASICTYPE_ANY:
+		/* don't do weird types */
+		break;
 
 
-        /* assume all macro values in {}'s are OID values */
-        case BASICTYPE_OID:
-        case BASICTYPE_RELATIVE_OID:
-        case BASICTYPE_MACROTYPE:
-            parseResult = ParseOidValue (mods, m, vd, t, vStr, eof, &retVal);
-            if (!parseResult)
-			{
-				parseValuesErrG = 1;
-				PrintErrLoc (m->asn1SrcFileName, (long)valLineNoG);
-			}
-            break;
+		/*
+		 * The following simple types will need to be filled in
+		 * when the constructed types are parsed.
+		 * (ie ParseValueInternal becomes recursive)
+		 * (currenly all simple types not in {}'s are parsed
+		 * in the main yacc parser.)
+		 */
+
+	case BASICTYPE_BOOLEAN:
+		break;
+
+	case BASICTYPE_INTEGER:
+	case BASICTYPE_ENUMERATED:
+		break;
+
+	case BASICTYPE_REAL:
+		break;
+
+	case BASICTYPE_BITSTRING:
+		break;
+
+	case BASICTYPE_NULL:
+		break;
+
+	case BASICTYPE_OCTETSTRING:
+		break;
+
+	case BASICTYPE_OCTETCONTAINING:
+		break;
 
 
-        default:
-           break;
-    }
+		/* assume all macro values in {}'s are OID values */
+	case BASICTYPE_OID:
+	case BASICTYPE_RELATIVE_OID:
+	case BASICTYPE_MACROTYPE:
+		parseResult = ParseOidValue(mods, m, vd, t, vStr, eof, &retVal);
+		if (!parseResult)
+		{
+			parseValuesErrG = 1;
+			PrintErrLoc(m->asn1SrcFileName, (long)valLineNoG);
+		}
+		break;
 
-    if (parseResult)
-        return retVal;
-    else
-        return NULL;
+
+	default:
+		break;
+	}
+
+	if (parseResult)
+		return retVal;
+	else
+		return NULL;
 
 }  /* ParseValueInternal */
 
@@ -322,44 +322,44 @@ ParseValueInternal PARAMS ((mods, m, vd, t, vStr, eof),
  *  returns a null terminated malloc'd copy without the comments
  */
 char*
-StripComments PARAMS ((s, len),
-    char *s _AND_
+StripComments PARAMS((s, len),
+	char* s _AND_
 	size_t len)
 {
-    char *cpy;
+	char* cpy;
 	size_t sIndex, cpyIndex;
 
-    cpy = (char*)Malloc (len +1);
-    cpyIndex = 0;
-    for (sIndex = 0; sIndex < len; )
-    {
-        if ((s[sIndex] == '-') &&
-             ((sIndex+1) < len) && (s[sIndex+1]== '-'))
-        {
-            /* eat comment body */
-            for (sIndex += 2; sIndex < len; )
-            {
-                if ((s[sIndex] == '-') &&
-                    ((sIndex+1) < len) && (s[sIndex+1]== '-'))
-                {
-                    sIndex += 2;
-                    break; /* exit for */
-                }
-                else if (s[sIndex] == '\n')
-                {
-                    sIndex++;
-                    break; /* exit for */
-                }
-                else
-                    sIndex++;
-            }
-        }
-        else   /* not in or start of comment */
-            cpy[cpyIndex++] = s[sIndex++];
-    }
+	cpy = (char*)Malloc(len + 1);
+	cpyIndex = 0;
+	for (sIndex = 0; sIndex < len; )
+	{
+		if ((s[sIndex] == '-') &&
+			((sIndex + 1) < len) && (s[sIndex + 1] == '-'))
+		{
+			/* eat comment body */
+			for (sIndex += 2; sIndex < len; )
+			{
+				if ((s[sIndex] == '-') &&
+					((sIndex + 1) < len) && (s[sIndex + 1] == '-'))
+				{
+					sIndex += 2;
+					break; /* exit for */
+				}
+				else if (s[sIndex] == '\n')
+				{
+					sIndex++;
+					break; /* exit for */
+				}
+				else
+					sIndex++;
+			}
+		}
+		else   /* not in or start of comment */
+			cpy[cpyIndex++] = s[sIndex++];
+	}
 
-    cpy[cpyIndex] = '\0';  /* add  NULL terminator */
-    return cpy;
+	cpy[cpyIndex] = '\0';  /* add  NULL terminator */
+	return cpy;
 }  /* StripComments */
 
 
@@ -411,234 +411,234 @@ StripComments PARAMS ((s, len),
  *
  */
 int
-ParseOidValue PARAMS ((mods, m, vd, t, vStr, eof, result),
-    ModuleList *mods _AND_
-    Module *m _AND_
-    ValueDef *vd _AND_
-    Type *t _AND_
-    char **vStr _AND_
-    char *eof _AND_
-    Value **result)
+ParseOidValue PARAMS((mods, m, vd, t, vStr, eof, result),
+	ModuleList* mods _AND_
+	Module* m _AND_
+	ValueDef* vd _AND_
+	Type* t _AND_
+	char** vStr _AND_
+	char* eof _AND_
+	Value** result)
 {
-    Value *newVal;
-    Value *oidVal;
-    OID *parsedOid;
-    OID **nextOid;
-    char *id;
-    char *id2;
-    char *id3;
-    char *num;
-    int  arcNum;
-    P_LOCALS;
+	Value* newVal;
+	Value* oidVal;
+	OID* parsedOid;
+	OID** nextOid;
+	char* id;
+	char* id2;
+	char* id3;
+	char* num;
+	int  arcNum;
+	P_LOCALS;
 
 
-    SAVE_POS();
+	SAVE_POS();
 
-    if (AT_EOF())
-    {
-        fprintf (errFileG, "ERROR - expecting more data in OBJECT IDENTIFER value\n");
-        PrintErrLoc ((char*)m, (long)vd->value->lineNo);
-        FAIL();
-    }
+	if (AT_EOF())
+	{
+		fprintf(errFileG, "ERROR - expecting more data in OBJECT IDENTIFER value\n");
+		PrintErrLoc((char*)m, (long)vd->value->lineNo);
+		FAIL();
+	}
 
-    SkipWht (vStr, eof);
+	SkipWht(vStr, eof);
 
-    if (**vStr != '{')
-    {
-        PrintErrLoc ((char*)m, (long)vd->value->lineNo);
-        fprintf (errFileG, "ERROR - OBJECT IDENTIFER values must begin with an \"{\".\n");
-        FAIL();
-    }
-    else
-        (*vStr)++; /* skip opening { */
+	if (**vStr != '{')
+	{
+		PrintErrLoc((char*)m, (long)vd->value->lineNo);
+		fprintf(errFileG, "ERROR - OBJECT IDENTIFER values must begin with an \"{\".\n");
+		FAIL();
+	}
+	else
+		(*vStr)++; /* skip opening { */
 
-    SkipWht (vStr, eof);
+	SkipWht(vStr, eof);
 
-    parsedOid = NULL;
-    nextOid = &parsedOid;
+	parsedOid = NULL;
+	nextOid = &parsedOid;
 
-    while (**vStr != '}')
-    {
-        if (ParseIdentifier (vStr, eof, &id))
-        {
-            /*
-             * check for named number ident (num) or ident (valref)
-             * make a new value def with the name ident if is name
-             * and number form
-             */
-            SkipWht (vStr, eof);
-            if (**vStr == '(')
-            {
+	while (**vStr != '}')
+	{
+		if (ParseIdentifier(vStr, eof, &id))
+		{
+			/*
+			 * check for named number ident (num) or ident (valref)
+			 * make a new value def with the name ident if is name
+			 * and number form
+			 */
+			SkipWht(vStr, eof);
+			if (**vStr == '(')
+			{
 
-                (*vStr)++; /* skip opening ( */
-                SkipWht (vStr, eof);
+				(*vStr)++; /* skip opening ( */
+				SkipWht(vStr, eof);
 
-                arcNum = NULL_OID_ARCNUM;
-                /*
-                 * ident (num)/ident (valref) yields a new value definition
-                 * ident.  The oid then refences this new value def.
-                 */
+				arcNum = NULL_OID_ARCNUM;
+				/*
+				 * ident (num)/ident (valref) yields a new value definition
+				 * ident.  The oid then refences this new value def.
+				 */
 
-                /*
-                 * first case check if of form
-                 * { ... ident (valref) ... }
-                 */
-                if (ParseIdentifier (vStr, eof, &id2))
-                {
-                    id3 = NULL;
-                    /* check if modname.val format */
-                    if (**vStr == '.')
-                    {
-                        (*vStr)++;
-                        if (!ParseIdentifier (vStr, eof, &id3))
-                        {
-                            PrintErrLoc ((char*)m, (long)vd->value->lineNo);
-                            fprintf (errFileG, "ERROR - missing a module name after the \"%s.\" value reference",
+				 /*
+				  * first case check if of form
+				  * { ... ident (valref) ... }
+				  */
+				if (ParseIdentifier(vStr, eof, &id2))
+				{
+					id3 = NULL;
+					/* check if modname.val format */
+					if (**vStr == '.')
+					{
+						(*vStr)++;
+						if (!ParseIdentifier(vStr, eof, &id3))
+						{
+							PrintErrLoc((char*)m, (long)vd->value->lineNo);
+							fprintf(errFileG, "ERROR - missing a module name after the \"%s.\" value reference",
 								id2);
-                            FAIL();
-                        }
-                    }
+							FAIL();
+						}
+					}
 
-                    /* grab closing ) */
-                    SkipWht (vStr, eof);
-                    if (**vStr == ')')
-                        (*vStr)++;
-                    else
-                    {
-                        PrintErrLoc ((char*)m, (long)vd->value->lineNo);
-                        fprintf (errFileG, "ERROR - missing a closing \")\", after the \"%s\" value reference.\n",
+					/* grab closing ) */
+					SkipWht(vStr, eof);
+					if (**vStr == ')')
+						(*vStr)++;
+					else
+					{
+						PrintErrLoc((char*)m, (long)vd->value->lineNo);
+						fprintf(errFileG, "ERROR - missing a closing \")\", after the \"%s\" value reference.\n",
 							id2);
-                        FAIL();
-                    }
+						FAIL();
+					}
 
-                    if (id3 != NULL) /* modname.val format */
-                    {
-                        SetupValue (&newVal, BASICVALUE_IMPORTVALUEREF,valLineNoG);
-                        newVal->basicValue->a.importValueRef =
-                            (ValueRef*)Malloc (sizeof (ValueRef));
-                        newVal->basicValue->a.importValueRef->valueName = id2;
-                        newVal->basicValue->a.importValueRef->moduleName = id3;
+					if (id3 != NULL) /* modname.val format */
+					{
+						SetupValue(&newVal, BASICVALUE_IMPORTVALUEREF, valLineNoG);
+						newVal->basicValue->a.importValueRef =
+							(ValueRef*)Malloc(sizeof(ValueRef));
+						newVal->basicValue->a.importValueRef->valueName = id2;
+						newVal->basicValue->a.importValueRef->moduleName = id3;
 
-                        AddPrivateImportElmt (m, id2, id3, valLineNoG);
+						AddPrivateImportElmt(m, id2, id3, valLineNoG);
 
-                    }
-                    else
-                    {
-                        SetupValue (&newVal, BASICVALUE_LOCALVALUEREF,valLineNoG);
-                        newVal->basicValue->a.localValueRef =
-                            (ValueRef*)Malloc (sizeof (ValueRef));
-                        newVal->basicValue->a.localValueRef->valueName = id2;
-                    }
+					}
+					else
+					{
+						SetupValue(&newVal, BASICVALUE_LOCALVALUEREF, valLineNoG);
+						newVal->basicValue->a.localValueRef =
+							(ValueRef*)Malloc(sizeof(ValueRef));
+						newVal->basicValue->a.localValueRef->valueName = id2;
+					}
 
-                }
-                /* check this form { ... ident (2)...}*/
-                else if (ParseNum (vStr, eof, &num))
-                {
-                    /* grab closing ) */
-                    SkipWht (vStr, eof);
-                    if (**vStr == ')')
-                        (*vStr)++;
-                    else
-                    {
-                        PrintErrLoc ((char*)m, (long)vd->value->lineNo);
-                        fprintf (errFileG, "ERROR - missing a closing \")\" after the \"%s (%s\".\n",
+				}
+				/* check this form { ... ident (2)...}*/
+				else if (ParseNum(vStr, eof, &num))
+				{
+					/* grab closing ) */
+					SkipWht(vStr, eof);
+					if (**vStr == ')')
+						(*vStr)++;
+					else
+					{
+						PrintErrLoc((char*)m, (long)vd->value->lineNo);
+						fprintf(errFileG, "ERROR - missing a closing \")\" after the \"%s (%s\".\n",
 							id2, num);
-                        Free (num);
-                        FAIL();
-                    }
-                    arcNum = atoi (num);
-                    Free (num);
-                    newVal = NULL;
-                }
-                else /* neither an ident or num after the "(" */
-                {
-                    PrintErrLoc ((char*)m, (long)vd->value->lineNo);
-                    fprintf (errFileG, "ERROR - expecting either a value reference or number after the \"(\".\n");
-                    FAIL();
-                }
+						Free(num);
+						FAIL();
+					}
+					arcNum = atoi(num);
+					Free(num);
+					newVal = NULL;
+				}
+				else /* neither an ident or num after the "(" */
+				{
+					PrintErrLoc((char*)m, (long)vd->value->lineNo);
+					fprintf(errFileG, "ERROR - expecting either a value reference or number after the \"(\".\n");
+					FAIL();
+				}
 
-                *nextOid = (OID*) Malloc (sizeof (OID));
-                (*nextOid)->valueRef = newVal;
-                (*nextOid)->arcNum = arcNum;
-                nextOid = &(*nextOid)->next;
+				*nextOid = (OID*)Malloc(sizeof(OID));
+				(*nextOid)->valueRef = newVal;
+				(*nextOid)->arcNum = arcNum;
+				nextOid = &(*nextOid)->next;
 
-            }  /* end of ident (num) and ident (ident) form */
+			}  /* end of ident (num) and ident (ident) form */
 
-            else /* value ref: { ... ident .... } */
-            {
-                *nextOid = (OID*) Malloc (sizeof (OID));
-                (*nextOid)->arcNum = NULL_OID_ARCNUM;
+			else /* value ref: { ... ident .... } */
+			{
+				*nextOid = (OID*)Malloc(sizeof(OID));
+				(*nextOid)->arcNum = NULL_OID_ARCNUM;
 
-                /*
-                 * check if special defined oid elmt name
-                 * like joint-iso-ccitt, iso, standard etc.
-                 */
+				/*
+				 * check if special defined oid elmt name
+				 * like joint-iso-ccitt, iso, standard etc.
+				 */
 
-                arcNum = OidArcNameToNum (id);
-                if (arcNum != -1)
-                {
-                    (*nextOid)->arcNum = arcNum;
-                }
-                else /* value reference */
-                {
-                    SetupValue (&newVal, BASICVALUE_LOCALVALUEREF,valLineNoG);
-                    newVal->basicValue->a.localValueRef =
-                        (ValueRef*)Malloc (sizeof (ValueRef));
-                    newVal->basicValue->a.localValueRef->valueName = id;
+				arcNum = OidArcNameToNum(id);
+				if (arcNum != -1)
+				{
+					(*nextOid)->arcNum = arcNum;
+				}
+				else /* value reference */
+				{
+					SetupValue(&newVal, BASICVALUE_LOCALVALUEREF, valLineNoG);
+					newVal->basicValue->a.localValueRef =
+						(ValueRef*)Malloc(sizeof(ValueRef));
+					newVal->basicValue->a.localValueRef->valueName = id;
 
-                    (*nextOid)->valueRef = newVal;
-                }
-                nextOid = &(*nextOid)->next;
-            }
-        }
-        else if (ParseNum (vStr, eof, &num))  /* { .. 2 .. } */
-        {
-            *nextOid = (OID*) Malloc (sizeof (OID));
-            (*nextOid)->arcNum = atoi (num);
-            nextOid = &(*nextOid)->next;
-            Free (num);
-        }
-        else
-        {
-            PrintErrLoc ((char*)m, (long)vd->value->lineNo);
-            fprintf (errFileG, "ERROR - bady formed arc number\n");
-            FAIL();
-        }
+					(*nextOid)->valueRef = newVal;
+				}
+				nextOid = &(*nextOid)->next;
+			}
+		}
+		else if (ParseNum(vStr, eof, &num))  /* { .. 2 .. } */
+		{
+			*nextOid = (OID*)Malloc(sizeof(OID));
+			(*nextOid)->arcNum = atoi(num);
+			nextOid = &(*nextOid)->next;
+			Free(num);
+		}
+		else
+		{
+			PrintErrLoc((char*)m, (long)vd->value->lineNo);
+			fprintf(errFileG, "ERROR - bady formed arc number\n");
+			FAIL();
+		}
 
-        SkipWht (vStr, eof);
-    }
+		SkipWht(vStr, eof);
+	}
 
-    (*vStr)++; /* move over closing } */
+	(*vStr)++; /* move over closing } */
 
-    SetupValue (&oidVal, BASICVALUE_LINKEDOID, valLineNoG);
-    oidVal->basicValue->a.linkedOid = parsedOid;
-    *result = oidVal;
+	SetupValue(&oidVal, BASICVALUE_LINKEDOID, valLineNoG);
+	oidVal->basicValue->a.linkedOid = parsedOid;
+	*result = oidVal;
 	SUCCEED();
 }
 
 
 void
-SkipWht PARAMS ((vStr, eof),
-    char **vStr _AND_
-    char *eof)
+SkipWht PARAMS((vStr, eof),
+	char** vStr _AND_
+	char* eof)
 {
-    while (!AT_EOF())
-        switch (**vStr)
-        {
-            case '\n': /* newline */
-            case '\f': /* form feed  ?*/
-            case '\v': /* vertical tab ?*/
-            case '\r':  valLineNoG++; /* carriage return */
-            case '\t': /* tab */
-            case ' ':  /* space */
-            case '\007': /* bell? */
-            case '\b':   /* back spc */
-                (*vStr)++;
-                break;
+	while (!AT_EOF())
+		switch (**vStr)
+		{
+		case '\n': /* newline */
+		case '\f': /* form feed  ?*/
+		case '\v': /* vertical tab ?*/
+		case '\r':  valLineNoG++; /* carriage return */
+		case '\t': /* tab */
+		case ' ':  /* space */
+		case '\007': /* bell? */
+		case '\b':   /* back spc */
+			(*vStr)++;
+			break;
 
-            default:
-               return;
-        }
+		default:
+			return;
+		}
 }
 
 
@@ -651,47 +651,47 @@ SkipWht PARAMS ((vStr, eof),
  * hyphens. last char cannot be a hyphen.
  */
 int
-ParseIdentifier PARAMS ((vStr, eof, result),
-    char **vStr _AND_
-    char *eof _AND_
-    char **result)
+ParseIdentifier PARAMS((vStr, eof, result),
+	char** vStr _AND_
+	char* eof _AND_
+	char** result)
 {
-    char *start;
+	char* start;
 	size_t len;
-    P_LOCALS;
+	P_LOCALS;
 
-    SAVE_POS();
+	SAVE_POS();
 
-    if (AT_EOF())
-        FAIL();
+	if (AT_EOF())
+		FAIL();
 
-    start = *vStr;
-    if (!islower (**vStr))
-        FAIL();
+	start = *vStr;
+	if (!islower(**vStr))
+		FAIL();
 
-    (*vStr)++;
+	(*vStr)++;
 
-    while (!AT_EOF())
-    {
-        /* allow letters, digits  and single hyphens */
-        if ((isalpha (**vStr)) || isdigit (**vStr) ||
-            ((**vStr == '-') && !(*(*vStr - 1) == '-')))
-            (*vStr)++;
-        else
-            break; /* exit for loop */
+	while (!AT_EOF())
+	{
+		/* allow letters, digits  and single hyphens */
+		if ((isalpha(**vStr)) || isdigit(**vStr) ||
+			((**vStr == '-') && !(*(*vStr - 1) == '-')))
+			(*vStr)++;
+		else
+			break; /* exit for loop */
 
-    }
+	}
 
-    /* don't allow hyphens on the end */
-    if (*(*vStr - 1) == '-')
-        (*vStr)--;
+	/* don't allow hyphens on the end */
+	if (*(*vStr - 1) == '-')
+		(*vStr)--;
 
-    len  = *vStr - start;
-    *result = Malloc (len +1);
-    strncpy_s(*result, len + 1, start, len);
-    (*result)[len] = '\0';  /* null terminate */
+	len = *vStr - start;
+	*result = Malloc(len + 1);
+	strncpy_s(*result, len + 1, start, len);
+	(*result)[len] = '\0';  /* null terminate */
 
-    SUCCEED();
+	SUCCEED();
 } /* ParseIdentifier */
 
 
@@ -702,39 +702,39 @@ ParseIdentifier PARAMS ((vStr, eof, result),
  * in result, and returns TRUE. otherwise returns FALSE
  */
 int
-ParseNum PARAMS ((vStr, eof, result),
-    char **vStr _AND_
-    char *eof _AND_
-    char **result)
+ParseNum PARAMS((vStr, eof, result),
+	char** vStr _AND_
+	char* eof _AND_
+	char** result)
 {
-    P_LOCALS;
-    char *start;
+	P_LOCALS;
+	char* start;
 	size_t len;
 
-    SAVE_POS();
+	SAVE_POS();
 
-    if (AT_EOF())
-        FAIL();
+	if (AT_EOF())
+		FAIL();
 
-    start = *vStr;
+	start = *vStr;
 
-    while (!AT_EOF())
-    {
-        if (isdigit (**vStr))
-            (*vStr)++;
-        else
-            break; /* exit for loop */
-    }
-    len  = *vStr - start;
+	while (!AT_EOF())
+	{
+		if (isdigit(**vStr))
+			(*vStr)++;
+		else
+			break; /* exit for loop */
+	}
+	len = *vStr - start;
 
-    if (len == 0)
-        FAIL();
+	if (len == 0)
+		FAIL();
 
-    *result = Malloc (len +1);
-    strncpy_s(*result, len + 1, start, len);
-    (*result)[len] = '\0';  /* null terminate */
+	*result = Malloc(len + 1);
+	strncpy_s(*result, len + 1, start, len);
+	(*result)[len] = '\0';  /* null terminate */
 
-    SUCCEED();
+	SUCCEED();
 } /* ParseNum */
 
 /*
@@ -744,17 +744,17 @@ ParseNum PARAMS ((vStr, eof, result),
  * (should be  foo INTEGER (0..MAX) ::= 3)
  */
 void
-AddNewValueDef PARAMS ((vdl, name, value),
-    ValueDefList *vdl _AND_
-    char *name _AND_
-    Value *value)
+AddNewValueDef PARAMS((vdl, name, value),
+	ValueDefList* vdl _AND_
+	char* name _AND_
+	Value* value)
 {
-    ValueDef *vd;
-    ValueDef **tmpVd;
+	ValueDef* vd;
+	ValueDef** tmpVd;
 
-    vd = (ValueDef*)Malloc (sizeof (ValueDef));
-    vd->definedName = name;
-    vd->value = value;
-    tmpVd = (ValueDef**)AsnListAppend (vdl);
-    *tmpVd = vd;
+	vd = (ValueDef*)Malloc(sizeof(ValueDef));
+	vd->definedName = name;
+	vd->value = value;
+	tmpVd = (ValueDef**)AsnListAppend(vdl);
+	*tmpVd = vd;
 }  /* AddNewValueDef */
