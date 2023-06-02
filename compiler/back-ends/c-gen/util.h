@@ -36,12 +36,12 @@
 #define FIRST_LEVEL	1	/* must be 1 or greater */
 #define MAX_VAR_REF	512	/* max chars for ref'ing a var eg v->foo->bar.x->v*/
 
-void   MakeVarPtrRef PROTO ((CRules *r, TypeDef *td, Type *parent, Type *fieldType, char *parentVarName, char *newVarName, size_t size));
+void   MakeVarPtrRef PROTO((CRules* r, TypeDef* td, Type* parent, Type* fieldType, char* parentVarName, char* newVarName, size_t size));
 
-void   MakeVarValueRef PROTO ((CRules *r, TypeDef *td, Type *parent, Type *fieldType, char *parentVarName, char *newVarName, size_t size));
+void   MakeVarValueRef PROTO((CRules* r, TypeDef* td, Type* parent, Type* fieldType, char* parentVarName, char* newVarName, size_t size));
 
-void   MakeChoiceIdValueRef PROTO ((CRules *r, TypeDef *td, Type *parent, Type *fieldType, char *parentVarName, char *newVarName, size_t size));
+void   MakeChoiceIdValueRef PROTO((CRules* r, TypeDef* td, Type* parent, Type* fieldType, char* parentVarName, char* newVarName, size_t size));
 
-void   PrintElmtAllocCode PROTO ((FILE *f, Type *type, char *varPtrRefName));
+void   PrintElmtAllocCode PROTO((FILE* f, Type* type, char* varPtrRefName));
 
-void   PrintEocDecoders PROTO ((FILE *f, int maxLenLevel, int minLenLevel, char *lenBaseVarName, int totalLevel, char *totalBaseVarName));
+void   PrintEocDecoders PROTO((FILE* f, int maxLenLevel, int minLenLevel, char* lenBaseVarName, int totalLevel, char* totalBaseVarName));

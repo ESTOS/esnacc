@@ -12,25 +12,25 @@
 
 namespace EJson {
 
-// writer.h
-class FastWriter;
-class StyledWriter;
+	// writer.h
+	class FastWriter;
+	class StyledWriter;
 
-// reader.h
-class Reader;
+	// reader.h
+	class Reader;
 
-// features.h
-class Features;
+	// features.h
+	class Features;
 
-// value.h
-typedef unsigned int ArrayIndex;
-class StaticString;
-class Path;
-class PathArgument;
-class Value;
-class ValueIteratorBase;
-class ValueIterator;
-class ValueConstIterator;
+	// value.h
+	typedef unsigned int ArrayIndex;
+	class StaticString;
+	class Path;
+	class PathArgument;
+	class Value;
+	class ValueIteratorBase;
+	class ValueIterator;
+	class ValueConstIterator;
 
 } // namespace EJson
 

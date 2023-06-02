@@ -10,7 +10,7 @@
 #include "../../core/snacc-util.h"
 #include "../str-util.h"
 
-typedef struct SizeConstraint{
+typedef struct SizeConstraint {
 	long lowerBound;
 	long upperBound;
 	int  upperBoundExists;
@@ -18,11 +18,11 @@ typedef struct SizeConstraint{
 
 typedef SizeConstraint ValueRange;
 
-typedef struct PermittedAlphabet{
-	unsigned char* ucApha; 
+typedef struct PermittedAlphabet {
+	unsigned char* ucApha;
 }PermittedAlphabet;
 
-char* PrintCxxPermittedAlphabetHandler PROTO(( AsnListNode* currAlpha, unsigned char* cPermittedAlphabet, int *iAlphasize));
+char* PrintCxxPermittedAlphabetHandler PROTO((AsnListNode* currAlpha, unsigned char* cPermittedAlphabet, int* iAlphasize));
 
 int SizeConstraint_LISTS PROTO((FILE* hdr, FILE* src, SizeConstraint* scList, int iSCPresent, AsnListNode* curr, Subtype* currS_type));
 
@@ -32,7 +32,7 @@ int ValueRange_LISTS PROTO((FILE* hdr, FILE* src, ValueRange* vrList, int iVRPre
 
 int BasicTypeString_LISTS PROTO((FILE* hdr, FILE* src, SizeConstraint* scList, int iSCPresent, AsnListNode* curr, Subtype* currS_type));
 
-char* FindPermittedAlpha PROTO((AsnListNode* curr, unsigned char* cPermittedAlphabet, int *iAlphasize));
+char* FindPermittedAlpha PROTO((AsnListNode* curr, unsigned char* cPermittedAlphabet, int* iAlphasize));
 
 #endif
 

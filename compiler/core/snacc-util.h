@@ -63,28 +63,28 @@
 #define PrintErrLoc( fileName, lineNo)\
 			fprintf (errFileG, "%s(%ld) : ", fileName, (lineNo))
 
-/*
- * macro to allocate room for str & null & put in give STR*
- */
+ /*
+  * macro to allocate room for str & null & put in give STR*
+  */
 #define SETUP_STR( strPtr, string)\
     (strPtr)->str = Malloc (strlen (string) + 1);\
     strcpy ((strPtr)->str, string);\
     (strPtr)->len = strlen (string) + 1
 
 
-/*
- * Create a new list type such that each elmt has space
- * to hold a pointer
- */
+  /*
+   * Create a new list type such that each elmt has space
+   * to hold a pointer
+   */
 #define NEWLIST()	AsnListNew (sizeof (void *))
 
-/*
- *    macro to append an element to the end of linked list
- *    - helps on left recursion when order must be maintained
- *
- *  be careful of calling context if list is null
- *  that is, make sure the change to list is not lost.
- */
+   /*
+	*    macro to append an element to the end of linked list
+	*    - helps on left recursion when order must be maintained
+	*
+	*  be careful of calling context if list is null
+	*  that is, make sure the change to list is not lost.
+	*/
 #define APPEND( elmt, list) \
 {\
     void **tmpPtr;\
@@ -94,9 +94,9 @@
     *tmpPtr = (void *) (elmt);\
 }
 
-/*
- * like APPEND except puts elmt at head of  list
- */
+	/*
+	 * like APPEND except puts elmt at head of  list
+	 */
 #define PREPEND( elmt, list) \
 {\
     void **tmpPtr;\
@@ -111,88 +111,88 @@
     AsnListConcat(list1, list2);\
 }
 
-BasicValue* GetLastNamedNumberValue(NamedNumberList *valueList);
+BasicValue* GetLastNamedNumberValue(NamedNumberList* valueList);
 
-void SetupType(Type **t, enum BasicTypeChoiceId typeId, unsigned long lineNum);
+void SetupType(Type** t, enum BasicTypeChoiceId typeId, unsigned long lineNum);
 
-void SetupMacroType(Type **t, enum MacroTypeChoiceId macroTypeId, unsigned long lineNum);
+void SetupMacroType(Type** t, enum MacroTypeChoiceId macroTypeId, unsigned long lineNum);
 
-void SetupValue(Value **v, enum BasicValueChoiceId valId, unsigned long lineNum);
+void SetupValue(Value** v, enum BasicValueChoiceId valId, unsigned long lineNum);
 
 
-void AddPrivateImportElmt(Module *m, char *name, char *refModuleName, long lineNo);
+void AddPrivateImportElmt(Module* m, char* name, char* refModuleName, long lineNo);
 
-ImportElmt *LookupImportElmtInModule(Module *m, char *name, ImportModule **importModule);
+ImportElmt* LookupImportElmtInModule(Module* m, char* name, ImportModule** importModule);
 
-ImportElmt *LookupImportElmtInImportElmtList(ImportElmtList *importElmtList, char *name);
+ImportElmt* LookupImportElmtInImportElmtList(ImportElmtList* importElmtList, char* name);
 
-ImportModule *LookupImportModule(Module *m, char *importModuleName);
+ImportModule* LookupImportModule(Module* m, char* importModuleName);
 
-TypeDef *LookupType(TypeDefList *t, char *typeName);
+TypeDef* LookupType(TypeDefList* t, char* typeName);
 
 // Deepak: 04/Feb/2003
-NamedType *LookupObjectClassFieldType(NamedTypeList *n, char *typeName);
+NamedType* LookupObjectClassFieldType(NamedTypeList* n, char* typeName);
 
 // Deepak: 05/Mar/2003
-WithSyntax* LookupObjectClassFieldTypeWithSyntax(WithSyntaxList *withSyntaxList, char *typeName, char* bError);
+WithSyntax* LookupObjectClassFieldTypeWithSyntax(WithSyntaxList* withSyntaxList, char* typeName, char* bError);
 
 // Deepak: 05/Mar/2003
-ObjectAssignment* LookupObjectClassObjectAssignment(ObjectAssignmentList *objAssignmentList, char *objName);
+ObjectAssignment* LookupObjectClassObjectAssignment(ObjectAssignmentList* objAssignmentList, char* objName);
 
 // Deepak: 11/Mar/2003
-ObjectSetAssignment* LookupObjectClassObjectSetAssignment(ObjectSetAssignmentList *objSetAssignmentList, char *objSetName);
+ObjectSetAssignment* LookupObjectClassObjectSetAssignment(ObjectSetAssignmentList* objSetAssignmentList, char* objSetName);
 
-Module *LookupModule(ModuleList *m, char *modName, OID *oid);
+Module* LookupModule(ModuleList* m, char* modName, OID* oid);
 
 NamedType* LookupFieldInType(Type* t, const char* fieldName);
 
-Type* ResolveImportedType(Type *t);
+Type* ResolveImportedType(Type* t);
 
-Type* ParanoidGetType(Type *t);
+Type* ParanoidGetType(Type* t);
 
-enum BasicTypeChoiceId GetBuiltinType(Type *t);
-enum BasicTypeChoiceId ParanoidGetBuiltinType(Type *t);
+enum BasicTypeChoiceId GetBuiltinType(Type* t);
+enum BasicTypeChoiceId ParanoidGetBuiltinType(Type* t);
 
 
-NamedNumberList *GetNamedElmts(Type *t);
+NamedNumberList* GetNamedElmts(Type* t);
 
-NamedNumberList *GetAllNamedElmts(Type *t);
+NamedNumberList* GetAllNamedElmts(Type* t);
 
-Type *GetParentS(Type *ancestor, Type *child);
+Type* GetParentS(Type* ancestor, Type* child);
 
-ValueDef *LookupValue(ValueDefList *v, char *valueName);
+ValueDef* LookupValue(ValueDefList* v, char* valueName);
 
-Value *GetValue(Value *v);
+Value* GetValue(Value* v);
 
-int CompareOids(OID *oid1, OID *oid2);
+int CompareOids(OID* oid1, OID* oid2);
 
-int HasNamedElmts(Type *t);
+int HasNamedElmts(Type* t);
 
-int GetNumNamedElmts(Type *t);
+int GetNumNamedElmts(Type* t);
 
-int TagsAreIdentical(TagList *t1, TagList *t2);
+int TagsAreIdentical(TagList* t1, TagList* t2);
 
-int HasDefaultTag(Type *t);
+int HasDefaultTag(Type* t);
 
-int IsPrimitiveByDefOrRef(Type *t);
+int IsPrimitiveByDefOrRef(Type* t);
 
-int IsPrimitiveByDef(Type *t);
+int IsPrimitiveByDef(Type* t);
 
-int IsDefinedByLibraryType(Type *t);
+int IsDefinedByLibraryType(Type* t);
 
-int IsTypeRef(Type *t);
+int IsTypeRef(Type* t);
 
-int IsNewType(Type *t);
+int IsNewType(Type* t);
 
-int IsTailOptional(NamedTypeList *e);
+int IsTailOptional(NamedTypeList* e);
 
-int NextIsTailOptional(NamedTypeList *e);
+int NextIsTailOptional(NamedTypeList* e);
 
-int AllElmtsOptional(NamedTypeList *e);
+int AllElmtsOptional(NamedTypeList* e);
 
-AnyRefList **GetAnyRefListHndl(Type *t);
+AnyRefList** GetAnyRefListHndl(Type* t);
 
-void AppendSubtype(Subtype **s, Subtype *newSubtype, enum SubtypeChoiceId op);
+void AppendSubtype(Subtype** s, Subtype* newSubtype, enum SubtypeChoiceId op);
 
 
 extern FILE* errFileG;		// Defined in snacc.c

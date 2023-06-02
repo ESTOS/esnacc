@@ -39,12 +39,12 @@
 extern unsigned long myLineNoG;
 
 #ifdef YYTEXT_POINTER
-extern char	*yytext;
+extern char* yytext;
 #else
 extern char	yytext[];
 #endif
 
-extern FILE	*yyin;
+extern FILE* yyin;
 
 int LexBeginInitialContext();
 int LexBeginMacroDefContext();

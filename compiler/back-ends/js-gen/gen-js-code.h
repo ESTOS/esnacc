@@ -19,10 +19,10 @@
 #include "../../core/asn1module.h"
 #include "../../core/snacc-util.h"
 
-void PrintJSCode (FILE *src, ModuleList *mods, Module *m, long longJmpVal,
-				   int printTypes, int printValues, int printEncoders,
-				   int printDecoders, int printJSONEncDec, 
-				   int novolatilefuncs);
+void PrintJSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal,
+	int printTypes, int printValues, int printEncoders,
+	int printDecoders, int printJSONEncDec,
+	int novolatilefuncs);
 
 
 #endif //JSGENCODE_H_INCLUDED

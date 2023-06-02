@@ -153,7 +153,7 @@
 
 //ESTOS: wir linken immer statisch
 #ifndef SNACCDLL_NONE
-	#define SNACCDLL_NONE
+#define SNACCDLL_NONE
 #endif
 
 // RWC;VDA; added to support optional DLL build.
@@ -198,8 +198,8 @@
 #  endif
 #endif
 #ifdef I
-	typedef I		AsnIntType;
-	typedef unsigned I	AsnUIntType;
+typedef I		AsnIntType;
+typedef unsigned I	AsnUIntType;
 #  undef I
 #else
 #  error "can't find integer type which is 4 bytes in size"
@@ -212,43 +212,43 @@
 // Replaces the microsoft specific "secure" string operations
 
 #ifndef strcpy_s
-	#define strcpy_s(dest, len, source) strncpy(dest, source, len)
+#define strcpy_s(dest, len, source) strncpy(dest, source, len)
 #endif
 
 #ifndef _strdup
-	#include <string.h>
-	#define _strdup(arg) strdup(arg)
+#include <string.h>
+#define _strdup(arg) strdup(arg)
 #endif
 
 #ifndef strncpy_s
-	#define strncpy_s(dest, len, source, amount) strncpy(dest, source, amount)
+#define strncpy_s(dest, len, source, amount) strncpy(dest, source, amount)
 #endif
 
 #ifndef strcat_s
-	#define strcat_s(dest, len, source) strncat(dest, source, len)
+#define strcat_s(dest, len, source) strncat(dest, source, len)
 #endif
 
 #ifndef sprintf_s
-	#define sprintf_s(target, size, format, ...) snprintf(target, size, format, __VA_ARGS__)
+#define sprintf_s(target, size, format, ...) snprintf(target, size, format, __VA_ARGS__)
 #endif
 
 #ifndef _mkdir
-	#include <sys/stat.h>
-	#define _mkdir(path) mkdir(path, 777)
+#include <sys/stat.h>
+#define _mkdir(path) mkdir(path, 777)
 #endif
 
 #ifndef _isatty
-	#include <unistd.h>
-	#define _isatty(fd) isatty(fd)
+#include <unistd.h>
+#define _isatty(fd) isatty(fd)
 #endif
 
 #ifndef _fileno
-	#include <stdio.h>
-	#define _fileno(stream) fileno(stream)
+#include <stdio.h>
+#define _fileno(stream) fileno(stream)
 #endif
 
 #ifndef _MAX_PATH
-	#define _MAX_PATH 4096
+#define _MAX_PATH 4096
 #endif
 
 #endif // _WIN32

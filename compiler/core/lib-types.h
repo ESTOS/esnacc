@@ -40,10 +40,10 @@
 
 typedef struct LibType
 {
-    enum BasicTypeChoiceId typeId;
-    BER_UNIV_CODE          univTagCode;
-    BER_FORM               tagForm;
-    AnyRefList            *anyRefs;  /* these may be filled in do_macros.c*/
+	enum BasicTypeChoiceId typeId;
+	BER_UNIV_CODE          univTagCode;
+	BER_FORM               tagForm;
+	AnyRefList* anyRefs;  /* these may be filled in do_macros.c*/
 }  LibType;
 
 #ifndef NO_EXTN_LIBTYPE

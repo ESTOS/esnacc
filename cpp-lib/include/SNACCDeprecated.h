@@ -6,12 +6,12 @@
 #include "SnaccROSEBase.h"
 
 #ifdef _WIN32
-    #pragma comment(lib, "Dbghelp.lib")
+#pragma comment(lib, "Dbghelp.lib")
 #endif
 
 enum class SNACCDeprecatedNotifyCallDirection {
-    in = 0,
-    out = 1
+	in = 0,
+	out = 1
 };
 
 /**
@@ -48,9 +48,9 @@ public:
 	/**
 	 * Sets the callback
 	 *
-     * @param pCallBack - the callback that should get notified
-     */
-    static void SetDeprecatedCallback(SNACCDeprecatedNotify* pCallBack);
+	 * @param pCallBack - the callback that should get notified
+	 */
+	static void SetDeprecatedCallback(SNACCDeprecatedNotify* pCallBack);
 
 	/**
 	 * This method is called in case an object is created which is flagged deprecated
@@ -71,15 +71,15 @@ public:
 	static void DeprecatedASN1Method(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext = NULL);
 
 private:
-    /**
-     * Retrieves the current callstack 
-     * 
+	/**
+	 * Retrieves the current callstack
+	 *
 	 * @param remove - the amount of elements from the top to remove (to get rid of calls we do not want to see in the stack trace)
-     */
-    static std::list<std::string> GetStackTrace(int remove = 1);
+	 */
+	static std::list<std::string> GetStackTrace(int remove = 1);
 
-    // The current callback that is notified about deprecated method calls or object creations
-    static SNACCDeprecatedNotify* m_pCallback;
+	// The current callback that is notified about deprecated method calls or object creations
+	static SNACCDeprecatedNotify* m_pCallback;
 };
 
 #endif // SNACC_DEPRECATED_H

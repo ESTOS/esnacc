@@ -18,14 +18,14 @@
 #include "../../core/asn1module.h"
 #include "../../core/snacc-util.h"
 
-void PrintSwiftROSECodeOLD(FILE *src, ModuleList *mods, Module *m);
+void PrintSwiftROSECodeOLD(FILE* src, ModuleList* mods, Module* m);
 
-void PrintSwiftCodeOLD(FILE *src, ModuleList *mods, Module *m, long longJmpVal,
-				   int printTypes, int printValues, int printEncoders,
-				   int printDecoders, int printJSONEncDec, 
-				   int novolatilefuncs);
+void PrintSwiftCodeOLD(FILE* src, ModuleList* mods, Module* m, long longJmpVal,
+	int printTypes, int printValues, int printEncoders,
+	int printDecoders, int printJSONEncDec,
+	int novolatilefuncs);
 
-void PrintSwiftOperationFactoryOLD(FILE *src, ModuleList *mods);
+void PrintSwiftOperationFactoryOLD(FILE* src, ModuleList* mods);
 
 
 #endif //SWIFTGENCODE_H_INCLUDED

@@ -22,27 +22,27 @@
 extern "C" {
 #endif
 
-typedef double AsnReal;
+	typedef double AsnReal;
 
-extern AsnReal PLUS_INFINITY;
-extern AsnReal MINUS_INFINITY;
+	extern AsnReal PLUS_INFINITY;
+	extern AsnReal MINUS_INFINITY;
 
 
-void InitAsnInfinity();
-unsigned long SignedIntOctetLen PROTO ((long  val));
-    
-AsnLen BEncAsnReal PROTO ((GenBuf *b, AsnReal *data));
+	void InitAsnInfinity();
+	unsigned long SignedIntOctetLen PROTO((long  val));
 
-void BDecAsnReal PROTO ((GenBuf *b, AsnReal *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	AsnLen BEncAsnReal PROTO((GenBuf* b, AsnReal* data));
 
-AsnLen BEncAsnRealContent PROTO ((GenBuf *b, AsnReal *data));
+	void BDecAsnReal PROTO((GenBuf* b, AsnReal* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-void BDecAsnRealContent PROTO ((GenBuf *b, AsnTag tag, AsnLen len, AsnReal *result, AsnLen *bytesDecoded, ENV_TYPE env));
+	AsnLen BEncAsnRealContent PROTO((GenBuf* b, AsnReal* data));
 
-/* do nothing */
+	void BDecAsnRealContent PROTO((GenBuf* b, AsnTag tag, AsnLen len, AsnReal* result, AsnLen* bytesDecoded, ENV_TYPE env));
+
+	/* do nothing */
 #define FreeAsnReal( v)
 
-void PrintAsnReal PROTO ((FILE *f, AsnReal *b, unsigned int indent));
+	void PrintAsnReal PROTO((FILE* f, AsnReal* b, unsigned int indent));
 
 #ifdef __cplusplus
 }

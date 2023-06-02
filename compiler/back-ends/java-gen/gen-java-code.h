@@ -18,6 +18,6 @@
 #include "../../core/asn1module.h"
 #include "../../core/snacc-util.h"
 
-void PrintJAVACode(ModuleList *mods, Module *m);
+void PrintJAVACode(ModuleList* mods, Module* m);
 
 #endif //JAVAGENCODE_H_INCLUDED

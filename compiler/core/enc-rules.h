@@ -35,21 +35,21 @@ extern "C" {
 #include "../../c-lib/include/asn-incl.h"
 
 #if !defined(lint)
-  static const char rcs_ENC_RULES_H[] = "@(#)$RCSfile: enc-rules.h,v $ $Revision: 1.1.1.1 $";
+	static const char rcs_ENC_RULES_H[] = "@(#)$RCSfile: enc-rules.h,v $ $Revision: 1.1.1.1 $";
 #endif
 
-  /* Type of encoding rule being used
-	Basic Encoding Rules
-	DER
-	JSON Encoding Rules
-  */
-  typedef enum {BER, DER, JSONER, NOP} EncRulesType; 
+	/* Type of encoding rule being used
+	  Basic Encoding Rules
+	  DER
+	  JSON Encoding Rules
+	*/
+	typedef enum { BER, DER, JSONER, NOP } EncRulesType;
 
-  int SetEncRules(EncRulesType encoding);
-  EncRulesType *GetEncRules();
-  void AddEncRules(EncRulesType encoding);
-  char* GetEncRulePrefix();
-  EncRulesType GetEncEncRulesType();
+	int SetEncRules(EncRulesType encoding);
+	EncRulesType* GetEncRules();
+	void AddEncRules(EncRulesType encoding);
+	char* GetEncRulePrefix();
+	EncRulesType GetEncEncRulesType();
 
 #if defined (__cplusplus)
 }

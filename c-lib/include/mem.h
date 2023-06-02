@@ -19,11 +19,11 @@
 extern "C" {
 #endif
 
-void	*Malloc PROTO ((size_t size));
-void	*Realloc PROTO ((void *ptr, size_t newsize));
-void	Free PROTO ((void *ptr));
+	void* Malloc PROTO((size_t size));
+	void* Realloc PROTO((void* ptr, size_t newsize));
+	void	Free PROTO((void* ptr));
 
-/* malloc type */
+	/* malloc type */
 #define MT( type)	(type *)Malloc (sizeof (type))
 
 

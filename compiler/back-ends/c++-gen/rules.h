@@ -53,24 +53,24 @@
  */
 #ifndef _RulesInclude
 #define _RulesInclude
-/* see asn1module.h for CxxTDI (C++ type def info) */
+ /* see asn1module.h for CxxTDI (C++ type def info) */
 #include "../../core/asn1module.h"
 
 typedef struct CxxRules
 {
-    int  maxDigitsToAppend;
-    char *choiceIdFieldName;   /* name of choiceId field */
-    char *choiceIdEnumName;  /* name (tag) for choiceId enum def name */
-    char *choiceUnionFieldName; /* what the name of the choice's union is */
-    char *choiceUnionName;  /* name (tag) for choice union def name */
-    int   capitalizeNamedElmts;
-    char *encodeBaseName;
-    char *decodeBaseName;
-    char *encodeContentBaseName;
-    char *decodeContentBaseName;
-    char *encodePduBaseName;
-    char *decodePduBaseName;
-    CxxTDI typeConvTbl[BASICTYPE_EXTENSION + 1];
+	int  maxDigitsToAppend;
+	char* choiceIdFieldName;   /* name of choiceId field */
+	char* choiceIdEnumName;  /* name (tag) for choiceId enum def name */
+	char* choiceUnionFieldName; /* what the name of the choice's union is */
+	char* choiceUnionName;  /* name (tag) for choice union def name */
+	int   capitalizeNamedElmts;
+	char* encodeBaseName;
+	char* decodeBaseName;
+	char* encodeContentBaseName;
+	char* decodeContentBaseName;
+	char* encodePduBaseName;
+	char* decodePduBaseName;
+	CxxTDI typeConvTbl[BASICTYPE_EXTENSION + 1];
 }  CxxRules;
 
 extern CxxRules cxxRulesG;

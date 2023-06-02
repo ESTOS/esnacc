@@ -34,11 +34,11 @@ extern "C" {
 #  endif
 #endif
 #ifndef UL
-  #error "can't find integer type which is 4 bytes in size"
+#error "can't find integer type which is 4 bytes in size"
 #endif
-typedef UL	AsnTag;
+	typedef UL	AsnTag;
 
-/* Tag Id's byte length */
+	/* Tag Id's byte length */
 #define TB	sizeof (AsnTag)
 
 /*
@@ -76,77 +76,77 @@ typedef UL	AsnTag;
 
 
 
-typedef enum
-{
-    ANY_CLASS = -2,
-    NULL_CLASS = -1,
-    UNIV = 0,
-    APPL = (1 << 6),
-    CNTX = (2 << 6),
-    PRIV = (3 << 6)
-} BER_CLASS;
+	typedef enum
+	{
+		ANY_CLASS = -2,
+		NULL_CLASS = -1,
+		UNIV = 0,
+		APPL = (1 << 6),
+		CNTX = (2 << 6),
+		PRIV = (3 << 6)
+	} BER_CLASS;
 
-typedef enum
-{
-    ANY_FORM = -2,
-    NULL_FORM = -1,
-    PRIM = 0,
-    CONS = (1 << 5)
-} BER_FORM;
+	typedef enum
+	{
+		ANY_FORM = -2,
+		NULL_FORM = -1,
+		PRIM = 0,
+		CONS = (1 << 5)
+	} BER_FORM;
 
 
-typedef enum
-{
-    NO_TAG_CODE = 0,
-    BOOLEAN_TAG_CODE = 1,
-    INTEGER_TAG_CODE,
-    BITSTRING_TAG_CODE,
-    OCTETSTRING_TAG_CODE,
-    NULLTYPE_TAG_CODE,
-    OID_TAG_CODE,
-    OD_TAG_CODE,
-    EXTERNAL_TAG_CODE,
-    REAL_TAG_CODE,
-    ENUM_TAG_CODE,
-	 UTF8STRING_TAG_CODE=12,
-     RELATIVE_OID_TAG_CODE=13,
-    SEQ_TAG_CODE =  16,
-    SET_TAG_CODE,
-    NUMERICSTRING_TAG_CODE,
-    PRINTABLESTRING_TAG_CODE,
-    TELETEXSTRING_TAG_CODE,
-    VIDEOTEXSTRING_TAG_CODE,
-    IA5STRING_TAG_CODE,
-    UTCTIME_TAG_CODE,
-    GENERALIZEDTIME_TAG_CODE,
-    GRAPHICSTRING_TAG_CODE,
-    VISIBLESTRING_TAG_CODE,
-    GENERALSTRING_TAG_CODE,
-    UNIVERSALSTRING_TAG_CODE = 28,
-    BMPSTRING_TAG_CODE = 30
-} BER_UNIV_CODE;
+	typedef enum
+	{
+		NO_TAG_CODE = 0,
+		BOOLEAN_TAG_CODE = 1,
+		INTEGER_TAG_CODE,
+		BITSTRING_TAG_CODE,
+		OCTETSTRING_TAG_CODE,
+		NULLTYPE_TAG_CODE,
+		OID_TAG_CODE,
+		OD_TAG_CODE,
+		EXTERNAL_TAG_CODE,
+		REAL_TAG_CODE,
+		ENUM_TAG_CODE,
+		UTF8STRING_TAG_CODE = 12,
+		RELATIVE_OID_TAG_CODE = 13,
+		SEQ_TAG_CODE = 16,
+		SET_TAG_CODE,
+		NUMERICSTRING_TAG_CODE,
+		PRINTABLESTRING_TAG_CODE,
+		TELETEXSTRING_TAG_CODE,
+		VIDEOTEXSTRING_TAG_CODE,
+		IA5STRING_TAG_CODE,
+		UTCTIME_TAG_CODE,
+		GENERALIZEDTIME_TAG_CODE,
+		GRAPHICSTRING_TAG_CODE,
+		VISIBLESTRING_TAG_CODE,
+		GENERALSTRING_TAG_CODE,
+		UNIVERSALSTRING_TAG_CODE = 28,
+		BMPSTRING_TAG_CODE = 30
+	} BER_UNIV_CODE;
 
 #define TT61STRING_TAG_CODE	TELETEXSTRING_TAG_CODE
 #define ISO646STRING_TAG_CODE	VISIBLESTRING_TAG_CODE
 
 
-/*
- * the TAG_ID_[CLASS/FORM/CODE] macros are not
- * super fast - try not to use during encoding/decoding
- */
+	/*
+	 * the TAG_ID_[CLASS/FORM/CODE] macros are not
+	 * super fast - try not to use during encoding/decoding
+	 */
 #define TAG_ID_CLASS( tid)	((tid & (0xC0 << ((TB-1) *8))) >> ((TB -1) * 8))
 #define TAG_ID_FORM( tid)	((tid & (0x20 << ((TB-1) *8))) >> ((TB -1) * 8))
 
-/*
- * TAG_IS_CONS evaluates to true if the given AsnTag type
- * tag has the constructed bit set.
- */
+	 /*
+	  * TAG_IS_CONS evaluates to true if the given AsnTag type
+	  * tag has the constructed bit set.
+	  */
 #define TAG_IS_CONS( tag)	((tag) & (CONS << ((TB-1) *8)))
 #define CONSIFY( tag)		(tag | (CONS << ((TB-1) *8)))
 #define DECONSIFY( tag)		(tag &  ~(CONS << ((TB-1) *8)))
 
 
-/* not a valid tag - usually the first EOC octet */
+	  /* not a valid tag - usually the first EOC octet */
 #define EOC_TAG_ID		0
 
 
@@ -201,12 +201,12 @@ typedef enum
     BufPutByteRvs (b, (class) | (form) | 31);
 
 
-/* the following are protos for routines ins asn_tag.c */
+ /* the following are protos for routines ins asn_tag.c */
 
 
-AsnTag BDecTag PROTO ((GenBuf *b, AsnLen *bytesDecoded, ENV_TYPE env));
+	AsnTag BDecTag PROTO((GenBuf* b, AsnLen* bytesDecoded, ENV_TYPE env));
 #if TTBL
-AsnTag PeekTag PROTO ((GenBuf *b, ENV_TYPE env));
+	AsnTag PeekTag PROTO((GenBuf* b, ENV_TYPE env));
 #endif
 
 #ifdef __cplusplus

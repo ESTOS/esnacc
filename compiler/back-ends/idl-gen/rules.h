@@ -26,22 +26,22 @@
  * Revision 1.2  1994/10/08  03:47:50  rj
  */
 
-/* see ../core/asn1module.h for IDLTDI (C++ type def info) */
+ /* see ../core/asn1module.h for IDLTDI (C++ type def info) */
 
 typedef struct IDLRules
 {
-  int		maxDigitsToAppend;
+	int		maxDigitsToAppend;
 
-  char		*typePrefix,
-		*typeSuffix;
+	char* typePrefix,
+		* typeSuffix;
 
-  char		*choiceEnumSuffix;
-  char		*choiceUnionFieldName;	/* what the name of the choice's union is */
-  char		*choiceUnionName;	/* name (tag) for choice union def name */
+	char* choiceEnumSuffix;
+	char* choiceUnionFieldName;	/* what the name of the choice's union is */
+	char* choiceUnionName;	/* name (tag) for choice union def name */
 
-  int		capitalizeNamedElmts;
+	int		capitalizeNamedElmts;
 
-  IDLTDI	typeConvTbl[BASICTYPE_RELATIVE_OID + 1];
+	IDLTDI	typeConvTbl[BASICTYPE_RELATIVE_OID + 1];
 } IDLRules;
 
 extern IDLRules idlRulesG;

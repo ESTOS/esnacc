@@ -37,12 +37,12 @@
  */
 
 
-TagList		*GetTags PROTO ((Type *t, int *stoleChoiceTags));
-void		FreeTags PROTO ((TagList *tl));
-int		CountTags PROTO ((Type *t));
-unsigned long int TagByteLen PROTO ((unsigned long int tagCode));
-char		*Class2ClassStr PROTO ((int _class));  /* class defined in asn1module.h */
-char		*Form2FormStr PROTO ((BER_FORM form));
-char		*Code2UnivCodeStr PROTO ((BER_UNIV_CODE code));
-int             CmpTags PROTO ((Type *a, Type *b));
-char        *DetermineCode PROTO ((Tag *tag, int *ptagLen, int bJustIntegerFlag));
+TagList* GetTags PROTO((Type* t, int* stoleChoiceTags));
+void		FreeTags PROTO((TagList* tl));
+int		CountTags PROTO((Type* t));
+unsigned long int TagByteLen PROTO((unsigned long int tagCode));
+char* Class2ClassStr PROTO((int _class));  /* class defined in asn1module.h */
+char* Form2FormStr PROTO((BER_FORM form));
+char* Code2UnivCodeStr PROTO((BER_UNIV_CODE code));
+int             CmpTags PROTO((Type* a, Type* b));
+char* DetermineCode PROTO((Tag* tag, int* ptagLen, int bJustIntegerFlag));

@@ -24,33 +24,33 @@
 extern "C" {
 #endif
 
-typedef struct NibbleBuf
-{
-    char *start;
-    char *end;
-    char *curr;
-    struct NibbleBuf *next;
-} NibbleBuf;
+	typedef struct NibbleBuf
+	{
+		char* start;
+		char* end;
+		char* curr;
+		struct NibbleBuf* next;
+	} NibbleBuf;
 
 
-typedef struct NibbleMem
-{
-    NibbleBuf *firstNibbleBuf;
-    NibbleBuf *currNibbleBuf;
-    unsigned long incrementSize;
-} NibbleMem;
+	typedef struct NibbleMem
+	{
+		NibbleBuf* firstNibbleBuf;
+		NibbleBuf* currNibbleBuf;
+		unsigned long incrementSize;
+	} NibbleMem;
 
 
 
-void InitNibbleMem PROTO ((unsigned long initialSize, unsigned long incrementSize));
+	void InitNibbleMem PROTO((unsigned long initialSize, unsigned long incrementSize));
 
-void ShutdownNibbleMem();
+	void ShutdownNibbleMem();
 
-void ServiceNibbleFault PROTO ((unsigned long size));
+	void ServiceNibbleFault PROTO((unsigned long size));
 
-void *NibbleAlloc PROTO ((unsigned long size));
+	void* NibbleAlloc PROTO((unsigned long size));
 
-void ResetNibbleMem();
+	void ResetNibbleMem();
 
 
 #ifdef __cplusplus
