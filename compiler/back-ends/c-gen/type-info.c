@@ -64,7 +64,7 @@
 #include "../str-util.h"
 #include "rules.h"
 
-static DefinedObj *definedNamesG;
+static DefinedObj* definedNamesG;
 /*
  *  All Typedefs, union,struct & enum Tags, and definedvalues (enum consts)
  *  are assumed to share the same name space - this list is used to
@@ -72,25 +72,25 @@ static DefinedObj *definedNamesG;
  */
 
 
-/* unexported prototypes */
+ /* unexported prototypes */
 
-static void FillCTypeDefInfo PROTO ((CRules *r,  Module *m,  TypeDef *td));
-static void FillCFieldNames PROTO ((CRules *r, NamedTypeList *firstSibling));
-static void FillCTypeRefInfo PROTO ((CRules *r,  Module *m,  TypeDef *head,
-									Type *t, CTypeId parentTypeId));
-static void FillCStructElmts PROTO ((CRules *r,  Module *m,  TypeDef *head,
-									NamedTypeList *t));
-static void FillCChoiceElmts PROTO ((CRules *r, Module *m, TypeDef *head,
-									NamedTypeList *first));
-static int IsCPtr PROTO ((CRules *r, TypeDef *td, Type *t,
-						 CTypeId parentTypeId));
+static void FillCTypeDefInfo PROTO((CRules* r, Module* m, TypeDef* td));
+static void FillCFieldNames PROTO((CRules* r, NamedTypeList* firstSibling));
+static void FillCTypeRefInfo PROTO((CRules* r, Module* m, TypeDef* head,
+	Type* t, CTypeId parentTypeId));
+static void FillCStructElmts PROTO((CRules* r, Module* m, TypeDef* head,
+	NamedTypeList* t));
+static void FillCChoiceElmts PROTO((CRules* r, Module* m, TypeDef* head,
+	NamedTypeList* first));
+static int IsCPtr PROTO((CRules* r, TypeDef* td, Type* t,
+	CTypeId parentTypeId));
 const char* GetDirectiveName(SnaccDirectiveEnum dirType);
 
-static void ParseTypeDefAttribs PROTO ((CTDI *ctdi,
-									   SnaccDirectiveList *attrList));
-static void ParseTypeRefAttribs PROTO ((CTRI *ctri,
-									   SnaccDirectiveList *attrList));
-static void FillCTDIDefaults PROTO ((CRules *r, CTDI *ctdi, TypeDef *td));
+static void ParseTypeDefAttribs PROTO((CTDI* ctdi,
+	SnaccDirectiveList* attrList));
+static void ParseTypeRefAttribs PROTO((CTRI* ctri,
+	SnaccDirectiveList* attrList));
+static void FillCTDIDefaults PROTO((CRules* r, CTDI* ctdi, TypeDef* td));
 
 
 /*
@@ -99,48 +99,48 @@ static void FillCTDIDefaults PROTO ((CRules *r, CTDI *ctdi, TypeDef *td));
  *  Also does the useful types module if it is not null.
  */
 void
-FillCTypeInfo PARAMS ((r, modList),
-    CRules *r _AND_
-    ModuleList *modList)
+FillCTypeInfo PARAMS((r, modList),
+	CRules* r _AND_
+	ModuleList* modList)
 {
-    TypeDef *td;
-    Module *m;
+	TypeDef* td;
+	Module* m;
 
-    /*
-     * go through each module's type defs and fill
-     * in the C type and enc/dec routines etc
-     */
-    definedNamesG = NewObjList();
+	/*
+	 * go through each module's type defs and fill
+	 * in the C type and enc/dec routines etc
+	 */
+	definedNamesG = NewObjList();
 
-    FOR_EACH_LIST_ELMT (m, modList)
-    {
-        FOR_EACH_LIST_ELMT (td, m->typeDefs)
-            FillCTypeDefInfo (r, m, td);
-    }
+	FOR_EACH_LIST_ELMT(m, modList)
+	{
+		FOR_EACH_LIST_ELMT(td, m->typeDefs)
+			FillCTypeDefInfo(r, m, td);
+	}
 
 
-    /*
-     * now that type def info is filled in
-     * set up set/seq/list/choice elements that ref
-     * those definitions
-     */
-    FOR_EACH_LIST_ELMT (m, modList)
-    {
-        FOR_EACH_LIST_ELMT (td, m->typeDefs)
-            FillCTypeRefInfo (r, m, td, td->type, C_TYPEDEF);
-    }
+	/*
+	 * now that type def info is filled in
+	 * set up set/seq/list/choice elements that ref
+	 * those definitions
+	 */
+	FOR_EACH_LIST_ELMT(m, modList)
+	{
+		FOR_EACH_LIST_ELMT(td, m->typeDefs)
+			FillCTypeRefInfo(r, m, td, td->type, C_TYPEDEF);
+	}
 
-    /*
-     * modules compiled together (ie one call to snacc with
-     * multiple args) likely to be C compiled together so
-     * need a unique routines/types/defines/enum values
-     * since assuming they share same name space.
-     *  All Typedefs, union, struct & enum Tags, and defined values
-     * (enum consts), #define names
-     *  are assumed to share the same name space
-     */
+	/*
+	 * modules compiled together (ie one call to snacc with
+	 * multiple args) likely to be C compiled together so
+	 * need a unique routines/types/defines/enum values
+	 * since assuming they share same name space.
+	 *  All Typedefs, union, struct & enum Tags, and defined values
+	 * (enum consts), #define names
+	 *  are assumed to share the same name space
+	 */
 
-    FreeDefinedObjs (&definedNamesG);
+	FreeDefinedObjs(&definedNamesG);
 
 }  /* FillCTypeInfo */
 
@@ -151,477 +151,477 @@ FillCTypeInfo PARAMS ((r, modList),
  *  types etc.
  */
 void
-FillCTypeDefInfo PARAMS ((r, m, td),
-    CRules *r _AND_
-    Module *m _AND_
-    TypeDef *td)
+FillCTypeDefInfo PARAMS((r, m, td),
+	CRules* r _AND_
+	Module* m _AND_
+	TypeDef* td)
 {
-    size_t len;
-    char *tmpName;
-    CTDI *ctdi;
+	size_t len;
+	char* tmpName;
+	CTDI* ctdi;
 
-    /*
-     * if CTDI is present this type def has already been 'filled'
-     */
-    if (td->cTypeDefInfo != NULL)
-        return;
+	/*
+	 * if CTDI is present this type def has already been 'filled'
+	 */
+	if (td->cTypeDefInfo != NULL)
+		return;
 
-    ctdi = td->cTypeDefInfo = MT (CTDI);
-    ctdi->cTypeId = C_TYPEDEF;
+	ctdi = td->cTypeDefInfo = MT(CTDI);
+	ctdi->cTypeId = C_TYPEDEF;
 
-    /* get default type def attributes from table for type on rhs of ::= */
+	/* get default type def attributes from table for type on rhs of ::= */
 
-    FillCTDIDefaults (r, ctdi, td);
-
-
-    /*
-     * if defined by a ref to another type definition fill in that type
-     * def's CTDI so can inherit (actully completly replace default
-     * attributes) from it
-     */
-    if ((td->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-        (td->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
-    {
-        /*
-         * Fill in CTDI for defining type if nec.
-         * this works for importTypeRef as well since both a.localTypeRef
-         * and a.importTypeRef are of type TypeRef
-         */
-        FillCTypeDefInfo (r, td->type->basicType->a.localTypeRef->module, td->type->basicType->a.localTypeRef->link);
-
-        memcpy (ctdi, td->type->basicType->a.localTypeRef->link->cTypeDefInfo, sizeof (CTDI));
-    }
+	FillCTDIDefaults(r, ctdi, td);
 
 
-    /*
-     * Zap default names for routines/type with NULL so
-     * can determine if the --snacc attributes specified any
-     */
-    ctdi->cTypeName = NULL;
-    ctdi->printRoutineName = NULL;
-    ctdi->encodeRoutineName = NULL;
-    ctdi->decodeRoutineName = NULL;
-    ctdi->freeRoutineName = NULL;
+	/*
+	 * if defined by a ref to another type definition fill in that type
+	 * def's CTDI so can inherit (actully completly replace default
+	 * attributes) from it
+	 */
+	if ((td->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
+		(td->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+	{
+		/*
+		 * Fill in CTDI for defining type if nec.
+		 * this works for importTypeRef as well since both a.localTypeRef
+		 * and a.importTypeRef are of type TypeRef
+		 */
+		FillCTypeDefInfo(r, td->type->basicType->a.localTypeRef->module, td->type->basicType->a.localTypeRef->link);
+
+		memcpy(ctdi, td->type->basicType->a.localTypeRef->link->cTypeDefInfo, sizeof(CTDI));
+	}
 
 
-    /*
-     * check for any "--snacc" attributes that overide the current
-     * ctdi fields
-     */
-    ParseTypeDefAttribs (ctdi, td->attrList);
+	/*
+	 * Zap default names for routines/type with NULL so
+	 * can determine if the --snacc attributes specified any
+	 */
+	ctdi->cTypeName = NULL;
+	ctdi->printRoutineName = NULL;
+	ctdi->encodeRoutineName = NULL;
+	ctdi->decodeRoutineName = NULL;
+	ctdi->freeRoutineName = NULL;
 
-    /* If BigInt's used, then reset the default type def attributes */
+
+	/*
+	 * check for any "--snacc" attributes that overide the current
+	 * ctdi fields
+	 */
+	ParseTypeDefAttribs(ctdi, td->attrList);
+
+	/* If BigInt's used, then reset the default type def attributes */
 /*    if (ctdi->asn1TypeId == BASICTYPE_BIGINT) {
-      td->type->basicType->choiceId = BASICTYPE_BIGINT;
-    } */
+	  td->type->basicType->choiceId = BASICTYPE_BIGINT;
+	} */
 
 
 
-    /*
-     * generate c typename for this  type def if not given by
-     * --snacc attributes
-     */
-    if (ctdi->cTypeName == NULL)
-    {
-        tmpName = Asn1TypeName2CTypeName (td->definedName);
-        len = strlen (tmpName);
+	/*
+	 * generate c typename for this  type def if not given by
+	 * --snacc attributes
+	 */
+	if (ctdi->cTypeName == NULL)
+	{
+		tmpName = Asn1TypeName2CTypeName(td->definedName);
+		len = strlen(tmpName);
 		size_t size = len + r->maxDigitsToAppend + 1;
-        ctdi->cTypeName = Malloc (size);
-        strcpy_s(ctdi->cTypeName, size, tmpName);
-        Free (tmpName);
+		ctdi->cTypeName = Malloc(size);
+		strcpy_s(ctdi->cTypeName, size, tmpName);
+		Free(tmpName);
 
-       /*
-        * make sure c type def name is unique
-        * (no need to check if cTypeName was specified by --snacc attribs)
-        */
-       MakeCStrUnique (definedNamesG, ctdi->cTypeName, size, r->maxDigitsToAppend, 1);
-       DefineObj (&definedNamesG, ctdi->cTypeName);
-    }
+		/*
+		 * make sure c type def name is unique
+		 * (no need to check if cTypeName was specified by --snacc attribs)
+		 */
+		MakeCStrUnique(definedNamesG, ctdi->cTypeName, size, r->maxDigitsToAppend, 1);
+		DefineObj(&definedNamesG, ctdi->cTypeName);
+	}
 
 
-    /*
-     * make names for encoder,decoder, print and free routines
-     * (if not already set by --snacc attributes
-     */
-    if (ctdi->encodeRoutineName == NULL)
-    {
+	/*
+	 * make names for encoder,decoder, print and free routines
+	 * (if not already set by --snacc attributes
+	 */
+	if (ctdi->encodeRoutineName == NULL)
+	{
 		size_t size = strlen(ctdi->cTypeName) + strlen(r->encodeRoutineBaseName) + 1;
-        ctdi->encodeRoutineName = Malloc (size);
-        strcpy_s(ctdi->encodeRoutineName, size, r->encodeRoutineBaseName);
-        strcat_s(ctdi->encodeRoutineName, size, ctdi->cTypeName);
-    }
+		ctdi->encodeRoutineName = Malloc(size);
+		strcpy_s(ctdi->encodeRoutineName, size, r->encodeRoutineBaseName);
+		strcat_s(ctdi->encodeRoutineName, size, ctdi->cTypeName);
+	}
 
-    if (ctdi->decodeRoutineName == NULL)
-    {
+	if (ctdi->decodeRoutineName == NULL)
+	{
 		size_t size = strlen(ctdi->cTypeName) + strlen(r->decodeRoutineBaseName) + 1;
-        ctdi->decodeRoutineName = Malloc (size);
-        strcpy_s(ctdi->decodeRoutineName, size, r->decodeRoutineBaseName);
-        strcat_s(ctdi->decodeRoutineName, size, ctdi->cTypeName);
-    }
+		ctdi->decodeRoutineName = Malloc(size);
+		strcpy_s(ctdi->decodeRoutineName, size, r->decodeRoutineBaseName);
+		strcat_s(ctdi->decodeRoutineName, size, ctdi->cTypeName);
+	}
 
-    if (ctdi->printRoutineName == NULL)
-    {
+	if (ctdi->printRoutineName == NULL)
+	{
 		size_t size = strlen(ctdi->cTypeName) + strlen(r->printRoutineBaseName) + 1;
-        ctdi->printRoutineName = Malloc (size);
-        strcpy_s(ctdi->printRoutineName, size, r->printRoutineBaseName);
-        strcat_s(ctdi->printRoutineName, size, ctdi->cTypeName);
-    }
+		ctdi->printRoutineName = Malloc(size);
+		strcpy_s(ctdi->printRoutineName, size, r->printRoutineBaseName);
+		strcat_s(ctdi->printRoutineName, size, ctdi->cTypeName);
+	}
 
-    if (ctdi->freeRoutineName == NULL)
-    {
+	if (ctdi->freeRoutineName == NULL)
+	{
 		size_t size = strlen(ctdi->cTypeName) + strlen(r->freeRoutineBaseName) + 1;
-        ctdi->freeRoutineName = Malloc (size);
-        strcpy_s(ctdi->freeRoutineName, size, r->freeRoutineBaseName);
-        strcat_s(ctdi->freeRoutineName, size, ctdi->cTypeName);
-    }
+		ctdi->freeRoutineName = Malloc(size);
+		strcpy_s(ctdi->freeRoutineName, size, r->freeRoutineBaseName);
+		strcat_s(ctdi->freeRoutineName, size, ctdi->cTypeName);
+	}
 }  /* FillCTypeDefInfo */
 
 
 static void
-FillCTypeRefInfo PARAMS ((r, m, head, t, parentTypeId),
-    CRules *r _AND_
-    Module *m _AND_
-    TypeDef *head _AND_
-    Type *t _AND_
-    CTypeId parentTypeId)
+FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
+	CRules* r _AND_
+	Module* m _AND_
+	TypeDef* head _AND_
+	Type* t _AND_
+	CTypeId parentTypeId)
 {
-    CTRI	*ctri;
-    CTDI	*tmpCtdi;
-    ValueDef	*namedElmt;
-    CNamedElmt	*cne;
-    CNamedElmt	**cneHndl;
-    char	*elmtName;
-    char	*unionName;
-    enum BasicTypeChoiceId basicTypeId;
+	CTRI* ctri;
+	CTDI* tmpCtdi;
+	ValueDef* namedElmt;
+	CNamedElmt* cne;
+	CNamedElmt** cneHndl;
+	char* elmtName;
+	char* unionName;
+	enum BasicTypeChoiceId basicTypeId;
 	size_t len;
 
-    /*
-     * you must check for cycles yourself before calling this
-     */
-    if (t->cTypeRefInfo == NULL)
-    {
-        ctri = MT (CTRI);
-        t->cTypeRefInfo = ctri;
-    }
-    else
-        ctri =  t->cTypeRefInfo;
+	/*
+	 * you must check for cycles yourself before calling this
+	 */
+	if (t->cTypeRefInfo == NULL)
+	{
+		ctri = MT(CTRI);
+		t->cTypeRefInfo = ctri;
+	}
+	else
+		ctri = t->cTypeRefInfo;
 
-    basicTypeId = t->basicType->choiceId;
+	basicTypeId = t->basicType->choiceId;
 
-    tmpCtdi = &r->typeConvTbl[basicTypeId];
+	tmpCtdi = &r->typeConvTbl[basicTypeId];
 
 	// Deepak: 31/Mar/2003
 	// change typeId here so that C_OBJECTCLASSFIELDTYPE could automatically behave as C_LIB
-	if(tmpCtdi->cTypeId == C_OBJECTCLASSFIELDTYPE)
-	   tmpCtdi->cTypeId = C_LIB;
+	if (tmpCtdi->cTypeId == C_OBJECTCLASSFIELDTYPE)
+		tmpCtdi->cTypeId = C_LIB;
 
-    /* get base type def info from the conversion table in the rules */
-    /* if the cTypeId is C_LIB, nothing more needs to be done */
-    ctri->cTypeId = tmpCtdi->cTypeId;
-    ctri->cTypeName = tmpCtdi->cTypeName;
-    ctri->optTestRoutineName = tmpCtdi->optTestRoutineName;
-    ctri->printRoutineName = tmpCtdi->printRoutineName;
-    ctri->encodeRoutineName = tmpCtdi->encodeRoutineName;
-    ctri->decodeRoutineName = tmpCtdi->decodeRoutineName;
-    ctri->freeRoutineName = tmpCtdi->freeRoutineName;
-    ctri->isEncDec = tmpCtdi->isEncDec;
+	/* get base type def info from the conversion table in the rules */
+	/* if the cTypeId is C_LIB, nothing more needs to be done */
+	ctri->cTypeId = tmpCtdi->cTypeId;
+	ctri->cTypeName = tmpCtdi->cTypeName;
+	ctri->optTestRoutineName = tmpCtdi->optTestRoutineName;
+	ctri->printRoutineName = tmpCtdi->printRoutineName;
+	ctri->encodeRoutineName = tmpCtdi->encodeRoutineName;
+	ctri->decodeRoutineName = tmpCtdi->decodeRoutineName;
+	ctri->freeRoutineName = tmpCtdi->freeRoutineName;
+	ctri->isEncDec = tmpCtdi->isEncDec;
 
-    if (ctri->cTypeId == C_ANY)
-    {
-        /*RWC;fprintf (errFileG, "Warning - generated code for the \"ANY\" type in type \"%s\" will need modification by YOU.",
+	if (ctri->cTypeId == C_ANY)
+	{
+		/*RWC;fprintf (errFileG, "Warning - generated code for the \"ANY\" type in type \"%s\" will need modification by YOU.",
 			head->definedName);
-        fprintf (errFileG, "  The source files will have a \"/\ * ANY - Fix Me! * /\" comment before related code.\n\n");*RWC;*/
-     }
+		fprintf (errFileG, "  The source files will have a \"/\ * ANY - Fix Me! * /\" comment before related code.\n\n");*RWC;*/
+	}
 
-    /*
-     * convert named elmts to C.
-     * check for name conflict with other defined Types/Names/Values
-     */
-    if ((basicTypeId == BASICTYPE_INTEGER || basicTypeId == BASICTYPE_ENUMERATED || basicTypeId == BASICTYPE_BITSTRING) && !(LIST_EMPTY (t->basicType->a.integer)))
-/*    if ((basicTypeId == BASICTYPE_INTEGER || basicTypeId == BASICTYPE_ENUMERATED || basicTypeId == BASICTYPE_BITSTRING) && !(LIST_EMPTY (t->basicType->a.integer))) */
-    {
-        ctri->cNamedElmts = AsnListNew (sizeof (void *));
-        FOR_EACH_LIST_ELMT (namedElmt, t->basicType->a.integer)
-        {
-            cneHndl = (CNamedElmt **)AsnListAppend (ctri->cNamedElmts);
-            cne = *cneHndl = MT (CNamedElmt);
-            elmtName = Asn1ValueName2CValueName (namedElmt->definedName);
-            len = strlen (elmtName);
+	/*
+	 * convert named elmts to C.
+	 * check for name conflict with other defined Types/Names/Values
+	 */
+	if ((basicTypeId == BASICTYPE_INTEGER || basicTypeId == BASICTYPE_ENUMERATED || basicTypeId == BASICTYPE_BITSTRING) && !(LIST_EMPTY(t->basicType->a.integer)))
+		/*    if ((basicTypeId == BASICTYPE_INTEGER || basicTypeId == BASICTYPE_ENUMERATED || basicTypeId == BASICTYPE_BITSTRING) && !(LIST_EMPTY (t->basicType->a.integer))) */
+	{
+		ctri->cNamedElmts = AsnListNew(sizeof(void*));
+		FOR_EACH_LIST_ELMT(namedElmt, t->basicType->a.integer)
+		{
+			cneHndl = (CNamedElmt**)AsnListAppend(ctri->cNamedElmts);
+			cne = *cneHndl = MT(CNamedElmt);
+			elmtName = Asn1ValueName2CValueName(namedElmt->definedName);
+			len = strlen(elmtName);
 			size_t size = len + 1 + r->maxDigitsToAppend;
-            cne->name = Malloc (size);
-            strcpy_s(cne->name, size, elmtName);
-            Free (elmtName); /* not very efficient */
+			cne->name = Malloc(size);
+			strcpy_s(cne->name, size, elmtName);
+			Free(elmtName); /* not very efficient */
 
-            if (namedElmt->value->basicValue->choiceId == BASICVALUE_INTEGER)
-                cne->value = namedElmt->value->basicValue->a.integer;
-            else
-            {
-                fprintf (errFileG, "Warning: unlinked defined value using -9999999\n");
-                cne->value = -9999999;
-            }
+			if (namedElmt->value->basicValue->choiceId == BASICVALUE_INTEGER)
+				cne->value = namedElmt->value->basicValue->a.integer;
+			else
+			{
+				fprintf(errFileG, "Warning: unlinked defined value using -9999999\n");
+				cne->value = -9999999;
+			}
 
-            if (r->capitalizeNamedElmts)
-                Str2UCase (cne->name, len);
+			if (r->capitalizeNamedElmts)
+				Str2UCase(cne->name, len);
 
-            /*
-             * append digits until there is not name conflict
-             * if nec
-             */
-            MakeCStrUnique (definedNamesG, cne->name, size, r->maxDigitsToAppend, 1);
-            DefineObj (&definedNamesG, cne->name);
-        }
-    }
+			/*
+			 * append digits until there is not name conflict
+			 * if nec
+			 */
+			MakeCStrUnique(definedNamesG, cne->name, size, r->maxDigitsToAppend, 1);
+			DefineObj(&definedNamesG, cne->name);
+		}
+	}
 
-    /*
-     *  Fill in c type name, routines, ptr attibutes etc
-     */
-    if (r->typeConvTbl[basicTypeId].cTypeId == C_TYPEREF)
-    {
-        /*
-         * don't do this anymore - it cause problems since FillTypeDef
-         * changes name ie ORName -> ORName1 and other type use new name
-         *
-         * don't define type or print/enc/dec/free routines
-         * if typedef name is the same as the defining type ref name
-         * in P2: ORName ::= P1.ORName
-        if ((parentTypeId == C_TYPEDEF) &&
-            (strcmp (head->definedName, t->basicType->a.localTypeRef->typeName)
-             == 0))
-        {
-            tmpCtdi = head->cTypeDefInfo;
-            tmpCtdi->genPrintRoutine = FALSE;
-            tmpCtdi->genEncodeRoutine = FALSE;
-            tmpCtdi->genDecodeRoutine = FALSE;
-            tmpCtdi->genFreeRoutine = FALSE;
-            tmpCtdi->genTypeDef = FALSE;
-        }
-         */
+	/*
+	 *  Fill in c type name, routines, ptr attibutes etc
+	 */
+	if (r->typeConvTbl[basicTypeId].cTypeId == C_TYPEREF)
+	{
+		/*
+		 * don't do this anymore - it cause problems since FillTypeDef
+		 * changes name ie ORName -> ORName1 and other type use new name
+		 *
+		 * don't define type or print/enc/dec/free routines
+		 * if typedef name is the same as the defining type ref name
+		 * in P2: ORName ::= P1.ORName
+		if ((parentTypeId == C_TYPEDEF) &&
+			(strcmp (head->definedName, t->basicType->a.localTypeRef->typeName)
+			 == 0))
+		{
+			tmpCtdi = head->cTypeDefInfo;
+			tmpCtdi->genPrintRoutine = FALSE;
+			tmpCtdi->genEncodeRoutine = FALSE;
+			tmpCtdi->genDecodeRoutine = FALSE;
+			tmpCtdi->genFreeRoutine = FALSE;
+			tmpCtdi->genTypeDef = FALSE;
+		}
+		 */
 
-        /*
-         * grab type name from link (link is the def of the
-         * the ref'd type)
-         */
-        if (t->basicType->a.localTypeRef->link != NULL)
-        {
-            /* inherit attributes from referenced type */
-            tmpCtdi=  t->basicType->a.localTypeRef->link->cTypeDefInfo;
-            ctri->cTypeName = tmpCtdi->cTypeName;
-            ctri->printRoutineName  = tmpCtdi->printRoutineName;
-            ctri->encodeRoutineName = tmpCtdi->encodeRoutineName;
-            ctri->decodeRoutineName = tmpCtdi->decodeRoutineName;
-            ctri->freeRoutineName = tmpCtdi->freeRoutineName;
-            ctri->isEncDec = tmpCtdi->isEncDec;
-            ctri->optTestRoutineName = tmpCtdi->optTestRoutineName;
+		 /*
+		  * grab type name from link (link is the def of the
+		  * the ref'd type)
+		  */
+		if (t->basicType->a.localTypeRef->link != NULL)
+		{
+			/* inherit attributes from referenced type */
+			tmpCtdi = t->basicType->a.localTypeRef->link->cTypeDefInfo;
+			ctri->cTypeName = tmpCtdi->cTypeName;
+			ctri->printRoutineName = tmpCtdi->printRoutineName;
+			ctri->encodeRoutineName = tmpCtdi->encodeRoutineName;
+			ctri->decodeRoutineName = tmpCtdi->decodeRoutineName;
+			ctri->freeRoutineName = tmpCtdi->freeRoutineName;
+			ctri->isEncDec = tmpCtdi->isEncDec;
+			ctri->optTestRoutineName = tmpCtdi->optTestRoutineName;
 
-        }
-        else
-        {
-            /*
-             * guess type and routine names
-             */
-            fprintf (errFileG, "Assuming C Type and Routine names for unresolved type ref \"%s\"\n",
+		}
+		else
+		{
+			/*
+			 * guess type and routine names
+			 */
+			fprintf(errFileG, "Assuming C Type and Routine names for unresolved type ref \"%s\"\n",
 				t->basicType->a.localTypeRef->typeName);
 
-            ctri->cTypeName = Asn1TypeName2CTypeName (t->basicType->a.localTypeRef->typeName);
+			ctri->cTypeName = Asn1TypeName2CTypeName(t->basicType->a.localTypeRef->typeName);
 
 			size_t size1 = strlen(r->printRoutineBaseName) + strlen(ctri->cTypeName) + 1;
-            ctri->printRoutineName = Malloc (size1);
-            strcpy_s(ctri->printRoutineName, size1, r->printRoutineBaseName);
-            strcat_s(ctri->printRoutineName, size1, ctri->cTypeName);
+			ctri->printRoutineName = Malloc(size1);
+			strcpy_s(ctri->printRoutineName, size1, r->printRoutineBaseName);
+			strcat_s(ctri->printRoutineName, size1, ctri->cTypeName);
 
 			size_t size2 = strlen(r->encodeRoutineBaseName) + strlen(ctri->cTypeName) + 1;
-            ctri->encodeRoutineName = Malloc (size2);
-            strcpy_s(ctri->encodeRoutineName, size2, r->encodeRoutineBaseName);
-            strcat_s(ctri->encodeRoutineName, size2, ctri->cTypeName);
+			ctri->encodeRoutineName = Malloc(size2);
+			strcpy_s(ctri->encodeRoutineName, size2, r->encodeRoutineBaseName);
+			strcat_s(ctri->encodeRoutineName, size2, ctri->cTypeName);
 
 			size_t size3 = strlen(r->decodeRoutineBaseName) + strlen(ctri->cTypeName) + 1;
-            ctri->decodeRoutineName = Malloc (size3);
-            strcpy_s(ctri->decodeRoutineName, size3, r->decodeRoutineBaseName);
-            strcat_s(ctri->decodeRoutineName, size3, ctri->cTypeName);
+			ctri->decodeRoutineName = Malloc(size3);
+			strcpy_s(ctri->decodeRoutineName, size3, r->decodeRoutineBaseName);
+			strcat_s(ctri->decodeRoutineName, size3, ctri->cTypeName);
 
 			size_t size4 = strlen(ctri->cTypeName) + strlen(r->freeRoutineBaseName) + 1;
 			ctri->freeRoutineName = Malloc(size4);
-            strcpy_s(ctri->freeRoutineName, size4, r->freeRoutineBaseName);
-            strcat_s(ctri->freeRoutineName, size4, ctri->cTypeName);
-        }
+			strcpy_s(ctri->freeRoutineName, size4, r->freeRoutineBaseName);
+			strcat_s(ctri->freeRoutineName, size4, ctri->cTypeName);
+		}
 
-    }
+	}
 	// Deepak: 05/Feb/2003
 #ifdef DEEPAK
-    else if (r->typeConvTbl[basicTypeId].cTypeId == C_OBJECTCLASSFIELDTYPE)
-    {
-        /*
-         * grab type name from link (link is the def of the
-         * the ref'd type)
-         */
-        if (t->basicType->a.localTypeRef->namedTypeLink != NULL)
-        {
-            /* inherit attributes from referenced type */
-          /*  tmpCtdi=  t->basicType->a.localTypeRef->namedTypeLink->type->cTypeRefInfo;
-            ctri->cTypeName = tmpCtdi->cTypeName;
-            ctri->printRoutineName  = tmpCtdi->printRoutineName;
-            ctri->encodeRoutineName = tmpCtdi->encodeRoutineName;
-            ctri->decodeRoutineName = tmpCtdi->decodeRoutineName;
-            ctri->freeRoutineName = tmpCtdi->freeRoutineName;
-            ctri->isEncDec = tmpCtdi->isEncDec;
-            ctri->optTestRoutineName = tmpCtdi->optTestRoutineName;
+	else if (r->typeConvTbl[basicTypeId].cTypeId == C_OBJECTCLASSFIELDTYPE)
+	{
+		/*
+		 * grab type name from link (link is the def of the
+		 * the ref'd type)
+		 */
+		if (t->basicType->a.localTypeRef->namedTypeLink != NULL)
+		{
+			/* inherit attributes from referenced type */
+		  /*  tmpCtdi=  t->basicType->a.localTypeRef->namedTypeLink->type->cTypeRefInfo;
+			ctri->cTypeName = tmpCtdi->cTypeName;
+			ctri->printRoutineName  = tmpCtdi->printRoutineName;
+			ctri->encodeRoutineName = tmpCtdi->encodeRoutineName;
+			ctri->decodeRoutineName = tmpCtdi->decodeRoutineName;
+			ctri->freeRoutineName = tmpCtdi->freeRoutineName;
+			ctri->isEncDec = tmpCtdi->isEncDec;
+			ctri->optTestRoutineName = tmpCtdi->optTestRoutineName;
 		  */
-        }
-        else
-        {
-            /*
-             * guess type and routine names
-             */
-            fprintf (errFileG, "Assuming C Type and Routine names for unresolved type ref \"%s\"\n",
+		}
+		else
+		{
+			/*
+			 * guess type and routine names
+			 */
+			fprintf(errFileG, "Assuming C Type and Routine names for unresolved type ref \"%s\"\n",
 				t->basicType->a.localTypeRef->typeName);
 
-            ctri->cTypeName = Asn1TypeName2CTypeName (t->basicType->a.localTypeRef->typeName);
+			ctri->cTypeName = Asn1TypeName2CTypeName(t->basicType->a.localTypeRef->typeName);
 
-            ctri->printRoutineName = Malloc (strlen (r->printRoutineBaseName) + strlen (ctri->cTypeName) + 1);
-            strcpy (ctri->printRoutineName, r->printRoutineBaseName);
-            strcat (ctri->printRoutineName, ctri->cTypeName);
+			ctri->printRoutineName = Malloc(strlen(r->printRoutineBaseName) + strlen(ctri->cTypeName) + 1);
+			strcpy(ctri->printRoutineName, r->printRoutineBaseName);
+			strcat(ctri->printRoutineName, ctri->cTypeName);
 
-            ctri->encodeRoutineName = Malloc (strlen (r->encodeRoutineBaseName)+ strlen (ctri->cTypeName) +  1);
-            strcpy (ctri->encodeRoutineName, r->encodeRoutineBaseName);
-            strcat (ctri->encodeRoutineName, ctri->cTypeName);
+			ctri->encodeRoutineName = Malloc(strlen(r->encodeRoutineBaseName) + strlen(ctri->cTypeName) + 1);
+			strcpy(ctri->encodeRoutineName, r->encodeRoutineBaseName);
+			strcat(ctri->encodeRoutineName, ctri->cTypeName);
 
-            ctri->decodeRoutineName = Malloc (strlen (r->decodeRoutineBaseName)+ strlen (ctri->cTypeName) + 1);
-            strcpy (ctri->decodeRoutineName, r->decodeRoutineBaseName);
-            strcat (ctri->decodeRoutineName, ctri->cTypeName);
+			ctri->decodeRoutineName = Malloc(strlen(r->decodeRoutineBaseName) + strlen(ctri->cTypeName) + 1);
+			strcpy(ctri->decodeRoutineName, r->decodeRoutineBaseName);
+			strcat(ctri->decodeRoutineName, ctri->cTypeName);
 
-            ctri->freeRoutineName = Malloc (strlen (ctri->cTypeName) + strlen (r->freeRoutineBaseName) + 1);
-            strcpy (ctri->freeRoutineName, r->freeRoutineBaseName);
-            strcat (ctri->freeRoutineName, ctri->cTypeName);
-        }
+			ctri->freeRoutineName = Malloc(strlen(ctri->cTypeName) + strlen(r->freeRoutineBaseName) + 1);
+			strcpy(ctri->freeRoutineName, r->freeRoutineBaseName);
+			strcat(ctri->freeRoutineName, ctri->cTypeName);
+		}
 
-    }
+	}
 #endif	// DEEPAK
 	else if (r->typeConvTbl[basicTypeId].cTypeId == C_OBJECTCLASS)
 	{	// Deepak: 11/Mar/2003
 		//FillCTypeRefInfo (r, m, head, t->basicType->a.objectclass->classdef, C_LIST);
 		size_t size = strlen(head->cTypeDefInfo->cTypeName) + 1;
-        unionName = Malloc (size);
-        strcpy_s(unionName, size, head->cTypeDefInfo->cTypeName);
-        ctri->cTypeName = unionName;
+		unionName = Malloc(size);
+		strcpy_s(unionName, size, head->cTypeDefInfo->cTypeName);
+		ctri->cTypeName = unionName;
 
-        FillCStructElmts (r, m, head, t->basicType->a.objectclass->classdef);		// Deepak: All the elements in this structure are filled here.
-        FillCFieldNames (r, t->basicType->a.objectclass->classdef);	// Deepak: All the identifiers are stored over here.
+		FillCStructElmts(r, m, head, t->basicType->a.objectclass->classdef);		// Deepak: All the elements in this structure are filled here.
+		FillCFieldNames(r, t->basicType->a.objectclass->classdef);	// Deepak: All the identifiers are stored over here.
 	}
-    else if (r->typeConvTbl[basicTypeId].cTypeId == C_LIST)
-    {
-        /*
-         * List  types (SET OF/ SEQ OF)
-         * fill in component type
-         */
+	else if (r->typeConvTbl[basicTypeId].cTypeId == C_LIST)
+	{
+		/*
+		 * List  types (SET OF/ SEQ OF)
+		 * fill in component type
+		 */
 
-        FillCTypeRefInfo (r, m, head, t->basicType->a.setOf, C_LIST);
-    }
+		FillCTypeRefInfo(r, m, head, t->basicType->a.setOf, C_LIST);
+	}
 
-    else if (r->typeConvTbl[basicTypeId].cTypeId == C_CHOICE)
-    {
-        /*
-         * Choice - set up choice Id elmt names, choiceid enum name
-         * choiceid enum fieldName, choice union name.
-         * this will only be the first type in the typedef
-         * ie will not be embedded (those are turned into type
-         * refs in nomalize.c)
-         */
+	else if (r->typeConvTbl[basicTypeId].cTypeId == C_CHOICE)
+	{
+		/*
+		 * Choice - set up choice Id elmt names, choiceid enum name
+		 * choiceid enum fieldName, choice union name.
+		 * this will only be the first type in the typedef
+		 * ie will not be embedded (those are turned into type
+		 * refs in nomalize.c)
+		 */
 
-        /*
-         * make union name (tag) from enclosing typedefs name plus "Choice"
-         * put in the cTypeName part. (the typeDef name is already unique
-         * but make sure union tag/name does not conflict with other types)
-         */
-        len = strlen (head->cTypeDefInfo->cTypeName);
+		 /*
+		  * make union name (tag) from enclosing typedefs name plus "Choice"
+		  * put in the cTypeName part. (the typeDef name is already unique
+		  * but make sure union tag/name does not conflict with other types)
+		  */
+		len = strlen(head->cTypeDefInfo->cTypeName);
 		size_t size1 = len + strlen(r->choiceUnionDefSuffix) + r->maxDigitsToAppend + 1;
-        unionName = (char*) Malloc (size1);
-        strcpy_s(unionName, size1, head->cTypeDefInfo->cTypeName);
-        strcat_s(unionName, size1, r->choiceUnionDefSuffix);
-        MakeCStrUnique (definedNamesG, unionName, size1, r->maxDigitsToAppend, 1);
-        DefineObj (&definedNamesG, unionName);
-        ctri->cTypeName = unionName;
+		unionName = (char*)Malloc(size1);
+		strcpy_s(unionName, size1, head->cTypeDefInfo->cTypeName);
+		strcat_s(unionName, size1, r->choiceUnionDefSuffix);
+		MakeCStrUnique(definedNamesG, unionName, size1, r->maxDigitsToAppend, 1);
+		DefineObj(&definedNamesG, unionName);
+		ctri->cTypeName = unionName;
 
 		size_t size2 = len + strlen(r->choiceIdEnumSuffix) + r->maxDigitsToAppend + 1;
-        ctri->choiceIdEnumName = Malloc (size2);
-        strcpy_s(ctri->choiceIdEnumName, size2, head->cTypeDefInfo->cTypeName);
-        strcat_s(ctri->choiceIdEnumName, size2, r->choiceIdEnumSuffix);
-        MakeCStrUnique (definedNamesG, ctri->choiceIdEnumName, size2, r->maxDigitsToAppend, 1);
-        DefineObj (&definedNamesG, ctri->choiceIdEnumName);
+		ctri->choiceIdEnumName = Malloc(size2);
+		strcpy_s(ctri->choiceIdEnumName, size2, head->cTypeDefInfo->cTypeName);
+		strcat_s(ctri->choiceIdEnumName, size2, r->choiceIdEnumSuffix);
+		MakeCStrUnique(definedNamesG, ctri->choiceIdEnumName, size2, r->maxDigitsToAppend, 1);
+		DefineObj(&definedNamesG, ctri->choiceIdEnumName);
 
-        ctri->choiceIdEnumFieldName = r->choiceIdFieldName; /* "choiceId" */
-        ctri->cFieldName = r->choiceUnionFieldName;         /* "a" */
+		ctri->choiceIdEnumFieldName = r->choiceIdFieldName; /* "choiceId" */
+		ctri->cFieldName = r->choiceUnionFieldName;         /* "a" */
 
-        /*
-         * must fill field names BEFORE filling choice elmts
-         * (allows better naming for choice ids
-         */
-        FillCFieldNames (r, t->basicType->a.choice);
-        FillCChoiceElmts (r, m, head, t->basicType->a.choice);
+		/*
+		 * must fill field names BEFORE filling choice elmts
+		 * (allows better naming for choice ids
+		 */
+		FillCFieldNames(r, t->basicType->a.choice);
+		FillCChoiceElmts(r, m, head, t->basicType->a.choice);
 
-    }
+	}
 
-    else if (r->typeConvTbl[basicTypeId].cTypeId == C_STRUCT)
-    {
-        /*
-         * SETs and SEQUENCEs
-         */
+	else if (r->typeConvTbl[basicTypeId].cTypeId == C_STRUCT)
+	{
+		/*
+		 * SETs and SEQUENCEs
+		 */
 
-        /*
-         * make struct name (tag) (the typeDef name is already unique)
-         * the same as the enclosing typeDef
-         */
+		 /*
+		  * make struct name (tag) (the typeDef name is already unique)
+		  * the same as the enclosing typeDef
+		  */
 		size_t size = strlen(head->cTypeDefInfo->cTypeName) + 1;
-        unionName = Malloc (size);
-        strcpy_s(unionName, size, head->cTypeDefInfo->cTypeName);
-        ctri->cTypeName = unionName;
+		unionName = Malloc(size);
+		strcpy_s(unionName, size, head->cTypeDefInfo->cTypeName);
+		ctri->cTypeName = unionName;
 
-        FillCStructElmts (r, m, head, t->basicType->a.set);		// Deepak: All the elements in this structure are filled here.
-        FillCFieldNames (r, t->basicType->a.set);	// Deepak: All the identifiers are stored over here.
-    }
-    else if (r->typeConvTbl[basicTypeId].cTypeId == C_MACROTYPE)
-    {		// Deepak: 17/Apr/2003
-        /*
-         * Macro Types
-         */
+		FillCStructElmts(r, m, head, t->basicType->a.set);		// Deepak: All the elements in this structure are filled here.
+		FillCFieldNames(r, t->basicType->a.set);	// Deepak: All the identifiers are stored over here.
+	}
+	else if (r->typeConvTbl[basicTypeId].cTypeId == C_MACROTYPE)
+	{		// Deepak: 17/Apr/2003
+		/*
+		 * Macro Types
+		 */
 
-        /*
-         * make struct name (tag) (the typeDef name is already unique)
-         * the same as the enclosing typeDef
-         */
+		 /*
+		  * make struct name (tag) (the typeDef name is already unique)
+		  * the same as the enclosing typeDef
+		  */
 		size_t size = strlen(head->cTypeDefInfo->cTypeName) + 1;
-        unionName = Malloc (size);
-        strcpy_s(unionName, size, head->cTypeDefInfo->cTypeName);
-        ctri->cTypeName = unionName;
+		unionName = Malloc(size);
+		strcpy_s(unionName, size, head->cTypeDefInfo->cTypeName);
+		ctri->cTypeName = unionName;
 
-		switch(t->basicType->a.macroType->choiceId)
+		switch (t->basicType->a.macroType->choiceId)
 		{
-        case MACROTYPE_ASNABSTRACTOPERATION:
-        case MACROTYPE_ROSOPERATION:
+		case MACROTYPE_ASNABSTRACTOPERATION:
+		case MACROTYPE_ROSOPERATION:
 
-			if(t->basicType->a.macroType->a.rosOperation->arguments != NULL)
-				FillCTypeRefInfo (r, m, head, t->basicType->a.macroType->a.rosOperation->arguments->type, C_MACROTYPE);
+			if (t->basicType->a.macroType->a.rosOperation->arguments != NULL)
+				FillCTypeRefInfo(r, m, head, t->basicType->a.macroType->a.rosOperation->arguments->type, C_MACROTYPE);
 
-			if(t->basicType->a.macroType->a.rosOperation->result != NULL)
-				FillCTypeRefInfo (r, m, head, t->basicType->a.macroType->a.rosOperation->result->type, C_MACROTYPE);
+			if (t->basicType->a.macroType->a.rosOperation->result != NULL)
+				FillCTypeRefInfo(r, m, head, t->basicType->a.macroType->a.rosOperation->result->type, C_MACROTYPE);
 			break;
 		default:
-		  break;
+			break;
 		}
-    }
+	}
 
-    /*
-     * figure out whether this is a ptr based on the enclosing
-     * type (if any) and optionality/default
-     */
-    ctri->isPtr = (unsigned char)IsCPtr (r, head, t, parentTypeId);		// ????? check for C_MACROTYPE
+	/*
+	 * figure out whether this is a ptr based on the enclosing
+	 * type (if any) and optionality/default
+	 */
+	ctri->isPtr = (unsigned char)IsCPtr(r, head, t, parentTypeId);		// ????? check for C_MACROTYPE
 
-    /* let user overide any defaults with the --snacc attributes */
-    ParseTypeRefAttribs (ctri, t->attrList);
+	/* let user overide any defaults with the --snacc attributes */
+	ParseTypeRefAttribs(ctri, t->attrList);
 
-    /* Check for bigint conversion */
+	/* Check for bigint conversion */
   /*  if (strcmp(ctri->cTypeName, "AsnBigInt") == 0) {
-      t->basicType->choiceId = BASICTYPE_BIGINT;
-    } */
+	  t->basicType->choiceId = BASICTYPE_BIGINT;
+	} */
 
 
 }  /* FillCTypeRefInfo */
@@ -629,18 +629,18 @@ FillCTypeRefInfo PARAMS ((r, m, head, t, parentTypeId),
 
 
 static void
-FillCStructElmts PARAMS ((r, m, head, elmts),
-    CRules *r _AND_
-    Module *m _AND_
-    TypeDef *head _AND_
-    NamedTypeList *elmts)
+FillCStructElmts PARAMS((r, m, head, elmts),
+	CRules* r _AND_
+	Module* m _AND_
+	TypeDef* head _AND_
+	NamedTypeList* elmts)
 {
-    NamedType *et;
+	NamedType* et;
 
-    FOR_EACH_LIST_ELMT (et, elmts)		// Take struct elements one by one.
-    {
-        FillCTypeRefInfo (r, m, head, et->type, C_STRUCT);
-    }
+	FOR_EACH_LIST_ELMT(et, elmts)		// Take struct elements one by one.
+	{
+		FillCTypeRefInfo(r, m, head, et->type, C_STRUCT);
+	}
 
 }  /* FillCStructElmts */
 
@@ -651,64 +651,64 @@ FillCStructElmts PARAMS ((r, m, head, elmts),
  *  choice id's
  */
 static void
-FillCChoiceElmts PARAMS ((r, m, head, elmts),
-    CRules *r _AND_
-    Module *m _AND_
-    TypeDef *head _AND_
-    NamedTypeList *elmts)
+FillCChoiceElmts PARAMS((r, m, head, elmts),
+	CRules* r _AND_
+	Module* m _AND_
+	TypeDef* head _AND_
+	NamedTypeList* elmts)
 {
-    NamedType *et;
-    int idCount = 0;
-    CTRI *ctri;
-    char *firstName;
-    char *secondName;
+	NamedType* et;
+	int idCount = 0;
+	CTRI* ctri;
+	char* firstName;
+	char* secondName;
 	size_t len;
 
-    /*
-     * fill in type info for elmt types first
-     */
-    FOR_EACH_LIST_ELMT (et, elmts)
-        FillCTypeRefInfo (r, m, head, et->type, C_CHOICE);
+	/*
+	 * fill in type info for elmt types first
+	 */
+	FOR_EACH_LIST_ELMT(et, elmts)
+		FillCTypeRefInfo(r, m, head, et->type, C_CHOICE);
 
-    /*
-     * set choiceId Symbol & value
-     * eg
-     *  Car ::= CHOICE {          typedef struct Car {
-     *     chev ChevCar,   ->         enum CarChoiceId {
-     *     ford FordCar                  CAR_CHEV,  <- typename_fieldName
-     *     toyota ToyotaCar              CAR_FORD,
-     *     }                             CAR_TOYOTA } choiceId;
-     *                                union CarChoiceUnion {
-     *                                      ChevCar *chev;
-     *                                      FordCar *ford;
-     *                                      ToyotaCar *toyota; } a;
-     *                               }
-     */
-    FOR_EACH_LIST_ELMT (et, elmts)
-    {
-        ctri =  et->type->cTypeRefInfo;
+	/*
+	 * set choiceId Symbol & value
+	 * eg
+	 *  Car ::= CHOICE {          typedef struct Car {
+	 *     chev ChevCar,   ->         enum CarChoiceId {
+	 *     ford FordCar                  CAR_CHEV,  <- typename_fieldName
+	 *     toyota ToyotaCar              CAR_FORD,
+	 *     }                             CAR_TOYOTA } choiceId;
+	 *                                union CarChoiceUnion {
+	 *                                      ChevCar *chev;
+	 *                                      FordCar *ford;
+	 *                                      ToyotaCar *toyota; } a;
+	 *                               }
+	 */
+	FOR_EACH_LIST_ELMT(et, elmts)
+	{
+		ctri = et->type->cTypeRefInfo;
 
-        if (ctri == NULL)
-            continue; /* wierd type */
+		if (ctri == NULL)
+			continue; /* wierd type */
 
-        ctri->choiceIdValue = idCount++;
+		ctri->choiceIdValue = idCount++;
 
-        firstName = Asn1TypeName2CTypeName (head->cTypeDefInfo->cTypeName);
-        secondName = ctri->cFieldName;
+		firstName = Asn1TypeName2CTypeName(head->cTypeDefInfo->cTypeName);
+		secondName = ctri->cFieldName;
 		size_t size = strlen(firstName) + strlen(secondName) + 2 + r->maxDigitsToAppend;
-        ctri->choiceIdSymbol = Malloc (size);
-        strcpy_s(ctri->choiceIdSymbol, size, firstName);
-        strcat_s(ctri->choiceIdSymbol, size, "_");
-        strcat_s(ctri->choiceIdSymbol, size, secondName);
-        Free (firstName);
-        len = strlen (ctri->choiceIdSymbol);
+		ctri->choiceIdSymbol = Malloc(size);
+		strcpy_s(ctri->choiceIdSymbol, size, firstName);
+		strcat_s(ctri->choiceIdSymbol, size, "_");
+		strcat_s(ctri->choiceIdSymbol, size, secondName);
+		Free(firstName);
+		len = strlen(ctri->choiceIdSymbol);
 
-        if (r->capitalizeNamedElmts)
-            Str2UCase (ctri->choiceIdSymbol, len);
+		if (r->capitalizeNamedElmts)
+			Str2UCase(ctri->choiceIdSymbol, len);
 
-        MakeCStrUnique (definedNamesG, ctri->choiceIdSymbol, size, r->maxDigitsToAppend, 0);
-        DefineObj (&definedNamesG, ctri->choiceIdSymbol);
-    }
+		MakeCStrUnique(definedNamesG, ctri->choiceIdSymbol, size, r->maxDigitsToAppend, 0);
+		DefineObj(&definedNamesG, ctri->choiceIdSymbol);
+	}
 
 }  /* FillCChoiceElmts */
 
@@ -719,89 +719,89 @@ FillCChoiceElmts PARAMS ((r, m, head, elmts),
  * the CTypeRefInfo struct
  */
 static void
-FillCFieldNames PARAMS ((r, elmts),
-    CRules *r _AND_
-    NamedTypeList *elmts)
+FillCFieldNames PARAMS((r, elmts),
+	CRules* r _AND_
+	NamedTypeList* elmts)
 {
-    NamedType  *et;
-    CTRI *ctri;
-    DefinedObj *fieldNames;
-    char      *tmpName;
-    char      *asn1FieldName;
-    char      *cFieldName;
+	NamedType* et;
+	CTRI* ctri;
+	DefinedObj* fieldNames;
+	char* tmpName;
+	char* asn1FieldName;
+	char* cFieldName;
 
-    fieldNames = NewObjList();
+	fieldNames = NewObjList();
 
-    /*
-     * Initialize fieldname data
-     * allocate (if nec) and fill in CTRI fieldname if poss
-     * from asn1 field name.  leave blank otherwise
-     */
-    FOR_EACH_LIST_ELMT (et, elmts)
-    {
-        ctri =  et->type->cTypeRefInfo;
-        if (ctri == NULL)
-        {
-            ctri = MT (CTRI);
-            et->type->cTypeRefInfo = ctri;
-        }
-        if (et->fieldName != NULL)
-        {
-            asn1FieldName = et->fieldName;
-            ctri->cFieldName = Asn1FieldName2CFieldName (asn1FieldName);
-            DefineObj (&fieldNames, ctri->cFieldName);
-        }
-    }
+	/*
+	 * Initialize fieldname data
+	 * allocate (if nec) and fill in CTRI fieldname if poss
+	 * from asn1 field name.  leave blank otherwise
+	 */
+	FOR_EACH_LIST_ELMT(et, elmts)
+	{
+		ctri = et->type->cTypeRefInfo;
+		if (ctri == NULL)
+		{
+			ctri = MT(CTRI);
+			et->type->cTypeRefInfo = ctri;
+		}
+		if (et->fieldName != NULL)
+		{
+			asn1FieldName = et->fieldName;
+			ctri->cFieldName = Asn1FieldName2CFieldName(asn1FieldName);
+			DefineObj(&fieldNames, ctri->cFieldName);
+		}
+	}
 
 
-    FOR_EACH_LIST_ELMT (et, elmts)
-    {
-        ctri =  et->type->cTypeRefInfo;
+	FOR_EACH_LIST_ELMT(et, elmts)
+	{
+		ctri = et->type->cTypeRefInfo;
 
-        /*
-         * generate field names for those without them
-         */
-        if (ctri->cFieldName == NULL)
-        {
-            size_t size = 0;
-            if ((et->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-                 (et->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
-            {
-                /*
-                 * take ref'd type name as field name
-                 * convert first let to lower case
-                 */
-                tmpName = et->type->basicType->a.localTypeRef->link->cTypeDefInfo->cTypeName;
-                tmpName =  Asn1TypeName2CTypeName (tmpName);
+		/*
+		 * generate field names for those without them
+		 */
+		if (ctri->cFieldName == NULL)
+		{
+			size_t size = 0;
+			if ((et->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
+				(et->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+			{
+				/*
+				 * take ref'd type name as field name
+				 * convert first let to lower case
+				 */
+				tmpName = et->type->basicType->a.localTypeRef->link->cTypeDefInfo->cTypeName;
+				tmpName = Asn1TypeName2CTypeName(tmpName);
 				size = strlen(tmpName) + r->maxDigitsToAppend + 1;
-                cFieldName = Malloc (size);
-                strcpy_s(cFieldName, size, tmpName);
-                Free (tmpName);
-                if (isupper (cFieldName[0]))
-                    cFieldName[0] = (char)tolower (cFieldName[0]);
-            }
-            else
-            {
-                /*
-                 * get default field name for this type
-                 */
-                tmpName = r->typeConvTbl[et->type->basicType->choiceId].defaultFieldName;
+				cFieldName = Malloc(size);
+				strcpy_s(cFieldName, size, tmpName);
+				Free(tmpName);
+				if (isupper(cFieldName[0]))
+					cFieldName[0] = (char)tolower(cFieldName[0]);
+			}
+			else
+			{
+				/*
+				 * get default field name for this type
+				 */
+				tmpName = r->typeConvTbl[et->type->basicType->choiceId].defaultFieldName;
 				size = strlen(tmpName) + r->maxDigitsToAppend + 1;
-                cFieldName = Malloc (size);
-                strcpy_s(cFieldName, size, tmpName);
+				cFieldName = Malloc(size);
+				strcpy_s(cFieldName, size, tmpName);
 
-                if (isupper (cFieldName[0]))
-                    cFieldName[0] = (char)tolower (cFieldName[0]);
-            }
+				if (isupper(cFieldName[0]))
+					cFieldName[0] = (char)tolower(cFieldName[0]);
+			}
 
 
-            MakeCStrUnique (fieldNames, cFieldName, size, r->maxDigitsToAppend, 1);
+			MakeCStrUnique(fieldNames, cFieldName, size, r->maxDigitsToAppend, 1);
 
-            DefineObj (&fieldNames, cFieldName);
-            ctri->cFieldName = cFieldName;
-        }
-    }
-    FreeDefinedObjs (&fieldNames);
+			DefineObj(&fieldNames, cFieldName);
+			ctri->cFieldName = cFieldName;
+		}
+	}
+	FreeDefinedObjs(&fieldNames);
 }  /* FillCFieldNames */
 
 
@@ -811,43 +811,43 @@ FillCFieldNames PARAMS ((r, elmts),
  * be ref'd as a ptr
  */
 static int
-IsCPtr PARAMS ((r, td, t, parentCTypeId),
-    CRules *r _AND_
-    TypeDef *td _AND_
-    Type *t _AND_
-    CTypeId parentCTypeId)
+IsCPtr PARAMS((r, td, t, parentCTypeId),
+	CRules* r _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	CTypeId parentCTypeId)
 {
-    CTDI *ctdi;
-    int retVal = FALSE;
+	CTDI* ctdi;
+	int retVal = FALSE;
 
-    /*
-     * inherit ptr attriubutes from ref'd type if any
-     * otherwise grab lib c type def from the CRules
-     */
-    if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-        (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
-    {
-        ctdi = t->basicType->a.localTypeRef->link->cTypeDefInfo;
-    }
-    else
-        ctdi = &r->typeConvTbl[GetBuiltinType (t)];
+	/*
+	 * inherit ptr attriubutes from ref'd type if any
+	 * otherwise grab lib c type def from the CRules
+	 */
+	if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
+		(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+	{
+		ctdi = t->basicType->a.localTypeRef->link->cTypeDefInfo;
+	}
+	else
+		ctdi = &r->typeConvTbl[GetBuiltinType(t)];
 
-    if ((parentCTypeId == C_TYPEDEF) && (ctdi->isPtrForTypeDef))
-        retVal = TRUE;
+	if ((parentCTypeId == C_TYPEDEF) && (ctdi->isPtrForTypeDef))
+		retVal = TRUE;
 
-    else if ((parentCTypeId == C_STRUCT) && (ctdi->isPtrForTypeRef))
-        retVal = TRUE;
+	else if ((parentCTypeId == C_STRUCT) && (ctdi->isPtrForTypeRef))
+		retVal = TRUE;
 
 	// Deepak: 18/Apr/2003
-    else if ((parentCTypeId == C_MACROTYPE) && (ctdi->isPtrForTypeRef))
-        retVal = TRUE;
+	else if ((parentCTypeId == C_MACROTYPE) && (ctdi->isPtrForTypeRef))
+		retVal = TRUE;
 
-    else if ((parentCTypeId == C_CHOICE) && (ctdi->isPtrInChoice))
-        retVal = TRUE;
+	else if ((parentCTypeId == C_CHOICE) && (ctdi->isPtrInChoice))
+		retVal = TRUE;
 
-    else if (((t->optional) || (t->defaultVal != NULL)) && (ctdi->isPtrForOpt))
-        retVal = TRUE;
-    return retVal;
+	else if (((t->optional) || (t->defaultVal != NULL)) && (ctdi->isPtrForOpt))
+		retVal = TRUE;
+	return retVal;
 }  /* IsCPtr */
 
 
@@ -861,17 +861,17 @@ IsCPtr PARAMS ((r, td, t, parentCTypeId),
  * pairs.  A list is used in case the attr/value pairs are
  * given in multiple ASN.1 comments around the type.
  */
-void ParseTypeDefAttribs PARAMS ((ctdi, attrList),
-    CTDI *ctdi _AND_
-    SnaccDirectiveList *attrList)
+void ParseTypeDefAttribs PARAMS((ctdi, attrList),
+	CTDI* ctdi _AND_
+	SnaccDirectiveList* attrList)
 {
-    SnaccDirective* pDirective;
+	SnaccDirective* pDirective;
 
-    if (attrList == NULL)
-        return;
+	if (attrList == NULL)
+		return;
 
-    FOR_EACH_LIST_ELMT (pDirective, attrList)
-    {
+	FOR_EACH_LIST_ELMT(pDirective, attrList)
+	{
 		switch (pDirective->type)
 		{
 		case ASN1_TypeID:
@@ -955,26 +955,26 @@ void ParseTypeDefAttribs PARAMS ((ctdi, attrList),
 			break;
 
 		default:
-			fprintf (errFileG, "Warning: ignoring unrecognized type def attribute '%s'\n",
+			fprintf(errFileG, "Warning: ignoring unrecognized type def attribute '%s'\n",
 				GetDirectiveName(pDirective->type));
 		}
 
-    } /* end for */
+	} /* end for */
 
 } /* ParseTypeDefAttribs */
 
 
-void ParseTypeRefAttribs PARAMS ((ctri, attrList),
-    CTRI *ctri _AND_
-    SnaccDirectiveList *attrList)
+void ParseTypeRefAttribs PARAMS((ctri, attrList),
+	CTRI* ctri _AND_
+	SnaccDirectiveList* attrList)
 {
 	SnaccDirective* pDirective;
 
-    if (attrList == NULL)
-        return;
+	if (attrList == NULL)
+		return;
 
-    FOR_EACH_LIST_ELMT (pDirective, attrList)
-    {
+	FOR_EACH_LIST_ELMT(pDirective, attrList)
+	{
 		switch (pDirective->type)
 		{
 		case C_TypeID:
@@ -1045,7 +1045,7 @@ void ParseTypeRefAttribs PARAMS ((ctri, attrList),
 			break;
 
 		default:
-			fprintf (errFileG, "Warning: ignoring unrecognized type def attribute '%s'\n",
+			fprintf(errFileG, "Warning: ignoring unrecognized type def attribute '%s'\n",
 				GetDirectiveName(pDirective->type));
 		}
 
@@ -1056,22 +1056,22 @@ void ParseTypeRefAttribs PARAMS ((ctri, attrList),
 
 /* fill given ctdi with defaults from table for given typedef */
 void
-FillCTDIDefaults PARAMS ((r, ctdi, td),
-    CRules *r _AND_
-    CTDI *ctdi _AND_
-    TypeDef *td)
+FillCTDIDefaults PARAMS((r, ctdi, td),
+	CRules* r _AND_
+	CTDI* ctdi _AND_
+	TypeDef* td)
 {
-    CTDI *tblCtdi;
-    int typeIndex;
+	CTDI* tblCtdi;
+	int typeIndex;
 
-    typeIndex = GetBuiltinType (td->type);
+	typeIndex = GetBuiltinType(td->type);
 
-    if (typeIndex < 0)
-        return;
+	if (typeIndex < 0)
+		return;
 
-    tblCtdi = &r->typeConvTbl[typeIndex];
+	tblCtdi = &r->typeConvTbl[typeIndex];
 
-    memcpy (ctdi, tblCtdi, sizeof (CTDI));
+	memcpy(ctdi, tblCtdi, sizeof(CTDI));
 
 }
 

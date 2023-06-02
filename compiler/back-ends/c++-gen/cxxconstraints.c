@@ -18,12 +18,12 @@ void PrintTypeDefDefault(FILE* hdr, FILE* src, TypeDef* td)
 	if (strcmp(td->cxxTypeDefInfo->className, "AsnSystemTime") == 0)
 		return;
 
-	fprintf (hdr, "typedef %s %s;\n", td->type->cxxTypeRefInfo->className, td->cxxTypeDefInfo->className);
+	fprintf(hdr, "typedef %s %s;\n", td->type->cxxTypeRefInfo->className, td->cxxTypeDefInfo->className);
 }
 
 
 void PrintCxxSetOfSizeConstraint(FILE* hdr, SubtypeValue* sizeConstraint,
-								 Module* m, Type* type)
+	Module* m, Type* type)
 {
 	long lBound = 0;
 	long uBound = 0;
@@ -108,200 +108,200 @@ void PrintCxxSetOfSizeConstraint(FILE* hdr, SubtypeValue* sizeConstraint,
 /* Function generates the checkconstraints function for */
 /*    a setOf or seqOf with size constraints set        */
 void PrintCxxSetOfSizeValRangeConstraints PARAMS((hdr, src, td),
- FILE* hdr _AND_
- FILE* src _AND_
- TypeDef* td)
+	FILE* hdr _AND_
+	FILE* src _AND_
+	TypeDef* td)
 {
-    Subtype* s_type;
-    long lboundLower = 0;
-    long lboundUpper = 0;
-    int ubExists = 2;
+	Subtype* s_type;
+	long lboundLower = 0;
+	long lboundUpper = 0;
+	int ubExists = 2;
 
-    s_type = (Subtype*)td->type->subtypes->a.single->a.sizeConstraint->a.or->last->data;
+	s_type = (Subtype*)td->type->subtypes->a.single->a.sizeConstraint->a. or ->last->data;
 
-    if(s_type->a.single->a.valueRange->lowerEndValue->endValue->basicValue->choiceId == BASICVALUE_INTEGER)
-    {
-        if(s_type->a.single->a.valueRange->lowerEndValue->valueInclusive)
-        {
+	if (s_type->a.single->a.valueRange->lowerEndValue->endValue->basicValue->choiceId == BASICVALUE_INTEGER)
+	{
+		if (s_type->a.single->a.valueRange->lowerEndValue->valueInclusive)
+		{
 
-            lboundLower = s_type->a.single->a.valueRange->lowerEndValue->endValue->basicValue->a.integer;
-        }
-        else
-        {
-            lboundLower = s_type->a.single->a.valueRange->lowerEndValue->endValue->basicValue->a.integer+1;
-        }
+			lboundLower = s_type->a.single->a.valueRange->lowerEndValue->endValue->basicValue->a.integer;
+		}
+		else
+		{
+			lboundLower = s_type->a.single->a.valueRange->lowerEndValue->endValue->basicValue->a.integer + 1;
+		}
 
-        if(s_type->a.single->a.valueRange->upperEndValue->endValue->basicValue->choiceId == BASICVALUE_INTEGER)
-        {
-            if(s_type->a.single->a.valueRange->upperEndValue->valueInclusive)
-            {
-	            lboundUpper = s_type->a.single->a.valueRange->upperEndValue->endValue->basicValue->a.integer;
-                ubExists = 1;
-            }
-            else
-            {
-	            lboundUpper = s_type->a.single->a.valueRange->upperEndValue->endValue->basicValue->a.integer-1;
-                ubExists = 1;
-            }
-        }
-    }
+		if (s_type->a.single->a.valueRange->upperEndValue->endValue->basicValue->choiceId == BASICVALUE_INTEGER)
+		{
+			if (s_type->a.single->a.valueRange->upperEndValue->valueInclusive)
+			{
+				lboundUpper = s_type->a.single->a.valueRange->upperEndValue->endValue->basicValue->a.integer;
+				ubExists = 1;
+			}
+			else
+			{
+				lboundUpper = s_type->a.single->a.valueRange->upperEndValue->endValue->basicValue->a.integer - 1;
+				ubExists = 1;
+			}
+		}
+	}
 
-    if(lboundUpper > 65536)
-    {
-        ubExists = 2;
-    }
+	if (lboundUpper > 65536)
+	{
+		ubExists = 2;
+	}
 
-    if(ubExists == 2)
-    {
-        lboundUpper = 0;
-    }
+	if (ubExists == 2)
+	{
+		lboundUpper = 0;
+	}
 
-   if(lboundLower >= 0 && ((lboundUpper >= 0 && (lboundUpper >= lboundLower)) || ubExists == 2))
-    {
-        fprintf (hdr, "     SizeConstraint* SizeConstraints()const{\n");
-        fprintf (hdr, "         static SizeConstraint s = {%ld, %ld, %d}; SizeConstraint * ps = &s; return ps;}\n", lboundLower, lboundUpper, ubExists);
+	if (lboundLower >= 0 && ((lboundUpper >= 0 && (lboundUpper >= lboundLower)) || ubExists == 2))
+	{
+		fprintf(hdr, "     SizeConstraint* SizeConstraints()const{\n");
+		fprintf(hdr, "         static SizeConstraint s = {%ld, %ld, %d}; SizeConstraint * ps = &s; return ps;}\n", lboundLower, lboundUpper, ubExists);
 
-        //fprintf (hdr, "     SizeConstraint* SizeConstraints(){\n");
-        //fprintf (hdr, "         static SizeConstraint s = {%d, %d, %d}; SizeConstraint * ps = &s; return ps;}\n", lboundLower, lboundUpper, ubExists);
+		//fprintf (hdr, "     SizeConstraint* SizeConstraints(){\n");
+		//fprintf (hdr, "         static SizeConstraint s = {%d, %d, %d}; SizeConstraint * ps = &s; return ps;}\n", lboundLower, lboundUpper, ubExists);
 
-        /*
-        fprintf (hdr, "     AsnLen PEnc(AsnBufBits &b)const;\n");
-        fprintf (src, "AsnLen %s::PEnc(AsnBufBits &b)const\n", td->definedName);
-        fprintf (src, "{\n");
-        fprintf (src, "         AsnLen len = 0;\n");
-        fprintf (src, "         return len;\n}\n");
+		/*
+		fprintf (hdr, "     AsnLen PEnc(AsnBufBits &b)const;\n");
+		fprintf (src, "AsnLen %s::PEnc(AsnBufBits &b)const\n", td->definedName);
+		fprintf (src, "{\n");
+		fprintf (src, "         AsnLen len = 0;\n");
+		fprintf (src, "         return len;\n}\n");
 
-        fprintf (hdr, "     void PDec(AsnBufBits &b, AsnLen &bitsDecoded);\n");
-        fprintf (src, "void %s::PDec(AsnBufBits &b, AsnLen &bitsDecoded)\n", td->definedName);
-        fprintf (src, "{\n");
-        fprintf (src, "}\n");
+		fprintf (hdr, "     void PDec(AsnBufBits &b, AsnLen &bitsDecoded);\n");
+		fprintf (src, "void %s::PDec(AsnBufBits &b, AsnLen &bitsDecoded)\n", td->definedName);
+		fprintf (src, "{\n");
+		fprintf (src, "}\n");
 */
-        /*
-        fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
-        fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
+/*
+fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
+fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
 
-        fprintf (src, "  std::string * pTmpError;\n");
-        if(ubExists == 1)
-        {
-            fprintf (src, "  char* ptr = checkSOfValRange(%d, %d);\n\n", lboundLower, lboundUpper);
-        }
-        else
-        {
-            fprintf (src, "  char* ptr = checkSOfValRange(%d, 65535/\*TBD-fix check to check for unconstrainted UB*//*);\n\n", lboundLower);*/
-/*        }
+fprintf (src, "  std::string * pTmpError;\n");
+if(ubExists == 1)
+{
+	fprintf (src, "  char* ptr = checkSOfValRange(%d, %d);\n\n", lboundLower, lboundUpper);
+}
+else
+{
+	fprintf (src, "  char* ptr = checkSOfValRange(%d, 65535/\*TBD-fix check to check for unconstrainted UB*//*);\n\n", lboundLower);*/
+	/*        }
 
-        fprintf (src, "  if(ptr)\n   {\n");
-        fprintf (src, "     if(pConstraintFails!=NULL)\n     {\n");
-        fprintf (src, "       pTmpError=pConstraintFails->Append();\n");
-        fprintf (src, "       *pTmpError += ptr;\n");
-        fprintf (src, "       *pTmpError += \"In function call:  %s::checkConstraints(...)\\n\";\n", td->cxxTypeDefInfo->className);
-        fprintf (src, "     }\n");
-        fprintf (src, "   }\n   else\n   {\n");
+			fprintf (src, "  if(ptr)\n   {\n");
+			fprintf (src, "     if(pConstraintFails!=NULL)\n     {\n");
+			fprintf (src, "       pTmpError=pConstraintFails->Append();\n");
+			fprintf (src, "       *pTmpError += ptr;\n");
+			fprintf (src, "       *pTmpError += \"In function call:  %s::checkConstraints(...)\\n\";\n", td->cxxTypeDefInfo->className);
+			fprintf (src, "     }\n");
+			fprintf (src, "   }\n   else\n   {\n");
 
-        fprintf (src, "     return checkListConstraints(pConstraintFails);\n");
-        fprintf (src, "   }\n\n");
-        fprintf (src, "   return checkListConstraints(pConstraintFails);\n");
-        fprintf(src, "\n}\n");
-    }
-    else
-    {
+			fprintf (src, "     return checkListConstraints(pConstraintFails);\n");
+			fprintf (src, "   }\n\n");
+			fprintf (src, "   return checkListConstraints(pConstraintFails);\n");
+			fprintf(src, "\n}\n");
+		}
+		else
+		{
 
-        fprintf(hdr, "      int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
-        fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
-        fprintf(src, "   return checkListConstraints(pConstraintFails);\n");
+			fprintf(hdr, "      int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
+			fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
+			fprintf(src, "   return checkListConstraints(pConstraintFails);\n");
 
-        fprintf(src, "}\n\n");
-        */
-    }
+			fprintf(src, "}\n\n");
+			*/
+	}
 
 }
 
 void PrintCxxSetOfSizeSingleValConstraints PARAMS((hdr, src, td),
- FILE* hdr _AND_
- FILE* src _AND_
- TypeDef* td)
+	FILE* hdr _AND_
+	FILE* src _AND_
+	TypeDef* td)
 {
-    Subtype* s_type;
-    long lbound = 0;
+	Subtype* s_type;
+	long lbound = 0;
 
-    s_type = (Subtype*)td->type->subtypes->a.single->a.sizeConstraint->a.or->last->data;
+	s_type = (Subtype*)td->type->subtypes->a.single->a.sizeConstraint->a. or ->last->data;
 
-    if(s_type->a.single->a.singleValue->basicValue->choiceId == BASICVALUE_INTEGER)
-    {
-        lbound = s_type->a.single->a.singleValue->basicValue->a.integer;
-    }
+	if (s_type->a.single->a.singleValue->basicValue->choiceId == BASICVALUE_INTEGER)
+	{
+		lbound = s_type->a.single->a.singleValue->basicValue->a.integer;
+	}
 
-    if(lbound >= 0)
-    {
-        fprintf (hdr, "     SizeConstraint* SizeConstraints()const{\n");
-        fprintf (hdr, "         SizeConstraint s = {%ld, 0, 0}; SizeConstraint * ps = &s; return ps;}\n", lbound);
+	if (lbound >= 0)
+	{
+		fprintf(hdr, "     SizeConstraint* SizeConstraints()const{\n");
+		fprintf(hdr, "         SizeConstraint s = {%ld, 0, 0}; SizeConstraint * ps = &s; return ps;}\n", lbound);
 
-        fprintf (hdr, "     SizeConstraint* SizeConstraints(){\n");
-        fprintf (hdr, "         SizeConstraint s = {%ld, 0, 0}; SizeConstraint * ps = &s; return ps;}\n", lbound);
+		fprintf(hdr, "     SizeConstraint* SizeConstraints(){\n");
+		fprintf(hdr, "         SizeConstraint s = {%ld, 0, 0}; SizeConstraint * ps = &s; return ps;}\n", lbound);
 
-      /*
+		/*
 
-        fprintf (hdr, "     AsnLen PEnc(AsnBufBits &b)const;\n");
-        fprintf (src, "AsnLen %s::PEnc(AsnBufBits &b)const\n", td->definedName);
-        fprintf (src, "{\n");
-        fprintf (src, "     FUNC(\"%s::PEnc\");\n", td->definedName);
-        fprintf (src, "     AsnLen len = 0;\n");
-        fprintf (src, "     typename AsnList<T>::ListElmt *currElmt;\n");
-        fprintf (src, "     long lbound = %d;\n\n", lbound);
-        fprintf (src, "     if(Count() == lbound)\n");
-        fprintf (src, "     {\n");
-        fprintf (src, "         for (currElmt = first; currElmt != NULL; currElmt = currElmt->next)\n");
-        fprintf (src, "             len += currElmt->elmt->PEnc (b);\n");
-        fprintf (src, "     }\n");
-        fprintf (src, "     else\n");
-        fprintf (src, "     {\n");
-        fprintf (src, "         throw (\"%s count does not match singlevalue constraint bound\");\n", td->definedName);
-        fprintf (src, "     }\n");
-        fprintf (src, "     return len;\n}\n");
+		  fprintf (hdr, "     AsnLen PEnc(AsnBufBits &b)const;\n");
+		  fprintf (src, "AsnLen %s::PEnc(AsnBufBits &b)const\n", td->definedName);
+		  fprintf (src, "{\n");
+		  fprintf (src, "     FUNC(\"%s::PEnc\");\n", td->definedName);
+		  fprintf (src, "     AsnLen len = 0;\n");
+		  fprintf (src, "     typename AsnList<T>::ListElmt *currElmt;\n");
+		  fprintf (src, "     long lbound = %d;\n\n", lbound);
+		  fprintf (src, "     if(Count() == lbound)\n");
+		  fprintf (src, "     {\n");
+		  fprintf (src, "         for (currElmt = first; currElmt != NULL; currElmt = currElmt->next)\n");
+		  fprintf (src, "             len += currElmt->elmt->PEnc (b);\n");
+		  fprintf (src, "     }\n");
+		  fprintf (src, "     else\n");
+		  fprintf (src, "     {\n");
+		  fprintf (src, "         throw (\"%s count does not match singlevalue constraint bound\");\n", td->definedName);
+		  fprintf (src, "     }\n");
+		  fprintf (src, "     return len;\n}\n");
 
-        fprintf (hdr, "     void PDec(AsnBufBits &b, AsnLen &bitsDecoded);\n");
-        fprintf (src, "void %s::PDec(AsnBufBits &b, AsnLen &bitsDecoded)\n", td->definedName);
-        fprintf (src, "{\n");
-        fprintf (src, "     T *listElmt;\n");
-        fprintf (src, "     long lbound = %d;\n", lbound);
-        fprintf (src, "     while(lbound)\n");
-        fprintf (src, "     {\n");
-        fprintf (src, "         listElmt = Append();\n");
-        fprintf (src, "         listElmt->PDec(b, bitsDecoded);\n");
-        fprintf (src, "         lbound--;\n");
-        fprintf (src, "     }\n");
-        fprintf (src, "}\n");
-*/
-        /*
-        fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
-        fprintf(src, "int %s::checkConstraints(ConstraintFailList*pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
+		  fprintf (hdr, "     void PDec(AsnBufBits &b, AsnLen &bitsDecoded);\n");
+		  fprintf (src, "void %s::PDec(AsnBufBits &b, AsnLen &bitsDecoded)\n", td->definedName);
+		  fprintf (src, "{\n");
+		  fprintf (src, "     T *listElmt;\n");
+		  fprintf (src, "     long lbound = %d;\n", lbound);
+		  fprintf (src, "     while(lbound)\n");
+		  fprintf (src, "     {\n");
+		  fprintf (src, "         listElmt = Append();\n");
+		  fprintf (src, "         listElmt->PDec(b, bitsDecoded);\n");
+		  fprintf (src, "         lbound--;\n");
+		  fprintf (src, "     }\n");
+		  fprintf (src, "}\n");
+  */
+  /*
+  fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
+  fprintf(src, "int %s::checkConstraints(ConstraintFailList*pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
 
 
-        fprintf (src, "  std::string * pTmpError;\n");
-        fprintf (src, "  char* ptr = checkSOfSingleVal(%d);\n\n", lbound);
-        fprintf (src, "  if(ptr)\n   {\n");
-        fprintf (src, "     if(pConstraintFails!=NULL)\n     {\n");
-        fprintf (src, "       pTmpError=pConstraintFails->Append();\n");
-        fprintf (src, "       *pTmpError += ptr;\n");
-        fprintf (src, "       *pTmpError += \"In function call:  %s...)\\n\";\n", td->cxxTypeDefInfo->className);
-        fprintf (src, "     }\n");
-        fprintf (src, "   }\n   else\n   {\n");
+  fprintf (src, "  std::string * pTmpError;\n");
+  fprintf (src, "  char* ptr = checkSOfSingleVal(%d);\n\n", lbound);
+  fprintf (src, "  if(ptr)\n   {\n");
+  fprintf (src, "     if(pConstraintFails!=NULL)\n     {\n");
+  fprintf (src, "       pTmpError=pConstraintFails->Append();\n");
+  fprintf (src, "       *pTmpError += ptr;\n");
+  fprintf (src, "       *pTmpError += \"In function call:  %s...)\\n\";\n", td->cxxTypeDefInfo->className);
+  fprintf (src, "     }\n");
+  fprintf (src, "   }\n   else\n   {\n");
 
-        fprintf (src, "     return checkListConstraints(pConstraintFails);\n");
-        fprintf (src, "   }\n\n");
-        fprintf (src, "   return checkListConstraints(pConstraintFails);\n");
-        fprintf(src, "\n}\n");
-        */
-    }
-    else
-    {
-        /*
-        fprintf(hdr, "      int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
-        fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
-        fprintf(src, "   return checkListConstraints(pConstraintFails);\n");
+  fprintf (src, "     return checkListConstraints(pConstraintFails);\n");
+  fprintf (src, "   }\n\n");
+  fprintf (src, "   return checkListConstraints(pConstraintFails);\n");
+  fprintf(src, "\n}\n");
+  */
+	}
+	else
+	{
+		/*
+		fprintf(hdr, "      int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
+		fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
+		fprintf(src, "   return checkListConstraints(pConstraintFails);\n");
 
-        fprintf(src, "}\n\n");
-        */
-    }
+		fprintf(src, "}\n\n");
+		*/
+	}
 
 }

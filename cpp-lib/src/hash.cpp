@@ -55,94 +55,94 @@ _BEGIN_SNACC_NAMESPACE
  *
  */
 
-Hash
-MakeHash (const char *str, size_t len)
+	Hash
+	MakeHash(const char* str, size_t len)
 {
-    Hash n = 0;
+	Hash n = 0;
 
 #define HASHC   n = *str++ + 65587 * n
 
-    if (len > 0)
-    {
-        int loop;
-        loop = ((int)len + 8 - 1) >> 3;
-        switch (len & (8 - 1))
+	if (len > 0)
 	{
-          case 0:            /* very strange! - switch labels in do loop */
-            do
-	    {
-                HASHC;
-              case 7: HASHC;
-              case 6: HASHC;
-              case 5: HASHC;
-              case 4: HASHC;
-              case 3: HASHC;
-              case 2: HASHC;
-              case 1: HASHC;
-	    } while (--loop);
+		int loop;
+		loop = ((int)len + 8 - 1) >> 3;
+		switch (len & (8 - 1))
+		{
+		case 0:            /* very strange! - switch labels in do loop */
+			do
+			{
+				HASHC;
+		case 7: HASHC;
+		case 6: HASHC;
+		case 5: HASHC;
+		case 4: HASHC;
+		case 3: HASHC;
+		case 2: HASHC;
+		case 1: HASHC;
+			} while (--loop);
+		}
 	}
-    }
-    return n;
+	return n;
 }
 
 
 /* Creates and clears a new hash slot */
-static HashSlot *
+static HashSlot*
 NewHashSlot()
 {
-  HashSlot *foo;
+	HashSlot* foo;
 
-  foo =  new HashSlot;
-  if (foo == NULL)
-      return NULL;
-  memset (foo, 0, sizeof (HashSlot));
-  return foo;
+	foo = new HashSlot;
+	if (foo == NULL)
+		return NULL;
+	memset(foo, 0, sizeof(HashSlot));
+	return foo;
 }
 
 /* Create a new cleared hash table */
-static Table *
+static Table*
 NewTable()
 {
-  Table *new_table;
+	Table* new_table;
 
-//  new_table = new Table;
-// whose bug is it that gcc won't compile the above line?
-  new_table = (Table *) new Table;
-  if (new_table == NULL)
-      return NULL;
-  memset (new_table, 0, sizeof (Table));
-  return new_table;
+	//  new_table = new Table;
+	// whose bug is it that gcc won't compile the above line?
+	new_table = (Table*) new Table;
+	if (new_table == NULL)
+		return NULL;
+	memset(new_table, 0, sizeof(Table));
+	return new_table;
 }
 
 /* This routine is used to initialize the hash tables. When it is called
  * it returns a value which is used to identify which hash table
  * a particular request is to operate on.
  */
-Table *
+Table*
 InitHash()
 {
-  Table *table;
-  table = NewTable();
-  if (table == NULL)
-      return 0;
-  else
-      return table;
+	Table* table;
+	table = NewTable();
+	if (table == NULL)
+		return 0;
+	else
+		return table;
 }
 
 /* When a hash collision occurs at a leaf slot this routine is called to
  * split the entry and add a new level to the tree at this point.
  */
 static int
-SplitAndInsert (HashSlot *entry, void *element, Hash hash_value)
+SplitAndInsert(HashSlot* entry, void* element, Hash hash_value)
 {
 
-  if (((entry->table = NewTable()) == NULL) ||
-      !Insert (entry->table, entry->value, entry->hash >> INDEXSHIFT) ||
-      !Insert (entry->table, element, hash_value >> INDEXSHIFT))
-    return false;
+	if (((entry->table = NewTable()) == NULL) ||
+		!Insert(entry->table, entry->value, entry->hash >> INDEXSHIFT) ||
+		!Insert(entry->table, element, hash_value >> INDEXSHIFT))
+		return false;
 
-  entry->leaf = false;
-  return true;
+	entry->leaf = false;
+	return true;
 }
 
 /* This routine takes a hash table identifier, an element (value) and the
@@ -150,31 +150,31 @@ SplitAndInsert (HashSlot *entry, void *element, Hash hash_value)
  * assuming it isn't already there.
  */
 int
-Insert (Table *table, void *element, Hash hash_value)
+Insert(Table* table, void* element, Hash hash_value)
 {
-  HashSlot *entry;
+	HashSlot* entry;
 
-  entry = (HashSlot *) (*table)[hash_value & INDEXMASK];
+	entry = (HashSlot*)(*table)[hash_value & INDEXMASK];
 
-  if (entry == NULL) {
-    /* Need to add this element here */
-    entry = NewHashSlot();
-    if (entry == NULL)
-        return false;
-    entry->leaf = true;
-    entry->value = element;
-    entry->hash = hash_value;
-    (*table)[hash_value & INDEXMASK] = entry;
-    return true;
-  }
+	if (entry == NULL) {
+		/* Need to add this element here */
+		entry = NewHashSlot();
+		if (entry == NULL)
+			return false;
+		entry->leaf = true;
+		entry->value = element;
+		entry->hash = hash_value;
+		(*table)[hash_value & INDEXMASK] = entry;
+		return true;
+	}
 
-  if (hash_value == entry->hash)
-      return false;
+	if (hash_value == entry->hash)
+		return false;
 
-  if (entry->leaf)
-      return SplitAndInsert (entry, element, hash_value);
+	if (entry->leaf)
+		return SplitAndInsert(entry, element, hash_value);
 
-  return Insert (entry->table, element, hash_value >> INDEXSHIFT);
+	return Insert(entry->table, element, hash_value >> INDEXSHIFT);
 }
 
 
@@ -182,17 +182,17 @@ Insert (Table *table, void *element, Hash hash_value)
  * the table. It returns true if it is and false otherwise.
  */
 int
-CheckFor (Table *table, Hash hash)
+CheckFor(Table* table, Hash hash)
 {
-  HashSlot *entry;
+	HashSlot* entry;
 
-  entry = (HashSlot *) table[hash & INDEXMASK];
+	entry = (HashSlot*)table[hash & INDEXMASK];
 
-  if (entry == NULL)
-      return false;
-  if (entry->leaf)
-      return entry->hash == hash;
-  return CheckFor (entry->table, hash >> INDEXSHIFT);
+	if (entry == NULL)
+		return false;
+	if (entry->leaf)
+		return entry->hash == hash;
+	return CheckFor(entry->table, hash >> INDEXSHIFT);
 }
 
 /* In addition to checking for a hash value in the tree this function also
@@ -201,30 +201,30 @@ CheckFor (Table *table, Hash hash)
  * the the space pointed to by value is not changed.
  */
 int
-CheckForAndReturnValue (Table *table, Hash hash, void **value)
+CheckForAndReturnValue(Table* table, Hash hash, void** value)
 {
-  HashSlot *entry;
-  if (table)
-  {
-      entry = (HashSlot *) (*table)[hash & INDEXMASK];
+	HashSlot* entry;
+	if (table)
+	{
+		entry = (HashSlot*)(*table)[hash & INDEXMASK];
 
-      if (entry == NULL)
-          return false;
+		if (entry == NULL)
+			return false;
 
-      if (entry->leaf)
-      {
-          if (entry->hash == hash)
-          {
-              *value = entry->value;
-              return true;
-          }
-          else
-              return false;
-      }
-      return CheckForAndReturnValue (entry->table, hash >> INDEXSHIFT, value);
-  }
-  else
-     return false;
+		if (entry->leaf)
+		{
+			if (entry->hash == hash)
+			{
+				*value = entry->value;
+				return true;
+			}
+			else
+				return false;
+		}
+		return CheckForAndReturnValue(entry->table, hash >> INDEXSHIFT, value);
+	}
+	else
+		return false;
 }
 
 _END_SNACC_NAMESPACE

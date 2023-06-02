@@ -110,27 +110,27 @@
 #include "../cond.h"
 #include "../../../snacc.h"
 
-/* Function Prototypes */
-char *Code2UnivCodeStr PROTO ((BER_UNIV_CODE code));
-void PrintCAnyCode(FILE *src, FILE *hdr, CRules *r, ModuleList *mods, 
-				   Module *m, int printEncoders, int printDecoders, 
-				   int printPrinters, int printFree);
-void PrintCContentDecoder PROTO ((FILE *src, FILE *hdr, CRules *r, Module *m,
-								 TypeDef *td, long int *longJmpVal));
-void PrintCContentEncoder PROTO ((FILE *src, FILE *hdr, CRules *r, Module *m,
-								 TypeDef *td));
-void PrintCDecoder PROTO ((FILE *src, FILE *hdr, CRules *r, Module *m,
-						  TypeDef *td, long int *longJmpVal));
-void PrintCEncoder PROTO ((FILE *src, FILE *hdr, CRules *r, Module *m,
-						  TypeDef *td));
-void PrintCFree PROTO ((FILE *src, FILE *hdr, CRules *r, ModuleList *mods,
-					   Module *m, TypeDef *td));
-void PrintCPrinter PROTO ((FILE *src, FILE *hdr, CRules *r, ModuleList *mods,
-						  Module *m, TypeDef *td));
-void PrintCTypeDef PROTO ((FILE *f, CRules *r, Module *m, TypeDef *td));
-void PrintCValueDef PROTO ((FILE *src, CRules *r, ValueDef *v));
-void PrintCValueExtern  PROTO ((FILE *hdr, CRules *r, ValueDef *v));
-void PrintCValueInstantiation PROTO ((FILE *hdr, CRules *r, Value *v));
+ /* Function Prototypes */
+char* Code2UnivCodeStr PROTO((BER_UNIV_CODE code));
+void PrintCAnyCode(FILE* src, FILE* hdr, CRules* r, ModuleList* mods,
+	Module* m, int printEncoders, int printDecoders,
+	int printPrinters, int printFree);
+void PrintCContentDecoder PROTO((FILE* src, FILE* hdr, CRules* r, Module* m,
+	TypeDef* td, long int* longJmpVal));
+void PrintCContentEncoder PROTO((FILE* src, FILE* hdr, CRules* r, Module* m,
+	TypeDef* td));
+void PrintCDecoder PROTO((FILE* src, FILE* hdr, CRules* r, Module* m,
+	TypeDef* td, long int* longJmpVal));
+void PrintCEncoder PROTO((FILE* src, FILE* hdr, CRules* r, Module* m,
+	TypeDef* td));
+void PrintCFree PROTO((FILE* src, FILE* hdr, CRules* r, ModuleList* mods,
+	Module* m, TypeDef* td));
+void PrintCPrinter PROTO((FILE* src, FILE* hdr, CRules* r, ModuleList* mods,
+	Module* m, TypeDef* td));
+void PrintCTypeDef PROTO((FILE* f, CRules* r, Module* m, TypeDef* td));
+void PrintCValueDef PROTO((FILE* src, CRules* r, ValueDef* v));
+void PrintCValueExtern  PROTO((FILE* hdr, CRules* r, ValueDef* v));
+void PrintCValueInstantiation PROTO((FILE* hdr, CRules* r, Value* v));
 
 
 /* Global Variables */
@@ -138,10 +138,10 @@ extern int isTableConstraintAllowed;	/* defined in snacc.c */
 
 
 /* unexported prototypes */
-static void PrintCSrcComment PROTO ((FILE *src, Module *m));
-static void PrintCSrcIncludes PROTO ((FILE *src, Module *m, ModuleList *mods));
-static void PrintCHdrComment PROTO ((FILE *hdr, Module *m));
-static void PrintCHdrObjectDeclaration_and_Init PROTO ((FILE *hdr, Module *m, CRules *r));
+static void PrintCSrcComment PROTO((FILE* src, Module* m));
+static void PrintCSrcIncludes PROTO((FILE* src, Module* m, ModuleList* mods));
+static void PrintCHdrComment PROTO((FILE* hdr, Module* m));
+static void PrintCHdrObjectDeclaration_and_Init PROTO((FILE* hdr, Module* m, CRules* r));
 //RWC;static void PrintCHdrObjectField PROTO ((FILE *hdr, Module *m, CRules *r, char *objName, ObjectAssignmentField *oaf));
 //extern short ImportedFilesG;
 /*
@@ -149,216 +149,216 @@ static void PrintCHdrObjectDeclaration_and_Init PROTO ((FILE *hdr, Module *m, CR
  * Fills the src file with the encoded/decode routine definitions
  */
 void
-PrintCCode PARAMS ((src, hdr, mods, m, r, longJmpVal, printTypes, printValues, printEncoders, printDecoders, printPrinters, printFree),
-    FILE *src _AND_
-    FILE *hdr _AND_
-    ModuleList *mods _AND_
-    Module *m _AND_
-    CRules *r _AND_
-    long int longJmpVal _AND_
-    int printTypes _AND_
-    int printValues _AND_
-    int printEncoders _AND_
-    int printDecoders _AND_
-    int printPrinters _AND_
-    int printFree)
+PrintCCode PARAMS((src, hdr, mods, m, r, longJmpVal, printTypes, printValues, printEncoders, printDecoders, printPrinters, printFree),
+	FILE* src _AND_
+	FILE* hdr _AND_
+	ModuleList* mods _AND_
+	Module* m _AND_
+	CRules* r _AND_
+	long int longJmpVal _AND_
+	int printTypes _AND_
+	int printValues _AND_
+	int printEncoders _AND_
+	int printDecoders _AND_
+	int printPrinters _AND_
+	int printFree)
 {
-    TypeDef *td;
-    ValueDef *vd;
+	TypeDef* td;
+	ValueDef* vd;
 
 	/* Deepak: suppose the asn source file is test.asn
 	 * then the C source file name is test.c and C header file is test.h
 	 */
-    PrintCSrcComment (src, m);	// Deepak: Write the comments in the source file.
-    PrintCSrcIncludes (hdr/*RWC;src*/, m, mods);	// Deepak: #include "../../../c-lib/include/asn-incl.h" and #include "test.h".
+	PrintCSrcComment(src, m);	// Deepak: Write the comments in the source file.
+	PrintCSrcIncludes(hdr/*RWC;src*/, m, mods);	// Deepak: #include "../../../c-lib/include/asn-incl.h" and #include "test.h".
 
-    PrintCHdrComment (hdr, m);	// Deepak: Write the comments in the header file.
-    PrintConditionalIncludeOpen (hdr, m->cHdrFileName);	
+	PrintCHdrComment(hdr, m);	// Deepak: Write the comments in the header file.
+	PrintConditionalIncludeOpen(hdr, m->cHdrFileName);
 
-	/* Deepak: the above fn writes 
-	 * #ifndef _test_h_ 
+	/* Deepak: the above fn writes
+	 * #ifndef _test_h_
 	 * #define _test_h_
-     */
+	 */
 
-	/* PIERCE TBD: Is this necessary still after Deepak's mods?
-     *
-	 * Add include reference to source file
-	 * 
-     */
-    fprintf (src, "#include \"%s\"\n", RemovePath(m->cHdrFileName));
-    fprintf (hdr,"\n\n");
-    fprintf (hdr,"#ifdef __cplusplus\n");
-    fprintf (hdr,"extern \"C\" {\n");
-    fprintf (hdr,"#endif\n");
-    
-    fprintf (src,"\n\n");
+	 /* PIERCE TBD: Is this necessary still after Deepak's mods?
+	  *
+	  * Add include reference to source file
+	  *
+	  */
+	fprintf(src, "#include \"%s\"\n", RemovePath(m->cHdrFileName));
+	fprintf(hdr, "\n\n");
+	fprintf(hdr, "#ifdef __cplusplus\n");
+	fprintf(hdr, "extern \"C\" {\n");
+	fprintf(hdr, "#endif\n");
 
-    if (printValues)
-    {
-        /* put value defs at beginning of .c file */
-        FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-        {
-            PrintCValueDef (src, r, vd);
-        }
-    }
+	fprintf(src, "\n\n");
 
-    PrintCAnyCode (src, hdr, r, mods, m, printEncoders, printDecoders, 
+	if (printValues)
+	{
+		/* put value defs at beginning of .c file */
+		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+		{
+			PrintCValueDef(src, r, vd);
+		}
+	}
+
+	PrintCAnyCode(src, hdr, r, mods, m, printEncoders, printDecoders,
 		printPrinters, printFree);
 
-    FOR_EACH_LIST_ELMT (td, m->typeDefs)
-    {
-        if (printTypes)
-            PrintCTypeDef (hdr, r, m, td);
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+	{
+		if (printTypes)
+			PrintCTypeDef(hdr, r, m, td);
 
-        /* for PDU type or types ref'd with ANY/ANY DEF BY */
-        if (printEncoders && ((td->anyRefs != NULL) || td->cTypeDefInfo->isPdu))
-            PrintCEncoder (src, hdr, r, m, td);
+		/* for PDU type or types ref'd with ANY/ANY DEF BY */
+		if (printEncoders && ((td->anyRefs != NULL) || td->cTypeDefInfo->isPdu))
+			PrintCEncoder(src, hdr, r, m, td);
 
-        /* for PDU type or types ref'd with ANY/ANY DEF BY */
-        if (printDecoders && ((td->anyRefs != NULL) || td->cTypeDefInfo->isPdu))
-            PrintCDecoder (src, hdr, r, m, td, &longJmpVal);
+		/* for PDU type or types ref'd with ANY/ANY DEF BY */
+		if (printDecoders && ((td->anyRefs != NULL) || td->cTypeDefInfo->isPdu))
+			PrintCDecoder(src, hdr, r, m, td, &longJmpVal);
 
-        if (printEncoders)
+		if (printEncoders)
 		{
-            PrintCContentEncoder (src, hdr, r, m, td);
+			PrintCContentEncoder(src, hdr, r, m, td);
 			//if (td->bHasTableConstraint)
 			//	PrintCTableConstraintEncoder (src, hdr, m, td);		// Deepak: 25/Mar/2003
 		}
 
-        if (printDecoders)
+		if (printDecoders)
 		{
-            PrintCContentDecoder (src, hdr, r, m, td, &longJmpVal);
+			PrintCContentDecoder(src, hdr, r, m, td, &longJmpVal);
 			//if (td->bHasTableConstraint)
 			//	PrintCTableConstraintDecoder (src, hdr, m, td);		// Deepak: 25/Mar/2003
 		}
 
-        if (printPrinters)
-            PrintCPrinter (src, hdr, r, mods, m, td);
+		if (printPrinters)
+			PrintCPrinter(src, hdr, r, mods, m, td);
 
-        if (printFree)
-            PrintCFree (src, hdr, r, mods, m, td);
+		if (printFree)
+			PrintCFree(src, hdr, r, mods, m, td);
 
-        /* only print new lines for normal types */
-        switch (td->type->basicType->choiceId)
-        {
-            case BASICTYPE_SEQUENCEOF:  /* list types */
-            case BASICTYPE_SETOF:
-            case BASICTYPE_CHOICE:
-            case BASICTYPE_SET:
-            case BASICTYPE_SEQUENCE:
-			case BASICTYPE_SEQUENCET:	// Deepak: 30/Nov/2002
-			case BASICTYPE_OBJECTCLASS:	// Deepak: 14/Mar/2003
-                fprintf (src, "\n");
-                /* fall through */
+		/* only print new lines for normal types */
+		switch (td->type->basicType->choiceId)
+		{
+		case BASICTYPE_SEQUENCEOF:  /* list types */
+		case BASICTYPE_SETOF:
+		case BASICTYPE_CHOICE:
+		case BASICTYPE_SET:
+		case BASICTYPE_SEQUENCE:
+		case BASICTYPE_SEQUENCET:	// Deepak: 30/Nov/2002
+		case BASICTYPE_OBJECTCLASS:	// Deepak: 14/Mar/2003
+			fprintf(src, "\n");
+			/* fall through */
 
-            case BASICTYPE_IMPORTTYPEREF:  /* type references */
-            case BASICTYPE_LOCALTYPEREF:
-            case BASICTYPE_BOOLEAN:  /* library type */
-            case BASICTYPE_REAL:  /* library type */
-            case BASICTYPE_OCTETSTRING:  /* library type */
-            case BASICTYPE_NULL:  /* library type */
-            case BASICTYPE_OID:  /* library type */
-            case BASICTYPE_RELATIVE_OID: /* library type */
-            case BASICTYPE_INTEGER:  /* library type */
-            case BASICTYPE_BITSTRING:  /* library type */
-            case BASICTYPE_ENUMERATED:  /* library type */
-            case BASICTYPE_ANYDEFINEDBY:  /* ANY types */
-            case BASICTYPE_ANY:
-			case BASICTYPE_NUMERIC_STR:		/* library type */
-			case BASICTYPE_PRINTABLE_STR:	/* library type */
-			case BASICTYPE_IA5_STR:			/* library type */
-			case BASICTYPE_BMP_STR:			/* library type */
-			case BASICTYPE_UNIVERSAL_STR:	/* library type */
-			case BASICTYPE_UTF8_STR:		/* library type */
-			case BASICTYPE_T61_STR:			/* library type */
-                fprintf (hdr, "\n");
-                break;
-		
-	default:
-	  break;
-        }
-    }
+		case BASICTYPE_IMPORTTYPEREF:  /* type references */
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_BOOLEAN:  /* library type */
+		case BASICTYPE_REAL:  /* library type */
+		case BASICTYPE_OCTETSTRING:  /* library type */
+		case BASICTYPE_NULL:  /* library type */
+		case BASICTYPE_OID:  /* library type */
+		case BASICTYPE_RELATIVE_OID: /* library type */
+		case BASICTYPE_INTEGER:  /* library type */
+		case BASICTYPE_BITSTRING:  /* library type */
+		case BASICTYPE_ENUMERATED:  /* library type */
+		case BASICTYPE_ANYDEFINEDBY:  /* ANY types */
+		case BASICTYPE_ANY:
+		case BASICTYPE_NUMERIC_STR:		/* library type */
+		case BASICTYPE_PRINTABLE_STR:	/* library type */
+		case BASICTYPE_IA5_STR:			/* library type */
+		case BASICTYPE_BMP_STR:			/* library type */
+		case BASICTYPE_UNIVERSAL_STR:	/* library type */
+		case BASICTYPE_UTF8_STR:		/* library type */
+		case BASICTYPE_T61_STR:			/* library type */
+			fprintf(hdr, "\n");
+			break;
 
-	// Declare ObjectAssignment, ObjestSetAssignment, & initialize them.
-	if(isTableConstraintAllowed)
-	{
-		PrintCHdrObjectDeclaration_and_Init (hdr, m, r);	// Deepak: 24/Mar/2003
+		default:
+			break;
+		}
 	}
 
-    if (printValues)
-    {
-        /* put value externs at end of .h file */
-        FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-        {
-            PrintCValueExtern (hdr, r, vd);
-        }
-    }
+	// Declare ObjectAssignment, ObjestSetAssignment, & initialize them.
+	if (isTableConstraintAllowed)
+	{
+		PrintCHdrObjectDeclaration_and_Init(hdr, m, r);	// Deepak: 24/Mar/2003
+	}
 
-    fprintf (hdr,"#ifdef __cplusplus\n");
-    fprintf (hdr,"extern \"C\" {\n");
-    fprintf (hdr,"#endif\n");
+	if (printValues)
+	{
+		/* put value externs at end of .h file */
+		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+		{
+			PrintCValueExtern(hdr, r, vd);
+		}
+	}
+
+	fprintf(hdr, "#ifdef __cplusplus\n");
+	fprintf(hdr, "extern \"C\" {\n");
+	fprintf(hdr, "#endif\n");
 
 
-    PrintConditionalIncludeClose (hdr, m->cHdrFileName);
+	PrintConditionalIncludeClose(hdr, m->cHdrFileName);
 
 } /* PrintCCode */
 
 void
-PrintConstraintValueCheckingCode PARAMS ((src, td, t, nt),
-	FILE *src _AND_
-	TypeDef *td _AND_
-	Type *t _AND_
-	NamedType *nt)
+PrintConstraintValueCheckingCode PARAMS((src, td, t, nt),
+	FILE* src _AND_
+	TypeDef* td _AND_
+	Type* t _AND_
+	NamedType* nt)
 {
-	if(t == NULL || nt == NULL)
+	if (t == NULL || nt == NULL)
 		return;
 
-	fprintf (src, "\tfor(index=0; index < %s_Size; index++)\n", t->tableConstraint->objSetAssignment->objectSetName);
-	fprintf (src, "\t{\n");
-	fprintf (src, "\t\tif(&v->%s == &%s[index].%s)\n", nt->fieldName, t->tableConstraint->objSetAssignment->objectSetName, nt->fieldName);
-	fprintf (src, "\t\t\tbreak;\n");
-	fprintf (src, "\t}\n");
-	fprintf (src, "\n");
+	fprintf(src, "\tfor(index=0; index < %s_Size; index++)\n", t->tableConstraint->objSetAssignment->objectSetName);
+	fprintf(src, "\t{\n");
+	fprintf(src, "\t\tif(&v->%s == &%s[index].%s)\n", nt->fieldName, t->tableConstraint->objSetAssignment->objectSetName, nt->fieldName);
+	fprintf(src, "\t\t\tbreak;\n");
+	fprintf(src, "\t}\n");
+	fprintf(src, "\n");
 
-	fprintf (src, "\tif(&v->%s == %s_Size)\n", nt->fieldName, t->tableConstraint->objSetAssignment->objectSetName);
-	fprintf (src, "\t\treturn 0;\n");
-	fprintf (src, "\n");
+	fprintf(src, "\tif(&v->%s == %s_Size)\n", nt->fieldName, t->tableConstraint->objSetAssignment->objectSetName);
+	fprintf(src, "\t\treturn 0;\n");
+	fprintf(src, "\n");
 } /* PrintConstraintValueCheckingCode */
 
 static void		// Deepak: 24/Mar/2003
-PrintCHdrObjectDeclaration_and_Init PARAMS ((hdr, m, r), 
-	FILE *hdr _AND_
-	Module *m _AND_
-	CRules *r)
+PrintCHdrObjectDeclaration_and_Init PARAMS((hdr, m, r),
+	FILE* hdr _AND_
+	Module* m _AND_
+	CRules* r)
 {
-	ObjectAssignment *oa;
-	ObjectSetAssignment *osa;
+	ObjectAssignment* oa;
+	ObjectSetAssignment* osa;
 	//RWC;ObjectAssignmentField *oaf;
 	//RWC;TypeOrValue* tOrV;
-	int osaCount=0;
-	char *osaName="";
+	int osaCount = 0;
+	char* osaName = "";
 	//RWC;char *objName="";
-	
+
 	////////////////////////////////////////////////////////////////////////////////////
 	/* Declare Object Assignments */		// Deepak: 13/Mar/2003
-	fprintf (hdr, "/* ========== Object Declarations ========== */\n");
-	FOR_EACH_LIST_ELMT (oa, m->objAssignments)
+	fprintf(hdr, "/* ========== Object Declarations ========== */\n");
+	FOR_EACH_LIST_ELMT(oa, m->objAssignments)
 	{
-		fprintf (hdr, "%s %s;\n", Asn1ValueName2CValueName(oa->objectClassName), Asn1ValueName2CValueName(oa->objectName));
+		fprintf(hdr, "%s %s;\n", Asn1ValueName2CValueName(oa->objectClassName), Asn1ValueName2CValueName(oa->objectName));
 	}
-	fprintf (hdr, "\n");
+	fprintf(hdr, "\n");
 	////////////////////////////////////////////////////////////////////////////////////
 
 	////////////////////////////////////////////////////////////////////////////////////
 	/* Declare Object Set Assignments */	// Deepak: 13/Mar/2003
-	fprintf (hdr, "\n/* ========== Object Set Declarations ========== */\n");
-	FOR_EACH_LIST_ELMT (osa, m->objSetAssignments)
+	fprintf(hdr, "\n/* ========== Object Set Declarations ========== */\n");
+	FOR_EACH_LIST_ELMT(osa, m->objSetAssignments)
 	{
 		osaCount = osa->objectNameList->count;
 		osaName = Asn1ValueName2CValueName(osa->objectSetName);
-		fprintf (hdr, "%s %s[%d];\n", Asn1ValueName2CValueName(osa->objectClassName), osaName, osaCount);
-		fprintf (hdr, "int %s_Size = %d;\n", osaName, osaCount);
-		fprintf (hdr, "\n");
+		fprintf(hdr, "%s %s[%d];\n", Asn1ValueName2CValueName(osa->objectClassName), osaName, osaCount);
+		fprintf(hdr, "int %s_Size = %d;\n", osaName, osaCount);
+		fprintf(hdr, "\n");
 	}
 	////////////////////////////////////////////////////////////////////////////////////
 
@@ -366,10 +366,10 @@ PrintCHdrObjectDeclaration_and_Init PARAMS ((hdr, m, r),
 	// Init Module Objects
 	Asn1ValueName2CValueName(m->modId->name);
 	//RWC;REMOVED;fprintf (hdr, "/* ========== init_%sObjects() ========== */\n", moduleName);
-    /*RWC;REMOVED;
+	/*RWC;REMOVED;
 	fprintf (hdr, "void init_%sObjects()\n", moduleName);
 	fprintf (hdr, "{\n");
-	
+
 	FOR_EACH_LIST_ELMT (oa, m->objAssignments)
 	{
 		objName = Asn1ValueName2CValueName(oa->objectName);
@@ -385,7 +385,7 @@ PrintCHdrObjectDeclaration_and_Init PARAMS ((hdr, m, r),
 
 	////////////////////////////////////////////////////////////////////////////////////
 	// Init Module Object Sets
-	
+
 	FOR_EACH_LIST_ELMT (osa, m->objSetAssignments)
 	{
 		currOsa = 0;
@@ -414,8 +414,8 @@ PrintCHdrObjectDeclaration_and_Init PARAMS ((hdr, m, r),
 
 	////////////////////////////////////////////////////////////////////////////////////
 	// Module Init
-       
-    
+
+
 	fprintf (hdr, "void %s_init()\n", moduleName);
 	fprintf (hdr, "{\n");
 	fprintf (hdr, "\tinit_%sValue();\n", moduleName);
@@ -427,14 +427,14 @@ PrintCHdrObjectDeclaration_and_Init PARAMS ((hdr, m, r),
 	fprintf (hdr, "}\n");
 	fprintf (hdr, "\n");
 	////////////////////////////////////////////////////////////////////////////////////
-     *RWC;REMOVED;*/
+	 *RWC;REMOVED;*/
 
 } /* PrintCHdrObjectDeclaration_and_Init */
 
 
 /*RWC;REMOVED;
 static void		// Deepak: 24/Mar/2003
-PrintCHdrObjectField PARAMS ((hdr, m, r, objName, oaf), 
+PrintCHdrObjectField PARAMS ((hdr, m, r, objName, oaf),
 	FILE *hdr _AND_
 	Module *m _AND_
 	CRules *r _AND_
@@ -443,19 +443,19 @@ PrintCHdrObjectField PARAMS ((hdr, m, r, objName, oaf),
 {
 	char *objFieldName="";
 	objFieldName = Asn1ValueName2CValueName(oaf->objectFieldName);
-	if(oaf->bPresent && oaf->typeOrValue->choiceId)	
+	if(oaf->bPresent && oaf->typeOrValue->choiceId)
 	{	// value
 		fprintf (hdr, "\t%s.%s = ", objName, objFieldName);
 		PrintCValueInstantiation (hdr, r, oaf->typeOrValue->a.value);
 		fprintf (hdr, ";\n");
 	}
-	
+
 	// Print here if optional arguments are present or not
 	if(oaf->bOptional)	// Deepak: 22/Mar/2003
 	{
 		fprintf (hdr, "\t%s.m.%sPresent = %d;\n", objName, objFieldName, oaf->bPresent?1:0);
 	}
-	
+
 	// Now write the BasicType_Unknown initialisation here...
 	if(oaf->bPresent && oaf->bUnknownType)	// Unknown Type	 Deepak: 22/Mar/2003
 	{	// value
@@ -475,16 +475,16 @@ PrintCHdrObjectField PARAMS ((hdr, m, r, objName, oaf),
 ***RWC;REMOVED **/
 
 static void
-PrintCSrcComment PARAMS ((src, m),
-    FILE *src _AND_
-    Module *m)
+PrintCSrcComment PARAMS((src, m),
+	FILE* src _AND_
+	Module* m)
 {
-    fprintf (src, "/*\n");
-    fprintf (src, " * %s\n", m->cSrcFileName);
-    fprintf (src, " * \"%s\" ASN.1 module encode/decode/print/free C src.\n", m->modId->name);
-    fprintf (src, " *\n");
+	fprintf(src, "/*\n");
+	fprintf(src, " * %s\n", m->cSrcFileName);
+	fprintf(src, " * \"%s\" ASN.1 module encode/decode/print/free C src.\n", m->modId->name);
+	fprintf(src, " *\n");
 	write_snacc_header(src, " * ");
-    fprintf (src, " */\n\n");
+	fprintf(src, " */\n\n");
 
 } /* PrintSrcComment */
 
@@ -493,59 +493,59 @@ PrintCSrcComment PARAMS ((src, m),
 *  will appropriately pull in their respective references.
 */
 static void
-PrintCSrcIncludes PARAMS ((inFile, m, mods ),
-    FILE *inFile _AND_
-    Module *m _AND_
-    ModuleList *mods /* _AND_
+PrintCSrcIncludes PARAMS((inFile, m, mods),
+	FILE* inFile _AND_
+	Module* m _AND_
+	ModuleList* mods /* _AND_
 	char *srcref*/)
 {
-    void *tmp;
-    Module *currMod;
-    AsnListNode *currModTmp;
+	void* tmp;
+	Module* currMod;
+	AsnListNode* currModTmp;
 
-    /*
-     * include snacc runtime library related hdrs
-     */
-    fprintf (inFile, "\n#include \"asn-incl.h\"\n");
+	/*
+	 * include snacc runtime library related hdrs
+	 */
+	fprintf(inFile, "\n#include \"asn-incl.h\"\n");
 
-    /*
-     * print out include files in same order of the module
-     * list. every module in the list includes the others and it's
-     * own .h
-     */
-    tmp = (void*)CURR_LIST_NODE (mods);
-    FOR_EACH_LIST_ELMT (currMod, mods)
-    {
+	/*
+	 * print out include files in same order of the module
+	 * list. every module in the list includes the others and it's
+	 * own .h
+	 */
+	tmp = (void*)CURR_LIST_NODE(mods);
+	FOR_EACH_LIST_ELMT(currMod, mods)
+	{
 		if ((strcmp(m->cHdrFileName, currMod->cHdrFileName) == 0))
 		{
-			ImportModuleList *ModLists;
-			ImportModule *impMod;
-			char *ImpFile = NULL;
+			ImportModuleList* ModLists;
+			ImportModule* impMod;
+			char* ImpFile = NULL;
 			ModLists = currMod->imports;
-            currModTmp = mods->curr;    //RWC;FIXES infinite loop problem.
-                                        //  IN case changed inside loop.
+			currModTmp = mods->curr;    //RWC;FIXES infinite loop problem.
+			//  IN case changed inside loop.
 			FOR_EACH_LIST_ELMT(impMod, ModLists)
 			{
 				ImpFile = GetImportFileName(impMod->modId->name, mods);
 				if (ImpFile != NULL)
-					fprintf (inFile, "#include \"%s\"\n", RemovePath(ImpFile));
+					fprintf(inFile, "#include \"%s\"\n", RemovePath(ImpFile));
 			}
-            mods->curr = currModTmp;    // RWC;RESET loop control
-        }
-    }
+			mods->curr = currModTmp;    // RWC;RESET loop control
+		}
+	}
 
-    SET_CURR_LIST_NODE (mods, tmp);
+	SET_CURR_LIST_NODE(mods, tmp);
 }  /* PrintCSrcIncludes */
 
 
 static void
-PrintCHdrComment PARAMS ((f, m),
-    FILE *f _AND_
-    Module *m)
+PrintCHdrComment PARAMS((f, m),
+	FILE* f _AND_
+	Module* m)
 {
-    fprintf (f, "/*\n");
-    fprintf (f, " * %s\n", m->cHdrFileName);
-    fprintf (f, " * \"%s\" ASN.1 module C type definitions and prototypes\n", m->modId->name);
+	fprintf(f, "/*\n");
+	fprintf(f, " * %s\n", m->cHdrFileName);
+	fprintf(f, " * \"%s\" ASN.1 module C type definitions and prototypes\n", m->modId->name);
 	write_snacc_header(f, " * ");
-    fprintf (f, " */\n\n");
+	fprintf(f, " */\n\n");
 } /* PrintCHdrComment */

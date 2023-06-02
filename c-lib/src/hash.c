@@ -37,80 +37,80 @@
 #include "../include/hash.h"
 #include <memory.h>
 
-/*
- *
- * From sdbm, an ndbm work-alike hashed database library
- * Author: oz@nexus.yorku.ca
- * Status: public domain.
- *
- * polynomial conversion ignoring overflows
- * [this seems to work remarkably well, in fact better
- * then the ndbm hash function. Replace at your own risk]
- * use: 65599   nice.
- *      65587   even better.
- *
- * [In one experiment, this function hashed 84165 symbols (English words
- * plus symbol table values) with no collisions. -bjb]
- *
- */
+ /*
+  *
+  * From sdbm, an ndbm work-alike hashed database library
+  * Author: oz@nexus.yorku.ca
+  * Status: public domain.
+  *
+  * polynomial conversion ignoring overflows
+  * [this seems to work remarkably well, in fact better
+  * then the ndbm hash function. Replace at your own risk]
+  * use: 65599   nice.
+  *      65587   even better.
+  *
+  * [In one experiment, this function hashed 84165 symbols (English words
+  * plus symbol table values) with no collisions. -bjb]
+  *
+  */
 
 Hash
-MakeHash PARAMS ((str, len),
-    char *str _AND_
-    size_t  len)
+MakeHash PARAMS((str, len),
+	char* str _AND_
+	size_t  len)
 {
-    register Hash n;
-    n = 0;
+	register Hash n;
+	n = 0;
 
 #define HASHC   n = *str++ + 65587 * n
 
-    if (len > 0)
-    {
-		size_t loop;
-        loop = (len + 8 - 1) >> 3;
-        switch (len & (8 - 1))
+	if (len > 0)
 	{
-          case 0:
-            do
-	    {
-                HASHC;
-              case 7: HASHC;
-              case 6: HASHC;
-              case 5: HASHC;
-              case 4: HASHC;
-              case 3: HASHC;
-              case 2: HASHC;
-              case 1: HASHC;
-	    } while (--loop);
+		size_t loop;
+		loop = (len + 8 - 1) >> 3;
+		switch (len & (8 - 1))
+		{
+		case 0:
+			do
+			{
+				HASHC;
+		case 7: HASHC;
+		case 6: HASHC;
+		case 5: HASHC;
+		case 4: HASHC;
+		case 3: HASHC;
+		case 2: HASHC;
+		case 1: HASHC;
+			} while (--loop);
+		}
 	}
-    }
-    return n;
+	return n;
 }
 
 /* Creates and clears a new hash slot */
 static HashSlot*
 NewHashSlot()
 {
-  HashSlot *foo;
+	HashSlot* foo;
 
-  foo = (HashSlot *) malloc (sizeof (HashSlot));
-  if (foo == NULL)
-      return NULL;
-  memset(foo, 0, sizeof (HashSlot));
-  return foo;
+	foo = (HashSlot*)malloc(sizeof(HashSlot));
+	if (foo == NULL)
+		return NULL;
+	memset(foo, 0, sizeof(HashSlot));
+	return foo;
 }
 
 /* Create a new cleared hash table */
 static Table*
 NewTable()
 {
-  Table *new_table;
+	Table* new_table;
 
-  new_table = (Table *) malloc (sizeof (Table));
-  if (new_table == NULL)
-      return NULL;
-  memset(new_table, 0, sizeof (Table));
-  return new_table;
+	new_table = (Table*)malloc(sizeof(Table));
+	if (new_table == NULL)
+		return NULL;
+	memset(new_table, 0, sizeof(Table));
+	return new_table;
 }
 
 /* This routine is used to initialize the hash tables. When it is called
@@ -120,31 +120,31 @@ NewTable()
 Table*
 InitHash()
 {
-  Table *table;
-  table = NewTable();
-  if (table == NULL)
-      return 0;
-  else
-      return table;
+	Table* table;
+	table = NewTable();
+	if (table == NULL)
+		return 0;
+	else
+		return table;
 }
 
 /* When a hash collision occurs at a leaf slot this routine is called to
  * split the entry and add a new level to the tree at this point.
  */
 static int
-SplitAndInsert PARAMS ((entry, element, hash_value),
-    HashSlot *entry _AND_
-    void *element _AND_
-    Hash hash_value)
+SplitAndInsert PARAMS((entry, element, hash_value),
+	HashSlot* entry _AND_
+	void* element _AND_
+	Hash hash_value)
 {
 
-  if (((entry->table = NewTable()) == NULL) ||
-      !Insert (entry->table, entry->value, entry->hash >> INDEXSHIFT) ||
-      !Insert (entry->table, element, hash_value >> INDEXSHIFT))
-    return FALSE;
+	if (((entry->table = NewTable()) == NULL) ||
+		!Insert(entry->table, entry->value, entry->hash >> INDEXSHIFT) ||
+		!Insert(entry->table, element, hash_value >> INDEXSHIFT))
+		return FALSE;
 
-  entry->leaf = FALSE;
-  return TRUE;
+	entry->leaf = FALSE;
+	return TRUE;
 }
 
 /* This routine takes a hash table identifier, an element (value) and the
@@ -152,34 +152,34 @@ SplitAndInsert PARAMS ((entry, element, hash_value),
  * assuming it isn't already there.
  */
 int
-Insert PARAMS ((table, element, hash_value),
-    Table *table _AND_
-    void *element _AND_
-    Hash hash_value)
+Insert PARAMS((table, element, hash_value),
+	Table* table _AND_
+	void* element _AND_
+	Hash hash_value)
 {
-  HashSlot *entry;
+	HashSlot* entry;
 
-  entry = (HashSlot *) (*table)[hash_value & INDEXMASK];
+	entry = (HashSlot*)(*table)[hash_value & INDEXMASK];
 
-  if (entry == NULL) {
-    /* Need to add this element here */
-    entry = NewHashSlot();
-    if (entry == NULL)
-        return FALSE;
-    entry->leaf = TRUE;
-    entry->value = element;
-    entry->hash = hash_value;
-	(*table)[hash_value & INDEXMASK] = (void *)entry;
-    return TRUE;
-  }
+	if (entry == NULL) {
+		/* Need to add this element here */
+		entry = NewHashSlot();
+		if (entry == NULL)
+			return FALSE;
+		entry->leaf = TRUE;
+		entry->value = element;
+		entry->hash = hash_value;
+		(*table)[hash_value & INDEXMASK] = (void*)entry;
+		return TRUE;
+	}
 
-  if (hash_value == entry->hash)
-      return TRUE;
+	if (hash_value == entry->hash)
+		return TRUE;
 
-  if (entry->leaf)
-      return SplitAndInsert (entry, element, hash_value);
+	if (entry->leaf)
+		return SplitAndInsert(entry, element, hash_value);
 
-  return Insert (entry->table, element, hash_value >> INDEXSHIFT);
+	return Insert(entry->table, element, hash_value >> INDEXSHIFT);
 }
 
 
@@ -187,19 +187,19 @@ Insert PARAMS ((table, element, hash_value),
  * the table. It returns true if it is and false otherwise.
  */
 int
-CheckFor PARAMS ((table, hash),
-    Table *table _AND_
-    Hash hash)
+CheckFor PARAMS((table, hash),
+	Table* table _AND_
+	Hash hash)
 {
-  HashSlot *entry;
+	HashSlot* entry;
 
-  entry = (HashSlot *) &(*table)[hash & INDEXMASK];
+	entry = (HashSlot*)&(*table)[hash & INDEXMASK];
 
-  if (entry == NULL)
-      return FALSE;
-  if (entry->leaf)
-      return entry->hash == hash;
-  return CheckFor (entry->table, hash >> INDEXSHIFT);
+	if (entry == NULL)
+		return FALSE;
+	if (entry->leaf)
+		return entry->hash == hash;
+	return CheckFor(entry->table, hash >> INDEXSHIFT);
 }
 
 /* In addition to checking for a hash value in the tree this function also
@@ -208,26 +208,26 @@ CheckFor PARAMS ((table, hash),
  * the the space pointed to by value is not changed.
  */
 int
-CheckForAndReturnValue PARAMS ((table, hash, value),
-    Table *table _AND_
-    Hash hash _AND_
-    void **value)
+CheckForAndReturnValue PARAMS((table, hash, value),
+	Table* table _AND_
+	Hash hash _AND_
+	void** value)
 {
-  HashSlot *entry;
-  entry = (HashSlot *) (*table)[hash & INDEXMASK];
+	HashSlot* entry;
+	entry = (HashSlot*)(*table)[hash & INDEXMASK];
 
-  if (entry == NULL)
-      return FALSE;
+	if (entry == NULL)
+		return FALSE;
 
-  if (entry->leaf)
-  {
-      if (entry->hash == hash)
-      {
-          *value = entry->value;
-          return TRUE;
-      }
-      else
-          return FALSE;
-  }
-  return CheckForAndReturnValue (entry->table, hash >> INDEXSHIFT, value);
+	if (entry->leaf)
+	{
+		if (entry->hash == hash)
+		{
+			*value = entry->value;
+			return TRUE;
+		}
+		else
+			return FALSE;
+	}
+	return CheckForAndReturnValue(entry->table, hash >> INDEXSHIFT, value);
 }

@@ -58,7 +58,7 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
 
 	if (mod->imports) {
-		char szAlreadyAdded[4096] = {0};
+		char szAlreadyAdded[4096] = { 0 };
 		AsnListNode* saveImport = mod->imports->curr;
 		ImportModule* impMod;
 		FOR_EACH_LIST_ELMT(impMod, mod->imports)
@@ -71,7 +71,7 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 					strcat_s(szAlreadyAdded, 4096, szNameSpace);
 					fprintf(src, "import * as %s from \"./%s\";\n", szNameSpace, referencedModule->moduleName);
 				}
-			} 
+			}
 		}
 
 		if (bIncludeConverters) {

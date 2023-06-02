@@ -51,18 +51,18 @@
 #include "asn1module.h"  /* for BASICTYPE_... choice ids */
 #include "lib-types.h"
 
-/*
- * Warning: this table must be in order of ascending
- * BASICTYPE ids such that
- *    libTypesG[BASICTYPE_X].typeId == BASICTYPE_X
- * is alwas true
- */
+ /*
+  * Warning: this table must be in order of ascending
+  * BASICTYPE ids such that
+  *    libTypesG[BASICTYPE_X].typeId == BASICTYPE_X
+  * is alwas true
+  */
 
-/* BER Types */
+  /* BER Types */
 
 
 
-LibType libBERTypesG[ BASICTYPE_RELATIVE_OID + 1] =
+LibType libBERTypesG[BASICTYPE_RELATIVE_OID + 1] =
 {
   { BASICTYPE_UNKNOWN,       NO_TAG_CODE,          NULL_FORM, NULL },
   { BASICTYPE_BOOLEAN,       BOOLEAN_TAG_CODE,     PRIM,      NULL },
@@ -108,7 +108,7 @@ LibType libBERTypesG[ BASICTYPE_RELATIVE_OID + 1] =
 
 
 /* DER Types */
-LibType libDERTypesG[ BASICTYPE_RELATIVE_OID + 1] =
+LibType libDERTypesG[BASICTYPE_RELATIVE_OID + 1] =
 {
   { BASICTYPE_UNKNOWN,       NO_TAG_CODE,          NULL_FORM, NULL },
   { BASICTYPE_BOOLEAN,       BOOLEAN_TAG_CODE,     PRIM,      NULL },
@@ -153,5 +153,5 @@ LibType libDERTypesG[ BASICTYPE_RELATIVE_OID + 1] =
 };
 
 /* Default is BER */
-LibType *libTypesG = libBERTypesG;
+LibType* libTypesG = libBERTypesG;
 

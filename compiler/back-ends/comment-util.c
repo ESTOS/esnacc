@@ -9,7 +9,7 @@
 const char* getDeprecated(const char* szDeprecated, enum COMMENTSTYLE style) {
 	if (szDeprecated && strlen(szDeprecated))
 		return szDeprecated;
-	else if(style == COMMENTSTYLE_JSON)
+	else if (style == COMMENTSTYLE_JSON)
 		return "*";
 	else
 		return (const char*)NULL;
@@ -107,7 +107,8 @@ bool printComment(FILE* src, const char* szPrefix, const char* szString, const c
 					// Wenn nicht, gibt es noch Text, dann nehmen wir den
 					if (posEnd == NULL && strlen(posBegin))
 						posEnd = posBegin + strlen(posBegin);
-				} else {
+				}
+				else {
 					posEnd = NULL;
 				}
 
@@ -134,7 +135,7 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 
 	asnmembercomment comment;
 	bool bSucceeded = false;
-	if(style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP)
 		bSucceeded = GetMemberComment_ASCII(m->moduleName, td->definedName, szElement, &comment) ? true : false;
 	else
 		bSucceeded = GetMemberComment_UTF8(m->moduleName, td->definedName, szElement, &comment) ? true : false;
@@ -148,17 +149,18 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 				iMultiline++;
 			if (strstr(comment.szShort, "\\n"))
 				iMultiline += 2;
-			else if(strlen(comment.szShort))
+			else if (strlen(comment.szShort))
 				iMultiline += 1;
-			char prefix[128] = {0};
-			char suffix[128] = {0};
+			char prefix[128] = { 0 };
+			char suffix[128] = { 0 };
 			strcat_s(prefix, 128, szIndent);
 			if (style == COMMENTSTYLE_JSON) {
 				strcat_s(prefix, 128, iMultiline > 1 ? " *" : "/**");
 				strcat_s(suffix, 128, iMultiline > 1 ? "" : " */");
 				if (iMultiline > 1)
 					fprintf(src, "%s/**\n", szIndent);
-			} else if(style == COMMENTSTYLE_CPP) {
+			}
+			else if (style == COMMENTSTYLE_CPP) {
 				strcat_s(prefix, 128, "//");
 			}
 			if (iMultiline > 1 && style == COMMENTSTYLE_JSON)
@@ -168,7 +170,7 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 
 			if (comment.i64Deprecated || comment.iPrivate)
 			{
-				if(bAdded)
+				if (bAdded)
 					fprintf(src, "\n");
 				if (comment.i64Deprecated) {
 					const char* szComment = getDeprecated(comment.szDeprecated, style);
@@ -191,7 +193,7 @@ void printModuleComment(FILE* src, const char* szModuleName, enum COMMENTSTYLE s
 
 	asnmodulecomment comment;
 	bool bSucceeded = false;
-	if(style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP)
 		bSucceeded = GetModuleComment_ASCII(szModuleName, &comment) ? true : false;
 	else
 		bSucceeded = GetModuleComment_UTF8(szModuleName, &comment) ? true : false;
@@ -226,7 +228,7 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 
 	asnoperationcomment comment;
 	bool bSucceeded = false;
-	if(style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP)
 		bSucceeded = GetOperationComment_ASCII(m->moduleName, szOperationName, &comment) ? true : false;
 	else
 		bSucceeded = GetOperationComment_UTF8(m->moduleName, szOperationName, &comment) ? true : false;
@@ -236,10 +238,11 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 		bool bHasLong = strlen(comment.szLong) ? true : false;
 		if (bHasShort || bHasLong || comment.i64Deprecated || comment.iPrivate) {
 			const char* szPrefix = "";
-			if(style == COMMENTSTYLE_JSON) {
+			if (style == COMMENTSTYLE_JSON) {
 				fprintf(src, "\t/**\n");
 				szPrefix = "\t *";
-			} else if(style == COMMENTSTYLE_CPP) {
+			}
+			else if (style == COMMENTSTYLE_CPP) {
 				szPrefix = "\t//";
 			}
 			if (bHasShort)
@@ -256,13 +259,13 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 				if (comment.iPrivate)
 					fprintf(src, "%s @private\n", szPrefix);
 			}
-			if(style == COMMENTSTYLE_JSON)
+			if (style == COMMENTSTYLE_JSON)
 				fprintf(src, "\t */\n");
-			
+
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -272,7 +275,7 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum CO
 
 	asnsequencecomment comment;
 	bool bSucceeded = false;
-	if(style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP)
 		bSucceeded = GetSequenceComment_ASCII(m->moduleName, td->definedName, &comment) ? true : false;
 	else
 		bSucceeded = GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment) ? true : false;
@@ -282,10 +285,11 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum CO
 		bool bHasLong = strlen(comment.szLong) ? true : false;
 		if (bHasShort || bHasLong || comment.i64Deprecated || comment.iPrivate) {
 			const char* szPrefix = "";
-			if(style == COMMENTSTYLE_JSON) {
+			if (style == COMMENTSTYLE_JSON) {
 				fprintf(src, "/**\n");
 				szPrefix = " *";
-			} else if(style == COMMENTSTYLE_CPP) {
+			}
+			else if (style == COMMENTSTYLE_CPP) {
 				szPrefix = "//";
 			}
 			if (bHasShort)
@@ -302,7 +306,7 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum CO
 				if (comment.iPrivate)
 					fprintf(src, "%s @private\n", szPrefix);
 			}
-			if(style == COMMENTSTYLE_JSON)
+			if (style == COMMENTSTYLE_JSON)
 				fprintf(src, " */\n");
 		}
 	}

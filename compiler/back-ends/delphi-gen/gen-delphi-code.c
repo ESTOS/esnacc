@@ -13,7 +13,7 @@
 *           and the University of British Columbia
 *
 * 2016 estos/chs
-* 
+*
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation; either version 2 of the License, or
@@ -26,9 +26,9 @@
 #include "gen-delphi-code.h"
 #include "../str-util.h"
 
-static Module *GetImportModuleRef(char *Impname, ModuleList *mods)
+static Module* GetImportModuleRef(char* Impname, ModuleList* mods)
 {
-	Module *currMod = NULL;
+	Module* currMod = NULL;
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
 		/* Find the import Module in the Modules and
@@ -43,7 +43,7 @@ static Module *GetImportModuleRef(char *Impname, ModuleList *mods)
 }
 
 
-static void PrintDelphiNativeType(FILE *hdr, int basicTypeChoiseId) 
+static void PrintDelphiNativeType(FILE* hdr, int basicTypeChoiseId)
 {
 	switch (basicTypeChoiseId) {
 	case BASICTYPE_BOOLEAN:
@@ -56,9 +56,9 @@ static void PrintDelphiNativeType(FILE *hdr, int basicTypeChoiseId)
 	case BASICTYPE_OCTETCONTAINING:
 		fprintf(hdr, "RawByteString");
 		break;
-	//case BASICTYPE_ENUMERATED:
-	//	fprintf(hdr, "Integer"); //FIXME
-	//	break;
+		//case BASICTYPE_ENUMERATED:
+		//	fprintf(hdr, "Integer"); //FIXME
+		//	break;
 	case BASICTYPE_REAL:
 		fprintf(hdr, "double");
 		break;
@@ -79,12 +79,12 @@ static void PrintDelphiNativeType(FILE *hdr, int basicTypeChoiseId)
 }
 
 
-static int DelphiIsEnumeratedType(Type *t)
+static int DelphiIsEnumeratedType(Type* t)
 {
 	return (t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED) ||
 		(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link != NULL && t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED);
 
-	
+
 }
 
 static int DelphiIsFinalType(Type* t)
@@ -113,7 +113,7 @@ static int DelphiIsFinalType(Type* t)
 }
 
 // the name of the enum itself. not the class name
-static void PrintDelphiEnumType(FILE *hdr, ModuleList *mods, Module *mmodule, TypeDef *td, Type *parent, Type *t)
+static void PrintDelphiEnumType(FILE* hdr, ModuleList* mods, Module* mmodule, TypeDef* td, Type* parent, Type* t)
 {
 	if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED) ||
 		(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link != NULL && t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED))
@@ -122,7 +122,7 @@ static void PrintDelphiEnumType(FILE *hdr, ModuleList *mods, Module *mmodule, Ty
 	}
 }
 
-static void PrintDelphiType(FILE *hdr, ModuleList *mods, Module *mmodule, TypeDef *td, Type *parent, Type *t)
+static void PrintDelphiType(FILE* hdr, ModuleList* mods, Module* mmodule, TypeDef* td, Type* parent, Type* t)
 {
 	// fprintf(hdr, "{type: '");
 	enum BasicTypeChoiceId basictype = BASICTYPE_UNKNOWN;
@@ -143,8 +143,8 @@ static void PrintDelphiType(FILE *hdr, ModuleList *mods, Module *mmodule, TypeDe
 		{
 			// fprintf(hdr, "{}"); // AsnOptionalParameters are objects not arrays
 		}
-		
-		else if (strcmp(t->cxxTypeRefInfo->className, "UTF8StringList") == 0 || strcmp(t->cxxTypeRefInfo->className, "SEQInteger") == 0 || strcmp(t->cxxTypeRefInfo->className, "AsnContactIDs") == 0) 
+
+		else if (strcmp(t->cxxTypeRefInfo->className, "UTF8StringList") == 0 || strcmp(t->cxxTypeRefInfo->className, "SEQInteger") == 0 || strcmp(t->cxxTypeRefInfo->className, "AsnContactIDs") == 0)
 		{
 			// fprintf(hdr, "[]");
 		}
@@ -152,7 +152,7 @@ static void PrintDelphiType(FILE *hdr, ModuleList *mods, Module *mmodule, TypeDe
 		{
 			//fprintf(hdr, "[Listtype]");
 			// fprintf(hdr, "', // type: %s", t->cxxTypeRefInfo->className);
-		}		
+		}
 		fprintf(hdr, " T%s", t->cxxTypeRefInfo->className); // Prefix for class names
 	}
 	else if (basictype == BASICTYPE_ENUMERATED)
@@ -163,7 +163,7 @@ static void PrintDelphiType(FILE *hdr, ModuleList *mods, Module *mmodule, TypeDe
 	{
 		// fprintf(hdr, "[BASICTYPE_CHOICE] %s", t->cxxTypeRefInfo->className);
 		fprintf(hdr, "T%s", t->cxxTypeRefInfo->className); // Prefix for class names
-	}	
+	}
 	else
 	{
 		// fprintf(hdr, "[BASIC TYPE] ");
@@ -206,7 +206,7 @@ static void PrintDelphiType(FILE *hdr, ModuleList *mods, Module *mmodule, TypeDe
 			{
 				fprintf(hdr, "AsnTime"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String übermittelt.
 			}
-			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0) 
+			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0)
 			{
 				fprintf(hdr, "AsnUtf8String");
 			}
@@ -224,11 +224,11 @@ static void PrintDelphiType(FILE *hdr, ModuleList *mods, Module *mmodule, TypeDe
 } /* PrintDelphiType */
 
 
-static void PrintDelphiBitstringDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *enumerated)
+static void PrintDelphiBitstringDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* enumerated)
 {
 	//	NamedType *e;
 	//	enum BasicTypeChoiceId tmpTypeId;
-	CNamedElmt *n;
+	CNamedElmt* n;
 	fprintf(src, "// [PrintDelphiBitstringDefCode] %s\n", td->definedName);
 
 	fprintf(src, "var %s = {\n", td->definedName);
@@ -246,12 +246,12 @@ static void PrintDelphiBitstringDefCode(FILE *src, ModuleList *mods, Module *m, 
 	fprintf(src, "};\n\n\n");
 } /* PrintDelphiBitstringDefCode */
 
-static void PrintDelphiEnumDefCode(FILE *src, ModuleList *mods, Module *m,
-	TypeDef *td, Type *parent, Type *enumerated)
+static void PrintDelphiEnumDefCode(FILE* src, ModuleList* mods, Module* m,
+	TypeDef* td, Type* parent, Type* enumerated)
 {
 	//	NamedType *e;
 	//	enum BasicTypeChoiceId tmpTypeId;
-	CNamedElmt *n;
+	CNamedElmt* n;
 	fprintf(src, "// [PrintDelphiEnumDefCode] %s\n", td->definedName);
 
 
@@ -283,9 +283,9 @@ static void PrintDelphiEnumDefCode(FILE *src, ModuleList *mods, Module *m,
 	fprintf(src, "  end;\n\n");
 } /* PrintDelphiEnumDefCode */
 
-static void PrintDelphiChoiceDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *choice)
+static void PrintDelphiChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* choice)
 {
-	NamedType *e;
+	NamedType* e;
 
 	fprintf(src, "// [PrintDelphiChoiceDefCode] %s\n", td->definedName);
 
@@ -324,7 +324,7 @@ static void PrintDelphiChoiceDefCode(FILE *src, ModuleList *mods, Module *m, Typ
 	//
 	// members, functions etc.
 	//
-	fprintf(src, "  private\n"); 
+	fprintf(src, "  private\n");
 	fprintf(src, "    FchoiceInternal: T%sInternal;\n", td->definedName);
 
 	fprintf(src, "  public\n");
@@ -351,9 +351,9 @@ static void PrintDelphiChoiceDefCode(FILE *src, ModuleList *mods, Module *m, Typ
 	fprintf(src, "  end;\n\n");
 } /* PrintDelphiChoiceDefCode */
 
-static void PrintDelphiSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *seq)
+static void PrintDelphiSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* seq)
 {
-	NamedType *e;
+	NamedType* e;
 
 	// DEFINE PER encode/decode tmp vars.
 	//NamedType **pSeqElementNamedType = NULL;
@@ -363,14 +363,14 @@ static void PrintDelphiSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeDe
 
 
 	fprintf(src, "  T%s = class (TAsnBase)\n", td->definedName); // Prefix for class names
-																//	fprintf(src, "  private\n");
+	//	fprintf(src, "  private\n");
 
 
 	fprintf(src, "  public\n");
 	fprintf(src, "    constructor Create(); override;\n");
 	fprintf(src, "    destructor Destroy(); override;\n");
 
-	fprintf(src, "    procedure Clear();\n"); 
+	fprintf(src, "    procedure Clear();\n");
 	fprintf(src, "    procedure JEnc(var json: TJSONValue); override;\n");
 	fprintf(src, "    function JDec(json: TJSONValue; suppressErrMissing: Boolean = false; suppressErrDecode: Boolean = false): Boolean; override;\n");
 
@@ -394,7 +394,7 @@ static void PrintDelphiSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeDe
 			fprintf(src, "  public\n");
 			fprintf(src, "  // optional parameters - must be created on use\n");
 		}
-		
+
 
 		fprintf(src, "    F%s: ", e->fieldName);
 		PrintDelphiType(src, mods, m, td, seq, e->type);
@@ -448,7 +448,7 @@ static void PrintDelphiSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeDe
 			fprintf(src, ";\n");
 			fprintf(src, "    procedure Set%s(const Value: ", e->fieldName);
 			PrintDelphiEnumType(src, mods, m, td, seq, e->type);
-			fprintf(src, ");\n"); 
+			fprintf(src, ");\n");
 
 		}
 	}
@@ -458,7 +458,7 @@ static void PrintDelphiSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeDe
 	/* add properties */
 	fprintf(src, "  public\n");
 	// fprintf(src, "\ttype: '%s',\n", td->definedName);
-	
+
 	/* Write out properties */
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
@@ -526,7 +526,7 @@ static void PrintDelphiSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeDe
 	fprintf(src, "  end;\n\n");
 } /* PrintDelphiSeqDefCode */
 
-static void PrintDelphiListClass(FILE *src, TypeDef *td, Type *lst, Module* m, ModuleList *mods)
+static void PrintDelphiListClass(FILE* src, TypeDef* td, Type* lst, Module* m, ModuleList* mods)
 {
 	fprintf(src, "// [PrintDelphiListClass] %s\n", td->definedName);
 	struct NamedType p_etemp;
@@ -539,17 +539,17 @@ static void PrintDelphiListClass(FILE *src, TypeDef *td, Type *lst, Module* m, M
 		//case BASICTYPE_BOOLEAN:
 		//case BASICTYPE_INTEGER:
 		//case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
+	case BASICTYPE_OCTETCONTAINING:
 		//case BASICTYPE_ENUMERATED:
 		//case BASICTYPE_REAL:
 		//case BASICTYPE_UTF8_STR:
 		//case BASICTYPE_UTCTIME:
-		case BASICTYPE_UNKNOWN:
-		case BASICTYPE_NULL:
-			fprintf(src, "//  %s [No collections of primitive Types %s]\n", td->cxxTypeDefInfo->className, p_e->type->cxxTypeRefInfo->className);
-			return;
-		default:
-			break;
+	case BASICTYPE_UNKNOWN:
+	case BASICTYPE_NULL:
+		fprintf(src, "//  %s [No collections of primitive Types %s]\n", td->cxxTypeDefInfo->className, p_e->type->cxxTypeRefInfo->className);
+		return;
+	default:
+		break;
 	}
 	if (strcmp(p_e->type->cxxTypeRefInfo->className, "AsnContactID") == 0)
 	{
@@ -568,7 +568,7 @@ static void PrintDelphiListClass(FILE *src, TypeDef *td, Type *lst, Module* m, M
 	fprintf(src, "  end;\n");
 }
 
-static void PrintDelphiSetOfDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *setOf)
+static void PrintDelphiSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf)
 {
 	if (strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParameters") == 0) // ESTOS special 'native Object' AsnOptionalParamaters
 		return;
@@ -578,7 +578,7 @@ static void PrintDelphiSetOfDefCode(FILE *src, ModuleList *mods, Module *m, Type
 
 } /* PrintDelphiSetOfDefCode */
 
-static void PrintDelphiTypeDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td)
+static void PrintDelphiTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td)
 {
 	fprintf(src, "// [PrintDelphiTypeDefCode] %s\n", td->definedName);
 
@@ -662,14 +662,14 @@ static void PrintDelphiTypeDefCode(FILE *src, ModuleList *mods, Module *m, TypeD
 		/* TBD: print error? */
 		break;
 	}
-	
+
 } /* PrintDelphiTypeDefCode */
 
-void PrintDelphiSeqConstructor(FILE *src, TypeDef *td, Type *seq)
+void PrintDelphiSeqConstructor(FILE* src, TypeDef* td, Type* seq)
 {
-	NamedType *e;
-	char *varName;
-	CxxTRI *cxxtri = NULL;
+	NamedType* e;
+	char* varName;
+	CxxTRI* cxxtri = NULL;
 
 	fprintf(src, "constructor T%s.Create();\n", td->definedName); // Prefix for class names
 	fprintf(src, "begin\n");
@@ -690,7 +690,7 @@ void PrintDelphiSeqConstructor(FILE *src, TypeDef *td, Type *seq)
 		else
 		{
 			PrintDelphiType(src, NULL, NULL, td, seq, e->type); // the both NULLs are not used in PrintDelphiType
-			fprintf(src, ".Create();\n" );
+			fprintf(src, ".Create();\n");
 		}
 	}
 
@@ -698,11 +698,11 @@ void PrintDelphiSeqConstructor(FILE *src, TypeDef *td, Type *seq)
 	fprintf(src, "\n");
 } /* PrintDelphiSeqConstructor */
 
-void PrintDelphiDestructor(FILE *src, TypeDef *td, Type *seq)
+void PrintDelphiDestructor(FILE* src, TypeDef* td, Type* seq)
 {
-	NamedType *e;
-	char *varName;
-	CxxTRI *cxxtri = NULL;
+	NamedType* e;
+	char* varName;
+	CxxTRI* cxxtri = NULL;
 
 	fprintf(src, "destructor T%s.Destroy();\n", td->definedName); // Prefix for class names
 	fprintf(src, "begin\n");
@@ -722,11 +722,11 @@ void PrintDelphiDestructor(FILE *src, TypeDef *td, Type *seq)
 	fprintf(src, "\n");
 } /* PrintDelphiDestructor */
 
-void PrintDelphiSeqDefClear(FILE *src, TypeDef *td, Type *seq)
+void PrintDelphiSeqDefClear(FILE* src, TypeDef* td, Type* seq)
 {
-	NamedType *e;
-	char *varName;
-	CxxTRI *cxxtri = NULL;
+	NamedType* e;
+	char* varName;
+	CxxTRI* cxxtri = NULL;
 
 	fprintf(src, "procedure T%s.Clear();\n", td->definedName); // Prefix for class names
 	fprintf(src, "begin\n");
@@ -745,9 +745,9 @@ void PrintDelphiSeqDefClear(FILE *src, TypeDef *td, Type *seq)
 	fprintf(src, "\n");
 } /* PrintDelphiSeqDefClear */
 
-void PrintDelphiChoiceConstructor(FILE *src, TypeDef *td, Type *choice)
+void PrintDelphiChoiceConstructor(FILE* src, TypeDef* td, Type* choice)
 {
-	NamedType *e;
+	NamedType* e;
 	//char *varName;
 	//CxxTRI *cxxtri = NULL;
 
@@ -769,9 +769,9 @@ void PrintDelphiChoiceConstructor(FILE *src, TypeDef *td, Type *choice)
 	fprintf(src, "\n");
 } /* PrintDelphiChoiceConstructor */
 
-void PrintDelphiChoiceDestructor(FILE *src, TypeDef *td, Type *choice)
+void PrintDelphiChoiceDestructor(FILE* src, TypeDef* td, Type* choice)
 {
-//	NamedType *e;
+	//	NamedType *e;
 
 	fprintf(src, "destructor T%s.Destroy();\n", td->definedName); // Prefix for class names
 	fprintf(src, "begin\n");
@@ -782,9 +782,9 @@ void PrintDelphiChoiceDestructor(FILE *src, TypeDef *td, Type *choice)
 	fprintf(src, "\n");
 } /* PrintDelphiChoiceDestructor */
 
-void PrintDelphiChoiceCodeClear(FILE *src, TypeDef *td, Type *choice)
+void PrintDelphiChoiceCodeClear(FILE* src, TypeDef* td, Type* choice)
 {
-	NamedType *e;
+	NamedType* e;
 
 	fprintf(src, "procedure T%s.Clear();\n", td->definedName); // Prefix for class names
 	fprintf(src, "begin\n");
@@ -799,7 +799,7 @@ void PrintDelphiChoiceCodeClear(FILE *src, TypeDef *td, Type *choice)
 	fprintf(src, "\n");
 } /* PrintDelphiChoiceCodeClear */
 
-void PrintDelphiEnumDefCodeJsonEnc(FILE *src, TypeDef *td/*, Type *seq*/)
+void PrintDelphiEnumDefCodeJsonEnc(FILE* src, TypeDef* td/*, Type *seq*/)
 {
 	fprintf(src, "procedure T%s.JEnc(var json: TJSONValue);\n", td->definedName);// Prefix for class names
 	fprintf(src, "begin\n");
@@ -825,11 +825,11 @@ void PrintDelphiEnumDefCodeJsonEnc(FILE *src, TypeDef *td/*, Type *seq*/)
 	fprintf(src, "\n");
 }
 
-void PrintDelphiSeqDefCodeJsonEnc(FILE *src, TypeDef *td, Type *seq)
+void PrintDelphiSeqDefCodeJsonEnc(FILE* src, TypeDef* td, Type* seq)
 {
-	NamedType *e;
-	char *varName;
-	CxxTRI *cxxtri = NULL;
+	NamedType* e;
+	char* varName;
+	CxxTRI* cxxtri = NULL;
 
 	fprintf(src, "procedure T%s.JEnc(var json: TJSONValue);\n", td->definedName);// Prefix for class names
 	fprintf(src, "var\n");
@@ -874,7 +874,7 @@ void PrintDelphiSeqDefCodeJsonEnc(FILE *src, TypeDef *td, Type *seq)
 	{
 		cxxtri = e->type->cxxTypeRefInfo;
 		varName = cxxtri->fieldName;
-//		fprintf(src, "		F%s.JDec(jo.Get('%s').JsonValue);\n", varName, varName);
+		//		fprintf(src, "		F%s.JDec(jo.Get('%s').JsonValue);\n", varName, varName);
 		fprintf(src, "\n");
 		fprintf(src, "    if GetJsonValue(jo, '%s', jv) then\n", varName);
 		fprintf(src, "    begin\n");
@@ -894,7 +894,7 @@ void PrintDelphiSeqDefCodeJsonEnc(FILE *src, TypeDef *td, Type *seq)
 		{
 			basictype = e->type->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId;
 		}
-		
+
 		if ((basictype == BASICTYPE_SEQUENCE) ||
 			(basictype == BASICTYPE_SEQUENCEOF))
 			fprintf(src, "      if (not F%s.JDec(jv, suppressErrMissing, suppressErrDecode)) and (not suppressErrDecode) then\n", varName);
@@ -909,7 +909,7 @@ void PrintDelphiSeqDefCodeJsonEnc(FILE *src, TypeDef *td, Type *seq)
 		else
 		{
 			fprintf(src, "\n");
-			fprintf(src, "    else if not suppressErrMissing then\n");			
+			fprintf(src, "    else if not suppressErrMissing then\n");
 			fprintf(src, "      raise EAsnTagMissingException.Create('%s', '%s');\n", td->definedName, varName);
 		}
 	}
@@ -921,7 +921,7 @@ void PrintDelphiSeqDefCodeJsonEnc(FILE *src, TypeDef *td, Type *seq)
 	fprintf(src, "\n");
 }
 
-void PrintDelphiSetOfDefCodeJsonEnc(FILE *src, TypeDef *td, Type *lst)
+void PrintDelphiSetOfDefCodeJsonEnc(FILE* src, TypeDef* td, Type* lst)
 {
 	fprintf(src, "procedure T%s.JEnc(var json: TJSONValue);\n", td->definedName);// Prefix for class names
 	fprintf(src, "var\n");
@@ -939,7 +939,7 @@ void PrintDelphiSetOfDefCodeJsonEnc(FILE *src, TypeDef *td, Type *lst)
 	fprintf(src, "\n");
 }
 
-void PrintDelphiSetOfDefCodeJsonDec(FILE *src, TypeDef *td, Type *lst)
+void PrintDelphiSetOfDefCodeJsonDec(FILE* src, TypeDef* td, Type* lst)
 {
 	fprintf(src, "function T%s.JDec(json: TJSONValue; suppressErrMissing: Boolean; suppressErrDecode: Boolean): Boolean;\n", td->definedName);// Prefix for class names
 	fprintf(src, "var\n");
@@ -957,7 +957,7 @@ void PrintDelphiSetOfDefCodeJsonDec(FILE *src, TypeDef *td, Type *lst)
 
 	fprintf(src, "    for jv in TJsonArray(json) do\n");
 	fprintf(src, "    begin\n");
-	fprintf(src, "      tmpObj := "); 
+	fprintf(src, "      tmpObj := ");
 	PrintDelphiType(src, NULL, NULL, td, lst, lst->basicType->a.sequenceOf);
 	fprintf(src, ".Create(); \n");
 
@@ -972,7 +972,7 @@ void PrintDelphiSetOfDefCodeJsonDec(FILE *src, TypeDef *td, Type *lst)
 	}
 
 	if ((basictype == BASICTYPE_SEQUENCE) ||
-		(basictype == BASICTYPE_SEQUENCEOF))	
+		(basictype == BASICTYPE_SEQUENCEOF))
 		fprintf(src, "      if tmpObj.JDec(jv, suppressErrMissing, suppressErrDecode) then\n");
 	else
 		fprintf(src, "      if tmpObj.JDec(jv) then\n");
@@ -988,9 +988,9 @@ void PrintDelphiSetOfDefCodeJsonDec(FILE *src, TypeDef *td, Type *lst)
 }
 
 
-void PrintDelphiChoiceDefCodeJsonEnc(FILE *src, TypeDef *td, Type *choice)
+void PrintDelphiChoiceDefCodeJsonEnc(FILE* src, TypeDef* td, Type* choice)
 {
-	NamedType *e;
+	NamedType* e;
 
 	fprintf(src, "procedure T%s.JEnc(var json: TJSONValue);\n", td->definedName);// Prefix for class names
 	fprintf(src, "var\n");
@@ -1017,11 +1017,11 @@ void PrintDelphiChoiceDefCodeJsonEnc(FILE *src, TypeDef *td, Type *choice)
 	fprintf(src, "\n");
 }
 
-void PrintDelphiChoiceDefCodeJsonDec(FILE *src, TypeDef *td, Type *choice)
+void PrintDelphiChoiceDefCodeJsonDec(FILE* src, TypeDef* td, Type* choice)
 {
-	NamedType *e;
-	char *varName;
-	CxxTRI *cxxtri = NULL;
+	NamedType* e;
+	char* varName;
+	CxxTRI* cxxtri = NULL;
 
 	fprintf(src, "function T%s.JDec(json: TJSONValue): Boolean;\n", td->definedName);// Prefix for class names
 	fprintf(src, "var\n");
@@ -1063,9 +1063,9 @@ void PrintDelphiChoiceDefCodeJsonDec(FILE *src, TypeDef *td, Type *choice)
 	fprintf(src, "\n");
 
 }
-static void PrintDelphiPropertyImplementation(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *seq)
+static void PrintDelphiPropertyImplementation(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq)
 {
-	NamedType *e;
+	NamedType* e;
 	/* add getters/setters */
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
@@ -1110,44 +1110,44 @@ static void PrintDelphiPropertyImplementation(FILE *src, ModuleList *mods, Modul
 
 }
 
-static void PrintDelphiImplementationCode(FILE *src, Module *m, TypeDef *td)
+static void PrintDelphiImplementationCode(FILE* src, Module* m, TypeDef* td)
 {
 
 	// class name comment: { ClassName }
 	fprintf(src, "{ %s }\n", td->definedName);
-	fprintf(src, "\n"); 
+	fprintf(src, "\n");
 	switch (td->type->basicType->choiceId)
 	{
-		case BASICTYPE_ENUMERATED:  /* library type */
-			PrintDelphiEnumDefCodeJsonEnc(src, td/*, td->type*/);
-			break;
-		case BASICTYPE_SEQUENCE:
+	case BASICTYPE_ENUMERATED:  /* library type */
+		PrintDelphiEnumDefCodeJsonEnc(src, td/*, td->type*/);
+		break;
+	case BASICTYPE_SEQUENCE:
 
-			PrintDelphiSeqConstructor(src, td, td->type);
-			PrintDelphiDestructor(src, td, td->type);
-			PrintDelphiSeqDefClear(src, td, td->type);
+		PrintDelphiSeqConstructor(src, td, td->type);
+		PrintDelphiDestructor(src, td, td->type);
+		PrintDelphiSeqDefClear(src, td, td->type);
 
-			PrintDelphiPropertyImplementation(src, NULL, m, td, td->type);
+		PrintDelphiPropertyImplementation(src, NULL, m, td, td->type);
 
 
-			PrintDelphiSeqDefCodeJsonEnc(src, td, td->type);
-			break;
-		case BASICTYPE_CHOICE:
-			PrintDelphiChoiceConstructor(src, td, td->type);
-			PrintDelphiChoiceDestructor(src, td, td->type);
-			PrintDelphiChoiceCodeClear(src, td, td->type);
+		PrintDelphiSeqDefCodeJsonEnc(src, td, td->type);
+		break;
+	case BASICTYPE_CHOICE:
+		PrintDelphiChoiceConstructor(src, td, td->type);
+		PrintDelphiChoiceDestructor(src, td, td->type);
+		PrintDelphiChoiceCodeClear(src, td, td->type);
 
-			PrintDelphiChoiceDefCodeJsonEnc(src, td, td->type);
-			PrintDelphiChoiceDefCodeJsonDec(src, td, td->type);
-			break;
-		case BASICTYPE_SEQUENCEOF:  /* list types */
-		case BASICTYPE_SETOF:
+		PrintDelphiChoiceDefCodeJsonEnc(src, td, td->type);
+		PrintDelphiChoiceDefCodeJsonDec(src, td, td->type);
+		break;
+	case BASICTYPE_SEQUENCEOF:  /* list types */
+	case BASICTYPE_SETOF:
 
-			PrintDelphiSetOfDefCodeJsonEnc(src, td, td->type);
-			PrintDelphiSetOfDefCodeJsonDec(src, td, td->type);
-			break;
-		default:
-			break;
+		PrintDelphiSetOfDefCodeJsonEnc(src, td, td->type);
+		PrintDelphiSetOfDefCodeJsonDec(src, td, td->type);
+		break;
+	default:
+		break;
 	}
 	//switch (td->type->basicType->choiceId)
 	//{
@@ -1195,7 +1195,7 @@ static void PrintDelphiImplementationCode(FILE *src, Module *m, TypeDef *td)
 //
 //} /* PrintROSEInvoke */
 
-static void PrintDelphiTypeDecl(FILE *f, TypeDef *td)
+static void PrintDelphiTypeDecl(FILE* f, TypeDef* td)
 {
 	//fprintf(f, "// [PrintDelphiTypeDecl] %s\n", td->cxxTypeDefInfo->className);
 
@@ -1215,10 +1215,10 @@ static void PrintDelphiTypeDecl(FILE *f, TypeDef *td)
 
 }
 
-void PrintDelphiImports(FILE *src, ModuleList *mods, Module *m)
+void PrintDelphiImports(FILE* src, ModuleList* mods, Module* m)
 {
-	Module *currMod;
-	AsnListNode *currModTmp;
+	Module* currMod;
+	AsnListNode* currModTmp;
 
 	fprintf(src, "// Global imports\n");
 	fprintf(src, "uses\n");
@@ -1238,14 +1238,14 @@ void PrintDelphiImports(FILE *src, ModuleList *mods, Module *m)
 		if ((strcmp(m->delphiFileName, currMod->delphiFileName) == 0))
 		{
 			// Code to see the import module list AND load possible "namespace" refs.
-			ImportModuleList *ModLists;
-			ImportModule *impMod;
-	
+			ImportModuleList* ModLists;
+			ImportModule* impMod;
+
 			ModLists = currMod->imports;
 			currModTmp = mods->curr;    //RWC;
 			FOR_EACH_LIST_ELMT(impMod, ModLists)
 			{
-				ImportElmt *impElmt;
+				ImportElmt* impElmt;
 
 				//fprintf(src, "  // Imports from %s\n", impMod->modId->name);
 
@@ -1262,7 +1262,7 @@ void PrintDelphiImports(FILE *src, ModuleList *mods, Module *m)
 					{
 						continue;
 					}
-					else 
+					else
 					{
 						importRequired = TRUE;
 						break;
@@ -1283,7 +1283,7 @@ void PrintDelphiImports(FILE *src, ModuleList *mods, Module *m)
 	fprintf(src, "\n");
 }
 
-void PrintDelphiComments(FILE *src, Module *m) {
+void PrintDelphiComments(FILE* src, Module* m) {
 	fprintf(src, "{\n");
 	fprintf(src, " * %s\n", RemovePath(m->delphiFileName));
 	fprintf(src, " * \"%s\" ASN.1 stubs.\n", m->modId->name);
@@ -1299,12 +1299,12 @@ void PrintDelphiComments(FILE *src, Module *m) {
 //}
 
 
-void PrintDelphiCode(FILE *src, ModuleList *mods, Module *m)
+void PrintDelphiCode(FILE* src, ModuleList* mods, Module* m)
 {
-	TypeDef *td;
+	TypeDef* td;
 
 	fprintf(src, "// [PrintDelphiCode]\n");
-	
+
 	fprintf(src, "unit %s;\n", m->moduleName);
 
 	// Comments
@@ -1315,7 +1315,7 @@ void PrintDelphiCode(FILE *src, ModuleList *mods, Module *m)
 
 	// Uses/Includes
 	PrintDelphiImports(src, mods, m);
-	
+
 	fprintf(src, "{$SCOPEDENUMS ON}\n"); // required to prevent collisions between enumerations
 	//fprintf(src, "//------------------------------------------------------------------------------\n");
 	fprintf(src, "type\n");
@@ -1325,8 +1325,8 @@ void PrintDelphiCode(FILE *src, ModuleList *mods, Module *m)
 	fprintf(src, "\n");
 
 	fprintf(src, "// class declarations:\n");
-	FOR_EACH_LIST_ELMT (td, m->typeDefs)
-		PrintDelphiTypeDefCode (src, mods, m, td);
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+		PrintDelphiTypeDefCode(src, mods, m, td);
 
 
 	fprintf(src, "\n");

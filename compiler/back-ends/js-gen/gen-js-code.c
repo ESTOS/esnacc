@@ -13,7 +13,7 @@
 *           and the University of British Columbia
 *
 * 2016 ESTOS/stm
-* 
+*
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation; either version 2 of the License, or
@@ -24,9 +24,9 @@
 #include "gen-js-code.h"
 #include "../str-util.h"
 
-static Module *GetImportModuleRef(char *Impname, ModuleList *mods)
+static Module* GetImportModuleRef(char* Impname, ModuleList* mods)
 {
-	Module *currMod = NULL;
+	Module* currMod = NULL;
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
 		/* Find the import Module in the Modules and
@@ -41,7 +41,7 @@ static Module *GetImportModuleRef(char *Impname, ModuleList *mods)
 }
 
 
-static void PrintJSNativeType(FILE *hdr, int basicTypeChoiseId) {
+static void PrintJSNativeType(FILE* hdr, int basicTypeChoiseId) {
 	switch (basicTypeChoiseId) {
 	case BASICTYPE_BOOLEAN:
 		fprintf(hdr, "boolean");
@@ -76,7 +76,7 @@ static void PrintJSNativeType(FILE *hdr, int basicTypeChoiseId) {
 }
 
 
-static void PrintJSDefaultValue(FILE *hdr, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *t)
+static void PrintJSDefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t)
 {
 	// fprintf(hdr, "/*[PrintJSDefaultValue]*/");
 
@@ -89,12 +89,12 @@ static void PrintJSDefaultValue(FILE *hdr, ModuleList *mods, Module *m, TypeDef 
 			fprintf(hdr, "[]");
 	}
 	else if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED) ||
-			 (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link != NULL && t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED))
+		(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link != NULL && t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED))
 	{
 		//fprintf(hdr, "/*[if(2)]*/");
 		// fprintf(hdr, "[ENUMERATED] ");
-		CNamedElmt *n;
-		Type *enumType = t->basicType->a.localTypeRef->link->type;
+		CNamedElmt* n;
+		Type* enumType = t->basicType->a.localTypeRef->link->type;
 		if (HasNamedElmts(enumType) != 0)
 		{
 			FOR_EACH_LIST_ELMT_NOITERATE(n, enumType->cxxTypeRefInfo->namedElmts)
@@ -106,7 +106,7 @@ static void PrintJSDefaultValue(FILE *hdr, ModuleList *mods, Module *m, TypeDef 
 		}
 	}
 	else if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_CHOICE) ||
-			 (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link != NULL && t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_CHOICE))
+		(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link != NULL && t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_CHOICE))
 	{
 		// fprintf(hdr, "[BASICTYPE_CHOICE] %s", t->cxxTypeRefInfo->className);
 		fprintf(hdr, "{}");
@@ -145,7 +145,7 @@ static void PrintJSDefaultValue(FILE *hdr, ModuleList *mods, Module *m, TypeDef 
 			break;
 		case BASICTYPE_UNKNOWN:
 		case BASICTYPE_NULL:
-				fprintf(hdr, "null");
+			fprintf(hdr, "null");
 			break;
 		case BASICTYPE_IMPORTTYPEREF:
 		case BASICTYPE_LOCALTYPEREF:
@@ -153,11 +153,11 @@ static void PrintJSDefaultValue(FILE *hdr, ModuleList *mods, Module *m, TypeDef 
 			{
 				fprintf(hdr, "''"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String übermittelt.
 			}
-			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0) 
+			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0)
 			{
 				fprintf(hdr, "''");
 			}
-			else 
+			else
 			{
 				fprintf(hdr, "{}");
 			}
@@ -169,7 +169,7 @@ static void PrintJSDefaultValue(FILE *hdr, ModuleList *mods, Module *m, TypeDef 
 	}
 }
 
-static void PrintJSType(FILE *hdr, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *t)
+static void PrintJSType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t)
 {
 	// fprintf(hdr, "{type: '");
 
@@ -188,21 +188,21 @@ static void PrintJSType(FILE *hdr, ModuleList *mods, Module *m, TypeDef *td, Typ
 		else
 		{
 			fprintf(hdr, "[Listtype]");
-		}		
+		}
 		fprintf(hdr, " type: %s", t->cxxTypeRefInfo->className);
 	}
 	else if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED) ||
-			(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link != NULL && t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED))
+		(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link != NULL && t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED))
 	{
 		fprintf(hdr, "[ENUMERATED] ");
 		// fprintf(hdr, "number");
 	}
 	else if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_CHOICE) ||
-			(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link != NULL && t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_CHOICE))
+		(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link != NULL && t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_CHOICE))
 	{
 		// fprintf(hdr, "[BASICTYPE_CHOICE] %s", t->cxxTypeRefInfo->className);
 		fprintf(hdr, " type: %s", t->cxxTypeRefInfo->className);
-	}	
+	}
 	else
 	{
 		// fprintf(hdr, "[BASIC TYPE] ");
@@ -231,7 +231,7 @@ static void PrintJSType(FILE *hdr, ModuleList *mods, Module *m, TypeDef *td, Typ
 			{
 				fprintf(hdr, "string"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im JS als String übermittelt.
 			}
-			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0) 
+			else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0)
 			{
 				fprintf(hdr, "string");
 			}
@@ -248,11 +248,11 @@ static void PrintJSType(FILE *hdr, ModuleList *mods, Module *m, TypeDef *td, Typ
 } /* PrintCxxType */
 
 
-static void PrintJSBitstringDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *enumerated, int novolatilefuncs)
+static void PrintJSBitstringDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* enumerated, int novolatilefuncs)
 {
 	//	NamedType *e;
 	//	enum BasicTypeChoiceId tmpTypeId;
-	CNamedElmt *n;
+	CNamedElmt* n;
 	fprintf(src, "// [PrintJSBitstringDefCode] %s\n", td->definedName);
 
 	fprintf(src, "var %s = {\n", td->definedName);
@@ -270,12 +270,12 @@ static void PrintJSBitstringDefCode(FILE *src, ModuleList *mods, Module *m, Type
 	fprintf(src, "};\n\n\n");
 } /* PrintJSBitstringDefCode */
 
-static void PrintJSEnumDefCode(FILE *src, ModuleList *mods, Module *m,
-	TypeDef *td, Type *parent, Type *enumerated, int novolatilefuncs)
+static void PrintJSEnumDefCode(FILE* src, ModuleList* mods, Module* m,
+	TypeDef* td, Type* parent, Type* enumerated, int novolatilefuncs)
 {
 	//	NamedType *e;
 	//	enum BasicTypeChoiceId tmpTypeId;
-	CNamedElmt *n;
+	CNamedElmt* n;
 	fprintf(src, "// [PrintJSEnumDefCode] %s\n", td->definedName);
 
 	fprintf(src, "var %s = {\n", td->definedName);
@@ -293,18 +293,18 @@ static void PrintJSEnumDefCode(FILE *src, ModuleList *mods, Module *m,
 	fprintf(src, "};\n\n\n");
 } /* PrintJSEnumDefCode */
 
-static void PrintJSChoiceDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *choice, int novolatilefuncs)
+static void PrintJSChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* choice, int novolatilefuncs)
 {
-	NamedType *e;
+	NamedType* e;
 	//	CxxTRI *cxxtri=NULL;
 	//	int inTailOptElmts;
 	//	enum BasicTypeChoiceId tmpTypeId;
 	//	int allOpt;
 
 	// DEFINE PER encode/decode tmp vars.
-	NamedType **pSeqElementNamedType = NULL;
+	NamedType** pSeqElementNamedType = NULL;
 	int propertyCounter = 0;
-//	int collectionCounter = 0;
+	//	int collectionCounter = 0;
 
 	fprintf(src, "// [PrintJSChoiceDefCode] %s\n", td->definedName);
 
@@ -327,7 +327,7 @@ static void PrintJSChoiceDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef
 		fprintf(src, "; // ");
 		PrintJSType(src, mods, m, td, choice, e->type);
 
-		
+
 		fprintf(src, "}");
 
 		propertyCounter++;
@@ -343,24 +343,24 @@ static void PrintJSChoiceDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef
 	fprintf(src, "}\n\n");
 } /* PrintJSChoiceDefCode */
 
-static void PrintJSSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *seq, int novolatilefuncs)
+static void PrintJSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* seq, int novolatilefuncs)
 {
-	NamedType *e;
+	NamedType* e;
 	//	CxxTRI *cxxtri=NULL;
 	//	int inTailOptElmts;
 	//	enum BasicTypeChoiceId tmpTypeId;
 	//	int allOpt;
 
 	// DEFINE PER encode/decode tmp vars.
-	NamedType **pSeqElementNamedType = NULL;
+	NamedType** pSeqElementNamedType = NULL;
 	int propertyCounter = 0;
-	
+
 	fprintf(src, "// [PrintJSSeqDefCode] %s\n", td->definedName);
 
 	/* put class spec in hdr file */
 	fprintf(src, "function %s() {\n", td->definedName);
 	fprintf(src, "\tthis._type = '%s';\n", td->definedName);
-	
+
 	/* Write out properties */
 	// fprintf(src, "\tprops: {\n");
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
@@ -417,7 +417,7 @@ static void PrintJSSeqDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *t
 	fprintf(src, "}\n\n");
 } /* PrintCxxSeqDefCode */
 
-static void PrintJSListClass(FILE *src, TypeDef *td, Type *lst, Module* m, ModuleList *mods)
+static void PrintJSListClass(FILE* src, TypeDef* td, Type* lst, Module* m, ModuleList* mods)
 {
 	struct NamedType p_etemp;
 	NamedType* p_e;
@@ -425,20 +425,20 @@ static void PrintJSListClass(FILE *src, TypeDef *td, Type *lst, Module* m, Modul
 	p_e->type = lst->basicType->a.setOf;
 
 	switch (lst->basicType->a.setOf->basicType->choiceId) {
-		case BASICTYPE_BOOLEAN:
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
-		case BASICTYPE_ENUMERATED:
-		case BASICTYPE_REAL:
-		case BASICTYPE_UTF8_STR:
-		case BASICTYPE_UTCTIME:
-		case BASICTYPE_UNKNOWN:
-		case BASICTYPE_NULL:
-			fprintf(src, "//  %s [No collections of primitive Types %s]\n", td->cxxTypeDefInfo->className, p_e->type->cxxTypeRefInfo->className);
-			return;
-		default:
-			break;
+	case BASICTYPE_BOOLEAN:
+	case BASICTYPE_INTEGER:
+	case BASICTYPE_OCTETSTRING:
+	case BASICTYPE_OCTETCONTAINING:
+	case BASICTYPE_ENUMERATED:
+	case BASICTYPE_REAL:
+	case BASICTYPE_UTF8_STR:
+	case BASICTYPE_UTCTIME:
+	case BASICTYPE_UNKNOWN:
+	case BASICTYPE_NULL:
+		fprintf(src, "//  %s [No collections of primitive Types %s]\n", td->cxxTypeDefInfo->className, p_e->type->cxxTypeRefInfo->className);
+		return;
+	default:
+		break;
 	}
 	if (strcmp(p_e->type->cxxTypeRefInfo->className, "AsnContactID") == 0)
 	{
@@ -455,7 +455,7 @@ static void PrintJSListClass(FILE *src, TypeDef *td, Type *lst, Module* m, Modul
 	//fprintf(src, "}],\n\n");
 }
 
-static void PrintJSSetOfDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, Type *parent, Type *setOf, int novolatilefuncs)
+static void PrintJSSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
 {
 	if (strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParameters") == 0) // ESTOS special 'native Object' AsnOptionalParamaters
 		return;
@@ -465,7 +465,7 @@ static void PrintJSSetOfDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef 
 
 } /* PrintJSSetOfDefCode */
 
-static void PrintJSTypeDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *td, int novolatilefuncs)
+static void PrintJSTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs)
 {
 	fprintf(src, "// [PrintJSTypeDefCode] %s\n", td->definedName);
 
@@ -503,7 +503,7 @@ static void PrintJSTypeDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *
 	case BASICTYPE_SEQUENCEOF:  /* list types */
 	case BASICTYPE_SETOF:
 		// fprintf(src, "// [BASICTYPE_SEQUENCEOF/BASICTYPE_SETOF]\n");
-		PrintJSSetOfDefCode (src, mods, m, td, NULL, td->type, novolatilefuncs);
+		PrintJSSetOfDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
 		break;
 	case BASICTYPE_IMPORTTYPEREF:  /* type references */
 		fprintf(src, "// [BASICTYPE_IMPORTTYPEREF]\n");
@@ -550,7 +550,7 @@ static void PrintJSTypeDefCode(FILE *src, ModuleList *mods, Module *m, TypeDef *
 } /* PrintCxxTypeDefCode */
 
 
-static void PrintJSExportCode(FILE *src, Module *m, TypeDef *td)
+static void PrintJSExportCode(FILE* src, Module* m, TypeDef* td)
 {
 	//fprintf(src, "// [PrintHJSExportCode] %s\n", td->definedName);
 	switch (td->type->basicType->choiceId)
@@ -571,7 +571,7 @@ static void PrintJSExportCode(FILE *src, Module *m, TypeDef *td)
 
 		fprintf(src, "\t %s: %s", td->definedName, td->definedName);
 
-		if (td != (TypeDef *)LAST_LIST_ELMT(m->typeDefs))
+		if (td != (TypeDef*)LAST_LIST_ELMT(m->typeDefs))
 			fprintf(src, ",\n");
 		else
 			fprintf(src, "\n");
@@ -584,10 +584,10 @@ static void PrintJSExportCode(FILE *src, Module *m, TypeDef *td)
 	}
 } /* PrintJSExportCode */
 
-void PrintJSImports(FILE *src, ModuleList *mods, Module *m)
+void PrintJSImports(FILE* src, ModuleList* mods, Module* m)
 {
-	Module *currMod;
-	AsnListNode *currModTmp;
+	Module* currMod;
+	AsnListNode* currModTmp;
 
 	fprintf(src, "// Global imports\n");
 	//fprintf(src, "var Backbone = require('backbone');\n");
@@ -600,14 +600,14 @@ void PrintJSImports(FILE *src, ModuleList *mods, Module *m)
 		if ((strcmp(m->jsFileName, currMod->jsFileName) == 0))
 		{
 			// Code to see the import module list AND load possible "namespace" refs.
-			ImportModuleList *ModLists;
-			ImportModule *impMod;
-	
+			ImportModuleList* ModLists;
+			ImportModule* impMod;
+
 			ModLists = currMod->imports;
 			currModTmp = mods->curr;    //RWC;
 			FOR_EACH_LIST_ELMT(impMod, ModLists)
 			{
-				ImportElmt *impElmt;
+				ImportElmt* impElmt;
 
 				fprintf(src, "// Imports from %s\n", impMod->modId->name);
 
@@ -635,7 +635,7 @@ void PrintJSImports(FILE *src, ModuleList *mods, Module *m)
 	}
 }
 
-void PrintJSComments(FILE *src, Module *m) {
+void PrintJSComments(FILE* src, Module* m) {
 	fprintf(src, "/*\n");
 	fprintf(src, " * %s\n", RemovePath(m->jsFileName));
 	fprintf(src, " * \"%s\" ASN.1 stubs.\n", m->modId->name);
@@ -643,14 +643,14 @@ void PrintJSComments(FILE *src, Module *m) {
 	fprintf(src, " */\n\n");
 }
 
-void PrintJSROSECode(FILE *src, ModuleList *mods, Module *m)
+void PrintJSROSECode(FILE* src, ModuleList* mods, Module* m)
 {
 }
 
 
-void PrintJSCode(FILE *src, ModuleList *mods, Module *m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int novolatilefuncs)
+void PrintJSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int novolatilefuncs)
 {
-	TypeDef *td;
+	TypeDef* td;
 
 	fprintf(src, "// [PrintJSCode]\n");
 
@@ -671,8 +671,8 @@ void PrintJSCode(FILE *src, ModuleList *mods, Module *m, long longJmpVal, int pr
 	//fprintf(src, "\n");
 
 
-	FOR_EACH_LIST_ELMT (td, m->typeDefs)
-		PrintJSTypeDefCode (src, mods, m, td, novolatilefuncs);
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+		PrintJSTypeDefCode(src, mods, m, td, novolatilefuncs);
 
 
 	fprintf(src, "\n");

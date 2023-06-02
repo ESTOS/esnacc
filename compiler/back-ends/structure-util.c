@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <string.h>
 
-bool IsDeprecatedNoOutput(const long long i64DeprecatedValue)  {
+bool IsDeprecatedNoOutput(const long long i64DeprecatedValue) {
 	if (!gi64NoDeprecatedSymbols || !i64DeprecatedValue)
 		return false;
 	// If set to 1 no date has been specified on the command line, so we remove ANY deprecated value no matter when it was flagged deprecated
@@ -44,9 +44,9 @@ bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszR
 	if (ppszError)
 		*ppszError = NULL;
 
-	Type*(*resolver)(Type* type, char** szName) = NULL;
+	Type* (*resolver)(Type * type, char** szName) = NULL;
 	// Depends on the caller we resolved any type to root or one level (just one local type ref or imported type ref is resolved)
-	if(bResolveToRoot)
+	if (bResolveToRoot)
 		resolver = &ResolveTypeReferencesToRoot;
 	else
 		resolver = &ResolveTypeReferencesOneLevel;
@@ -419,7 +419,7 @@ bool IsDeprecatedFlaggedModule(Module* mod) {
 	asnmodulecomment comment;
 
 	if (GetModuleComment_UTF8(mod->moduleName, &comment)) {
-		if (comment.i64Deprecated){
+		if (comment.i64Deprecated) {
 			if (gi64NoDeprecatedSymbols)
 				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
 			else
@@ -439,21 +439,21 @@ bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szEle
 	// - sequences if the property is optional
 	// -> so in any other case false, not skippable
 
-	if(type != BASICTYPE_CHOICE &&
+	if (type != BASICTYPE_CHOICE &&
 		type != BASICTYPE_ENUMERATED &&
 		type != BASICTYPE_SEQUENCE)
 		return false;
 
 	asnmembercomment comment;
 	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment)) {
-		if (comment.i64Deprecated){
+		if (comment.i64Deprecated) {
 			if (gi64NoDeprecatedSymbols)
 				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
 			else
 				return true;
 		}
 	}
-				
+
 	return false;
 }
 
@@ -480,7 +480,7 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 	// - sequences if the property is optional
 	// -> so in any other case false, not skippable
 
-	if(type != BASICTYPE_CHOICE &&
+	if (type != BASICTYPE_CHOICE &&
 		type != BASICTYPE_ENUMERATED &&
 		type != BASICTYPE_SEQUENCE)
 		return false;
@@ -492,7 +492,7 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 				// We need to check if the property is optional, if that is the case we can skip it
 				NamedType* e;
 				bool bReturn = false;
-				AsnListNode	*curr = td->type->basicType->a.sequence->curr;
+				AsnListNode* curr = td->type->basicType->a.sequence->curr;
 				FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
 				{
 					if (strcmp(e->fieldName, szElement) != 0)
@@ -509,7 +509,7 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 				return true;
 		}
 	}
-				
+
 	return false;
 }
 

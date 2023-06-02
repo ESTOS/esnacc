@@ -221,16 +221,16 @@
 
 _BEGIN_SNACC_NAMESPACE
 
-Table *AsnAny::oidHashTbl = NULL;
-Table *AsnAny::intHashTbl = NULL;
-long SM_DetermineLengthBuf(AsnBuf &SNACCinputBuf, AsnLen elmtLen0, 
-                           int bFirstTimeFlag=false);
-long SM_DetermineLengthBuf(AsnBuf &SNACCinputBuf);
+Table* AsnAny::oidHashTbl = NULL;
+Table* AsnAny::intHashTbl = NULL;
+long SM_DetermineLengthBuf(AsnBuf& SNACCinputBuf, AsnLen elmtLen0,
+	int bFirstTimeFlag = false);
+long SM_DetermineLengthBuf(AsnBuf& SNACCinputBuf);
 
 class AnyTableDestructor
 {
 public:
-   ~AnyTableDestructor() { AsnAny::AsnAnyDestroyHashTbls(); }
+	~AnyTableDestructor() { AsnAny::AsnAnyDestroyHashTbls(); }
 };
 
 static AnyTableDestructor __anyTableDestructor;
@@ -239,34 +239,34 @@ static AnyTableDestructor __anyTableDestructor;
 // Define this ANY value's type to the one that the given id hashes
 // to in the ANY table.
 void
-AsnAny::SetTypeByInt (const AsnInt& id) const
+AsnAny::SetTypeByInt(const AsnInt& id) const
 {
-    Hash hash;
-    void *anyInfo;
+	Hash hash;
+	void* anyInfo;
 
-    /* use int as hash string */
-    hash = MakeHash ((const char*)id.c_str(), id.length());
-    if (CheckForAndReturnValue (intHashTbl, hash, &anyInfo))
-        ai = (AnyInfo*) anyInfo;
-    else
-        ai = NULL; /* indicates failure */
+	/* use int as hash string */
+	hash = MakeHash((const char*)id.c_str(), id.length());
+	if (CheckForAndReturnValue(intHashTbl, hash, &anyInfo))
+		ai = (AnyInfo*)anyInfo;
+	else
+		ai = NULL; /* indicates failure */
 
 } /* SetAnyTypeByInt */
 
 // Define this ANY value's type to the one that the given id hashes
 // to in the ANY table.
-void AsnAny::SetTypeByOid (const AsnOid &id) const
+void AsnAny::SetTypeByOid(const AsnOid& id) const
 {
-    Hash hash;
-    void *anyInfo;
+	Hash hash;
+	void* anyInfo;
 
-    /* use encoded oid as hash string */
-    hash = MakeHash (id.Str(), id.Len());
-    if (CheckForAndReturnValue (oidHashTbl, hash, &anyInfo))
-        ai = (AnyInfo*) anyInfo;
-    else
-        ai = NULL; /* indicates failure */
-    //RWC;4/16/01; lastly, clear ->value in case loaded previously.
+	/* use encoded oid as hash string */
+	hash = MakeHash(id.Str(), id.Len());
+	if (CheckForAndReturnValue(oidHashTbl, hash, &anyInfo))
+		ai = (AnyInfo*)anyInfo;
+	else
+		ai = NULL; /* indicates failure */
+	//RWC;4/16/01; lastly, clear ->value in case loaded previously.
 
 } /* SetAnyTypeByOid */
 
@@ -275,27 +275,27 @@ void AsnAny::SetTypeByOid (const AsnOid &id) const
 // Given an integer, intId, to hash on, the type and it's anyId
 // are installed in the integer id hash tbl
 void
-AsnAny::InstallAnyByInt (AsnIntType intId, int anyId, AsnType *type)
+AsnAny::InstallAnyByInt(AsnIntType intId, int anyId, AsnType* type)
 {
-    AnyInfo *a;
-    Hash h;
+	AnyInfo* a;
+	Hash h;
 
-    a = new AnyInfo;
-    //  Oid will be NULL and 0 len by default constructor
-    a->anyId = anyId;
-    a->intId = intId;
-    a->typeToClone = type;
+	a = new AnyInfo;
+	//  Oid will be NULL and 0 len by default constructor
+	a->anyId = anyId;
+	a->intId = intId;
+	a->typeToClone = type;
 
-    if (AsnAny::intHashTbl == NULL)
-        AsnAny::intHashTbl = InitHash();
+	if (AsnAny::intHashTbl == NULL)
+		AsnAny::intHashTbl = InitHash();
 
-	 AsnInt intval = intId;
-    h = MakeHash ((const char*)intval.c_str(), intval.length());
-    if ( ! Insert (AsnAny::intHashTbl, a, h) )
-    {
-       delete a->typeToClone;
-       delete a;
-    }
+	AsnInt intval = intId;
+	h = MakeHash((const char*)intval.c_str(), intval.length());
+	if (!Insert(AsnAny::intHashTbl, a, h))
+	{
+		delete a->typeToClone;
+		delete a;
+	}
 
 }  /* InstallAnyByInt */
 
@@ -304,162 +304,162 @@ AsnAny::InstallAnyByInt (AsnIntType intId, int anyId, AsnType *type)
 //
 void AsnAny::AsnAnyDestroyHashTbls() // Added for static call to destroy special; at end.
 {
-   if (oidHashTbl)
-   {
-       AsnAnyDestroyHashTbl(oidHashTbl);
-   }
-   if (intHashTbl)
-   {
-       AsnAnyDestroyHashTbl(intHashTbl);
-   }
+	if (oidHashTbl)
+	{
+		AsnAnyDestroyHashTbl(oidHashTbl);
+	}
+	if (intHashTbl)
+	{
+		AsnAnyDestroyHashTbl(intHashTbl);
+	}
 }
 
 //
 //
-void AsnAny::AsnAnyDestroyHashTbl(Table *&pHashTbl) // Added for static call to destroy special; at end.
+void AsnAny::AsnAnyDestroyHashTbl(Table*& pHashTbl) // Added for static call to destroy special; at end.
 {
-    HashSlot *pHash;
-    AnyInfo *pA;
-    int i;
-    for (i=0; i < TABLESIZE; i++)
-         if ((*pHashTbl)[i])
-         {
-            pHash = (HashSlot *)(*pHashTbl)[i];
-            pA = (AnyInfo *)pHash->value;
-            if (pHash->table)
-              AsnAnyDestroyHashTbl(pHash->table);
-            else if (pA->typeToClone)
-            {
-              delete pA->typeToClone;
-              delete pA;
-            }
-            delete pHash;
-         }
-      delete[] pHashTbl;
-      pHashTbl = NULL;
+	HashSlot* pHash;
+	AnyInfo* pA;
+	int i;
+	for (i = 0; i < TABLESIZE; i++)
+		if ((*pHashTbl)[i])
+		{
+			pHash = (HashSlot*)(*pHashTbl)[i];
+			pA = (AnyInfo*)pHash->value;
+			if (pHash->table)
+				AsnAnyDestroyHashTbl(pHash->table);
+			else if (pA->typeToClone)
+			{
+				delete pA->typeToClone;
+				delete pA;
+			}
+			delete pHash;
+		}
+	delete[] pHashTbl;
+	pHashTbl = NULL;
 }
 //
 
 // given an OBJECT IDENTIFIER, oid, to hash on, the type and it's anyId
 // are installed in the OBJECT IDENTIFIER id hash tbl
 void
-AsnAny::InstallAnyByOid (AsnOid &oid, int anyId, AsnType *type)
+AsnAny::InstallAnyByOid(AsnOid& oid, int anyId, AsnType* type)
 {
-    AnyInfo *a;
-    Hash h;
+	AnyInfo* a;
+	Hash h;
 
-    a =  new AnyInfo;
-    a->anyId = anyId;
-    a->oid = oid;  // copy given oid
-    a->typeToClone = type;
+	a = new AnyInfo;
+	a->anyId = anyId;
+	a->oid = oid;  // copy given oid
+	a->typeToClone = type;
 
-    h = MakeHash (oid.Str(), oid.Len());
+	h = MakeHash(oid.Str(), oid.Len());
 
-    if (AsnAny::oidHashTbl == NULL)
-        AsnAny::oidHashTbl = InitHash();
+	if (AsnAny::oidHashTbl == NULL)
+		AsnAny::oidHashTbl = InitHash();
 
-    if (! Insert (AsnAny::oidHashTbl, a, h))
-    {
-       delete a->typeToClone;
-       delete a;
-    }
+	if (!Insert(AsnAny::oidHashTbl, a, h))
+	{
+		delete a->typeToClone;
+		delete a;
+	}
 
 }  /* InstallAnyByOid */
 
 
 //
 //
-AsnLen AsnAny::PEnc(AsnBufBits &b) const
+AsnLen AsnAny::PEnc(AsnBufBits& b) const
 {
-   std::stringbuf *pbufStr=new std::stringbuf;    //MEMORY released by ~AsnBufBits.
-   AsnBufBits TmpBufBits(pbufStr);
-   AsnOcts tmpAnyLoadOcts;
-   unsigned char *pBits;
-   long lAnyBitCount, lAnyByteCount;
-   unsigned long lLength=0;
-   FUNC("AsnAny::PEnc()");
+	std::stringbuf* pbufStr = new std::stringbuf;    //MEMORY released by ~AsnBufBits.
+	AsnBufBits TmpBufBits(pbufStr);
+	AsnOcts tmpAnyLoadOcts;
+	unsigned char* pBits;
+	long lAnyBitCount, lAnyByteCount;
+	unsigned long lLength = 0;
+	FUNC("AsnAny::PEnc()");
 
-   if (value != NULL)    // HANDLE the case where we know the syntax.
-   {
-      value->PEnc(TmpBufBits);
-      lAnyBitCount = TmpBufBits.length();
-      pBits = TmpBufBits.GetBits(lAnyBitCount);
-      lAnyByteCount = lAnyBitCount/8;
-      if (lAnyByteCount*8 < lAnyBitCount)
-          lAnyByteCount++;      // ZERO padded here.
-      tmpAnyLoadOcts.Set((const char *)pBits, lAnyByteCount);
-      delete[] pBits;
-      lLength = tmpAnyLoadOcts.PEnc(b);
-   }        // IF value
-   else if (anyBuf != NULL)  // HANDLE the case with just a BLOB of data.
-   {
-       anyBuf->ResetMode();
-       lLength = anyBuf->length();
-       char *ptr = anyBuf->GetSeg(lLength);
-       if (ptr && lLength)
-       {
-          tmpAnyLoadOcts.Set(ptr, lLength); // BYTE count here.
-          lLength = tmpAnyLoadOcts.PEnc(b);  // BIT count returned.
-          delete[] ptr;
-       }    // END IF any data in ANY.
-   }        // IF value/anyBuf
-   else
-      throw EXCEPT("Unknown any with no value", ENCODE_ERROR);
+	if (value != NULL)    // HANDLE the case where we know the syntax.
+	{
+		value->PEnc(TmpBufBits);
+		lAnyBitCount = TmpBufBits.length();
+		pBits = TmpBufBits.GetBits(lAnyBitCount);
+		lAnyByteCount = lAnyBitCount / 8;
+		if (lAnyByteCount * 8 < lAnyBitCount)
+			lAnyByteCount++;      // ZERO padded here.
+		tmpAnyLoadOcts.Set((const char*)pBits, lAnyByteCount);
+		delete[] pBits;
+		lLength = tmpAnyLoadOcts.PEnc(b);
+	}        // IF value
+	else if (anyBuf != NULL)  // HANDLE the case with just a BLOB of data.
+	{
+		anyBuf->ResetMode();
+		lLength = anyBuf->length();
+		char* ptr = anyBuf->GetSeg(lLength);
+		if (ptr && lLength)
+		{
+			tmpAnyLoadOcts.Set(ptr, lLength); // BYTE count here.
+			lLength = tmpAnyLoadOcts.PEnc(b);  // BIT count returned.
+			delete[] ptr;
+		}    // END IF any data in ANY.
+	}        // IF value/anyBuf
+	else
+		throw EXCEPT("Unknown any with no value", ENCODE_ERROR);
 
-   if(pbufStr)
-        delete pbufStr;
+	if (pbufStr)
+		delete pbufStr;
 
-   return(lLength);
+	return(lLength);
 }       // END AsnAny::PEnc(...)
 
 //
 //
-void AsnAny::PDec(AsnBufBits &b, AsnLen &bitsDecoded)
+void AsnAny::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 {
-   AsnBufBits tmpBufBits;
-   AsnOcts tmpAnyLoadOcts;
-   AsnLen tmpBitsDecoded=0;
-   FUNC("AsnAny::PDec");
+	AsnBufBits tmpBufBits;
+	AsnOcts tmpAnyLoadOcts;
+	AsnLen tmpBitsDecoded = 0;
+	FUNC("AsnAny::PDec");
 
-   // ai will be NULL if this is an ANY (not an ANY DEFINED BY)
-   if (ai != NULL)
-   {
-      // the type is already known clone it and use it's BDec to decode the 
-      // ASN.1
-      //
-      value = ai->typeToClone->Clone();
-      if (value == NULL)
-      {
-         throw SnaccException(STACK_ENTRY, "typeToClone->Clone() failed", INVALID_ANY);
-      }     // IF value == NULL
-      else
-      {
-         tmpAnyLoadOcts.PDec(b, bitsDecoded);  // OUTER OctetString
-                                // OUTER "bitsDecoded" returned to caller.
-         if (tmpAnyLoadOcts.length())
-         {
-             tmpBufBits.PutBits((unsigned char *)tmpAnyLoadOcts.c_ustr(), 
-                            tmpAnyLoadOcts.length()*8);
-             value->PDec(tmpBufBits, tmpBitsDecoded);
-                                // DECODE actual known value.
-         }      // END IF tmpBitsDecoded
-      }     // END IF value == NULL
-   }        // IF ai != NULL
-   else     // JUST load BLOB of data in "anyBuf"
-   {
-         tmpAnyLoadOcts.PDec(b, bitsDecoded);  // OUTER OctetString
-                                // OUTER "bitsDecoded" returned to caller.
-         if (tmpAnyLoadOcts.length())
-         {
-             if(this->anyBuf)
-                 delete this->anyBuf;
-             this->anyBuf = new AsnBuf((char *)tmpAnyLoadOcts.c_str(), 
-                                               tmpAnyLoadOcts.length());
-         }  // END IF any data in ANY.
-   }        // END IF ai != NULL
+	// ai will be NULL if this is an ANY (not an ANY DEFINED BY)
+	if (ai != NULL)
+	{
+		// the type is already known clone it and use it's BDec to decode the 
+		// ASN.1
+		//
+		value = ai->typeToClone->Clone();
+		if (value == NULL)
+		{
+			throw SnaccException(STACK_ENTRY, "typeToClone->Clone() failed", INVALID_ANY);
+		}     // IF value == NULL
+		else
+		{
+			tmpAnyLoadOcts.PDec(b, bitsDecoded);  // OUTER OctetString
+			// OUTER "bitsDecoded" returned to caller.
+			if (tmpAnyLoadOcts.length())
+			{
+				tmpBufBits.PutBits((unsigned char*)tmpAnyLoadOcts.c_ustr(),
+					tmpAnyLoadOcts.length() * 8);
+				value->PDec(tmpBufBits, tmpBitsDecoded);
+				// DECODE actual known value.
+			}      // END IF tmpBitsDecoded
+		}     // END IF value == NULL
+	}        // IF ai != NULL
+	else     // JUST load BLOB of data in "anyBuf"
+	{
+		tmpAnyLoadOcts.PDec(b, bitsDecoded);  // OUTER OctetString
+		// OUTER "bitsDecoded" returned to caller.
+		if (tmpAnyLoadOcts.length())
+		{
+			if (this->anyBuf)
+				delete this->anyBuf;
+			this->anyBuf = new AsnBuf((char*)tmpAnyLoadOcts.c_str(),
+				tmpAnyLoadOcts.length());
+		}  // END IF any data in ANY.
+	}        // END IF ai != NULL
 }           // END AsnAny::PDec(...)
 
-void AsnAny::JEnc (EJson::Value &b) const
+void AsnAny::JEnc(EJson::Value& b) const
 {
 	if (value != NULL)
 	{
@@ -480,7 +480,7 @@ void AsnAny::JEnc (EJson::Value &b) const
 	}
 }
 
-bool AsnAny::JDec (const EJson::Value &b)
+bool AsnAny::JDec(const EJson::Value& b)
 {
 	FUNC("AsnAny::JDec");
 
@@ -511,32 +511,32 @@ bool AsnAny::JDec (const EJson::Value &b)
 //          anyBuf is present.  If neither is present an exception is thrown.
 //
 AsnLen
-AsnAny::BEnc (AsnBuf &b) const
+AsnAny::BEnc(AsnBuf& b) const
 {
-   FUNC("AsnAny::BEnc()");
+	FUNC("AsnAny::BEnc()");
 
-   if (value != NULL)
-      return value->BEnc(b);
-   else if (anyBuf != NULL)
-   {
+	if (value != NULL)
+		return value->BEnc(b);
+	else if (anyBuf != NULL)
+	{
 		anyBuf->ResetMode();
 		b.insert(*anyBuf);
 		return anyBuf->length();
 
 #ifdef OLD
-      std::string data;
-      
+		std::string data;
+
 		// PIERCE: make this more efficient
-      //
-      anyBuf->ResetMode();
-      anyBuf->GetSeg(data);
-      anyBuf->ResetMode();
-      b.PutSegRvs(data.data(), data.length());
-      return anyBuf->length();
+	  //
+		anyBuf->ResetMode();
+		anyBuf->GetSeg(data);
+		anyBuf->ResetMode();
+		b.PutSegRvs(data.data(), data.length());
+		return anyBuf->length();
 #endif
-   }
-   else
-      throw EXCEPT("Unknown any with no value", ENCODE_ERROR);
+	}
+	else
+		throw EXCEPT("Unknown any with no value", ENCODE_ERROR);
 }
 
 
@@ -547,29 +547,29 @@ AsnAny::BEnc (AsnBuf &b) const
 // BY is found it's will be decoded into value.  If an UNKNOWN ANY is
 // found it's binary values will be copied into 'anyBuf'.
 //
-void AsnAny::BDec (const AsnBuf &b, AsnLen &bytesDecoded)
+void AsnAny::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 {
-   FUNC("AsnAny::BDec");
+	FUNC("AsnAny::BDec");
 
-   // ai will be NULL if this is an ANY (not an ANY DEFINED BY)
-   if (ai == NULL)
-   {             
-      anyBuf = new AsnBuf;
-      b.GrabAny(*anyBuf, bytesDecoded);
-   }
-   else
-   {
-      // the type is already known clone it and use it's BDec to decode the 
-      // ASN.1
-      //
-      value = ai->typeToClone->Clone();
-      if (value == NULL)
-      {
-         throw SnaccException(STACK_ENTRY, "typeToClone->Clone() failed", INVALID_ANY);
-      }
-      else
-         value->BDec (b, bytesDecoded);
-   }
+	// ai will be NULL if this is an ANY (not an ANY DEFINED BY)
+	if (ai == NULL)
+	{
+		anyBuf = new AsnBuf;
+		b.GrabAny(*anyBuf, bytesDecoded);
+	}
+	else
+	{
+		// the type is already known clone it and use it's BDec to decode the 
+		// ASN.1
+		//
+		value = ai->typeToClone->Clone();
+		if (value == NULL)
+		{
+			throw SnaccException(STACK_ENTRY, "typeToClone->Clone() failed", INVALID_ANY);
+		}
+		else
+			value->BDec(b, bytesDecoded);
+	}
 }
 
 /* JKG -- added 03/03/04 for support of unkown any's in extension additions                   */
@@ -577,17 +577,17 @@ void AsnAny::BDec (const AsnBuf &b, AsnLen &bytesDecoded)
 /* that happened because of extension additions.  It is not intended for use with decoding    */
 /* known any's.  ALL extension additions that are not in the root extension list are unkown   */
 /* any's and these are the ONLY any's that should call this function.                         */
-void AsnAny::BDecContent (const AsnBuf &b, AsnTag tag, AsnLen len, AsnLen &bytesDecoded)
+void AsnAny::BDecContent(const AsnBuf& b, AsnTag tag, AsnLen len, AsnLen& bytesDecoded)
 {
 
-    long lBytesToUnget = 0;
-    
-    lBytesToUnget += BytesInLen(len);
-    lBytesToUnget += BytesInTag(tag);
-      
-    b.UnGetBytes(lBytesToUnget);
-    anyBuf = new AsnBuf;
-    b.GrabAny(*anyBuf, bytesDecoded);
+	long lBytesToUnget = 0;
+
+	lBytesToUnget += BytesInLen(len);
+	lBytesToUnget += BytesInTag(tag);
+
+	b.UnGetBytes(lBytesToUnget);
+	anyBuf = new AsnBuf;
+	b.GrabAny(*anyBuf, bytesDecoded);
 }
 
 void AsnAny::Print(std::ostream& os, unsigned short indent) const
@@ -603,71 +603,71 @@ void AsnAny::Print(std::ostream& os, unsigned short indent) const
 	}
 }
 
-void AsnAny::PrintXML (std::ostream &os, const char *lpszTitle) const 
+void AsnAny::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
-   if (lpszTitle) 
-       os << "<" << lpszTitle << " type=\"ANY\">"; 
-   else
-       os << "<ANY>"; 
-   Print(os);
-   if (lpszTitle) 
-       os << "</" << lpszTitle << ">\n"; 
-   else
-       os << "</ANY>\n"; 
+	if (lpszTitle)
+		os << "<" << lpszTitle << " type=\"ANY\">";
+	else
+		os << "<ANY>";
+	Print(os);
+	if (lpszTitle)
+		os << "</" << lpszTitle << ">\n";
+	else
+		os << "</ANY>\n";
 }
 
 AsnAny::~AsnAny()
 {
-   delete this->value;
-   this->value = NULL;
-   delete this->anyBuf;
-   this->anyBuf = NULL;
-   delete this->jsonBuf;
-   this->jsonBuf = NULL;
+	delete this->value;
+	this->value = NULL;
+	delete this->anyBuf;
+	this->anyBuf = NULL;
+	delete this->jsonBuf;
+	this->jsonBuf = NULL;
 }
 
-AsnAny &AsnAny::operator = (const AsnAny &o) 
-{ 
-   FUNC("AsnAny::operator=");
-   ai = o.ai;  // pointer into Any Table
+AsnAny& AsnAny::operator = (const AsnAny& o)
+{
+	FUNC("AsnAny::operator=");
+	ai = o.ai;  // pointer into Any Table
 
-   delete value;
-   value = NULL;
-   delete anyBuf;
-   anyBuf = NULL;
-   delete jsonBuf;
-   jsonBuf = NULL;
+	delete value;
+	value = NULL;
+	delete anyBuf;
+	anyBuf = NULL;
+	delete jsonBuf;
+	jsonBuf = NULL;
 
-   // NOW, take care of special CSM_Buffer copy, if present.
-   if (o.value != NULL)
-   {
-      value = o.value->Clone();
-      if (value == NULL)
-         throw SnaccException(STACK_ENTRY,"AsnType::Clone() failed",INVALID_ANY);
-   }
-   else if (o.anyBuf != NULL)
-   {
-      anyBuf = new AsnBuf(*o.anyBuf);
-   }
-   else if (o.jsonBuf != NULL)
-   {
-	   jsonBuf = new EJson::Value(*(o.jsonBuf));
-   }
-   return *this; 
+	// NOW, take care of special CSM_Buffer copy, if present.
+	if (o.value != NULL)
+	{
+		value = o.value->Clone();
+		if (value == NULL)
+			throw SnaccException(STACK_ENTRY, "AsnType::Clone() failed", INVALID_ANY);
+	}
+	else if (o.anyBuf != NULL)
+	{
+		anyBuf = new AsnBuf(*o.anyBuf);
+	}
+	else if (o.jsonBuf != NULL)
+	{
+		jsonBuf = new EJson::Value(*(o.jsonBuf));
+	}
+	return *this;
 }
 
 
 
 extern "C" {
-void SNACCDLL_API SNACC_CleanupMemory()
-{
+	void SNACCDLL_API SNACC_CleanupMemory()
+	{
 #ifndef NO_THREADS
-   threadDestroy();  // ONLY necessary if a thread lock is created (and it is 
-                     //  important to clear all memory leaks before exiting.
+		threadDestroy();  // ONLY necessary if a thread lock is created (and it is 
+		//  important to clear all memory leaks before exiting.
 #endif
-   AsnAny::AsnAnyDestroyHashTbls();   // FINAL call, to clear static tables, 
-                                      //  before exiting.
-}
+		AsnAny::AsnAnyDestroyHashTbls();   // FINAL call, to clear static tables, 
+		//  before exiting.
+	}
 }     // END extern "C"
 
 _END_SNACC_NAMESPACE

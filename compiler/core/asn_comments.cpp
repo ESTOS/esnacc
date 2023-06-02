@@ -116,7 +116,7 @@ extern "C" {
 		strKey += szOpName;
 
 		auto it = gComments.mapOperations.find(strKey);
-		if (it != gComments.mapOperations.end()) 
+		if (it != gComments.mapOperations.end())
 		{
 			const EOperationComment& comment = it->second;
 			pcomment->szTypeName = comment.strTypeName_UTF8.c_str();
@@ -141,7 +141,7 @@ extern "C" {
 		strKey += szOpName;
 
 		auto it = gComments.mapOperations.find(strKey);
-		if (it != gComments.mapOperations.end()) 
+		if (it != gComments.mapOperations.end())
 		{
 			EOperationComment& comment = it->second;
 			if (!comment.m_bConvertedToAscii) {
@@ -162,7 +162,7 @@ extern "C" {
 			return 1;
 		}
 		return 0;
-	}	
+	}
 
 	//Get Comments for Sequence or other types
 	int GetSequenceComment_UTF8(const char* szModuleName, const char* szTypeName, asnsequencecomment* pcomment)
@@ -233,7 +233,7 @@ extern "C" {
 		strKey += "::";
 		strKey += szTypeName;
 
-		if(strKey == "ENetUC_Conference::AsnInterfaceVersions")
+		if (strKey == "ENetUC_Conference::AsnInterfaceVersions")
 			printf("");
 		auto it = gComments.mapSequences.find(strKey);
 		if (it != gComments.mapSequences.end())

@@ -47,7 +47,7 @@ AsnOid& AsnOid::operator+=(const AsnRelativeOid& ro)
 	FUNC("AsnOid::operator+=()");
 
 	// Create a temporary encoded OID and concatenate the RelativeOID to it
-	char *tmp = new char[octetLen + ro.Len()];
+	char* tmp = new char[octetLen + ro.Len()];
 	if (tmp == NULL)
 		throw SNACC_MEMORY_EXCEPT((long)(octetLen + ro.Len()), "tmp");
 	memcpy(tmp, oid, octetLen);
@@ -67,8 +67,8 @@ AsnOid& AsnOid::operator+=(const AsnRelativeOid& ro)
 
 
 #if META
-const AsnOidTypeDesc AsnOid::_desc (NULL, NULL, false, AsnTypeDesc::OBJECT_IDENTIFIER, NULL);
-const AsnTypeDesc *AsnOid::_getdesc() const
+const AsnOidTypeDesc AsnOid::_desc(NULL, NULL, false, AsnTypeDesc::OBJECT_IDENTIFIER, NULL);
+const AsnTypeDesc* AsnOid::_getdesc() const
 {
 	return &_desc;
 }

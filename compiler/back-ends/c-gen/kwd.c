@@ -41,30 +41,30 @@
 #include "../../../snacc.h"
 #include <string.h>
 
-/*
- * last elmt must be NULL.
- * key words grabbed from K&R 2nd Ed
- */
-static char *cKWdG[] =
+ /*
+  * last elmt must be NULL.
+  * key words grabbed from K&R 2nd Ed
+  */
+static char* cKWdG[] =
 {
-    "auto", "break", "case", "char", "const", "continue",
-    "default", "do", "double", "else", "enum", "extern",
-    "float", "for", "goto", "if", "int", "long", "register",
-    "return", "short", "signed", "sizeof", "static", "struct",
-    "switch",  "typedef", "union", "unsigned", "void", "volatile",
-    "while", NULL
+	"auto", "break", "case", "char", "const", "continue",
+	"default", "do", "double", "else", "enum", "extern",
+	"float", "for", "goto", "if", "int", "long", "register",
+	"return", "short", "signed", "sizeof", "static", "struct",
+	"switch",  "typedef", "union", "unsigned", "void", "volatile",
+	"while", NULL
 };
 
 
 /*
  * returns non-zero if the given str is a C key word
  */
-int IsCKeyWord(char *str)
+int IsCKeyWord(char* str)
 {
-    int i;
+	int i;
 
-    for (i=0; (cKWdG[i] != NULL) && (strcmp (cKWdG[i],str) != 0); i++)
-	;
+	for (i = 0; (cKWdG[i] != NULL) && (strcmp(cKWdG[i], str) != 0); i++)
+		;
 
-    return cKWdG[i] != NULL;
+	return cKWdG[i] != NULL;
 }

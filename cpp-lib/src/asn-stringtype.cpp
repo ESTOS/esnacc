@@ -14,10 +14,10 @@
 
 namespace std
 {
-const basic_string<wchar_t>::size_type
-    basic_string<wchar_t>::_Rep::_S_max_size = (((npos - sizeof(_Rep))/sizeof(wchar_t)) - 1) / 4;
+	const basic_string<wchar_t>::size_type
+		basic_string<wchar_t>::_Rep::_S_max_size = (((npos - sizeof(_Rep)) / sizeof(wchar_t)) - 1) / 4;
 
-const wchar_t basic_string<wchar_t>::_Rep::_S_terminal = wchar_t();
+	const wchar_t basic_string<wchar_t>::_Rep::_S_terminal = wchar_t();
 }
 
 #endif // HPUX
@@ -51,7 +51,7 @@ typedef struct
 {
 	unsigned char mask;
 	unsigned char value;
-   unsigned short bits;
+	unsigned short bits;
 	unsigned long maxCharValue;
 } MaskValue;
 
@@ -72,27 +72,27 @@ char* AsnString::getChar(long offset)const
 }
 
 
-const char* AsnString::PermittedAlphabet(int &sizeAlpha) const
+const char* AsnString::PermittedAlphabet(int& sizeAlpha) const
 {
-    sizeAlpha = 256;
-    static const unsigned char baseAlpha[]=
-    { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-      0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-      0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
-      0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
-      0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
-      0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
-      0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
-      0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f,
-      0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
-      0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f,
-      0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf,
-      0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe, 0xbf,
-      0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf,
-      0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf,
-      0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef,
-      0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff,
-    };
+	sizeAlpha = 256;
+	static const unsigned char baseAlpha[] =
+	{ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+	  0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+	  0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
+	  0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
+	  0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
+	  0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
+	  0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
+	  0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f,
+	  0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
+	  0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f,
+	  0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf,
+	  0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe, 0xbf,
+	  0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf,
+	  0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf,
+	  0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef,
+	  0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff,
+	};
 
 	return (char*)baseAlpha;
 
@@ -104,10 +104,10 @@ int AsnString::findB2(int B)const
 	int B2 = 0;
 	int B2NotFound = 1;
 
-	while(B2NotFound == 1)
+	while (B2NotFound == 1)
 	{
 		B2 = (int)(1 << power);
-		if(B <= B2)
+		if (B <= B2)
 		{
 			B2NotFound = 0;
 		}
@@ -122,10 +122,10 @@ int AsnString::numBits()const
 	int B = 0;
 	int N;
 
-    PermittedAlphabet(N);
+	PermittedAlphabet(N);
 
 	N -= 1;
-	while(N > 0)
+	while (N > 0)
 	{
 		N -= (long)(1 << B);
 		B += 1;
@@ -134,26 +134,26 @@ int AsnString::numBits()const
 	return B;
 }
 
-long AsnString::FindSizeConstraintBounds(int &iSCLowerBound, int &iSCUpperBound)const
+long AsnString::FindSizeConstraintBounds(int& iSCLowerBound, int& iSCUpperBound)const
 {
 	int count = 0;
-    int numSizeConstraints;
-    const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
+	int numSizeConstraints;
+	const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
 
-	while(count < numSizeConstraints)
+	while (count < numSizeConstraints)
 	{
-		if((unsigned)iSCUpperBound < sizeConstraints[count].lowerBound)
+		if ((unsigned)iSCUpperBound < sizeConstraints[count].lowerBound)
 		{
 			iSCUpperBound = sizeConstraints[count].lowerBound;
 		}
 
-		if( sizeConstraints[count].upperBoundExists == 1 &&
+		if (sizeConstraints[count].upperBoundExists == 1 &&
 			(unsigned)iSCUpperBound < sizeConstraints[count].upperBound)
 		{
 			iSCUpperBound = sizeConstraints[count].upperBound;
 		}
 
-		if( (unsigned)iSCLowerBound > sizeConstraints[count].lowerBound &&
+		if ((unsigned)iSCLowerBound > sizeConstraints[count].lowerBound &&
 			sizeConstraints[count].lowerBound >= 0)
 		{
 			iSCLowerBound = sizeConstraints[count].lowerBound;
@@ -162,18 +162,18 @@ long AsnString::FindSizeConstraintBounds(int &iSCLowerBound, int &iSCUpperBound)
 		count++;
 	}
 
-	return ( (iSCUpperBound - iSCLowerBound) + 1);
+	return ((iSCUpperBound - iSCLowerBound) + 1);
 }
 
-AsnLen AsnString::EncodeWithSizeConstraint(AsnBufBits &b)const
+AsnLen AsnString::EncodeWithSizeConstraint(AsnBufBits& b)const
 {
 	FUNC("AsnString::EncodeWithSizeConstraint");
 
 	AsnLen len = 0;
 	int B = numBits();
 	int B2 = findB2(B);
-    int numSizeConstraints;
-    const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
+	int numSizeConstraints;
+	const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
 	int iSCLowerBound = sizeConstraints[0].lowerBound;
 	int iSCUpperBound = iSCLowerBound;
 	int minBitsNeeded = 0;
@@ -184,21 +184,21 @@ AsnLen AsnString::EncodeWithSizeConstraint(AsnBufBits &b)const
 	long count = 0;
 	unsigned char* pStr = new unsigned char[1];
 
-	while(tempRange > 0)
+	while (tempRange > 0)
 	{
 		tempRange -= (long)(1 << minBitsNeeded);
 		minBitsNeeded += 1;
 	}
 
-	if(size < iSCLowerBound || size > iSCUpperBound)
+	if (size < iSCLowerBound || size > iSCUpperBound)
 	{
 		throw EXCEPT("String size not withing restricted bounds", RESTRICTED_TYPE_ERROR);
 	}
 
 
-	if(Range > 1)
+	if (Range > 1)
 	{
-		if( ((iSCUpperBound * B2) > 16) && b.IsAligned())
+		if (((iSCUpperBound * B2) > 16) && b.IsAligned())
 		{
 			len += b.OctetAlignWrite();
 		}
@@ -207,7 +207,7 @@ AsnLen AsnString::EncodeWithSizeConstraint(AsnBufBits &b)const
 		minBitsNeeded = minBitsNeeded % 8;
 		size -= iSCLowerBound;
 
-		if(minBytesNeeded > 0)
+		if (minBytesNeeded > 0)
 		{
 			pStr[0] = (unsigned char)(size >> minBitsNeeded);
 			len += b.PutBits(pStr, 8);
@@ -218,29 +218,29 @@ AsnLen AsnString::EncodeWithSizeConstraint(AsnBufBits &b)const
 		len += b.PutBits(pStr, minBitsNeeded);
 	}
 
-	if( ((iSCUpperBound * B2) > 16) && b.IsAligned())
+	if (((iSCUpperBound * B2) > 16) && b.IsAligned())
 	{
 		len += b.OctetAlignWrite();
 	}
 
-	while((unsigned)count < length())
+	while ((unsigned)count < length())
 	{
 		len += Interpret(b, count);
 		count++;
 	}
 
-    delete [] pStr;
+	delete[] pStr;
 	return len;
 }
 
-void AsnString::DecodeWithSizeConstraint(AsnBufBits &b, AsnLen &bitsDecoded)
+void AsnString::DecodeWithSizeConstraint(AsnBufBits& b, AsnLen& bitsDecoded)
 {
 	FUNC("AsnString::DecodeWithSizeConstraint");
 
 	int B = numBits();
 	int B2 = findB2(B);
-    int numSizeConstraints;
-    const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
+	int numSizeConstraints;
+	const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
 	int iSCLowerBound = sizeConstraints[0].lowerBound;
 	int iSCUpperBound = iSCLowerBound;
 	int minBitsNeeded = 0;
@@ -253,16 +253,16 @@ void AsnString::DecodeWithSizeConstraint(AsnBufBits &b, AsnLen &bitsDecoded)
 
 	Clear();
 
-	while(tempRange > 0)
+	while (tempRange > 0)
 	{
 		tempRange -= (long)(1 << minBitsNeeded);
 		minBitsNeeded += 1;
 	}
 
 
-	if(Range > 1)
+	if (Range > 1)
 	{
-		if( ((iSCUpperBound * B2) > 16) && b.IsAligned())
+		if (((iSCUpperBound * B2) > 16) && b.IsAligned())
 		{
 			bitsDecoded += b.OctetAlignRead();
 		}
@@ -270,20 +270,20 @@ void AsnString::DecodeWithSizeConstraint(AsnBufBits &b, AsnLen &bitsDecoded)
 		minBytesNeeded = minBitsNeeded / 8;
 		minBitsNeeded = minBitsNeeded % 8;
 
-		if(minBytesNeeded > 0)
+		if (minBytesNeeded > 0)
 		{
-            delete [] pStr;;
+			delete[] pStr;;
 			pStr = b.GetBits(8);
-            bitsDecoded += 8;
+			bitsDecoded += 8;
 			decodeSize <<= 8;
 			decodeSize |= (long)pStr[0];
 		}
 
-        delete [] pStr;;
+		delete[] pStr;;
 		pStr = b.GetBits(minBitsNeeded);
-        bitsDecoded += minBitsNeeded;
+		bitsDecoded += minBitsNeeded;
 
-		if(minBitsNeeded > 0)
+		if (minBitsNeeded > 0)
 		{
 			decodeSize <<= minBitsNeeded;
 			pStr[0] >>= (8 - minBitsNeeded);
@@ -293,54 +293,54 @@ void AsnString::DecodeWithSizeConstraint(AsnBufBits &b, AsnLen &bitsDecoded)
 
 	decodeSize += iSCLowerBound;
 
-	if(decodeSize > iSCUpperBound)
+	if (decodeSize > iSCUpperBound)
 	{
 		throw EXCEPT("String size not withing restricted bounds", RESTRICTED_TYPE_ERROR);
 	}
 
 
-	if( ((iSCUpperBound * B2) > 16) && b.IsAligned())
+	if (((iSCUpperBound * B2) > 16) && b.IsAligned())
 	{
 		bitsDecoded += b.OctetAlignRead();
 	}
 
-	while(count < decodeSize)
+	while (count < decodeSize)
 	{
 		Deterpret(b, bitsDecoded, count);
 		count++;
 	}
 
-    free(pStr);
+	free(pStr);
 }
 
 
-AsnLen AsnString::Interpret(AsnBufBits &b, long offset)const
+AsnLen AsnString::Interpret(AsnBufBits& b, long offset)const
 {
 	AsnLen len;
 	int B = numBits();
 	int B2 = findB2(B);
-    int sizepermittedalpha;
-    const char* permittedAlphabet = PermittedAlphabet(sizepermittedalpha);
+	int sizepermittedalpha;
+	const char* permittedAlphabet = PermittedAlphabet(sizepermittedalpha);
 	int ub = (int)permittedAlphabet[sizepermittedalpha - 1];
 	bool bNotFound = true;
 	int count = 0;
 
-	if(b.IsAligned())
+	if (b.IsAligned())
 		len = B2;
 	else
 		len = B;
 
 	unsigned char* seg = (unsigned char*)getChar(offset);
 
-	if(ub <= ((1 << len) - 1))
+	if (ub <= ((1 << len) - 1))
 	{
 		len = (sizeof(char) * 8);
 	}
 	else
 	{
-		while(bNotFound)
+		while (bNotFound)
 		{
-			if(permittedAlphabet[count] == seg[0])
+			if (permittedAlphabet[count] == seg[0])
 			{
 				seg[0] = (char)count;
 				bNotFound = false;
@@ -366,37 +366,37 @@ AsnString& AsnString::operator=(const char* str)
 	return *this;
 }
 
-void AsnString::Deterpret(AsnBufBits &b, AsnLen &bitsDecoded, long offset)
+void AsnString::Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset)
 {
 	AsnLen len;
 	int B = numBits();
 	int B2 = findB2(B);
 	int count = 0;
 	bool bNotFound = true;
-    int sizePermittedAlpha;
-    const char* permittedAlphabet = PermittedAlphabet(sizePermittedAlpha);
+	int sizePermittedAlpha;
+	const char* permittedAlphabet = PermittedAlphabet(sizePermittedAlpha);
 	int ub = (int)permittedAlphabet[sizePermittedAlpha - 1];
 
-	if(b.IsAligned())
+	if (b.IsAligned())
 		len = B2;
 	else
 		len = B;
 
-	if(ub <= ((1 << len) - 1) )
+	if (ub <= ((1 << len) - 1))
 	{
 		len = (sizeof(char) * 8);
 	}
 
 	unsigned char* seg = b.GetBits(len);
-    bitsDecoded += len;
-	seg[0] >>= ((sizeof(char)*8) - len);
+	bitsDecoded += len;
+	seg[0] >>= ((sizeof(char) * 8) - len);
 
 
-	if(!(ub <= ((1 << len) - 1)) )
+	if (!(ub <= ((1 << len) - 1)))
 	{
-		while(bNotFound)
+		while (bNotFound)
 		{
-			if(count == (int)seg[0])
+			if (count == (int)seg[0])
 			{
 				seg[0] = permittedAlphabet[count];
 				bNotFound = false;
@@ -406,15 +406,15 @@ void AsnString::Deterpret(AsnBufBits &b, AsnLen &bitsDecoded, long offset)
 	}
 
 	putChar((char*)seg);
-    free(seg);
+	free(seg);
 }
 
-void AsnString::PDec(AsnBufBits &b, AsnLen &bitsDecoded)
+void AsnString::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 {
-    int numSizeConstraints;
-    const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
+	int numSizeConstraints;
+	const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
 
-	if(sizeConstraints == NULL &&	numSizeConstraints == 0)
+	if (sizeConstraints == NULL && numSizeConstraints == 0)
 	{
 		DecodeGeneral(b, bitsDecoded);
 	}
@@ -425,14 +425,14 @@ void AsnString::PDec(AsnBufBits &b, AsnLen &bitsDecoded)
 }
 
 
-AsnLen AsnString::PEnc(AsnBufBits &b) const
+AsnLen AsnString::PEnc(AsnBufBits& b) const
 {
-    FUNC("AsnString::PEnc");
-    int numSizeConstraints;
-    const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
+	FUNC("AsnString::PEnc");
+	int numSizeConstraints;
+	const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
 
-    if(checkConstraints(NULL)) {
-        throw ConstraintException("String not within constraints", STACK_ENTRY);
+	if (checkConstraints(NULL)) {
+		throw ConstraintException("String not within constraints", STACK_ENTRY);
 	}
 
 	if (sizeConstraints == NULL && numSizeConstraints == 0)
@@ -445,40 +445,40 @@ AsnLen AsnString::PEnc(AsnBufBits &b) const
 	}
 }
 
-AsnLen AsnString::BEnc(AsnBuf &b) const
+AsnLen AsnString::BEnc(AsnBuf& b) const
 {
-    FUNC("AsnString::BEnc");
+	FUNC("AsnString::BEnc");
 
-    if(checkConstraints(NULL))
-        throw ConstraintException("String not within constraints", STACK_ENTRY);
+	if (checkConstraints(NULL))
+		throw ConstraintException("String not within constraints", STACK_ENTRY);
 
-    AsnLen l = BEncContent(b);
-    l += BEncDefLen(b, l);
-    l += BEncTag1(b, UNIV, PRIM, tagCode());
-    return l;
+	AsnLen l = BEncContent(b);
+	l += BEncDefLen(b, l);
+	l += BEncTag1(b, UNIV, PRIM, tagCode());
+	return l;
 }
 
-void AsnString::BDec(const AsnBuf &b, AsnLen &bytesDecoded)
+void AsnString::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 {
 	FUNC("AsnStringType::BDec()");
 
 	AsnTag tag = BDecTag(b, bytesDecoded);
-	if ((tag != MAKE_TAG_ID (UNIV, PRIM, tagCode())) &&
-		(tag != MAKE_TAG_ID (UNIV, CONS, tagCode())))
+	if ((tag != MAKE_TAG_ID(UNIV, PRIM, tagCode())) &&
+		(tag != MAKE_TAG_ID(UNIV, CONS, tagCode())))
 	{
-		throw InvalidTagException(typeName(),tag, STACK_ENTRY);
+		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
 	}
 
 	AsnLen elmtLen1 = BDecLen(b, bytesDecoded);
 	BDecContent(b, tag, elmtLen1, bytesDecoded);
 }
 
-void AsnString::JEnc (EJson::Value &b) const
+void AsnString::JEnc(EJson::Value& b) const
 {
 	b = EJson::Value(c_str());
 }
 
-bool AsnString::JDec (const EJson::Value &b)
+bool AsnString::JDec(const EJson::Value& b)
 {
 	clear();
 	if (b.isString())
@@ -489,7 +489,7 @@ bool AsnString::JDec (const EJson::Value &b)
 	return false;
 }
 
-AsnLen AsnString::BEncContent(AsnBuf &b) const
+AsnLen AsnString::BEncContent(AsnBuf& b) const
 {
 	FUNC("AsnString::BEncContent()");
 
@@ -498,11 +498,11 @@ AsnLen AsnString::BEncContent(AsnBuf &b) const
 		throw EXCEPT("Invalid character present", RESTRICTED_TYPE_ERROR);
 #endif
 
-   b.PutSegRvs(c_str(), length());
+	b.PutSegRvs(c_str(), length());
 	return (int)length();
 }
 
-void AsnString::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLen &bytesDecoded)
+void AsnString::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded)
 {
 	FUNC("AsnString::BDecContent()");
 
@@ -516,42 +516,42 @@ void AsnString::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen, AsnLe
 	}
 	else	// primitive string
 	{
-        if (elmtLen != INDEFINITE_LEN)//RWC; TMP disable -1,indefinite length value
-                            //RWC;  FOUND through NISCC tests for EnvelopedData
-        {
-			  b.GetSeg(*this, elmtLen);
-			  bytesDecoded += elmtLen;
-        }
-		  else
-		  {
-			  throw BoundsException("Indefinite length not allowed on primitive", STACK_ENTRY);
-		  }
+		if (elmtLen != INDEFINITE_LEN)//RWC; TMP disable -1,indefinite length value
+			//RWC;  FOUND through NISCC tests for EnvelopedData
+		{
+			b.GetSeg(*this, elmtLen);
+			bytesDecoded += elmtLen;
+		}
+		else
+		{
+			throw BoundsException("Indefinite length not allowed on primitive", STACK_ENTRY);
+		}
 	}
 
-/*RWC;DISABLE; USER CAN CALL SEPARATELY;#ifndef DISABLE_STRING_CHECK
-	if (!check())
-		throw EXCEPT("Invalid character present", RESTRICTED_TYPE_ERROR);
-#endif;RWC;*/
+	/*RWC;DISABLE; USER CAN CALL SEPARATELY;#ifndef DISABLE_STRING_CHECK
+		if (!check())
+			throw EXCEPT("Invalid character present", RESTRICTED_TYPE_ERROR);
+	#endif;RWC;*/
 }
 
 void AsnString::Print(std::ostream& os, unsigned short indent) const
 {
-   os << c_str();
-   if (!indent)
-	   os << std::endl;
+	os << c_str();
+	if (!indent)
+		os << std::endl;
 
 }
 
-void AsnString::PrintXML(std::ostream &os, const char *lpszTitle) const
+void AsnString::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	const char* title = lpszTitle;
 	if (title == NULL)
 		title = typeName();
 
-   os << "<" << title << ">" << c_str() << "</" << title << ">";
+	os << "<" << title << ">" << c_str() << "</" << title << ">";
 }
 
-void AsnString::BDecConsString(const AsnBuf &b, AsnLen elmtLen, AsnLen &bytesDecoded)
+void AsnString::BDecConsString(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded)
 
 {
 
@@ -576,22 +576,22 @@ void AsnString::BDecConsString(const AsnBuf &b, AsnLen elmtLen, AsnLen &bytesDec
 
 		AsnLen innerLen = BDecLen(b, totalElmtsLen);
 
-		if (innerTag == MAKE_TAG_ID (UNIV, PRIM, OCTETSTRING_TAG_CODE))
+		if (innerTag == MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE))
 		{
-	        char *seg =  new char[innerLen];
+			char* seg = new char[innerLen];
 
 			if (seg == NULL)
-			   throw MemoryException(elmtLen, "seg", STACK_ENTRY);
+				throw MemoryException(elmtLen, "seg", STACK_ENTRY);
 
-            b.GetSeg(seg, innerLen);
+			b.GetSeg(seg, innerLen);
 
-            totalElmtsLen += innerLen;
+			totalElmtsLen += innerLen;
 
 			append(seg, innerLen);
 
 			delete[] seg;
 		}
-		else if (innerTag == MAKE_TAG_ID (UNIV, CONS, OCTETSTRING_TAG_CODE))
+		else if (innerTag == MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE))
 		{
 			BDecConsString(b, innerLen, totalElmtsLen);
 		}
@@ -599,7 +599,7 @@ void AsnString::BDecConsString(const AsnBuf &b, AsnLen elmtLen, AsnLen &bytesDec
 			throw InvalidTagException(typeName(), innerTag, STACK_ENTRY);
 	}
 
-    bytesDecoded += totalElmtsLen;
+	bytesDecoded += totalElmtsLen;
 } // end of AsnString::BDecConsString()
 
 WideAsnString::WideAsnString() {
@@ -668,56 +668,56 @@ void WideAsnString::getUTF16(std::wstring& strUTF16) const {
 	strUTF16 = *this;
 }
 
-void WideAsnString::PDec(AsnBufBits &b, AsnLen &bitsDecoded)
+void WideAsnString::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 {
 	DecodeGeneral(b, bitsDecoded);
 }
 
-AsnLen WideAsnString::PEnc(AsnBufBits &b) const
+AsnLen WideAsnString::PEnc(AsnBufBits& b) const
 {
-    FUNC("WideAsnString::PEnc");
+	FUNC("WideAsnString::PEnc");
 
-    if (checkConstraints(NULL)) {
-        throw ConstraintException("Wide string not within constraints", STACK_ENTRY);
+	if (checkConstraints(NULL)) {
+		throw ConstraintException("Wide string not within constraints", STACK_ENTRY);
 	}
 
 	return EncodeGeneral(b);
 }
 
-AsnLen WideAsnString::BEnc(AsnBuf &b) const
+AsnLen WideAsnString::BEnc(AsnBuf& b) const
 {
-    FUNC("WideAsnString::BEnc");
+	FUNC("WideAsnString::BEnc");
 
-    if(checkConstraints(NULL))
-        throw ConstraintException("Wide string not within constraints", STACK_ENTRY);
+	if (checkConstraints(NULL))
+		throw ConstraintException("Wide string not within constraints", STACK_ENTRY);
 
-    AsnLen l = BEncContent(b);
-    l += BEncDefLen(b, l);
-    l += BEncTag1(b, UNIV, PRIM, tagCode());
-    return l;
+	AsnLen l = BEncContent(b);
+	l += BEncDefLen(b, l);
+	l += BEncTag1(b, UNIV, PRIM, tagCode());
+	return l;
 }
 
-void WideAsnString::BDec(const AsnBuf &b, AsnLen &bytesDecoded)
+void WideAsnString::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 {
-    FUNC("WideAsnString::BDec()");
+	FUNC("WideAsnString::BDec()");
 
 	AsnTag tag = BDecTag(b, bytesDecoded);
-	if ((tag != MAKE_TAG_ID (UNIV, PRIM, tagCode())) &&
-		(tag != MAKE_TAG_ID (UNIV, CONS, tagCode())))
+	if ((tag != MAKE_TAG_ID(UNIV, PRIM, tagCode())) &&
+		(tag != MAKE_TAG_ID(UNIV, CONS, tagCode())))
 	{
 		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
 	}
 
-    AsnLen elmtLen1 = BDecLen(b, bytesDecoded);
+	AsnLen elmtLen1 = BDecLen(b, bytesDecoded);
 	BDecContent(b, tag, elmtLen1, bytesDecoded);
 }
 
-void WideAsnString::JEnc (EJson::Value &b) const
+void WideAsnString::JEnc(EJson::Value& b) const
 {
 	b = EJson::Value(c_str());
 }
 
-bool WideAsnString::JDec (const EJson::Value &b)
+bool WideAsnString::JDec(const EJson::Value& b)
 {
 	clear();
 	if (b.isConvertibleTo(EJson::stringValue))
@@ -737,9 +737,9 @@ void WideAsnString::Print(std::ostream& os, unsigned short indent) const
 		os << std::endl;
 }
 
-void WideAsnString::PrintXML(std::ostream &os, const char *lpszTitle) const
+void WideAsnString::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
-	const char *title = lpszTitle;
+	const char* title = lpszTitle;
 	if (title == NULL)
 		title = typeName();
 
@@ -748,16 +748,16 @@ void WideAsnString::PrintXML(std::ostream &os, const char *lpszTitle) const
 	os << "<" << title << ">" << utf8Form.c_str() << "</" << title << ">";
 }
 
-void WideAsnString::Deterpret(AsnBufBits &b, AsnLen &bitsDecoded, long offset)
+void WideAsnString::Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset)
 {
 	wchar_t* seg = (wchar_t*)b.GetBits(sizeof(wchar_t));
-    bitsDecoded += (sizeof(wchar_t));
+	bitsDecoded += (sizeof(wchar_t));
 
 	putWideChar(seg);
 }
 
-AsnLen WideAsnString::CombineConsString(const AsnBuf &b, AsnLen elmtLen,
-										std::string& encStr)
+AsnLen WideAsnString::CombineConsString(const AsnBuf& b, AsnLen elmtLen,
+	std::string& encStr)
 {
 	FUNC("WideAsnString::CombineConsString()");
 
@@ -773,11 +773,11 @@ AsnLen WideAsnString::CombineConsString(const AsnBuf &b, AsnLen elmtLen,
 		}
 
 		AsnLen innerLen = BDecLen(b, totalElmtsLen);
-		if (innerTag == MAKE_TAG_ID (UNIV, PRIM, OCTETSTRING_TAG_CODE))
+		if (innerTag == MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE))
 		{
-			char *seg =  new char[elmtLen];
+			char* seg = new char[elmtLen];
 			if (seg == NULL)
-			   throw MemoryException(elmtLen, "seg", STACK_ENTRY);
+				throw MemoryException(elmtLen, "seg", STACK_ENTRY);
 			b.GetSeg(seg, elmtLen);
 			totalElmtsLen += elmtLen;
 
@@ -785,7 +785,7 @@ AsnLen WideAsnString::CombineConsString(const AsnBuf &b, AsnLen elmtLen,
 			innerLen -= elmtLen;
 			delete[] seg;
 		}
-		else if (innerTag == MAKE_TAG_ID (UNIV, CONS, OCTETSTRING_TAG_CODE))
+		else if (innerTag == MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE))
 		{
 			totalElmtsLen += CombineConsString(b, innerLen, encStr);
 		}
@@ -793,7 +793,7 @@ AsnLen WideAsnString::CombineConsString(const AsnBuf &b, AsnLen elmtLen,
 			throw InvalidTagException(typeName(), innerTag, STACK_ENTRY);
 	}
 
-    return totalElmtsLen;
+	return totalElmtsLen;
 } // end of WideAsnString::CombineConsString()
 
 bool NumericString::check() const
@@ -811,33 +811,33 @@ bool NumericString::check() const
 	return true;
 }
 
-const char* NumericString::PermittedAlphabet(int &alphaSize) const
-    {
-        alphaSize = 11;
-        static const char kNumAlpha[] = " 0123456789";
-        return kNumAlpha;
-	}
-
-const SizeConstraint* NumericString::SizeConstraints(int &sizeList)const
+const char* NumericString::PermittedAlphabet(int& alphaSize) const
 {
-    sizeList = 0;
-    return NULL;
+	alphaSize = 11;
+	static const char kNumAlpha[] = " 0123456789";
+	return kNumAlpha;
+}
+
+const SizeConstraint* NumericString::SizeConstraints(int& sizeList)const
+{
+	sizeList = 0;
+	return NULL;
 }
 
 
-const char* PrintableString::PermittedAlphabet(int &sizeAlpha) const
+const char* PrintableString::PermittedAlphabet(int& sizeAlpha) const
 {
 	sizeAlpha = 74;
 	static char pPbleAlpha[] =
-	{0x20, 0x27, 0x28, 0x29, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31,
+	{ 0x20, 0x27, 0x28, 0x29, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31,
 	0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39,	0x3A, 0x3D, 0x3F,
 	0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B,
 	0x4C, 0x4D, 0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56,
 	0x57, 0x58, 0x59, 0x5A, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,
 	0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72,
-	0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A};
+	0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A };
 
-    return pPbleAlpha;
+	return pPbleAlpha;
 }
 
 bool PrintableString::check() const
@@ -884,7 +884,7 @@ wchar_t* WideAsnString::getWideChar(long offset)const
 	return (wchar_t*)&(*this)[offset];
 }
 
-AsnLen WideAsnString::Interpret(AsnBufBits &b, long offset)const
+AsnLen WideAsnString::Interpret(AsnBufBits& b, long offset)const
 {
 	AsnLen len = sizeof(wchar_t);
 
@@ -898,82 +898,82 @@ AsnLen WideAsnString::Interpret(AsnBufBits &b, long offset)const
 const char* WideAsnString::checkStringTypPermittedAlpha(const char* permittedAlphabet, long permittedAlphabetSize)const
 {
 
-    char* pError=NULL;
+	char* pError = NULL;
 	const char* cstr;
-	int found=0;
+	int found = 0;
 	int x = 0;
 	int count = (int)length();
 
-    if(count > 0)
-    {
-        std::string utf8Form;
-	    getUTF8(utf8Form);
+	if (count > 0)
+	{
+		std::string utf8Form;
+		getUTF8(utf8Form);
 
-	    cstr=utf8Form.c_str();
+		cstr = utf8Form.c_str();
 
-	    while(count)
-	    {
-		    found = 0;
-		    for(x = 0; x < permittedAlphabetSize; x++)
-		    {
-			    if(permittedAlphabet[x] == cstr[count - 1])
-			    {
-				    found = 1;
-			    }
-		    }
+		while (count)
+		{
+			found = 0;
+			for (x = 0; x < permittedAlphabetSize; x++)
+			{
+				if (permittedAlphabet[x] == cstr[count - 1])
+				{
+					found = 1;
+				}
+			}
 
-		    if(found == 0)
-			    break;
+			if (found == 0)
+				break;
 
-		    count--;
-	    }
+			count--;
+		}
 
-       if(found == 1)
-       {
-	    return pError;
-       }
-       else
-       {
-            return ConstraintErrorStringList[ WIDE_STRING_PERMITTED_ALPHA ];;
-       }
-    }
-   return pError;
+		if (found == 1)
+		{
+			return pError;
+		}
+		else
+		{
+			return ConstraintErrorStringList[WIDE_STRING_PERMITTED_ALPHA];;
+		}
+	}
+	return pError;
 }
 
-int WideAsnString::checkConstraints (ConstraintFailList* pConstraintFails)const
+int WideAsnString::checkConstraints(ConstraintFailList* pConstraintFails)const
 {
 	int count = 0;
 	int sizefailed = 1;
-    int alphafailed = 1;
+	int alphafailed = 1;
 	std::string  ptr;
-	const char* tmpptr=NULL;
-    int numSizeConstraints;
-    const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
-    int sizePermittedAlpha;
-    const char* permittedAlphabet = PermittedAlphabet(sizePermittedAlpha);
+	const char* tmpptr = NULL;
+	int numSizeConstraints;
+	const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
+	int sizePermittedAlpha;
+	const char* permittedAlphabet = PermittedAlphabet(sizePermittedAlpha);
 
-	if(sizeConstraints)
+	if (sizeConstraints)
 	{
-		for(count = 0; count < numSizeConstraints; count++)
-        {
-            tmpptr = NULL;
-			if(sizeConstraints[count].upperBoundExists == 1)
+		for (count = 0; count < numSizeConstraints; count++)
+		{
+			tmpptr = NULL;
+			if (sizeConstraints[count].upperBoundExists == 1)
 			{
-                if( (sizeConstraints[count].lowerBound > (getUTF8().size()) ) ||
-                    (sizeConstraints[count].upperBound < (getUTF8().size()) ) )
-                {
-                    tmpptr = ConstraintErrorStringList[ WIDE_STRING_SIZE_VALUE_RANGE ];
-                }
+				if ((sizeConstraints[count].lowerBound > (getUTF8().size())) ||
+					(sizeConstraints[count].upperBound < (getUTF8().size())))
+				{
+					tmpptr = ConstraintErrorStringList[WIDE_STRING_SIZE_VALUE_RANGE];
+				}
 			}
 			else
 			{
-                if(sizeConstraints[count].lowerBound != getUTF8().size() )
-                {
-                    tmpptr = ConstraintErrorStringList[ WIDE_STRING_SIZE_SINGLE_VALUE ];
-                }
+				if (sizeConstraints[count].lowerBound != getUTF8().size())
+				{
+					tmpptr = ConstraintErrorStringList[WIDE_STRING_SIZE_SINGLE_VALUE];
+				}
 			}
 
-			if(tmpptr)
+			if (tmpptr)
 			{
 				ptr += tmpptr;
 			}
@@ -988,14 +988,14 @@ int WideAsnString::checkConstraints (ConstraintFailList* pConstraintFails)const
 		sizefailed = 0;
 	}
 
-	if(sizePermittedAlpha > 0)
+	if (sizePermittedAlpha > 0)
 	{
-        tmpptr = NULL;
-		tmpptr =  checkStringTypPermittedAlpha( permittedAlphabet, sizePermittedAlpha );
+		tmpptr = NULL;
+		tmpptr = checkStringTypPermittedAlpha(permittedAlphabet, sizePermittedAlpha);
 
-		if(tmpptr)
+		if (tmpptr)
 		{
-            ptr += tmpptr;
+			ptr += tmpptr;
 		}
 		else
 		{
@@ -1009,11 +1009,11 @@ int WideAsnString::checkConstraints (ConstraintFailList* pConstraintFails)const
 	}
 
 
-	if(sizefailed || alphafailed)
+	if (sizefailed || alphafailed)
 	{
-		if(pConstraintFails!=NULL)
+		if (pConstraintFails != NULL)
 			pConstraintFails->push_back(ptr);
-        return 1;
+		return 1;
 	}
 
 	return 0;
@@ -1024,9 +1024,9 @@ int WideAsnString::checkConstraints (ConstraintFailList* pConstraintFails)const
 char* WideAsnString::checkStringTypSize(unsigned int m_Size)const
 {
 
-    char* pError=NULL;
-    char cTmperr[300];
-    std::string utf8Form;
+	char* pError=NULL;
+	char cTmperr[300];
+	std::string utf8Form;
 	getUTF8(utf8Form);
 
    if(m_Size>=(strlen(utf8Form.c_str())))
@@ -1037,9 +1037,9 @@ char* WideAsnString::checkStringTypSize(unsigned int m_Size)const
    else
    {
 
-        snprintf(cTmperr, 300, "_______\nRestricted Char String Type--Size Constraint:\n_______\nError: --String length must be less < or = to Size Constraint--\nValue: %d is not < or = to Size Constraint: %d \n", strlen(utf8Form.c_str()), m_Size);
-        pError = strdup(cTmperr);
-        return pError;
+		snprintf(cTmperr, 300, "_______\nRestricted Char String Type--Size Constraint:\n_______\nError: --String length must be less < or = to Size Constraint--\nValue: %d is not < or = to Size Constraint: %d \n", strlen(utf8Form.c_str()), m_Size);
+		pError = strdup(cTmperr);
+		return pError;
 
    }
 
@@ -1049,9 +1049,9 @@ char* WideAsnString::checkStringTypSize(unsigned int m_Size)const
 char* WideAsnString::checkStringTypSize(unsigned int m_LowerSize, unsigned int m_UpperSize)const
 {
 
-    char* pError=NULL;
-    char cTmperr[500];
-    std::string utf8Form;
+	char* pError=NULL;
+	char cTmperr[500];
+	std::string utf8Form;
 	getUTF8(utf8Form);
 
    if(m_UpperSize>=(strlen(utf8Form.c_str())) && m_LowerSize<=(strlen(utf8Form.c_str())))
@@ -1062,9 +1062,9 @@ char* WideAsnString::checkStringTypSize(unsigned int m_LowerSize, unsigned int m
    else
    {
 
-        snprintf(cTmperr, 500, "_______\nRestricted Char String Type--Size Constraint:\n_______\nError: --String length must be between bounds--\nValue: %d is not between Lower Size Constraint: %d\n             and Upper Size Constraint %d \n", strlen(utf8Form.c_str()), m_LowerSize, m_UpperSize);
-        pError = strdup(cTmperr);
-        return pError;
+		snprintf(cTmperr, 500, "_______\nRestricted Char String Type--Size Constraint:\n_______\nError: --String length must be between bounds--\nValue: %d is not between Lower Size Constraint: %d\n             and Upper Size Constraint %d \n", strlen(utf8Form.c_str()), m_LowerSize, m_UpperSize);
+		pError = strdup(cTmperr);
+		return pError;
 
    }
 
@@ -1077,79 +1077,79 @@ char* WideAsnString::checkStringTypSize(unsigned int m_LowerSize, unsigned int m
 const char* AsnString::checkStringTypPermittedAlpha(const char* permittedAlphabet, long permittedAlphabetSize)const
 {
 
-   const char* pError=NULL;
+	const char* pError = NULL;
 	const char* cstr;
-	int found=0;
+	int found = 0;
 	int x = 0;
 	int count = (int)length();
 
-    if(count > 0)
-    {
-	    cstr=c_str();
+	if (count > 0)
+	{
+		cstr = c_str();
 
-	    while(count)
-	    {
-		    found = 0;
-		    for(x = 0; x < permittedAlphabetSize; x++)
-		    {
-			    if(permittedAlphabet[x] == cstr[count - 1])
-			    {
-				    found = 1;
-			    }
-		    }
+		while (count)
+		{
+			found = 0;
+			for (x = 0; x < permittedAlphabetSize; x++)
+			{
+				if (permittedAlphabet[x] == cstr[count - 1])
+				{
+					found = 1;
+				}
+			}
 
-		    if(found == 0)
-			    break;
+			if (found == 0)
+				break;
 
-		    count--;
-	    }
+			count--;
+		}
 
-       if(found == 1)
-       {
-	    return pError;
-       }
-       else
-       {
-           return ConstraintErrorStringList[ STRING_PERMITTED_ALPHA ];
-       }
-    }
-   return pError;
+		if (found == 1)
+		{
+			return pError;
+		}
+		else
+		{
+			return ConstraintErrorStringList[STRING_PERMITTED_ALPHA];
+		}
+	}
+	return pError;
 }
 
-int AsnString::checkConstraints (ConstraintFailList* pConstraintFails)const
+int AsnString::checkConstraints(ConstraintFailList* pConstraintFails)const
 {
 	int count = 0;
 	int sizefailed = 1;
-    int alphafailed = 1;
+	int alphafailed = 1;
 	std::string  ptr;
-	 const char* tmpptr = NULL;
-    int numSizeConstraints;
-    const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
-    int sizePermittedAlpha;
-    const char* permittedAlphabet = PermittedAlphabet(sizePermittedAlpha);
+	const char* tmpptr = NULL;
+	int numSizeConstraints;
+	const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
+	int sizePermittedAlpha;
+	const char* permittedAlphabet = PermittedAlphabet(sizePermittedAlpha);
 
-	if(sizeConstraints)
+	if (sizeConstraints)
 	{
-		for(count = 0; count< numSizeConstraints; count++)
+		for (count = 0; count < numSizeConstraints; count++)
 		{
-            tmpptr = NULL;
-			if(sizeConstraints[count].upperBoundExists == 1)
+			tmpptr = NULL;
+			if (sizeConstraints[count].upperBoundExists == 1)
 			{
-                if( ( sizeConstraints[count].lowerBound > (strlen(c_str()))  ) ||
-                    sizeConstraints[count].upperBound < (strlen(c_str())) )
-                {
-                    tmpptr = ConstraintErrorStringList[ STRING_SIZE_VALUE_RANGE ];
-                }
+				if ((sizeConstraints[count].lowerBound > (strlen(c_str()))) ||
+					sizeConstraints[count].upperBound < (strlen(c_str())))
+				{
+					tmpptr = ConstraintErrorStringList[STRING_SIZE_VALUE_RANGE];
+				}
 			}
 			else
 			{
-                if( sizeConstraints[count].lowerBound != (strlen(c_str()))  )
-                {
-                    tmpptr = ConstraintErrorStringList[ STRING_SIZE_SINGLE_VALUE ];
-                }
+				if (sizeConstraints[count].lowerBound != (strlen(c_str())))
+				{
+					tmpptr = ConstraintErrorStringList[STRING_SIZE_SINGLE_VALUE];
+				}
 			}
 
-			if(tmpptr)
+			if (tmpptr)
 			{
 				ptr += tmpptr;
 			}
@@ -1164,14 +1164,14 @@ int AsnString::checkConstraints (ConstraintFailList* pConstraintFails)const
 		sizefailed = 0;
 	}
 
-	if(sizePermittedAlpha > 0)
+	if (sizePermittedAlpha > 0)
 	{
-        tmpptr = NULL;
-		tmpptr =  checkStringTypPermittedAlpha( permittedAlphabet, sizePermittedAlpha );
+		tmpptr = NULL;
+		tmpptr = checkStringTypPermittedAlpha(permittedAlphabet, sizePermittedAlpha);
 
-		if(tmpptr)
+		if (tmpptr)
 		{
-            ptr += tmpptr;
+			ptr += tmpptr;
 		}
 		else
 		{
@@ -1179,10 +1179,10 @@ int AsnString::checkConstraints (ConstraintFailList* pConstraintFails)const
 		}
 	}
 
-	if(sizefailed || alphafailed)
+	if (sizefailed || alphafailed)
 	{
-		if(pConstraintFails!=NULL)
-        	pConstraintFails->push_back(ptr);
+		if (pConstraintFails != NULL)
+			pConstraintFails->push_back(ptr);
 		return 1;
 	}
 
@@ -1192,19 +1192,19 @@ int AsnString::checkConstraints (ConstraintFailList* pConstraintFails)const
 }
 
 
-const char* IA5String::PermittedAlphabet(int &sizeAlpha) const
+const char* IA5String::PermittedAlphabet(int& sizeAlpha) const
 {
-    sizeAlpha = 128;
-    static const char IA5Alpha[]=
-    { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-      0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-      0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
-      0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
-      0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
-      0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
-      0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
-      0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f
-   };
+	sizeAlpha = 128;
+	static const char IA5Alpha[] =
+	{ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+	  0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+	  0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
+	  0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
+	  0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
+	  0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
+	  0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
+	  0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f
+	};
 
 	return IA5Alpha;
 
@@ -1215,7 +1215,7 @@ bool IA5String::check() const
 	for (const_iterator i = begin(); i != end(); ++i)
 	{
 		// Check that character is less than 128
-		if ( ((unsigned)*i < 0) || ((unsigned)*i > 127) )
+		if (((unsigned)*i < 0) || ((unsigned)*i > 127))
 			return false;
 	}
 
@@ -1223,18 +1223,18 @@ bool IA5String::check() const
 }
 
 
-const char* VisibleString::PermittedAlphabet(int &sizeAlpha) const
+const char* VisibleString::PermittedAlphabet(int& sizeAlpha) const
 {
-    sizeAlpha = 95;
+	sizeAlpha = 95;
 
-    static const char VisibleAlpha[]=
-    { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
-      0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
-      0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
-      0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
-      0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
-      0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e
-    };
+	static const char VisibleAlpha[] =
+	{ 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
+	  0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
+	  0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
+	  0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
+	  0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
+	  0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e
+	};
 
 	return VisibleAlpha;
 }
@@ -1254,7 +1254,7 @@ bool VisibleString::check() const
 
 // Encode BMPString octets into byte stream
 //
-AsnLen BMPString::BEncContent(AsnBuf &b) const
+AsnLen BMPString::BEncContent(AsnBuf& b) const
 {
 	FUNC("BMPString::BEncContent");
 
@@ -1279,8 +1279,8 @@ AsnLen BMPString::BEncContent(AsnBuf &b) const
 	return len;
 }
 
-void BMPString::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
-							AsnLen &bytesDecoded)
+void BMPString::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen,
+	AsnLen& bytesDecoded)
 {
 	FUNC("BMPString::BDecContent");
 
@@ -1289,7 +1289,7 @@ void BMPString::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
 
 	if (elmtLen == INDEFINITE_LEN || elmtLen > b.length())
 	{
-	   throw MemoryException(elmtLen, "elmtLen requests for too much data", STACK_ENTRY);
+		throw MemoryException(elmtLen, "elmtLen requests for too much data", STACK_ENTRY);
 	}
 
 	// If tag is constructed, decode and combine the segments
@@ -1300,9 +1300,9 @@ void BMPString::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
 	}
 	else	// tag is primitive, just combine the one segment
 	{
-		char *seg =  new char[elmtLen];
+		char* seg = new char[elmtLen];
 		if (seg == NULL)
-		   throw MemoryException(elmtLen, "seg", STACK_ENTRY);
+			throw MemoryException(elmtLen, "seg", STACK_ENTRY);
 		b.GetSeg(seg, elmtLen);
 		bytesDecoded += elmtLen;
 
@@ -1334,7 +1334,7 @@ void BMPString::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
 
 // Encode UniversalString octets into byte stream
 //
-AsnLen UniversalString::BEncContent(AsnBuf &b) const
+AsnLen UniversalString::BEncContent(AsnBuf& b) const
 {
 	FUNC("UniversalString::BEncContent");
 
@@ -1362,8 +1362,8 @@ AsnLen UniversalString::BEncContent(AsnBuf &b) const
 	return len;
 }
 
-void UniversalString::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
-								  AsnLen &bytesDecoded)
+void UniversalString::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen,
+	AsnLen& bytesDecoded)
 {
 	FUNC("UniversalString::BDecContent");
 
@@ -1372,7 +1372,7 @@ void UniversalString::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
 
 	if (elmtLen == INDEFINITE_LEN || elmtLen > b.length())
 	{
-	   throw MemoryException(elmtLen, "elmtLen requests for too much data", STACK_ENTRY);
+		throw MemoryException(elmtLen, "elmtLen requests for too much data", STACK_ENTRY);
 	}
 
 
@@ -1384,9 +1384,9 @@ void UniversalString::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
 	}
 	else	// tag is primitive, just combine the one segment
 	{
-		char *seg =  new char[elmtLen];
+		char* seg = new char[elmtLen];
 		if (seg == NULL)
-		   throw MemoryException(elmtLen, "seg", STACK_ENTRY);
+			throw MemoryException(elmtLen, "seg", STACK_ENTRY);
 		b.GetSeg(seg, elmtLen);
 		bytesDecoded += elmtLen;
 
@@ -1447,42 +1447,42 @@ UTF8String UTF8String::CreateFromUTF8(const char* szUTF8) {
 	return UTF8String(AsnStringConvert::UTF8ToUTF16(szUTF8));
 }
 
-UTF8String UTF8String::CreateFromUTF8(const std::string& strUTF8){
+UTF8String UTF8String::CreateFromUTF8(const std::string& strUTF8) {
 	return UTF8String(AsnStringConvert::UTF8ToUTF16(strUTF8.c_str()));
 }
 
-UTF8String UTF8String::CreateFromASCII(const char* szAscii){
+UTF8String UTF8String::CreateFromASCII(const char* szAscii) {
 	return UTF8String(AsnStringConvert::AsciiToUTF16(szAscii));
 }
 
-UTF8String UTF8String::CreateFromASCII(const std::string& strAscii){
+UTF8String UTF8String::CreateFromASCII(const std::string& strAscii) {
 	return UTF8String(AsnStringConvert::AsciiToUTF16(strAscii.c_str()));
 }
 
-UTF8String* UTF8String::CreateNewFromUTF8(const char* szUTF8){
+UTF8String* UTF8String::CreateNewFromUTF8(const char* szUTF8) {
 	return new UTF8String(AsnStringConvert::UTF8ToUTF16(szUTF8));
 }
 
-UTF8String* UTF8String::CreateNewFromUTF8(const std::string& strUTF8){
+UTF8String* UTF8String::CreateNewFromUTF8(const std::string& strUTF8) {
 	return new UTF8String(AsnStringConvert::UTF8ToUTF16(strUTF8.c_str()));
 }
 
-UTF8String* UTF8String::CreateNewFromASCII(const char* szAscii){
+UTF8String* UTF8String::CreateNewFromASCII(const char* szAscii) {
 	return new UTF8String(AsnStringConvert::AsciiToUTF16(szAscii));
 }
 
-UTF8String* UTF8String::CreateNewFromASCII(const std::string& strAscii){
+UTF8String* UTF8String::CreateNewFromASCII(const std::string& strAscii) {
 	return new UTF8String(AsnStringConvert::AsciiToUTF16(strAscii.c_str()));
 }
 
-void UTF8String::JEnc (EJson::Value &b) const
+void UTF8String::JEnc(EJson::Value& b) const
 {
 	std::string utf8;
 	getUTF8(utf8);
 	b = EJson::Value(utf8);
 }
 
-bool UTF8String::JDec (const EJson::Value &b)
+bool UTF8String::JDec(const EJson::Value& b)
 {
 	clear();
 	if (b.isString())
@@ -1493,7 +1493,7 @@ bool UTF8String::JDec (const EJson::Value &b)
 	return false;
 }
 
-AsnLen UTF8String::BEncContent(AsnBuf &b) const
+AsnLen UTF8String::BEncContent(AsnBuf& b) const
 {
 	std::string utf8;
 	getUTF8(utf8);
@@ -1503,8 +1503,8 @@ AsnLen UTF8String::BEncContent(AsnBuf &b) const
 	return len;
 }
 
-void UTF8String::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
-							 AsnLen &bytesDecoded)
+void UTF8String::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen,
+	AsnLen& bytesDecoded)
 {
 	FUNC("UTF8String::BDecContent()");
 
@@ -1513,9 +1513,9 @@ void UTF8String::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
 
 	try
 	{
-    	if (elmtLen == INDEFINITE_LEN || elmtLen > b.length())
+		if (elmtLen == INDEFINITE_LEN || elmtLen > b.length())
 		{
-	       throw MemoryException(elmtLen, "elmtLen requests for too much data", STACK_ENTRY);
+			throw MemoryException(elmtLen, "elmtLen requests for too much data", STACK_ENTRY);
 		}
 
 
@@ -1527,9 +1527,9 @@ void UTF8String::BDecContent(const AsnBuf &b, AsnTag tagId, AsnLen elmtLen,
 		}
 		else	// tag is primitive, just combine the one segment
 		{
-			char *seg =  new char[elmtLen];
+			char* seg = new char[elmtLen];
 			if (seg == NULL)
-			   throw MemoryException(elmtLen, "seg", STACK_ENTRY);
+				throw MemoryException(elmtLen, "seg", STACK_ENTRY);
 			b.GetSeg(seg, elmtLen);
 			bytesDecoded += elmtLen;
 

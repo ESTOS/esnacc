@@ -26,16 +26,16 @@
  * encodes universal TAG LENGTH and Contents of and ASN.1 OBJECT ID
  */
 AsnLen
-BEncAsnRelativeOid PARAMS ((b, data),
-    GenBuf *b _AND_
-    AsnRelativeOid *data)
+BEncAsnRelativeOid PARAMS((b, data),
+	GenBuf* b _AND_
+	AsnRelativeOid* data)
 {
-    AsnLen len;
+	AsnLen len;
 
-    len =  BEncAsnRelativeOidContent (b, data);
-    len += BEncDefLen (b, len);
-    len += BEncTag1 (b, UNIV, PRIM, RELATIVE_OID_TAG_CODE);
-    return len;
+	len = BEncAsnRelativeOidContent(b, data);
+	len += BEncDefLen(b, len);
+	len += BEncTag1(b, UNIV, PRIM, RELATIVE_OID_TAG_CODE);
+	return len;
 }  /* BEncAsnRelativeOid */
 
 
@@ -43,23 +43,23 @@ BEncAsnRelativeOid PARAMS ((b, data),
  * decodes universal TAG LENGTH and Contents of and ASN.1 OBJECT ID
  */
 void
-BDecAsnRelativeOid PARAMS ((b, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnRelativeOid    *result _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecAsnRelativeOid PARAMS((b, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnRelativeOid* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    AsnTag tag;
-    AsnLen elmtLen;
+	AsnTag tag;
+	AsnLen elmtLen;
 
-    if ((tag = BDecTag (b, bytesDecoded, env)) != MAKE_TAG_ID (UNIV, PRIM, RELATIVE_OID_TAG_CODE))
-    {
-         Asn1Error ("BDecAsnRelativeOid: ERROR - wrong tag on OBJECT IDENTIFIER.\n");
-         longjmp (env, -40);
-    }
+	if ((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, RELATIVE_OID_TAG_CODE))
+	{
+		Asn1Error("BDecAsnRelativeOid: ERROR - wrong tag on OBJECT IDENTIFIER.\n");
+		longjmp(env, -40);
+	}
 
-    elmtLen = BDecLen (b, bytesDecoded, env);
-    BDecAsnRelativeOidContent (b, tag, elmtLen, result, bytesDecoded, env);
+	elmtLen = BDecLen(b, bytesDecoded, env);
+	BDecAsnRelativeOidContent(b, tag, elmtLen, result, bytesDecoded, env);
 
 }  /* BDecAsnRelativeOid */
 
@@ -70,29 +70,29 @@ BDecAsnRelativeOid PARAMS ((b, result, bytesDecoded, env),
  * AsnRelativeOid is handled the same as a primtive octet string
  */
 void
-BDecAsnRelativeOidContent PARAMS ((b, tagId, len, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnTag tagId _AND_
-    AsnLen len _AND_
-    AsnRelativeOid *result _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecAsnRelativeOidContent PARAMS((b, tagId, len, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnTag tagId _AND_
+	AsnLen len _AND_
+	AsnRelativeOid* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    if (len == INDEFINITE_LEN)
-    {
-         Asn1Error ("BDecAsnRelativeOidContent: ERROR - indefinite length on primitive\n");
-         longjmp (env, -66);
-    }
-    result->octetLen = len;
-    result->octs =  (char*)Asn1Alloc (len);
-    CheckAsn1Alloc (result->octs, env);
-    BufCopy (result->octs, b, len);
-    if (BufReadError (b))
-    {
-         Asn1Error ("BDecAsnRelativeOidContent: ERROR - decoded past end of data\n");
-         longjmp (env, -21);
-    }
-    (*bytesDecoded) += len;
+	if (len == INDEFINITE_LEN)
+	{
+		Asn1Error("BDecAsnRelativeOidContent: ERROR - indefinite length on primitive\n");
+		longjmp(env, -66);
+	}
+	result->octetLen = len;
+	result->octs = (char*)Asn1Alloc(len);
+	CheckAsn1Alloc(result->octs, env);
+	BufCopy(result->octs, b, len);
+	if (BufReadError(b))
+	{
+		Asn1Error("BDecAsnRelativeOidContent: ERROR - decoded past end of data\n");
+		longjmp(env, -21);
+	}
+	(*bytesDecoded) += len;
 }  /* BDecAsnRelativeOidContent */
 
 
@@ -103,26 +103,26 @@ BDecAsnRelativeOidContent PARAMS ((b, tagId, len, result, bytesDecoded, env),
  * decodes each individual arc number to print it.
  */
 void
-PrintAsnRelativeOid PARAMS ((f,v, indent),
-    FILE *f _AND_
-    AsnRelativeOid *v _AND_
-    unsigned int indent)
+PrintAsnRelativeOid PARAMS((f, v, indent),
+	FILE* f _AND_
+	AsnRelativeOid* v _AND_
+	unsigned int indent)
 {
-    unsigned int arcNum;
-    int i;
+	unsigned int arcNum;
+	int i;
 
-    fprintf (f,"{");
+	fprintf(f, "{");
 
-    for (i = 0; i < (int)(v->octetLen); )
-    {
-        for (arcNum = 0; (i < (int)(v->octetLen)) && (v->octs[i] & 0x80);i++)
-            arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
+	for (i = 0; i < (int)(v->octetLen); )
+	{
+		for (arcNum = 0; (i < (int)(v->octetLen)) && (v->octs[i] & 0x80); i++)
+			arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
 
-        arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
-        i++;
-        fprintf (f," %u", arcNum);
-    }
-    fprintf (f,"}");
+		arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
+		i++;
+		fprintf(f, " %u", arcNum);
+	}
+	fprintf(f, "}");
 } /* PrintAsnRelativeOid */
 
 
@@ -131,30 +131,30 @@ PrintAsnRelativeOid PARAMS ((f,v, indent),
  * given an RELATIVE_OID, figures out the length for the encoded version
  */
 AsnLen
-EncodedRelativeOidLen PARAMS ((oid),
-    RELATIVE_OID *oid)
+EncodedRelativeOidLen PARAMS((oid),
+	RELATIVE_OID* oid)
 {
-    AsnLen totalLen;
-    unsigned long tmpArcNum;
-    RELATIVE_OID *tmpOid;
+	AsnLen totalLen;
+	unsigned long tmpArcNum;
+	RELATIVE_OID* tmpOid;
 
-    totalLen = 0;
+	totalLen = 0;
 
-    /*
-     * oid must have at least 2 elmts
-     */
-    if (oid == NULL)
-       return 0;
+	/*
+	 * oid must have at least 2 elmts
+	 */
+	if (oid == NULL)
+		return 0;
 
-    for (tmpOid = oid; tmpOid != NULL; tmpOid = tmpOid->next)
-    {
-        totalLen++;
-        tmpArcNum = tmpOid->arcNum;
-        for (; (tmpArcNum >>= 7) != 0; totalLen++)
-	    ;
-    }
+	for (tmpOid = oid; tmpOid != NULL; tmpOid = tmpOid->next)
+	{
+		totalLen++;
+		tmpArcNum = tmpOid->arcNum;
+		for (; (tmpArcNum >>= 7) != 0; totalLen++)
+			;
+	}
 
-    return totalLen;
+	return totalLen;
 
 }  /* EncodedOidLen */
 
@@ -166,54 +166,54 @@ EncodedRelativeOidLen PARAMS ((oid),
  * of the oid.
  */
 void
-BuildEncodedRelativeOid PARAMS ((oid, result),
-    RELATIVE_OID *oid _AND_
-    AsnRelativeOid *result)
+BuildEncodedRelativeOid PARAMS((oid, result),
+	RELATIVE_OID* oid _AND_
+	AsnRelativeOid* result)
 {
-    unsigned long len;
-    char         *buf;
-    int           i;
-    unsigned long tmpArcNum;
-    RELATIVE_OID          *tmpOid;
+	unsigned long len;
+	char* buf;
+	int           i;
+	unsigned long tmpArcNum;
+	RELATIVE_OID* tmpOid;
 
-    buf = result->octs;
+	buf = result->octs;
 
-    /*
-     * oid must have at least 2 elmts
-     */
-    if (oid->next == NULL)
-       return;
-    /*
-     * munge together first two arcNum
-     * note first arcnum must be <= 2
-     * and second must be < 39 if first = 0 or 1
-     * see (X.209) for ref to this stupidity
-     */
-  
-   
-    for (tmpOid = oid; tmpOid != NULL; tmpOid = tmpOid->next)
-    {
-        /*
-         * figure out encoded length -1 of this arcNum
-         */
-        tmpArcNum = tmpOid->arcNum;
-        for (len = 0; (tmpArcNum >>= 7) != 0; len++)
-	    ;
+	/*
+	 * oid must have at least 2 elmts
+	 */
+	if (oid->next == NULL)
+		return;
+	/*
+	 * munge together first two arcNum
+	 * note first arcnum must be <= 2
+	 * and second must be < 39 if first = 0 or 1
+	 * see (X.209) for ref to this stupidity
+	 */
 
 
-        /*
-         * write more signifcant bytes (if any)
-         * with 'more' bit set
-         */
-        for (i=0; i < (int)len; i++)
-            *(buf++) = (char)(0x80 | (tmpOid->arcNum >> ((len-i)*7)));
+	for (tmpOid = oid; tmpOid != NULL; tmpOid = tmpOid->next)
+	{
+		/*
+		 * figure out encoded length -1 of this arcNum
+		 */
+		tmpArcNum = tmpOid->arcNum;
+		for (len = 0; (tmpArcNum >>= 7) != 0; len++)
+			;
 
-        /*
-         * write least significant byte
-         */
-        *(buf++) = (char)(0x7f & tmpOid->arcNum);
-    }
-    result->octetLen = (buf - result->octs);
+
+		/*
+		 * write more signifcant bytes (if any)
+		 * with 'more' bit set
+		 */
+		for (i = 0; i < (int)len; i++)
+			*(buf++) = (char)(0x80 | (tmpOid->arcNum >> ((len - i) * 7)));
+
+		/*
+		 * write least significant byte
+		 */
+		*(buf++) = (char)(0x7f & tmpOid->arcNum);
+	}
+	result->octetLen = (buf - result->octs);
 } /* BuildEncodedOid */
 
 
@@ -222,41 +222,41 @@ BuildEncodedRelativeOid PARAMS ((oid, result),
  * NOT RECOMMENDED for use in protocol implementations
  */
 void
-UnbuildEncodedRelativeOid PARAMS ((eoid, result),
-    AsnRelativeOid *eoid _AND_
-    RELATIVE_OID **result)
+UnbuildEncodedRelativeOid PARAMS((eoid, result),
+	AsnRelativeOid* eoid _AND_
+	RELATIVE_OID** result)
 {
-    RELATIVE_OID **nextOid;
-    RELATIVE_OID *headOid;
-    int arcNum;
-    int i;
-   
-    for (arcNum = 0, i=0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80);i++)
-        arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
+	RELATIVE_OID** nextOid;
+	RELATIVE_OID* headOid;
+	int arcNum;
+	int i;
 
-    arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
-    i++;
+	for (arcNum = 0, i = 0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80); i++)
+		arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
 
-    headOid = (RELATIVE_OID*)malloc (sizeof (RELATIVE_OID));
-    headOid->arcNum = arcNum;
-    headOid->next = (RELATIVE_OID*)malloc (sizeof (RELATIVE_OID));
-    nextOid = &headOid->next;
+	arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
+	i++;
 
-    
-    for (i = 1; i < (int)(eoid->octetLen); )
-    {
-        for (arcNum = 0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80); i++)
-            arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
+	headOid = (RELATIVE_OID*)malloc(sizeof(RELATIVE_OID));
+	headOid->arcNum = arcNum;
+	headOid->next = (RELATIVE_OID*)malloc(sizeof(RELATIVE_OID));
+	nextOid = &headOid->next;
 
-        arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
-        i++;
-        *nextOid = (RELATIVE_OID*)malloc (sizeof (RELATIVE_OID));
-        (*nextOid)->arcNum = arcNum;
-        (*nextOid)->next = NULL;
-        nextOid = &(*nextOid)->next;
-        
-    }
 
-    *result = headOid;
+	for (i = 1; i < (int)(eoid->octetLen); )
+	{
+		for (arcNum = 0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80); i++)
+			arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
+
+		arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
+		i++;
+		*nextOid = (RELATIVE_OID*)malloc(sizeof(RELATIVE_OID));
+		(*nextOid)->arcNum = arcNum;
+		(*nextOid)->next = NULL;
+		nextOid = &(*nextOid)->next;
+
+	}
+
+	*result = headOid;
 
 } /* UnbuildEncodedOid */

@@ -96,147 +96,147 @@
 
 _BEGIN_SNACC_NAMESPACE
 
-AsnLen AsnEnum::BEnc (AsnBuf &b) const
+AsnLen AsnEnum::BEnc(AsnBuf& b) const
 {
-    AsnLen l;
-    l = BEncContent (b);
-    BEncDefLenTo127 (b, l);
-    l++;
-    l += BEncTag1 (b, UNIV, PRIM, ENUM_TAG_CODE);
-    return l;
+	AsnLen l;
+	l = BEncContent(b);
+	BEncDefLenTo127(b, l);
+	l++;
+	l += BEncTag1(b, UNIV, PRIM, ENUM_TAG_CODE);
+	return l;
 }
 
 /*Takes the enumerated list, sorts them, and returns the index of the */
 /*number that matches the value                                       */
-long AsnEnum::IndexedVal(long *penumList, long numVals)const
+long AsnEnum::IndexedVal(long* penumList, long numVals)const
 {
-    FUNC("AsnEnum::IndexedVal");
-    long * indexedList = penumList;
-    long temp = 0;
-    long count1 = 0;
-    long count2 = 0;
-    bool bValueNotInList = true;
-    
-    if(m_len > 4)
-        throw EXCEPT("enumerated value is too big", INTEGER_ERROR);
+	FUNC("AsnEnum::IndexedVal");
+	long* indexedList = penumList;
+	long temp = 0;
+	long count1 = 0;
+	long count2 = 0;
+	bool bValueNotInList = true;
 
-    for(count1 = 0; count1 < numVals; count1++)
-    {
-        for(count2 = 0; count2 < numVals; count2++)
-        {
-            if(indexedList[count2] < indexedList[count1])
-            {
-                temp = indexedList[count2];
-                indexedList[count2] = indexedList[count1];
-                indexedList[count1] = temp;
-            }
-        }
-    }
-    
-    temp = (long)*this;
-    for(count1 = 0; count1 < numVals; count1++)
-    {
-        if(temp == indexedList[count1])
-        {
-            temp = count1;
-            count1 = numVals;
-            bValueNotInList = false;
-        }
-    }
+	if (m_len > 4)
+		throw EXCEPT("enumerated value is too big", INTEGER_ERROR);
 
-    if(bValueNotInList)
-        throw EXCEPT("value is not in enumerated List", INTEGER_ERROR);
+	for (count1 = 0; count1 < numVals; count1++)
+	{
+		for (count2 = 0; count2 < numVals; count2++)
+		{
+			if (indexedList[count2] < indexedList[count1])
+			{
+				temp = indexedList[count2];
+				indexedList[count2] = indexedList[count1];
+				indexedList[count1] = temp;
+			}
+		}
+	}
 
-    return temp;
+	temp = (long)*this;
+	for (count1 = 0; count1 < numVals; count1++)
+	{
+		if (temp == indexedList[count1])
+		{
+			temp = count1;
+			count1 = numVals;
+			bValueNotInList = false;
+		}
+	}
+
+	if (bValueNotInList)
+		throw EXCEPT("value is not in enumerated List", INTEGER_ERROR);
+
+	return temp;
 }
 
 /*sorts the enumerated list and matches the decoded number with */
 /*the associated indexed number in the list                     */
-void AsnEnum::SetIndex(long *penumList, long numVals, long index)
+void AsnEnum::SetIndex(long* penumList, long numVals, long index)
 {
-    long * indexedList = penumList;
-    long temp = 0;
-    long count1 = 0;
-    long count2 = 0; 
-    
-    for(count1 = 0; count1 < numVals; count1++)
-    {
-        for(count2 = 0; count2 < numVals; count2++)
-        {
-            if(indexedList[count2] < indexedList[count1])
-            {
-                temp = indexedList[count2];
-                indexedList[count2] = indexedList[count1];
-                indexedList[count1] = temp;
-            }
-        }
-    }
+	long* indexedList = penumList;
+	long temp = 0;
+	long count1 = 0;
+	long count2 = 0;
 
-    Set((AsnIntType)indexedList[index]);
+	for (count1 = 0; count1 < numVals; count1++)
+	{
+		for (count2 = 0; count2 < numVals; count2++)
+		{
+			if (indexedList[count2] < indexedList[count1])
+			{
+				temp = indexedList[count2];
+				indexedList[count2] = indexedList[count1];
+				indexedList[count1] = temp;
+			}
+		}
+	}
+
+	Set((AsnIntType)indexedList[index]);
 }
 
-void AsnEnum::BDec (const AsnBuf &b, AsnLen &bytesDecoded)
+void AsnEnum::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 {
-   FUNC("AsnEnum::BDec");
+	FUNC("AsnEnum::BDec");
 
-   AsnLen elmtLen;
-   AsnTag tagId;
+	AsnLen elmtLen;
+	AsnTag tagId;
 
-   tagId = BDecTag (b, bytesDecoded);
-   if (tagId != MAKE_TAG_ID (UNIV, PRIM, ENUM_TAG_CODE))
-   {
-    throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
-   }
+	tagId = BDecTag(b, bytesDecoded);
+	if (tagId != MAKE_TAG_ID(UNIV, PRIM, ENUM_TAG_CODE))
+	{
+		throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
+	}
 
-   elmtLen = BDecLen (b, bytesDecoded);
-   BDecContent (b, MAKE_TAG_ID (UNIV, PRIM, ENUM_TAG_CODE), elmtLen, bytesDecoded);
+	elmtLen = BDecLen(b, bytesDecoded);
+	BDecContent(b, MAKE_TAG_ID(UNIV, PRIM, ENUM_TAG_CODE), elmtLen, bytesDecoded);
 }
 
 #if META
 
-const AsnEnumTypeDesc AsnEnum::_desc (NULL, NULL, false, AsnTypeDesc::ENUMERATED, NULL, NULL);
+const AsnEnumTypeDesc AsnEnum::_desc(NULL, NULL, false, AsnTypeDesc::ENUMERATED, NULL, NULL);
 
-const AsnTypeDesc *AsnEnum::_getdesc() const
+const AsnTypeDesc* AsnEnum::_getdesc() const
 {
-  return &_desc;
+	return &_desc;
 }
 
 #if TCL
 
-int AsnEnum::TclGetVal (Tcl_Interp *interp) const
+int AsnEnum::TclGetVal(Tcl_Interp* interp) const
 {
-  const AsnNameDesc *n = _getdesc()->getnames();
-  if (n)
-  {
-    for (; n->name; n++)
-      if (n->value == value)
-      {
-	Tcl_SetResult (interp, (char*)n->name, TCL_STATIC);
-	return TCL_OK;
-      }
-  }
-  char valstr[80];
-  sprintf (valstr, "%d", value);
-  Tcl_AppendResult (interp, "illegal numeric enumeration value ", valstr, " for type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
-  Tcl_SetErrorCode (interp, "SNACC", "ILLENUM", NULL);
-  return TCL_ERROR;
+	const AsnNameDesc* n = _getdesc()->getnames();
+	if (n)
+	{
+		for (; n->name; n++)
+			if (n->value == value)
+			{
+				Tcl_SetResult(interp, (char*)n->name, TCL_STATIC);
+				return TCL_OK;
+			}
+	}
+	char valstr[80];
+	sprintf(valstr, "%d", value);
+	Tcl_AppendResult(interp, "illegal numeric enumeration value ", valstr, " for type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
+	Tcl_SetErrorCode(interp, "SNACC", "ILLENUM", NULL);
+	return TCL_ERROR;
 }
 
-int AsnEnum::TclSetVal (Tcl_Interp *interp, const char *valstr)
+int AsnEnum::TclSetVal(Tcl_Interp* interp, const char* valstr)
 {
-  const AsnNameDesc *n = _getdesc()->getnames();
-  if (n)
-  {
-    for (; n->name; n++)
-      if (!strcmp (n->name, valstr))
-      {
-	value = n->value;
-	return TCL_OK;
-      }
-  }
-  Tcl_SetErrorCode (interp, "SNACC", "ILLENUM", NULL);
-  Tcl_AppendResult (interp, "illegal symbolic enumeration value \"", valstr, "\" for type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
-  return TCL_ERROR;
+	const AsnNameDesc* n = _getdesc()->getnames();
+	if (n)
+	{
+		for (; n->name; n++)
+			if (!strcmp(n->name, valstr))
+			{
+				value = n->value;
+				return TCL_OK;
+			}
+	}
+	Tcl_SetErrorCode(interp, "SNACC", "ILLENUM", NULL);
+	Tcl_AppendResult(interp, "illegal symbolic enumeration value \"", valstr, "\" for type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
+	return TCL_ERROR;
 }
 
 #endif /* TCL */

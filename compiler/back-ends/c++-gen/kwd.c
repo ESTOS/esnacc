@@ -57,23 +57,23 @@
 #include "../../../snacc.h"
 #include <string.h>
 
-/*
- * last elmt will be NULL.
- * key words grabbed from C++/Stroustrup 2.0
- */
-static char *cxxKWdG[] =
+ /*
+  * last elmt will be NULL.
+  * key words grabbed from C++/Stroustrup 2.0
+  */
+static char* cxxKWdG[] =
 {
-    "asm", "auto", "break", "case", "catch", "char", "class", "const",
-    "continue", "default", "delete", "do", "double", "else", "enum",
-    "extern", "float", "for", "friend", "goto", "if", "inline", "int",
-    "long", "new", "operator", "private", "protected", "public",
-    "register", "return", "short", "signed", "sizeof", "static",
-    "struct", "switch", "template", "this", "throw", "try", "typedef",
-    "union", "unsigned", "virtual", "void", "volatile", "while", 
+	"asm", "auto", "break", "case", "catch", "char", "class", "const",
+	"continue", "default", "delete", "do", "double", "else", "enum",
+	"extern", "float", "for", "friend", "goto", "if", "inline", "int",
+	"long", "new", "operator", "private", "protected", "public",
+	"register", "return", "short", "signed", "sizeof", "static",
+	"struct", "switch", "template", "this", "throw", "try", "typedef",
+	"union", "unsigned", "virtual", "void", "volatile", "while",
 #if BOOL_BUILTIN
-    "bool", "true", "false",
+	"bool", "true", "false",
 #endif
-    NULL
+	NULL
 };
 
 
@@ -81,13 +81,13 @@ static char *cxxKWdG[] =
  * returns non-zero if the given str is a C++ key word
  */
 int
-IsCxxKeyWord PARAMS ((str),
-    char *str)
+IsCxxKeyWord PARAMS((str),
+	char* str)
 {
-    int i;
+	int i;
 
-    for (i=0; (cxxKWdG[i] != NULL) && (strcmp (cxxKWdG[i],str) != 0); i++)
-	;
+	for (i = 0; (cxxKWdG[i] != NULL) && (strcmp(cxxKWdG[i], str) != 0); i++)
+		;
 
-    return cxxKWdG[i] != NULL;
+	return cxxKWdG[i] != NULL;
 }

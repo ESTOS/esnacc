@@ -60,44 +60,44 @@
 
 
 void
-MakeVarPtrRef PARAMS ((r, td, parent, fieldType, parentVarName, newVarName, size),
-    CRules *r _AND_
-    TypeDef *td _AND_
-    Type *parent _AND_
-    Type *fieldType _AND_
-    char *parentVarName _AND_
-    char *newVarName _AND_
+MakeVarPtrRef PARAMS((r, td, parent, fieldType, parentVarName, newVarName, size),
+	CRules* r _AND_
+	TypeDef* td _AND_
+	Type* parent _AND_
+	Type* fieldType _AND_
+	char* parentVarName _AND_
+	char* newVarName _AND_
 	size_t size)
 {
-    CTRI *ctri;
+	CTRI* ctri;
 
-    ctri = fieldType->cTypeRefInfo;
+	ctri = fieldType->cTypeRefInfo;
 
-    /* always put in brackets to save future referencing hassles */
-    strcpy_s(newVarName, size, "(");
+	/* always put in brackets to save future referencing hassles */
+	strcpy_s(newVarName, size, "(");
 
-    /* make ref'd field into a ptr by taking it's addr if nec */
-    if (!ctri->isPtr)
-        strcat_s(newVarName, size, "&");
+	/* make ref'd field into a ptr by taking it's addr if nec */
+	if (!ctri->isPtr)
+		strcat_s(newVarName, size, "&");
 
-    /* start with ref to parent */
-    strcat_s(newVarName, size, parentVarName);
+	/* start with ref to parent */
+	strcat_s(newVarName, size, parentVarName);
 
-    /* ref this field */
-    if ((td->type == parent) || (parent->cTypeRefInfo->isPtr))
-        strcat_s(newVarName, size, "->");
-    else
-        strcat_s(newVarName, size, ".");
+	/* ref this field */
+	if ((td->type == parent) || (parent->cTypeRefInfo->isPtr))
+		strcat_s(newVarName, size, "->");
+	else
+		strcat_s(newVarName, size, ".");
 
-    /* ref choice union field if nec */
-    if (parent->basicType->choiceId == BASICTYPE_CHOICE)
-    {
-        strcat_s(newVarName, size, r->choiceUnionFieldName);
-        strcat_s(newVarName, size, ".");
-    }
+	/* ref choice union field if nec */
+	if (parent->basicType->choiceId == BASICTYPE_CHOICE)
+	{
+		strcat_s(newVarName, size, r->choiceUnionFieldName);
+		strcat_s(newVarName, size, ".");
+	}
 
-    strcat_s(newVarName, size, ctri->cFieldName);
-    strcat_s(newVarName, size, ")");
+	strcat_s(newVarName, size, ctri->cFieldName);
+	strcat_s(newVarName, size, ")");
 
 }  /* MakeVarPtrRef */
 
@@ -105,96 +105,96 @@ MakeVarPtrRef PARAMS ((r, td, parent, fieldType, parentVarName, newVarName, size
 
 
 void
-MakeVarValueRef PARAMS ((r, td, parent, fieldType, parentVarName, newVarName, size),
-    CRules *r _AND_
-    TypeDef *td _AND_
-    Type *parent _AND_
-    Type *fieldType _AND_
-    char *parentVarName _AND_
-    char *newVarName _AND_
+MakeVarValueRef PARAMS((r, td, parent, fieldType, parentVarName, newVarName, size),
+	CRules* r _AND_
+	TypeDef* td _AND_
+	Type* parent _AND_
+	Type* fieldType _AND_
+	char* parentVarName _AND_
+	char* newVarName _AND_
 	size_t size)
 {
-    CTRI *ctri;
+	CTRI* ctri;
 
-    ctri = fieldType->cTypeRefInfo;
+	ctri = fieldType->cTypeRefInfo;
 
-    /* always put in brackets to save future referencing hassles */
-    strcpy_s(newVarName, size, "(");
+	/* always put in brackets to save future referencing hassles */
+	strcpy_s(newVarName, size, "(");
 
-    /* make ref'd field into a value by de-referencing if nec */
-    if (ctri->isPtr)
-        strcat_s(newVarName, size, "*");
+	/* make ref'd field into a value by de-referencing if nec */
+	if (ctri->isPtr)
+		strcat_s(newVarName, size, "*");
 
-    /* start with ref to parent */
-    strcat_s(newVarName, size, parentVarName);
+	/* start with ref to parent */
+	strcat_s(newVarName, size, parentVarName);
 
-    /* ref this field */
-    if ((td->type == parent) || (parent->cTypeRefInfo->isPtr))
-        strcat_s(newVarName, size, "->");
-    else
-        strcat_s(newVarName, size, ".");
+	/* ref this field */
+	if ((td->type == parent) || (parent->cTypeRefInfo->isPtr))
+		strcat_s(newVarName, size, "->");
+	else
+		strcat_s(newVarName, size, ".");
 
-    /* ref choice union field if nec */
-    if (parent->basicType->choiceId == BASICTYPE_CHOICE)
-    {
-        strcat_s(newVarName, size, r->choiceUnionFieldName);
-        strcat_s(newVarName, size, ".");
-    }
+	/* ref choice union field if nec */
+	if (parent->basicType->choiceId == BASICTYPE_CHOICE)
+	{
+		strcat_s(newVarName, size, r->choiceUnionFieldName);
+		strcat_s(newVarName, size, ".");
+	}
 
-    strcat_s(newVarName, size, ctri->cFieldName);
-    strcat_s(newVarName, size, ")");
+	strcat_s(newVarName, size, ctri->cFieldName);
+	strcat_s(newVarName, size, ")");
 
 }  /* MakeVarValueRef */
 
 void
-MakeChoiceIdValueRef PARAMS ((r, td, parent, fieldType, parentVarName, newVarName, size),
-    CRules *r _AND_
-    TypeDef *td _AND_
-    Type *parent _AND_
-    Type *fieldType _AND_
-    char *parentVarName _AND_
-    char *newVarName _AND_
+MakeChoiceIdValueRef PARAMS((r, td, parent, fieldType, parentVarName, newVarName, size),
+	CRules* r _AND_
+	TypeDef* td _AND_
+	Type* parent _AND_
+	Type* fieldType _AND_
+	char* parentVarName _AND_
+	char* newVarName _AND_
 	size_t size)
 {
-    /* always put in brackets to save future referencing hassles */
-    strcpy_s(newVarName, size, "(");
+	/* always put in brackets to save future referencing hassles */
+	strcpy_s(newVarName, size, "(");
 
-    /* start with ref to parent */
-    strcat_s(newVarName, size, parentVarName);
+	/* start with ref to parent */
+	strcat_s(newVarName, size, parentVarName);
 
-    /* ref this field */
-    if ((td->type == parent) || (parent->cTypeRefInfo->isPtr))
-        strcat_s(newVarName, size, "->");
-    else
-        strcat_s(newVarName, size, ".");
+	/* ref this field */
+	if ((td->type == parent) || (parent->cTypeRefInfo->isPtr))
+		strcat_s(newVarName, size, "->");
+	else
+		strcat_s(newVarName, size, ".");
 
-    strcat_s(newVarName, size, parent->cTypeRefInfo->choiceIdEnumFieldName);
-    strcat_s(newVarName, size, ")");
+	strcat_s(newVarName, size, parent->cTypeRefInfo->choiceIdEnumFieldName);
+	strcat_s(newVarName, size, ")");
 }  /* MakeChoiceIdValueRef */
 
 
 void
-PrintElmtAllocCode PARAMS ((src, type, varRefPtrName),
-    FILE *src _AND_
-    Type *type _AND_
-    char *varRefPtrName)
+PrintElmtAllocCode PARAMS((src, type, varRefPtrName),
+	FILE* src _AND_
+	Type* type _AND_
+	char* varRefPtrName)
 {
-    CTRI *ctri1;
-    CTRI *ctri2;
-    Type *t;
+	CTRI* ctri1;
+	CTRI* ctri2;
+	Type* t;
 
-    t = ResolveImportedType (type);
-    ctri1 =  type->cTypeRefInfo;
-    ctri2 =  t->cTypeRefInfo;
-    if (ctri1->isPtr)
-    {
-        if (ctri2->cTypeId == C_LIST)
-           fprintf (src, "\t%s = AsnListNew(sizeof(char*));\n", varRefPtrName);
-        else
-           fprintf (src, "\t%s = (%s*)Asn1Alloc(sizeof(%s));\n", varRefPtrName, ctri1->cTypeName, ctri1->cTypeName);
-         //fprintf (src,"    CheckAsn1Alloc (%s, env);\n", varRefPtrName);
-		//fprintf (src,"    CheckAsn1Alloc (%s);\n", varRefPtrName);	// Deepak: 18/Apr/2003 Not Required
-    }
+	t = ResolveImportedType(type);
+	ctri1 = type->cTypeRefInfo;
+	ctri2 = t->cTypeRefInfo;
+	if (ctri1->isPtr)
+	{
+		if (ctri2->cTypeId == C_LIST)
+			fprintf(src, "\t%s = AsnListNew(sizeof(char*));\n", varRefPtrName);
+		else
+			fprintf(src, "\t%s = (%s*)Asn1Alloc(sizeof(%s));\n", varRefPtrName, ctri1->cTypeName, ctri1->cTypeName);
+		//fprintf (src,"    CheckAsn1Alloc (%s, env);\n", varRefPtrName);
+	   //fprintf (src,"    CheckAsn1Alloc (%s);\n", varRefPtrName);	// Deepak: 18/Apr/2003 Not Required
+	}
 
 } /* PrintElmtAllocCode */
 
@@ -209,19 +209,19 @@ PrintElmtAllocCode PARAMS ((src, type, varRefPtrName),
  *                        (ie totalElmtLen for totalElmtLen1)
  */
 void
-PrintEocDecoders PARAMS ((f, maxLenLevel, minLenLevel, lenBaseVarName, totalLevel, totalBaseVarName),
-    FILE *f _AND_
-    int maxLenLevel _AND_
-    int minLenLevel _AND_
-    char *lenBaseVarName _AND_
-    int totalLevel _AND_
-    char *totalBaseVarName)
+PrintEocDecoders PARAMS((f, maxLenLevel, minLenLevel, lenBaseVarName, totalLevel, totalBaseVarName),
+	FILE* f _AND_
+	int maxLenLevel _AND_
+	int minLenLevel _AND_
+	char* lenBaseVarName _AND_
+	int totalLevel _AND_
+	char* totalBaseVarName)
 {
-    int i;
-    for (i = maxLenLevel; i > minLenLevel; i--)
-    {
-        fprintf (f,"\tif (%s%d == INDEFINITE_LEN)\n", lenBaseVarName, i);
-        fprintf (f,"        %sDecEoc (b, &%s%d, env);\n", GetEncRulePrefix(), totalBaseVarName, totalLevel);
+	int i;
+	for (i = maxLenLevel; i > minLenLevel; i--)
+	{
+		fprintf(f, "\tif (%s%d == INDEFINITE_LEN)\n", lenBaseVarName, i);
+		fprintf(f, "        %sDecEoc (b, &%s%d, env);\n", GetEncRulePrefix(), totalBaseVarName, totalLevel);
 		//RWC;fprintf (f,"\t\t%sDecEoc(b,&%s%d);\n", GetEncRulePrefix(), totalBaseVarName, totalLevel);
-    }
+	}
 } /* PrintEocDeocoders */

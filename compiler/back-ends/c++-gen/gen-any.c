@@ -98,283 +98,283 @@
 #include "rules.h"
 #include "../../core/snacc-util.h"		/* REN -- 5/11/2001 -- added for GetBuiltinType() */
 
-void PrintCxxAnyEnum PROTO ((FILE *hdr, Module *m, CxxRules *r));
-void PrintCxxAnyHashInitRoutine PROTO ((FILE *src, FILE *hdr, ModuleList *mods,
-									   Module *m, CxxRules *r));
-void PrintCxxOidValue PROTO ((FILE *f, CxxRules *r, AsnOid *oid, int parenOrQuote));
+void PrintCxxAnyEnum PROTO((FILE* hdr, Module* m, CxxRules* r));
+void PrintCxxAnyHashInitRoutine PROTO((FILE* src, FILE* hdr, ModuleList* mods,
+	Module* m, CxxRules* r));
+void PrintCxxOidValue PROTO((FILE* f, CxxRules* r, AsnOid* oid, int parenOrQuote));
 
 /* REN -- 5/11/2001 -- added following prototype */
-static TypeDef* GetTypeDef PROTO ((Type *t));
+static TypeDef* GetTypeDef PROTO((Type* t));
 
 
 extern int anyEnumValG;
 
 
 void
-PrintCxxAnyCode PARAMS ((src, hdr, r, mods, m),
-    FILE *src _AND_
-    FILE *hdr _AND_
-    CxxRules *r _AND_
-    ModuleList *mods _AND_
-    Module *m)
+PrintCxxAnyCode PARAMS((src, hdr, r, mods, m),
+	FILE* src _AND_
+	FILE* hdr _AND_
+	CxxRules* r _AND_
+	ModuleList* mods _AND_
+	Module* m)
 {
 
-    if (!m->hasAnys)
-        return;
+	if (!m->hasAnys)
+		return;
 
-    PrintCxxAnyEnum (hdr, m, r);
-    PrintCxxAnyHashInitRoutine (src, hdr, mods, m, r);
+	PrintCxxAnyEnum(hdr, m, r);
+	PrintCxxAnyHashInitRoutine(src, hdr, mods, m, r);
 
 }  /* PrintAnyCode */
 
 
 
 void
-PrintCxxAnyEnum PARAMS ((hdr, m, r),
-    FILE *hdr _AND_
-    Module *m _AND_
-    CxxRules *r)
+PrintCxxAnyEnum PARAMS((hdr, m, r),
+	FILE* hdr _AND_
+	Module* m _AND_
+	CxxRules* r)
 {
-    int firstPrinted = TRUE;
-    char *modName;
-/* REN -- 5/11/2001 */
-/*  TypeDef *td;
-     AnyRef *ar;
-    AnyRefList *arl;
-    int i; */
-	ValueDef *vd;
-	Type *t;
-    char anyId[512];
-/* REN -- end */
+	int firstPrinted = TRUE;
+	char* modName;
+	/* REN -- 5/11/2001 */
+	/*  TypeDef *td;
+		 AnyRef *ar;
+		AnyRefList *arl;
+		int i; */
+	ValueDef* vd;
+	Type* t;
+	char anyId[512];
+	/* REN -- end */
 
-    modName = Asn1TypeName2CTypeName (m->modId->name);
+	modName = Asn1TypeName2CTypeName(m->modId->name);
 
-    fprintf (hdr,"typedef enum %sAnyId\n", modName);
-    fprintf (hdr,"{\n");
+	fprintf(hdr, "typedef enum %sAnyId\n", modName);
+	fprintf(hdr, "{\n");
 
-/* REN -- 5/11/2001 -- Changed method in which anyRefs get written.  Original 
-code looped through the module's basic types and local type refs and wrote the 
-anys that referred to them.  Corrected method loops through the valueRefs and 
-writes all of the SNMP Object Types.
-Removed the following loops:
-     do any lib types 
-    for (i = BASICTYPE_BOOLEAN; i < BASICTYPE_MACRODEF; i++)
-    {
-        arl = LIBTYPE_GET_ANY_REFS (i);
-        if (arl != NULL)
-        {
-            FOR_EACH_LIST_ELMT (ar, arl)
-            {
-                if (!firstPrinted)
-                    fprintf (hdr,",\n");
-                fprintf (hdr,"    %s = %d", ar->anyIdName, anyEnumValG++);
-                firstPrinted = FALSE;
-            }
-        }
-    }
+	/* REN -- 5/11/2001 -- Changed method in which anyRefs get written.  Original
+	code looped through the module's basic types and local type refs and wrote the
+	anys that referred to them.  Corrected method loops through the valueRefs and
+	writes all of the SNMP Object Types.
+	Removed the following loops:
+		 do any lib types
+		for (i = BASICTYPE_BOOLEAN; i < BASICTYPE_MACRODEF; i++)
+		{
+			arl = LIBTYPE_GET_ANY_REFS (i);
+			if (arl != NULL)
+			{
+				FOR_EACH_LIST_ELMT (ar, arl)
+				{
+					if (!firstPrinted)
+						fprintf (hdr,",\n");
+					fprintf (hdr,"    %s = %d", ar->anyIdName, anyEnumValG++);
+					firstPrinted = FALSE;
+				}
+			}
+		}
 
-    FOR_EACH_LIST_ELMT (td, m->typeDefs)
-    {
-        if (td->anyRefs != NULL)
-        {
-            FOR_EACH_LIST_ELMT (ar, td->anyRefs)
-            {
-                if (!firstPrinted)
-                    fprintf (hdr,",\n");
-                fprintf (hdr,"    %s = %d", ar->anyIdName, anyEnumValG++);
-                firstPrinted = FALSE;
-            }
-        }
-    }
+		FOR_EACH_LIST_ELMT (td, m->typeDefs)
+		{
+			if (td->anyRefs != NULL)
+			{
+				FOR_EACH_LIST_ELMT (ar, td->anyRefs)
+				{
+					if (!firstPrinted)
+						fprintf (hdr,",\n");
+					fprintf (hdr,"    %s = %d", ar->anyIdName, anyEnumValG++);
+					firstPrinted = FALSE;
+				}
+			}
+		}
 
-REN -- 5/11/2001 -- added the following: */
-    FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-    {
-        if (vd->value != NULL)
+	REN -- 5/11/2001 -- added the following: */
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value != NULL)
 		{
 			t = vd->value->type;
 			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) &&
-				(t->basicType->a.macroType->choiceId == 
-				MACROTYPE_SNMPOBJECTTYPE))
+				(t->basicType->a.macroType->choiceId ==
+					MACROTYPE_SNMPOBJECTTYPE))
 			{
 				strcpy_s(anyId, 512, vd->definedName);
-			    Dash2Underscore (anyId, strlen (anyId));
+				Dash2Underscore(anyId, strlen(anyId));
 				strcat_s(anyId, 512, "_ANY_ID");
 
 				if (!firstPrinted)
-					fprintf (hdr,",\n");
-				fprintf (hdr,"    %s = %d", anyId, anyEnumValG);
+					fprintf(hdr, ",\n");
+				fprintf(hdr, "    %s = %d", anyId, anyEnumValG);
 				anyEnumValG++;
 				firstPrinted = FALSE;
-            }
-        }
-    }
-/* REN -- end */
+			}
+		}
+	}
+	/* REN -- end */
 
-    if (firstPrinted) /* none have been printed */
-        fprintf (hdr,"/* NO INTEGER or OBJECT IDENTIFIER to ANY type relationships were defined (via MACROs or other mechanism) */\n ??? \n");
+	if (firstPrinted) /* none have been printed */
+		fprintf(hdr, "/* NO INTEGER or OBJECT IDENTIFIER to ANY type relationships were defined (via MACROs or other mechanism) */\n ??? \n");
 
-    fprintf (hdr,"\n} %sAnyId;\n\n\n", modName);
-    Free (modName);
+	fprintf(hdr, "\n} %sAnyId;\n\n\n", modName);
+	Free(modName);
 
 }  /* PrintAnyEnum */
 
 
 void
-PrintCxxAnyHashInitRoutine PARAMS ((src, hdr, mods, m, r),
-    FILE *src _AND_
-    FILE *hdr _AND_
-    ModuleList *mods _AND_
-    Module *m _AND_
-    CxxRules *r)
+PrintCxxAnyHashInitRoutine PARAMS((src, hdr, mods, m, r),
+	FILE* src _AND_
+	FILE* hdr _AND_
+	ModuleList* mods _AND_
+	Module* m _AND_
+	CxxRules* r)
 {
-    TypeDef *td;
-    int i;
-    int installedSomeHashes=0;
-    struct CxxTDI *cxxtdi;
-    char *modName;
-/* REN -- 5/11/2001 */
-/*  AnyRef *ar;
-    AnyRefList *arl;
-    int j; */
-    enum BasicTypeChoiceId typeId;
-	ValueDef *vd;
-	Type *t;
-	BasicValue *bv;
-    char anyId[512];
-	char *typeName = NULL;
-/* REN -- end */
+	TypeDef* td;
+	int i;
+	int installedSomeHashes = 0;
+	struct CxxTDI* cxxtdi;
+	char* modName;
+	/* REN -- 5/11/2001 */
+	/*  AnyRef *ar;
+		AnyRefList *arl;
+		int j; */
+	enum BasicTypeChoiceId typeId;
+	ValueDef* vd;
+	Type* t;
+	BasicValue* bv;
+	char anyId[512];
+	char* typeName = NULL;
+	/* REN -- end */
 
-    modName = Asn1TypeName2CTypeName (m->modId->name);
+	modName = Asn1TypeName2CTypeName(m->modId->name);
 
-    /* print Any class src file */
-    fprintf (src,"// this class will automatically intialize the any hash tbl\n");
-    fprintf (src,"class InitAny%s\n", modName);
-    fprintf (src,"{\n");
-    fprintf (src,"  public:\n");
-    fprintf (src,"    InitAny%s();\n", modName);
-    fprintf (src,"    /* Do not add a destructor to this class!  It could\n");
-    fprintf (src,"     * cause pre-mature destruction of the ANY tables.\n");
-    fprintf (src,"     * The ANY tables will be destroyed by the runtime library.\n");
-    fprintf (src,"     */\n");
+	/* print Any class src file */
+	fprintf(src, "// this class will automatically intialize the any hash tbl\n");
+	fprintf(src, "class InitAny%s\n", modName);
+	fprintf(src, "{\n");
+	fprintf(src, "  public:\n");
+	fprintf(src, "    InitAny%s();\n", modName);
+	fprintf(src, "    /* Do not add a destructor to this class!  It could\n");
+	fprintf(src, "     * cause pre-mature destruction of the ANY tables.\n");
+	fprintf(src, "     * The ANY tables will be destroyed by the runtime library.\n");
+	fprintf(src, "     */\n");
 #if 0
-    fprintf (src,"    ~InitAny%s() { AsnAny::AsnAnyDestroyHashTbls(); }\n",modName);
+	fprintf(src, "    ~InitAny%s() { AsnAny::AsnAnyDestroyHashTbls(); }\n", modName);
 #endif
-    fprintf (src,"};\n\n");
+	fprintf(src, "};\n\n");
 
-    fprintf (src,"static InitAny%s anyInitalizer;\n", modName);
+	fprintf(src, "static InitAny%s anyInitalizer;\n", modName);
 
-    /* print constructor method that build hash tbl to src file*/
-    fprintf (src,"InitAny%s::InitAny%s()\n", modName, modName);
-    fprintf (src,"{\n");
+	/* print constructor method that build hash tbl to src file*/
+	fprintf(src, "InitAny%s::InitAny%s()\n", modName, modName);
+	fprintf(src, "{\n");
 
-/* REN -- 5/11/2001 -- Changed method in which anyRefs get written.  Original
-code looped through the module's basic types and local type refs and wrote the
-anys that referred to them.  Corrected method loops through the valueRefs and
-writes all of the SNMP Object Types.
-Removed the following loops:
-   first print value for OID's *
-     do any lib types first *
-    i = 0;
-    for (j = BASICTYPE_BOOLEAN; j < BASICTYPE_MACRODEF; j++)
-    {
-        arl = LIBTYPE_GET_ANY_REFS (j);
-        if (arl != NULL)
-        {
-            FOR_EACH_LIST_ELMT (ar, arl)
-            {
-                installedSomeHashes = TRUE;
-                if (ar->id->choiceId == OIDORINT_OID)
-                {
-                    fprintf (src,"    %s oid%d", r->typeConvTbl[BASICTYPE_OID].className, i++);
-                    PrintCxxOidValue (src, r, ar->id->a.oid);
-                    fprintf (src,";\n");
-                }
-                else if (ar->id->choiceId == OIDORINT_INTID)
-                {
-                    fprintf (src,"    %s int%d", r->typeConvTbl[BASICTYPE_INTEGER].className, i++);
-                    PrintCxxIntValue (src, r, ar->id->a.intId);
-                    fprintf (src,";\n");
-                }
-            }
-        }
-    }
-
-
-    FOR_EACH_LIST_ELMT (td, m->typeDefs)
-    {
-        if (td->anyRefs != NULL)
-        {
-            cxxtdi = td->cxxTypeDefInfo;
-            FOR_EACH_LIST_ELMT (ar, td->anyRefs)
-            {
-                installedSomeHashes = TRUE;
-                if (ar->id->choiceId == OIDORINT_OID)
-                {
-                    fprintf (src,"    %s oid%d", r->typeConvTbl[BASICTYPE_OID].className, i++);
-                    PrintCxxOidValue (src, r, ar->id->a.oid);
-                    fprintf (src,";\n");
-                }
-                else if (ar->id->choiceId == OIDORINT_INTID)
-                {
-                    fprintf (src,"    %s int%d", r->typeConvTbl[BASICTYPE_INTEGER].className, i++);
-                    PrintCxxIntValue (src, r, ar->id->a.intId);
-                    fprintf (src,";\n");
-                }
-            }
-        }
-    }
+	/* REN -- 5/11/2001 -- Changed method in which anyRefs get written.  Original
+	code looped through the module's basic types and local type refs and wrote the
+	anys that referred to them.  Corrected method loops through the valueRefs and
+	writes all of the SNMP Object Types.
+	Removed the following loops:
+	   first print value for OID's *
+		 do any lib types first *
+		i = 0;
+		for (j = BASICTYPE_BOOLEAN; j < BASICTYPE_MACRODEF; j++)
+		{
+			arl = LIBTYPE_GET_ANY_REFS (j);
+			if (arl != NULL)
+			{
+				FOR_EACH_LIST_ELMT (ar, arl)
+				{
+					installedSomeHashes = TRUE;
+					if (ar->id->choiceId == OIDORINT_OID)
+					{
+						fprintf (src,"    %s oid%d", r->typeConvTbl[BASICTYPE_OID].className, i++);
+						PrintCxxOidValue (src, r, ar->id->a.oid);
+						fprintf (src,";\n");
+					}
+					else if (ar->id->choiceId == OIDORINT_INTID)
+					{
+						fprintf (src,"    %s int%d", r->typeConvTbl[BASICTYPE_INTEGER].className, i++);
+						PrintCxxIntValue (src, r, ar->id->a.intId);
+						fprintf (src,";\n");
+					}
+				}
+			}
+		}
 
 
-    * now print hash init calls *
-    i = 0;
-    for (j = BASICTYPE_BOOLEAN; j < BASICTYPE_MACRODEF; j++)
-    {
-        arl = LIBTYPE_GET_ANY_REFS (j);
-        if (arl != NULL)
-        {
-            FOR_EACH_LIST_ELMT (ar, arl)
-            {
-                if (ar->id->choiceId == OIDORINT_OID)
-                    fprintf (src,"    AsnAny::InstallAnyByOid (oid%d, %s, new %s);\n", i++, ar->anyIdName, r->typeConvTbl[j].className);
+		FOR_EACH_LIST_ELMT (td, m->typeDefs)
+		{
+			if (td->anyRefs != NULL)
+			{
+				cxxtdi = td->cxxTypeDefInfo;
+				FOR_EACH_LIST_ELMT (ar, td->anyRefs)
+				{
+					installedSomeHashes = TRUE;
+					if (ar->id->choiceId == OIDORINT_OID)
+					{
+						fprintf (src,"    %s oid%d", r->typeConvTbl[BASICTYPE_OID].className, i++);
+						PrintCxxOidValue (src, r, ar->id->a.oid);
+						fprintf (src,";\n");
+					}
+					else if (ar->id->choiceId == OIDORINT_INTID)
+					{
+						fprintf (src,"    %s int%d", r->typeConvTbl[BASICTYPE_INTEGER].className, i++);
+						PrintCxxIntValue (src, r, ar->id->a.intId);
+						fprintf (src,";\n");
+					}
+				}
+			}
+		}
 
-                else
-                    fprintf (src,"    AsnAny::InstallAnyByInt (int%d, %s, new %s);\n", i++, ar->anyIdName, r->typeConvTbl[j].className);
 
-            }
-        }
-    }
+		* now print hash init calls *
+		i = 0;
+		for (j = BASICTYPE_BOOLEAN; j < BASICTYPE_MACRODEF; j++)
+		{
+			arl = LIBTYPE_GET_ANY_REFS (j);
+			if (arl != NULL)
+			{
+				FOR_EACH_LIST_ELMT (ar, arl)
+				{
+					if (ar->id->choiceId == OIDORINT_OID)
+						fprintf (src,"    AsnAny::InstallAnyByOid (oid%d, %s, new %s);\n", i++, ar->anyIdName, r->typeConvTbl[j].className);
 
-    FOR_EACH_LIST_ELMT (td, m->typeDefs)
-    {
-        if (td->anyRefs != NULL)
-        {
-            FOR_EACH_LIST_ELMT (ar, td->anyRefs)
-            {
-                cxxtdi = td->cxxTypeDefInfo;
+					else
+						fprintf (src,"    AsnAny::InstallAnyByInt (int%d, %s, new %s);\n", i++, ar->anyIdName, r->typeConvTbl[j].className);
 
-                if (ar->id->choiceId == OIDORINT_OID)
-                    fprintf (src,"    AsnAny::InstallAnyByOid (oid%d, %s, new %s);\n", i++, ar->anyIdName, cxxtdi->className);
+				}
+			}
+		}
 
-                else
-                    fprintf (src,"    AsnAny::InstallAnyByInt (int%d, %s, new %s);\n", i++, ar->anyIdName, cxxtdi->className);
+		FOR_EACH_LIST_ELMT (td, m->typeDefs)
+		{
+			if (td->anyRefs != NULL)
+			{
+				FOR_EACH_LIST_ELMT (ar, td->anyRefs)
+				{
+					cxxtdi = td->cxxTypeDefInfo;
 
-            }
-        }
-    }
+					if (ar->id->choiceId == OIDORINT_OID)
+						fprintf (src,"    AsnAny::InstallAnyByOid (oid%d, %s, new %s);\n", i++, ar->anyIdName, cxxtdi->className);
 
-REN -- 5/11/2001 -- added the following: */
+					else
+						fprintf (src,"    AsnAny::InstallAnyByInt (int%d, %s, new %s);\n", i++, ar->anyIdName, cxxtdi->className);
+
+				}
+			}
+		}
+
+	REN -- 5/11/2001 -- added the following: */
 	/* first print value for OID's */
-    i = 0;
+	i = 0;
 
-    FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-    {
-        if (vd->value != NULL)
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value != NULL)
 		{
 			t = vd->value->type;
 			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) &&
-				(t->basicType->a.macroType->choiceId == 
-				MACROTYPE_SNMPOBJECTTYPE))
+				(t->basicType->a.macroType->choiceId ==
+					MACROTYPE_SNMPOBJECTTYPE))
 			{
 				bv = vd->value->basicValue;
 				if (bv != NULL)
@@ -382,34 +382,34 @@ REN -- 5/11/2001 -- added the following: */
 					installedSomeHashes = TRUE;
 					if (bv->choiceId == BASICVALUE_OID)
 					{
-	                    fprintf (src,"    %s oid%d", 
+						fprintf(src, "    %s oid%d",
 							r->typeConvTbl[BASICTYPE_OID].className, i++);
-		                PrintCxxOidValue (src, r, bv->a.oid, 1);
-			            fprintf (src,";\n");
+						PrintCxxOidValue(src, r, bv->a.oid, 1);
+						fprintf(src, ";\n");
 					}
 				}
-            }
-        }
-    }
-    fprintf (src,"\n\n");
+			}
+		}
+	}
+	fprintf(src, "\n\n");
 
-    /* now print hash init calls */
-    i = 0;
+	/* now print hash init calls */
+	i = 0;
 
-    FOR_EACH_LIST_ELMT (vd, m->valueDefs)
-    {
-        if (vd->value != NULL)
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value != NULL)
 		{
 			t = vd->value->type;
 			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) &&
 				(t->basicType->a.macroType->choiceId ==
-				MACROTYPE_SNMPOBJECTTYPE))
+					MACROTYPE_SNMPOBJECTTYPE))
 			{
 				bv = vd->value->basicValue;
 				if (bv != NULL)
 				{
 					strcpy_s(anyId, 512, vd->definedName);
-				    Dash2Underscore (anyId, strlen (anyId));
+					Dash2Underscore(anyId, strlen(anyId));
 					strcat_s(anyId, 512, "_ANY_ID");
 
 					installedSomeHashes = TRUE;
@@ -421,7 +421,7 @@ REN -- 5/11/2001 -- added the following: */
 					if (((typeId >= BASICTYPE_BOOLEAN) &&
 						(typeId <= BASICTYPE_SETOF)) ||
 						((typeId >= BASICTYPE_NUMERIC_STR) &&
-						(typeId <= BASICTYPE_T61_STR)))
+							(typeId <= BASICTYPE_T61_STR)))
 					{
 						typeName = r->typeConvTbl[typeId].className;
 					}
@@ -437,7 +437,7 @@ REN -- 5/11/2001 -- added the following: */
 							typeName = cxxtdi->className;
 						}
 						else
-					        typeName = NULL;
+							typeName = NULL;
 					}
 
 					if (typeName == NULL)
@@ -446,66 +446,66 @@ REN -- 5/11/2001 -- added the following: */
 					{
 						if (bv->choiceId == BASICVALUE_OID)
 						{
-							fprintf (src,
+							fprintf(src,
 								"    AsnAny::InstallAnyByOid (oid%d, %s, new %s);\n",
 								i++, anyId, typeName);
 						}
 						else if (bv->choiceId == BASICVALUE_INTEGER)
 						{
-							fprintf (src,
+							fprintf(src,
 								"    AsnAny::InstallAnyByInt (%d, %s, new %s);\n",
 								bv->a.integer, anyId, typeName);
 						}
 					}
 				}
-            }
-        }
-    }
-/* REN -- end */
+			}
+		}
+	}
+	/* REN -- end */
 
-    if (!installedSomeHashes)
-    {
-        fprintf (src,"    /* Since no INTEGER/OID to ANY type relations were defined\n");
-        fprintf (src,"     * (usually done via MACROs) you must manually do the code\n");
-        fprintf (src,"     * to fill the hash tbl.\n");
-        fprintf (src,"     * if the ids are INTEGER use the following:\n");
-        fprintf (src,"     * AsnAny::InstallAnyByInt (3, ??_ANY_ID, new <className>);\n");
-        fprintf (src,"     * if the ids are OBJECT IDENTIFIERs use the following:\n");
-        fprintf (src,"     * AsnAny::InstallAnyByOid (OidValue, ??_ANY_ID, new <className>);\n");
-        fprintf (src,"     * put the ??_ANY_IDs in the AnyId enum.\n\n");
-        fprintf (src,"     * For example if you have some thing like\n");
-        fprintf (src,"     * T1 ::= SEQUENCE { id INTEGER, ANY DEFINED BY id }\n");
-        fprintf (src,"     * and the id 1 maps to the type BOOLEAN use the following:\n");
-        fprintf (src,"     * AsnAny::InstallAnyByInt (1, SOMEBOOL_ANY_ID, new AsnBool);\n");
-        fprintf (src,"     */\n ???????\n");  /* generate compile error */
-    }
+	if (!installedSomeHashes)
+	{
+		fprintf(src, "    /* Since no INTEGER/OID to ANY type relations were defined\n");
+		fprintf(src, "     * (usually done via MACROs) you must manually do the code\n");
+		fprintf(src, "     * to fill the hash tbl.\n");
+		fprintf(src, "     * if the ids are INTEGER use the following:\n");
+		fprintf(src, "     * AsnAny::InstallAnyByInt (3, ??_ANY_ID, new <className>);\n");
+		fprintf(src, "     * if the ids are OBJECT IDENTIFIERs use the following:\n");
+		fprintf(src, "     * AsnAny::InstallAnyByOid (OidValue, ??_ANY_ID, new <className>);\n");
+		fprintf(src, "     * put the ??_ANY_IDs in the AnyId enum.\n\n");
+		fprintf(src, "     * For example if you have some thing like\n");
+		fprintf(src, "     * T1 ::= SEQUENCE { id INTEGER, ANY DEFINED BY id }\n");
+		fprintf(src, "     * and the id 1 maps to the type BOOLEAN use the following:\n");
+		fprintf(src, "     * AsnAny::InstallAnyByInt (1, SOMEBOOL_ANY_ID, new AsnBool);\n");
+		fprintf(src, "     */\n ???????\n");  /* generate compile error */
+	}
 
 
-    fprintf (src,"}  /* InitAny::InitAny */\n\n\n");
+	fprintf(src, "}  /* InitAny::InitAny */\n\n\n");
 }  /* PrintAnyHashInitRoutine */
 
 
 /* REN -- 5/11/2001 -- GetTypeDef() function added to return the type def info
 for the given type. */
 static TypeDef*
-GetTypeDef PARAMS ((t),
-    Type *t)
+GetTypeDef PARAMS((t),
+	Type* t)
 {
-    if (t == NULL)
+	if (t == NULL)
 		return NULL;
 
 	switch (t->basicType->choiceId)
-    {
-        case BASICTYPE_LOCALTYPEREF:
-        case BASICTYPE_IMPORTTYPEREF:
-			return t->basicType->a.localTypeRef->link;
-            break;
+	{
+	case BASICTYPE_LOCALTYPEREF:
+	case BASICTYPE_IMPORTTYPEREF:
+		return t->basicType->a.localTypeRef->link;
+		break;
 
-        default:
-            return NULL;
-    }
-    /*fprintf (errFileG, "GetTypeDef: ERROR - cannot get type def for unlinked local/import type refs\n");
-    return NULL;*/
+	default:
+		return NULL;
+	}
+	/*fprintf (errFileG, "GetTypeDef: ERROR - cannot get type def for unlinked local/import type refs\n");
+	return NULL;*/
 
 }  /* GetTypeDef */
 /* REN -- end */

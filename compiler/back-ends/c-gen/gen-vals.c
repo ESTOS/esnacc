@@ -64,175 +64,175 @@
 #include "../str-util.h"
 
 
-void PrintCValueInstantiation PROTO ((FILE *hdr, CRules *r, Value *v));
-void PrintCOidValue PROTO ((FILE *f, CRules *r, AsnOid *oid));
-static void PrintValueDefsName PROTO ((FILE *f, CRules *r, ValueDef *v));
-static void PrintValueDefsType PROTO ((FILE *f, CRules *r, ValueDef *v));
+void PrintCValueInstantiation PROTO((FILE* hdr, CRules* r, Value* v));
+void PrintCOidValue PROTO((FILE* f, CRules* r, AsnOid* oid));
+static void PrintValueDefsName PROTO((FILE* f, CRules* r, ValueDef* v));
+static void PrintValueDefsType PROTO((FILE* f, CRules* r, ValueDef* v));
 
 
 void
-PrintCValueDef PARAMS ((src, r, v),
-    FILE *src _AND_
-    CRules *r _AND_
-    ValueDef *v)
+PrintCValueDef PARAMS((src, r, v),
+	FILE* src _AND_
+	CRules* r _AND_
+	ValueDef* v)
 {
-    /* just do oid's, ints and bools for now */
+	/* just do oid's, ints and bools for now */
 	/* Commented the below condition to allow Some More ValueDefs */
 /*    if ((v->value->basicValue->choiceId != BASICVALUE_OID) &&
-        (v->value->basicValue->choiceId != BASICVALUE_INTEGER) &&
-        (v->value->basicValue->choiceId != BASICVALUE_BOOLEAN))
-        return;
+		(v->value->basicValue->choiceId != BASICVALUE_INTEGER) &&
+		(v->value->basicValue->choiceId != BASICVALUE_BOOLEAN))
+		return;
 */
-    /*
-     * put instantiation in src file
-     */
-    PrintValueDefsType (src, r, v);
-    fprintf (src," ");
-    PrintValueDefsName (src, r, v);
-    fprintf (src," = ");
-    PrintCValueInstantiation (src, r, v->value);
-    fprintf (src,";\n");
+/*
+ * put instantiation in src file
+ */
+	PrintValueDefsType(src, r, v);
+	fprintf(src, " ");
+	PrintValueDefsName(src, r, v);
+	fprintf(src, " = ");
+	PrintCValueInstantiation(src, r, v->value);
+	fprintf(src, ";\n");
 
 }  /* PrintCValueDef */
 
 void
-PrintCValueExtern PARAMS ((hdr, r, v),
-    FILE *hdr _AND_
-    CRules *r _AND_
-    ValueDef *v)
+PrintCValueExtern PARAMS((hdr, r, v),
+	FILE* hdr _AND_
+	CRules* r _AND_
+	ValueDef* v)
 {
-    /* just do oid's, ints and bools for now */
+	/* just do oid's, ints and bools for now */
 
 	/* modified for more types Deepak: 17/Mar/2003 */
 /*    if ((v->value->basicValue->choiceId != BASICVALUE_OID) &&
-        (v->value->basicValue->choiceId != BASICVALUE_INTEGER) &&
-        (v->value->basicValue->choiceId != BASICVALUE_BOOLEAN))
-        return;
+		(v->value->basicValue->choiceId != BASICVALUE_INTEGER) &&
+		(v->value->basicValue->choiceId != BASICVALUE_BOOLEAN))
+		return;
 */
-    /*
-     * put extern declaration in hdr file
-     */
-    fprintf (hdr,"extern ");
-    PrintValueDefsType (hdr, r, v);
-    fprintf (hdr," ");
-    PrintValueDefsName (hdr, r, v);
-    fprintf (hdr,";\n");
+/*
+ * put extern declaration in hdr file
+ */
+	fprintf(hdr, "extern ");
+	PrintValueDefsType(hdr, r, v);
+	fprintf(hdr, " ");
+	PrintValueDefsName(hdr, r, v);
+	fprintf(hdr, ";\n");
 
 }  /* PrintCValueExtern */
 
 void
-PrintCValueInstantiation PARAMS ((f, r, v),
-    FILE *f _AND_
-    CRules *r _AND_
-    Value *v)
+PrintCValueInstantiation PARAMS((f, r, v),
+	FILE* f _AND_
+	CRules* r _AND_
+	Value* v)
 {
 
-  /* needs work - just do ints, bools and oids for now */
-  switch (v->basicValue->choiceId) {
-  case BASICVALUE_OID:
-    PrintCOidValue (f, r, v->basicValue->a.oid);
-    break;
-    
-  case BASICVALUE_INTEGER:
-    fprintf (f, "%d", v->basicValue->a.integer);
-    break;
-      
-  case BASICVALUE_BOOLEAN:
-    if (v->basicValue->a.boolean)
-      fprintf (f, "TRUE");
-    else
-      fprintf (f, "FALSE");
-    break;
+	/* needs work - just do ints, bools and oids for now */
+	switch (v->basicValue->choiceId) {
+	case BASICVALUE_OID:
+		PrintCOidValue(f, r, v->basicValue->a.oid);
+		break;
 
-	/* modified for more types Deepak: 17/Mar/2003 */
-	/* Also add in func PrintValueDefsType(...) */
-  case BASICVALUE_ASCIITEXT:
-	fprintf (f, "%s", r->typeConvTbl[BASICTYPE_PRINTABLE_STR].cTypeName);
-    break;
+	case BASICVALUE_INTEGER:
+		fprintf(f, "%d", v->basicValue->a.integer);
+		break;
 
-  case BASICVALUE_LOCALVALUEREF:
-      if (v->basicValue->a.localValueRef &&
-          v->basicValue->a.localValueRef->link &&
-          v->basicValue->a.localValueRef->link->value &&
-          v->basicValue->a.localValueRef->link->value->basicValue)
-      {
-            int iValue=500;     // WILL indicate a problem on source creation...
-            if (v->basicValue->a.localValueRef->link->value->basicValue->choiceId == 
-                        BASICVALUE_INTEGER)
-            {
-                iValue = v->basicValue->a.localValueRef->link->
-                                                value->basicValue->a.integer;
-            }       // IF Integer
-            else if (v->basicValue->a.localValueRef->link->value->basicValue->choiceId == 
-                        BASICVALUE_LOCALVALUEREF)
-            {
-                ValueRef *pvalueRef=NULL;
-                if (v->basicValue->a.localValueRef->link->value->basicValue->choiceId == BASICVALUE_LOCALVALUEREF)
-                {
-                    pvalueRef = v->basicValue->a.localValueRef->link->value->basicValue->a.localValueRef;
-                    if (pvalueRef->link->value && pvalueRef->link->value->basicValue &&
-                        pvalueRef->link->value->basicValue->choiceId == BASICVALUE_INTEGER)
-                        iValue = pvalueRef->link->value->basicValue->a.integer;
-                }       // END IF LOCALVALUEREF (recursed)
-            }           // END IF LOCALVALUEREF under LCOALVALUEREF
-       	    fprintf (f, "%d", iValue);
-      }     // END if LocalValueRef type.
-    break;
+	case BASICVALUE_BOOLEAN:
+		if (v->basicValue->a.boolean)
+			fprintf(f, "TRUE");
+		else
+			fprintf(f, "FALSE");
+		break;
 
-  default:
-    break;
-  }
-   
+		/* modified for more types Deepak: 17/Mar/2003 */
+		/* Also add in func PrintValueDefsType(...) */
+	case BASICVALUE_ASCIITEXT:
+		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_PRINTABLE_STR].cTypeName);
+		break;
+
+	case BASICVALUE_LOCALVALUEREF:
+		if (v->basicValue->a.localValueRef &&
+			v->basicValue->a.localValueRef->link &&
+			v->basicValue->a.localValueRef->link->value &&
+			v->basicValue->a.localValueRef->link->value->basicValue)
+		{
+			int iValue = 500;     // WILL indicate a problem on source creation...
+			if (v->basicValue->a.localValueRef->link->value->basicValue->choiceId ==
+				BASICVALUE_INTEGER)
+			{
+				iValue = v->basicValue->a.localValueRef->link->
+					value->basicValue->a.integer;
+			}       // IF Integer
+			else if (v->basicValue->a.localValueRef->link->value->basicValue->choiceId ==
+				BASICVALUE_LOCALVALUEREF)
+			{
+				ValueRef* pvalueRef = NULL;
+				if (v->basicValue->a.localValueRef->link->value->basicValue->choiceId == BASICVALUE_LOCALVALUEREF)
+				{
+					pvalueRef = v->basicValue->a.localValueRef->link->value->basicValue->a.localValueRef;
+					if (pvalueRef->link->value && pvalueRef->link->value->basicValue &&
+						pvalueRef->link->value->basicValue->choiceId == BASICVALUE_INTEGER)
+						iValue = pvalueRef->link->value->basicValue->a.integer;
+				}       // END IF LOCALVALUEREF (recursed)
+			}           // END IF LOCALVALUEREF under LCOALVALUEREF
+			fprintf(f, "%d", iValue);
+		}     // END if LocalValueRef type.
+		break;
+
+	default:
+		break;
+	}
+
 }
 
 static void
-PrintValueDefsName PARAMS ((f, r, v),
-    FILE *f _AND_
-    CRules *r _AND_
-    ValueDef *v)
+PrintValueDefsName PARAMS((f, r, v),
+	FILE* f _AND_
+	CRules* r _AND_
+	ValueDef* v)
 {
-    char *cName;
-    cName = Asn1ValueName2CValueName (v->definedName);
-    fprintf (f, "%s", cName);
-    Free (cName);
+	char* cName;
+	cName = Asn1ValueName2CValueName(v->definedName);
+	fprintf(f, "%s", cName);
+	Free(cName);
 }
 
 static void
-PrintValueDefsType PARAMS ((f, r, v),
-    FILE *f _AND_
-    CRules *r _AND_
-    ValueDef *v)
+PrintValueDefsType PARAMS((f, r, v),
+	FILE* f _AND_
+	CRules* r _AND_
+	ValueDef* v)
 {
-    /* needs work - just do ints bools and oid's for now */
+	/* needs work - just do ints bools and oid's for now */
 	switch (v->value->basicValue->choiceId)
-    {
-        case BASICVALUE_OID:
-            fprintf (f, "%s", r->typeConvTbl[BASICTYPE_OID].cTypeName);
-            break;
+	{
+	case BASICVALUE_OID:
+		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_OID].cTypeName);
+		break;
 
-        case BASICVALUE_RELATIVE_OID:
-            fprintf (f, "%s", r->typeConvTbl[BASICTYPE_RELATIVE_OID].cTypeName);
-            break;
+	case BASICVALUE_RELATIVE_OID:
+		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_RELATIVE_OID].cTypeName);
+		break;
 
-        case BASICVALUE_INTEGER:
-            fprintf (f, "%s", r->typeConvTbl[BASICTYPE_INTEGER].cTypeName);
-            break;
+	case BASICVALUE_INTEGER:
+		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_INTEGER].cTypeName);
+		break;
 
-        case BASICVALUE_BOOLEAN:
-            fprintf (f, "%s", r->typeConvTbl[BASICTYPE_BOOLEAN].cTypeName);
-            break;
+	case BASICVALUE_BOOLEAN:
+		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_BOOLEAN].cTypeName);
+		break;
 
-			/* modified for more types Deepak: 17/Mar/2003 */
-			/* Also add in func PrintCValueInstantiation(...) */
-		case BASICVALUE_ASCIITEXT:
-			fprintf (f, "%s", r->typeConvTbl[BASICTYPE_PRINTABLE_STR].cTypeName);
-            break;
-	//	case BASICVALUE_VALUENOTATION:
-	//		fprintf (f, "%s", r->typeConvTbl[BASICTYPE_PRINTABLE_STR].cTypeName);
-	//		break;
-        default:
-           break;
-    }
+		/* modified for more types Deepak: 17/Mar/2003 */
+		/* Also add in func PrintCValueInstantiation(...) */
+	case BASICVALUE_ASCIITEXT:
+		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_PRINTABLE_STR].cTypeName);
+		break;
+		//	case BASICVALUE_VALUENOTATION:
+		//		fprintf (f, "%s", r->typeConvTbl[BASICTYPE_PRINTABLE_STR].cTypeName);
+		//		break;
+	default:
+		break;
+	}
 }
 
 
@@ -254,20 +254,20 @@ PrintValueDefsType PARAMS ((f, r, v),
  * is produced.
  */
 void
-PrintCOidValue PARAMS ((f, r, oid),
-    FILE *f _AND_
-    CRules *r _AND_
-    AsnOid *oid)
+PrintCOidValue PARAMS((f, r, oid),
+	FILE* f _AND_
+	CRules* r _AND_
+	AsnOid* oid)
 {
-    int i;
+	int i;
 
-    fprintf (f, "{ ");
-    fprintf (f, "%d, ",(int)oid->octetLen);
-    fprintf (f, "\"");
+	fprintf(f, "{ ");
+	fprintf(f, "%d, ", (int)oid->octetLen);
+	fprintf(f, "\"");
 
-    /* print encoded oid string in C's 'octal' escape format */
-    for (i = 0; i < (int)(oid->octetLen); i++)
-        fprintf (f, "\\%o", (unsigned char)oid->octs[i]);
-    fprintf (f, "\"");
-    fprintf (f, " }");
+	/* print encoded oid string in C's 'octal' escape format */
+	for (i = 0; i < (int)(oid->octetLen); i++)
+		fprintf(f, "\\%o", (unsigned char)oid->octs[i]);
+	fprintf(f, "\"");
+	fprintf(f, " }");
 } /* PrintCOidValue */

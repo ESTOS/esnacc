@@ -82,20 +82,20 @@
 #include <memory.h>
 
 
-/*
- * encodes universal TAG LENGTH and Contents of and ASN.1 OCTET STRING
- */
+ /*
+  * encodes universal TAG LENGTH and Contents of and ASN.1 OCTET STRING
+  */
 AsnLen
-BEncAsnOcts PARAMS ((b, data),
-    GenBuf *b _AND_
-    AsnOcts *data)
+BEncAsnOcts PARAMS((b, data),
+	GenBuf* b _AND_
+	AsnOcts* data)
 {
-    AsnLen len;
+	AsnLen len;
 
-    len =  BEncAsnOctsContent (b, data);
-    len += BEncDefLen (b, len);
-    len += BEncTag1 (b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
-    return len;
+	len = BEncAsnOctsContent(b, data);
+	len += BEncDefLen(b, len);
+	len += BEncTag1(b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
+	return len;
 }  /* BEncAsnOcts */
 
 
@@ -103,23 +103,23 @@ BEncAsnOcts PARAMS ((b, data),
  * decodes universal TAG LENGTH and Contents of and ASN.1 OCTET STRING
  */
 void
-BDecAsnOcts PARAMS ((b, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnOcts    *result _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecAsnOcts PARAMS((b, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnOcts* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    AsnTag tag;
-    AsnLen elmtLen;
+	AsnTag tag;
+	AsnLen elmtLen;
 
-    if (((tag = BDecTag (b, bytesDecoded, env)) != MAKE_TAG_ID (UNIV, PRIM, OCTETSTRING_TAG_CODE)) && (tag != MAKE_TAG_ID (UNIV, CONS, OCTETSTRING_TAG_CODE)))
-    {
-         Asn1Error ("BDecAsnOcts: ERROR - wrong tag on OCTET STRING.\n");
-         longjmp (env, -40);
-    }
+	if (((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE)))
+	{
+		Asn1Error("BDecAsnOcts: ERROR - wrong tag on OCTET STRING.\n");
+		longjmp(env, -40);
+	}
 
-    elmtLen = BDecLen (b, bytesDecoded, env);
-    BDecAsnOctsContent (b, tag, elmtLen, result, bytesDecoded, env);
+	elmtLen = BDecLen(b, bytesDecoded, env);
+	BDecAsnOctsContent(b, tag, elmtLen, result, bytesDecoded, env);
 
 }  /* BDecAsnOcts */
 
@@ -127,12 +127,12 @@ BDecAsnOcts PARAMS ((b, result, bytesDecoded, env),
  * BER encodes just the content of an OCTET STRING.
  */
 AsnLen
-BEncAsnOctsContent PARAMS ((b, o),
-    GenBuf *b _AND_
-    AsnOcts *o)
+BEncAsnOctsContent PARAMS((b, o),
+	GenBuf* b _AND_
+	AsnOcts* o)
 {
-    BufPutSegRvs (b, o->octs, o->octetLen);
-    return (AsnLen)o->octetLen;
+	BufPutSegRvs(b, o->octs, o->octetLen);
+	return (AsnLen)o->octetLen;
 }  /* BEncAsnOctsContent */
 
 
@@ -144,74 +144,74 @@ BEncAsnOctsContent PARAMS ((b, o),
  * construced octet string
  */
 static void
-FillOctetStringStk PARAMS ((b, elmtLen0, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnLen elmtLen0 _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+FillOctetStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnLen elmtLen0 _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    unsigned long refdLen;
-    unsigned long totalRefdLen;
-    char *strPtr;
-    unsigned long totalElmtsLen1 = 0;
-    unsigned long tagId1;
-    unsigned long elmtLen1;
+	unsigned long refdLen;
+	unsigned long totalRefdLen;
+	char* strPtr;
+	unsigned long totalElmtsLen1 = 0;
+	unsigned long tagId1;
+	unsigned long elmtLen1;
 
-    for (; (totalElmtsLen1 < elmtLen0) || (elmtLen0 == INDEFINITE_LEN); )
-    {
-        tagId1 = BDecTag (b, &totalElmtsLen1, env);
+	for (; (totalElmtsLen1 < elmtLen0) || (elmtLen0 == INDEFINITE_LEN); )
+	{
+		tagId1 = BDecTag(b, &totalElmtsLen1, env);
 
-        if ((tagId1 == EOC_TAG_ID) && (elmtLen0 == INDEFINITE_LEN))
-        {
-            BDEC_2ND_EOC_OCTET (b, &totalElmtsLen1, env);
-            break;
-        }
+		if ((tagId1 == EOC_TAG_ID) && (elmtLen0 == INDEFINITE_LEN))
+		{
+			BDEC_2ND_EOC_OCTET(b, &totalElmtsLen1, env);
+			break;
+		}
 
-        elmtLen1 = BDecLen (b, &totalElmtsLen1, env);
-        if (tagId1 == MAKE_TAG_ID (UNIV, PRIM, OCTETSTRING_TAG_CODE))
-        {
-            /*
-             * primitive part of string, put references to piece (s) in
-             * str stack
-             */
-            totalRefdLen = 0;
-            refdLen = elmtLen1;
-            while (1)
-            {
-                strPtr = (char *)BufGetSeg (b, &refdLen);
+		elmtLen1 = BDecLen(b, &totalElmtsLen1, env);
+		if (tagId1 == MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE))
+		{
+			/*
+			 * primitive part of string, put references to piece (s) in
+			 * str stack
+			 */
+			totalRefdLen = 0;
+			refdLen = elmtLen1;
+			while (1)
+			{
+				strPtr = (char*)BufGetSeg(b, &refdLen);
 
-                PUSH_STR (strPtr, refdLen, env);
-                totalRefdLen += refdLen;
-                if (totalRefdLen == elmtLen1)
-                    break; /* exit this while loop */
+				PUSH_STR(strPtr, refdLen, env);
+				totalRefdLen += refdLen;
+				if (totalRefdLen == elmtLen1)
+					break; /* exit this while loop */
 
-                if (refdLen == 0) /* end of data */
-                {
-                    Asn1Error ("BDecConsOctetString: ERROR - attempt to decode past end of data\n");
-                    longjmp (env, -18);
-                }
-                refdLen = elmtLen1 - totalRefdLen;
-            }
-            totalElmtsLen1 += elmtLen1;
-        }
+				if (refdLen == 0) /* end of data */
+				{
+					Asn1Error("BDecConsOctetString: ERROR - attempt to decode past end of data\n");
+					longjmp(env, -18);
+				}
+				refdLen = elmtLen1 - totalRefdLen;
+			}
+			totalElmtsLen1 += elmtLen1;
+		}
 
 
-        else if (tagId1 == MAKE_TAG_ID (UNIV, CONS, OCTETSTRING_TAG_CODE))
-        {
-            /*
-             * constructed octets string embedding in this constructed
-             * octet string. decode it.
-             */
-            FillOctetStringStk (b, elmtLen1, &totalElmtsLen1, env);
-        }
-        else  /* wrong tag */
-        {
-            Asn1Error ("BDecConsOctetString: ERROR - decoded non-OCTET STRING tag inside a constructed OCTET STRING\n");
-            longjmp (env, -19);
-        }
-    } /* end of for */
+		else if (tagId1 == MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE))
+		{
+			/*
+			 * constructed octets string embedding in this constructed
+			 * octet string. decode it.
+			 */
+			FillOctetStringStk(b, elmtLen1, &totalElmtsLen1, env);
+		}
+		else  /* wrong tag */
+		{
+			Asn1Error("BDecConsOctetString: ERROR - decoded non-OCTET STRING tag inside a constructed OCTET STRING\n");
+			longjmp(env, -19);
+		}
+	} /* end of for */
 
-    (*bytesDecoded) += totalElmtsLen1;
+	(*bytesDecoded) += totalElmtsLen1;
 
 }  /* FillOctetStringStk */
 
@@ -223,39 +223,39 @@ FillOctetStringStk PARAMS ((b, elmtLen0, bytesDecoded, env),
  * this in the length.
  */
 static void
-BDecConsAsnOcts PARAMS ((b, len, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnLen len _AND_
-    AsnOcts *result _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecConsAsnOcts PARAMS((b, len, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnLen len _AND_
+	AsnOcts* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    char *bufCurr;
-    unsigned long curr;
+	char* bufCurr;
+	unsigned long curr;
 
-    RESET_STR_STK();
+	RESET_STR_STK();
 
-    /*
-     * decode each piece of the octet string, puting
-     * an entry in the octet string stack for each
-     */
-    FillOctetStringStk (b, len, bytesDecoded, env);
+	/*
+	 * decode each piece of the octet string, puting
+	 * an entry in the octet string stack for each
+	 */
+	FillOctetStringStk(b, len, bytesDecoded, env);
 
-    result->octetLen = strStkG.totalByteLen;
+	result->octetLen = strStkG.totalByteLen;
 
-    /* alloc str for all octs pieces with extra byte for null terminator */
-    bufCurr = result->octs = (char*)Asn1Alloc (strStkG.totalByteLen +1);
-    CheckAsn1Alloc (result->octs, env);
+	/* alloc str for all octs pieces with extra byte for null terminator */
+	bufCurr = result->octs = (char*)Asn1Alloc(strStkG.totalByteLen + 1);
+	CheckAsn1Alloc(result->octs, env);
 
-    /* copy octet str pieces into single blk */
-    for (curr = 0; curr < strStkG.nextFreeElmt; curr++)
-    {
-        memcpy (bufCurr, strStkG.stk[curr].str, strStkG.stk[curr].len);
-        bufCurr += strStkG.stk[curr].len;
-    }
+	/* copy octet str pieces into single blk */
+	for (curr = 0; curr < strStkG.nextFreeElmt; curr++)
+	{
+		memcpy(bufCurr, strStkG.stk[curr].str, strStkG.stk[curr].len);
+		bufCurr += strStkG.stk[curr].len;
+	}
 
-    /* add null terminator - this is not included in the str's len */
-    *bufCurr = '\0';
+	/* add null terminator - this is not included in the str's len */
+	*bufCurr = '\0';
 
 }  /* BDecConsAsnOcts */
 
@@ -263,43 +263,43 @@ BDecConsAsnOcts PARAMS ((b, len, result, bytesDecoded, env),
  * Decodes the content of a BER OCTET STRING value
  */
 void
-BDecAsnOctsContent PARAMS ((b, tagId, len, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnTag tagId _AND_
-    AsnLen len _AND_
-    AsnOcts *result _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecAsnOctsContent PARAMS((b, tagId, len, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnTag tagId _AND_
+	AsnLen len _AND_
+	AsnOcts* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    /*
-     * tagId is encoded tag shifted into long int.
-     * if CONS bit is set then constructed octet string
-     */
-    if (TAG_IS_CONS (tagId))
-        BDecConsAsnOcts (b, len, result, bytesDecoded, env);
+	/*
+	 * tagId is encoded tag shifted into long int.
+	 * if CONS bit is set then constructed octet string
+	 */
+	if (TAG_IS_CONS(tagId))
+		BDecConsAsnOcts(b, len, result, bytesDecoded, env);
 
-    else /* primitive octet string */
-    {
-        if (len == INDEFINITE_LEN)
-        {
-             Asn1Error ("BDecAsnOctsContent: ERROR - indefinite length on primitive\n");
-             longjmp (env, -67);
-        }
-        result->octetLen = len;
-        result->octs =  (char*)Asn1Alloc (len+1);
-        CheckAsn1Alloc (result->octs, env);
-        BufCopy (result->octs, b, len);
+	else /* primitive octet string */
+	{
+		if (len == INDEFINITE_LEN)
+		{
+			Asn1Error("BDecAsnOctsContent: ERROR - indefinite length on primitive\n");
+			longjmp(env, -67);
+		}
+		result->octetLen = len;
+		result->octs = (char*)Asn1Alloc(len + 1);
+		CheckAsn1Alloc(result->octs, env);
+		BufCopy(result->octs, b, len);
 
-        if (BufReadError (b))
-        {
-            Asn1Error ("BDecAsnOctsContent: ERROR - decoded past end of data\n");
-            longjmp (env, -20);
-        }
+		if (BufReadError(b))
+		{
+			Asn1Error("BDecAsnOctsContent: ERROR - decoded past end of data\n");
+			longjmp(env, -20);
+		}
 
-        /* add null terminator - this is not included in the str's len */
-        result->octs[len] = '\0';
-        (*bytesDecoded) += len;
-    }
+		/* add null terminator - this is not included in the str's len */
+		result->octs[len] = '\0';
+		(*bytesDecoded) += len;
+	}
 }  /* BDecAsnOctsContent */
 
 
@@ -307,10 +307,10 @@ BDecAsnOctsContent PARAMS ((b, tagId, len, result, bytesDecoded, env),
  * Frees the string part of the given OCTET STRING
  */
 void
-FreeAsnOcts PARAMS ((v),
-    AsnOcts *v)
+FreeAsnOcts PARAMS((v),
+	AsnOcts* v)
 {
-    Asn1Free (v->octs);
+	Asn1Free(v->octs);
 }  /* FreeAsnOcts */
 
 /*
@@ -319,33 +319,33 @@ FreeAsnOcts PARAMS ((v),
  * hex format, the ASCII version is included in an ASN.1 comment.
  */
 void
-PrintAsnOcts PARAMS ((f,v, indent),
-    FILE *f _AND_
-    AsnOcts *v _AND_
-    unsigned int indent)
+PrintAsnOcts PARAMS((f, v, indent),
+	FILE* f _AND_
+	AsnOcts* v _AND_
+	unsigned int indent)
 {
-    int i;
+	int i;
 
-    /* print hstring value */
-    fprintf (f,"'");
+	/* print hstring value */
+	fprintf(f, "'");
 
-    for (i = 0; i < (int)(v->octetLen); i++)
-	  fprintf (f,"%c%c", TO_HEX (v->octs[i] >> 4), TO_HEX (v->octs[i]));
+	for (i = 0; i < (int)(v->octetLen); i++)
+		fprintf(f, "%c%c", TO_HEX(v->octs[i] >> 4), TO_HEX(v->octs[i]));
 
-    fprintf (f,"'H");
+	fprintf(f, "'H");
 
-    /* show printable chars in comment */
-    fprintf (f,"  -- \"");
+	/* show printable chars in comment */
+	fprintf(f, "  -- \"");
 
-    for (i = 0; i < (int)(v->octetLen); i++)
-    {
-/*	if (isprint (v->octs[i]))		DAD - temp removing for now*/
-	if(1)
-	    fprintf (f,"%c", v->octs[i]);
-	else
-	  fprintf (f,".");
-    }
-    fprintf (f,"\" --");
+	for (i = 0; i < (int)(v->octetLen); i++)
+	{
+		/*	if (isprint (v->octs[i]))		DAD - temp removing for now*/
+		if (1)
+			fprintf(f, "%c", v->octs[i]);
+		else
+			fprintf(f, ".");
+	}
+	fprintf(f, "\" --");
 }
 
 
@@ -354,11 +354,11 @@ PrintAsnOcts PARAMS ((f,v, indent),
  * Returns FALSE otherwise.
  */
 int
-AsnOctsEquiv PARAMS ((o1, o2),
-    AsnOcts *o1 _AND_
-    AsnOcts *o2)
+AsnOctsEquiv PARAMS((o1, o2),
+	AsnOcts* o1 _AND_
+	AsnOcts* o2)
 {
-    return o1->octetLen == o2->octetLen && !memcmp (o1->octs, o2->octs, o1->octetLen);
+	return o1->octetLen == o2->octetLen && !memcmp(o1->octs, o2->octs, o1->octetLen);
 } /* AsnOctsEquiv */
 
 

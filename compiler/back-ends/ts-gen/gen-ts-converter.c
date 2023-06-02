@@ -507,7 +507,7 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		enum BasicTypeChoiceId compareChoiceID = choiceId;
 		if (compareChoiceID == BASICTYPE_SEQUENCEOF)
 			compareChoiceID = BASICTYPE_SEQUENCE;
-		else if(compareChoiceID == BASICTYPE_SETOF)
+		else if (compareChoiceID == BASICTYPE_SETOF)
 			compareChoiceID = BASICTYPE_SET;
 		fprintf(src, "if (s.choiceName === \"%s\" && asn1ts.%s.typeGuard(s))", e->fieldName, GetBERType(compareChoiceID));
 
@@ -1125,7 +1125,7 @@ void Print_JSON_DecoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, Type
 	// Seems to be unused
 	assert(FALSE);
 	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
-	
+
 	fprintf(src, "\n%s// [%s]\n", szIndent, __FUNCTION__);
 	fprintf(src, "%st = %s_Converter.fromJSON(s, errors, newContext, name, optional);\n", szIndent, td->type->basicType->a.localTypeRef->link->definedName);
 }

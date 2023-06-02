@@ -286,7 +286,7 @@ void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 		propertyCounter++;
 	}
 
-	if(propertyCounter)
+	if (propertyCounter)
 		fprintf(src, "\n");
 
 	/*
@@ -420,8 +420,8 @@ void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 	fprintf(src, "\t// Merge\n");
 	fprintf(src, "\tpublic final func merge(_ objectToMerge : %s) -> %s {\n", szConverted, szConverted);
 	fprintf(src, "\t\tlet result = self.copy()\n");
-    fprintf(src, "\t\tresult.setJSONObject(objectToMerge.toJSONObject())\n");
-    fprintf(src, "\t\treturn result\n");
+	fprintf(src, "\t\tresult.setJSONObject(objectToMerge.toJSONObject())\n");
+	fprintf(src, "\t\treturn result\n");
 	fprintf(src, "\t}\n");
 
 	fprintf(src, "}\n");

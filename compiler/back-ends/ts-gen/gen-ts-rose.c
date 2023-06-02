@@ -205,7 +205,7 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 	if (!GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
 		return bAddNewLine;
 
-	if(!bInvokes && pszResult || bInvokes && !pszResult)
+	if (!bInvokes && pszResult || bInvokes && !pszResult)
 		return bAddNewLine;
 
 	if (bAddNewLine)
@@ -226,7 +226,7 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 				fprintf(src, " *\n");
 			if (bHasLong)
 				printComment(src, " *", operationComment.szLong, "\n");
-			if(!bHasShort && !bHasLong)
+			if (!bHasShort && !bHasLong)
 				fprintf(src, " * -\n");
 			fprintf(src, " *\n");
 			asnsequencecomment argumentComment;
@@ -235,7 +235,7 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 
 			char* szComment = getNakedCommentDupped(argumentComment.szShort);
 			if (szComment) {
-				if(strlen(szComment))
+				if (strlen(szComment))
 					fprintf(src, " %s", szComment);
 				free(szComment);
 			}
@@ -481,7 +481,7 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 			fprintf(src, "\t\t\t\treturn await this.handleOnInvoke(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
 			fprintf(src, "%s.%s, ", szArgumentNS, pszArgument);
-			if(argumentMod == m)
+			if (argumentMod == m)
 				fprintf(src, "Converter.%s_Converter, ", pszArgument);
 			else
 				fprintf(src, "%s_Converter.%s_Converter, ", szArgumentNS, pszArgument);
@@ -683,7 +683,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 				fprintf(src, "\t\treturn this.handleInvoke(argument, ");
 				fprintf(src, "%s.%s, ", szResultNS, pszResult);
 				fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
-				if(argumentMod == m)
+				if (argumentMod == m)
 					fprintf(src, "Converter.%s_Converter, ", pszArgument);
 				else
 					fprintf(src, "%s_Converter.%s_Converter, ", szArgumentNS, pszArgument);

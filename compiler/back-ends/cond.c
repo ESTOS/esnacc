@@ -38,24 +38,24 @@
 #include "../../c-lib/include/asn-incl.h"
 #include "str-util.h"
 
-void PrintConditionalIncludeOpen(FILE *f, char *fileName)
+void PrintConditionalIncludeOpen(FILE* f, char* fileName)
 {
-    char hdrFileDefSym[256];
-    int i;
+	char hdrFileDefSym[256];
+	int i;
 
-    strcpy_s(hdrFileDefSym, 256, RemovePath(fileName));
-    for (i = 0; i < (int)strlen (hdrFileDefSym); i++)
-        if (hdrFileDefSym[i] == '-' || hdrFileDefSym[i] == '.' ||
-           hdrFileDefSym[i] == '\\' || hdrFileDefSym[i] == '/')
-            hdrFileDefSym[i] = '_';
+	strcpy_s(hdrFileDefSym, 256, RemovePath(fileName));
+	for (i = 0; i < (int)strlen(hdrFileDefSym); i++)
+		if (hdrFileDefSym[i] == '-' || hdrFileDefSym[i] == '.' ||
+			hdrFileDefSym[i] == '\\' || hdrFileDefSym[i] == '/')
+			hdrFileDefSym[i] = '_';
 
-    fprintf (f, "#ifndef _%s_\n", hdrFileDefSym);
-    fprintf(f, "#define _%s_\n\n", hdrFileDefSym);
+	fprintf(f, "#ifndef _%s_\n", hdrFileDefSym);
+	fprintf(f, "#define _%s_\n\n", hdrFileDefSym);
 } /* PrintConditionalIncludeOpen */
 
 
-void PrintConditionalIncludeClose(FILE *f, char *fileName)
+void PrintConditionalIncludeClose(FILE* f, char* fileName)
 {
-    fprintf (f, "\n#endif\n");
+	fprintf(f, "\n#endif\n");
 
 } /* PrintConditionalIncludeClose */

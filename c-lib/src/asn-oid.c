@@ -68,20 +68,20 @@
 #include "../include/asn-oid.h"
 
 
-/*
- * encodes universal TAG LENGTH and Contents of and ASN.1 OBJECT ID
- */
+ /*
+  * encodes universal TAG LENGTH and Contents of and ASN.1 OBJECT ID
+  */
 AsnLen
-BEncAsnOid PARAMS ((b, data),
-    GenBuf *b _AND_
-    AsnOid *data)
+BEncAsnOid PARAMS((b, data),
+	GenBuf* b _AND_
+	AsnOid* data)
 {
-    AsnLen len;
+	AsnLen len;
 
-    len =  BEncAsnOidContent (b, data);
-    len += BEncDefLen (b, len);
-    len += BEncTag1 (b, UNIV, PRIM, OID_TAG_CODE);
-    return len;
+	len = BEncAsnOidContent(b, data);
+	len += BEncDefLen(b, len);
+	len += BEncTag1(b, UNIV, PRIM, OID_TAG_CODE);
+	return len;
 }  /* BEncAsnOid */
 
 
@@ -89,23 +89,23 @@ BEncAsnOid PARAMS ((b, data),
  * decodes universal TAG LENGTH and Contents of and ASN.1 OBJECT ID
  */
 void
-BDecAsnOid PARAMS ((b, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnOid    *result _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecAsnOid PARAMS((b, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnOid* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    AsnTag tag;
-    AsnLen elmtLen;
+	AsnTag tag;
+	AsnLen elmtLen;
 
-    if ((tag = BDecTag (b, bytesDecoded, env)) != MAKE_TAG_ID (UNIV, PRIM, OID_TAG_CODE))
-    {
-         Asn1Error ("BDecAsnOid: ERROR - wrong tag on OBJECT IDENTIFIER.\n");
-         longjmp (env, -40);
-    }
+	if ((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, OID_TAG_CODE))
+	{
+		Asn1Error("BDecAsnOid: ERROR - wrong tag on OBJECT IDENTIFIER.\n");
+		longjmp(env, -40);
+	}
 
-    elmtLen = BDecLen (b, bytesDecoded, env);
-    BDecAsnOidContent (b, tag, elmtLen, result, bytesDecoded, env);
+	elmtLen = BDecLen(b, bytesDecoded, env);
+	BDecAsnOidContent(b, tag, elmtLen, result, bytesDecoded, env);
 
 }  /* BDecAsnOid */
 
@@ -116,29 +116,29 @@ BDecAsnOid PARAMS ((b, result, bytesDecoded, env),
  * AsnOid is handled the same as a primtive octet string
  */
 void
-BDecAsnOidContent PARAMS ((b, tagId, len, result, bytesDecoded, env),
-    GenBuf *b _AND_
-    AsnTag tagId _AND_
-    AsnLen len _AND_
-    AsnOid *result _AND_
-    AsnLen *bytesDecoded _AND_
-    jmp_buf env)
+BDecAsnOidContent PARAMS((b, tagId, len, result, bytesDecoded, env),
+	GenBuf* b _AND_
+	AsnTag tagId _AND_
+	AsnLen len _AND_
+	AsnOid* result _AND_
+	AsnLen* bytesDecoded _AND_
+	jmp_buf env)
 {
-    if (len == INDEFINITE_LEN)
-    {
-         Asn1Error ("BDecAsnOidContent: ERROR - indefinite length on primitive\n");
-         longjmp (env, -66);
-    }
-    result->octetLen = len;
-    result->octs =  (char*)Asn1Alloc (len);
-    CheckAsn1Alloc (result->octs, env);
-    BufCopy (result->octs, b, len);
-    if (BufReadError (b))
-    {
-         Asn1Error ("BDecAsnOidContent: ERROR - decoded past end of data\n");
-         longjmp (env, -21);
-    }
-    (*bytesDecoded) += len;
+	if (len == INDEFINITE_LEN)
+	{
+		Asn1Error("BDecAsnOidContent: ERROR - indefinite length on primitive\n");
+		longjmp(env, -66);
+	}
+	result->octetLen = len;
+	result->octs = (char*)Asn1Alloc(len);
+	CheckAsn1Alloc(result->octs, env);
+	BufCopy(result->octs, b, len);
+	if (BufReadError(b))
+	{
+		Asn1Error("BDecAsnOidContent: ERROR - decoded past end of data\n");
+		longjmp(env, -21);
+	}
+	(*bytesDecoded) += len;
 }  /* BDecAsnOidContent */
 
 
@@ -149,39 +149,39 @@ BDecAsnOidContent PARAMS ((b, tagId, len, result, bytesDecoded, env),
  * decodes each individual arc number to print it.
  */
 void
-PrintAsnOid PARAMS ((f,v, indent),
-    FILE *f _AND_
-    AsnOid *v _AND_
-    unsigned int indent)
+PrintAsnOid PARAMS((f, v, indent),
+	FILE* f _AND_
+	AsnOid* v _AND_
+	unsigned int indent)
 {
-    unsigned int firstArcNum;
-    unsigned int arcNum;
-    int i;
+	unsigned int firstArcNum;
+	unsigned int arcNum;
+	int i;
 
-    fprintf (f,"{");
+	fprintf(f, "{");
 
-    /* un-munge first two arc numbers */
-    for (arcNum = 0, i=0; (i < (int)(v->octetLen)) && (v->octs[i] & 0x80);i++)
-        arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
+	/* un-munge first two arc numbers */
+	for (arcNum = 0, i = 0; (i < (int)(v->octetLen)) && (v->octs[i] & 0x80); i++)
+		arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
 
-    arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
-    i++;
-    firstArcNum = (unsigned short)(arcNum/40);
-    if (firstArcNum > 2)
-        firstArcNum = 2;
+	arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
+	i++;
+	firstArcNum = (unsigned short)(arcNum / 40);
+	if (firstArcNum > 2)
+		firstArcNum = 2;
 
-    fprintf (f,"%u %u", (unsigned int)firstArcNum, arcNum - (firstArcNum * 40));
+	fprintf(f, "%u %u", (unsigned int)firstArcNum, arcNum - (firstArcNum * 40));
 
-    for (; i < (int)(v->octetLen); )
-    {
-        for (arcNum = 0; (i < (int)(v->octetLen)) && (v->octs[i] & 0x80);i++)
-            arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
+	for (; i < (int)(v->octetLen); )
+	{
+		for (arcNum = 0; (i < (int)(v->octetLen)) && (v->octs[i] & 0x80); i++)
+			arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
 
-        arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
-        i++;
-        fprintf (f," %u", arcNum);
-    }
-    fprintf (f,"}");
+		arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
+		i++;
+		fprintf(f, " %u", arcNum);
+	}
+	fprintf(f, "}");
 } /* PrintAsnOid */
 
 
@@ -190,37 +190,37 @@ PrintAsnOid PARAMS ((f,v, indent),
  * given an OID, figures out the length for the encoded version
  */
 AsnLen
-EncodedOidLen PARAMS ((oid),
-    OID *oid)
+EncodedOidLen PARAMS((oid),
+	OID* oid)
 {
-    AsnLen totalLen;
-    unsigned long headArcNum;
-    unsigned long tmpArcNum;
-    OID *tmpOid;
+	AsnLen totalLen;
+	unsigned long headArcNum;
+	unsigned long tmpArcNum;
+	OID* tmpOid;
 
-    /*
-     * oid must have at least 2 elmts
-     */
-    if (oid->next == NULL)
-       return 0;
+	/*
+	 * oid must have at least 2 elmts
+	 */
+	if (oid->next == NULL)
+		return 0;
 
-    headArcNum = (oid->arcNum * 40) + oid->next->arcNum;
+	headArcNum = (oid->arcNum * 40) + oid->next->arcNum;
 
-    /*
-     * figure out total encoded length of oid
-     */
-    tmpArcNum = headArcNum;
-    for (totalLen = 1; (tmpArcNum >>= 7) != 0; totalLen++)
-	;
-    for (tmpOid = oid->next->next; tmpOid != NULL; tmpOid = tmpOid->next)
-    {
-        totalLen++;
-        tmpArcNum = tmpOid->arcNum;
-        for (; (tmpArcNum >>= 7) != 0; totalLen++)
-	    ;
-    }
+	/*
+	 * figure out total encoded length of oid
+	 */
+	tmpArcNum = headArcNum;
+	for (totalLen = 1; (tmpArcNum >>= 7) != 0; totalLen++)
+		;
+	for (tmpOid = oid->next->next; tmpOid != NULL; tmpOid = tmpOid->next)
+	{
+		totalLen++;
+		tmpArcNum = tmpOid->arcNum;
+		for (; (tmpArcNum >>= 7) != 0; totalLen++)
+			;
+	}
 
-    return totalLen;
+	return totalLen;
 
 }  /* EncodedOidLen */
 
@@ -232,79 +232,79 @@ EncodedOidLen PARAMS ((oid),
  * of the oid.
  */
 void
-BuildEncodedOid PARAMS ((oid, result),
-    OID *oid _AND_
-    AsnOid *result)
+BuildEncodedOid PARAMS((oid, result),
+	OID* oid _AND_
+	AsnOid* result)
 {
-    unsigned long len;
-    unsigned long headArcNum;
-    unsigned long tmpArcNum;
-    char         *buf;
-    int           i;
-    OID          *tmpOid;
+	unsigned long len;
+	unsigned long headArcNum;
+	unsigned long tmpArcNum;
+	char* buf;
+	int           i;
+	OID* tmpOid;
 
-    buf = result->octs;
+	buf = result->octs;
 
-    /*
-     * oid must have at least 2 elmts
-     */
-    if (oid->next == NULL)
-       return;
-    /*
-     * munge together first two arcNum
-     * note first arcnum must be <= 2
-     * and second must be < 39 if first = 0 or 1
-     * see (X.209) for ref to this stupidity
-     */
-    headArcNum = (oid->arcNum * 40) + oid->next->arcNum;
+	/*
+	 * oid must have at least 2 elmts
+	 */
+	if (oid->next == NULL)
+		return;
+	/*
+	 * munge together first two arcNum
+	 * note first arcnum must be <= 2
+	 * and second must be < 39 if first = 0 or 1
+	 * see (X.209) for ref to this stupidity
+	 */
+	headArcNum = (oid->arcNum * 40) + oid->next->arcNum;
 
-    tmpArcNum = headArcNum;
+	tmpArcNum = headArcNum;
 
-    /*
-     * calc # bytes needed for head arc num
-     */
-    for (len = 0; (tmpArcNum >>= 7) != 0; len++)
-	;
+	/*
+	 * calc # bytes needed for head arc num
+	 */
+	for (len = 0; (tmpArcNum >>= 7) != 0; len++)
+		;
 
-    /*
-     * write more signifcant bytes (if any) of head arc num
-     * with 'more' bit set
-     */
-    for (i=0; i < (int)len; i++)
-        *(buf++) = (char)(0x80 | (headArcNum >> ((len-i)*7)));
+	/*
+	 * write more signifcant bytes (if any) of head arc num
+	 * with 'more' bit set
+	 */
+	for (i = 0; i < (int)len; i++)
+		*(buf++) = (char)(0x80 | (headArcNum >> ((len - i) * 7)));
 
-    /*
-     * write least significant byte of head arc num
-     */
-    *(buf++) = (char)(0x7f & headArcNum);
-
-
-    /*
-     * write following arc nums, if any
-     */
-    for (tmpOid = oid->next->next; tmpOid != NULL; tmpOid = tmpOid->next)
-    {
-        /*
-         * figure out encoded length -1 of this arcNum
-         */
-        tmpArcNum = tmpOid->arcNum;
-        for (len = 0; (tmpArcNum >>= 7) != 0; len++)
-	    ;
+	/*
+	 * write least significant byte of head arc num
+	 */
+	*(buf++) = (char)(0x7f & headArcNum);
 
 
-        /*
-         * write more signifcant bytes (if any)
-         * with 'more' bit set
-         */
-        for (i=0; i < (int)len; i++)
-            *(buf++) = (char)(0x80 | (tmpOid->arcNum >> ((len-i)*7)));
+	/*
+	 * write following arc nums, if any
+	 */
+	for (tmpOid = oid->next->next; tmpOid != NULL; tmpOid = tmpOid->next)
+	{
+		/*
+		 * figure out encoded length -1 of this arcNum
+		 */
+		tmpArcNum = tmpOid->arcNum;
+		for (len = 0; (tmpArcNum >>= 7) != 0; len++)
+			;
 
-        /*
-         * write least significant byte
-         */
-        *(buf++) = (char)(0x7f & tmpOid->arcNum);
-    }
-    result->octetLen = (buf - result->octs);
+
+		/*
+		 * write more signifcant bytes (if any)
+		 * with 'more' bit set
+		 */
+		for (i = 0; i < (int)len; i++)
+			*(buf++) = (char)(0x80 | (tmpOid->arcNum >> ((len - i) * 7)));
+
+		/*
+		 * write least significant byte
+		 */
+		*(buf++) = (char)(0x7f & tmpOid->arcNum);
+	}
+	result->octetLen = (buf - result->octs);
 } /* BuildEncodedOid */
 
 
@@ -313,49 +313,49 @@ BuildEncodedOid PARAMS ((oid, result),
  * NOT RECOMMENDED for use in protocol implementations
  */
 void
-UnbuildEncodedOid PARAMS ((eoid, result),
-    AsnOid *eoid _AND_
-    OID **result)
+UnbuildEncodedOid PARAMS((eoid, result),
+	AsnOid* eoid _AND_
+	OID** result)
 {
-    OID **nextOid;
-    OID *headOid;
-    int arcNum;
-    int i;
-    int firstArcNum;
-    int secondArcNum;
+	OID** nextOid;
+	OID* headOid;
+	int arcNum;
+	int i;
+	int firstArcNum;
+	int secondArcNum;
 
-    for (arcNum = 0, i=0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80);i++)
-        arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
+	for (arcNum = 0, i = 0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80); i++)
+		arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
 
-    arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
-    i++;
+	arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
+	i++;
 
-    firstArcNum = arcNum / 40;
-    if (firstArcNum > 2)
-        firstArcNum = 2;
+	firstArcNum = arcNum / 40;
+	if (firstArcNum > 2)
+		firstArcNum = 2;
 
-    secondArcNum = arcNum - (firstArcNum * 40);
+	secondArcNum = arcNum - (firstArcNum * 40);
 
-    headOid = (OID*)malloc (sizeof (OID));
-    headOid->arcNum = firstArcNum;
-    headOid->next = (OID*)malloc (sizeof (OID));
-    headOid->next->arcNum = secondArcNum;
-    nextOid = &headOid->next->next;
+	headOid = (OID*)malloc(sizeof(OID));
+	headOid->arcNum = firstArcNum;
+	headOid->next = (OID*)malloc(sizeof(OID));
+	headOid->next->arcNum = secondArcNum;
+	nextOid = &headOid->next->next;
 
-    for (; i < (int)(eoid->octetLen); )
-    {
-        for (arcNum = 0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80); i++)
-            arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
+	for (; i < (int)(eoid->octetLen); )
+	{
+		for (arcNum = 0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80); i++)
+			arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
 
-        arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
-        i++;
-        *nextOid = (OID*)malloc (sizeof (OID));
-        (*nextOid)->arcNum = arcNum;
-        (*nextOid)->next = NULL;
-        nextOid = &(*nextOid)->next;
-        
-    }
+		arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
+		i++;
+		*nextOid = (OID*)malloc(sizeof(OID));
+		(*nextOid)->arcNum = arcNum;
+		(*nextOid)->next = NULL;
+		nextOid = &(*nextOid)->next;
 
-    *result = headOid;
+	}
+
+	*result = headOid;
 
 } /* UnbuildEncodedOid */

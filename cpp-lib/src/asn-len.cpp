@@ -117,26 +117,26 @@ _BEGIN_SNACC_NAMESPACE
 /*returns the number of bytes in the encoded length passed in*/
 long BytesInLen(AsnLen len)
 {
-    if (len < 128)
-    {
-        return 1;
-    }
-    else if (len < 256)
-    {
-        return 2;
-    }
-    else if (len < 65536)
-    {
-        return 3;
-    }
-    else if (len < 16777126)
-    {
-        return 4;
-    }
-    else
-    {
-        return 5;
-    }
+	if (len < 128)
+	{
+		return 1;
+	}
+	else if (len < 256)
+	{
+		return 2;
+	}
+	else if (len < 65536)
+	{
+		return 3;
+	}
+	else if (len < 16777126)
+	{
+		return 4;
+	}
+	else
+	{
+		return 5;
+	}
 }
 
 /*
@@ -144,47 +144,47 @@ long BytesInLen(AsnLen len)
  * returns the number of octets written to the buffer.
  */
 AsnLen
-BEncDefLen (AsnBuf &b, AsnLen len)
+BEncDefLen(AsnBuf& b, AsnLen len)
 {
-    /*
-     * unrolled for efficiency
-     * (check each possibitlity of the 4 byte integer)
-     */
-    if (len < 128)
-    {
-        b.PutByteRvs ((unsigned char)len);
-        return 1;
-    }
-    else if (len < 256)
-    {
-        b.PutByteRvs ((unsigned char)len);
-        b.PutByteRvs ((unsigned char)0x81);
-        return 2;
-    }
-    else if (len < 65536)
-    {
-        b.PutByteRvs ((unsigned char)len);
-        b.PutByteRvs ((unsigned char)(len >> 8));
-        b.PutByteRvs ((unsigned char) 0x82);
-        return 3;
-    }
-    else if (len < 16777126)
-    {
-        b.PutByteRvs ((unsigned char)len);
-        b.PutByteRvs ((unsigned char)(len >> 8));
-        b.PutByteRvs ((unsigned char)(len >> 16));
-        b.PutByteRvs ((unsigned char)0x83);
-        return 4;
-    }
-    else
-    {
-        b.PutByteRvs ((unsigned char)len);
-        b.PutByteRvs ((unsigned char)(len >> 8));
-        b.PutByteRvs ((unsigned char)(len >> 16));
-        b.PutByteRvs ((unsigned char)(len >> 24));
-        b.PutByteRvs ((unsigned char)0x84);
-        return 5;
-    }
+	/*
+	 * unrolled for efficiency
+	 * (check each possibitlity of the 4 byte integer)
+	 */
+	if (len < 128)
+	{
+		b.PutByteRvs((unsigned char)len);
+		return 1;
+	}
+	else if (len < 256)
+	{
+		b.PutByteRvs((unsigned char)len);
+		b.PutByteRvs((unsigned char)0x81);
+		return 2;
+	}
+	else if (len < 65536)
+	{
+		b.PutByteRvs((unsigned char)len);
+		b.PutByteRvs((unsigned char)(len >> 8));
+		b.PutByteRvs((unsigned char)0x82);
+		return 3;
+	}
+	else if (len < 16777126)
+	{
+		b.PutByteRvs((unsigned char)len);
+		b.PutByteRvs((unsigned char)(len >> 8));
+		b.PutByteRvs((unsigned char)(len >> 16));
+		b.PutByteRvs((unsigned char)0x83);
+		return 4;
+	}
+	else
+	{
+		b.PutByteRvs((unsigned char)len);
+		b.PutByteRvs((unsigned char)(len >> 8));
+		b.PutByteRvs((unsigned char)(len >> 16));
+		b.PutByteRvs((unsigned char)(len >> 24));
+		b.PutByteRvs((unsigned char)0x84);
+		return 5;
+	}
 } /*  EncodeDefLen */
 
 /*
@@ -193,42 +193,42 @@ BEncDefLen (AsnBuf &b, AsnLen len)
  * error if the length is too large or a read error occurs
  */
 AsnLen
-BDecLen (const AsnBuf &b, AsnLen &bytesDecoded)
+BDecLen(const AsnBuf& b, AsnLen& bytesDecoded)
 {
-    FUNC("BDecLen()");
-    AsnLen  len;
-    unsigned char  byte;
-    unsigned long  lenBytes;
+	FUNC("BDecLen()");
+	AsnLen  len;
+	unsigned char  byte;
+	unsigned long  lenBytes;
 
-    byte = b.GetUByte();
+	byte = b.GetUByte();
 
-    bytesDecoded++;
-    if (byte < 128)   /* short length */
-        return byte;
+	bytesDecoded++;
+	if (byte < 128)   /* short length */
+		return byte;
 
-    else if (byte == (unsigned char) 0x080)  /* indef len indicator */
-        return INDEFINITE_LEN;
+	else if (byte == (unsigned char)0x080)  /* indef len indicator */
+		return INDEFINITE_LEN;
 
-    else  /* long len form */
-    {
-        /*
-         * strip high bit to get # bytes left in len
-         */
-        lenBytes = byte & (unsigned char) 0x7f;
+	else  /* long len form */
+	{
+		/*
+		 * strip high bit to get # bytes left in len
+		 */
+		lenBytes = byte & (unsigned char)0x7f;
 
-        if (lenBytes > sizeof (long))
-        {
-           throw BoundsException("length overflow", STACK_ENTRY);
-        }
+		if (lenBytes > sizeof(long))
+		{
+			throw BoundsException("length overflow", STACK_ENTRY);
+		}
 
-        bytesDecoded += lenBytes;
+		bytesDecoded += lenBytes;
 
-        for (len = 0; lenBytes > 0; lenBytes--)
-            len = (len << 8) | (unsigned long int) b.GetUByte();
+		for (len = 0; lenBytes > 0; lenBytes--)
+			len = (len << 8) | (unsigned long int) b.GetUByte();
 
-        return len;
-    }
-    /* not reached */
+		return len;
+	}
+	/* not reached */
 }
 
 
@@ -237,12 +237,12 @@ BDecLen (const AsnBuf &b, AsnLen &bytesDecoded)
  * Returns the encoded length.
  */
 AsnLen
-BEncEoc (AsnBuf &b)
+BEncEoc(AsnBuf& b)
 {
 
-    b.PutByteRvs (0);
-    b.PutByteRvs (0);
-    return 2;
+	b.PutByteRvs(0);
+	b.PutByteRvs(0);
+	return 2;
 }  /* BEncEoc */
 
 /*
@@ -250,22 +250,22 @@ BEncEoc (AsnBuf &b)
  * octets are non-zero or if read error occured.
  */
 void
-BDecEoc (const AsnBuf &b, AsnLen &bytesDecoded)
+BDecEoc(const AsnBuf& b, AsnLen& bytesDecoded)
 {
-    FUNC("BDecEoc()");
-    if ((b.GetUByte() != 0) || (b.GetUByte() != 0))
-    {
-       throw EXCEPT("non zero byte in EOC or end of data reached" , DECODE_ERROR);
-    }
-    bytesDecoded += 2;
+	FUNC("BDecEoc()");
+	if ((b.GetUByte() != 0) || (b.GetUByte() != 0))
+	{
+		throw EXCEPT("non zero byte in EOC or end of data reached", DECODE_ERROR);
+	}
+	bytesDecoded += 2;
 }  /* BDecEoc */
 
 
 /* PER encoding of the length determinant for lengths */
 /* zero to 127 inclusive                              */
 /* Length will encode in one byte  with bit 8 = 0     */
-AsnLen 
-PEncDefLenTo127(AsnBufBits &b, int len)
+AsnLen
+PEncDefLenTo127(AsnBufBits& b, int len)
 {
 	unsigned char cLen = (unsigned char)len;
 	b.PutBits(&cLen, 8);
@@ -277,28 +277,28 @@ PEncDefLenTo127(AsnBufBits &b, int len)
 /* Length will encode in one byte, bit 7 and 8 = 1    */
 /* lower bits (1-4) are multiplied by 16k to give     */
 /* length determinant                                 */
-AsnLen 
-PEncLen_16kFragment(AsnBufBits &b, int len)
+AsnLen
+PEncLen_16kFragment(AsnBufBits& b, int len)
 {
-	AsnLen l= 8;
+	AsnLen l = 8;
 	unsigned char cLen = 0xC0;
 	cLen |= ((unsigned char)len);
-	unsigned char *c = &cLen;
+	unsigned char* c = &cLen;
 
 	b.PutBits(c, l);
-	
+
 	return l;
 }
 
 /* PER encoding of the length determinant for lengths */
 /* between 127 and 16k non-inclusive                  */
-AsnLen 
-PEncLen_1to16k(AsnBufBits &b, int len)
+AsnLen
+PEncLen_1to16k(AsnBufBits& b, int len)
 {
 	AsnLen l = 16;
 	int templen = len;
 	unsigned char cLen = ((unsigned char)len);
-	unsigned char *c = &cLen;
+	unsigned char* c = &cLen;
 
 	len >>= 8;
 
@@ -315,6 +315,6 @@ PEncLen_1to16k(AsnBufBits &b, int len)
 
 	return l;
 }
- 
-  
+
+
 _END_SNACC_NAMESPACE

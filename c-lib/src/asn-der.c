@@ -56,29 +56,29 @@
 #include "../include/asn-der.h"
 #include <memory.h>
 
-// Simple Compare
+ // Simple Compare
 int EncodedElmtCmp(const void* a1, const void* b1)
 {
-  int len = 0;
-  int cmp = -1;
-  unsigned char data1;
-  unsigned char data2;
-  EncodedElmt *a = (EncodedElmt *) a1;
-  EncodedElmt *b = (EncodedElmt *) b1;
+	int len = 0;
+	int cmp = -1;
+	unsigned char data1;
+	unsigned char data2;
+	EncodedElmt* a = (EncodedElmt*)a1;
+	EncodedElmt* b = (EncodedElmt*)b1;
 
-  /* Get minimum length */
-  len = (a->len > b->len)?b->len:a->len;
-  while (len-- > 0)
-  {
-	  data1 = BufGetByte (a->b);
-	  data2 = BufGetByte (b->b);
-      if (data1++ != data2++)
-		cmp = data1 < data2 ? -1 : 1;
-  }
+	/* Get minimum length */
+	len = (a->len > b->len) ? b->len : a->len;
+	while (len-- > 0)
+	{
+		data1 = BufGetByte(a->b);
+		data2 = BufGetByte(b->b);
+		if (data1++ != data2++)
+			cmp = data1 < data2 ? -1 : 1;
+	}
 
-  BufResetInReadMode(a->b);
-  BufResetInReadMode(b->b);
+	BufResetInReadMode(a->b);
+	BufResetInReadMode(b->b);
 
-  return cmp;
+	return cmp;
 
 }

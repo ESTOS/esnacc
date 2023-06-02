@@ -17,7 +17,7 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...);
 #ifdef __cplusplus
 extern "C" {
 #endif
-long long ConvertDateToUnixTime(const char* szValue);
+	long long ConvertDateToUnixTime(const char* szValue);
 #ifdef __cplusplus
 }
 #endif
@@ -48,23 +48,23 @@ enum { false, true };
 
 #else /* !__cplusplus */
 
- /* Type Definitions */
+/* Type Definitions */
 #ifndef bool
 typedef char bool;
 #endif
 
 #ifndef true
-#define true    1
+#define true 1
 #endif
 #ifndef false
-#define false   0
+#define false 0
 #endif
 
 #ifndef FALSE
-#define FALSE	0
+#define FALSE 0
 #endif
 #ifndef TRUE
-#define TRUE	1
+#define TRUE 1
 #endif
 
 #endif /* __cplusplus */
@@ -78,55 +78,55 @@ typedef char bool;
  */
 #ifdef __USE_ANSI_C__
 
-#define PROTO(X)			X
-#define PARAMS(arglist, args)  	(args)
-#define NOPARAMS()	        	(void)
-#define _AND_				,
-#define DOTS				, ...
+#define PROTO(X) X
+#define PARAMS(arglist, args) (args)
+#define NOPARAMS() (void)
+#define _AND_ ,
+#define DOTS , ...
 
 #else /* !__USE_ANSI_C__ */
 
-#define PROTO( X)			()
-#define PARAMS( arglist, args)	 	arglist args;
-#define NOPARAMS()	        	()
-#define _AND_				;
+#define PROTO(X) ()
+#define PARAMS(arglist, args) arglist args;
+#define NOPARAMS() ()
+#define _AND_ ;
 #define DOTS
-#define void                            char
+#define void char
 
 #endif /* __USE_ANSI_C__ */
 
 #if COMPILER
-	// If we have TCL on this system then add TCL to the compiler
-	#if defined (HAVE_TCLNOT)
-		#define TCL	HAVE_TCL
-		#define META	1	
-	#endif
-#elif defined (ENABLE_TCL) && defined (HAVE_TCL)
-	#define TCL 1;
-	#define META 1;
+ // If we have TCL on this system then add TCL to the compiler
+#if defined(HAVE_TCLNOT)
+#define TCL	HAVE_TCL
+#define META 1	
+#endif
+#elif defined(ENABLE_TCL) && defined(HAVE_TCL)
+#define TCL 1;
+#define META 1;
 #endif
 
 #ifdef ENABLE_META
 #ifndef META
-	#define META 1
+#define META 1
 #endif
 #endif
 
-#define COMMA			,
+#define COMMA ,
 
-#define if_IBM_ENC( code)
+#define if_IBM_ENC(code)
 
 
-#ifdef  META
-#define if_META( code)		code
+#ifdef META
+#define if_META(code) code
 #else
-#define if_META( code)
+#define if_META(code)
 #endif
 
-#if defined(TCL) && defined (META)
-#define if_TCL( code)		code
+#if defined(TCL) && defined(META)
+#define if_TCL(code)		code
 #else
-#define if_TCL( code)
+#define if_TCL(code)
 #endif
 
 extern long long gi64NoDeprecatedSymbols;
