@@ -21,7 +21,7 @@ namespace SNACC
 	class InvokeProblem;
 	class ROSEAuthRequest;
 	class ROSEAuthResult;
-}
+} // namespace SNACC
 
 /*! Die Klasse SnaccROSEPendingOperation
 	dient zur Realisierung der Funktionsaufrufe.
@@ -32,6 +32,7 @@ class SnaccROSEPendingOperation
 {
 private:
 	SyncEvent m_CompletedEvent;
+
 public:
 	SnaccROSEPendingOperation();
 	~SnaccROSEPendingOperation();
@@ -57,11 +58,10 @@ public:
 typedef std::map<long, SnaccROSEPendingOperation*> SnaccROSEPendingOperationMap;
 typedef std::pair<long, SnaccROSEPendingOperation*> SnaccROSEPendingOperationPair;
 
-
 class SnaccROSEBase;
 
-//Hilfsklasse für OperationID / Name lookup
-//Alle generierten Interfaces registrieren Ihre OperationIDs in dieser Klasse
+// Hilfsklasse für OperationID / Name lookup
+// Alle generierten Interfaces registrieren Ihre OperationIDs in dieser Klasse
 class SnaccRoseOperationLookup
 {
 public:
@@ -69,51 +69,53 @@ public:
 	static int LookUpID(const char* szOpName);
 	static void RegisterOperation(int iOpID, const char* szOpName, int iInterfaceID);
 	static int LookUpInterfaceID(int iOpID);
-	//check if at least one Operation has been registerd
+	// check if at least one Operation has been registerd
 	static bool Initialized();
-	//Cleanup all registered Operations (can be called during shutdown)
+	// Cleanup all registered Operations (can be called during shutdown)
 	static void CleanUp();
+
 private:
 	static std::map<std::string, int> m_mapOpToID;
 	static std::map<int, std::string> m_mapIDToOp;
 	static std::map<int, int> m_mapIDToInterface;
 };
 
-//Invoke Context
-//Dieser Context wird allen OnInvoke_ Funktionen mit übergeben
-//Dieser Context kann den Invoke_ Funktionen mit übergeben werden
-//Die ROSEAuth Member werden automatisch gelöscht, Angelegt mit new
+// Invoke Context
+// Dieser Context wird allen OnInvoke_ Funktionen mit übergeben
+// Dieser Context kann den Invoke_ Funktionen mit übergeben werden
+// Die ROSEAuth Member werden automatisch gelöscht, Angelegt mit new
 class SnaccInvokeContext
 {
 public:
 	SnaccInvokeContext();
 	virtual ~SnaccInvokeContext();
 
-	//Bedeutung im OnInvoke_: Authentication Header aus ROSE Invoke (Pointer auf das Objekt im Invoke)
-	//Bedeutung im Invoke_: Authentication Header der im Invoke mitgeschickt wird (muss mit new erzeugt werden, wird selbst aufgeräumt)
+	// Bedeutung im OnInvoke_: Authentication Header aus ROSE Invoke (Pointer auf das Objekt im Invoke)
+	// Bedeutung im Invoke_: Authentication Header der im Invoke mitgeschickt wird (muss mit new erzeugt werden, wird selbst aufgeräumt)
 	SNACC::ROSEAuthRequest* pInvokeAuth;
 
-	//Bedeutung im OnInvoke_: Authentication Header, der im Reject zurückgegeben wird falls die Methode returnReject zurückliefert muss mit new erzeugt werden, wird selbst aufgeräumt
-	//Bedeutung im Invoke_: Falls die Methode returnReject zurückliefert enthält dieser Member die Optionale Reject Authentication (nur wenn SNACC_REJECT_AUTH_INCOMPLETE)
+	// Bedeutung im OnInvoke_: Authentication Header, der im Reject zurückgegeben wird falls die Methode returnReject zurückliefert muss mit new erzeugt werden, wird selbst aufgeräumt
+	// Bedeutung im Invoke_: Falls die Methode returnReject zurückliefert enthält dieser Member die Optionale Reject Authentication (nur wenn SNACC_REJECT_AUTH_INCOMPLETE)
 	SNACC::ROSEAuthResult* pRejectAuth;
 
-	//Reject Result Code: 0 oder ROSE_REJECT_AUTHENTICATIONFAILED oder ROSE_REJECT_AUTHENTICATIONINCOMPLETE
-	//Bedeutung im Invoke_: Falls die Methode returnReject zurückliefert enthält dieser Member ROSE_REJECT_AUTHENTICATIONINCOMPLETE oder ROSE_REJECT_AUTHENTICATIONFAILED, falls die Authentication nicht erfolgreich war
-	//Special: ROSE_REJECT_ASYNCOPERATION - es wird kein Result versendet.
+	// Reject Result Code: 0 oder ROSE_REJECT_AUTHENTICATIONFAILED oder ROSE_REJECT_AUTHENTICATIONINCOMPLETE
+	// Bedeutung im Invoke_: Falls die Methode returnReject zurückliefert enthält dieser Member ROSE_REJECT_AUTHENTICATIONINCOMPLETE oder ROSE_REJECT_AUTHENTICATIONFAILED, falls die Authentication nicht erfolgreich war
+	// Special: ROSE_REJECT_ASYNCOPERATION - es wird kein Result versendet.
 	long lRejectResult;
 
-	//Bedeutung im OnInvoke_: Funktion, die gerufen wird, nachdem das Result zurückgeschickt wurde.
-	//Verwendung: cxt->funcAfterResult = [this, strCrossRefID]() -> void { /* executed after result has been sent. */ };
+	// Bedeutung im OnInvoke_: Funktion, die gerufen wird, nachdem das Result zurückgeschickt wurde.
+	// Verwendung: cxt->funcAfterResult = [this, strCrossRefID]() -> void { /* executed after result has been sent. */ };
 	std::function<void()> funcAfterResult;
 
-	//Bedeutung im OnInvoke_: Originaler Invoke
+	// Bedeutung im OnInvoke_: Originaler Invoke
 	SNACC::ROSEInvoke* pInvoke;
 
-	//A Custom void pointer that allows the caller to add custom data to the transport layer that is dispatching a request
+	// A Custom void pointer that allows the caller to add custom data to the transport layer that is dispatching a request
 	void* pCustom;
 };
 
-enum class SnaccTransportEncoding {
+enum class SnaccTransportEncoding
+{
 	// Transport Encoding Basic Encoding Rules (Binary)
 	BER = 0,
 	// Transport Encoding JSON (Text)
@@ -122,8 +124,8 @@ enum class SnaccTransportEncoding {
 	JSON_NO_HEADING = 2
 };
 
-#define SNACC_TE_BER	SnaccTransportEncoding::BER
-#define SNACC_TE_JSON	SnaccTransportEncoding::JSON
+#define SNACC_TE_BER SnaccTransportEncoding::BER
+#define SNACC_TE_JSON SnaccTransportEncoding::JSON
 
 /*! SnaccROSEBase implements the ROSE (ASN.1) protocol.
 
@@ -154,7 +156,6 @@ class SnaccROSEBase : public SnaccROSESender
 public:
 	SnaccROSEBase(void);
 	virtual ~SnaccROSEBase(void);
-
 
 	/*! Set timeout for function invokes.
 		Wait time in milliseconds */
@@ -195,22 +196,30 @@ public:
 		This is an alternative to overriding SendBinaryDataBlock */
 	void SetSnaccROSETransport(ISnaccROSETransport* pTransport);
 
-
 	/* Log output.
 		Override to print the log data out
 		All messages (in and out will be decoded to the logger */
-	virtual void PrintToLog(const std::string& /* strOutput*/) { return; }
+	virtual void PrintToLog(const std::string& /* strOutput*/)
+	{
+		return;
+	}
 
 	/* Log level 0 oder 1
 		bout=true for outgoing messages,
 		bout=false for incoming messages,
 		Override to set a different log level */
-	virtual long GetErrorLogLevel() { return 0; }
+	virtual long GetErrorLogLevel()
+	{
+		return 0;
+	}
 
 	/* Log Errors
 		Override to print Errors
 	*/
-	virtual void PrintToErrorLog(const std::string& /* strOutput*/) { return; }
+	virtual void PrintToErrorLog(const std::string& /* strOutput*/)
+	{
+		return;
+	}
 
 	/* Set the Transport Encoding to be used */
 	bool SetTransportEncoding(const SnaccTransportEncoding transportEncoding);
@@ -245,13 +254,16 @@ public:
 		bout=false for incoming messages,
 		Override to set a different log level
 		Override from SnaccRoseSender*/
-	virtual long GetLogLevel(bool /*bOut*/) { return 0; }
+	virtual long GetLogLevel(bool /*bOut*/)
+	{
+		return 0;
+	}
 
 	/* used for printing alle the messages
 		Override from SnaccRoseSender*/
 	virtual void PrintAsnType(bool bOutbound, SNACC::AsnType* pType, SNACC::ROSEInvoke* pInvoke);
 
-	//protected:
+	// protected:
 	/** The following function should only be called by the generated ROSE stub */
 	/* Invoke a function.
 		ppresult or pperror will be filled on return
@@ -270,7 +282,7 @@ public:
 	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt = nullptr);
 
 protected:
-	//ASN prefix mit länge für JSON bauen
+	// ASN prefix mit länge für JSON bauen
 	std::string GetJsonAsnPrefix(std::string& strJson);
 
 	/*! Die functions and events.
@@ -279,7 +291,9 @@ protected:
 	virtual long OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt) = 0;
 
 	/* Function is called when a received data Packet cannot be decoded (invalid Rose Message) */
-	virtual void OnRoseDecodeError(const char* /*lpBytes*/, unsigned long /*lSize*/, const std::string& /*strWhat */) {}
+	virtual void OnRoseDecodeError(const char* /*lpBytes*/, unsigned long /*lSize*/, const std::string& /*strWhat */)
+	{
+	}
 
 	/*! Add the invokeid and operationid the the log stream */
 	void AddInvokeHeaderLog(std::stringstream& strOut, SNACC::ROSEInvoke* pInvoke);
@@ -296,7 +310,10 @@ protected:
 	 * @param pInvokeContext - the context that has just been created (some properties are already filled such as the pInvoke and the pInvokeAuth)
 	 * @return true in case you implement the fuction (the stub will then call)
 	 */
-	virtual bool OnInvokeContextCreated(SnaccInvokeContext* pInvokeContext) { return false; };
+	virtual bool OnInvokeContextCreated(SnaccInvokeContext* pInvokeContext)
+	{
+		return false;
+	};
 
 	/*
 	 * This callback is called before the invokeContext runs out of scope.
@@ -304,7 +321,7 @@ protected:
 	 *
 	 * @param pInvokeContext - the context that is about to get deleted
 	 */
-	virtual void OnInvokeContextRunsOutOfScope(SnaccInvokeContext* pInvokeContext) {};
+	virtual void OnInvokeContextRunsOutOfScope(SnaccInvokeContext* pInvokeContext){};
 
 private:
 	/*! The ROSE component messages.
@@ -337,15 +354,14 @@ private:
 
 	std::map<int, int> m_mapMultithreadInvokeIDs;
 
-	//Outbound Data Interface (optional)
+	// Outbound Data Interface (optional)
 	ISnaccROSETransport* m_pTransport = NULL;
 
-	//Transport Encoding to be used
+	// Transport Encoding to be used
 	SnaccTransportEncoding m_eTransportEncoding = SnaccTransportEncoding::BER;
 
-	//Get Length of JSON Header J1235{} )
+	// Get Length of JSON Header J1235{} )
 	int GetJsonHeaderLen(const char* lpBytes, unsigned long iLength);
 };
-
 
 #endif //_SnaccROSEBase_h_

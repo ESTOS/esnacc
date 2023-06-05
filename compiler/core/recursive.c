@@ -68,17 +68,12 @@
 #include "asn1module.h"
 #include "snacc-util.h"
 
+void MkRecTypeDef PROTO((Module * m, TypeDef* td));
+void MkRecType PROTO((Module * m, TypeDef* td, Type* t, int optional, int empty));
 
-void MkRecTypeDef PROTO((Module* m, TypeDef* td));
-void MkRecType  PROTO((Module* m, TypeDef* td, Type* t, int optional, int empty));
+extern FILE* errFileG; // Defined in snacc.c
 
-
-extern FILE* errFileG;		// Defined in snacc.c
-
-
-void
-MarkRecursiveTypes PARAMS((m),
-	Module* m)
+void MarkRecursiveTypes PARAMS((m), Module* m)
 {
 	TypeDef* td;
 
@@ -93,19 +88,12 @@ MarkRecursiveTypes PARAMS((m),
 	{
 		MkRecTypeDef(m, td);
 	}
-}  /* MarkRecursiveTypes */
+} /* MarkRecursiveTypes */
 
-
-
-void
-MkRecTypeDef PARAMS((m, td),
-	Module* m _AND_
-	TypeDef* td)
+void MkRecTypeDef PARAMS((m, td), Module* m _AND_ TypeDef* td)
 {
 	MkRecType(m, td, td->type, 0, 1);
-}  /* MkRecTypeDef */
-
-
+} /* MkRecTypeDef */
 
 /*
  * cruise through aggregate types and type refs looking for
@@ -119,105 +107,96 @@ MkRecTypeDef PARAMS((m, td),
  * the empty flag is initially TRUE and remains true until a
  * non-type reference type is encountered
  */
-void
-MkRecType  PARAMS((m, td, t, optional, empty),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	int optional _AND_
-	int empty)
+void MkRecType PARAMS((m, td, t, optional, empty), Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ int optional _AND_ int empty)
 {
 	int newOptional;
 	NamedType* e;
 
 	switch (t->basicType->choiceId)
 	{
-	case BASICTYPE_CHOICE:
-		if (AsnListCount(t->basicType->a.choice) > 1)
-		{
+		case BASICTYPE_CHOICE:
+			if (AsnListCount(t->basicType->a.choice) > 1)
+			{
+				empty = 0;
+				optional = 1;
+			}
+			FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
+			{
+				MkRecType(m, td, e->type, optional, empty);
+			}
+			break;
+
+		case BASICTYPE_SET:
+		case BASICTYPE_SEQUENCE:
 			empty = 0;
-			optional = 1;
-		}
-		FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
-		{
-			MkRecType(m, td, e->type, optional, empty);
-		}
-		break;
 
-	case BASICTYPE_SET:
-	case BASICTYPE_SEQUENCE:
-		empty = 0;
-
-		FOR_EACH_LIST_ELMT(e, t->basicType->a.set)
-		{
-			newOptional = optional || (e->type->optional) ||
-				(e->type->defaultVal != NULL);
-			MkRecType(m, td, e->type, newOptional, empty);
-		}
-		break;
-
-	case BASICTYPE_SETOF:
-	case BASICTYPE_SEQUENCEOF:
-		empty = 0;  /* since an empty set is actual data */
-		optional = 1; /* since SET OF and SEQ OF's can be empty */
-		MkRecType(m, td, t->basicType->a.setOf, optional, empty);
-		break;
-
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_IMPORTTYPEREF:
-
-		/*
-		 * check if ref to original type def & mark recursive if so.
-		 */
-		 /*            if ((strcmp (t->basicType->a.localTypeRef->typeName, td->definedName) == 0) && (t->basicType->a.localTypeRef->module == m))
-		  easier to just check ptrs!
-		 */
-		if (t->basicType->a.localTypeRef->link == td)
-		{
-			td->recursive = 1;
-			if (empty)
+			FOR_EACH_LIST_ELMT(e, t->basicType->a.set)
 			{
-				PrintErrLoc(m->asn1SrcFileName, (long)td->type->lineNo);
-				fprintf(errFileG, "WARNING: Type \"%s\" appears to be infinitely recursive and can hold no values! (circular type references)\n",
-					td->definedName);
+				newOptional = optional || (e->type->optional) || (e->type->defaultVal != NULL);
+				MkRecType(m, td, e->type, newOptional, empty);
 			}
-			else if (!optional)
-			{
-				PrintErrLoc(m->asn1SrcFileName, (long)t->lineNo);
-				fprintf(errFileG, "WARNING: Type \"%s\" appears to be infinitely recursive! (infinitely sized values)\n",
-					td->definedName);
-			}
-		}
+			break;
 
-		/*
-		 * else follow this type reference if we aren't in it already
-		 * (ie another recursive type in td)
-		 */
-		else if (t->basicType->a.localTypeRef->link->tmpRefCount == 0)
-		{
-			/*
-			 * mark this typedef as 'entered' to
-			 * detect when looping in a recusive type that is contained
-			 * in the original td (use tmpRefCount)
-			 */
-			t->basicType->a.localTypeRef->link->tmpRefCount = 1;
+		case BASICTYPE_SETOF:
+		case BASICTYPE_SEQUENCEOF:
+			empty = 0;	  /* since an empty set is actual data */
+			optional = 1; /* since SET OF and SEQ OF's can be empty */
+			MkRecType(m, td, t->basicType->a.setOf, optional, empty);
+			break;
 
-			newOptional = optional || (t->optional) || (t->defaultVal != NULL);
-			MkRecType(m, td, t->basicType->a.localTypeRef->link->type, newOptional, empty);
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
 
 			/*
-			 * un-mark this type since finished with it
-			 * for recursive ref's to td
+			 * check if ref to original type def & mark recursive if so.
 			 */
-			t->basicType->a.localTypeRef->link->tmpRefCount = 0;
-		}
-		break;
+			/*            if ((strcmp (t->basicType->a.localTypeRef->typeName, td->definedName) == 0) && (t->basicType->a.localTypeRef->module == m))
+			 easier to just check ptrs!
+			*/
+			if (t->basicType->a.localTypeRef->link == td)
+			{
+				td->recursive = 1;
+				if (empty)
+				{
+					PrintErrLoc(m->asn1SrcFileName, (long)td->type->lineNo);
+					fprintf(errFileG, "WARNING: Type \"%s\" appears to be infinitely recursive and can hold no values! (circular type references)\n", td->definedName);
+				}
+				else if (!optional)
+				{
+					PrintErrLoc(m->asn1SrcFileName, (long)t->lineNo);
+					fprintf(errFileG, "WARNING: Type \"%s\" appears to be infinitely recursive! (infinitely sized values)\n", td->definedName);
+				}
+			}
 
-	default:
-		break;
-		/*
-		 * default: other types are not aggregate and
-		 * do not make recursive refs - they can be ignored
-		 */
+			/*
+			 * else follow this type reference if we aren't in it already
+			 * (ie another recursive type in td)
+			 */
+			else if (t->basicType->a.localTypeRef->link->tmpRefCount == 0)
+			{
+				/*
+				 * mark this typedef as 'entered' to
+				 * detect when looping in a recusive type that is contained
+				 * in the original td (use tmpRefCount)
+				 */
+				t->basicType->a.localTypeRef->link->tmpRefCount = 1;
+
+				newOptional = optional || (t->optional) || (t->defaultVal != NULL);
+				MkRecType(m, td, t->basicType->a.localTypeRef->link->type, newOptional, empty);
+
+				/*
+				 * un-mark this type since finished with it
+				 * for recursive ref's to td
+				 */
+				t->basicType->a.localTypeRef->link->tmpRefCount = 0;
+			}
+			break;
+
+		default:
+			break;
+			/*
+			 * default: other types are not aggregate and
+			 * do not make recursive refs - they can be ignored
+			 */
 	}
 } /* MkRecType */

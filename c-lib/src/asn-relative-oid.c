@@ -14,7 +14,7 @@
  * This source code is distributed in the hope that it will be
  * useful, but WITHOUT ANY WARRANTY; without even the implied warranty
  * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-*/
+ */
 
 #include "../include/asn-config.h"
 #include "../include/asn-len.h"
@@ -25,10 +25,7 @@
 /*
  * encodes universal TAG LENGTH and Contents of and ASN.1 OBJECT ID
  */
-AsnLen
-BEncAsnRelativeOid PARAMS((b, data),
-	GenBuf* b _AND_
-	AsnRelativeOid* data)
+AsnLen BEncAsnRelativeOid PARAMS((b, data), GenBuf* b _AND_ AsnRelativeOid* data)
 {
 	AsnLen len;
 
@@ -36,18 +33,12 @@ BEncAsnRelativeOid PARAMS((b, data),
 	len += BEncDefLen(b, len);
 	len += BEncTag1(b, UNIV, PRIM, RELATIVE_OID_TAG_CODE);
 	return len;
-}  /* BEncAsnRelativeOid */
-
+} /* BEncAsnRelativeOid */
 
 /*
  * decodes universal TAG LENGTH and Contents of and ASN.1 OBJECT ID
  */
-void
-BDecAsnRelativeOid PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnRelativeOid* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnRelativeOid PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ AsnRelativeOid* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnTag tag;
 	AsnLen elmtLen;
@@ -61,22 +52,13 @@ BDecAsnRelativeOid PARAMS((b, result, bytesDecoded, env),
 	elmtLen = BDecLen(b, bytesDecoded, env);
 	BDecAsnRelativeOidContent(b, tag, elmtLen, result, bytesDecoded, env);
 
-}  /* BDecAsnRelativeOid */
-
-
+} /* BDecAsnRelativeOid */
 
 /*
  * Decodes just the content of the RELATIVE_OID.
  * AsnRelativeOid is handled the same as a primtive octet string
  */
-void
-BDecAsnRelativeOidContent PARAMS((b, tagId, len, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnTag tagId _AND_
-	AsnLen len _AND_
-	AsnRelativeOid* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnRelativeOidContent PARAMS((b, tagId, len, result, bytesDecoded, env), GenBuf* b _AND_ AsnTag tagId _AND_ AsnLen len _AND_ AsnRelativeOid* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	if (len == INDEFINITE_LEN)
 	{
@@ -93,27 +75,21 @@ BDecAsnRelativeOidContent PARAMS((b, tagId, len, result, bytesDecoded, env),
 		longjmp(env, -21);
 	}
 	(*bytesDecoded) += len;
-}  /* BDecAsnRelativeOidContent */
-
-
+} /* BDecAsnRelativeOidContent */
 
 /*
  * Prints the given RELATIVE_OID to the given FILE * in ASN.1 Value Notation.
  * Since the internal rep of an RELATIVE_OID is 'encoded', this routine
  * decodes each individual arc number to print it.
  */
-void
-PrintAsnRelativeOid PARAMS((f, v, indent),
-	FILE* f _AND_
-	AsnRelativeOid* v _AND_
-	unsigned int indent)
+void PrintAsnRelativeOid PARAMS((f, v, indent), FILE* f _AND_ AsnRelativeOid* v _AND_ unsigned int indent)
 {
 	unsigned int arcNum;
 	int i;
 
 	fprintf(f, "{");
 
-	for (i = 0; i < (int)(v->octetLen); )
+	for (i = 0; i < (int)(v->octetLen);)
 	{
 		for (arcNum = 0; (i < (int)(v->octetLen)) && (v->octs[i] & 0x80); i++)
 			arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
@@ -125,14 +101,10 @@ PrintAsnRelativeOid PARAMS((f, v, indent),
 	fprintf(f, "}");
 } /* PrintAsnRelativeOid */
 
-
-
 /*
  * given an RELATIVE_OID, figures out the length for the encoded version
  */
-AsnLen
-EncodedRelativeOidLen PARAMS((oid),
-	RELATIVE_OID* oid)
+AsnLen EncodedRelativeOidLen PARAMS((oid), RELATIVE_OID* oid)
 {
 	AsnLen totalLen;
 	unsigned long tmpArcNum;
@@ -156,8 +128,7 @@ EncodedRelativeOidLen PARAMS((oid),
 
 	return totalLen;
 
-}  /* EncodedOidLen */
-
+} /* EncodedOidLen */
 
 /*
  * given an oid list and a pre-allocated ENC_RELATIVE_OID
@@ -165,14 +136,11 @@ EncodedRelativeOidLen PARAMS((oid),
  * fills the ENC_RELATIVE_OID with a BER encoded version
  * of the oid.
  */
-void
-BuildEncodedRelativeOid PARAMS((oid, result),
-	RELATIVE_OID* oid _AND_
-	AsnRelativeOid* result)
+void BuildEncodedRelativeOid PARAMS((oid, result), RELATIVE_OID* oid _AND_ AsnRelativeOid* result)
 {
 	unsigned long len;
 	char* buf;
-	int           i;
+	int i;
 	unsigned long tmpArcNum;
 	RELATIVE_OID* tmpOid;
 
@@ -190,7 +158,6 @@ BuildEncodedRelativeOid PARAMS((oid, result),
 	 * see (X.209) for ref to this stupidity
 	 */
 
-
 	for (tmpOid = oid; tmpOid != NULL; tmpOid = tmpOid->next)
 	{
 		/*
@@ -199,7 +166,6 @@ BuildEncodedRelativeOid PARAMS((oid, result),
 		tmpArcNum = tmpOid->arcNum;
 		for (len = 0; (tmpArcNum >>= 7) != 0; len++)
 			;
-
 
 		/*
 		 * write more signifcant bytes (if any)
@@ -216,15 +182,11 @@ BuildEncodedRelativeOid PARAMS((oid, result),
 	result->octetLen = (buf - result->octs);
 } /* BuildEncodedOid */
 
-
 /*
  * convert an AsnRelativeOid into an RELATIVE_OID (linked list)
  * NOT RECOMMENDED for use in protocol implementations
  */
-void
-UnbuildEncodedRelativeOid PARAMS((eoid, result),
-	AsnRelativeOid* eoid _AND_
-	RELATIVE_OID** result)
+void UnbuildEncodedRelativeOid PARAMS((eoid, result), AsnRelativeOid* eoid _AND_ RELATIVE_OID** result)
 {
 	RELATIVE_OID** nextOid;
 	RELATIVE_OID* headOid;
@@ -242,8 +204,7 @@ UnbuildEncodedRelativeOid PARAMS((eoid, result),
 	headOid->next = (RELATIVE_OID*)malloc(sizeof(RELATIVE_OID));
 	nextOid = &headOid->next;
 
-
-	for (i = 1; i < (int)(eoid->octetLen); )
+	for (i = 1; i < (int)(eoid->octetLen);)
 	{
 		for (arcNum = 0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80); i++)
 			arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
@@ -254,7 +215,6 @@ UnbuildEncodedRelativeOid PARAMS((eoid, result),
 		(*nextOid)->arcNum = arcNum;
 		(*nextOid)->next = NULL;
 		nextOid = &(*nextOid)->next;
-
 	}
 
 	*result = headOid;

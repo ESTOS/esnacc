@@ -1,25 +1,25 @@
 /*
-*   compiler/back_ends/TS_gen/gen_js_code.c - routines for printing C++ code from type trees
-*
-*   assumes that the type tree has already been run through the
-*   c++ type generator (c++_gen/types.c).
-*
-*  This was hastily written - it has some huge routines in it.
-*  Needs a lot of cleaning up and modularization...
-*
-* Mike Sample
-* 92
-* Copyright (C) 1991, 1992 Michael Sample
-*           and the University of British Columbia
-*
-* 2016 ESTOS/stm
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
-*
-*/
+ *   compiler/back_ends/TS_gen/gen_js_code.c - routines for printing C++ code from type trees
+ *
+ *   assumes that the type tree has already been run through the
+ *   c++ type generator (c++_gen/types.c).
+ *
+ *  This was hastily written - it has some huge routines in it.
+ *  Needs a lot of cleaning up and modularization...
+ *
+ * Mike Sample
+ * 92
+ * Copyright (C) 1991, 1992 Michael Sample
+ *           and the University of British Columbia
+ *
+ * 2016 ESTOS/stm
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ */
 
 #include "gen-swift-code.h"
 #include "../str-util.h"
@@ -32,26 +32,26 @@ void PrintSwiftNativeType(FILE* src, enum BasicTypeChoiceId basicTypeChoiseId)
 {
 	switch (basicTypeChoiseId)
 	{
-	case BASICTYPE_BOOLEAN:
-		fprintf(src, "Bool");
-		break;
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_REAL:
-	case BASICTYPE_ENUMERATED:
-		fprintf(src, "Int");
-		break;
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-		fprintf(src, "Data");
-		break;
-	case BASICTYPE_UTF8_STR:
-		fprintf(src, "NSString");
-		break;
-	case BASICTYPE_NULL:
-		fprintf(src, "object");
-		break;
-	default:
-		snacc_exit("Invalid basicTypeChoiseId %d", basicTypeChoiseId);
+		case BASICTYPE_BOOLEAN:
+			fprintf(src, "Bool");
+			break;
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_REAL:
+		case BASICTYPE_ENUMERATED:
+			fprintf(src, "Int");
+			break;
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(src, "Data");
+			break;
+		case BASICTYPE_UTF8_STR:
+			fprintf(src, "NSString");
+			break;
+		case BASICTYPE_NULL:
+			fprintf(src, "object");
+			break;
+		default:
+			snacc_exit("Invalid basicTypeChoiseId %d", basicTypeChoiseId);
 	}
 }
 
@@ -98,50 +98,50 @@ void PrintSwiftDefaultValue(FILE* src, ModuleList* mods, Module* m, TypeDef* td,
 
 		switch (choiceId)
 		{
-		case BASICTYPE_BOOLEAN:
-			fprintf(src, "false");
-			break;
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_ENUMERATED:
-			fprintf(src, "0");
-			break;
-		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
-			fprintf(src, "Data()");
-			break;
-		case BASICTYPE_UTCTIME:
-			fprintf(src, "Date()");
-			break;
-		case BASICTYPE_REAL:
-			fprintf(src, "0.0");
-			break;
-		case BASICTYPE_UTF8_STR:
-			fprintf(src, "String() as NSString");
-			break;
-		case BASICTYPE_IMPORTTYPEREF:
-		{
-			char* szConverted = FixName(t->basicType->a.importTypeRef->link->definedName);
-			fprintf(src, "%s()", szConverted);
-			free(szConverted);
-			break;
-		}
-		case BASICTYPE_LOCALTYPEREF:
-		{
-			char* szConverted = FixName(t->basicType->a.localTypeRef->link->definedName);
-			fprintf(src, "%s()", szConverted);
-			free(szConverted);
-			break;
-		}
-		case BASICTYPE_NULL:
-			fprintf(src, "null");
-			break;
-		case BASICTYPE_ANY:
-			fprintf(src, "undefined");
-			break;
-		case BASICTYPE_BITSTRING:
-			break;
-		default:
-			snacc_exit("Unknown choiceId %d", choiceId);
+			case BASICTYPE_BOOLEAN:
+				fprintf(src, "false");
+				break;
+			case BASICTYPE_INTEGER:
+			case BASICTYPE_ENUMERATED:
+				fprintf(src, "0");
+				break;
+			case BASICTYPE_OCTETSTRING:
+			case BASICTYPE_OCTETCONTAINING:
+				fprintf(src, "Data()");
+				break;
+			case BASICTYPE_UTCTIME:
+				fprintf(src, "Date()");
+				break;
+			case BASICTYPE_REAL:
+				fprintf(src, "0.0");
+				break;
+			case BASICTYPE_UTF8_STR:
+				fprintf(src, "String() as NSString");
+				break;
+			case BASICTYPE_IMPORTTYPEREF:
+				{
+					char* szConverted = FixName(t->basicType->a.importTypeRef->link->definedName);
+					fprintf(src, "%s()", szConverted);
+					free(szConverted);
+					break;
+				}
+			case BASICTYPE_LOCALTYPEREF:
+				{
+					char* szConverted = FixName(t->basicType->a.localTypeRef->link->definedName);
+					fprintf(src, "%s()", szConverted);
+					free(szConverted);
+					break;
+				}
+			case BASICTYPE_NULL:
+				fprintf(src, "null");
+				break;
+			case BASICTYPE_ANY:
+				fprintf(src, "undefined");
+				break;
+			case BASICTYPE_BITSTRING:
+				break;
+			default:
+				snacc_exit("Unknown choiceId %d", choiceId);
 		}
 	}
 }
@@ -167,48 +167,48 @@ void PrintSwiftType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* p
 
 	switch (choiceId)
 	{
-	case BASICTYPE_BOOLEAN:
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_REAL:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_UTF8_STR:
-		if (iForceType)
-			PrintSwiftNativeType(src, choiceId);
-		break;
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-		fprintf(src, "Data");
-		break;
-	case BASICTYPE_SEQUENCEOF:
-		fprintf(src, "%s[]", t->cxxTypeRefInfo->className);
-		break;
-	case BASICTYPE_NULL:
-		fprintf(src, "null");
-		break;
-	case BASICTYPE_UTCTIME:
-		fprintf(src, "Date"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im TS als String übermittelt.
-		break;
-	case BASICTYPE_IMPORTTYPEREF:
-	{
-		char* szConverted = FixName(t->basicType->a.importTypeRef->link->definedName);
-		fprintf(src, "%s", szConverted);
-		free(szConverted);
-		break;
-	}
-	case BASICTYPE_LOCALTYPEREF:
-	{
-		char* szConverted = FixName(t->basicType->a.localTypeRef->link->definedName);
-		fprintf(src, "%s", szConverted);
-		free(szConverted);
-		break;
-	}
-	case BASICTYPE_ANY:
-		fprintf(src, "any");
-		break;
-	case BASICTYPE_BITSTRING:
-		break;
-	default:
-		snacc_exit("Unknown choiceId %d", choiceId);
+		case BASICTYPE_BOOLEAN:
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_REAL:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_UTF8_STR:
+			if (iForceType)
+				PrintSwiftNativeType(src, choiceId);
+			break;
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(src, "Data");
+			break;
+		case BASICTYPE_SEQUENCEOF:
+			fprintf(src, "%s[]", t->cxxTypeRefInfo->className);
+			break;
+		case BASICTYPE_NULL:
+			fprintf(src, "null");
+			break;
+		case BASICTYPE_UTCTIME:
+			fprintf(src, "Date"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im TS als String übermittelt.
+			break;
+		case BASICTYPE_IMPORTTYPEREF:
+			{
+				char* szConverted = FixName(t->basicType->a.importTypeRef->link->definedName);
+				fprintf(src, "%s", szConverted);
+				free(szConverted);
+				break;
+			}
+		case BASICTYPE_LOCALTYPEREF:
+			{
+				char* szConverted = FixName(t->basicType->a.localTypeRef->link->definedName);
+				fprintf(src, "%s", szConverted);
+				free(szConverted);
+				break;
+			}
+		case BASICTYPE_ANY:
+			fprintf(src, "any");
+			break;
+		case BASICTYPE_BITSTRING:
+			break;
+		default:
+			snacc_exit("Unknown choiceId %d", choiceId);
 	}
 } /* PrintCxxType */
 
@@ -224,7 +224,8 @@ void PrintSwiftEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, 
 		fprintf(src, "public enum %s : Int {\n", szConverted);
 		free(szConverted);
 	}
-	if (HasNamedElmts(td->type) != 0) {
+	if (HasNamedElmts(td->type) != 0)
+	{
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
 			printMemberComment(src, m, td, n->name, "\t", COMMENTSTYLE_SWIFT);
@@ -258,7 +259,7 @@ void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 	fprintf(src, "open class %s : JSONConvertable, JSONObjectConvertable {\n", szConverted);
 	// fprintf(src, "\ttype: \"%s\",\n", td->definedName);
 
-		/* Write out properties */
+	/* Write out properties */
 	// fprintf(src, "\tprops: {\n");
 	int propertyCounter = 0;
 	NamedType* e;
@@ -277,7 +278,8 @@ void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 
 		if (e->type->optional || bIsChoice)
 			fprintf(src, "? = nil");
-		else {
+		else
+		{
 			fprintf(src, " = ");
 			PrintSwiftDefaultValue(src, mods, m, td, seq, e->type);
 		}
@@ -438,30 +440,30 @@ void PrintSwiftSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td,
 	char* szBaseName = NULL;
 
 	BasicType* pBase = GetBaseBasicType(td->type->basicType, &szBaseNameArg);
-	if (pBase->choiceId == BASICTYPE_LOCALTYPEREF ||
-		pBase->choiceId == BASICTYPE_IMPORTTYPEREF)
+	if (pBase->choiceId == BASICTYPE_LOCALTYPEREF || pBase->choiceId == BASICTYPE_IMPORTTYPEREF)
 		szBaseName = FixName(szBaseNameArg);
 
-	switch (pBase->choiceId) {
-	case BASICTYPE_BOOLEAN:
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_REAL:
-	case BASICTYPE_UTF8_STR:
-		fprintf(src, "open class %s<T:", szName);
-		PrintSwiftNativeType(src, pBase->choiceId);
-		fprintf(src, "> : GenericArray<");
-		PrintSwiftNativeType(src, pBase->choiceId);
-		fprintf(src, "> {\n");
-		break;
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_IMPORTTYPEREF:
-		fprintf(src, "open class %s<T:%s> : GenericArray<%s> {\n", szName, szBaseName, szBaseName);
-		break;
-	default:
-		snacc_exit("unsupported choice %i in [PrintSwiftListClass]", pBase->choiceId);
+	switch (pBase->choiceId)
+	{
+		case BASICTYPE_BOOLEAN:
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_REAL:
+		case BASICTYPE_UTF8_STR:
+			fprintf(src, "open class %s<T:", szName);
+			PrintSwiftNativeType(src, pBase->choiceId);
+			fprintf(src, "> : GenericArray<");
+			PrintSwiftNativeType(src, pBase->choiceId);
+			fprintf(src, "> {\n");
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
+			fprintf(src, "open class %s<T:%s> : GenericArray<%s> {\n", szName, szBaseName, szBaseName);
+			break;
+		default:
+			snacc_exit("unsupported choice %i in [PrintSwiftListClass]", pBase->choiceId);
 	}
 	fprintf(src, "\tpublic override init() {\n");
 	fprintf(src, "\t\tsuper.init()\n");
@@ -511,49 +513,49 @@ void PrintSwiftTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, 
 {
 	switch (td->type->basicType->choiceId)
 	{
-	case BASICTYPE_BOOLEAN:  /* library type */
-	case BASICTYPE_REAL:  /* library type */
-	case BASICTYPE_OCTETSTRING:  /* library type */
-	case BASICTYPE_OCTETCONTAINING:
-	case BASICTYPE_INTEGER:  /* library type */
-	case BASICTYPE_UTF8_STR:     /* 27 */
-		PrintSwiftimpleDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_SEQUENCEOF:  /* list types */
-	case BASICTYPE_SETOF:
-		PrintSwiftSetOfDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_IMPORTTYPEREF:  /* type references */
-	{
-		Module* mod = GetImportModuleRefByClassName(td->type->basicType->a.importTypeRef->typeName, mods, m);
-		if (mod)
-		{
-			const char* szNameSpace = GetNameSpace(mod);
-			fprintf(src, "\nexport class %s extends %s.%s {\n", td->definedName, szNameSpace, td->type->basicType->a.importTypeRef->typeName);
-			fprintf(src, "}\n");
-		}
-	}
-	break;
-	case BASICTYPE_LOCALTYPEREF:
-		fprintf(src, "\nexport { %s as %s };\n", td->type->basicType->a.localTypeRef->typeName, td->definedName);
-		break;
-	case BASICTYPE_ENUMERATED:  /* library type */
-		PrintSwiftEnumDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_SEQUENCE:
-	case BASICTYPE_CHOICE:
-		PrintSwiftSeqDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_BITSTRING:
-		break;
-	default:
-		snacc_exit("Unknown td->type->basicType->choiceId %d", td->type->basicType->choiceId);
+		case BASICTYPE_BOOLEAN:		/* library type */
+		case BASICTYPE_REAL:		/* library type */
+		case BASICTYPE_OCTETSTRING: /* library type */
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_INTEGER:	 /* library type */
+		case BASICTYPE_UTF8_STR: /* 27 */
+			PrintSwiftimpleDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			PrintSwiftSetOfDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_IMPORTTYPEREF: /* type references */
+			{
+				Module* mod = GetImportModuleRefByClassName(td->type->basicType->a.importTypeRef->typeName, mods, m);
+				if (mod)
+				{
+					const char* szNameSpace = GetNameSpace(mod);
+					fprintf(src, "\nexport class %s extends %s.%s {\n", td->definedName, szNameSpace, td->type->basicType->a.importTypeRef->typeName);
+					fprintf(src, "}\n");
+				}
+			}
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+			fprintf(src, "\nexport { %s as %s };\n", td->type->basicType->a.localTypeRef->typeName, td->definedName);
+			break;
+		case BASICTYPE_ENUMERATED: /* library type */
+			PrintSwiftEnumDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_SEQUENCE:
+		case BASICTYPE_CHOICE:
+			PrintSwiftSeqDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_BITSTRING:
+			break;
+		default:
+			snacc_exit("Unknown td->type->basicType->choiceId %d", td->type->basicType->choiceId);
 	}
 } /* PrintCxxTypeDefCode */
 
 /*
-* prints PrintROSEInvoke
-*/
+ * prints PrintROSEInvoke
+ */
 void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd)
 {
 } /* PrintROSEInvoke */
@@ -564,21 +566,21 @@ void PrintSwiftTypeDecl(FILE* src, TypeDef* td)
 
 	switch (td->type->basicType->choiceId)
 	{
-	case BASICTYPE_COMPONENTSOF:
-	case BASICTYPE_SELECTION:
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_MACRODEF:
-	case BASICTYPE_MACROTYPE:
-		return; /* do nothing */
+		case BASICTYPE_COMPONENTSOF:
+		case BASICTYPE_SELECTION:
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_MACRODEF:
+		case BASICTYPE_MACROTYPE:
+			return; /* do nothing */
 
-	default:
-		if (IsNewType(td->type))
-			fprintf(src, "// typedef %s\n", td->cxxTypeDefInfo->className);
+		default:
+			if (IsNewType(td->type))
+				fprintf(src, "// typedef %s\n", td->cxxTypeDefInfo->className);
 	}
-
 }
 
-void PrintSwiftComments(FILE* src, Module* m) {
+void PrintSwiftComments(FILE* src, Module* m)
+{
 	PRINTCOMMENT(src, "\n// [%s]\n", __FUNCTION__);
 
 	fprintf(src, "/*\n");
@@ -601,7 +603,8 @@ void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int
 	PrintSwiftImports(src, mods, m, false);
 
 	TypeDef* td;
-	FOR_EACH_LIST_ELMT(td, m->typeDefs) {
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+	{
 		if (IsDeprecatedNoOutputSequence(m, td->definedName))
 			continue;
 		PrintSwiftTypeDefCode(src, mods, m, td, novolatilefuncs);
@@ -609,4 +612,3 @@ void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int
 } /* PrintSwiftCode */
 
 /* EOF gen-code.c (for back-ends/TS-gen) */
-

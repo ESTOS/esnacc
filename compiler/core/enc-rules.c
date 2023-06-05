@@ -30,76 +30,78 @@
  *
  */
 
- /*
- #if !defined(lint)
- static const char rcsid[] = "@(#)$RCSfile: enc-rules.c,v $ $Revision: 1.1.1.1 $";
- #endif
+/*
+#if !defined(lint)
+static const char rcsid[] = "@(#)$RCSfile: enc-rules.c,v $ $Revision: 1.1.1.1 $";
+#endif
+*/
+/*
+ * Local file includes
  */
- /*
-  * Local file includes
-  */
 #include "enc-rules.h"
 #include "asn1module.h"
 #include "lib-types.h"
 
-
-  /* Static variables. */
+/* Static variables. */
 static EncRulesType rulesG;
 static char* prefixG;
-static EncRulesType rulesListG[3] = { NOP, NOP, NOP };
+static EncRulesType rulesListG[3] = {NOP, NOP, NOP};
 
 /* Set the encoding rule to be used */
 int SetEncRules(EncRulesType encoding)
 {
-	switch (encoding) {
-	case BER:
-		/* Basic Encoding Rules */
-		rulesG = BER;
-		prefixG = "B";
+	switch (encoding)
+	{
+		case BER:
+			/* Basic Encoding Rules */
+			rulesG = BER;
+			prefixG = "B";
 
-		/* Set the correct encodings */
-		SET_BER_LIBTYPE();
+			/* Set the correct encodings */
+			SET_BER_LIBTYPE();
 
-		return 1;
-	case DER:
-		/* Distinguished Encoding Rules */
-		rulesG = DER;
-		prefixG = "D";
+			return 1;
+		case DER:
+			/* Distinguished Encoding Rules */
+			rulesG = DER;
+			prefixG = "D";
 
-		/* Set the encodings for each lib type */
-		SET_DER_LIBTYPE();
-		return 1;
-	case JSONER:
-		/* JSON Encoding Rules */
-		rulesG = JSONER;
-		prefixG = "J";
+			/* Set the encodings for each lib type */
+			SET_DER_LIBTYPE();
+			return 1;
+		case JSONER:
+			/* JSON Encoding Rules */
+			rulesG = JSONER;
+			prefixG = "J";
 
-		/* Set the correct encodings */
-		SET_BER_LIBTYPE();
+			/* Set the correct encodings */
+			SET_BER_LIBTYPE();
 
-		return 1;
-	default:
-		/* No such rule */
-		return 0;
+			return 1;
+		default:
+			/* No such rule */
+			return 0;
 	}
 }
 
 /* Add an encoding to the list of encoders to generate */
 void AddEncRules(EncRulesType encoding)
 {
-	if (rulesListG[0] == NOP) {
+	if (rulesListG[0] == NOP)
+	{
 		rulesListG[0] = encoding;
 	}
-	else if (rulesListG[0] != encoding && rulesListG[1] == NOP) {
+	else if (rulesListG[0] != encoding && rulesListG[1] == NOP)
+	{
 		rulesListG[1] = encoding;
 	}
-	else {
+	else
+	{
 		/* Encoding must be already set */
 		return;
 	}
 
 	return;
-
 }
 
 /* Return a list of the encoders to generate */
@@ -117,10 +119,6 @@ EncRulesType GetEncRulesType()
 {
 	return rulesG;
 }
-
-
-
-
 
 /***************************************************************/
 /* end of FILE_C */

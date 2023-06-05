@@ -1,5 +1,5 @@
 
-// The following "SM_NO_THREADS" define allows the application/lib code that 
+// The following "SM_NO_THREADS" define allows the application/lib code that
 //  uses threads to not require this define (cleaner).  In this source module
 //  the thread lock logic is disabled (there is some slight performance loss
 //  in the wasted no-op call to the thread lock/unlock, but the logic is
@@ -29,14 +29,12 @@ void threadUnlock()
 #include <windows.h>
 HANDLE gMutex;
 
-#else 
+#else
 
 #include <pthread.h>
 pthread_mutex_t gMutex;
 
 #endif
-
-
 
 #ifndef _WIN32
 void initMutex(void)
@@ -68,7 +66,7 @@ void threadLock()
 #else // _WIN32
 
 #ifdef SUNOS
-	pthread_once_t once_block = { PTHREAD_ONCE_INIT };
+	pthread_once_t once_block = {PTHREAD_ONCE_INIT};
 #else
 	pthread_once_t once_block = PTHREAD_ONCE_INIT;
 #endif
@@ -76,18 +74,17 @@ void threadLock()
 	pthread_once(&once_block, initMutex);
 
 	pthread_mutex_lock(&gMutex);
-#endif  // _WIN32
+#endif // _WIN32
 }
 
 void threadUnlock()
 {
 #ifdef _WIN32
 	ReleaseMutex(gMutex);
-#else   //UNIX
+#else  // UNIX
 	pthread_mutex_unlock(&gMutex);
-#endif  // _WIN32
+#endif // _WIN32
 }
-
 
 #endif
 _END_SNACC_NAMESPACE

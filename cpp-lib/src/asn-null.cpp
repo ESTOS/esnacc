@@ -106,14 +106,12 @@
 
 _BEGIN_SNACC_NAMESPACE
 
-void AsnNull::BDecContent(const AsnBuf&/*b*/, AsnTag /*tagId*/, AsnLen elmtLen, AsnLen&/*bytesDecoded*/)
+void AsnNull::BDecContent(const AsnBuf& /*b*/, AsnTag /*tagId*/, AsnLen elmtLen, AsnLen& /*bytesDecoded*/)
 {
 	FUNC("AsnNull::BDecContent()");
 
 	if (elmtLen != 0)
-	{
 		throw BoundsException("AsnNull has non-zero length", STACK_ENTRY);
-	}
 } /* AsnNull::BDecContent */
 
 void AsnNull::JEnc(EJson::Value& b) const
@@ -154,9 +152,7 @@ void AsnNull::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	AsnTag tagId;
 	tagId = BDecTag(b, bytesDecoded);
 	if (tagId != MAKE_TAG_ID(UNIV, PRIM, NULLTYPE_TAG_CODE))
-	{
 		throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
-	}
 
 	elmtLen = BDecLen(b, bytesDecoded);
 	BDecContent(b, MAKE_TAG_ID(UNIV, PRIM, NULLTYPE_TAG_CODE), elmtLen, bytesDecoded);
@@ -170,9 +166,11 @@ void AsnNull::Print(std::ostream& os, unsigned short /*indent*/) const
 void AsnNull::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	os << "<NULL>";
-	if (lpszTitle) os << lpszTitle;
+	if (lpszTitle)
+		os << lpszTitle;
 	os << "-";
-	Print(os); os << "</NULL>\n";
+	Print(os);
+	os << "</NULL>\n";
 }
 
 #if META

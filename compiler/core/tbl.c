@@ -10,16 +10,10 @@
  *    NOTE: This is a machine generated file - editing not recommended
  */
 
-
-
 #include "../../c-lib/include/asn-incl.h"
 #include "tbl.h"
 
-
-AsnLen
-BEncTBLTypeRefContent PARAMS((b, v),
-	GenBuf* b _AND_
-	TBLTypeRef* v)
+AsnLen BEncTBLTypeRefContent PARAMS((b, v), GenBuf* b _AND_ TBLTypeRef* v)
 {
 	AsnLen totalLen = 0;
 	AsnLen itemLen;
@@ -40,15 +34,9 @@ BEncTBLTypeRefContent PARAMS((b, v),
 
 	return totalLen;
 
-}  /* BEncTBLTypeRefContent */
+} /* BEncTBLTypeRefContent */
 
-
-
-
-AsnLen
-BEncTBLTagContent PARAMS((b, v),
-	GenBuf* b _AND_
-	TBLTag* v)
+AsnLen BEncTBLTagContent PARAMS((b, v), GenBuf* b _AND_ TBLTag* v)
 {
 	AsnLen totalLen = 0;
 	AsnLen itemLen;
@@ -69,15 +57,9 @@ BEncTBLTagContent PARAMS((b, v),
 
 	return totalLen;
 
-}  /* BEncTBLTagContent */
+} /* BEncTBLTagContent */
 
-
-
-
-AsnLen
-BEncTBLTypeSeqOfContent PARAMS((b, v),
-	GenBuf* b _AND_
-	TBLTypeSeqOf* v)
+AsnLen BEncTBLTypeSeqOfContent PARAMS((b, v), GenBuf* b _AND_ TBLTypeSeqOf* v)
 {
 	AsnLen itemLen;
 	AsnLen listLen;
@@ -95,15 +77,9 @@ BEncTBLTypeSeqOfContent PARAMS((b, v),
 	}
 	return listLen;
 
-}  /* BEncTBLTypeSeqOfContent */
+} /* BEncTBLTypeSeqOfContent */
 
-
-
-
-AsnLen
-BEncTBLTypeContentSeqOfContent PARAMS((b, v),
-	GenBuf* b _AND_
-	TBLTypeContentSeqOf* v)
+AsnLen BEncTBLTypeContentSeqOfContent PARAMS((b, v), GenBuf* b _AND_ TBLTypeContentSeqOf* v)
 {
 	AsnLen itemLen;
 	AsnLen listLen;
@@ -121,15 +97,9 @@ BEncTBLTypeContentSeqOfContent PARAMS((b, v),
 	}
 	return listLen;
 
-}  /* BEncTBLTypeContentSeqOfContent */
+} /* BEncTBLTypeContentSeqOfContent */
 
-
-
-
-AsnLen
-BEncTBLTypeContent PARAMS((b, v),
-	GenBuf* b _AND_
-	TBLType* v)
+AsnLen BEncTBLTypeContent PARAMS((b, v), GenBuf* b _AND_ TBLType* v)
 {
 	AsnLen totalLen = 0;
 	AsnLen itemLen;
@@ -176,63 +146,50 @@ BEncTBLTypeContent PARAMS((b, v),
 
 	return totalLen;
 
-}  /* BEncTBLTypeContent */
+} /* BEncTBLTypeContent */
 
-
-
-
-AsnLen
-BEncTBLTypeContentContent PARAMS((b, v),
-	GenBuf* b _AND_
-	TBLTypeContent* v)
+AsnLen BEncTBLTypeContentContent PARAMS((b, v), GenBuf* b _AND_ TBLTypeContent* v)
 {
 	AsnLen totalLen = 0;
 	AsnLen itemLen;
 
 	switch (v->choiceId)
 	{
-	case TBLTYPECONTENT_PRIMTYPE:
-		itemLen = BEncAsnNullContent(b, (&v->a.primType));
-		BEncDefLenTo127(b, itemLen);
-		itemLen++;
-		itemLen += BEncTag1(b, CNTX, PRIM, 0);
+		case TBLTYPECONTENT_PRIMTYPE:
+			itemLen = BEncAsnNullContent(b, (&v->a.primType));
+			BEncDefLenTo127(b, itemLen);
+			itemLen++;
+			itemLen += BEncTag1(b, CNTX, PRIM, 0);
 
-		totalLen += itemLen;
+			totalLen += itemLen;
 
-		break;
+			break;
 
-	case TBLTYPECONTENT_ELMTS:
-		BEncEocIfNec(b);
-		itemLen = BEncTBLTypeContentSeqOfContent(b, (v->a.elmts));
-		itemLen += BEncConsLen(b, itemLen);
-		itemLen += BEncTag1(b, CNTX, CONS, BOOLEAN_TAG_CODE);
+		case TBLTYPECONTENT_ELMTS:
+			BEncEocIfNec(b);
+			itemLen = BEncTBLTypeContentSeqOfContent(b, (v->a.elmts));
+			itemLen += BEncConsLen(b, itemLen);
+			itemLen += BEncTag1(b, CNTX, CONS, BOOLEAN_TAG_CODE);
 
-		totalLen += itemLen;
+			totalLen += itemLen;
 
-		break;
+			break;
 
-	case TBLTYPECONTENT_TYPEREF:
-		BEncEocIfNec(b);
-		itemLen = BEncTBLTypeRefContent(b, (v->a.typeRef));
-		itemLen += BEncConsLen(b, itemLen);
-		itemLen += BEncTag1(b, CNTX, CONS, INTEGER_TAG_CODE);
+		case TBLTYPECONTENT_TYPEREF:
+			BEncEocIfNec(b);
+			itemLen = BEncTBLTypeRefContent(b, (v->a.typeRef));
+			itemLen += BEncConsLen(b, itemLen);
+			itemLen += BEncTag1(b, CNTX, CONS, INTEGER_TAG_CODE);
 
-		totalLen += itemLen;
+			totalLen += itemLen;
 
-		break;
-
+			break;
 	}
 	return totalLen;
 
-}  /* BEncTBLTypeContentContent */
+} /* BEncTBLTypeContentContent */
 
-
-
-
-AsnLen
-BEncTBLTypeDefContent PARAMS((b, v),
-	GenBuf* b _AND_
-	TBLTypeDef* v)
+AsnLen BEncTBLTypeDefContent PARAMS((b, v), GenBuf* b _AND_ TBLTypeDef* v)
 {
 	AsnLen totalLen = 0;
 	AsnLen itemLen;
@@ -262,15 +219,9 @@ BEncTBLTypeDefContent PARAMS((b, v),
 
 	return totalLen;
 
-}  /* BEncTBLTypeDefContent */
+} /* BEncTBLTypeDefContent */
 
-
-
-
-AsnLen
-BEncTBLModuleSeqOfContent PARAMS((b, v),
-	GenBuf* b _AND_
-	TBLModuleSeqOf* v)
+AsnLen BEncTBLModuleSeqOfContent PARAMS((b, v), GenBuf* b _AND_ TBLModuleSeqOf* v)
 {
 	AsnLen itemLen;
 	AsnLen listLen;
@@ -288,15 +239,9 @@ BEncTBLModuleSeqOfContent PARAMS((b, v),
 	}
 	return listLen;
 
-}  /* BEncTBLModuleSeqOfContent */
+} /* BEncTBLModuleSeqOfContent */
 
-
-
-
-AsnLen
-BEncTBLModuleContent PARAMS((b, v),
-	GenBuf* b _AND_
-	TBLModule* v)
+AsnLen BEncTBLModuleContent PARAMS((b, v), GenBuf* b _AND_ TBLModule* v)
 {
 	AsnLen totalLen = 0;
 	AsnLen itemLen;
@@ -332,15 +277,9 @@ BEncTBLModuleContent PARAMS((b, v),
 
 	return totalLen;
 
-}  /* BEncTBLModuleContent */
+} /* BEncTBLModuleContent */
 
-
-
-
-AsnLen
-BEncTBLSeqOfContent PARAMS((b, v),
-	GenBuf* b _AND_
-	TBLSeqOf* v)
+AsnLen BEncTBLSeqOfContent PARAMS((b, v), GenBuf* b _AND_ TBLSeqOf* v)
 {
 	AsnLen itemLen;
 	AsnLen listLen;
@@ -358,14 +297,9 @@ BEncTBLSeqOfContent PARAMS((b, v),
 	}
 	return listLen;
 
-}  /* BEncTBLSeqOfContent */
+} /* BEncTBLSeqOfContent */
 
-
-
-
-AsnLen BEncTBL PARAMS((b, v),
-	GenBuf* b _AND_
-	TBL* v)
+AsnLen BEncTBL PARAMS((b, v), GenBuf* b _AND_ TBL* v)
 {
 	AsnLen l = 0;
 	BEncEocIfNec(b);
@@ -375,10 +309,7 @@ AsnLen BEncTBL PARAMS((b, v),
 	return l;
 } /* BEncTBL */
 
-AsnLen
-BEncTBLContent PARAMS((b, v),
-	GenBuf* b _AND_
-	TBL* v)
+AsnLen BEncTBLContent PARAMS((b, v), GenBuf* b _AND_ TBL* v)
 {
 	AsnLen totalLen = 0;
 	AsnLen itemLen;
@@ -434,8 +365,4 @@ BEncTBLContent PARAMS((b, v),
 
 	return totalLen;
 
-}  /* BEncTBLContent */
-
-
-
-
+} /* BEncTBLContent */

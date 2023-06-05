@@ -58,31 +58,26 @@
 #include "../../c-lib/include/asn-incl.h"
 #include "asn1module.h"
 
- /* Function Prototypes */
-void BuildLocalRefList PROTO((Type* t, TypeDefList* refList));
-void BuildWeightedLocalRefList PROTO((Type* t, TypeDefList* refList));
-long GetElmtIndex PROTO((TypeDef* td, TypeDefList* tdl));
-int IsDefinedByLibraryType PROTO((Type* t));
-TypeDefList* RemoveAndSortIndependents PROTO((TypeDefList* tdl));
-void SortInterModuleDependencies PROTO((ModuleList* m));
-void SortTypeDefs PROTO((TypeDefList* tdl));
-void SortTypeDependencies PROTO((Module* m));
+/* Function Prototypes */
+void BuildLocalRefList PROTO((Type * t, TypeDefList* refList));
+void BuildWeightedLocalRefList PROTO((Type * t, TypeDefList* refList));
+long GetElmtIndex PROTO((TypeDef * td, TypeDefList* tdl));
+int IsDefinedByLibraryType PROTO((Type * t));
+TypeDefList* RemoveAndSortIndependents PROTO((TypeDefList * tdl));
+void SortInterModuleDependencies PROTO((ModuleList * m));
+void SortTypeDefs PROTO((TypeDefList * tdl));
+void SortTypeDependencies PROTO((Module * m));
 /*
 void MoveAfter PROTO ((unsigned long currIndex, unsigned long afterIndex, AsnList *l));
 */
 
-
-extern FILE* errFileG;		/* Pointer to file for reporting errors */
-
-
+extern FILE* errFileG; /* Pointer to file for reporting errors */
 
 /*
  * Sorts type dependencies by reodering TypeDefs linear list
  * with least dependent types followed by dependent types
  */
-void
-SortAllDependencies PARAMS((modList),
-	ModuleList* modList)
+void SortAllDependencies PARAMS((modList), ModuleList* modList)
 {
 	Module* m;
 
@@ -94,7 +89,6 @@ SortAllDependencies PARAMS((modList),
 	/*    SortInterModuleDependencies (modList); */
 
 } /* SortAllDependencies */
-
 
 /*
  * This attempts to sort the types in order of dependency
@@ -131,9 +125,7 @@ SortAllDependencies PARAMS((modList),
  *
  * MS 92
  */
-void
-SortTypeDependencies PARAMS((m),
-	Module* m)
+void SortTypeDependencies PARAMS((m), Module* m)
 {
 	TypeDef* curr;
 	TypeDefList* prims;
@@ -150,7 +142,7 @@ SortTypeDependencies PARAMS((m),
 	/* put each TypeDef in the appropriate list (1-4)*/
 	FOR_EACH_LIST_ELMT(curr, m->typeDefs)
 	{
-		if (IsDefinedByLibraryType(curr->type))	// Deepak: One Change Done Here...
+		if (IsDefinedByLibraryType(curr->type)) // Deepak: One Change Done Here...
 			newElmtHndl = (TypeDef**)AsnListAppend(prims);
 
 		else if (curr->localRefCount == 0)
@@ -206,41 +198,34 @@ SortTypeDependencies PARAMS((m),
 
 } /* SortTypeDependencies */
 
-
-
-
 /*
  * Attempt to sort modules in order of "depends on none" to
  * "depends on all" where a dependency is caused by importing
  * from another module.
  * cyclic dependencies are a pain
  */
- /*
-  *  Not implemented yet... perhaps best left in user's hands
-  *  ie set it by the cmd line order
-  */
-  /*
-  void
-  SortInterModuleDependencies PARAMS ((m),
-	  ModuleList *m)
-  {
+/*
+ *  Not implemented yet... perhaps best left in user's hands
+ *  ie set it by the cmd line order
+ */
+/*
+void
+SortInterModuleDependencies PARAMS ((m),
+	ModuleList *m)
+{
 
-  }  SortInterModuleDependencies */
+}  SortInterModuleDependencies */
 
-
-
-  /*
-   * Given a non-empty TypeDef list, the refLists of TypeDefs
-   * are used to divide the list into two lists, one list
-   * that is sorted the order of dependency (independed-->dependent)
-   * and the other list contains types that are mutually dependent
-   * (recursive or depend on recursive types)
-   * The sorted list is returned and the passed in list has those
-   * TypeDefs that are now in the sorted list removed.
-   */
-TypeDefList*
-RemoveAndSortIndependents PARAMS((tdl),
-	TypeDefList* tdl)
+/*
+ * Given a non-empty TypeDef list, the refLists of TypeDefs
+ * are used to divide the list into two lists, one list
+ * that is sorted the order of dependency (independed-->dependent)
+ * and the other list contains types that are mutually dependent
+ * (recursive or depend on recursive types)
+ * The sorted list is returned and the passed in list has those
+ * TypeDefs that are now in the sorted list removed.
+ */
+TypeDefList* RemoveAndSortIndependents PARAMS((tdl), TypeDefList* tdl)
 {
 	TypeDef* last;
 	TypeDef* currTd;
@@ -316,7 +301,6 @@ RemoveAndSortIndependents PARAMS((tdl),
 
 } /* RemoveAndSortIndependents */
 
-
 /*
  * Given a list of types that depend on each other, this attempts
  * to sort the list from independent--> most dependent.
@@ -348,17 +332,15 @@ RemoveAndSortIndependents PARAMS((tdl),
  *
  *     (the stripped C lists go after 'A')
  */
-void
-SortTypeDefs PARAMS((tdl),
-	TypeDefList* tdl)
+void SortTypeDefs PARAMS((tdl), TypeDefList* tdl)
 {
 	TypeDef* last;
 	TypeDef* currTd;
 	TypeDef** tdHndl;
 	AsnListNode* nextListNode;
-	TypeDefList* subList;  /* "A" */
+	TypeDefList* subList; /* "A" */
 	TypeDefList* nonRec;
-	TypeDefList* sortedRec;  /* "B" */
+	TypeDefList* sortedRec;	   /* "B" */
 	TypeDefList* sortedNonRec; /* "C" */
 	TypeDefList* cLists;
 
@@ -437,9 +419,7 @@ SortTypeDefs PARAMS((tdl),
 		currTd->refList = NULL;
 
 		/* for C only, remove lists since they are generic */
-		if ((currTd->cTypeDefInfo != NULL) &&
-			((currTd->type->basicType->choiceId == BASICTYPE_SETOF) ||
-				(currTd->type->basicType->choiceId == BASICTYPE_SEQUENCEOF)))
+		if ((currTd->cTypeDefInfo != NULL) && ((currTd->type->basicType->choiceId == BASICTYPE_SETOF) || (currTd->type->basicType->choiceId == BASICTYPE_SEQUENCEOF)))
 		{
 			tdHndl = (TypeDef**)AsnListAppend(cLists);
 			*tdHndl = currTd;
@@ -452,8 +432,6 @@ SortTypeDefs PARAMS((tdl),
 		SET_CURR_LIST_NODE(tdl, nextListNode);
 		currTd = (TypeDef*)CURR_LIST_ELMT(tdl);
 	}
-
-
 
 	FOR_EACH_LIST_ELMT(currTd, tdl)
 	{
@@ -478,61 +456,54 @@ SortTypeDefs PARAMS((tdl),
 	Free(sortedRec);
 	Free(sortedNonRec);
 
-}  /* SortTypeDefs */
-
-
-
+} /* SortTypeDefs */
 
 /*
  * Builds list of TypeDefs in this module that the given type refs.
  * Does not follow type refs to include their type refs.
  */
-void
-BuildLocalRefList PARAMS((t, refList),
-	Type* t _AND_
-	TypeDefList* refList)
+void BuildLocalRefList PARAMS((t, refList), Type* t _AND_ TypeDefList* refList)
 {
 	NamedType* e;
 	TypeDef** tdHndl;
 
 	switch (t->basicType->choiceId)
 	{
-	case BASICTYPE_CHOICE:
-	case BASICTYPE_SET:
-	case BASICTYPE_SEQUENCE:
-		FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
-		{
-			BuildLocalRefList(e->type, refList);
-		}
-		break;
+		case BASICTYPE_CHOICE:
+		case BASICTYPE_SET:
+		case BASICTYPE_SEQUENCE:
+			FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
+			{
+				BuildLocalRefList(e->type, refList);
+			}
+			break;
 
-	case BASICTYPE_OBJECTCLASS:			// Deepak: 13/Mar/2003
-		FOR_EACH_LIST_ELMT(e, t->basicType->a.objectclass->classdef)
-		{
-			BuildLocalRefList(e->type, refList);
-		}
-		break;
+		case BASICTYPE_OBJECTCLASS: // Deepak: 13/Mar/2003
+			FOR_EACH_LIST_ELMT(e, t->basicType->a.objectclass->classdef)
+			{
+				BuildLocalRefList(e->type, refList);
+			}
+			break;
 
-	case BASICTYPE_SETOF:
-	case BASICTYPE_SEQUENCEOF:
-		BuildLocalRefList(t->basicType->a.setOf, refList);
-		break;
+		case BASICTYPE_SETOF:
+		case BASICTYPE_SEQUENCEOF:
+			BuildLocalRefList(t->basicType->a.setOf, refList);
+			break;
 
-	case BASICTYPE_LOCALTYPEREF:
-		tdHndl = (TypeDef**)AsnListAppend(refList);
-		*tdHndl = t->basicType->a.localTypeRef->link;
-		break;
+		case BASICTYPE_LOCALTYPEREF:
+			tdHndl = (TypeDef**)AsnListAppend(refList);
+			*tdHndl = t->basicType->a.localTypeRef->link;
+			break;
 
-		/*
-		 * default: other types are not aggregate and
-		 * and can be ignored
-		 */
+			/*
+			 * default: other types are not aggregate and
+			 * and can be ignored
+			 */
 
-	default:
-		break;
+		default:
+			break;
 	}
 } /* BuildLocalRefList */
-
 
 /*
  * Builds list of TypeDefs in this module that the given type references.
@@ -543,79 +514,67 @@ BuildLocalRefList PARAMS((t, refList),
  * (it doesn't need type info)
  * they shouldn't affect type ordering.
  */
-void
-BuildWeightedLocalRefList PARAMS((t, refList),
-	Type* t _AND_
-	TypeDefList* refList)
+void BuildWeightedLocalRefList PARAMS((t, refList), Type* t _AND_ TypeDefList* refList)
 {
 	NamedType* e;
 	TypeDef** tdHndl;
 
 	switch (t->basicType->choiceId)
 	{
-	case BASICTYPE_CHOICE:
-	case BASICTYPE_SET:
-	case BASICTYPE_SEQUENCE:
-		FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
-		{
-			BuildWeightedLocalRefList(e->type, refList);
-		}
-		break;
+		case BASICTYPE_CHOICE:
+		case BASICTYPE_SET:
+		case BASICTYPE_SEQUENCE:
+			FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
+			{
+				BuildWeightedLocalRefList(e->type, refList);
+			}
+			break;
 
+		case BASICTYPE_SETOF:
+		case BASICTYPE_SEQUENCEOF:
+			/*
+			 * normalize makes embedded list defs into
+			 * separate type defs now so this clause will
+			 * not fire. (ie they will be a LOCAL_TYPEREF
+			 * to the removed list type instead)
+			 */
 
+			/*
+			 * list types for C don't really depend on
+			 * the component type (void*). So if the target lang
+			 * is C then can achieve better ordering
+			 * for ugly recursive defs by using this relaxation
+			 * (ie not including the component type in the ref list)
+			 */
+			if (t->cTypeRefInfo == NULL)
+				BuildWeightedLocalRefList(t->basicType->a.setOf, refList);
 
-	case BASICTYPE_SETOF:
-	case BASICTYPE_SEQUENCEOF:
-		/*
-		 * normalize makes embedded list defs into
-		 * separate type defs now so this clause will
-		 * not fire. (ie they will be a LOCAL_TYPEREF
-		 * to the removed list type instead)
-		 */
+			break;
 
-		 /*
-		  * list types for C don't really depend on
-		  * the component type (void*). So if the target lang
-		  * is C then can achieve better ordering
-		  * for ugly recursive defs by using this relaxation
-		  * (ie not including the component type in the ref list)
-		  */
-		if (t->cTypeRefInfo == NULL)
-			BuildWeightedLocalRefList(t->basicType->a.setOf, refList);
+		case BASICTYPE_LOCALTYPEREF:
 
-		break;
+			if (((t->cxxTypeRefInfo != NULL) && !(t->cxxTypeRefInfo->isPtr)) || ((t->cTypeRefInfo != NULL) && !(t->cTypeRefInfo->isPtr)))
+			{
+				tdHndl = (TypeDef**)AsnListAppend(refList);
+				*tdHndl = t->basicType->a.localTypeRef->link;
+			}
+			break;
 
-	case BASICTYPE_LOCALTYPEREF:
-
-		if (((t->cxxTypeRefInfo != NULL) &&
-			!(t->cxxTypeRefInfo->isPtr)) ||
-			((t->cTypeRefInfo != NULL) && !(t->cTypeRefInfo->isPtr)))
-		{
-			tdHndl = (TypeDef**)AsnListAppend(refList);
-			*tdHndl = t->basicType->a.localTypeRef->link;
-		}
-		break;
-
-	default:
-		break;
-		/*
-		 * default: other types are not aggregate and
-		 * and can be ignored
-		 */
+		default:
+			break;
+			/*
+			 * default: other types are not aggregate and
+			 * and can be ignored
+			 */
 	}
 } /* BuildWeightedLocalRefList */
-
-
 
 /*
  * Returns the index (starting a 0 for the first elmt)
  * of the given td in the td list (tdl)
  * returns -1 if td is not in the list
  */
-long
-GetElmtIndex PARAMS((td, tdl),
-	TypeDef* td _AND_
-	TypeDefList* tdl)
+long GetElmtIndex PARAMS((td, tdl), TypeDef* td _AND_ TypeDefList* tdl)
 {
 	void* tmp;
 	TypeDef* tmpTd;
@@ -637,11 +596,7 @@ GetElmtIndex PARAMS((td, tdl),
 	SET_CURR_LIST_NODE(tdl, tmp);
 	return -1;
 
-}  /* GetElmtIndex */
-
-
-
-
+} /* GetElmtIndex */
 
 /*
  * Attempts to order the types in tdl from independent-->most depenedent
@@ -705,8 +660,6 @@ AttemptDependencySort PARAMS ((tdl),
 		currTd = (TypeDef*)CURR_LIST_ELMT (tdl);
 	}
 }  AttemptDependencySort */
-
-
 
 /*
  * Moves list node at currIndex to after Node at afterIndex

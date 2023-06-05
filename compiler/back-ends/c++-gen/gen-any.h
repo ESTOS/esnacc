@@ -3,5 +3,4 @@
 
 void PrintCxxAnyCode(FILE* src, FILE* hdr, CxxRules* r, ModuleList* mods, Module* m);
 
-
 #endif

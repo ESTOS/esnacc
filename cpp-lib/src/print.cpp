@@ -18,7 +18,6 @@
 
 #include "../include/asn-incl.h"
 
-
 void SNACC::Indent(std::ostream& os, unsigned short i)
 {
 	while (i-- > 0)

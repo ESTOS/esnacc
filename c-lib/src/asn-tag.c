@@ -58,21 +58,17 @@
 #include "../include/asn-len.h"
 #include "../include/asn-tag.h"
 
- /*
-  * Returns an AsnTag.  An AsnTag is simply an encoded tag
-  * shifted to fill up an unsigned long int (first tag byte
-  * in most sig byte of long int)
-  * This rep permits easy case stmt comparison of tags.
-  * NOTE: The unsigned long rep for tag BREAKS if the
-  *       the tag's code is over 2^21 (very unlikely)
-  *
-  * RETURNS 0 if decoded a 0 byte (ie first byte of an EOC)
-  */
-AsnTag
-BDecTag PARAMS((b, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+/*
+ * Returns an AsnTag.  An AsnTag is simply an encoded tag
+ * shifted to fill up an unsigned long int (first tag byte
+ * in most sig byte of long int)
+ * This rep permits easy case stmt comparison of tags.
+ * NOTE: The unsigned long rep for tag BREAKS if the
+ *       the tag's code is over 2^21 (very unlikely)
+ *
+ * RETURNS 0 if decoded a 0 byte (ie first byte of an EOC)
+ */
+AsnTag BDecTag PARAMS((b, bytesDecoded, env), GenBuf* b _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnTag tagId;
 	AsnTag tmpTagId;
@@ -111,13 +107,10 @@ BDecTag PARAMS((b, bytesDecoded, env),
 
 	return tagId;
 
-}  /* BDecTag */
-
+} /* BDecTag */
 
 #if TTBL
-AsnTag PeekTag PARAMS((b, env),
-	GenBuf* b _AND_
-	ENV_TYPE env)
+AsnTag PeekTag PARAMS((b, env), GenBuf* b _AND_ ENV_TYPE env)
 {
 	AsnTag tagId, tmpTagId;
 	int i;

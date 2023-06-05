@@ -19,7 +19,4 @@ bool AsnStringOcts::JDec(const EJson::Value& b)
 	return false;
 }
 
-
-
-
 _END_SNACC_NAMESPACE

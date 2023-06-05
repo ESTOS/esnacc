@@ -30,7 +30,7 @@ New JSON Format:
 }
 */
 
-//Implementation from asn-listset.h
+// Implementation from asn-listset.h
 void AsnOptionalParameters::JEnc(EJson::Value& b) const
 {
 	/*
@@ -59,7 +59,7 @@ bool AsnOptionalParameters::JDec(const EJson::Value& b)
 {
 	Clear();
 
-	//original Implementation (like BER)
+	// original Implementation (like BER)
 	if (b.isArray())
 	{
 		EJson::Value::const_iterator it = b.begin();
@@ -89,20 +89,18 @@ bool AsnOptionalParameters::JDec(const EJson::Value& b)
 	return false;
 }
 
-
 void AsnOptionalParam::Init(void)
 {
 }
 
-
-int AsnOptionalParam::checkConstraints(ConstraintFailList* pConstraintFails) const {
+int AsnOptionalParam::checkConstraints(ConstraintFailList* pConstraintFails) const
+{
 	key.checkConstraints(pConstraintFails);
 
 	value.checkConstraints(pConstraintFails);
 
 	return 0;
 }
-
 
 void AsnOptionalParam::Clear()
 {
@@ -119,7 +117,7 @@ AsnType* AsnOptionalParam::Clone() const
 	return new AsnOptionalParam(*this);
 }
 
-AsnOptionalParam& AsnOptionalParam::operator = (const AsnOptionalParam& that)
+AsnOptionalParam& AsnOptionalParam::operator=(const AsnOptionalParam& that)
 {
 	if (this != &that)
 	{
@@ -131,8 +129,7 @@ AsnOptionalParam& AsnOptionalParam::operator = (const AsnOptionalParam& that)
 	return *this;
 }
 
-AsnLen
-AsnOptionalParam::BEncContent(AsnBuf& _b) const
+AsnLen AsnOptionalParam::BEncContent(AsnBuf& _b) const
 {
 	AsnLen totalLen = 0;
 	AsnLen l = 0;
@@ -149,7 +146,6 @@ AsnOptionalParam::BEncContent(AsnBuf& _b) const
 	return totalLen;
 } // AsnOptionalParam::BEncContent
 
-
 void AsnOptionalParam::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 {
 	FUNC(" AsnOptionalParam::BDecContent");
@@ -157,14 +153,12 @@ void AsnOptionalParam::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elm
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
 	// Wenn nix da ist, brauchen wir nicht weiter machen --> raus
-	if (elmtLen0 == 0) {
+	if (elmtLen0 == 0)
 		return;
-	}
 
 	AsnTag tag1 = BDecTag(_b, seqBytesDecoded);
 
-	if ((tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
-		|| (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
+	if ((tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE)) || (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)))
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		key.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
@@ -175,11 +169,7 @@ void AsnOptionalParam::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elm
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 	}
 
-	if ((tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE))
-		|| (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE))
-		|| (tag1 == MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE))
-		|| (tag1 == MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE))
-		|| (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE)))
+	if ((tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE)) || (tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE)) || (tag1 == MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE)) || (tag1 == MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE)) || (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE)))
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		value.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
@@ -223,9 +213,7 @@ void AsnOptionalParam::JEnc(EJson::Value& b) const
 
 	value.JEnc(tmp);
 	b["value"] = tmp;
-
 }
-
 
 void AsnOptionalParam::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 {
@@ -234,26 +222,32 @@ void AsnOptionalParam::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	AsnLen elmtLen1;
 
 	if ((tag = BDecTag(_b, bytesDecoded)) != MAKE_TAG_ID(UNIV, CONS, SEQ_TAG_CODE))
-	{
 		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-	}
 	elmtLen1 = BDecLen(_b, bytesDecoded);
 	BDecContent(_b, tag, elmtLen1, bytesDecoded);
 }
 
-bool AsnOptionalParam::JDec(const EJson::Value& b) {
+bool AsnOptionalParam::JDec(const EJson::Value& b)
+{
 	Clear();
-	if (!b.isObject()) return false;
+	if (!b.isObject())
+		return false;
 
 	EJson::Value tmp;
-	if (b.isMember("key")) {
-		if (!key.JDec(b["key"])) throw InvalidTagException(typeName(), "decode failed: key", STACK_ENTRY);
+	if (b.isMember("key"))
+	{
+		if (!key.JDec(b["key"]))
+			throw InvalidTagException(typeName(), "decode failed: key", STACK_ENTRY);
 	}
-	else throw InvalidTagException(typeName(), "not found: key", STACK_ENTRY);
-	if (b.isMember("value")) {
-		if (!value.JDec(b["value"])) throw InvalidTagException(typeName(), "decode failed: value", STACK_ENTRY);
+	else
+		throw InvalidTagException(typeName(), "not found: key", STACK_ENTRY);
+	if (b.isMember("value"))
+	{
+		if (!value.JDec(b["value"]))
+			throw InvalidTagException(typeName(), "decode failed: value", STACK_ENTRY);
 	}
-	else throw InvalidTagException(typeName(), "not found: value", STACK_ENTRY);
+	else
+		throw InvalidTagException(typeName(), "not found: value", STACK_ENTRY);
 	return true;
 } // AsnOptionalParam::JDec
 
@@ -279,7 +273,6 @@ void AsnOptionalParam::Print(std::ostream& os, unsigned short indent) const
 	os << "}\n";
 } // end of AsnOptionalParam::Print()
 
-
 AsnOptionalParamChoice::AsnOptionalParamChoice(const AsnOptionalParamChoice& that)
 {
 	Init();
@@ -291,7 +284,6 @@ void AsnOptionalParamChoice::Init(void)
 	choiceId = stringdataCid;
 	stringdata = NULL;
 }
-
 
 int AsnOptionalParamChoice::checkConstraints(ConstraintFailList* pConstraintFails) const
 {
@@ -307,23 +299,22 @@ int AsnOptionalParamChoice::checkConstraints(ConstraintFailList* pConstraintFail
 	return 0;
 }
 
-
 void AsnOptionalParamChoice::Clear()
 {
 	switch (choiceId)
 	{
-	case stringdataCid:
-		delete stringdata;
-		stringdata = NULL;
-		break;
-	case binarydataCid:
-		delete binarydata;
-		binarydata = NULL;
-		break;
-	case integerdataCid:
-		delete integerdata;
-		integerdata = NULL;
-		break;
+		case stringdataCid:
+			delete stringdata;
+			stringdata = NULL;
+			break;
+		case binarydataCid:
+			delete binarydata;
+			binarydata = NULL;
+			break;
+		case integerdataCid:
+			delete integerdata;
+			integerdata = NULL;
+			break;
 	} // end of switch
 } // end of Clear()
 
@@ -332,7 +323,7 @@ AsnType* AsnOptionalParamChoice::Clone() const
 	return new AsnOptionalParamChoice(*this);
 }
 
-AsnOptionalParamChoice& AsnOptionalParamChoice::operator = (const AsnOptionalParamChoice& that)
+AsnOptionalParamChoice& AsnOptionalParamChoice::operator=(const AsnOptionalParamChoice& that)
 {
 	if (this != &that)
 	{
@@ -342,56 +333,54 @@ AsnOptionalParamChoice& AsnOptionalParamChoice::operator = (const AsnOptionalPar
 		{
 			switch (choiceId = that.choiceId)
 			{
-			case stringdataCid:
-				stringdata = new UTF8String(*that.stringdata);
-				break;
-			case binarydataCid:
-				binarydata = new AsnOcts(*that.binarydata);
-				break;
-			case integerdataCid:
-				integerdata = new AsnInt(*that.integerdata);
-				break;
-			}// end of switch
-		}// end of if
+				case stringdataCid:
+					stringdata = new UTF8String(*that.stringdata);
+					break;
+				case binarydataCid:
+					binarydata = new AsnOcts(*that.binarydata);
+					break;
+				case integerdataCid:
+					integerdata = new AsnInt(*that.integerdata);
+					break;
+			} // end of switch
+		}	  // end of if
 	}
 
 	return *this;
 }
 
-AsnLen
-AsnOptionalParamChoice::BEncContent(AsnBuf& _b) const
+AsnLen AsnOptionalParamChoice::BEncContent(AsnBuf& _b) const
 {
 	FUNC("AsnOptionalParamChoice::BEncContent (AsnBuf &_b)");
 	AsnLen l = 0;
 	switch (choiceId)
 	{
-	case stringdataCid:
-		l = stringdata->BEncContent(_b);
-		l += BEncDefLen(_b, l);
+		case stringdataCid:
+			l = stringdata->BEncContent(_b);
+			l += BEncDefLen(_b, l);
 
-		l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
-		break;
+			l += BEncTag1(_b, UNIV, PRIM, UTF8STRING_TAG_CODE);
+			break;
 
-	case binarydataCid:
-		l = binarydata->BEncContent(_b);
-		l += BEncDefLen(_b, l);
+		case binarydataCid:
+			l = binarydata->BEncContent(_b);
+			l += BEncDefLen(_b, l);
 
-		l += BEncTag1(_b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
-		break;
+			l += BEncTag1(_b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
+			break;
 
-	case integerdataCid:
-		l = integerdata->BEncContent(_b);
-		l += BEncDefLen(_b, l);
+		case integerdataCid:
+			l = integerdata->BEncContent(_b);
+			l += BEncDefLen(_b, l);
 
-		l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
-		break;
+			l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
+			break;
 
-	default:
-		throw EXCEPT("Choice is empty", ENCODE_ERROR);
+		default:
+			throw EXCEPT("Choice is empty", ENCODE_ERROR);
 	} // end switch
 	return l;
 } // AsnOptionalParamChoice::BEncContent
-
 
 void AsnOptionalParamChoice::BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen0, AsnLen& bytesDecoded /*, s env*/)
 {
@@ -399,33 +388,33 @@ void AsnOptionalParamChoice::BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen el
 	Clear();
 	switch (tag)
 	{
-	case MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE):
-	case MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE):
-		choiceId = stringdataCid;
-		stringdata = new UTF8String;
-		stringdata->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+		case MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE):
+		case MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE):
+			choiceId = stringdataCid;
+			stringdata = new UTF8String;
+			stringdata->BDecContent(_b, tag, elmtLen0, bytesDecoded);
+			break;
 
-	case MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE):
-	case MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE):
-		choiceId = binarydataCid;
-		binarydata = new AsnOcts;
-		binarydata->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+		case MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE):
+		case MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE):
+			choiceId = binarydataCid;
+			binarydata = new AsnOcts;
+			binarydata->BDecContent(_b, tag, elmtLen0, bytesDecoded);
+			break;
 
-	case MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE):
-		choiceId = integerdataCid;
-		integerdata = new AsnInt;
-		integerdata->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+		case MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE):
+			choiceId = integerdataCid;
+			integerdata = new AsnInt;
+			integerdata->BDecContent(_b, tag, elmtLen0, bytesDecoded);
+			break;
 
-	default:
-	{        throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-	break;
-	}
+		default:
+			{
+				throw InvalidTagException(typeName(), tag, STACK_ENTRY);
+				break;
+			}
 	} // end switch
 } // AsnOptionalParamChoice::BDecContent
-
 
 AsnLen AsnOptionalParamChoice::BEnc(AsnBuf& _b) const
 {
@@ -465,29 +454,28 @@ void AsnOptionalParamChoice::JEnc(EJson::Value& b) const
 	*/
 	switch (choiceId)
 	{
-	case stringdataCid:
-		stringdata->JEnc(b);
-		break;
+		case stringdataCid:
+			stringdata->JEnc(b);
+			break;
 
-	case binarydataCid:
-	{
-		b = EJson::Value(EJson::objectValue);
-		EJson::Value tmp;
-		binarydata->JEnc(tmp);
-		b["binarydata"] = tmp;
-		break;
-	}
+		case binarydataCid:
+			{
+				b = EJson::Value(EJson::objectValue);
+				EJson::Value tmp;
+				binarydata->JEnc(tmp);
+				b["binarydata"] = tmp;
+				break;
+			}
 
-	case integerdataCid:
-		integerdata->JEnc(b);
-		break;
+		case integerdataCid:
+			integerdata->JEnc(b);
+			break;
 
-	default:
-		throw EXCEPT("Choice is empty", ENCODE_ERROR);
+		default:
+			throw EXCEPT("Choice is empty", ENCODE_ERROR);
 	} // end switch
 
 } // AsnOptionalParamChoice::JEnc
-
 
 void AsnOptionalParamChoice::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 {
@@ -501,28 +489,36 @@ void AsnOptionalParamChoice::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	BDecContent(_b, tag, elmtLen, bytesDecoded);
 }
 
-bool AsnOptionalParamChoice::JDec(const EJson::Value& b) {
+bool AsnOptionalParamChoice::JDec(const EJson::Value& b)
+{
 	FUNC("AsnOptionalParamChoice::JDec()");
 	Clear();
-	if (b.isObject()) {
+	if (b.isObject())
+	{
 		EJson::Value tmp;
-		if (b.isMember("stringdata")) {
+		if (b.isMember("stringdata"))
+		{
 			choiceId = stringdataCid;
 			delete stringdata;
 			stringdata = new UTF8String;
-			if (!stringdata->JDec(b["stringdata"])) throw InvalidTagException(typeName(), "decode failed: stringdata", STACK_ENTRY);
+			if (!stringdata->JDec(b["stringdata"]))
+				throw InvalidTagException(typeName(), "decode failed: stringdata", STACK_ENTRY);
 		}
-		else if (b.isMember("binarydata")) {
+		else if (b.isMember("binarydata"))
+		{
 			choiceId = binarydataCid;
 			delete binarydata;
 			binarydata = new AsnOcts;
-			if (!binarydata->JDec(b["binarydata"])) throw InvalidTagException(typeName(), "decode failed: binarydata", STACK_ENTRY);
+			if (!binarydata->JDec(b["binarydata"]))
+				throw InvalidTagException(typeName(), "decode failed: binarydata", STACK_ENTRY);
 		}
-		else if (b.isMember("integerdata")) {
+		else if (b.isMember("integerdata"))
+		{
 			choiceId = integerdataCid;
 			delete integerdata;
 			integerdata = new AsnInt;
-			if (!integerdata->JDec(b["integerdata"])) throw InvalidTagException(typeName(), "decode failed: integerdata", STACK_ENTRY);
+			if (!integerdata->JDec(b["integerdata"]))
+				throw InvalidTagException(typeName(), "decode failed: integerdata", STACK_ENTRY);
 		}
 		else
 			throw InvalidTagException(typeName(), "no valid choice member", STACK_ENTRY);
@@ -532,14 +528,16 @@ bool AsnOptionalParamChoice::JDec(const EJson::Value& b) {
 		choiceId = integerdataCid;
 		delete integerdata;
 		integerdata = new AsnInt;
-		if (!integerdata->JDec(b)) throw InvalidTagException(typeName(), "decode failed: integerdata", STACK_ENTRY);
+		if (!integerdata->JDec(b))
+			throw InvalidTagException(typeName(), "decode failed: integerdata", STACK_ENTRY);
 	}
 	else if (b.isString())
 	{
 		choiceId = stringdataCid;
 		delete stringdata;
 		stringdata = new UTF8String;
-		if (!stringdata->JDec(b)) throw InvalidTagException(typeName(), "decode failed: stringdata", STACK_ENTRY);
+		if (!stringdata->JDec(b))
+			throw InvalidTagException(typeName(), "decode failed: stringdata", STACK_ENTRY);
 	}
 	else
 	{
@@ -549,38 +547,35 @@ bool AsnOptionalParamChoice::JDec(const EJson::Value& b) {
 	return true;
 } // AsnOptionalParamChoice::JDec
 
-
 void AsnOptionalParamChoice::Print(std::ostream& os, unsigned short indent) const
 {
 	switch (choiceId)
 	{
-	case stringdataCid:
-		os << "stringdata ";
-		if (stringdata)
-			stringdata->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
+		case stringdataCid:
+			os << "stringdata ";
+			if (stringdata)
+				stringdata->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
 
-	case binarydataCid:
-		os << "binarydata ";
-		if (binarydata)
-			binarydata->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
+		case binarydataCid:
+			os << "binarydata ";
+			if (binarydata)
+				binarydata->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
 
-	case integerdataCid:
-		os << "integerdata ";
-		if (integerdata)
-			integerdata->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
+		case integerdataCid:
+			os << "integerdata ";
+			if (integerdata)
+				integerdata->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
 
 	} // end of switch
 } // end of AsnOptionalParamChoice::Print()
-
-
 
 _END_SNACC_NAMESPACE

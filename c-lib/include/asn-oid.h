@@ -22,33 +22,30 @@
 #include "asn-octs.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
+	typedef AsnOcts AsnOid; /* standard oid type  */
 
-	typedef AsnOcts AsnOid;  /* standard oid type  */
+#define ASNOID_PRESENT(aoid) ASNOCTS_PRESENT(aoid)
 
+	AsnLen BEncAsnOid PROTO((GenBuf * b, AsnOid* data));
 
-#define ASNOID_PRESENT( aoid)	ASNOCTS_PRESENT (aoid)
+	void BDecAsnOid PROTO((GenBuf * b, AsnOid* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-	AsnLen BEncAsnOid PROTO((GenBuf* b, AsnOid* data));
+#define BEncAsnOidContent(b, oid) BEncAsnOctsContent(b, oid)
 
-	void BDecAsnOid PROTO((GenBuf* b, AsnOid* result, AsnLen* bytesDecoded, ENV_TYPE env));
+	void BDecAsnOidContent PROTO((GenBuf * b, AsnTag tag, AsnLen len, AsnOid* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-#define BEncAsnOidContent( b, oid)   BEncAsnOctsContent (b, oid)
+#define FreeAsnOid FreeAsnOcts
 
+	void PrintAsnOid PROTO((FILE * f, AsnOid* b, unsigned int indent));
 
-	void BDecAsnOidContent PROTO((GenBuf* b, AsnTag tag, AsnLen len, AsnOid* result, AsnLen* bytesDecoded, ENV_TYPE env));
-
-
-#define FreeAsnOid	FreeAsnOcts
-
-	void PrintAsnOid PROTO((FILE* f, AsnOid* b, unsigned int indent));
-
-#define AsnOidsEquiv( o1, o2) AsnOctsEquiv (o1, o2)
+#define AsnOidsEquiv(o1, o2) AsnOctsEquiv(o1, o2)
 
 	/* linked oid type that may be easier to use in some circumstances */
-#define NULL_OID_ARCNUM	-1
+#define NULL_OID_ARCNUM -1
 	typedef struct OID
 	{
 		struct OID* next;
@@ -58,14 +55,13 @@ extern "C" {
 #endif
 	} OID;
 
-	AsnLen EncodedOidLen PROTO((OID* oid));
+	AsnLen EncodedOidLen PROTO((OID * oid));
 
-	void BuildEncodedOid PROTO((OID* oid, AsnOid* result));
+	void BuildEncodedOid PROTO((OID * oid, AsnOid* result));
 
-	void UnbuildEncodedOid PROTO((AsnOid* eoid, OID** result));
+	void UnbuildEncodedOid PROTO((AsnOid * eoid, OID** result));
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 #endif /* conditional include */
-

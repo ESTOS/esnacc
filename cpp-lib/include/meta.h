@@ -40,7 +40,7 @@
 struct AsnNameDesc
 {
 	const char* const name;
-	const AsnIntType		value;
+	const AsnIntType value;
 };
 
 struct AsnTypeDesc;
@@ -54,26 +54,26 @@ struct AsnMemberDesc // description of CHOICE member; base class SNACCDLL_API fo
 	AsnMemberDesc();
 
 #if TCL
-	virtual int			TclGetDesc(Tcl_DString*) const;
-	virtual int			TclGetDesc2(Tcl_DString*) const;
+	virtual int TclGetDesc(Tcl_DString*) const;
+	virtual int TclGetDesc2(Tcl_DString*) const;
 #endif
 };
 
-struct AsnSe_MemberDesc : AsnMemberDesc	// _ == t/quence; description of SET or SEQUENCE member
+struct AsnSe_MemberDesc : AsnMemberDesc // _ == t/quence; description of SET or SEQUENCE member
 {
-	bool				optional;
+	bool optional;
 
 	AsnSe_MemberDesc(const char*, const AsnTypeDesc*, bool);
 	AsnSe_MemberDesc();
 
 #if TCL
-	int				TclGetDesc2(Tcl_DString*) const;
+	int TclGetDesc2(Tcl_DString*) const;
 #endif
 };
 
-typedef AsnMemberDesc		AsnChoiceMemberDesc;
-typedef AsnSe_MemberDesc	AsnSetMemberDesc;
-typedef AsnSe_MemberDesc	AsnSequenceMemberDesc;
+typedef AsnMemberDesc AsnChoiceMemberDesc;
+typedef AsnSe_MemberDesc AsnSetMemberDesc;
+typedef AsnSe_MemberDesc AsnSequenceMemberDesc;
 
 struct AsnModuleDesc;
 
@@ -82,30 +82,28 @@ class SNACCDLL_API AsnType;
 struct AsnTypeDesc
 {
 	const AsnModuleDesc* module;
-	const char* const name;	// NULL for basic types
-	const bool			pdu;
-	const enum Type	// NOTE: keep this enum in sync with the typenames[]
-	{
-		VOID,
-		ALIAS,
+	const char* const name; // NULL for basic types
+	const bool pdu;
+	const enum Type // NOTE: keep this enum in sync with the typenames[]
+	{ VOID,
+	  ALIAS,
 
-		INTEGER,
-		REAL,
-		NUL_, // sic! (can't fight the ubiquitous NULL #define)
-		BOOLEAN,
-		ENUMERATED,
-		BIT_STRING,
-		OCTET_STRING,
-		OBJECT_IDENTIFIER,
-		RELATIVE_OID,
+	  INTEGER,
+	  REAL,
+	  NUL_, // sic! (can't fight the ubiquitous NULL #define)
+	  BOOLEAN,
+	  ENUMERATED,
+	  BIT_STRING,
+	  OCTET_STRING,
+	  OBJECT_IDENTIFIER,
+	  RELATIVE_OID,
 
-		SET,
-		SEQUENCE,
-		SET_OF,
-		SEQUENCE_OF,
-		CHOICE,
-		ANY
-	}				type;
+	  SET,
+	  SEQUENCE,
+	  SET_OF,
+	  SEQUENCE_OF,
+	  CHOICE,
+	  ANY } type;
 
 	AsnType* (*create)();
 
@@ -115,14 +113,14 @@ struct AsnTypeDesc
 
 	virtual const AsnModuleDesc* getmodule() const;
 	virtual const char* getname() const;
-	virtual bool			ispdu() const;
-	virtual Type			gettype() const;
+	virtual bool ispdu() const;
+	virtual Type gettype() const;
 	virtual const AsnNameDesc* getnames() const;
-	//virtual const AsnMemberDesc	*getmembers() const;
+	// virtual const AsnMemberDesc	*getmembers() const;
 
 #if TCL
-	virtual int			TclGetDesc(Tcl_DString*) const;
-	virtual int			TclGetDesc2(Tcl_DString*) const;
+	virtual int TclGetDesc(Tcl_DString*) const;
+	virtual int TclGetDesc2(Tcl_DString*) const;
 #endif
 };
 
@@ -135,9 +133,9 @@ struct AsnNamesTypeDesc : AsnTypeDesc
 	const AsnNameDesc* getnames() const;
 
 #if TCL
-	int				TclGetDesc(Tcl_DString*) const;
+	int TclGetDesc(Tcl_DString*) const;
 	// for BIT STRING and INTEGER, ENUMERATED has its own:
-	int				TclGetDesc2(Tcl_DString*) const;
+	int TclGetDesc2(Tcl_DString*) const;
 #endif
 };
 
@@ -146,7 +144,7 @@ struct AsnEnumTypeDesc : AsnNamesTypeDesc
 	AsnEnumTypeDesc(const AsnModuleDesc*, const char*, bool ispdu, Type, AsnType* (*create)(), const AsnNameDesc*);
 
 #if TCL
-	int				TclGetDesc2(Tcl_DString*) const;
+	int TclGetDesc2(Tcl_DString*) const;
 #endif
 };
 
@@ -155,7 +153,7 @@ struct AsnMembersTypeDesc : AsnTypeDesc
 	AsnMembersTypeDesc(const AsnModuleDesc*, const char*, bool ispdu, Type, AsnType* (*create)());
 
 #if TCL
-	int				TclGetDesc(Tcl_DString*) const;
+	int TclGetDesc(Tcl_DString*) const;
 #endif
 };
 
@@ -165,11 +163,11 @@ struct AsnChoiceTypeDesc : AsnMembersTypeDesc
 
 	AsnChoiceTypeDesc(const AsnModuleDesc*, const char*, bool ispdu, Type, AsnType* (*create)(), const AsnChoiceMemberDesc*);
 
-	int				choicebyname(const char* name) const;
+	int choicebyname(const char* name) const;
 	const char* choicebyvalue(int value) const;
 
 #if TCL
-	int				TclGetDesc2(Tcl_DString*) const;
+	int TclGetDesc2(Tcl_DString*) const;
 #endif
 };
 
@@ -180,8 +178,8 @@ struct AsnSe_TypeDesc : AsnMembersTypeDesc
 	AsnSe_TypeDesc(const AsnModuleDesc*, const char*, bool ispdu, Type, AsnType* (*create)(), const AsnSe_MemberDesc*);
 
 #if TCL
-	int				mandatmemberr(Tcl_Interp* interp, const char* membername) const;
-	int				TclGetDesc2(Tcl_DString*) const;
+	int mandatmemberr(Tcl_Interp* interp, const char* membername) const;
+	int TclGetDesc2(Tcl_DString*) const;
 #endif
 };
 
@@ -192,7 +190,7 @@ struct AsnListTypeDesc : AsnTypeDesc
 	AsnListTypeDesc(const AsnModuleDesc*, const char*, bool ispdu, Type, AsnType* (*create)(), const AsnTypeDesc*);
 
 #if TCL
-	int				TclGetDesc(Tcl_DString*) const;
+	int TclGetDesc(Tcl_DString*) const;
 #endif
 };
 
@@ -204,27 +202,27 @@ struct AsnAliasTypeDesc : AsnTypeDesc
 
 	const AsnModuleDesc* getmodule() const;
 	const char* getname() const;
-	bool				ispdu() const;
-	Type				gettype() const;
+	bool ispdu() const;
+	Type gettype() const;
 
 	const AsnNameDesc* getnames() const;
-	//const AsnMemberDesc		*getmembers() const;
+	// const AsnMemberDesc		*getmembers() const;
 
 #if TCL
-	int				TclGetDesc(Tcl_DString*) const;
+	int TclGetDesc(Tcl_DString*) const;
 #endif
 };
 
-typedef AsnTypeDesc		AsnRealTypeDesc;
-typedef AsnTypeDesc		AsnNullTypeDesc;
-typedef AsnTypeDesc		AsnBoolTypeDesc;
-typedef AsnNamesTypeDesc	AsnIntTypeDesc;
-typedef AsnNamesTypeDesc	AsnBitsTypeDesc;
-typedef AsnTypeDesc		AsnOctsTypeDesc;
-typedef AsnTypeDesc		AsnOidTypeDesc;
-typedef AsnTypeDesc		AsnRelativeOidTypeDesc;
-typedef AsnSe_TypeDesc		AsnSetTypeDesc;
-typedef AsnSe_TypeDesc		AsnSequenceTypeDesc;
+typedef AsnTypeDesc AsnRealTypeDesc;
+typedef AsnTypeDesc AsnNullTypeDesc;
+typedef AsnTypeDesc AsnBoolTypeDesc;
+typedef AsnNamesTypeDesc AsnIntTypeDesc;
+typedef AsnNamesTypeDesc AsnBitsTypeDesc;
+typedef AsnTypeDesc AsnOctsTypeDesc;
+typedef AsnTypeDesc AsnOidTypeDesc;
+typedef AsnTypeDesc AsnRelativeOidTypeDesc;
+typedef AsnSe_TypeDesc AsnSetTypeDesc;
+typedef AsnSe_TypeDesc AsnSequenceTypeDesc;
 
 struct AsnModuleDesc
 {
@@ -241,11 +239,11 @@ extern const AsnModuleDesc* asnModuleDescs[];
 
 struct Args
 {
-	int				c;
+	int c;
 	char** v;
 
 	Args();
-	virtual			~Args();
+	virtual ~Args();
 };
 
 //\[sep]----------------------------------------------------------------------------------------------------------------------------
@@ -253,25 +251,38 @@ struct Args
 
 struct TmpFD
 {
-	int	fd;
+	int fd;
 
-	TmpFD() { fd = -1; }
-	TmpFD(int _fd) { fd = _fd; }
-	~TmpFD() { if (fd > 0) ::close(fd); }
+	TmpFD()
+	{
+		fd = -1;
+	}
+	TmpFD(int _fd)
+	{
+		fd = _fd;
+	}
+	~TmpFD()
+	{
+		if (fd > 0)
+			::close(fd);
+	}
 
-	int operator = (int _fd) { return fd = _fd; }
+	int operator=(int _fd)
+	{
+		return fd = _fd;
+	}
 	//	operator int()		{ return fd; }
 };
 
 //\[sep]----------------------------------------------------------------------------------------------------------------------------
 // hack to cope with Tcl's inability to handle binary strings:
 
-extern int	debinify(Tcl_Interp* interp, const char* in, size_t len);
-extern int	binify(Tcl_Interp* interp, const char* str, char* buf, size_t* len);
+extern int debinify(Tcl_Interp* interp, const char* in, size_t len);
+extern int binify(Tcl_Interp* interp, const char* str, char* buf, size_t* len);
 
 //\[sep]----------------------------------------------------------------------------------------------------------------------------
 #endif /* TCL */
 
-#endif //#if META
+#endif // #if META
 
-#endif  /* SNACC_META_H*/
+#endif /* SNACC_META_H*/

@@ -21,9 +21,9 @@
 #define _asn_hash_h_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-
 
 #define TABLESIZE 256
 #define INDEXMASK 0xFF
@@ -35,8 +35,8 @@ extern "C" {
 
 	typedef struct HashSlot
 	{
-		int    leaf;
-		Hash   hash;
+		int leaf;
+		Hash hash;
 		void* value;
 		Table* table;
 	} HashSlot;
@@ -45,15 +45,14 @@ extern "C" {
 
 	Table* InitHash();
 
-	int Insert PROTO((Table* table, void* element, Hash hash));
+	int Insert PROTO((Table * table, void* element, Hash hash));
 
-	int CheckFor PROTO((Table* table, Hash hash));
+	int CheckFor PROTO((Table * table, Hash hash));
 
-	int CheckForAndReturnValue PROTO((Table* table, Hash hash, void** value));
+	int CheckForAndReturnValue PROTO((Table * table, Hash hash, void** value));
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* conditional include */
-

@@ -51,35 +51,29 @@
 #include "../str-util.h"
 #include "rules.h"
 
-
 static DefinedObj* definedNamesG;
-
 
 /* unexported prototypes */
 
-void FillIDLTypeDefInfo PROTO((IDLRules* r, Module* m, TypeDef* td));
+void FillIDLTypeDefInfo PROTO((IDLRules * r, Module* m, TypeDef* td));
 
-static void FillIDLFieldNames PROTO((IDLRules* r, NamedTypeList* firstSibling));
+static void FillIDLFieldNames PROTO((IDLRules * r, NamedTypeList* firstSibling));
 
-static void FillIDLTypeRefInfo PROTO((IDLRules* r, Module* m, TypeDef* td, Type* parent, Type* t));
+static void FillIDLTypeRefInfo PROTO((IDLRules * r, Module* m, TypeDef* td, Type* parent, Type* t));
 
-static void FillIDLStructElmts PROTO((IDLRules* r, Module* m, TypeDef* td, Type* parent, NamedTypeList* t));
+static void FillIDLStructElmts PROTO((IDLRules * r, Module* m, TypeDef* td, Type* parent, NamedTypeList* t));
 
-static void FillIDLChoiceElmts PROTO((IDLRules* r, Module* m, TypeDef* td, Type* parent, NamedTypeList* first));
+static void FillIDLChoiceElmts PROTO((IDLRules * r, Module* m, TypeDef* td, Type* parent, NamedTypeList* first));
 
-static int IsIDLPtr PROTO((IDLRules* r, TypeDef* td, Type* parent, Type* t));
+static int IsIDLPtr PROTO((IDLRules * r, TypeDef* td, Type* parent, Type* t));
 
-void FillIDLTDIDefaults PROTO((IDLRules* r, IDLTDI* ctdi, TypeDef* td));
-
+void FillIDLTDIDefaults PROTO((IDLRules * r, IDLTDI* ctdi, TypeDef* td));
 
 /*
  *  allocates and fills all the idlTypeInfos
  *  in the type trees for every module in the list
  */
-void
-FillIDLTypeInfo PARAMS((r, modList),
-	IDLRules* r _AND_
-	ModuleList* modList)
+void FillIDLTypeInfo PARAMS((r, modList), IDLRules* r _AND_ ModuleList* modList)
 {
 	TypeDef* td;
 	Module* m;
@@ -93,7 +87,7 @@ FillIDLTypeInfo PARAMS((r, modList),
 	FOR_EACH_LIST_ELMT(m, modList)
 	{
 		FOR_EACH_LIST_ELMT(td, m->typeDefs)
-			FillIDLTypeDefInfo(r, m, td);
+		FillIDLTypeDefInfo(r, m, td);
 	}
 
 	/*
@@ -104,7 +98,7 @@ FillIDLTypeInfo PARAMS((r, modList),
 	FOR_EACH_LIST_ELMT(m, modList)
 	{
 		FOR_EACH_LIST_ELMT(td, m->typeDefs)
-			FillIDLTypeRefInfo(r, m, td, NULL, td->type);
+		FillIDLTypeRefInfo(r, m, td, NULL, td->type);
 	}
 
 	/*
@@ -117,22 +111,17 @@ FillIDLTypeInfo PARAMS((r, modList),
 	 *  are assumed to share the same name space
 	 */
 
-	 /* done with checking for name conflicts */
+	/* done with checking for name conflicts */
 	FreeDefinedObjs(&definedNamesG);
 
-}  /* FillIDLTypeInfo */
-
+} /* FillIDLTypeInfo */
 
 /*
  *  allocates and fills structure holding C type definition information
  *  fo the given ASN.1 type definition.  Does not fill CTRI for contained
  *  types etc.
  */
-void
-FillIDLTypeDefInfo PARAMS((r, m, td),
-	IDLRules* r _AND_
-	Module* m _AND_
-	TypeDef* td)
+void FillIDLTypeDefInfo PARAMS((r, m, td), IDLRules* r _AND_ Module* m _AND_ TypeDef* td)
 {
 	char* tmpName;
 	IDLTDI* idltdi;
@@ -143,7 +132,6 @@ FillIDLTypeDefInfo PARAMS((r, m, td),
 	if (td->idlTypeDefInfo != NULL)
 		return;
 
-
 	idltdi = MT(IDLTDI);
 	td->idlTypeDefInfo = idltdi;
 
@@ -151,14 +139,12 @@ FillIDLTypeDefInfo PARAMS((r, m, td),
 
 	FillIDLTDIDefaults(r, idltdi, td);
 
-
 	/*
 	 * if defined by a ref to another type definition fill in that type
 	 * def's IDLTDI so can inherit (actully completly replace default
 	 * attributes) from it
 	 */
-	if ((td->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-		(td->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+	if ((td->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (td->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 	{
 		/*
 		 * Fill in IDLTDI for defining type if nec.
@@ -173,23 +159,15 @@ FillIDLTypeDefInfo PARAMS((r, m, td),
 		idltdi->typeName = tmpName; /* restore typeName */
 	}
 
-
 	/*
 	 * check for any "--snacc" attributes that overide the current
 	 * idltdi fields
 	 * UNDEFINED FOR C++
 	ParseTypeDefAttribs (idltdi, td->attrList);
 	 */
-}  /* FillIDLTypeDefInfo */
+} /* FillIDLTypeDefInfo */
 
-
-static void
-FillIDLTypeRefInfo PARAMS((r, m, td, parent, t),
-	IDLRules* r _AND_
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	Type* t)
+static void FillIDLTypeRefInfo PARAMS((r, m, td, parent, t), IDLRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* t)
 {
 	IDLTRI* idltri;
 	IDLTDI* tmpidltdi;
@@ -198,8 +176,7 @@ FillIDLTypeRefInfo PARAMS((r, m, td, parent, t),
 	CNamedElmt** cneHndl;
 	char* elmtName;
 	size_t len;
-	enum BasicTypeChoiceId
-		basicTypeId;
+	enum BasicTypeChoiceId basicTypeId;
 
 	/*
 	 * you must check for cycles yourself before calling this
@@ -220,7 +197,6 @@ FillIDLTypeRefInfo PARAMS((r, m, td, parent, t),
 	idltri->isEnc = tmpidltdi->isEnc;
 	idltri->typeName = tmpidltdi->typeName;
 	idltri->optTestRoutineName = tmpidltdi->optTestRoutineName;
-
 
 	/*
 	 * convert named elmts to IDL names.
@@ -262,82 +238,81 @@ FillIDLTypeRefInfo PARAMS((r, m, td, parent, t),
 	/* fill in rest of type info depending on the type */
 	switch (basicTypeId)
 	{
-	case BASICTYPE_BOOLEAN:  /* library types */
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_BITSTRING:
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_NULL:
-	case BASICTYPE_OID:
-	case BASICTYPE_RELATIVE_OID:
-	case BASICTYPE_REAL:
-	case BASICTYPE_ENUMERATED:
-		/* don't need to do anything else */
-		break;
+		case BASICTYPE_BOOLEAN: /* library types */
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_BITSTRING:
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_NULL:
+		case BASICTYPE_OID:
+		case BASICTYPE_RELATIVE_OID:
+		case BASICTYPE_REAL:
+		case BASICTYPE_ENUMERATED:
+			/* don't need to do anything else */
+			break;
 
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			/* fill in component type */
+			FillIDLTypeRefInfo(r, m, td, t, t->basicType->a.setOf);
+			break;
 
-	case BASICTYPE_SEQUENCEOF:  /* list types */
-	case BASICTYPE_SETOF:
-		/* fill in component type */
-		FillIDLTypeRefInfo(r, m, td, t, t->basicType->a.setOf);
-		break;
+		case BASICTYPE_IMPORTTYPEREF: /* type references */
+		case BASICTYPE_LOCALTYPEREF:
+			/*
+			 * grab class name from link (link is the def of the
+			 * the ref'd type)
+			 */
+			if (t->basicType->a.localTypeRef->link != NULL)
+			{
+				/* inherit attributes from referenced type */
+				tmpidltdi = t->basicType->a.localTypeRef->link->idlTypeDefInfo;
+				idltri->typeName = tmpidltdi->typeName;
+				idltri->isEnc = tmpidltdi->isEnc;
+				idltri->optTestRoutineName = tmpidltdi->optTestRoutineName;
+			}
 
-	case BASICTYPE_IMPORTTYPEREF:  /* type references */
-	case BASICTYPE_LOCALTYPEREF:
-		/*
-		 * grab class name from link (link is the def of the
-		 * the ref'd type)
-		 */
-		if (t->basicType->a.localTypeRef->link != NULL)
-		{
-			/* inherit attributes from referenced type */
-			tmpidltdi = t->basicType->a.localTypeRef->link->idlTypeDefInfo;
-			idltri->typeName = tmpidltdi->typeName;
-			idltri->isEnc = tmpidltdi->isEnc;
-			idltri->optTestRoutineName = tmpidltdi->optTestRoutineName;
-		}
+			break;
 
-		break;
+		case BASICTYPE_ANYDEFINEDBY: /* ANY types */
+			break;					 /* these are handled now */
 
-	case BASICTYPE_ANYDEFINEDBY:  /* ANY types */
-		break;  /* these are handled now */
-
-	case BASICTYPE_ANY:
+		case BASICTYPE_ANY:
 #if 0
 		PrintErrLoc(m->asn1SrcFileName, t->lineNo);
 		fprintf(errFileG, "Warning - generated code for the \"ANY\" type in type \"%s\" will need modification by YOU.", td->definedName);
 		fprintf(errFileG, "  The source files will have a \"/* ANY - Fix Me! */\" comment before related code.\n\n");
 #endif
 
-		break;
+			break;
 
-	case BASICTYPE_CHOICE:
-		/*
-		 * must fill field names BEFORE filling choice elmts
-		 * (allows better naming for choice ids)
-		 */
-		FillIDLFieldNames(r, t->basicType->a.choice);
-		FillIDLChoiceElmts(r, m, td, t, t->basicType->a.choice);
-		break;
+		case BASICTYPE_CHOICE:
+			/*
+			 * must fill field names BEFORE filling choice elmts
+			 * (allows better naming for choice ids)
+			 */
+			FillIDLFieldNames(r, t->basicType->a.choice);
+			FillIDLChoiceElmts(r, m, td, t, t->basicType->a.choice);
+			break;
 
-	case BASICTYPE_SET:
-	case BASICTYPE_SEQUENCE:
-		FillIDLStructElmts(r, m, td, t, t->basicType->a.set);
-		FillIDLFieldNames(r, t->basicType->a.set);
-		break;
+		case BASICTYPE_SET:
+		case BASICTYPE_SEQUENCE:
+			FillIDLStructElmts(r, m, td, t, t->basicType->a.set);
+			FillIDLFieldNames(r, t->basicType->a.set);
+			break;
 
-	case BASICTYPE_COMPONENTSOF:
-	case BASICTYPE_SELECTION:
-		fprintf(errFileG, "Compiler error - COMPONENTS OF or SELECTION type slipped through normalizing phase.\n");
-		break;
+		case BASICTYPE_COMPONENTSOF:
+		case BASICTYPE_SELECTION:
+			fprintf(errFileG, "Compiler error - COMPONENTS OF or SELECTION type slipped through normalizing phase.\n");
+			break;
 
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_MACRODEF:
-	case BASICTYPE_MACROTYPE:
-		/* do nothing */
-		break;
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_MACRODEF:
+		case BASICTYPE_MACROTYPE:
+			/* do nothing */
+			break;
 
-	default:
-		break;
+		default:
+			break;
 	}
 
 	/*
@@ -349,18 +324,9 @@ FillIDLTypeRefInfo PARAMS((r, m, td, parent, t),
 	/* let user overide any defaults with the --snacc attributes */
 	/* undefined for C++ ParseTypeRefAttribs (ctri, t->attrList); */
 
+} /* FillIDLTypeRefInfo */
 
-}  /* FillIDLTypeRefInfo */
-
-
-
-static void
-FillIDLStructElmts PARAMS((r, m, td, parent, elmts),
-	IDLRules* r _AND_
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts)
+static void FillIDLStructElmts PARAMS((r, m, td, parent, elmts), IDLRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* elmts)
 {
 	NamedType* et;
 
@@ -369,24 +335,16 @@ FillIDLStructElmts PARAMS((r, m, td, parent, elmts),
 		FillIDLTypeRefInfo(r, m, td, parent, et->type);
 	}
 
-}  /* FillIDLStructElmts */
-
-
+} /* FillIDLStructElmts */
 
 /*
  *  Figures out non-conflicting enum names for the
  *  choice id's
  */
-static void
-FillIDLChoiceElmts PARAMS((r, m, td, parent, elmts),
-	IDLRules* r _AND_
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts)
+static void FillIDLChoiceElmts PARAMS((r, m, td, parent, elmts), IDLRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* elmts)
 {
 	NamedType* et;
-	int		idCount = 0;
+	int idCount = 0;
 	IDLTRI* idltri;
 	size_t len;
 
@@ -394,7 +352,7 @@ FillIDLChoiceElmts PARAMS((r, m, td, parent, elmts),
 	 * fill in type info for elmt types first
 	 */
 	FOR_EACH_LIST_ELMT(et, elmts)
-		FillIDLTypeRefInfo(r, m, td, parent, et->type);
+	FillIDLTypeRefInfo(r, m, td, parent, et->type);
 
 	/*
 	 * set choiceId Symbol & value
@@ -433,18 +391,14 @@ FillIDLChoiceElmts PARAMS((r, m, td, parent, elmts),
 		Str2LCase(idltri->choiceIdSymbol, 1);
 	}
 
-}  /* FillIDLChoiceElmts */
-
+} /* FillIDLChoiceElmts */
 
 /*
  * takes a list of "sibling" (eg same level in a structure)
  * ElmtTypes and fills sets up the c field names in
  * the IDLTRI struct
  */
-static void
-FillIDLFieldNames PARAMS((r, elmts),
-	IDLRules* r _AND_
-	NamedTypeList* elmts)
+static void FillIDLFieldNames PARAMS((r, elmts), IDLRules* r _AND_ NamedTypeList* elmts)
 {
 	NamedType* et;
 	IDLTRI* idltri;
@@ -491,7 +445,6 @@ FillIDLFieldNames PARAMS((r, elmts),
 		}
 	}
 
-
 	FOR_EACH_LIST_ELMT(et, elmts)
 	{
 		idltri = et->type->idlTypeRefInfo;
@@ -502,8 +455,7 @@ FillIDLFieldNames PARAMS((r, elmts),
 		if (idltri && idltri->fieldName == NULL)
 		{
 			size_t size = 0;
-			if ((et->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-				(et->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+			if ((et->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (et->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 			{
 				/*
 				 * take ref'd type name as field name
@@ -544,20 +496,13 @@ FillIDLFieldNames PARAMS((r, elmts),
 		}
 	}
 	FreeDefinedObjs(&fieldNames);
-}  /* FillIDLFieldNames */
-
-
+} /* FillIDLFieldNames */
 
 /*
  * returns true if this c type for this type should be
  * be ref'd as a ptr
  */
-static int
-IsIDLPtr PARAMS((r, td, parent, t),
-	IDLRules* r _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	Type* t)
+static int IsIDLPtr PARAMS((r, td, parent, t), IDLRules* r _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* t)
 {
 	IDLTDI* idltdi;
 	int retVal = FALSE;
@@ -566,11 +511,8 @@ IsIDLPtr PARAMS((r, td, parent, t),
 	 * inherit ptr attriubutes from ref'd type if any
 	 * otherwise grab lib c type def from the IDLRules
 	 */
-	if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-		(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
-	{
+	if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 		idltdi = t->basicType->a.localTypeRef->link->idlTypeDefInfo;
-	}
 	else
 		idltdi = &r->typeConvTbl[GetBuiltinType(t)];
 
@@ -578,37 +520,23 @@ IsIDLPtr PARAMS((r, td, parent, t),
 	if ((parent == NULL) && (idltdi->isPtrForTypeDef))
 		retVal = TRUE;
 
-	else if ((parent != NULL) &&
-		((parent->basicType->choiceId == BASICTYPE_SET) ||
-			(parent->basicType->choiceId == BASICTYPE_SEQUENCE)) &&
-		(idltdi->isPtrInSetAndSeq))
+	else if ((parent != NULL) && ((parent->basicType->choiceId == BASICTYPE_SET) || (parent->basicType->choiceId == BASICTYPE_SEQUENCE)) && (idltdi->isPtrInSetAndSeq))
 		retVal = TRUE;
 
-	else if ((parent != NULL) &&
-		((parent->basicType->choiceId == BASICTYPE_SETOF) ||
-			(parent->basicType->choiceId == BASICTYPE_SEQUENCEOF)) &&
-		(idltdi->isPtrInList))
+	else if ((parent != NULL) && ((parent->basicType->choiceId == BASICTYPE_SETOF) || (parent->basicType->choiceId == BASICTYPE_SEQUENCEOF)) && (idltdi->isPtrInList))
 		retVal = TRUE;
 
-	else if ((parent != NULL) &&
-		(parent->basicType->choiceId == BASICTYPE_CHOICE) &&
-		(idltdi->isPtrInChoice))
+	else if ((parent != NULL) && (parent->basicType->choiceId == BASICTYPE_CHOICE) && (idltdi->isPtrInChoice))
 		retVal = TRUE;
 
 	else if (((t->optional) || (t->defaultVal != NULL)) && (idltdi->isPtrForOpt))
 		retVal = TRUE;
 
 	return retVal;
-}  /* IsIDLPtr */
-
-
+} /* IsIDLPtr */
 
 /* fill given idltdi with defaults from table for given typedef */
-void
-FillIDLTDIDefaults PARAMS((r, idltdi, td),
-	IDLRules* r _AND_
-	IDLTDI* idltdi _AND_
-	TypeDef* td)
+void FillIDLTDIDefaults PARAMS((r, idltdi, td), IDLRules* r _AND_ IDLTDI* idltdi _AND_ TypeDef* td)
 {
 	IDLTDI* tblidltdi;
 	int typeIndex;

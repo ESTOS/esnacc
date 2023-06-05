@@ -23,14 +23,13 @@
 #include <setjmp.h> /* for jmp_buf type, setjmp and longjmp */
 #include <stdlib.h>
 
- /* for pow() used in asn_real.c - must include to avoid casting err on pow */
- /* #include <math.h> */
+/* for pow() used in asn_real.c - must include to avoid casting err on pow */
+/* #include <math.h> */
 
 #include "../../snacc.h"
 
-
 /* used to test if optionals are present */
-#define NOT_NULL( ptr)			((ptr) != NULL)
+#define NOT_NULL(ptr) ((ptr) != NULL)
 
 #ifndef _WIN32
 // Replaces the microsoft specific "secure" string
@@ -87,14 +86,14 @@
 #endif // _WIN32
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 	/*
 	 * Asn1Error (char *str) - configure error handler
 	 */
 	void Asn1Error PROTO((char* str));
-
 
 	/*
 	 * Asn1Warning (char *str) - configure warning mechanism
@@ -131,29 +130,25 @@ extern "C" {
 
 #include "nibble-alloc.h"
 
-#define Asn1Alloc( size)		NibbleAlloc (size)
-#define Asn1Free( ptr)			/* empty */
-#define CheckAsn1Alloc( ptr, env)	\
-	if ((ptr) == NULL)\
-	  longjmp (env, -27)
+#define Asn1Alloc(size) NibbleAlloc(size)
+#define Asn1Free(ptr) /* empty */
+#define CheckAsn1Alloc(ptr, env)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+	if ((ptr) == NULL)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	longjmp(env, -27)
 
 #else /* !USE_NIBBLE_MEMORY */
 
 #include "mem.h"
 
-#define Asn1Alloc( size)		Malloc (size)
-#define Asn1Free( ptr)			Free (ptr)
-#define CheckAsn1Alloc( ptr, env)	\
-	if ((ptr) == NULL)\
-	  longjmp (env, -27)
+#define Asn1Alloc(size) Malloc(size)
+#define Asn1Free(ptr) Free(ptr)
+#define CheckAsn1Alloc(ptr, env)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+	if ((ptr) == NULL)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	longjmp(env, -27)
 
 #endif /* USE_NIBBLE_MEMORY */
 
 #define ENV_TYPE jmp_buf
-
-
-
-
 
 /*
  * NOTE: for use with tables, I defined the (slower)
@@ -170,26 +165,23 @@ extern "C" {
  */
 #include "gen-buf.h"
 
- //#define BUF_TYPE			GenBuf *
-#define BufGetByte( b)			GenBufGetByte (b)
-#define BufGetSeg( b, lenPtr)		GenBufGetSeg (b, lenPtr)
-#define BufCopy( dst, b, len)		GenBufCopy (dst, b, len)
-#define BufSkip( b, len)		GenBufSkip (b, len)
-#define BufPeekByte( b)			GenBufPeekByte (b)
-#define BufPeekSeg( b, lenPtr)		GenBufPeekSeg (b, lenPtr)
-#define BufPeekCopy( dst, b, len)	GenBufPeekCopy (dst, b, len)
-#define BufPutByteRvs( b, byte)		GenBufPutByteRvs (b, byte)
-#define BufPutSegRvs( b, data, len)	GenBufPutSegRvs (b, data, len)
-#define BufReadError( b)		GenBufReadError (b)
-#define BufWriteError( b)		GenBufWriteError (b)
-#define BufFreeBufAndData( b)           GenBufFreeBufAndData(*(b))
-#define BufResetInWriteRvsMode( b)      GenBufResetInWriteRvsMode(*(b))
-#define BufResetInReadMode( b)          GenBufResetInReadMode((b))
-#define BufSetWriteError(b, value)     GenBufSetWriteError(b, value)
+// #define BUF_TYPE			GenBuf *
+#define BufGetByte(b) GenBufGetByte(b)
+#define BufGetSeg(b, lenPtr) GenBufGetSeg(b, lenPtr)
+#define BufCopy(dst, b, len) GenBufCopy(dst, b, len)
+#define BufSkip(b, len) GenBufSkip(b, len)
+#define BufPeekByte(b) GenBufPeekByte(b)
+#define BufPeekSeg(b, lenPtr) GenBufPeekSeg(b, lenPtr)
+#define BufPeekCopy(dst, b, len) GenBufPeekCopy(dst, b, len)
+#define BufPutByteRvs(b, byte) GenBufPutByteRvs(b, byte)
+#define BufPutSegRvs(b, data, len) GenBufPutSegRvs(b, data, len)
+#define BufReadError(b) GenBufReadError(b)
+#define BufWriteError(b) GenBufWriteError(b)
+#define BufFreeBufAndData(b) GenBufFreeBufAndData(*(b))
+#define BufResetInWriteRvsMode(b) GenBufResetInWriteRvsMode(*(b))
+#define BufResetInReadMode(b) GenBufResetInReadMode((b))
+#define BufSetWriteError(b, value) GenBufSetWriteError(b, value)
 
-
-
-#include "print.h"  /* for printing set up */
+#include "print.h" /* for printing set up */
 
 #endif /* conditional include */
-

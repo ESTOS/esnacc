@@ -11,11 +11,13 @@
 
 SNACCDeprecatedNotify* SNACCDeprecated::m_pCallback = NULL;
 
-void SNACCDeprecated::SetDeprecatedCallback(SNACCDeprecatedNotify* pCallBack) {
+void SNACCDeprecated::SetDeprecatedCallback(SNACCDeprecatedNotify* pCallBack)
+{
 	m_pCallback = pCallBack;
 }
 
-void SNACCDeprecated::DeprecatedASN1Object(const char* szModuleName, const char* szObjectName) {
+void SNACCDeprecated::DeprecatedASN1Object(const char* szModuleName, const char* szObjectName)
+{
 	if (!m_pCallback)
 		return;
 
@@ -24,7 +26,8 @@ void SNACCDeprecated::DeprecatedASN1Object(const char* szModuleName, const char*
 	m_pCallback->DeprecatedASN1Object(szModuleName, szObjectName, callStack);
 }
 
-void SNACCDeprecated::DeprecatedASN1Method(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext /* = NULL */) {
+void SNACCDeprecated::DeprecatedASN1Method(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext /* = NULL */)
+{
 	if (!m_pCallback)
 		return;
 
@@ -33,13 +36,15 @@ void SNACCDeprecated::DeprecatedASN1Method(const char* szModuleName, const char*
 	m_pCallback->DeprecatedASN1Method(szModuleName, szMethodName, direction, callStack, pContext);
 }
 
-std::list<std::string> SNACCDeprecated::GetStackTrace(int remove /*= 1*/) {
+std::list<std::string> SNACCDeprecated::GetStackTrace(int remove /*= 1*/)
+{
 	std::list<std::string> stackTrace;
 #ifdef _WIN32
 	SymInitialize(GetCurrentProcess(), NULL, TRUE);
 	void* trace[256];
 	int size = CaptureStackBackTrace(remove, 256, trace, NULL);
-	for (int i = 0; i < size; i++) {
+	for (int i = 0; i < size; i++)
+	{
 		const int kMaxNameLength = 256;
 		DWORD_PTR frame = reinterpret_cast<DWORD_PTR>(trace[i]);
 		const int iSize = (sizeof(SYMBOL_INFO) + kMaxNameLength * sizeof(wchar_t) + sizeof(ULONG64) - 1) / sizeof(ULONG64);
@@ -49,7 +54,8 @@ std::list<std::string> SNACCDeprecated::GetStackTrace(int remove /*= 1*/) {
 		symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 		symbol->MaxNameLen = kMaxNameLength - 1;
 		DWORD64 sym_displacement = 0;
-		if (SymFromAddr(GetCurrentProcess(), frame, &sym_displacement, symbol)) {
+		if (SymFromAddr(GetCurrentProcess(), frame, &sym_displacement, symbol))
+		{
 			if (strcmp(symbol->Name, "wmain") == 0)
 				break;
 			stackTrace.push_back(symbol->Name);
@@ -60,9 +66,8 @@ std::list<std::string> SNACCDeprecated::GetStackTrace(int remove /*= 1*/) {
 	void* trace[256];
 	int size = backtrace(trace, 256);
 	char** symbols = backtrace_symbols(trace, size);
-	for (int i = 0; i < size; i++) {
+	for (int i = 0; i < size; i++)
 		stackTrace.push_back(symbols[i]);
-	}
 	free(symbols);
 #endif
 	return stackTrace;

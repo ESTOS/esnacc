@@ -9,7 +9,8 @@
 
 std::string escapeJsonString(const std::string& input);
 
-class EDeprecated {
+class EDeprecated
+{
 public:
 	void handleDeprecated(const std::string& strParsedLine);
 	// Type is deprecated, the value shows the time in unix time when the property has been flagged deprecated
@@ -70,20 +71,19 @@ public:
 class ESequenceComment : public ETypeComment
 {
 public:
-	//Map member Name to Struct Member Comment
+	// Map member Name to Struct Member Comment
 	std::map<std::string, EStructMemberComment> mapMembers;
 };
 
 class EModuleComment : public ETypeComment
 {
 public:
-	//These elements shall be filtered when logging (currently only in the typescript rose stubs)
-	//The elements are added through @logfilter in the beginning of the file ; delimited
+	// These elements shall be filtered when logging (currently only in the typescript rose stubs)
+	// The elements are added through @logfilter in the beginning of the file ; delimited
 	std::vector<std::string> strLogFilter;
 	// Helper to get the LogFilters from the set in c
 	int iCounter = 0;
 };
-
 
 void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType);
 
@@ -95,23 +95,30 @@ public:
 	int ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type);
 
 	std::list<EAsnStackElement*> m_stack;
+
 private:
 	int ProcessLine(const char* szModuleName, const char* szLine);
 };
 
-//Element on the Parser Stack
+// Element on the Parser Stack
 class EAsnStackElement
 {
 public:
-	enum state {
+	enum state
+	{
 		undef = -1,
 		infile = 0,
 		inmodule,
 		insequence
 	} m_state = undef;
 
-	EAsnStackElement(EAsnCommentParser* pParser) : m_pParser(pParser) {}
-	virtual ~EAsnStackElement() {}
+	EAsnStackElement(EAsnCommentParser* pParser)
+		: m_pParser(pParser)
+	{
+	}
+	virtual ~EAsnStackElement()
+	{
+	}
 
 	EAsnCommentParser* m_pParser;
 	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) = 0;
@@ -120,7 +127,8 @@ public:
 class EAsnStackElementFile : public EAsnStackElement
 {
 public:
-	EAsnStackElementFile(EAsnCommentParser* pParser, const char* szModuleName) : EAsnStackElement(pParser)
+	EAsnStackElementFile(EAsnCommentParser* pParser, const char* szModuleName)
+		: EAsnStackElement(pParser)
 	{
 		m_state = infile;
 		m_strModuleName = szModuleName;
@@ -129,6 +137,7 @@ public:
 	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
 
 	std::string m_strModuleName;
+
 private:
 	std::list<std::string> m_CollectComments;
 };
@@ -136,7 +145,11 @@ private:
 class EAsnStackElementModule : public EAsnStackElement
 {
 public:
-	EAsnStackElementModule(EAsnCommentParser* pParser) : EAsnStackElement(pParser) { m_state = inmodule; }
+	EAsnStackElementModule(EAsnCommentParser* pParser)
+		: EAsnStackElement(pParser)
+	{
+		m_state = inmodule;
+	}
 
 	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
 
@@ -152,8 +165,11 @@ private:
 class EAsnStackElementSequence : public EAsnStackElement
 {
 public:
-	EAsnStackElementSequence(EAsnCommentParser* pParser) : EAsnStackElement(pParser) {
-		m_state = insequence; m_pmodcomment = 0;
+	EAsnStackElementSequence(EAsnCommentParser* pParser)
+		: EAsnStackElement(pParser)
+	{
+		m_state = insequence;
+		m_pmodcomment = 0;
 	}
 
 	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
@@ -163,7 +179,7 @@ public:
 
 	void SetProperties(bool bOpenBracket, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
 
-	//collected comments during parsing
+	// collected comments during parsing
 	std::list<std::string> m_CollectComments;
 
 	ESequenceComment m_comment;
@@ -173,11 +189,15 @@ public:
 class EAsnStackElementSequenceOf : public EAsnStackElement
 {
 public:
-	EAsnStackElementSequenceOf(EAsnCommentParser* pParser) : EAsnStackElement(pParser) { m_state = insequence; }
+	EAsnStackElementSequenceOf(EAsnCommentParser* pParser)
+		: EAsnStackElement(pParser)
+	{
+		m_state = insequence;
+	}
 
 	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
 
-	//List of comment lines before the element
+	// List of comment lines before the element
 	std::list<std::string> commentsBefore;
 
 	ESequenceComment m_comment;
@@ -186,7 +206,11 @@ public:
 class EAsnStackElementOperation : public EAsnStackElement
 {
 public:
-	EAsnStackElementOperation(EAsnCommentParser* pParser) : EAsnStackElement(pParser) { m_state = insequence; }
+	EAsnStackElementOperation(EAsnCommentParser* pParser)
+		: EAsnStackElement(pParser)
+	{
+		m_state = insequence;
+	}
 
 	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
 
@@ -201,17 +225,17 @@ class EAsnComments
 public:
 	EAsnComments();
 
-	//map Module Name to Details
+	// map Module Name to Details
 	std::map<std::string, EModuleComment> mapModules;
 
-	//map Operation Name to Details
-	// Key is the combination of the module and the operation as operations may exist multiple times
-	// modulename::operationname
+	// map Operation Name to Details
+	//  Key is the combination of the module and the operation as operations may exist multiple times
+	//  modulename::operationname
 	std::map<std::string, EOperationComment> mapOperations;
 
-	//map Type Name to Details
-	// Key is the combination of the module and the type name as type names may exist multiple times
-	// modulename::typename
+	// map Type Name to Details
+	//  Key is the combination of the module and the type name as type names may exist multiple times
+	//  modulename::typename
 	std::map<std::string, ESequenceComment> mapSequences;
 };
 

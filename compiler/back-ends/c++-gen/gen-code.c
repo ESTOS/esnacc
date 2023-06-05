@@ -1,31 +1,31 @@
 /*
-*   compiler/back_ends/c++_gen/gen_code.c - routines for printing C++ code from type trees
-*
-*   assumes that the type tree has already been run through the
-*   c++ type generator (c++_gen/types.c).
-*
-*  This was hastily written - it has some huge routines in it.
-*  Needs a lot of cleaning up and modularization...
-*
-* Mike Sample
-* 92
-* Copyright (C) 1991, 1992 Michael Sample
-*           and the University of British Columbia
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
-*
-* $Header: /develop30/common/esnacc1.7/SNACC/compiler/back-ends/c++-gen/gen-code.c,v 1.15 2008/04/15 07:29:30 \ste Exp $
-*
-*/
+ *   compiler/back_ends/c++_gen/gen_code.c - routines for printing C++ code from type trees
+ *
+ *   assumes that the type tree has already been run through the
+ *   c++ type generator (c++_gen/types.c).
+ *
+ *  This was hastily written - it has some huge routines in it.
+ *  Needs a lot of cleaning up and modularization...
+ *
+ * Mike Sample
+ * 92
+ * Copyright (C) 1991, 1992 Michael Sample
+ *           and the University of British Columbia
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * $Header: /develop30/common/esnacc1.7/SNACC/compiler/back-ends/c++-gen/gen-code.c,v 1.15 2008/04/15 07:29:30 \ste Exp $
+ *
+ */
 
 #include "gen-code.h"
 
 #include "../../../c-lib/include/print.h"
 #include "../../core/print.h"
-#include "../tag-util.h"  /* get GetTags/FreeTags/CountTags/TagByteLen */
+#include "../tag-util.h" /* get GetTags/FreeTags/CountTags/TagByteLen */
 #include "../structure-util.h"
 #include "../comment-util.h"
 #include "cxxconstraints.h"
@@ -58,7 +58,6 @@ int printPrintersG = 0;
 int printPrintersXMLG = 0;
 int printFreeG = 0;
 
-
 // normalizeValue
 //
 // strip whitespace and { } from valueNation values.
@@ -86,8 +85,8 @@ static char* GetImportForwardDeclFileName(char* Impname, ModuleList* mods)
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
 		/* Find the import Module in the Modules and
-		* return the header file name
-		*/
+		 * return the header file name
+		 */
 		if ((strcmp(Impname, currMod->modId->name) == 0))
 		{
 			/* Set the file name and break */
@@ -105,17 +104,16 @@ static Module* GetImportModuleRef(char* Impname, ModuleList* mods)
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
 		/* Find the import Module in the Modules and
-		* return the header file name
-		*/
+		 * return the header file name
+		 */
 		if ((strcmp(Impname, currMod->modId->name) == 0))
-		{
 			break;
-		}
 	}
 	return currMod;
 }
 
-void PrintClassHeader(FILE* hdr, Module* m, TypeDef* td, const char* szBaseClass) {
+void PrintClassHeader(FILE* hdr, Module* m, TypeDef* td, const char* szBaseClass)
+{
 	printSequenceComment(hdr, m, td, COMMENTSTYLE_CPP);
 	fprintf(hdr, "class ");
 	if (bVDAGlobalDLLExport)
@@ -168,7 +166,8 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules* r, TypeDef* td, Modul
 		else if (t->basicType->choiceId == BASICTYPE_SEQUENCE)
 			pList = t->basicType->a.sequence;
 
-		if (pList) {
+		if (pList)
+		{
 			NamedType* e = NULL;
 			FOR_EACH_LIST_ELMT(e, pList)
 			{
@@ -183,23 +182,23 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules* r, TypeDef* td, Modul
 				{
 					switch (e->type->subtypes->choiceId)
 					{
-					case SUBTYPE_AND:
-					case SUBTYPE_OR:
-					case SUBTYPE_SINGLE:
-						if (!PrintCxxMultiConstraintOrHandler(hdr, src, td->definedName, e, 1))
-						{
+						case SUBTYPE_AND:
+						case SUBTYPE_OR:
+						case SUBTYPE_SINGLE:
+							if (!PrintCxxMultiConstraintOrHandler(hdr, src, td->definedName, e, 1))
+							{
+								printMemberComment(hdr, m, td, e->type->cxxTypeRefInfo->fieldName, "\t", COMMENTSTYLE_CPP);
+								fprintf(hdr, "\t");
+								PrintCxxType(hdr, mods, m, r, td, e->type);
+								fprintf(hdr, "%s;\n", e->type->cxxTypeRefInfo->fieldName);
+							}
+							break;
+						default:
 							printMemberComment(hdr, m, td, e->type->cxxTypeRefInfo->fieldName, "\t", COMMENTSTYLE_CPP);
 							fprintf(hdr, "\t");
 							PrintCxxType(hdr, mods, m, r, td, e->type);
 							fprintf(hdr, "%s;\n", e->type->cxxTypeRefInfo->fieldName);
-						}
-						break;
-					default:
-						printMemberComment(hdr, m, td, e->type->cxxTypeRefInfo->fieldName, "\t", COMMENTSTYLE_CPP);
-						fprintf(hdr, "\t");
-						PrintCxxType(hdr, mods, m, r, td, e->type);
-						fprintf(hdr, "%s;\n", e->type->cxxTypeRefInfo->fieldName);
-						break;
+							break;
 					}
 				}
 				else
@@ -260,7 +259,8 @@ void PrintInit(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "void %s::Init()\n", className);
 	fprintf(src, "{\n");
-	if (t->basicType->choiceId == BASICTYPE_CHOICE) {
+	if (t->basicType->choiceId == BASICTYPE_CHOICE)
+	{
 		fprintf(src, "\t// initialize choice to no choiceId to first choice and set pointer to NULL\n");
 		NamedType* e = FIRST_LIST_ELMT(t->basicType->a.choice);
 		if (!e)
@@ -268,7 +268,8 @@ void PrintInit(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 		fprintf(src, "\tchoiceId = %sCid;\n", e->type->cxxTypeRefInfo->fieldName);
 		fprintf(src, "\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
 	}
-	else if (t->basicType->choiceId == BASICTYPE_SEQUENCE || t->basicType->choiceId == BASICTYPE_SET) {
+	else if (t->basicType->choiceId == BASICTYPE_SEQUENCE || t->basicType->choiceId == BASICTYPE_SET)
+	{
 
 		NamedTypeList* pList = NULL;
 		if (t->basicType->choiceId == BASICTYPE_SET)
@@ -276,7 +277,8 @@ void PrintInit(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 		else if (t->basicType->choiceId == BASICTYPE_SEQUENCE)
 			pList = t->basicType->a.sequence;
 
-		if (pList) {
+		if (pList)
+		{
 			NamedType* e = NULL;
 			FOR_EACH_LIST_ELMT(e, pList)
 			{
@@ -290,7 +292,7 @@ void PrintInit(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 					fprintf(src, "#endif // TCL\n");
 #else
 					/* Default member initialization is a work in progress for eSNACC 1.6
-					*/
+					 */
 
 					if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
 						continue;
@@ -301,69 +303,52 @@ void PrintInit(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 						Value* defVal = GetValue(e->type->defaultVal->value);
 
 						/* HANDLE DEFAULT VALUE DECODING FOR DER by initializing the respective members to their default
-						* values.
-						*/
+						 * values.
+						 */
 						switch (ParanoidGetBuiltinType(e->type))
 						{
-						case BASICTYPE_INTEGER:
-						case BASICTYPE_ENUMERATED:
-							fprintf(src, "\t%s = new %s(%d);\n",
-								e->type->cxxTypeRefInfo->fieldName,
-								e->type->cxxTypeRefInfo->className,
-								defVal->basicValue->a.integer);
-							break;
-						case BASICTYPE_BOOLEAN:
-							fprintf(src, "\t%s = new %s(%s);\n",
-								e->type->cxxTypeRefInfo->fieldName,
-								e->type->cxxTypeRefInfo->className,
-								defVal->basicValue->a.boolean == 0 ? "false" : "true");
-							break;
-						case BASICTYPE_BITSTRING:
-						{
-							NamedNumberList* pNNL = GetNamedElmts(e->type);
-							BasicValue* pBV;
-							pBV = GetLastNamedNumberValue(pNNL);
+							case BASICTYPE_INTEGER:
+							case BASICTYPE_ENUMERATED:
+								fprintf(src, "\t%s = new %s(%d);\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, defVal->basicValue->a.integer);
+								break;
+							case BASICTYPE_BOOLEAN:
+								fprintf(src, "\t%s = new %s(%s);\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, defVal->basicValue->a.boolean == 0 ? "false" : "true");
+								break;
+							case BASICTYPE_BITSTRING:
+								{
+									NamedNumberList* pNNL = GetNamedElmts(e->type);
+									BasicValue* pBV;
+									pBV = GetLastNamedNumberValue(pNNL);
 
-							if (defVal->basicValue->choiceId == BASICVALUE_VALUENOTATION &&
-								pBV != NULL)
-							{
-								char* defBitStr;
-								normalizeValue(&defBitStr, defVal->basicValue->a.valueNotation->octs);
+									if (defVal->basicValue->choiceId == BASICVALUE_VALUENOTATION && pBV != NULL)
+									{
+										char* defBitStr;
+										normalizeValue(&defBitStr, defVal->basicValue->a.valueNotation->octs);
 
-								fprintf(src, "\t%s = new %s(%d);\n",
-									e->type->cxxTypeRefInfo->fieldName,
-									e->type->cxxTypeRefInfo->className,
-									pBV->a.integer);
+										fprintf(src, "\t%s = new %s(%d);\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, pBV->a.integer);
 
-								//ste modified for empty default values
-								if (strlen(defBitStr))
-									fprintf(src, "\t%s->SetBit(%s::%s);\n",
-										e->type->cxxTypeRefInfo->fieldName,
-										e->type->cxxTypeRefInfo->className,
-										defBitStr);
-								free(defBitStr);
-							}
-							else
-								printf("\nWARNING: unsupported use of default BIT STRING\n");
-						}
-						break;
-						default:
-						{
-							fprintf(src, "\t%s = new %s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
-						}
+										// ste modified for empty default values
+										if (strlen(defBitStr))
+											fprintf(src, "\t%s->SetBit(%s::%s);\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, defBitStr);
+										free(defBitStr);
+									}
+									else
+										printf("\nWARNING: unsupported use of default BIT STRING\n");
+								}
+								break;
+							default:
+								{
+									fprintf(src, "\t%s = new %s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
+								}
 
 						} /* end switch */
 					}
 					else
 					{
 						if (e->type->optional)
-						{
 							fprintf(src, "\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
-						}
 						else
-						{
 							fprintf(src, "\t%s = new %s();\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
-						}
 					}
 					/* end of default member initialization */
 
@@ -383,7 +368,8 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "void %s::Clear()\n", className);
 	fprintf(src, "{\n");
-	if (t->basicType->choiceId == BASICTYPE_CHOICE) {
+	if (t->basicType->choiceId == BASICTYPE_CHOICE)
+	{
 		fprintf(src, "\tswitch (choiceId)\n");
 		fprintf(src, "\t{\n");
 		NamedType* e = NULL;
@@ -400,10 +386,7 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 				fprintf(src, "\t\t\tdelete %s;\n", e->type->cxxTypeRefInfo->fieldName);
 				fprintf(src, "\t\t\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
 			}
-			else if (!e->type->cxxTypeRefInfo->isPtr &&
-				((tmpTypeId == BASICTYPE_CHOICE) ||
-					(tmpTypeId == BASICTYPE_SET) ||
-					(tmpTypeId == BASICTYPE_SEQUENCE)))
+			else if (!e->type->cxxTypeRefInfo->isPtr && ((tmpTypeId == BASICTYPE_CHOICE) || (tmpTypeId == BASICTYPE_SET) || (tmpTypeId == BASICTYPE_SEQUENCE)))
 			{
 				fprintf(src, "\t\t\t%s.Clear();\n", e->type->cxxTypeRefInfo->fieldName);
 			}
@@ -411,7 +394,8 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 		}
 		fprintf(src, "\t\t}\n");
 	}
-	else if (t->basicType->choiceId == BASICTYPE_SEQUENCE) {
+	else if (t->basicType->choiceId == BASICTYPE_SEQUENCE)
+	{
 		NamedType* e = NULL;
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
 		{
@@ -427,16 +411,14 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 				fprintf(src, "\t\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
 				fprintf(src, "\t}\n");
 			}
-			else if (!e->type->cxxTypeRefInfo->isPtr &&
-				((tmpTypeId == BASICTYPE_CHOICE) ||
-					(tmpTypeId == BASICTYPE_SET) ||
-					(tmpTypeId == BASICTYPE_SEQUENCE)))
+			else if (!e->type->cxxTypeRefInfo->isPtr && ((tmpTypeId == BASICTYPE_CHOICE) || (tmpTypeId == BASICTYPE_SET) || (tmpTypeId == BASICTYPE_SEQUENCE)))
 			{
 				fprintf(src, "\t%s.Clear();\n", e->type->cxxTypeRefInfo->fieldName);
 			}
 		}
 	}
-	else if (t->basicType->choiceId == BASICTYPE_SET) {
+	else if (t->basicType->choiceId == BASICTYPE_SET)
+	{
 		NamedType* e = NULL;
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.set)
 		{
@@ -450,10 +432,7 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 				fprintf(src, "\t\tdelete %s;\n", e->type->cxxTypeRefInfo->fieldName);
 				fprintf(src, "\t\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
 			}
-			else if (!e->type->cxxTypeRefInfo->isPtr &&
-				((tmpTypeId == BASICTYPE_CHOICE) ||
-					(tmpTypeId == BASICTYPE_SET) ||
-					(tmpTypeId == BASICTYPE_SEQUENCE)))
+			else if (!e->type->cxxTypeRefInfo->isPtr && ((tmpTypeId == BASICTYPE_CHOICE) || (tmpTypeId == BASICTYPE_SET) || (tmpTypeId == BASICTYPE_SEQUENCE)))
 			{
 				fprintf(src, "\t%s.Clear();\n", e->type->cxxTypeRefInfo->fieldName);
 			}
@@ -463,7 +442,8 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 	fprintf(src, "}\n\n");
 }
 
-void PrintCheckConstraints(FILE* hdr, FILE* src, Module* m, Type* t, TypeDef* td) {
+void PrintCheckConstraints(FILE* hdr, FILE* src, Module* m, Type* t, TypeDef* td)
+{
 	fprintf(hdr, "\tint checkConstraints(ConstraintFailList* pConstraintFails) const;\n");
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails) const\n", td->cxxTypeDefInfo->className);
@@ -477,9 +457,11 @@ void PrintCheckConstraints(FILE* hdr, FILE* src, Module* m, Type* t, TypeDef* td
 	else if (t->basicType->choiceId == BASICTYPE_CHOICE)
 		pList = t->basicType->a.choice;
 
-	if (pList) {
+	if (pList)
+	{
 		NamedType* e = NULL;
-		FOR_EACH_LIST_ELMT(e, pList) {
+		FOR_EACH_LIST_ELMT(e, pList)
+		{
 			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
 				continue;
 
@@ -547,7 +529,8 @@ static void PrintSrcComment(FILE* src, Module* m)
 
 static void PrintSrcIncludes(FILE* src, ModuleList* mods, Module* m)
 {
-	if (m->cxxHdrFileName) {
+	if (m->cxxHdrFileName)
+	{
 		// Special for the SNACCROSE header as it is place in an include folder and not side by side with the cpp file
 		if (strcmp(m->moduleName, "SNACCROSE") == 0)
 			fprintf(src, "#include \"../include/%s\"\n", RemovePath(m->cxxHdrFileName));
@@ -560,16 +543,16 @@ static int HasTypeDecl(TypeDef* td)
 {
 	switch (td->type->basicType->choiceId)
 	{
-	case BASICTYPE_COMPONENTSOF:
-	case BASICTYPE_SELECTION:
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_MACRODEF:
-	case BASICTYPE_MACROTYPE:
-		return 0; /* do nothing */
+		case BASICTYPE_COMPONENTSOF:
+		case BASICTYPE_SELECTION:
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_MACRODEF:
+		case BASICTYPE_MACROTYPE:
+			return 0; /* do nothing */
 
-	default:
-		if (IsNewType(td->type))
-			return 1;
+		default:
+			if (IsNewType(td->type))
+				return 1;
 	}
 	return 0;
 }
@@ -578,18 +561,17 @@ static void PrintTypeDecl(FILE* hdr, TypeDef* td)
 {
 	switch (td->type->basicType->choiceId)
 	{
-	case BASICTYPE_COMPONENTSOF:
-	case BASICTYPE_SELECTION:
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_MACRODEF:
-	case BASICTYPE_MACROTYPE:
-		return; /* do nothing */
+		case BASICTYPE_COMPONENTSOF:
+		case BASICTYPE_SELECTION:
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_MACRODEF:
+		case BASICTYPE_MACROTYPE:
+			return; /* do nothing */
 
-	default:
-		if (IsNewType(td->type))
-			fprintf(hdr, "class %s;\n", td->cxxTypeDefInfo->className);
+		default:
+			if (IsNewType(td->type))
+				fprintf(hdr, "class %s;\n", td->cxxTypeDefInfo->className);
 	}
-
 }
 
 static void PrintCxxType(FILE* hdr, ModuleList* mods, Module* m, CxxRules* r, TypeDef* td, Type* t)
@@ -608,13 +590,11 @@ static void PrintCxxType(FILE* hdr, ModuleList* mods, Module* m, CxxRules* r, Ty
 }
 
 /*
-*  Uses the Constructor that takes no args.
-*  Assumes file hdr is positioned inside a class definition.
-*  All Classes get this to support the ANY type.
-*/
-static void PrintClone(FILE* hdr,
-	FILE* src,
-	TypeDef* td)
+ *  Uses the Constructor that takes no args.
+ *  Assumes file hdr is positioned inside a class definition.
+ *  All Classes get this to support the ANY type.
+ */
+static void PrintClone(FILE* hdr, FILE* src, TypeDef* td)
 {
 	//    fprintf(hdr, "  AsnType		*Clone() const;\n\n", td->cxxTypeDefInfo->className);
 	fprintf(hdr, " \t%s* Clone() const;\n", td->cxxTypeDefInfo->className);
@@ -652,14 +632,9 @@ static void PrintAssignmentOperator(FILE* hdr, FILE* src, Module* m, Type* t, Ty
 
 			fprintf(src, "\t\t\t\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
 			if (e->type->cxxTypeRefInfo->isPtr)
-			{
-				fprintf(src, "\t\t\t\t\t%s = new %s(*that.%s);\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className,
-					e->type->cxxTypeRefInfo->fieldName);
-			}
+				fprintf(src, "\t\t\t\t\t%s = new %s(*that.%s);\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->type->cxxTypeRefInfo->fieldName);
 			else
-			{
 				fprintf(src, "\t\t\t\t\t%s = that.%s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->fieldName);
-			}
 			fprintf(src, "\t\t\t\t\tbreak;\n");
 		}
 		fprintf(src, "\t\t\t}\n");
@@ -673,7 +648,8 @@ static void PrintAssignmentOperator(FILE* hdr, FILE* src, Module* m, Type* t, Ty
 		else if (t->basicType->choiceId == BASICTYPE_SEQUENCE)
 			list = t->basicType->a.sequence;
 
-		if (list) {
+		if (list)
+		{
 			NamedType* e = NULL;
 			FOR_EACH_LIST_ELMT(e, list)
 			{
@@ -703,16 +679,15 @@ static void PrintAssignmentOperator(FILE* hdr, FILE* src, Module* m, Type* t, Ty
 	fprintf(src, "\n");
 	fprintf(src, "\treturn *this;\n");
 	fprintf(src, "}\n\n");
-
 }
 
 /*
-* prints inline definition of constructors if this class is
-* derived from a library class.
-* assumes FILE *hdr is positioned in the derived class definition (.h)
-*
-* 12/92 MS - added overloaded "=" ops for string types.
-*/
+ * prints inline definition of constructors if this class is
+ * derived from a library class.
+ * assumes FILE *hdr is positioned in the derived class definition (.h)
+ *
+ * 12/92 MS - added overloaded "=" ops for string types.
+ */
 static void PrintDerivedConstructors(FILE* hdr, FILE* src, CxxRules* r, TypeDef* td)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
@@ -739,125 +714,118 @@ static void PrintDerivedConstructors(FILE* hdr, FILE* src, CxxRules* r, TypeDef*
 
 	switch (typeId)
 	{
-	case BASICTYPE_BOOLEAN:
-		fprintf(hdr, "\t%s();\n", derivedClassName);
-		fprintf(src, "%s::%s(): %s()\n", derivedClassName, derivedClassName, baseClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "}\n\n");
-		fprintf(hdr, "\t%s(const bool b);\n", derivedClassName);
-		fprintf(src, "%s::%s(const bool b): %s(b)\n", derivedClassName, derivedClassName, baseClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "}\n\n");
-		break;
+		case BASICTYPE_BOOLEAN:
+			fprintf(hdr, "\t%s();\n", derivedClassName);
+			fprintf(src, "%s::%s(): %s()\n", derivedClassName, derivedClassName, baseClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
+			fprintf(hdr, "\t%s(const bool b);\n", derivedClassName);
+			fprintf(src, "%s::%s(const bool b): %s(b)\n", derivedClassName, derivedClassName, baseClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
+			break;
 
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_INTEGER:
-		fprintf(hdr, "\t%s();\n", derivedClassName);
-		fprintf(src, "%s::%s(): %s()\n", derivedClassName, derivedClassName, baseClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "}\n\n");
-		fprintf(hdr, "\t%s(const int i);\n", derivedClassName);
-		fprintf(src, "%s::%s(const int i): %s(i)\n", derivedClassName, derivedClassName, baseClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "}\n\n");
-		break;
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_INTEGER:
+			fprintf(hdr, "\t%s();\n", derivedClassName);
+			fprintf(src, "%s::%s(): %s()\n", derivedClassName, derivedClassName, baseClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
+			fprintf(hdr, "\t%s(const int i);\n", derivedClassName);
+			fprintf(src, "%s::%s(const int i): %s(i)\n", derivedClassName, derivedClassName, baseClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
+			break;
 
-	case BASICTYPE_REAL:
-		fprintf(hdr, "\t%s();\n", derivedClassName);
-		fprintf(src, "%s::%s(): %s()\n", derivedClassName, derivedClassName, baseClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "}\n\n");
-		fprintf(hdr, "\t%s(const double d);\n", derivedClassName);
-		fprintf(src, "%s::%s(const double d): %s(d)\n", derivedClassName, derivedClassName, baseClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "}\n\n");
-		break;
+		case BASICTYPE_REAL:
+			fprintf(hdr, "\t%s();\n", derivedClassName);
+			fprintf(src, "%s::%s(): %s()\n", derivedClassName, derivedClassName, baseClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
+			fprintf(hdr, "\t%s(const double d);\n", derivedClassName);
+			fprintf(src, "%s::%s(const double d): %s(d)\n", derivedClassName, derivedClassName, baseClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
+			break;
 
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-		fprintf(hdr, "\t%s();\n", derivedClassName);
-		fprintf(src, "%s::%s(): %s()\n", derivedClassName, derivedClassName, baseClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "}\n\n");
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(hdr, "\t%s();\n", derivedClassName);
+			fprintf(src, "%s::%s(): %s()\n", derivedClassName, derivedClassName, baseClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
 
-		fprintf(hdr, "\t%s(const char *str);\n", derivedClassName);
-		fprintf(src, "%s::%s(const char *str): %s(str)\n", derivedClassName, derivedClassName, baseClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "}\n\n");
+			fprintf(hdr, "\t%s(const char *str);\n", derivedClassName);
+			fprintf(src, "%s::%s(const char *str): %s(str)\n", derivedClassName, derivedClassName, baseClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
 
-		fprintf(hdr, "\t%s(const char *str, const size_t len);\n", derivedClassName);
-		fprintf(src, "%s::%s(const char *str, const size_t len): %s(str, len)\n", derivedClassName, derivedClassName, baseClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "}\n\n");
+			fprintf(hdr, "\t%s(const char *str, const size_t len);\n", derivedClassName);
+			fprintf(src, "%s::%s(const char *str, const size_t len): %s(str, len)\n", derivedClassName, derivedClassName, baseClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
 
-		fprintf(hdr, "\t%s(const %s &o);\n", derivedClassName, derivedClassName);
-		fprintf(src, "%s::%s(const %s &o): %s(o)\n", derivedClassName, derivedClassName, derivedClassName, baseClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "}\n\n");
+			fprintf(hdr, "\t%s(const %s &o);\n", derivedClassName, derivedClassName);
+			fprintf(src, "%s::%s(const %s &o): %s(o)\n", derivedClassName, derivedClassName, derivedClassName, baseClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
 
-		fprintf(hdr, "\t%s& operator=(const %s& that);\n", derivedClassName, derivedClassName);
-		fprintf(src, "%s& %s::operator=(const %s& that)\n", derivedClassName, derivedClassName, derivedClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "\tAsnOcts::operator=(that);\n");
-		fprintf(src, "\treturn *this;\n");
-		fprintf(src, "}\n\n");
+			fprintf(hdr, "\t%s& operator=(const %s& that);\n", derivedClassName, derivedClassName);
+			fprintf(src, "%s& %s::operator=(const %s& that)\n", derivedClassName, derivedClassName, derivedClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "\tAsnOcts::operator=(that);\n");
+			fprintf(src, "\treturn *this;\n");
+			fprintf(src, "}\n\n");
 
-		fprintf(hdr, "\t%s& operator=(const char *str);\n", derivedClassName);
-		fprintf(src, "%s& %s::operator=(const char *str)\n", derivedClassName, derivedClassName);
-		fprintf(src, "{\n");
-		fprintf(src, "\tAsnOcts::operator=(str);\n");
-		fprintf(src, "\treturn *this;\n");
-		fprintf(src, "}\n\n");
-		break;
+			fprintf(hdr, "\t%s& operator=(const char *str);\n", derivedClassName);
+			fprintf(src, "%s& %s::operator=(const char *str)\n", derivedClassName, derivedClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "\tAsnOcts::operator=(str);\n");
+			fprintf(src, "\treturn *this;\n");
+			fprintf(src, "}\n\n");
+			break;
 
-	case BASICTYPE_BITSTRING:
-	{
-		const char* nblStr = "nblFlag = false;";
-		int iNumNamedElements = 0;
-		if (HasNamedElmts(td->type))
-		{
-			nblStr = "nblFlag = true;";
-			iNumNamedElements = GetNumNamedElmts(td->type);
-		}
-		if (iNumNamedElements)
-			fprintf(hdr, "\t%s(): %s(%d)\t\t\t{ %s }\n", derivedClassName,
-				baseClassName, iNumNamedElements, nblStr);
-		else
-			fprintf(hdr, "\t%s(): %s()\t\t\t{ %s }\n", derivedClassName,
-				baseClassName, nblStr);
+		case BASICTYPE_BITSTRING:
+			{
+				const char* nblStr = "nblFlag = false;";
+				int iNumNamedElements = 0;
+				if (HasNamedElmts(td->type))
+				{
+					nblStr = "nblFlag = true;";
+					iNumNamedElements = GetNumNamedElmts(td->type);
+				}
+				if (iNumNamedElements)
+					fprintf(hdr, "\t%s(): %s(%d)\t\t\t{ %s }\n", derivedClassName, baseClassName, iNumNamedElements, nblStr);
+				else
+					fprintf(hdr, "\t%s(): %s()\t\t\t{ %s }\n", derivedClassName, baseClassName, nblStr);
 
-		fprintf(hdr, "\t%s(size_t bits): %s(bits)\t{ %s }\n",
-			derivedClassName, baseClassName, nblStr);
-		fprintf(hdr, "\t%s(const unsigned char* str, const size_t bitLen):\n", derivedClassName);
-		fprintf(hdr, "\t\t%s(str, bitLen)\t\t\t\t{ %s }\n", baseClassName,
-			nblStr);
-		//	Copy constructor not needed
-		//				fprintf(hdr, "\t%s (const %s &o) : %s(o)\n",
-		//					derivedClassName, baseClassName, baseClassName);
-	}
-	break;
+				fprintf(hdr, "\t%s(size_t bits): %s(bits)\t{ %s }\n", derivedClassName, baseClassName, nblStr);
+				fprintf(hdr, "\t%s(const unsigned char* str, const size_t bitLen):\n", derivedClassName);
+				fprintf(hdr, "\t\t%s(str, bitLen)\t\t\t\t{ %s }\n", baseClassName, nblStr);
+				//	Copy constructor not needed
+				//				fprintf(hdr, "\t%s (const %s &o) : %s(o)\n",
+				//					derivedClassName, baseClassName, baseClassName);
+			}
+			break;
 
-	case BASICTYPE_OID:
-		/* TBD: Fix this code -PIERCE
+		case BASICTYPE_OID:
+			/* TBD: Fix this code -PIERCE
 
-		fprintf(hdr, "			%s(): %s() {}\n", derivedClassName, baseClassName);
-		fprintf(hdr, "			%s (const char *encOid, size_t len): %s (encOid, len) {}\n", derivedClassName, baseClassName);
-		fprintf(hdr, "			%s (const %s &o): %s (o) {}\n", derivedClassName, baseClassName, baseClassName);
-		fprintf(hdr, "			%s (unsigned long  a1, unsigned long  a2, long a3=-1, long a4=-1, long a5=-1, long a6=-1, long a7=-1, long a8=-1, long a9=-1, long a10=-1, long a11=-1): %s (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) {}\n", baseClassName, derivedClassName, baseClassName);
-		fprintf(hdr, "  %s& operator=(const %s &o)	{ ReSet (o); return *this; }\n", derivedClassName, derivedClassName);
-		*/
-		printf("TBD: Attempt was made to generate code for a tagged OID outside of a SEQ or SET\n");
-		break;
-	default:
-		break;
+			fprintf(hdr, "			%s(): %s() {}\n", derivedClassName, baseClassName);
+			fprintf(hdr, "			%s (const char *encOid, size_t len): %s (encOid, len) {}\n", derivedClassName, baseClassName);
+			fprintf(hdr, "			%s (const %s &o): %s (o) {}\n", derivedClassName, baseClassName, baseClassName);
+			fprintf(hdr, "			%s (unsigned long  a1, unsigned long  a2, long a3=-1, long a4=-1, long a5=-1, long a6=-1, long a7=-1, long a8=-1, long a9=-1, long a10=-1, long a11=-1): %s (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) {}\n", baseClassName, derivedClassName, baseClassName);
+			fprintf(hdr, "  %s& operator=(const %s &o)	{ ReSet (o); return *this; }\n", derivedClassName, derivedClassName);
+			*/
+			printf("TBD: Attempt was made to generate code for a tagged OID outside of a SEQ or SET\n");
+			break;
+		default:
+			break;
 	}
 } /* PrintDerivedConstructors */
 
 #if DEPRECATED
-static void PrintCxxEocEncoders(FILE* src,
-	TypeDef* td,
-	Type* t,
-	char* bufVarName)
+static void PrintCxxEocEncoders(FILE* src, TypeDef* td, Type* t, char* bufVarName)
 {
 	TagList* tl;
 	Tag* tag;
@@ -873,54 +841,39 @@ static int HasShortLen(Type* t)
 {
 	enum BasicTypeChoiceId typesType;
 	/*
-	* efficiency hack - use simple length (1 byte)
-	* encoded for type (almost) guaranteed to have
-	* encoded lengths of 0 <= len <= 127
-	*/
+	 * efficiency hack - use simple length (1 byte)
+	 * encoded for type (almost) guaranteed to have
+	 * encoded lengths of 0 <= len <= 127
+	 */
 	typesType = GetBuiltinType(t);
 	/*RWC;8/9/01;REMOVED when INTEGER made AsnOcts;return typesType == BASICTYPE_BOOLEAN || typesType == BASICTYPE_INTEGER || typesType == BASICTYPE_NULL || typesType == BASICTYPE_REAL || typesType == BASICTYPE_ENUMERATED; */
 	return typesType == BASICTYPE_BOOLEAN || typesType == BASICTYPE_NULL || typesType == BASICTYPE_REAL || typesType == BASICTYPE_ENUMERATED;
 } /* HasShortLen */
 
-
 /*
-* prints length encoding code.  Primitives always use
-* definite length and constructors get "ConsLen"
-* which can be configured at compile to to be indefinite
-* or definite.  Primitives can also be "short" (isShort is true)
-* in which case a fast macro is used to write the length.
-* Types for which isShort apply are: boolean, null and
-* (almost always) integer and reals
-*/
-static void PrintCxxLenEncodingCode(FILE* hdr,
-	const int isCons,
-	const int isShort,
-	const char* lenVarName,
-	const char* bufVarName,
-	const char* szIndent)
+ * prints length encoding code.  Primitives always use
+ * definite length and constructors get "ConsLen"
+ * which can be configured at compile to to be indefinite
+ * or definite.  Primitives can also be "short" (isShort is true)
+ * in which case a fast macro is used to write the length.
+ * Types for which isShort apply are: boolean, null and
+ * (almost always) integer and reals
+ */
+static void PrintCxxLenEncodingCode(FILE* hdr, const int isCons, const int isShort, const char* lenVarName, const char* bufVarName, const char* szIndent)
 {
 	if (isCons)
 		fprintf(hdr, "%s%s += BEncConsLen(%s, %s);\n", szIndent, lenVarName, bufVarName, lenVarName);
-	else
+	else if (isShort)
 	{
-		if (isShort)
-		{
-			fprintf(hdr, "%sBEncDefLenTo127(%s, %s);\n", szIndent, bufVarName, lenVarName);
-			fprintf(hdr, "%s%s++;\n", szIndent, lenVarName);
-		}
-		else
-			fprintf(hdr, "%s%s += BEncDefLen(%s, %s);\n", szIndent, lenVarName, bufVarName, lenVarName);
+		fprintf(hdr, "%sBEncDefLenTo127(%s, %s);\n", szIndent, bufVarName, lenVarName);
+		fprintf(hdr, "%s%s++;\n", szIndent, lenVarName);
 	}
+	else
+		fprintf(hdr, "%s%s += BEncDefLen(%s, %s);\n", szIndent, lenVarName, bufVarName, lenVarName);
 } /* PrintCxxLenEncodingCode */
 
-
 /* prints last tag's encoding code first */
-static void PrintCxxTagAndLenList(FILE* src,
-	Type* t,
-	TagList* tagList,
-	const char* lenVarName,
-	const char* bufVarName,
-	const char* szIndent)
+static void PrintCxxTagAndLenList(FILE* src, Type* t, TagList* tagList, const char* lenVarName, const char* bufVarName, const char* szIndent)
 {
 	char* classStr;
 	char* formStr;
@@ -932,15 +885,15 @@ static void PrintCxxTagAndLenList(FILE* src,
 		return;
 
 	/*
-	* efficiency hack - use simple length (1 byte)
-	* encoded for type (almost) guaranteed to have
-	* encoded lengths of 0 <= len <= 127
-	*/
+	 * efficiency hack - use simple length (1 byte)
+	 * encoded for type (almost) guaranteed to have
+	 * encoded lengths of 0 <= len <= 127
+	 */
 	isShort = HasShortLen(t);
 
 	/*
-	* since encoding backward encode tags backwards
-	*/
+	 * since encoding backward encode tags backwards
+	 */
 	FOR_EACH_LIST_ELMT_RVS(tg, tagList)
 	{
 		classStr = Class2ClassStr(tg->tclass);
@@ -956,55 +909,49 @@ static void PrintCxxTagAndLenList(FILE* src,
 			PrintCxxLenEncodingCode(src, FALSE, isShort, lenVarName, bufVarName, szIndent);
 		}
 
-		//RWC;tagLen = TagByteLen (tg->code);
+		// RWC;tagLen = TagByteLen (tg->code);
 
 		if (tg->tclass == UNIV)
 		{
 			const char* ptr = DetermineCode(tg, &tagLen, 0);
 			fprintf(src, "%s%s += BEncTag%d(%s, %s, %s, %s);\n", szIndent, lenVarName, tagLen, bufVarName, classStr, formStr, ptr);
-		}                                                       //RWC;Code2UnivCodeStr (tg->code));
+		} // RWC;Code2UnivCodeStr (tg->code));
 		else
 		{
 			const char* ptr = DetermineCode(tg, &tagLen, 1);
 			fprintf(src, "%s%s += BEncTag%d(%s, %s, %s, %s);\n", szIndent, lenVarName, tagLen, bufVarName, classStr, formStr, ptr);
-		}                                                       //RWC;tg->code);
+		} // RWC;tg->code);
 	}
 } /* PrintCxxTagAndLenList */
 
 /*
-*  Recursively walks through tags, printing lower lvl tags
-*  first (since encoding is done backwards).
-*
-*/
-static void PrintCxxTagAndLenEncodingCode(FILE* src,
-	TypeDef* td,
-	Type* t,
-	const char* lenVarName,
-	const char* bufVarName,
-	const char* szIndent)
+ *  Recursively walks through tags, printing lower lvl tags
+ *  first (since encoding is done backwards).
+ *
+ */
+static void PrintCxxTagAndLenEncodingCode(FILE* src, TypeDef* td, Type* t, const char* lenVarName, const char* bufVarName, const char* szIndent)
 {
 	TagList* tl;
 	int stoleChoiceTags;
 
 	/*
-	* get all the tags on this type
-	*/
+	 * get all the tags on this type
+	 */
 	tl = (TagList*)GetTags(t, &stoleChoiceTags);
 
 	/*
-	* leave choice elmt tag enc to encoding routine
-	*/
+	 * leave choice elmt tag enc to encoding routine
+	 */
 	if (!stoleChoiceTags)
 		PrintCxxTagAndLenList(src, t, tl, lenVarName, bufVarName, szIndent);
 
 	FreeTags(tl);
 } /* PrintCxxTagAndLenEncodingCode */
 
-
 /*
-* used to figure out local variables to declare
-* for decoding tags/len pairs on type t
-*/
+ * used to figure out local variables to declare
+ * for decoding tags/len pairs on type t
+ */
 static int CxxCountVariableLevels(Type* t)
 {
 	if (GetBuiltinType(t) == BASICTYPE_CHOICE)
@@ -1013,11 +960,10 @@ static int CxxCountVariableLevels(Type* t)
 		return CountTags(t);
 } /* CxxCountVariableLevels */
 
-
 /*
-* returns true if elmts curr following
-*  onward are all optional ow. false
-*/
+ * returns true if elmts curr following
+ *  onward are all optional ow. false
+ */
 static int RestAreTailOptional(NamedTypeList* e)
 {
 	NamedType* elmt;
@@ -1056,7 +1002,8 @@ static bool IsValidROSEOnInvoke(Module* mod, ValueDef* vd, bool bEvents)
 	return false;
 }
 
-static bool HasValidROSEOnInvokes(Module* mod, bool bEvents) {
+static bool HasValidROSEOnInvokes(Module* mod, bool bEvents)
+{
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, mod->valueDefs)
 	{
@@ -1070,8 +1017,8 @@ static bool HasValidROSEOnInvokes(Module* mod, bool bEvents) {
 }
 
 /*
-* prints PrintROSEOnInvoke
-*/
+ * prints PrintROSEOnInvoke
+ */
 static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd, bool bCommentWasAdded)
 {
 	char* pszArgument = NULL;
@@ -1087,18 +1034,12 @@ static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd,
 
 			bCommentWasAdded = printOperationComment(hdr, mod, vd->definedName, COMMENTSTYLE_CPP);
 
-			//there is a result -> it is a Funktion
-			//Header
+			// there is a result -> it is a Funktion
+			// Header
 			if (pszError)
-			{
-				fprintf(hdr, "\tvirtual SnaccInvokeResult OnInvoke_%s(%s* argument, %s* result, %s* error, SnaccInvokeContext* cxt) { return returnReject; }\n", vd->definedName,
-					pszArgument, pszResult, pszError);
-			}
+				fprintf(hdr, "\tvirtual SnaccInvokeResult OnInvoke_%s(%s* argument, %s* result, %s* error, SnaccInvokeContext* cxt) { return returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
 			else
-			{
-				fprintf(hdr, "\tvirtual SnaccInvokeResult OnInvoke_%s(%s* argument, %s* result, SnaccInvokeContext* cxt) { return returnReject; }\n", vd->definedName,
-					pszArgument, pszResult);
-			}
+				fprintf(hdr, "\tvirtual SnaccInvokeResult OnInvoke_%s(%s* argument, %s* result, SnaccInvokeContext* cxt) { return returnReject; }\n", vd->definedName, pszArgument, pszResult);
 		}
 		else if (!pszResult && bEvents)
 		{
@@ -1106,10 +1047,9 @@ static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd,
 				fprintf(hdr, "\n");
 
 			bCommentWasAdded = printOperationComment(hdr, mod, vd->definedName, COMMENTSTYLE_CPP);
-			//there is no result -> it is an Event
-			//Header
-			fprintf(hdr, "\tvirtual void OnEvent_%s(%s* argument) { }\n", vd->definedName,
-				pszArgument);
+			// there is no result -> it is an Event
+			// Header
+			fprintf(hdr, "\tvirtual void OnEvent_%s(%s* argument) { }\n", vd->definedName, pszArgument);
 		}
 	}
 
@@ -1117,8 +1057,8 @@ static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd,
 }
 
 /*
-* prints PrintROSEOnInvokeswitchCase
-*/
+ * prints PrintROSEOnInvokeswitchCase
+ */
 static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, ValueDef* vd)
 {
 	char* pszArgument = NULL;
@@ -1127,7 +1067,7 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 
 	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 	{
-		//there is an argument
+		// there is an argument
 		if ((pszResult && !bEvents) || (!pszResult && bEvents))
 		{
 			fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
@@ -1156,12 +1096,14 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 			fprintf(src, "\t\t\t\tpBase->PrintAsnType(false, &argument, pinvoke);\n");
 			fprintf(src, "\n");
 
-			if (IsDeprecatedFlaggedOperation(mod, vd->definedName)) {
+			if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
+			{
 				fprintf(src, "\t\t\t// This method has been flagged deprecated\n");
 				fprintf(src, "\t\t\tSNACCDeprecated::DeprecatedASN1Method(\"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::in%s);\n\n", mod->moduleName, vd->definedName, pszResult ? ", cxt" : "");
 			}
 
-			if (pszResult) {
+			if (pszResult)
+			{
 				if (pszError)
 					fprintf(src, "\t\t\tswitch (pInt->OnInvoke_%s(&argument, &result, &error, cxt))\n", vd->definedName);
 				else
@@ -1173,7 +1115,8 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 				fprintf(src, "\t\t\t\tlRoseResult = pBase->SendResult(pinvoke->invokeID, &result, pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);\n");
 				fprintf(src, "\t\t\t\tbreak;\n");
 				fprintf(src, "\t\t\tcase returnError:\n");
-				if (pszError) {
+				if (pszError)
+				{
 					fprintf(src, "\t\t\t\tif(pBase->GetLogLevel(true))\n");
 					fprintf(src, "\t\t\t\t\tpBase->PrintAsnType(true, &error, pinvoke);\n");
 					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pinvoke->invokeID, &error, pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);\n");
@@ -1187,7 +1130,8 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 				fprintf(src, "\t\t\t\tbreak;\n");
 				fprintf(src, "\t\t\t}\n");
 			}
-			else {
+			else
+			{
 				fprintf(src, "\t\t\tpInt->OnEvent_%s(&argument);\n", vd->definedName);
 				fprintf(src, "\t\t\tlRoseResult = ROSE_NOERROR;\n");
 			}
@@ -1204,38 +1148,37 @@ static void PrintAllForwardDeclarations(FILE* hdr, Module* m)
 	fprintf(hdr, "// ------------------------------------------------------------------------------\n");
 	fprintf(hdr, "// forward declarations:\n\n");
 
-	//Alle klassen printen
-	//walk through all Type Definitions
+	// Alle klassen printen
+	// walk through all Type Definitions
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
 		if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
 			continue;
 
-		if (IsNewType(td->type)) {
-			if (HasTypeDecl(td)) {
-				//class
+		if (IsNewType(td->type))
+		{
+			if (HasTypeDecl(td))
+			{
+				// class
 				PrintTypeDecl(hdr, td);
 			}
 		}
 	}
-	//Alle typedefs printen
+	// Alle typedefs printen
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
 		if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
 			continue;
 
-		if (!IsNewType(td->type)) {
+		if (!IsNewType(td->type))
+		{
 
 			if (IsPrimitiveByDefOrRef(td->type) && gAlternateNamespaceString != 0)
-			{
 				fprintf(hdr, "class SNACC::%s;\n", td->type->cxxTypeRefInfo->className);
-			}
 			else
-			{
 				fprintf(hdr, "class %s;\n", td->type->cxxTypeRefInfo->className);
-			}
 
-			//typedef
+			// typedef
 
 			PrintTypeDefDefault(hdr, NULL, td);
 		}
@@ -1286,7 +1229,8 @@ static bool IsValidROSEInvoke(Module* m, ValueDef* vd, bool bEvents)
 	return false;
 }
 
-static bool HasValidROSEInvokes(Module* mod, bool bEvents) {
+static bool HasValidROSEInvokes(Module* mod, bool bEvents)
+{
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, mod->valueDefs)
 	{
@@ -1315,9 +1259,10 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 
 			bCommentWasAdded = printOperationComment(hdr, m, vd->definedName, COMMENTSTYLE_CPP);
 
-			//there is a result -> it is a Funktion
-			//Are there errors inside?
-			if (pszResult) {
+			// there is a result -> it is a Funktion
+			// Are there errors inside?
+			if (pszResult)
+			{
 				if (pszError)
 				{
 					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout = -1, SnaccInvokeContext* cxt = 0);\n", vd->definedName, pszArgument, pszResult, pszError);
@@ -1329,7 +1274,8 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, int iTimeout, SnaccInvokeContext* cxt)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult);
 				}
 			}
-			else {
+			else
+			{
 				fprintf(hdr, "\tlong Event_%s(%s* argument);\n", vd->definedName, pszArgument);
 				fprintf(src, "long %s::Event_%s(%s* argument)\n", m->ROSEClassName, vd->definedName, pszArgument);
 			}
@@ -1347,7 +1293,8 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			fprintf(src, "\tInvokeMsg.argument = new AsnAny;\n");
 			fprintf(src, "\tInvokeMsg.argument->value = argument;\n\n");
 
-			if (pszResult) {
+			if (pszResult)
+			{
 				fprintf(src, "\tROSEResult* pResultMsg = NULL;\n");
 				fprintf(src, "\tROSEError* pErrorMsg = NULL;\n\n");
 			}
@@ -1355,7 +1302,8 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			fprintf(src, "\tif(m_pSB->GetLogLevel(true))\n");
 			fprintf(src, "\t\tm_pSB->PrintAsnType(true, argument, &InvokeMsg);\n\n");
 
-			if (IsDeprecatedFlaggedOperation(m, vd->definedName)) {
+			if (IsDeprecatedFlaggedOperation(m, vd->definedName))
+			{
 				fprintf(src, "\t// This method has been flagged deprecated\n");
 				fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Method(\"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out%s);\n\n", m->moduleName, vd->definedName, pszResult ? ", cxt" : "");
 			}
@@ -1368,7 +1316,8 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			fprintf(src, "\t//prevent autodelete of argument\n");
 			fprintf(src, "\tInvokeMsg.argument->value = NULL;\n");
 
-			if (pszResult) {
+			if (pszResult)
+			{
 				fprintf(src, "\t//decode result\n");
 				if (pszError)
 					fprintf(src, "\tlRoseResult = m_pSB->HandleInvokeResult(lRoseResult, &InvokeMsg, pResultMsg, pErrorMsg, result, error, cxt);\n");
@@ -1389,9 +1338,9 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 }
 
 /*
-* prints typedef or new class given an ASN.1  type def of a primitive type
-* or typeref.  Uses inheritance to cover re-tagging and named elmts.
-*/
+ * prints typedef or new class given an ASN.1  type def of a primitive type
+ * or typeref.  Uses inheritance to cover re-tagging and named elmts.
+ */
 static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, TypeDef* td)
 {
 	if (IsDeprecatedNoOutputSequence(m, td->type->cxxTypeRefInfo->className))
@@ -1415,50 +1364,50 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 	// fprintf(hdr, " */\n");
 
 	/* check if has been re-tagged
-	*   eg Foo ::= [APPLICATION 2] IMPLICIT REAL
-	* or if it has named elmts in which case a new class must
-	* be defined
-	*  eg Foo ::= INTEGER { one (1), two (2), three (3) }
-	*/
+	 *   eg Foo ::= [APPLICATION 2] IMPLICIT REAL
+	 * or if it has named elmts in which case a new class must
+	 * be defined
+	 *  eg Foo ::= INTEGER { one (1), two (2), three (3) }
+	 */
 
 	if (IsNewType(td->type))
 	{
-		int	hasNamedElmts;
+		int hasNamedElmts;
 
 		PrintClassHeader(hdr, m, td, td->type->cxxTypeRefInfo->className);
 
 		/*
-		* must explicitly call constructors for base class
-		*/
+		 * must explicitly call constructors for base class
+		 */
 		PrintDerivedConstructors(hdr, src, r, td);
 
 		/* do named elmts enum if any */
 		/* for types with named elements, inherit from the base
-		* class and define and enum eg:
-		* Foo ::= INTEGER { one (1), two (2), five (5) }
-		*  ->
-		* class Foo: public AsnInt
-		* {
-		* public:
-		*		Foo(): AsnInt() {}
-		*		Foo (int val): AsnInt (int val) {}
-		*    enum { one = 1, two = 2, five = 5 };
-		* };
-		* or
-		* Foo2 ::= [APPLICATION 2] INTEGER
-		* -->
-		* class Foo: public AsnInt
-		* {
-		* public:
-		*		Foo(): AsnInt() {}
-		*		Foo (int val): AsnInt (int val) {}
-		*     AsnLen	BEnc { ....... } <-- holds new tag enc/dec
-		*     void	BDec { ....... }   <--/
-		*     int	BEncPdu { ....... }
-		*     int	BDecPdu { ....... }
-		* };
-		* (must 'inherit' constructors explicitly)
-		*/
+		 * class and define and enum eg:
+		 * Foo ::= INTEGER { one (1), two (2), five (5) }
+		 *  ->
+		 * class Foo: public AsnInt
+		 * {
+		 * public:
+		 *		Foo(): AsnInt() {}
+		 *		Foo (int val): AsnInt (int val) {}
+		 *    enum { one = 1, two = 2, five = 5 };
+		 * };
+		 * or
+		 * Foo2 ::= [APPLICATION 2] INTEGER
+		 * -->
+		 * class Foo: public AsnInt
+		 * {
+		 * public:
+		 *		Foo(): AsnInt() {}
+		 *		Foo (int val): AsnInt (int val) {}
+		 *     AsnLen	BEnc { ....... } <-- holds new tag enc/dec
+		 *     void	BDec { ....... }   <--/
+		 *     int	BEncPdu { ....... }
+		 *     int	BDecPdu { ....... }
+		 * };
+		 * (must 'inherit' constructors explicitly)
+		 */
 
 		if ((hasNamedElmts = HasNamedElmts(td->type)) != 0)
 		{
@@ -1481,7 +1430,6 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 				count++;
 			}
 			fprintf(hdr, "\t};\n");
-
 
 			if (td->type->basicType->choiceId == BASICTYPE_BITSTRING)
 			{
@@ -1552,18 +1500,14 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 
 #if META
 		if (printMetaG)
-		{
 			PrintCxxSimpleDefMeta_1(hdr, src, td, hasNamedElmts, n, m);
-		}
 #endif /* META */
 
 		/*
-		* Re-do BerEncode, BerDeocode, BerDecodePdu and BerDecodePdu
-		* if this type has been re-tagged
-		*/
-		if ((IsDefinedByLibraryType(td->type) && !HasDefaultTag(td->type))
-			|| (IsTypeRef(td->type) && ((td->type->tags != NULL)
-				&& !LIST_EMPTY(td->type->tags))))
+		 * Re-do BerEncode, BerDeocode, BerDecodePdu and BerDecodePdu
+		 * if this type has been re-tagged
+		 */
+		if ((IsDefinedByLibraryType(td->type) && !HasDefaultTag(td->type)) || (IsTypeRef(td->type) && ((td->type->tags != NULL) && !LIST_EMPTY(td->type->tags))))
 		{
 			/* only BerEn/Decode BerEn/DecodePdu need to be re-done if tags are different */
 
@@ -1601,17 +1545,17 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 						}
 
 						fprintf(src, "\n");
-						//RWC;tagLen = TagByteLen (tag->code);
+						// RWC;tagLen = TagByteLen (tag->code);
 
 						if (tag->tclass == UNIV)
 						{
 							const char* ptr2 = DetermineCode(tag, &tagLen, 0);
-							fprintf(src, "\t\tl += BEncTag%d (_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr2);//RWC;Code2UnivCodeStr (tag->code));
+							fprintf(src, "\t\tl += BEncTag%d (_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr2); // RWC;Code2UnivCodeStr (tag->code));
 						}
 						else
 						{
 							const char* ptr2 = DetermineCode(tag, &tagLen, 1);
-							fprintf(src, "\t\tl += BEncTag%d (_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr2);//RWC;tag->code);
+							fprintf(src, "\t\tl += BEncTag%d (_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr2); // RWC;tag->code);
 						}
 					}
 				}
@@ -1623,8 +1567,8 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 			/* Do BDec function */
 			if (printDecodersG)
 			{
-				fprintf(hdr, "\tvoid B%s(const %s& _b, %s& bytesDecoded);\n", r->decodeBaseName, bufTypeNameG, lenTypeNameG);// envTypeNameG);
-				fprintf(src, "void %s::B%s (const %s& _b, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, bufTypeNameG, lenTypeNameG);//, envTypeNameG);
+				fprintf(hdr, "\tvoid B%s(const %s& _b, %s& bytesDecoded);\n", r->decodeBaseName, bufTypeNameG, lenTypeNameG);								   // envTypeNameG);
+				fprintf(src, "void %s::B%s (const %s& _b, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, bufTypeNameG, lenTypeNameG); //, envTypeNameG);
 				fprintf(src, "{\n");
 				fprintf(src, "\t%s tag;\n", tagTypeNameG);
 
@@ -1647,7 +1591,6 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 					{
 						classStr = Class2ClassStr(tag->tclass);
 
-
 						if (tag->form == ANY_FORM)
 							formStr = Form2FormStr(PRIM);
 						else
@@ -1657,17 +1600,17 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 
 						if (tag->tclass == UNIV)
 						{
-							fprintf(src, "MAKE_TAG_ID (%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 0));//RWC;Code2UnivCodeStr (tag->code));
+							fprintf(src, "MAKE_TAG_ID (%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 0)); // RWC;Code2UnivCodeStr (tag->code));
 							if (tag->form == ANY_FORM)
-								fprintf(src, "\n\t\t&& (tag != MAKE_TAG_ID (%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 0));//RWC;Code2UnivCodeStr (tag->code));
+								fprintf(src, "\n\t\t&& (tag != MAKE_TAG_ID (%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 0)); // RWC;Code2UnivCodeStr (tag->code));
 							else
 								fprintf(src, ")\n");
 						}
 						else
 						{
-							fprintf(src, "MAKE_TAG_ID (%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+							fprintf(src, "MAKE_TAG_ID (%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 							if (tag->form == ANY_FORM)
-								fprintf(src, "\n\t\t&& (tag != MAKE_TAG_ID (%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
+								fprintf(src, "\n\t\t&& (tag != MAKE_TAG_ID (%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 							else
 								fprintf(src, ")\n");
 						}
@@ -1701,16 +1644,13 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 		}
 		/* close class def */
 		fprintf(hdr, "};\n\n");
-
 	}
-	else  /* isomorphic with referenced type, so just to a typedef */
+	else /* isomorphic with referenced type, so just to a typedef */
 	{
 
 #if META
 		if (printMetaG)
-		{
 			PrintCxxSimpleDefMeta_2(hdr, src, td, hasNamedElmts, n, m, r);
-		}
 #endif /* META */
 
 		/* JKG 7/31/03 */
@@ -1723,27 +1663,27 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 		{
 			switch (td->type->subtypes->choiceId)
 			{
-			case SUBTYPE_AND:
-			case SUBTYPE_OR:
-			case SUBTYPE_SINGLE:
-			{
-				struct NamedType temp;
-				NamedType* tmp;
-				tmp = &temp;
-				tmp->type = td->type;
-				tmp->type->cxxTypeRefInfo->fieldName = td->definedName;
-				tmp->fieldName = td->definedName;
+				case SUBTYPE_AND:
+				case SUBTYPE_OR:
+				case SUBTYPE_SINGLE:
+					{
+						struct NamedType temp;
+						NamedType* tmp;
+						tmp = &temp;
+						tmp->type = td->type;
+						tmp->type->cxxTypeRefInfo->fieldName = td->definedName;
+						tmp->fieldName = td->definedName;
 
-				if (!PrintCxxMultiConstraintOrHandler(hdr, src, NULL, tmp, 0))
-					PrintTypeDefDefault(hdr, src, td);
-				break;
-			}
+						if (!PrintCxxMultiConstraintOrHandler(hdr, src, NULL, tmp, 0))
+							PrintTypeDefDefault(hdr, src, td);
+						break;
+					}
 
-			default:
-			{
-				PrintTypeDefDefault(hdr, src, td);
-				break;
-			}
+				default:
+					{
+						PrintTypeDefDefault(hdr, src, td);
+						break;
+					}
 			}
 		}
 		else
@@ -1786,9 +1726,9 @@ void PrintChoiceDefCodeBerEncodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 		varName = cxxtri->fieldName;
 
 		/* eSNACC 1.5 does not encode indefinite length
-		*
-		* PrintCxxEocEncoders (src, td, e->type, "_b");
-		*/
+		 *
+		 * PrintCxxEocEncoders (src, td, e->type, "_b");
+		 */
 
 		/* encode content */
 		tmpTypeId = GetBuiltinType(e->type);
@@ -1861,13 +1801,13 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 	int varCount, tmpVarCount;
 	enum BasicTypeChoiceId tmpTypeId;
 	NamedType* defByNamedType;
-	//char *ptr="";   /* NOT DLL Exported, or ignored on Unix. */
+	// char *ptr="";   /* NOT DLL Exported, or ignored on Unix. */
 	int extensionsExist = FALSE;
 	TagList* tags;
 	int stoleChoiceTags;
 
-	fprintf(hdr, "\tvoid B%s(const %s& _b, %s tag, %s elmtLen, %s& bytesDecoded);\n", r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG);//, envTypeNameG);
-	fprintf(src, "void %s::B%s(const %s &_b, %s tag, %s elmtLen0, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG);//, envTypeNameG);
+	fprintf(hdr, "\tvoid B%s(const %s& _b, %s tag, %s elmtLen, %s& bytesDecoded);\n", r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG);								  //, envTypeNameG);
+	fprintf(src, "void %s::B%s(const %s &_b, %s tag, %s elmtLen0, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG); //, envTypeNameG);
 	fprintf(src, "{\n");
 	fprintf(src, "\tClear();\n");
 	varCount = 0;
@@ -1878,9 +1818,9 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 			varCount = tmpVarCount;
 	}
 	/* write extra length vars - remember choice content
-	* decoders are passed the 'key' tag so need one less
-	* than max var count.
-	*/
+	 * decoders are passed the 'key' tag so need one less
+	 * than max var count.
+	 */
 	for (i = 1; i < varCount; i++)
 		fprintf(src, "\t%s elmtLen%d = 0;\n", lenTypeNameG, i);
 
@@ -1913,13 +1853,10 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 				formStr = Form2FormStr(tag->form);
 
 				if (tag->tclass == UNIV)
-				{
-					codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
-				}
+					codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
+
 				else
-				{
 					codeStr = DetermineCode(tag, NULL, 1);
-				}
 
 				if (tag->form == ANY_FORM)
 				{
@@ -1944,7 +1881,7 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 						formStr = Form2FormStr(tag->form);
 
 						if (tag->tclass == UNIV)
-							codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+							codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 						else
 							codeStr = DetermineCode(tag, NULL, 1);
 
@@ -1964,7 +1901,7 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 					FOR_REST_LIST_ELMT(tag, tags)
 					{
 						classStr = Class2ClassStr(tag->tclass);
-						codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+						codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 						formStr = Form2FormStr(tag->form);
 
 						fprintf(src, "\t\ttag = BDecTag(_b, bytesDecoded);\n");
@@ -1977,8 +1914,8 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 							}
 							else
 							{
-								fprintf(src, "\t\tif ((tag != MAKE_TAG_ID(%s, %s, %s))", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-								fprintf(src, " && (tag != MAKE_TAG_ID(%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
+								fprintf(src, "\t\tif ((tag != MAKE_TAG_ID(%s, %s, %s))", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
+								fprintf(src, " && (tag != MAKE_TAG_ID(%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));	 // RWC;tag->code);
 							}
 						}
 						else
@@ -1986,7 +1923,7 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 							if (tag->tclass == UNIV)
 								fprintf(src, "\t\tif (tag != MAKE_TAG_ID(%s, %s, %s))\n", classStr, formStr, codeStr);
 							else
-								fprintf(src, "\t\tif (tag != MAKE_TAG_ID(%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+								fprintf(src, "\t\tif (tag != MAKE_TAG_ID(%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 						}
 
 						fprintf(src, "\t\t\tthrow InvalidTagException(typeName(), tag, STACK_ENTRY);\n");
@@ -1996,10 +1933,10 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 				}
 			}
 			/*
-			* if the choices element is another choice &&
-			* we didn't steal its tags then we must grab
-			* the key tag out of the contained CHOICE
-			*/
+			 * if the choices element is another choice &&
+			 * we didn't steal its tags then we must grab
+			 * the key tag out of the contained CHOICE
+			 */
 			if (!stoleChoiceTags && (GetBuiltinType(e->type) == BASICTYPE_CHOICE))
 			{
 				fprintf(src, "\t\t\ttag = BDecTag(_b, bytesDecoded);\n");
@@ -2012,18 +1949,16 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 
 			/* alloc elmt if nec */
 			if (cxxtri->isPtr)
-			{
 				fprintf(src, "\t\t\t%s = new %s;\n", varName, cxxtri->className);
-			}
 			/* decode content */
 			tmpTypeId = GetBuiltinType(e->type);
 			if (tmpTypeId == BASICTYPE_ANYDEFINEDBY)
 			{
 				/*
-				* must check for another EOC for ANYs
-				* since the any decode routines decode
-				* their own first tag/len pair
-				*/
+				 * must check for another EOC for ANYs
+				 * since the any decode routines decode
+				 * their own first tag/len pair
+				 */
 				elmtLevel++;
 				defByNamedType = e->type->basicType->a.anyDefinedBy->link;
 				PrintCxxSetTypeByCode(defByNamedType, cxxtri, src, "\t\t\t");
@@ -2109,19 +2044,19 @@ void PrintChoiceDefCodeBerEnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 	FOR_EACH_LIST_ELMT_RVS(tag, choice->tags)
 	{
 		classStr = Class2ClassStr(tag->tclass);
-		formStr = Form2FormStr(CONS);  /* choices are constructed */
-		//RWC;tagLen = TagByteLen (tag->code);
+		formStr = Form2FormStr(CONS); /* choices are constructed */
+		// RWC;tagLen = TagByteLen (tag->code);
 		fprintf(src, "\t\tl += BEncConsLen(_b, l);\n");
 
 		if (tag->tclass == UNIV)
 		{
 			const char* ptr = DetermineCode(tag, &tagLen, 1);
-			fprintf(src, "\t\tl += BEncTag%d(_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr);//RWC;Code2UnivCodeStr (tag->code));
+			fprintf(src, "\t\tl += BEncTag%d(_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr); // RWC;Code2UnivCodeStr (tag->code));
 		}
 		else
 		{
 			const char* ptr = DetermineCode(tag, &tagLen, 1);
-			fprintf(src, "\t\tl += BEncTag%d(_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr);//RWC;tag->code);
+			fprintf(src, "\t\tl += BEncTag%d(_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr); // RWC;tag->code);
 		}
 	}
 	fprintf(src, "\treturn l;\n");
@@ -2139,7 +2074,7 @@ void PrintChoiceDefCodeBerDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 	int elmtLevel = 0;
 
 	fprintf(hdr, "\tvoid B%s(const %s& _b, %s& bytesDecoded);\n", r->decodeBaseName, bufTypeNameG, lenTypeNameG);
-	fprintf(src, "void %s::B%s(const %s& _b, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, bufTypeNameG, lenTypeNameG);//, envTypeNameG);
+	fprintf(src, "void %s::B%s(const %s& _b, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, bufTypeNameG, lenTypeNameG); //, envTypeNameG);
 	fprintf(src, "{\n");
 
 	fprintf(src, "\t%s elmtLen = 0;\n", lenTypeNameG);
@@ -2155,13 +2090,13 @@ void PrintChoiceDefCodeBerDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 	FOR_EACH_LIST_ELMT(tag, choice->tags)
 	{
 		classStr = Class2ClassStr(tag->tclass);
-		formStr = Form2FormStr(CONS);  /* choices are constructed */
+		formStr = Form2FormStr(CONS); /* choices are constructed */
 		fprintf(src, "\tAsnTag tagId = BDecTag (_b, bytesDecoded);\n");
 		fprintf(src, "\tif (tagId != ");
 		if (tag->tclass == UNIV)
-			fprintf(src, "MAKE_TAG_ID(%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 0));//RWC;Code2UnivCodeStr (tag->code));
+			fprintf(src, "MAKE_TAG_ID(%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 0)); // RWC;Code2UnivCodeStr (tag->code));
 		else
-			fprintf(src, "MAKE_TAG_ID(%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+			fprintf(src, "MAKE_TAG_ID(%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 		fprintf(src, "\t\tthrow InvalidTagException(typeName(), tagId, STACK_ENTRY);\n");
 		fprintf(src, "\textraLen%d = BDecLen (_b, bytesDecoded);\n", ++elmtLevel);
 	}
@@ -2191,7 +2126,7 @@ void PrintChoiceDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 	CxxTRI* cxxtri;
 	char* varName;
 
-	//void JEnc (EJson::Value &b) const;
+	// void JEnc (EJson::Value &b) const;
 
 	fprintf(hdr, "\tvoid JEnc(EJson::Value& b) const;\n");
 	fprintf(src, "void %s::JEnc(EJson::Value& b) const\n", td->cxxTypeDefInfo->className);
@@ -2293,7 +2228,6 @@ void PrintChoiceDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 	fprintf(src, "}\n\n");
 }
 
-
 void PrintChoiceDefCodePEREnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Type* choice)
 {
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
@@ -2309,23 +2243,21 @@ void PrintChoiceDefCodePEREnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 
 	/****************************/
 	/*** FIRST, handle index encoding for PER Choice.  Taking advantage of
-	* the AsnInt class with constraints for the detailed encoding
-	* details.  Declare outside scope of source method for PEnc/PDec. */
+	 * the AsnInt class with constraints for the detailed encoding
+	 * details.  Declare outside scope of source method for PEnc/PDec. */
 	fprintf(src, "class AsnIntChoice_%s : public AsnInt  {\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "  public:\n");
-	fprintf(src, "  AsnIntChoice_%s(AsnIntType val=0):AsnInt(val){ }\n",
-		td->cxxTypeDefInfo->className);
+	fprintf(src, "  AsnIntChoice_%s(AsnIntType val=0):AsnInt(val){ }\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "  ValueRange* ValueRanges(int &sizeVRList)\n");
 	fprintf(src, "  {\n");
 	fprintf(src, "  	static ValueRange INT1_ValueRangeList[] = \n");
-	fprintf(src, "  		{{ 0, %d, 1 }};\n",
-		choice->basicType->a.choice->count);  /* CONSTANT value for this CHOICE. */
+	fprintf(src, "  		{{ 0, %d, 1 }};\n", choice->basicType->a.choice->count); /* CONSTANT value for this CHOICE. */
 	fprintf(src, "  	sizeVRList = 1;\n");
 	fprintf(src, "  	return INT1_ValueRangeList;\n");
 	fprintf(src, "  }\n");
 	fprintf(src, "};\n\n");
 
-	//RWC;fprintf(hdr, "  AsnLen		PEnc(AsnBufBits &_b, bool bAlign = false) const {AsnLen len; len = 1;return len;};\n");
+	// RWC;fprintf(hdr, "  AsnLen		PEnc(AsnBufBits &_b, bool bAlign = false) const {AsnLen len; len = 1;return len;};\n");
 	fprintf(hdr, "  %s		P%s (AsnBufBits &_b) const;\n", lenTypeNameG, r->encodeBaseName);
 	fprintf(src, "%s %s::P%s (AsnBufBits &_b) const\n", lenTypeNameG, td->cxxTypeDefInfo->className, r->encodeBaseName);
 	fprintf(src, "{\n");
@@ -2335,16 +2267,12 @@ void PrintChoiceDefCodePEREnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 	/****************************/
 	/*** PERFORM sorting of Choice elements for proper index setting. */
 	PrintCxxDefCode_PERSort(&ppElementNamedType, &pElementTag, choice->basicType->a.choice);
-	fprintf(src, "  AsnIntChoice_%s TmpAsnIntChoice(%d);\n",
-		td->cxxTypeDefInfo->className,
-		choice->basicType->a.choice->count);  /* CONSTANT value for this CHOICE. */
+	fprintf(src, "  AsnIntChoice_%s TmpAsnIntChoice(%d);\n", td->cxxTypeDefInfo->className, choice->basicType->a.choice->count); /* CONSTANT value for this CHOICE. */
 	for (ii = 0; ii < choice->basicType->a.choice->count; ii++)
 	{
-		fprintf(src, "   if (%s == %s::%s)\n", r->choiceIdFieldName,
-			td->cxxTypeDefInfo->className,
-			ppElementNamedType[ii]->type->cxxTypeRefInfo->choiceIdSymbol);
+		fprintf(src, "   if (%s == %s::%s)\n", r->choiceIdFieldName, td->cxxTypeDefInfo->className, ppElementNamedType[ii]->type->cxxTypeRefInfo->choiceIdSymbol);
 		fprintf(src, "      TmpAsnIntChoice.Set(%d); // SORTED index value.\n", ii);
-	}       // END FOR ii
+	} // END FOR ii
 	free(ppElementNamedType);
 	free(pElementTag);
 
@@ -2353,13 +2281,13 @@ void PrintChoiceDefCodePEREnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 
 	/****************************/
 	/*** NOW, setup each individual Choice element.*/
-	//RWC;fprintf(src, "    l = P%s (_b);\n", r->encodeContentBaseName);
+	// RWC;fprintf(src, "    l = P%s (_b);\n", r->encodeContentBaseName);
 	/* print local vars */
-	//RWC;fprintf(src, "  %s l=0;\n", lenTypeNameG);
+	// RWC;fprintf(src, "  %s l=0;\n", lenTypeNameG);
 
 	/* encode tag (s) & len (s) */
-	//PrintCxxTagAndLenEncodingCode (src, td, e->type, "l", "_b");
-	// RWC; TAGS already encoded if necessary above (non-UNIV).
+	// PrintCxxTagAndLenEncodingCode (src, td, e->type, "l", "_b");
+	//  RWC; TAGS already encoded if necessary above (non-UNIV).
 
 	fprintf(src, "  switch (%s)\n", r->choiceIdFieldName);
 	fprintf(src, "  {\n");
@@ -2428,14 +2356,14 @@ void PrintChoiceDefCodePERDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 	int ii;
 
 	fprintf(hdr, "  void			P%s (AsnBufBits &_b, %s &bitsDecoded);\n", r->decodeBaseName, lenTypeNameG);
-	fprintf(src, "void %s::P%s (AsnBufBits &_b, %s &bitsDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, lenTypeNameG);//, envTypeNameG);
+	fprintf(src, "void %s::P%s (AsnBufBits &_b, %s &bitsDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, lenTypeNameG); //, envTypeNameG);
 	fprintf(src, "{\n");
 	fprintf(src, "\tClear();\n");
 
 	/* print extra locals for redundant lengths */
 	for (i = 1; (choice->tags != NULL) && (i <= LIST_COUNT(choice->tags)); i++)
 	{
-		//fprintf(src, "    %s extraLen%d = 0; \n", lenTypeNameG, i);
+		// fprintf(src, "    %s extraLen%d = 0; \n", lenTypeNameG, i);
 	}
 	fprintf(src, "\n");
 
@@ -2451,8 +2379,8 @@ void PrintChoiceDefCodePERDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 
 	/* print local vars */
 	/* count max number of extra length var nec
-	* by counting tag/len pairs on components of the CHOICE
-	*/
+	 * by counting tag/len pairs on components of the CHOICE
+	 */
 	varCount = 0;
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
 	{
@@ -2472,9 +2400,7 @@ void PrintChoiceDefCodePERDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 	{
 		fprintf(src, "   if (TmpAsnIntChoice == %d)\n", ii);
 		fprintf(src, "   {\n");
-		fprintf(src, "      %s = %s::%s;\n", r->choiceIdFieldName,
-			td->cxxTypeDefInfo->className,
-			ppElementNamedType[ii]->type->cxxTypeRefInfo->choiceIdSymbol);
+		fprintf(src, "      %s = %s::%s;\n", r->choiceIdFieldName, td->cxxTypeDefInfo->className, ppElementNamedType[ii]->type->cxxTypeRefInfo->choiceIdSymbol);
 
 		/* Process specific tag - choices always have the key tag decoded */
 		e = ppElementNamedType[ii];
@@ -2484,18 +2410,16 @@ void PrintChoiceDefCodePERDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 
 		/* alloc elmt if nec */
 		if (cxxtri->isPtr)
-		{
 			fprintf(src, "      %s = new %s;\n", varName, cxxtri->className);
-		}
 		/* decode content */
 		tmpTypeId = GetBuiltinType(e->type);
 		if (tmpTypeId == BASICTYPE_ANYDEFINEDBY)
 		{
 			/*
-			* must check for another EOC for ANYs
-			* since the any decode routines decode
-			* their own first tag/len pair
-			*/
+			 * must check for another EOC for ANYs
+			 * since the any decode routines decode
+			 * their own first tag/len pair
+			 */
 			defByNamedType = e->type->basicType->a.anyDefinedBy->link;
 			PrintCxxSetTypeByCode(defByNamedType, cxxtri, src, "\t\t");
 
@@ -2530,9 +2454,8 @@ void PrintChoiceDefCodePERDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 			fprintf(src, "P%s (_b, bitsDecoded);\n", r->decodeBaseName);
 		}
 
-
 		fprintf(src, "   }  // END if this Choice ID chosen\n");
-	}       // END FOR ii
+	} // END FOR ii
 
 	free(ppElementNamedType);
 	free(pElementTag);
@@ -2540,17 +2463,14 @@ void PrintChoiceDefCodePERDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 	fprintf(src, "}   // END %s::P%s(...)\n\n", td->cxxTypeDefInfo->className, r->decodeBaseName);
 }
 
-static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m, CxxRules* r,
-	TypeDef* td, Type* parent, Type* choice, int novolatilefuncs)
+static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m, CxxRules* r, TypeDef* td, Type* parent, Type* choice, int novolatilefuncs)
 {
 	if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
 		return;
 
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
 
-	if (gAlternateNamespaceString == 0 &&
-		(strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParam") == 0 ||
-			strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParamChoice") == 0))
+	if (gAlternateNamespaceString == 0 && (strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParam") == 0 || strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParamChoice") == 0))
 		return;
 
 	PrintClassHeader(hdr, m, td, baseClassesG);
@@ -2563,26 +2483,24 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 		{
 			switch (e->type->subtypes->choiceId)
 			{
-			case SUBTYPE_AND:
-			case SUBTYPE_OR:
-			case SUBTYPE_SINGLE:
-			{
-				PrintCxxMultiConstraintOrHandler(hdr, src, td->cxxTypeDefInfo->className, e, 3);
-				break;
-			}
-			default:
-			{
-				break;
-			}
+				case SUBTYPE_AND:
+				case SUBTYPE_OR:
+				case SUBTYPE_SINGLE:
+					{
+						PrintCxxMultiConstraintOrHandler(hdr, src, td->cxxTypeDefInfo->className, e, 3);
+						break;
+					}
+				default:
+					{
+						break;
+					}
 			}
 		}
 	}
 
 #if META
 	if (printMetaG)
-	{
 		PrintCxxChoiceDefCodeMeta_1(hdr, src, td, choice, m, e);
-	}
 #endif /* META */
 
 	/* PIERCE 8-22-2001 */
@@ -2597,7 +2515,8 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 	PrintTypeName(hdr, src, td->cxxTypeDefInfo->className, 0);
 	PrintCheckConstraints(hdr, src, m, choice, td);
 
-	if (printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode) {
+	if (printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode)
+	{
 		fprintf(hdr, "\n\t// Encoders & Decoders\n");
 		if (printEncodersG)
 			PrintChoiceDefCodeBerEncodeContent(src, hdr, m, r, td, choice);
@@ -2624,8 +2543,7 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 	if (printPrintersG)
 	{
 		fprintf(hdr, "\tvoid Print(std::ostream& os, unsigned short indent = 0) const;\n");
-		fprintf(src, "void %s::Print(std::ostream& os, unsigned short indent) const\n",
-			td->cxxTypeDefInfo->className);
+		fprintf(src, "void %s::Print(std::ostream& os, unsigned short indent) const\n", td->cxxTypeDefInfo->className);
 		fprintf(src, "{\n");
 		fprintf(src, "\tswitch (choiceId)\n");
 		fprintf(src, "\t{\n");
@@ -2641,15 +2559,13 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 			if (e->type->cxxTypeRefInfo->isPtr)
 			{
 				fprintf(src, "\t\tif (%s)\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "\t\t\t%s->Print(os, indent);\n",
-					e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\t%s->Print(os, indent);\n", e->type->cxxTypeRefInfo->fieldName);
 				fprintf(src, "\t\telse\n");
 				fprintf(src, "\t\t\tos << \"<CHOICE value is missing>\\n\";\n");
 			}
 			else
 			{
-				fprintf(src, "\t\t%s.Print(os, indent);\n",
-					e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t%s.Print(os, indent);\n", e->type->cxxTypeRefInfo->fieldName);
 			}
 
 			fprintf(src, "\t\tbreak;\n\n");
@@ -2692,14 +2608,9 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 				fprintf(src, "\t\t\t\t{\n");
 
 				if (e->fieldName != NULL)
-				{
 					fprintf(src, "\t\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->fieldName, e->fieldName);
-				}
 				else
-				{
-					fprintf(src, "\t\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n",
-						e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->fieldName);
-				}
+					fprintf(src, "\t\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->fieldName);
 
 				fprintf(src, "\t\t\t\t}\n");
 			}
@@ -2754,66 +2665,65 @@ void PrintSeqDefCodeBerEncodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 		{
 			Value* defVal = GetValue(e->type->defaultVal->value);
 			/** PIERCE added DER DEFAULT encoding rules 8-16-2000
-			**/
+			 **/
 
 			/* HANDLE DEFAULT VALUE ENCODING FOR DER
-			*/
+			 */
 			switch (ParanoidGetBuiltinType(e->type))
 			{
-			case BASICTYPE_INTEGER:
-			case BASICTYPE_ENUMERATED:
-				fprintf(src, "\tif (%s(%s) && *%s != %d)\n", cxxtri->optTestRoutineName, varName, varName, defVal->basicValue->a.integer);
-				fprintf(src, "\t{\n");
-				break;
-			case BASICTYPE_BITSTRING:
-			{
-				if (defVal->basicValue->choiceId == BASICVALUE_VALUENOTATION)
-				{
-					char* defBitStr;
-					normalizeValue(&defBitStr, defVal->basicValue->a.valueNotation->octs);
-
-					//ste inserted check for default empty
-					if (strlen(defBitStr))
+				case BASICTYPE_INTEGER:
+				case BASICTYPE_ENUMERATED:
+					fprintf(src, "\tif (%s(%s) && *%s != %d)\n", cxxtri->optTestRoutineName, varName, varName, defVal->basicValue->a.integer);
+					fprintf(src, "\t{\n");
+					break;
+				case BASICTYPE_BITSTRING:
 					{
-						//check for default bit.
-						fprintf(src, "\tif (%s(%s) && (!%s->soloBitCheck(%s::%s)))", cxxtri->optTestRoutineName, varName, varName, cxxtri->className, defBitStr);
-						fprintf(src, "\t{\n");
-					}
-					else
-					{
-						//if default is empty then check for empty
-						fprintf(src, "\tif (%s(%s) && (!%s->IsEmpty()))\n", cxxtri->optTestRoutineName, varName, varName);
-						fprintf(src, "\t{\n");
-					}
+						if (defVal->basicValue->choiceId == BASICVALUE_VALUENOTATION)
+						{
+							char* defBitStr;
+							normalizeValue(&defBitStr, defVal->basicValue->a.valueNotation->octs);
 
-					//RWC;ALLOW "}" alignment using editor...
-					free(defBitStr);
-				}
-				else
-					printf("\nWARNING: unsupported use of default BIT STRING\n");
-			}
-			break;
-			case BASICTYPE_BOOLEAN:
-				fprintf(src, "\tif (%s(%s) && *%s != %s)\n", cxxtri->optTestRoutineName, varName, varName, defVal->basicValue->a.boolean ? "true" : "false");
-				fprintf(src, "\t{\n");
-				break;
-			default:
-				/* TBD print error? */
-				break;
+							// ste inserted check for default empty
+							if (strlen(defBitStr))
+							{
+								// check for default bit.
+								fprintf(src, "\tif (%s(%s) && (!%s->soloBitCheck(%s::%s)))", cxxtri->optTestRoutineName, varName, varName, cxxtri->className, defBitStr);
+								fprintf(src, "\t{\n");
+							}
+							else
+							{
+								// if default is empty then check for empty
+								fprintf(src, "\tif (%s(%s) && (!%s->IsEmpty()))\n", cxxtri->optTestRoutineName, varName, varName);
+								fprintf(src, "\t{\n");
+							}
+
+							// RWC;ALLOW "}" alignment using editor...
+							free(defBitStr);
+						}
+						else
+							printf("\nWARNING: unsupported use of default BIT STRING\n");
+					}
+					break;
+				case BASICTYPE_BOOLEAN:
+					fprintf(src, "\tif (%s(%s) && *%s != %s)\n", cxxtri->optTestRoutineName, varName, varName, defVal->basicValue->a.boolean ? "true" : "false");
+					fprintf(src, "\t{\n");
+					break;
+				default:
+					/* TBD print error? */
+					break;
 			}
 		}
 		else if (e->type->optional)
 		{
 			fprintf(src, "\tif (%s(%s))\n", cxxtri->optTestRoutineName, varName);
 			fprintf(src, "\t{\n");
-			//RWC;ALLOW "}" alignment using editor...
+			// RWC;ALLOW "}" alignment using editor...
 		}
 
-
 		/* eSNACC 1.5 does not encode indefinite length
-		*
-		* PrintCxxEocEncoders (src, td, e->type, "_b");
-		*/
+		 *
+		 * PrintCxxEocEncoders (src, td, e->type, "_b");
+		 */
 
 		const char* szIndent = (e->type->optional || e->type->defaultVal != NULL) ? "\t\t" : "\t";
 
@@ -2866,7 +2776,6 @@ void PrintSeqDefCodeBerEncodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 			fprintf(src, "B%s(_b);\n", r->encodeContentBaseName);
 		}
 
-
 		/* encode tag (s) & len (s) */
 		PrintCxxTagAndLenEncodingCode(src, td, e->type, "l", "_b", szIndent);
 		fprintf(src, "%stotalLen += l;\n", szIndent);
@@ -2903,8 +2812,8 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 	NamedType* tmpElmt;
 	int extensionAdditionFound = FALSE;
 
-	fprintf(hdr, "\tvoid B%s(const %s& _b, %s tag, %s elmtLen, %s& bytesDecoded);\n", r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG);//, envTypeNameG);
-	fprintf(src, "void %s::B%s(const %s& _b, %s /*tag0*/, %s elmtLen0, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG);//, envTypeNameG);
+	fprintf(hdr, "\tvoid B%s(const %s& _b, %s tag, %s elmtLen, %s& bytesDecoded);\n", r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG);									   //, envTypeNameG);
+	fprintf(src, "void %s::B%s(const %s& _b, %s /*tag0*/, %s elmtLen0, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG); //, envTypeNameG);
 	fprintf(src, "{\n");
 	fprintf(src, "\tClear();\n");
 
@@ -2957,14 +2866,11 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 				if ((e->type->optional) && (e != (NamedType*)LAST_LIST_ELMT(seq->basicType->a.sequence)))
 					fprintf(src, "<untagged optional ANY - you must fix this>\n");
 			}
-			else
+			else if (!e->type->extensionAddition)
 			{
-				if (!e->type->extensionAddition)
-				{
-					fprintf(src, "\tif (elmtLen0 == 0)\n"); // Wenn die Länge 0 ist, gibts nix zum Auslesen -> fertig
-					fprintf(src, "\t\treturn;\n");
-					fprintf(src, "\ttag1 = BDecTag(_b, seqBytesDecoded);\n\n");
-				}
+				fprintf(src, "\tif (elmtLen0 == 0)\n"); // Wenn die Länge 0 ist, gibts nix zum Auslesen -> fertig
+				fprintf(src, "\t\treturn;\n");
+				fprintf(src, "\ttag1 = BDecTag(_b, seqBytesDecoded);\n\n");
 			}
 		}
 		else
@@ -3012,7 +2918,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 					if (!tag)
 						exit(3);
 					classStr = Class2ClassStr(tag->tclass);
-					codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+					codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 					formStr = Form2FormStr(tag->form);
 
 					fprintf(src, "\tif (");
@@ -3026,16 +2932,13 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 						else
 							fprintf(src, "tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, formStr, codeStr);
 					}
-					else
+					else if (tag->form == ANY_FORM)
 					{
-						if (tag->form == ANY_FORM)
-						{
-							fprintf(src, "tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-							fprintf(src, " || tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-						}
-						else
-							fprintf(src, "tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+						fprintf(src, "tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));		// RWC;tag->code);
+						fprintf(src, " || tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 					}
+					else
+						fprintf(src, "tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 
 					/* now decode extra tags/length pairs */
 					AsnListFirst(tags);
@@ -3049,7 +2952,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 							formStr = Form2FormStr(tag->form);
 
 							if (tag->tclass == UNIV)
-								codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+								codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 							else
 								codeStr = DetermineCode(tag, NULL, 1);
 							if (tag->form == ANY_FORM)
@@ -3079,7 +2982,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 
 							fprintf(src, "\t\ttag1 = BDecTag(_b, seqBytesDecoded);\n\n");
 							if (tag->tclass == UNIV)
-								codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+								codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 							else
 								codeStr = DetermineCode(tag, NULL, 1);
 							if (tag->form == ANY_FORM)
@@ -3098,10 +3001,10 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 				}
 
 				/*
-				* if this seq element is CHOICE &&
-				* we didn't steal its tags then we must grab
-				* the key tag out of the contained CHOICE
-				*/
+				 * if this seq element is CHOICE &&
+				 * we didn't steal its tags then we must grab
+				 * the key tag out of the contained CHOICE
+				 */
 				if (!stoleChoiceTags && (GetBuiltinType(e->type) == BASICTYPE_CHOICE))
 				{
 					fprintf(src, "\t\ttag1 = BDecTag(_b, seqBytesDecoded);\n");
@@ -3126,10 +3029,10 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 				if (tmpTypeId == BASICTYPE_ANYDEFINEDBY)
 				{
 					/*
-					* must check for another EOC for ANYs
-					* since the any decode routines decode
-					* their own first tag/len pair
-					*/
+					 * must check for another EOC for ANYs
+					 * since the any decode routines decode
+					 * their own first tag/len pair
+					 */
 					elmtLevel++;
 
 					defByNamedType = e->type->basicType->a.anyDefinedBy->link;
@@ -3175,8 +3078,8 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 				}
 
 				/*
-				* print code for getting the next tag
-				*/
+				 * print code for getting the next tag
+				 */
 				inTailOptElmts = RestAreTailOptional(seq->basicType->a.sequence);
 				if (e != (NamedType*)LAST_LIST_ELMT(seq->basicType->a.sequence))
 				{
@@ -3196,9 +3099,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 						else
 						{
 							if (!tmpElmt->type->extensionAddition)
-							{
 								fprintf(src, "\t\ttag1 = BDecTag (_b, seqBytesDecoded);\n");
-							}
 						}
 					}
 					else
@@ -3217,8 +3118,8 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 							if (e->type->optional || (tmpElmt->type->optional && tmpElmt != (NamedType*)LAST_LIST_ELMT(seq->basicType->a.sequence)))
 							{
 								/*
-								* let this cause a compile error in the generated code
-								*/
+								 * let this cause a compile error in the generated code
+								 */
 								fprintf(src, "  <problems with untagged ANY that is optional or follows an optional sequence element - you must fix this>\n");
 							}
 							fprintf(src, "\t\t\ttag1 = _b.PeekByte();\n");
@@ -3254,10 +3155,10 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 				}
 
 				/*
-				* close tag check if (if there is one) and
-				* print else clause to handle missing non-optional elmt
-				* errors
-				*/
+				 * close tag check if (if there is one) and
+				 * print else clause to handle missing non-optional elmt
+				 * errors
+				 */
 				tmpTypeId = GetBuiltinType(e->type);
 				if ((tmpTypeId == BASICTYPE_ANYDEFINEDBY || tmpTypeId == BASICTYPE_ANY) && !CountTags(e->type))
 				{
@@ -3373,19 +3274,19 @@ void PrintSeqDefCodeBerEnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Type*
 	FOR_EACH_LIST_ELMT_RVS(tag, seq->tags)
 	{
 		classStr = Class2ClassStr(tag->tclass);
-		formStr = Form2FormStr(CONS);  /* seq's are constructed */
+		formStr = Form2FormStr(CONS); /* seq's are constructed */
 
 		fprintf(src, "\tl += BEncConsLen(_b, l);\n");
 
 		if (tag->tclass == UNIV)
 		{
 			const char* ptr = DetermineCode(tag, &tagLen, 0);
-			fprintf(src, "\tl += BEncTag%d(_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr);//RWC;Code2UnivCodeStr (tag->code));
+			fprintf(src, "\tl += BEncTag%d(_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr); // RWC;Code2UnivCodeStr (tag->code));
 		}
 		else
 		{
 			const char* ptr = DetermineCode(tag, &tagLen, 1);
-			fprintf(src, "\tl += BEncTag%d(_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr);//RWC;tag->code);
+			fprintf(src, "\tl += BEncTag%d(_b, %s, %s, %s);\n", tagLen, classStr, formStr, ptr); // RWC;tag->code);
 		}
 	}
 
@@ -3403,8 +3304,8 @@ void PrintSeqDefCodeBerDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Type*
 	Tag* tag;
 	int elmtLevel = 0;
 
-	fprintf(hdr, "\tvoid B%s(const %s& _b, %s& bytesDecoded);\n", r->decodeBaseName, bufTypeNameG, lenTypeNameG);//, envTypeNameG);
-	fprintf(src, "void %s::B%s(const %s& _b, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, bufTypeNameG, lenTypeNameG);//, envTypeNameG);
+	fprintf(hdr, "\tvoid B%s(const %s& _b, %s& bytesDecoded);\n", r->decodeBaseName, bufTypeNameG, lenTypeNameG);								  //, envTypeNameG);
+	fprintf(src, "void %s::B%s(const %s& _b, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, bufTypeNameG, lenTypeNameG); //, envTypeNameG);
 	fprintf(src, "{\n");
 	fprintf(src, "\t%s tag;\n", tagTypeNameG);
 
@@ -3418,13 +3319,13 @@ void PrintSeqDefCodeBerDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Type*
 	FOR_EACH_LIST_ELMT(tag, seq->tags)
 	{
 		classStr = Class2ClassStr(tag->tclass);
-		formStr = Form2FormStr(CONS);  /* seqs are constructed */
+		formStr = Form2FormStr(CONS); /* seqs are constructed */
 		fprintf(src, "\ttag = BDecTag(_b, bytesDecoded);\n");
 
 		if (tag->tclass == UNIV)
-			fprintf(src, "\tif (tag != MAKE_TAG_ID(%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 0));//RWC;Code2UnivCodeStr (tag->code));
+			fprintf(src, "\tif (tag != MAKE_TAG_ID(%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 0)); // RWC;Code2UnivCodeStr (tag->code));
 		else
-			fprintf(src, "\tif (tag != MAKE_TAG_ID(%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+			fprintf(src, "\tif (tag != MAKE_TAG_ID(%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 		fprintf(src, "\t\tthrow InvalidTagException(typeName(), tag, STACK_ENTRY);\n\n");
 
 		fprintf(src, "\telmtLen%d = BDecLen(_b, bytesDecoded);\n", ++elmtLevel);
@@ -3473,60 +3374,60 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 			{
 				Value* defVal = GetValue(e->type->defaultVal->value);
 				/** PIERCE added DER DEFAULT encoding rules 8-16-2000
-				**/
+				 **/
 
 				/* HANDLE DEFAULT VALUE ENCODING FOR DER
-				*/
+				 */
 				switch (ParanoidGetBuiltinType(e->type))
 				{
-				case BASICTYPE_INTEGER:
-				case BASICTYPE_ENUMERATED:
-					fprintf(src, "\tif ( %s(%s) && *%s != %d )\n", cxxtri->optTestRoutineName, varName, varName, defVal->basicValue->a.integer);
-					fprintf(src, "\t{\n");
-					break;
-				case BASICTYPE_BITSTRING:
-				{
-					if (defVal->basicValue->choiceId == BASICVALUE_VALUENOTATION)
-					{
-						char* defBitStr;
-						normalizeValue(&defBitStr, defVal->basicValue->a.valueNotation->octs);
-
-						//ste inserted check for default empty
-						if (strlen(defBitStr))
+					case BASICTYPE_INTEGER:
+					case BASICTYPE_ENUMERATED:
+						fprintf(src, "\tif ( %s(%s) && *%s != %d )\n", cxxtri->optTestRoutineName, varName, varName, defVal->basicValue->a.integer);
+						fprintf(src, "\t{\n");
+						break;
+					case BASICTYPE_BITSTRING:
 						{
-							//check for default bit.
-							fprintf(src, "\tif ( %s(%s) && (! %s->soloBitCheck(%s::%s)) )\n", cxxtri->optTestRoutineName, varName, varName, cxxtri->className, defBitStr);
-							fprintf(src, "\t{\n");
-						}
-						else
-						{
-							//if default is empty then check for empty
-							fprintf(src, "\tif ( %s(%s) && (! %s->IsEmpty()) ){", cxxtri->optTestRoutineName, varName, varName);
-							fprintf(src, "\t{\n");
-						}
+							if (defVal->basicValue->choiceId == BASICVALUE_VALUENOTATION)
+							{
+								char* defBitStr;
+								normalizeValue(&defBitStr, defVal->basicValue->a.valueNotation->octs);
 
-						//RWC;ALLOW "}" alignment using editor...
-						free(defBitStr);
-					}
-					else
-						printf("\nWARNING: unsupported use of default BIT STRING\n");
-				}
-				break;
-				case BASICTYPE_BOOLEAN:
-					fprintf(src, "\tif (%s(%s) && *%s != %s)\n", cxxtri->optTestRoutineName, varName, varName, defVal->basicValue->a.boolean ? "true" : "false");
-					fprintf(src, "\t{\n");
-					//RWC;ALLOW "}" alignment using editor...
-					break;
-				default:
-					/* TBD print error? */
-					break;
+								// ste inserted check for default empty
+								if (strlen(defBitStr))
+								{
+									// check for default bit.
+									fprintf(src, "\tif ( %s(%s) && (! %s->soloBitCheck(%s::%s)) )\n", cxxtri->optTestRoutineName, varName, varName, cxxtri->className, defBitStr);
+									fprintf(src, "\t{\n");
+								}
+								else
+								{
+									// if default is empty then check for empty
+									fprintf(src, "\tif ( %s(%s) && (! %s->IsEmpty()) ){", cxxtri->optTestRoutineName, varName, varName);
+									fprintf(src, "\t{\n");
+								}
+
+								// RWC;ALLOW "}" alignment using editor...
+								free(defBitStr);
+							}
+							else
+								printf("\nWARNING: unsupported use of default BIT STRING\n");
+						}
+						break;
+					case BASICTYPE_BOOLEAN:
+						fprintf(src, "\tif (%s(%s) && *%s != %s)\n", cxxtri->optTestRoutineName, varName, varName, defVal->basicValue->a.boolean ? "true" : "false");
+						fprintf(src, "\t{\n");
+						// RWC;ALLOW "}" alignment using editor...
+						break;
+					default:
+						/* TBD print error? */
+						break;
 				}
 			}
 			else if (e->type->optional)
 			{
 				fprintf(src, "\tif (%s(%s))\n", cxxtri->optTestRoutineName, varName);
 				fprintf(src, "\t{\n");
-				//RWC;ALLOW "}" alignment using editor...
+				// RWC;ALLOW "}" alignment using editor...
 			}
 
 			const char* szIndent = e->type->optional || e->type->defaultVal != NULL ? "\t\t" : "\t";
@@ -3571,7 +3472,7 @@ void PrintSeqDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 		if (IsDeprecatedNoOutputMember(m, td, varName))
 			continue;
 
-		//do not print code for extensions (...)
+		// do not print code for extensions (...)
 		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 		{
 			fprintf(src, "\tif (b.isMember(\"%s\"))\n", varName);
@@ -3589,7 +3490,7 @@ void PrintSeqDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 			fprintf(src, "\t\t\tthrow InvalidTagException(typeName(), \"decode failed: %s\", STACK_ENTRY);\n", varName);
 			fprintf(src, "\t}\n");
 
-			//if not optional, throw not found error
+			// if not optional, throw not found error
 			if (!cxxtri->isPtr)
 			{
 				fprintf(src, "\telse\n");
@@ -3624,23 +3525,20 @@ void PrintSeqDefCodePEREnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Type*
 	int ii = 0;
 	/*** RWC;PRESENT. ***/
 	/* FIRST, create array containing all SEQUENCE elements. */
-	pSeqElementNamedType = (NamedType**)calloc(
-		seq->basicType->a.sequence->count,
-		sizeof(NamedType*));
+	pSeqElementNamedType = (NamedType**)calloc(seq->basicType->a.sequence->count, sizeof(NamedType*));
 	ii = 0;
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
 		pSeqElementNamedType[ii++] = e;
-	}       /* END FOR each SEQUENCE element. */
+	} /* END FOR each SEQUENCE element. */
 	/*RWC;ONLY FOR SET.PrintCxxDefCode_PERSort(&pSetElementNamedType, &pSetElementTag,
 	set->basicType->a.set);*/
 
 	/* THIRD, perform actual encoding using SEQUENCE element pointers.
-	* FOR_EACH_LIST_ELMT (e, set->basicType->a.set) */
+	 * FOR_EACH_LIST_ELMT (e, set->basicType->a.set) */
 	if (!seq->basicType->a.sequence)
 		exit(3);
-	PrintCxxDefCode_SetSeqPEREncode(src, hdr, r, td, pSeqElementNamedType,
-		seq->basicType->a.sequence->count);
+	PrintCxxDefCode_SetSeqPEREncode(src, hdr, r, td, pSeqElementNamedType, seq->basicType->a.sequence->count);
 }
 
 void PrintSeqDefCodePERDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Type* seq, NamedType** pSeqElementNamedType)
@@ -3656,9 +3554,7 @@ static void PrintCxxSeqDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
 
-	if (gAlternateNamespaceString == 0 &&
-		(strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParam") == 0 ||
-			strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParameters") == 0))
+	if (gAlternateNamespaceString == 0 && (strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParam") == 0 || strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParameters") == 0))
 		return;
 
 	PrintClassHeader(hdr, m, td, baseClassesG);
@@ -3668,7 +3564,7 @@ static void PrintCxxSeqDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 		PrintCxxSeqDefCodeMeta_1(hdr, src, td, seq, m, e)
 #endif
 
-		PrintConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
+			PrintConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintCopyConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintDestructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	fprintf(hdr, "\n");
@@ -3679,7 +3575,8 @@ static void PrintCxxSeqDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	PrintTypeName(hdr, src, td->cxxTypeDefInfo->className, 0);
 	PrintCheckConstraints(hdr, src, m, seq, td);
 
-	if (printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode) {
+	if (printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode)
+	{
 		fprintf(hdr, "\n\t// Encoders & Decoders\n");
 		if (printEncodersG)
 			PrintSeqDefCodeBerEncodeContent(src, hdr, m, r, td, seq);
@@ -3706,7 +3603,6 @@ static void PrintCxxSeqDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	/* close class definition */
 	fprintf(hdr, "};\n\n");
 } /* PrintCxxSeqDefCode */
-
 
 static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m, CxxRules* r, TypeDef* td, Type* parent, Type* set, int novolatilefuncs)
 {
@@ -3769,9 +3665,9 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 		fprintf(src, "  %s l=0;\n\n", lenTypeNameG);
 
 		/* PIERCE changed 11-05-2002
-		*   use an std::list of AsnBuf instead of an array of CSM_Buffers to
-		*   sort the elements of the set.
-		*/
+		 *   use an std::list of AsnBuf instead of an array of CSM_Buffers to
+		 *   sort the elements of the set.
+		 */
 		fprintf(src, "    std::list<AsnBuf> bufList;\n");
 		fprintf(src, "    std::list<AsnBuf>::iterator iBuf;\n");
 
@@ -3801,7 +3697,6 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 				else
 					fprintf(src, ".");
 				fprintf(src, "B%s (*iBuf);\n", r->encodeBaseName);
-
 			}
 			else if (tmpTypeId == BASICTYPE_ANY)
 			{
@@ -3845,7 +3740,6 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 
 			PrintCxxTagAndLenEncodingCode(src, td, e->type, "l", "(*iBuf)", "\t\t");
 			fprintf(src, "    totalLen += l;\n");
-
 
 			/** NOW, encode for SET DER rule ordering.*/
 			/** RWC; Buffers handle files or memory. **/
@@ -3891,9 +3785,9 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	/* write BerDecodeContent */
 	if (printDecodersG)
 	{
-		fprintf(hdr, "  void			B%s (const %s &_b, %s tag, %s elmtLen, %s &bytesDecoded);\n\n", r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG);//, envTypeNameG);
+		fprintf(hdr, "  void			B%s (const %s &_b, %s tag, %s elmtLen, %s &bytesDecoded);\n\n", r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG); //, envTypeNameG);
 
-		fprintf(src, "void %s::B%s (const %s &_b, %s /*tag0*/, %s elmtLen0, %s &bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG);//, envTypeNameG);
+		fprintf(src, "void %s::B%s (const %s &_b, %s /*tag0*/, %s elmtLen0, %s &bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG); //, envTypeNameG);
 		fprintf(src, "{\n");
 		fprintf(src, "   FUNC(\"%s::B%s\");\n", td->cxxTypeDefInfo->className, r->decodeContentBaseName);
 		fprintf(src, "   Clear();\n");
@@ -3961,7 +3855,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 						formStr = Form2FormStr(tag->form);
 
 						if (tag->tclass == UNIV)
-							codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+							codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 						else
 							codeStr = DetermineCode(tag, NULL, 1);
 						if (tag->form == ANY_FORM)
@@ -3984,7 +3878,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 								formStr = Form2FormStr(tag->form);
 
 								if (tag->tclass == UNIV)
-									codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+									codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 								else
 									codeStr = DetermineCode(tag, NULL, 1);
 								if (tag->form == ANY_FORM)
@@ -4001,7 +3895,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 							FOR_REST_LIST_ELMT(tag, tags)
 							{
 								classStr = Class2ClassStr(tag->tclass);
-								codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+								codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 								formStr = Form2FormStr(tag->form);
 
 								fprintf(src, "        tag1 = BDecTag (_b, setBytesDecoded);\n");
@@ -4014,8 +3908,8 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 									}
 									else
 									{
-										fprintf(src, "        if ((tag1 != MAKE_TAG_ID (%s, %s, %s))\n", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-										fprintf(src, "           && (tag1 != MAKE_TAG_ID (%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
+										fprintf(src, "        if ((tag1 != MAKE_TAG_ID (%s, %s, %s))\n", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));	// RWC;tag->code);
+										fprintf(src, "           && (tag1 != MAKE_TAG_ID (%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 									}
 								}
 								else
@@ -4023,7 +3917,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 									if (tag->tclass == UNIV)
 										fprintf(src, "        if (tag1 != MAKE_TAG_ID (%s, %s, %s))\n", classStr, formStr, codeStr);
 									else
-										fprintf(src, "        if (tag1 != MAKE_TAG_ID (%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+										fprintf(src, "        if (tag1 != MAKE_TAG_ID (%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 								}
 
 								fprintf(src, "        {\n");
@@ -4034,10 +3928,10 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 						}
 					}
 					/*
-					* if the choices element is another choice &&
-					* we didn't steal its tags then we must grab
-					* the key tag out of the contained CHOICE
-					*/
+					 * if the choices element is another choice &&
+					 * we didn't steal its tags then we must grab
+					 * the key tag out of the contained CHOICE
+					 */
 					if (!stoleChoiceTags && (GetBuiltinType(e->type) == BASICTYPE_CHOICE))
 					{
 						fprintf(src, "        tag1 = BDecTag (_b, setBytesDecoded);\n");
@@ -4064,10 +3958,10 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 					if (tmpTypeId == BASICTYPE_ANYDEFINEDBY)
 					{
 						/*
-						* must check for another EOC for ANYs
-						* since the any decode routines decode
-						* their own first tag/len pair
-						*/
+						 * must check for another EOC for ANYs
+						 * since the any decode routines decode
+						 * their own first tag/len pair
+						 */
 						elmtLevel++;
 
 						fprintf(src, "        %s", varName);
@@ -4165,25 +4059,20 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	if (genPERCode && set->basicType->a.set)
 	{
 		/* PerEncode */
-		if (printEncodersG)     //RWC;TBD; SHOULD set printEncodersP with FLAG!!!!
+		if (printEncodersG) // RWC;TBD; SHOULD set printEncodersP with FLAG!!!!
 		{
-			PrintCxxDefCode_PERSort(&pSetElementNamedType, &pSetElementTag,
-				set->basicType->a.set);
+			PrintCxxDefCode_PERSort(&pSetElementNamedType, &pSetElementTag, set->basicType->a.set);
 			//
 			// THIRD, perform actual encoding using re-arranged Set element
 			//    pointers.
-			//FOR_EACH_LIST_ELMT (e, set->basicType->a.set)
-			PrintCxxDefCode_SetSeqPEREncode(src, hdr, r, td, pSetElementNamedType,
-				set->basicType->a.set->count);
-		}       // END IF printEncodersG
+			// FOR_EACH_LIST_ELMT (e, set->basicType->a.set)
+			PrintCxxDefCode_SetSeqPEREncode(src, hdr, r, td, pSetElementNamedType, set->basicType->a.set->count);
+		} // END IF printEncodersG
 		/* end of PerEncode */
 
 		/* PerDecode */
 		if (printDecodersG)
-		{
-			PrintCxxDefCode_SetSeqPERDecode(src, hdr, r, td,
-				pSetElementNamedType, set->basicType->a.set->count);
-		}
+			PrintCxxDefCode_SetSeqPERDecode(src, hdr, r, td, pSetElementNamedType, set->basicType->a.set->count);
 	}
 
 	/* end of PerDecode */
@@ -4206,15 +4095,15 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 		FOR_EACH_LIST_ELMT_RVS(tag, set->tags)
 		{
 			classStr = Class2ClassStr(tag->tclass);
-			formStr = Form2FormStr(CONS);  /* set's are constructed */
-			//RWC;tagLen = TagByteLen (tag->code);
+			formStr = Form2FormStr(CONS); /* set's are constructed */
+			// RWC;tagLen = TagByteLen (tag->code);
 
 			fprintf(src, "  l += BEncConsLen (_b, l);\n");
 
 			if (tag->tclass == UNIV)
-				fprintf(src, "  l += BEncTag%d (_b, %s, %s, %s);\n", tagLen, classStr, formStr, DetermineCode(tag, &tagLen, 0));//RWC;Code2UnivCodeStr (tag->code));
+				fprintf(src, "  l += BEncTag%d (_b, %s, %s, %s);\n", tagLen, classStr, formStr, DetermineCode(tag, &tagLen, 0)); // RWC;Code2UnivCodeStr (tag->code));
 			else
-				fprintf(src, "  l += BEncTag%d (_b, %s, %s, %s);\n", tagLen, classStr, formStr, DetermineCode(tag, &tagLen, 1));//RWC;tag->code);
+				fprintf(src, "  l += BEncTag%d (_b, %s, %s, %s);\n", tagLen, classStr, formStr, DetermineCode(tag, &tagLen, 1)); // RWC;tag->code);
 		}
 		fprintf(src, "  return l;\n");
 		fprintf(src, "}\n\n");
@@ -4224,8 +4113,8 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	/* BerDecode */
 	if (printDecodersG)
 	{
-		fprintf(hdr, "  void			B%s (const %s &_b, %s &bytesDecoded);\n", r->decodeBaseName, bufTypeNameG, lenTypeNameG);//, envTypeNameG);
-		fprintf(src, "void %s::B%s (const %s &_b, %s &bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, bufTypeNameG, lenTypeNameG);//, envTypeNameG);
+		fprintf(hdr, "  void			B%s (const %s &_b, %s &bytesDecoded);\n", r->decodeBaseName, bufTypeNameG, lenTypeNameG);					   //, envTypeNameG);
+		fprintf(src, "void %s::B%s (const %s &_b, %s &bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, bufTypeNameG, lenTypeNameG); //, envTypeNameG);
 		fprintf(src, "{\n");
 		fprintf(src, "   FUNC(\"%s::B%s\");\n", td->cxxTypeDefInfo->className, r->decodeBaseName);
 		fprintf(src, "   %s tag;\n", tagTypeNameG);
@@ -4240,14 +4129,14 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 		FOR_EACH_LIST_ELMT(tag, set->tags)
 		{
 			classStr = Class2ClassStr(tag->tclass);
-			formStr = Form2FormStr(CONS);  /* sets are constructed */
+			formStr = Form2FormStr(CONS); /* sets are constructed */
 
 			fprintf(src, "  if ((tag = BDecTag (_b, bytesDecoded)) != ");
 
 			if (tag->tclass == UNIV)
-				fprintf(src, "MAKE_TAG_ID (%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 0));//RWC;Code2UnivCodeStr (tag->code));
+				fprintf(src, "MAKE_TAG_ID (%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 0)); // RWC;Code2UnivCodeStr (tag->code));
 			else
-				fprintf(src, "MAKE_TAG_ID (%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+				fprintf(src, "MAKE_TAG_ID (%s, %s, %s))\n", classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 			fprintf(src, "  {\n");
 			fprintf(src, "        throw InvalidTagException(typeName(), tag, STACK_ENTRY);\n");
 			fprintf(src, "  }\n");
@@ -4270,10 +4159,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 
 	/* write code for printing */
 	if (printPrintersG)
-	{
-		PrintCxxSeqSetPrintFunction(src, hdr, td->cxxTypeDefInfo->className,
-			set->basicType);
-	}
+		PrintCxxSeqSetPrintFunction(src, hdr, td->cxxTypeDefInfo->className, set->basicType);
 	if (printPrintersXMLG)
 	{
 		/* ##################################################################
@@ -4319,7 +4205,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 			}
 			fprintf(src, "\n");
 
-		}      /* END For each set element */
+		} /* END For each set element */
 		fprintf(src, "  if (lpszTitle)\n");
 		fprintf(src, "     os << \"</\" << lpszTitle << \">\" << std::endl;\n");
 		fprintf(src, "  else\n");
@@ -4334,11 +4220,10 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	fprintf(hdr, "};\n\n\n");
 } /* PrintCxxSetDefCode */
 
-
 /*
-* PIERCE added 8-21-2001 template code to handle SET/SEQ OF
-*
-*/
+ * PIERCE added 8-21-2001 template code to handle SET/SEQ OF
+ *
+ */
 static void PrintCxxListClass(FILE* hdr, FILE* src, TypeDef* td, Type* lst, Module* m, ModuleList* mods)
 {
 	if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
@@ -4371,23 +4256,20 @@ static void PrintCxxListClass(FILE* hdr, FILE* src, TypeDef* td, Type* lst, Modu
 
 		switch (p_e->type->subtypes->choiceId)
 		{
-		case SUBTYPE_AND:
-		case SUBTYPE_OR:
-		case SUBTYPE_SINGLE:
-		{
-			if (PrintCxxMultiConstraintOrHandler(hdr, src, td->definedName, p_e, 0))
-			{
-				constraints_flag = 1;
-			}
-			break;
-		}
-		default:
-		{
-			break;
-		}
+			case SUBTYPE_AND:
+			case SUBTYPE_OR:
+			case SUBTYPE_SINGLE:
+				{
+					if (PrintCxxMultiConstraintOrHandler(hdr, src, td->definedName, p_e, 0))
+						constraints_flag = 1;
+					break;
+				}
+			default:
+				{
+					break;
+				}
 		}
 	}
-
 
 	elementClassName = lst->basicType->a.setOf->cxxTypeRefInfo->className;
 	pszNamespace = LookupNamespace(lst, mods);
@@ -4397,24 +4279,24 @@ static void PrintCxxListClass(FILE* hdr, FILE* src, TypeDef* td, Type* lst, Modu
 
 	switch (lst->basicType->choiceId)
 	{
-	case BASICTYPE_SEQUENCEOF:
-		sprintf_s(typeNameStr, 256, "\"%s\"", className);
-		if (pszNamespace)
-			fprintf(hdr, "AsnSeqOf<%s::%s>\n", pszNamespace, elementClassName);
-		else
-			fprintf(hdr, "AsnSeqOf<%s>\n", elementClassName);
-		break;
-	case BASICTYPE_SETOF:
-		sprintf_s(typeNameStr, 256, "\"%s\"", className);
-		if (pszNamespace)
-			fprintf(hdr, "AsnSetOf<%s::%s>\n", pszNamespace, elementClassName);
-		else
-			fprintf(hdr, "AsnSetOf<%s>\n", elementClassName);
-		break;
+		case BASICTYPE_SEQUENCEOF:
+			sprintf_s(typeNameStr, 256, "\"%s\"", className);
+			if (pszNamespace)
+				fprintf(hdr, "AsnSeqOf<%s::%s>\n", pszNamespace, elementClassName);
+			else
+				fprintf(hdr, "AsnSeqOf<%s>\n", elementClassName);
+			break;
+		case BASICTYPE_SETOF:
+			sprintf_s(typeNameStr, 256, "\"%s\"", className);
+			if (pszNamespace)
+				fprintf(hdr, "AsnSetOf<%s::%s>\n", pszNamespace, elementClassName);
+			else
+				fprintf(hdr, "AsnSetOf<%s>\n", elementClassName);
+			break;
 
-	default:
-		/* TBD print error? */
-		break;
+		default:
+			/* TBD print error? */
+			break;
 	}
 	fprintf(hdr, "{\n");
 
@@ -4427,9 +4309,7 @@ static void PrintCxxListClass(FILE* hdr, FILE* src, TypeDef* td, Type* lst, Modu
 		/*Subtype* s_type;*/
 		/*s_type = (Subtype*)td->type->subtypes->a.single->a.sizeConstraint->a.or->last->data;*/
 		/* Only single size constraints that are themselves single are supported */
-		if ((td->type->subtypes->choiceId == SUBTYPE_SINGLE) &&
-			(td->type->subtypes->a.single->choiceId == SUBTYPEVALUE_SIZECONSTRAINT) &&
-			(td->type->subtypes->a.single->a.sizeConstraint->choiceId == SUBTYPE_SINGLE))
+		if ((td->type->subtypes->choiceId == SUBTYPE_SINGLE) && (td->type->subtypes->a.single->choiceId == SUBTYPEVALUE_SIZECONSTRAINT) && (td->type->subtypes->a.single->a.sizeConstraint->choiceId == SUBTYPE_SINGLE))
 		{
 			PrintCxxSetOfSizeConstraint(hdr, td->type->subtypes->a.single->a.sizeConstraint->a.single, m, td->type);
 		}
@@ -4443,15 +4323,7 @@ static void PrintCxxListClass(FILE* hdr, FILE* src, TypeDef* td, Type* lst, Modu
 	fprintf(hdr, "};\n\n");
 }
 
-static void PrintCxxSetOfDefCode(FILE* src,
-	FILE* hdr,
-	ModuleList* mods,
-	Module* m,
-	CxxRules* r,
-	TypeDef* td,
-	Type* parent,
-	Type* setOf,
-	int novolatilefuncs)
+static void PrintCxxSetOfDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m, CxxRules* r, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
 {
 	if (gAlternateNamespaceString == 0 && strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParameters") == 0)
 		return;
@@ -4461,83 +4333,81 @@ static void PrintCxxSetOfDefCode(FILE* src,
 
 } /* PrintCxxSetOfDefCode */
 
-
 static void PrintCxxAnyDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m, CxxRules* r, TypeDef* td, Type* parent, Type* any)
 {
 	fprintf(hdr, "/* ");
 	SpecialPrintType(hdr, td, td->type);
 	fprintf(hdr, " */\n");
-	//fprintf(hdr, "typedef %s %s;\n\n", td->type->cxxTypeRefInfo->className, td->cxxTypeDefInfo->className);
+	// fprintf(hdr, "typedef %s %s;\n\n", td->type->cxxTypeRefInfo->className, td->cxxTypeDefInfo->className);
 	fprintf(hdr, "class %s : public %s {};\n\n", td->cxxTypeDefInfo->className, td->type->cxxTypeRefInfo->className);
 } /* PrintCxxAnyDefCode */
-
 
 static void PrintCxxTypeDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m, CxxRules* r, TypeDef* td, int novolatilefuncs)
 {
 	switch (td->type->basicType->choiceId)
 	{
-	case BASICTYPE_BOOLEAN:  /* library type */
-	case BASICTYPE_REAL:  /* library type */
-	case BASICTYPE_OCTETSTRING:  /* library type */
-	case BASICTYPE_OCTETCONTAINING:
-	case BASICTYPE_NULL:  /* library type */
-	case BASICTYPE_EXTERNAL:		/* library type */
-	case BASICTYPE_OID:  /* library type */
-	case BASICTYPE_RELATIVE_OID:
-	case BASICTYPE_INTEGER:  /* library type */
-	case BASICTYPE_BITSTRING:  /* library type */
-	case BASICTYPE_ENUMERATED:  /* library type */
-	case BASICTYPE_NUMERIC_STR:  /* 22 */
-	case BASICTYPE_PRINTABLE_STR: /* 23 */
-	case BASICTYPE_UNIVERSAL_STR: /* 24 */
-	case BASICTYPE_IA5_STR:      /* 25 */
-	case BASICTYPE_BMP_STR:      /* 26 */
-	case BASICTYPE_UTF8_STR:     /* 27 */
-	case BASICTYPE_UTCTIME:      /* 28 tag 23 */
-	case BASICTYPE_GENERALIZEDTIME: /* 29 tag 24 */
-	case BASICTYPE_GRAPHIC_STR:     /* 30 tag 25 */
-	case BASICTYPE_VISIBLE_STR:     /* 31 tag 26  aka ISO646String */
-	case BASICTYPE_GENERAL_STR:     /* 32 tag 27 */
-	case BASICTYPE_OBJECTDESCRIPTOR:	/* 33 tag 7 */
-	case BASICTYPE_VIDEOTEX_STR:	/* 34 tag 21 */
-	case BASICTYPE_T61_STR:			/* 35 tag 20 */
-		PrintCxxSimpleDef(hdr, src, m, r, td);
-		break;
-	case BASICTYPE_SEQUENCEOF:  /* list types */
-	case BASICTYPE_SETOF:
-		PrintCxxSetOfDefCode(src, hdr, mods, m, r, td, NULL, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_IMPORTTYPEREF:  /* type references */
-	case BASICTYPE_LOCALTYPEREF:
-		/*
-		* if this type has been re-tagged then
-		* must create new class instead of using a typedef
-		*/
-		PrintCxxSimpleDef(hdr, src, m, r, td);
-		break;
-	case BASICTYPE_ANYDEFINEDBY:  /* ANY types */
-	case BASICTYPE_ANY:
-		PrintCxxAnyDefCode(src, hdr, mods, m, r, td, NULL, td->type);
-		break;
-	case BASICTYPE_CHOICE:
-		PrintCxxChoiceDefCode(src, hdr, mods, m, r, td, NULL, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_SET:
-		PrintCxxSetDefCode(src, hdr, mods, m, r, td, NULL, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_SEQUENCE:
-		PrintCxxSeqDefCode(src, hdr, mods, m, r, td, NULL, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_COMPONENTSOF:
-	case BASICTYPE_SELECTION:
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_MACRODEF:
-	case BASICTYPE_MACROTYPE:
-		/* do nothing */
-		break;
-	default:
-		/* TBD: print error? */
-		break;
+		case BASICTYPE_BOOLEAN:		/* library type */
+		case BASICTYPE_REAL:		/* library type */
+		case BASICTYPE_OCTETSTRING: /* library type */
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_NULL:	 /* library type */
+		case BASICTYPE_EXTERNAL: /* library type */
+		case BASICTYPE_OID:		 /* library type */
+		case BASICTYPE_RELATIVE_OID:
+		case BASICTYPE_INTEGER:			 /* library type */
+		case BASICTYPE_BITSTRING:		 /* library type */
+		case BASICTYPE_ENUMERATED:		 /* library type */
+		case BASICTYPE_NUMERIC_STR:		 /* 22 */
+		case BASICTYPE_PRINTABLE_STR:	 /* 23 */
+		case BASICTYPE_UNIVERSAL_STR:	 /* 24 */
+		case BASICTYPE_IA5_STR:			 /* 25 */
+		case BASICTYPE_BMP_STR:			 /* 26 */
+		case BASICTYPE_UTF8_STR:		 /* 27 */
+		case BASICTYPE_UTCTIME:			 /* 28 tag 23 */
+		case BASICTYPE_GENERALIZEDTIME:	 /* 29 tag 24 */
+		case BASICTYPE_GRAPHIC_STR:		 /* 30 tag 25 */
+		case BASICTYPE_VISIBLE_STR:		 /* 31 tag 26  aka ISO646String */
+		case BASICTYPE_GENERAL_STR:		 /* 32 tag 27 */
+		case BASICTYPE_OBJECTDESCRIPTOR: /* 33 tag 7 */
+		case BASICTYPE_VIDEOTEX_STR:	 /* 34 tag 21 */
+		case BASICTYPE_T61_STR:			 /* 35 tag 20 */
+			PrintCxxSimpleDef(hdr, src, m, r, td);
+			break;
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			PrintCxxSetOfDefCode(src, hdr, mods, m, r, td, NULL, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_IMPORTTYPEREF: /* type references */
+		case BASICTYPE_LOCALTYPEREF:
+			/*
+			 * if this type has been re-tagged then
+			 * must create new class instead of using a typedef
+			 */
+			PrintCxxSimpleDef(hdr, src, m, r, td);
+			break;
+		case BASICTYPE_ANYDEFINEDBY: /* ANY types */
+		case BASICTYPE_ANY:
+			PrintCxxAnyDefCode(src, hdr, mods, m, r, td, NULL, td->type);
+			break;
+		case BASICTYPE_CHOICE:
+			PrintCxxChoiceDefCode(src, hdr, mods, m, r, td, NULL, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_SET:
+			PrintCxxSetDefCode(src, hdr, mods, m, r, td, NULL, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_SEQUENCE:
+			PrintCxxSeqDefCode(src, hdr, mods, m, r, td, NULL, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_COMPONENTSOF:
+		case BASICTYPE_SELECTION:
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_MACRODEF:
+		case BASICTYPE_MACROTYPE:
+			/* do nothing */
+			break;
+		default:
+			/* TBD: print error? */
+			break;
 	}
 } /* PrintCxxTypeDefCode */
 
@@ -4545,10 +4415,11 @@ int HasROSEOperations(Module* m)
 {
 	ValueDef* vd;
 	int iHasOperations = 0;
-	//check for existing operation defines....
+	// check for existing operation defines....
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
-		if (IsROSEValueDef(m, vd)) {
+		if (IsROSEValueDef(m, vd))
+		{
 			iHasOperations = 1;
 			break;
 		}
@@ -4560,11 +4431,11 @@ int HasROSEOperations(Module* m)
 void PrintROSENamespaceOpenCode(FILE* hfile, Module* m)
 {
 	/* 7-09-2001 Pierce Leonberger
-	*   Added code to include all SNACC generated code in the SNACC namespace.
-	*   If the namespace name was overridden with the '-ns' switch then
-	*   use the name specified.  If the '-nons' switch was used then don't
-	*   use namespaces for SNACC generated code.
-	*/
+	 *   Added code to include all SNACC generated code in the SNACC namespace.
+	 *   If the namespace name was overridden with the '-ns' switch then
+	 *   use the name specified.  If the '-nons' switch was used then don't
+	 *   use namespaces for SNACC generated code.
+	 */
 	if (gNO_NAMESPACE == 0)
 	{
 		fprintf(hfile, "#ifndef NO_NAMESPACE\n");
@@ -4574,7 +4445,7 @@ void PrintROSENamespaceOpenCode(FILE* hfile, Module* m)
 			fprintf(hfile, "using namespace SNACC;\n");
 		}
 		else if (m->namespaceToUse)
-		{            // PRINT namespace designated in .asn1 file for this module.
+		{ // PRINT namespace designated in .asn1 file for this module.
 			fprintf(hfile, "namespace %s {\n", m->namespaceToUse);
 			fprintf(hfile, "using namespace SNACC;\n");
 		}
@@ -4589,7 +4460,7 @@ void PrintROSENamespaceOpenCode(FILE* hfile, Module* m)
 void PrintROSENamespaceCloseCode(FILE* hfile)
 {
 	/* 7-09-2001 Pierce Leonberger
-	*/
+	 */
 	if (gNO_NAMESPACE == 0)
 	{
 		fprintf(hfile, "#ifndef NO_NAMESPACE\n");
@@ -4617,27 +4488,26 @@ void PrintForwardDeclarationsCode(FILE* hdrForwardDecl, ModuleList* mods, Module
 			ImportModule* impMod;
 			char* ImpFile = NULL;
 			ModLists = currMod->imports;
-			currModTmp = mods->curr;    //RWC;
+			currModTmp = mods->curr; // RWC;
 			FOR_EACH_LIST_ELMT(impMod, ModLists)
 			{
 				ImpFile = GetImportForwardDeclFileName(impMod->modId->name, mods);
 				if (ImpFile != NULL)
 					fprintf(hdrForwardDecl, "#include \"%s\"\n", RemovePath(ImpFile));
 			}
-			mods->curr = currModTmp;    // RWC;RESET loop control
+			mods->curr = currModTmp; // RWC;RESET loop control
 		}
 	}
 
 	PrintROSENamespaceOpenCode(hdrForwardDecl, m);
 
-	//Print only the class forward declarations, that are used in the ROSE Methods
+	// Print only the class forward declarations, that are used in the ROSE Methods
 	PrintAllForwardDeclarations(hdrForwardDecl, m);
 
 	fprintf(hdrForwardDecl, "\n");
 
 	PrintROSENamespaceCloseCode(hdrForwardDecl);
 	PrintConditionalIncludeClose(hdrForwardDecl, m->ROSEHdrForwardDeclFileName);
-
 }
 
 void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, Module* m, CxxRules* r, const char* szCppHeaderIncludePath)
@@ -4652,9 +4522,8 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	PrintHdrComment(hdr, m);
 	PrintHdrComment(hdrInterface, m);
 
-	if (genCodeCPPPrintStdAfxInclude) {
+	if (genCodeCPPPrintStdAfxInclude)
 		fprintf(src, "#include \"stdafx.h\"\n");
-	}
 
 	PrintConditionalIncludeOpen(hdr, m->ROSEHdrFileName);
 	PrintConditionalIncludeOpen(hdrInterface, m->ROSEHdrInterfaceFileName);
@@ -4664,7 +4533,7 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(hdrInterface, "#include <%sSnaccROSEInterfaces.h>\n", szCppHeaderIncludePath);
 	fprintf(hdrInterface, "#include \"%s\"\n", RemovePath(m->ROSEHdrForwardDeclFileName));
 
-	fprintf(src, "\n");    //RWC; PRINT before possible "namespace" designations.
+	fprintf(src, "\n"); // RWC; PRINT before possible "namespace" designations.
 
 	PrintSrcIncludes(src, mods, m);
 	fprintf(src, "#include \"%s\"\n", RemovePath(m->ROSEHdrFileName));
@@ -4682,10 +4551,11 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	PrintROSENamespaceOpenCode(hdr, m);
 	PrintROSENamespaceOpenCode(hdrInterface, m);
 
-	//print Operation defines
+	// print Operation defines
 	fprintf(hdr, "// ------------------------------------------------------------------------------\n");
 	fprintf(hdr, "// Operation defines\n");
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
 		if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 			continue;
 		PrintROSEOperationDefines(hdr, r, vd, 0);
@@ -4693,7 +4563,7 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fflush(hdr);
 	fprintf(hdr, "\n");
 
-	//forward decl
+	// forward decl
 	fprintf(hdr, "//------------------------------------------------------------------------------\n");
 	fprintf(hdr, "// forward declares:\n");
 	fprintf(hdr, "class %sInterface;\n\n", m->ROSEClassName);
@@ -4703,16 +4573,16 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 
 	PrintCxxAnyCode(src, hdr, r, mods, m);
 
-	//Generate the ROSE class here.
+	// Generate the ROSE class here.
 	fprintf(hdr, "class %s : public SnaccROSEComponent\n{\n", m->ROSEClassName);
 	fprintf(hdr, "public:\n");
 
-	//Constructor
+	// Constructor
 	fprintf(hdr, "\t%s(SnaccROSESender* pBase);\n", m->ROSEClassName);
 	fprintf(src, "%s::%s(SnaccROSESender* pBase) : SnaccROSEComponent(pBase)\n", m->ROSEClassName, m->ROSEClassName);
 	fprintf(src, "{\n}\n\n");
 
-	//Function for triggering the registration of all Operations (name/id)
+	// Function for triggering the registration of all Operations (name/id)
 	fprintf(hdr, "\t// Function Registers all known operations in SnaccRoseOperationLookup\n");
 	fprintf(hdr, "\tstatic void RegisterOperations();\n");
 	fprintf(src, "void %s::RegisterOperations()\n", m->ROSEClassName);
@@ -4721,7 +4591,8 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	{
 		if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 			continue;
-		if (PrintROSEOperationRegistration(src, r, vd) && !iFirstIIDFound) {
+		if (PrintROSEOperationRegistration(src, r, vd) && !iFirstIIDFound)
+		{
 			iFirstIIDFound = 1;
 			fprintf(hdr, "\tstatic const int m_iid = %d;\n", vd->value->basicValue->a.integer);
 		}
@@ -4730,8 +4601,7 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fflush(src);
 	fflush(hdr);
 
-
-	//generate the InvokeHandler
+	// generate the InvokeHandler
 	fprintf(hdr, "\t// The main Invoke Dispatcher\n");
 	fprintf(hdr, "\tstatic long OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt);\n", m->ROSEClassName);
 	fprintf(src, "long %s::OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt)\n", m->ROSEClassName, m->ROSEClassName);
@@ -4742,24 +4612,20 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(src, "\tswitch (pinvoke->operationID)\n");
 	fprintf(src, "\t{\n");
 
-	//Rose Interface class
+	// Rose Interface class
 	fprintf(hdrInterface, "class %sInterface\n{\n", m->ROSEClassName);
 	fprintf(hdrInterface, "public:\n");
 
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-		{
 			PrintROSEOnInvokeswitchCase(src, 0, m, vd);
-		}
 	}
 
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-		{
 			PrintROSEOnInvokeswitchCase(src, 1, m, vd);
-		}
 	}
 
 	fprintf(src, "\t}\n");
@@ -4772,10 +4638,11 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 
 	bool bCommentWasAdded = false;
 	bool bBlockWasAdded = false;
-	if (HasValidROSEInvokes(m, 0)) {
+	if (HasValidROSEInvokes(m, 0))
+	{
 		fprintf(hdr, "\t// ---- ROSE Invoke operations ----\n");
 		fprintf(hdr, "\t// --------------------------------\n\n");
-		//Now generate the invoke messages
+		// Now generate the invoke messages
 		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 		{
 			if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
@@ -4784,13 +4651,14 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 		bBlockWasAdded = true;
 	}
 
-	if (HasValidROSEInvokes(m, 1)) {
+	if (HasValidROSEInvokes(m, 1))
+	{
 		if (bBlockWasAdded)
 			fprintf(hdr, "\n");
 
 		fprintf(hdr, "\t// ---- ROSE Event operations ----\n");
 		fprintf(hdr, "\t// -------------------------------\n\n");
-		//Now generate the invoke messages
+		// Now generate the invoke messages
 		bCommentWasAdded = false;
 		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 		{
@@ -4800,10 +4668,11 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	}
 
 	bBlockWasAdded = false;
-	if (HasValidROSEOnInvokes(m, 0)) {
+	if (HasValidROSEOnInvokes(m, 0))
+	{
 		fprintf(hdrInterface, "\t// ---- ROSE OnInvoke handlers ----\n");
 		fprintf(hdrInterface, "\t// --------------------------------\n\n");
-		//Now generate the invoke handler messages
+		// Now generate the invoke handler messages
 		bCommentWasAdded = false;
 		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 		{
@@ -4813,12 +4682,13 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 		bBlockWasAdded = true;
 	}
 
-	if (HasValidROSEOnInvokes(m, 1)) {
+	if (HasValidROSEOnInvokes(m, 1))
+	{
 		if (bBlockWasAdded)
 			fprintf(hdrInterface, "\n");
 		fprintf(hdrInterface, "\t// ---- ROSE OnEvent handlers ----\n");
 		fprintf(hdrInterface, "\t// -------------------------------\n\n");
-		//Now generate the Event handler messages
+		// Now generate the Event handler messages
 		bCommentWasAdded = false;
 		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 		{
@@ -4834,7 +4704,6 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(hdr, "\n");
 	fprintf(hdrInterface, "\n");
 
-
 	PrintROSENamespaceCloseCode(src);
 	PrintROSENamespaceCloseCode(hdr);
 	PrintROSENamespaceCloseCode(hdrInterface);
@@ -4844,27 +4713,7 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 
 } /* PrintROSECode */
 
-
-void PrintCxxCode(FILE* src,
-	FILE* hdr,
-	if_META(MetaNameStyle printMeta _AND_)
-	if_META(const Meta* meta _AND_)
-	if_META(MetaPDU* meta_pdus _AND_)
-	ModuleList* mods,
-	Module* m,
-	CxxRules* r,
-	long longJmpVal,
-	int printTypes,
-	int printValues,
-	int printEncoders,
-	int printDecoders,
-	int printJSONEncDec,
-	int printPrinters,
-	int printPrintersXML,
-	int printFree
-	if_TCL(_AND_ int printTcl),
-	int novolatilefuncs,
-	const char* szCppHeaderIncludePath)
+void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) if_META(const Meta* meta _AND_) if_META(MetaPDU* meta_pdus _AND_) ModuleList* mods, Module* m, CxxRules* r, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int printPrinters, int printPrintersXML, int printFree if_TCL(_AND_ int printTcl), int novolatilefuncs, const char* szCppHeaderIncludePath)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
@@ -4918,21 +4767,25 @@ void PrintCxxCode(FILE* src,
 
 	// Special for the SNACCROSE header as it is place in the include folder
 	// The generated code for the product that is using the snacc lib is placed into a different folder and thus needs a different place to look for the includes
-	if (strcmp(m->moduleName, "SNACCROSE") == 0) {
+	if (strcmp(m->moduleName, "SNACCROSE") == 0)
+	{
 		fprintf(hdr, "#include \"asn-incl.h\"\n");
 		fprintf(hdr, "#include \"asn-listset.h\"\n");
 	}
-	else {
+	else
+	{
 		fprintf(hdr, "#include <%sasn-incl.h>\n", szCppHeaderIncludePath);
 		fprintf(hdr, "#include <%sasn-listset.h>\n", szCppHeaderIncludePath);
 	}
-	fprintf(src, "\n");    //RWC; PRINT before possible "namespace" designations.
+	fprintf(src, "\n"); // RWC; PRINT before possible "namespace" designations.
 
 	PrintSrcIncludes(src, mods, m);
 
 	bool bHasDeprecatedElements = false;
-	FOR_EACH_LIST_ELMT(td, m->typeDefs) {
-		if (IsDeprecatedFlaggedSequence(m, td->definedName)) {
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+	{
+		if (IsDeprecatedFlaggedSequence(m, td->definedName))
+		{
 			// Special for the SNACCROSE header as it is place in the include folder
 			// The generated code for the product that is using the snacc lib is placed into a different folder and thus needs a different place to look for the includes
 			if (strcmp(m->moduleName, "SNACCROSE") == 0)
@@ -4953,21 +4806,18 @@ void PrintCxxCode(FILE* src,
 			ImportModule* impMod;
 			char* ImpFile = NULL;
 			ModLists = currMod->imports;
-			currModTmp = mods->curr;    //RWC;
+			currModTmp = mods->curr; // RWC;
 			FOR_EACH_LIST_ELMT(impMod, ModLists)
 			{
 				ImpFile = GetImportFileName(impMod->modId->name, mods);
 				if (ImpFile != NULL)
 					fprintf(hdr, "#include \"%s\"\n", RemovePath(ImpFile));
-				if (impMod->moduleRef == NULL)  // RWC; attempt to update...
+				if (impMod->moduleRef == NULL) // RWC; attempt to update...
 					impMod->moduleRef = GetImportModuleRef(impMod->modId->name, mods);
-				if (impMod->moduleRef &&
-					impMod->moduleRef->namespaceToUse)
-				{
+				if (impMod->moduleRef && impMod->moduleRef->namespaceToUse)
 					fprintf(src, "using namespace %s;\n", impMod->moduleRef->namespaceToUse);
-				}
 			}
-			mods->curr = currModTmp;    // RWC;RESET loop control
+			mods->curr = currModTmp; // RWC;RESET loop control
 		}
 		// Don't duplicate header file referenced in source
 		//		if ((strcmp(m->cxxHdrFileName, currMod->cxxHdrFileName) != 0))
@@ -4981,11 +4831,11 @@ void PrintCxxCode(FILE* src,
 	fprintf(src, "\n");
 
 	/* 7-09-2001 Pierce Leonberger
-	*   Added code to include all SNACC generated code in the SNACC namespace.
-	*   If the namespace name was overridden with the '-ns' switch then
-	*   use the name specified.  If the '-nons' switch was used then don't
-	*   use namespaces for SNACC generated code.
-	*/
+	 *   Added code to include all SNACC generated code in the SNACC namespace.
+	 *   If the namespace name was overridden with the '-ns' switch then
+	 *   use the name specified.  If the '-nons' switch was used then don't
+	 *   use namespaces for SNACC generated code.
+	 */
 	if (gNO_NAMESPACE == 0)
 	{
 		fprintf(hdr, "#ifndef NO_NAMESPACE\n");
@@ -4997,7 +4847,7 @@ void PrintCxxCode(FILE* src,
 			fprintf(src, "using namespace SNACC;\n");
 		}
 		else if (m->namespaceToUse)
-		{            // PRINT namespace designated in .asn1 file for this module.
+		{ // PRINT namespace designated in .asn1 file for this module.
 			fprintf(hdr, "namespace %s {\n", m->namespaceToUse);
 			fprintf(src, "namespace %s {\n", m->namespaceToUse);
 			fprintf(hdr, "using namespace SNACC;\n");
@@ -5014,11 +4864,13 @@ void PrintCxxCode(FILE* src,
 	if (bVDAGlobalDLLExport)
 	{
 		/* RWC; VDA Enhanced to allow produced files to be DLLs exporting
-		* SNACC classes.
-		*/
+		 * SNACC classes.
+		 */
 		fprintf(hdr,
-			"// RWC; IF static refs to this class set, compiler define %s=""""\n",
-			bVDAGlobalDLLExport);
+				"// RWC; IF static refs to this class set, compiler define %s="
+				""
+				"\n",
+				bVDAGlobalDLLExport);
 
 		fprintf(hdr, "#ifndef %s\n", bVDAGlobalDLLExport);
 		fprintf(hdr, "#if defined(_WIN32)\n");
@@ -5040,11 +4892,12 @@ void PrintCxxCode(FILE* src,
 		fprintf(hdr, "#define %s \n", bVDAGlobalDLLExport);
 		fprintf(hdr, "#endif      // _WIN32\n");
 		fprintf(hdr, "#endif      // %s\n", bVDAGlobalDLLExport);
-	}       /* RWC;VDA; END Additional support for DLLs. */
+	} /* RWC;VDA; END Additional support for DLLs. */
 
 	fprintf(hdr, "\n//------------------------------------------------------------------------------\n");
 	fprintf(hdr, "// forward declarations:\n");
-	FOR_EACH_LIST_ELMT(td, m->typeDefs) {
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+	{
 		if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
 			continue;
 		PrintTypeDecl(hdr, td);
@@ -5059,7 +4912,7 @@ void PrintCxxCode(FILE* src,
 
 		fprintf(hdr, "//------------------------------------------------------------------------------\n");
 
-		char* ptr = "";   /* NOT DLL Exported, or ignored on Unix. */
+		char* ptr = ""; /* NOT DLL Exported, or ignored on Unix. */
 		if (bVDAGlobalDLLExport != NULL)
 			ptr = bVDAGlobalDLLExport;
 
@@ -5069,7 +4922,7 @@ void PrintCxxCode(FILE* src,
 		fprintf(src, "static const AsnTypeDesc *%sModuleTypes[] =\n", m->cxxname);
 		fprintf(src, "{\n");
 		FOR_EACH_LIST_ELMT(td, m->typeDefs)
-			fprintf(src, "  &%s::_desc,\n", td->cxxTypeDefInfo->className);
+		fprintf(src, "  &%s::_desc,\n", td->cxxTypeDefInfo->className);
 		fprintf(src, "  NULL\n");
 		fprintf(src, "};\n\n");
 
@@ -5078,7 +4931,7 @@ void PrintCxxCode(FILE* src,
 		else /* META_asn1_names */
 #endif
 
-			fprintf(src, "const AsnModuleDesc %sModuleDesc = { \"%s\", %sModuleTypes };\n\n", m->cxxname, m->modId->name, m->cxxname);
+		fprintf(src, "const AsnModuleDesc %sModuleDesc = { \"%s\", %sModuleTypes };\n\n", m->cxxname, m->modId->name, m->cxxname);
 
 		fprintf(hdr, "#endif // META\n\n");
 		fprintf(src, "#endif // META\n\n");
@@ -5086,26 +4939,26 @@ void PrintCxxCode(FILE* src,
 #endif /* META */
 
 	/* REMOVE PIERCE changed to print the Value definitions to the header file
-	* 10-25-2001
-	*/
+	 * 10-25-2001
+	 */
 	if (printValues)
 	{
 		fprintf(src, "//------------------------------------------------------------------------------\n");
 		fprintf(src, "// value defs\n\n");
 		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
-			PrintCxxValueDef(src, r, vd);
+		PrintCxxValueDef(src, r, vd);
 		fprintf(src, "\n");
 	}
 	/* REMOVE PIERCE changed const values to print to the header file only.  This negates the
-	* need to extern or export the const values.
-	* 10-25-2001
-	*/
+	 * need to extern or export the const values.
+	 * 10-25-2001
+	 */
 	if (printValues)
 	{
 		fprintf(hdr, "//------------------------------------------------------------------------------\n");
 		fprintf(hdr, "// externs for value defs\n\n");
 		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
-			PrintCxxValueExtern(hdr, r, vd);
+		PrintCxxValueExtern(hdr, r, vd);
 	}
 
 	fprintf(hdr, "//------------------------------------------------------------------------------\n");
@@ -5114,10 +4967,10 @@ void PrintCxxCode(FILE* src,
 	PrintCxxAnyCode(src, hdr, r, mods, m);
 
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
-		PrintCxxTypeDefCode(src, hdr, mods, m, r, td, novolatilefuncs);
+	PrintCxxTypeDefCode(src, hdr, mods, m, r, td, novolatilefuncs);
 
 	/* 7-09-2001 Pierce Leonberger
-	*/
+	 */
 	if (gNO_NAMESPACE == 0)
 	{
 		fprintf(hdr, "#ifndef NO_NAMESPACE\n");
@@ -5132,7 +4985,6 @@ void PrintCxxCode(FILE* src,
 
 } /* PrintCxxCode */
 
-
 void PrintCxxEncodeContaining(Type* t, CxxRules* r, FILE* src, const char* szIndent)
 {
 	fprintf(src, "%sl += %s", szIndent, t->cxxTypeRefInfo->fieldName);
@@ -5144,8 +4996,8 @@ void PrintCxxEncodeContaining(Type* t, CxxRules* r, FILE* src, const char* szInd
 	fprintf(src, "B%s(_b);\n", r->encodeBaseName);
 
 	/* If this is a BITSTRING CONTAINING encode a NULL octet for the unused
-	* bits
-	*/
+	 * bits
+	 */
 	if (t->basicType->choiceId == BASICTYPE_BITCONTAINING)
 	{
 		fprintf(src, "%s_b.PutByteRvs((char) 0 ); //encode 0 for unused bits\n", szIndent);
@@ -5158,11 +5010,9 @@ void PrintCxxDecodeContaining(Type* t, CxxRules* r, FILE* src, const char* szInd
 	NamedType* defByNamedType;
 
 	/* Encode Content of contained type */
-	if (t->basicType->a.stringContaining->basicType->choiceId ==
-		BASICTYPE_ANYDEFINEDBY)
+	if (t->basicType->a.stringContaining->basicType->choiceId == BASICTYPE_ANYDEFINEDBY)
 	{
-		defByNamedType =
-			t->basicType->a.stringContaining->basicType->a.anyDefinedBy->link;
+		defByNamedType = t->basicType->a.stringContaining->basicType->a.anyDefinedBy->link;
 		PrintCxxSetTypeByCode(defByNamedType, t->cxxTypeRefInfo, src, szIndent);
 	}
 
@@ -5187,7 +5037,6 @@ void PrintCxxDecodeContaining(Type* t, CxxRules* r, FILE* src, const char* szInd
 	fprintf(src, "B%s(_b, seqBytesDecoded);\n", r->decodeBaseName);
 }
 
-
 void PrintCxxPEREncodeContaining(Type* t, CxxRules* r, FILE* src)
 {
 	fprintf(src, "    l += %s", t->cxxTypeRefInfo->fieldName);
@@ -5199,8 +5048,8 @@ void PrintCxxPEREncodeContaining(Type* t, CxxRules* r, FILE* src)
 	fprintf(src, "P%s(_b);\n", r->encodeBaseName);
 
 	/* If this is a BITSTRING CONTAINING encode a NULL octet for the unused
-	* bits
-	*/
+	 * bits
+	 */
 	if (t->basicType->choiceId == BASICTYPE_BITCONTAINING)
 	{
 		fprintf(src, "    unsigned char _tmp[] = {0x00};\n");
@@ -5214,11 +5063,9 @@ void PrintCxxPERDecodeContaining(Type* t, CxxRules* r, FILE* src)
 	NamedType* defByNamedType;
 
 	/* Encode Content of contained type */
-	if (t->basicType->a.stringContaining->basicType->choiceId ==
-		BASICTYPE_ANYDEFINEDBY)
+	if (t->basicType->a.stringContaining->basicType->choiceId == BASICTYPE_ANYDEFINEDBY)
 	{
-		defByNamedType =
-			t->basicType->a.stringContaining->basicType->a.anyDefinedBy->link;
+		defByNamedType = t->basicType->a.stringContaining->basicType->a.anyDefinedBy->link;
 		PrintCxxSetTypeByCode(defByNamedType, t->cxxTypeRefInfo, src, "\t\t");
 	}
 
@@ -5242,7 +5089,6 @@ void PrintCxxPERDecodeContaining(Type* t, CxxRules* r, FILE* src)
 
 	fprintf(src, "P%s (_b, bitsDecoded);\n", r->decodeBaseName);
 }
-
 
 void PrintCxxSetTypeByCode(NamedType* defByNamedType, CxxTRI* cxxtri, FILE* src, const char* szIndent)
 {
@@ -5290,22 +5136,15 @@ void PrintCxxSetTypeByCode(NamedType* defByNamedType, CxxTRI* cxxtri, FILE* src,
 				fprintf(src, "->");
 			else
 				fprintf(src, ".");
-			if (nt->type->basicType->choiceId == BASICTYPE_INTEGER ||
-				nt->type->basicType->choiceId == BASICTYPE_ENUMERATED)
-			{
+			if (nt->type->basicType->choiceId == BASICTYPE_INTEGER || nt->type->basicType->choiceId == BASICTYPE_ENUMERATED)
 				fprintf(src, "SetTypeByInt(*%s->%s);\n", defByNamedType->type->cxxTypeRefInfo->fieldName, nt->fieldName);
-			}
 			else
-			{
 				fprintf(src, "SetTypeByOid(*%s->%s);\n", defByNamedType->type->cxxTypeRefInfo->fieldName, nt->fieldName);
-			}
 			fprintf(src, "%s\t\tbreak;\n", szIndent);
-
 		}
 		fprintf(src, "%s}\n", szIndent);
 	}
 }
-
 
 char* LookupNamespace(Type* t, ModuleList* mods)
 {
@@ -5314,35 +5153,32 @@ char* LookupNamespace(Type* t, ModuleList* mods)
 	TypeDef* ptTmp = NULL;
 	BasicType* pbtTmp2 = NULL;
 
-	//RWC; HANDLE namespace designations of specific modules on declarations,
-	//      if necessary.  (May have to lookup module name to get namespace).
+	// RWC; HANDLE namespace designations of specific modules on declarations,
+	//       if necessary.  (May have to lookup module name to get namespace).
 	pbtTmp2 = t->basicType;
-	if (pbtTmp2->choiceId == BASICTYPE_SEQUENCEOF ||
-		pbtTmp2->choiceId == BASICTYPE_SETOF)
-		pbtTmp2 = pbtTmp2->a.sequenceOf->basicType;  // Burrow 1 more layer down for SequenceOf/SetOf
+	if (pbtTmp2->choiceId == BASICTYPE_SEQUENCEOF || pbtTmp2->choiceId == BASICTYPE_SETOF)
+		pbtTmp2 = pbtTmp2->a.sequenceOf->basicType; // Burrow 1 more layer down for SequenceOf/SetOf
 	if (pbtTmp2->choiceId == BASICTYPE_IMPORTTYPEREF)
-	{                     // RWC; IF IMPORTED, then we need to check for
+	{ // RWC; IF IMPORTED, then we need to check for
 		//       optional namespace designation (only in .h)
 		FOR_EACH_LIST_ELMT(mTmp, mods)
 		{
 			ptTmp = LookupType(mTmp->typeDefs,
-				pbtTmp2->a.importTypeRef->typeName); //WHAT we are looking for...
+							   pbtTmp2->a.importTypeRef->typeName); // WHAT we are looking for...
 			if (ptTmp != NULL)
-				break;      //FOUND the MODULE that contains our defninition...
-		}       // END FOR each module.
-		if (ptTmp != NULL && mTmp != NULL && mTmp->namespaceToUse)  // FOUND our MODULE...
-		{
-			pszNamespace = mTmp->namespaceToUse;    // DO NOT DELETE...
-		}
-		//LookupType PARAMS ((typeDefList, typeName),
-	}           // IF BASICTYPE_IMPORTTYPEREF
+				break;											   // FOUND the MODULE that contains our defninition...
+		}														   // END FOR each module.
+		if (ptTmp != NULL && mTmp != NULL && mTmp->namespaceToUse) // FOUND our MODULE...
 
-	return(pszNamespace);
-}       /* END LookupNamespace(...)*/
+			pszNamespace = mTmp->namespaceToUse; // DO NOT DELETE...
 
+		// LookupType PARAMS ((typeDefList, typeName),
+	} // IF BASICTYPE_IMPORTTYPEREF
 
-static void PrintCxxSeqSetPrintFunction(FILE* src, FILE* hdr, MyString className,
-	BasicType* pBasicType)
+	return (pszNamespace);
+} /* END LookupNamespace(...)*/
+
+static void PrintCxxSeqSetPrintFunction(FILE* src, FILE* hdr, MyString className, BasicType* pBasicType)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
@@ -5352,8 +5188,7 @@ static void PrintCxxSeqSetPrintFunction(FILE* src, FILE* hdr, MyString className
 	NamedType* e;
 
 	fprintf(hdr, "\tvoid Print(std::ostream& os, unsigned short indent = 0) const;\n");
-	fprintf(src, "void %s::Print(std::ostream& os, unsigned short indent) const\n",
-		className);
+	fprintf(src, "void %s::Print(std::ostream& os, unsigned short indent) const\n", className);
 	fprintf(src, "{\n");
 
 	if (pBasicType->choiceId == BASICTYPE_SEQUENCE)
@@ -5385,27 +5220,25 @@ static void PrintCxxSeqSetPrintFunction(FILE* src, FILE* hdr, MyString className
 
 		if (e->type->cxxTypeRefInfo->isPtr)
 		{
-			fprintf(src, "\tif (%s (%s))\n",
-				e->type->cxxTypeRefInfo->optTestRoutineName,
-				e->type->cxxTypeRefInfo->fieldName);
+			fprintf(src, "\tif (%s (%s))\n", e->type->cxxTypeRefInfo->optTestRoutineName, e->type->cxxTypeRefInfo->fieldName);
 			fprintf(src, "\t{\n");
 
 			if (allOpt)
 			{
 				if (e != FIRST_LIST_ELMT(pElmtList))
 				{
-					//fprintf(src, "\t\tif (!nonePrinted) {\n");
-					//fprintf(src, "\t\tIndent(os, indent);\n");
-					//fprintf(src, "\t\t\tos << \",\" << std::endl;\n");
-					//fprintf(src, "\t\t\t}\n");
+					// fprintf(src, "\t\tif (!nonePrinted) {\n");
+					// fprintf(src, "\t\tIndent(os, indent);\n");
+					// fprintf(src, "\t\t\tos << \",\" << std::endl;\n");
+					// fprintf(src, "\t\t\t}\n");
 				}
 				fprintf(src, "\t\tnonePrinted = false;\n");
 			}
 			/* cannot be first elmt ow allOpt is true */
 			else if (inTailOptElmts)
 			{
-				//fprintf(src, "\t\tIndent(os, indent);\n");
-				//fprintf(src, "\t\tos << \",\"<< std::endl;\n");
+				// fprintf(src, "\t\tIndent(os, indent);\n");
+				// fprintf(src, "\t\tos << \",\"<< std::endl;\n");
 			}
 
 			fprintf(src, "\t\tIndent(os, indent);\n");
@@ -5426,17 +5259,16 @@ static void PrintCxxSeqSetPrintFunction(FILE* src, FILE* hdr, MyString className
 			if (e->fieldName != NULL)
 				fprintf(src, "\tos << \"%s \";\n", e->fieldName);
 
-			fprintf(src, "\t%s.Print(os, indent);\n",
-				e->type->cxxTypeRefInfo->fieldName);
+			fprintf(src, "\t%s.Print(os, indent);\n", e->type->cxxTypeRefInfo->fieldName);
 
 			fprintf(src, "\tos << std::endl;\n");
-			//if (e != LAST_LIST_ELMT (pElmtList))
+			// if (e != LAST_LIST_ELMT (pElmtList))
 			//	fprintf(src, "\tos << ',' << std::endl;\n");
 		}
 
 		fprintf(src, "\n");
 
-		//if (e == LAST_LIST_ELMT (pElmtList))
+		// if (e == LAST_LIST_ELMT (pElmtList))
 		//	fprintf(src, "\tos << std::endl;\n");
 	}
 
@@ -5445,7 +5277,6 @@ static void PrintCxxSeqSetPrintFunction(FILE* src, FILE* hdr, MyString className
 	fprintf(src, "\tos << \"}\\n\";\n");
 	fprintf(src, "} // end of %s::Print()\n\n", className);
 } /* end of PrintCxxSeqSetPrintFunction() */
-
 
 void PrintSeqDefCodeXMLPrinter(FILE* src, FILE* hdr, TypeDef* td, Type* seq)
 {
@@ -5481,11 +5312,9 @@ void PrintSeqDefCodeXMLPrinter(FILE* src, FILE* hdr, TypeDef* td, Type* seq)
 		CxxTRI* cxxtri = e->type->cxxTypeRefInfo;
 		if (e->type->cxxTypeRefInfo->isPtr)
 		{
-			fprintf(src, "\tif (%s (%s))\n", cxxtri->optTestRoutineName,
-				e->type->cxxTypeRefInfo->fieldName);
+			fprintf(src, "\tif (%s (%s))\n", cxxtri->optTestRoutineName, e->type->cxxTypeRefInfo->fieldName);
 			fprintf(src, "\t{\n");
-			fprintf(src, "\t\t%s->PrintXML(os",
-				e->type->cxxTypeRefInfo->fieldName);
+			fprintf(src, "\t\t%s->PrintXML(os", e->type->cxxTypeRefInfo->fieldName);
 
 			if (e->fieldName != NULL)
 				fprintf(src, ", \"%s\"", e->fieldName);
@@ -5515,11 +5344,8 @@ void PrintSeqDefCodeXMLPrinter(FILE* src, FILE* hdr, TypeDef* td, Type* seq)
 }
 
 /*
-* RWC;   */
-static void
-PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
-	NamedType** pSetElementNamedType,
-	int iElementCount)      /* IN, ELEMENT Count to process in array*/
+ * RWC;   */
+static void PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, NamedType** pSetElementNamedType, int iElementCount) /* IN, ELEMENT Count to process in array*/
 {
 	NamedType* e;
 	char* varName;
@@ -5533,16 +5359,14 @@ PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 	long lOptional_Default_ElmtCount = 0;
 	const char* tabAndlenVar = "\tl";
 
-	fprintf(hdr, "\t%s\t\tP%s(AsnBufBits &_b) const;\n", lenTypeNameG,
-		r->encodeBaseName);
+	fprintf(hdr, "\t%s\t\tP%s(AsnBufBits &_b) const;\n", lenTypeNameG, r->encodeBaseName);
 	/*RWC; {AsnLen len; len = 1;return len;};\n");
 	RWC; MUST sort the results by tag; usually explicit except for
 	RWC;  untagged Choices which can be nested.  We must determine which
 	RWC;  tag can go 1st from any Choice, potentially nested.
 	RWC;  (FORWARD ENCODING FOR PER!)*/
 
-	fprintf(src, "%s %s::P%s(AsnBufBits &_b) const\n", lenTypeNameG,
-		td->cxxTypeDefInfo->className, r->encodeBaseName);
+	fprintf(src, "%s %s::P%s(AsnBufBits &_b) const\n", lenTypeNameG, td->cxxTypeDefInfo->className, r->encodeBaseName);
 	fprintf(src, "{\n\t%s l = 0;\n", lenTypeNameG);
 
 	/* SECOND, determine ahead of time the bit count for OPTIONAL/DEFAULT values. */
@@ -5550,7 +5374,7 @@ PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 	{
 		e = pSetElementNamedType[ii];
 
-		//RWC; ALSO, count any OPTIONAL/DEFAULT ASN.1 elements.
+		// RWC; ALSO, count any OPTIONAL/DEFAULT ASN.1 elements.
 		if ((e->type->optional || e->type->defaultVal != NULL) && (!e->type->extensionAddition))
 			lOptional_Default_ElmtCount++;
 	}
@@ -5558,8 +5382,8 @@ PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 	/* NEXT, decode this number of bits, if any, to determine the
 	presence/absence of OPTIONAL/DEFAULT elements.*/
 	if (lOptional_Default_ElmtCount)
-	{	/* NOW, load PER encoding flag to indicate what OPTIONAL/DEFAULT
-		fields are actually present.*/
+	{ /* NOW, load PER encoding flag to indicate what OPTIONAL/DEFAULT
+	  fields are actually present.*/
 		/* FOR PER ENCODING OF Set, we must load a bitfield of length
 		"lOptional_Default_ElmtCount", indicating presence of optional
 		or default field data. */
@@ -5571,17 +5395,14 @@ PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 			e = pSetElementNamedType[ii];
 			if ((e->type->optional || e->type->defaultVal != NULL) && (!e->type->extensionAddition))
 			{
-				fprintf(src, "\tif (%s != NULL)\n",
-					e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "\t\tSnaccOptionalDefaultBits.SetBit(%d);\n",
-					iOptional_Default_ElementIndex++);
-			}		/* END IF OPTIONAL/DEFAULT */
-		}	/* END FOR each element. */
-		fprintf(src, "\t_b.PutBits(SnaccOptionalDefaultBits.data(), %ld);\n",
-			lOptional_Default_ElmtCount);
+				fprintf(src, "\tif (%s != NULL)\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\tSnaccOptionalDefaultBits.SetBit(%d);\n", iOptional_Default_ElementIndex++);
+			} /* END IF OPTIONAL/DEFAULT */
+		}	  /* END FOR each element. */
+		fprintf(src, "\t_b.PutBits(SnaccOptionalDefaultBits.data(), %ld);\n", lOptional_Default_ElmtCount);
 		fprintf(src, "\tl += %ld;\n", lOptional_Default_ElmtCount);
 
-	}		/* END IF lOptional_Default_ElmtCount */
+	} /* END IF lOptional_Default_ElmtCount */
 
 	/* NEXT, process each element of the Set/Sequence for decoding. */
 	fprintf(src, "\n\t// Encode the elements of the SEQUENCE\n");
@@ -5591,11 +5412,9 @@ PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 		if (!e->type->extensionAddition)
 		{
 
-
 			if ((e->type->optional || e->type->defaultVal != NULL) && (!e->type->extensionAddition))
 			{
-				fprintf(src, "\tif (%s != NULL)\t// Optional OR Default\n",
-					e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\tif (%s != NULL)\t// Optional OR Default\n", e->type->cxxTypeRefInfo->fieldName);
 				tabAndlenVar = "\t\tl";
 			}
 
@@ -5607,14 +5426,14 @@ PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 			/*RWC;TBD; UPDATE to reflect PER encoding rules for encoding length, no tags
 			RWC;TBD;  unless explicit (probably need to write a PER version, checking type).*/
 
-			//RWC;NOT FOR PER;PrintCxxTagAndLenEncodingCode (src, td, e->type, "l", "(*iBuf)");
+			// RWC;NOT FOR PER;PrintCxxTagAndLenEncodingCode (src, td, e->type, "l", "(*iBuf)");
 
 			/* encode content */
 			tmpTypeId = GetBuiltinType(e->type);
 			if (tmpTypeId == BASICTYPE_ANYDEFINEDBY)
 			{
-				//RWC;TBD; we may have to investigate individual types here to
-				//RWC;TBD;	restrict which codes are printed for PER...
+				// RWC;TBD; we may have to investigate individual types here to
+				// RWC;TBD;	restrict which codes are printed for PER...
 				defByNamedType = e->type->basicType->a.anyDefinedBy->link;
 				PrintCxxSetTypeByCode(defByNamedType, cxxtri, src, "\t\t");
 
@@ -5627,8 +5446,8 @@ PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 			}
 			else if (tmpTypeId == BASICTYPE_ANY)
 			{
-				//RWC;NOTE:  we will assume here that the ANY buffer is already
-				//RWC;NOTE:    properly PER encoder; we have no way of checking.
+				// RWC;NOTE:  we will assume here that the ANY buffer is already
+				// RWC;NOTE:    properly PER encoder; we have no way of checking.
 				fprintf(src, "%s += %s", tabAndlenVar, varName);
 				if (cxxtri->isPtr)
 					fprintf(src, "->");
@@ -5640,8 +5459,8 @@ PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 			else if (tmpTypeId == BASICTYPE_BITCONTAINING)
 			{
 				PrintCxxPEREncodeContaining(e->type, r, src);
-				//RWC;TBD; THIS CALL WILL NOT UPDATE THE COUNT VALUE PROPERLY; must reflect
-				//RWC;TBD;	PER encoding forward, l+=, instead of l=
+				// RWC;TBD; THIS CALL WILL NOT UPDATE THE COUNT VALUE PROPERLY; must reflect
+				// RWC;TBD;	PER encoding forward, l+=, instead of l=
 			}
 			else
 			{
@@ -5651,34 +5470,26 @@ PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 				else
 					fprintf(src, ".");
 
-				fprintf(src, "P%s(_b);\n", r->encodeBaseName);/*RWC;r->encodeContentBaseName);*/
+				fprintf(src, "P%s(_b);\n", r->encodeBaseName); /*RWC;r->encodeContentBaseName);*/
 			}
 		}
 		else
 		{
 			extensionsExist = TRUE;
 		}
-	}			/* END FOR iElementCount */
-
+	} /* END FOR iElementCount */
 
 	if (extensionsExist)
-	{
 		fprintf(src, " \t/*   WARNING:  PER does not yet support extensibility */\n");
-	}
 
 	fprintf(src, "\n\treturn l;\n");
-	fprintf(src, "}\t// %s::P%s\n\n\n", td->cxxTypeDefInfo->className,
-		r->encodeBaseName);
+	fprintf(src, "}\t// %s::P%s\n\n\n", td->cxxTypeDefInfo->className, r->encodeBaseName);
 } /* END PrintCxxDefCode_SetSeqPEREncode(...) */
 
-
 /*
-* RWC;  This method only handles the entire routine decode operations for both Set and Sequence PER Decode.
-* element decodes, not the wrapping logic. */
-static void
-PrintCxxDefCode_SetSeqPERDecode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
-	NamedType** pSetElementNamedType,
-	int iElementCount)      /* IN, ELEMENT Count to process in arrays */
+ * RWC;  This method only handles the entire routine decode operations for both Set and Sequence PER Decode.
+ * element decodes, not the wrapping logic. */
+static void PrintCxxDefCode_SetSeqPERDecode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, NamedType** pSetElementNamedType, int iElementCount) /* IN, ELEMENT Count to process in arrays */
 {
 	NamedType* e;
 	char* varName;
@@ -5699,11 +5510,9 @@ PrintCxxDefCode_SetSeqPERDecode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 	}
 
 	/***RWC; PERFORM PDec operations first... */
-	fprintf(hdr, "\tvoid\t\tP%s(AsnBufBits& _b, %s& bitsDecoded);\n\n",
-		r->decodeBaseName, lenTypeNameG);
+	fprintf(hdr, "\tvoid\t\tP%s(AsnBufBits& _b, %s& bitsDecoded);\n\n", r->decodeBaseName, lenTypeNameG);
 
-	fprintf(src, "void %s::P%s(AsnBufBits& _b, %s& bitsDecoded)\n",
-		td->cxxTypeDefInfo->className, r->decodeBaseName, lenTypeNameG);
+	fprintf(src, "void %s::P%s(AsnBufBits& _b, %s& bitsDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, lenTypeNameG);
 	fprintf(src, "{\n");
 	fprintf(src, "\tClear();\n");
 
@@ -5711,16 +5520,14 @@ PrintCxxDefCode_SetSeqPERDecode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 	varCount = 0;
 
 	for (ii = 0; ii < iElementCount; ii++)
-		//FOR_EACH_LIST_ELMT (e, set->basicType->a.set)
+	// FOR_EACH_LIST_ELMT (e, set->basicType->a.set)
 	{
 		e = pSetElementNamedType[ii];
 		tmpVarCount = CxxCountVariableLevels(e->type);
 		if (tmpVarCount > varCount)
 			varCount = tmpVarCount;
 		if ((e->type->optional || e->type->defaultVal != NULL) && (!e->type->extensionAddition))
-		{
 			lOptional_Default_ElmtCount++;
-		}
 	}
 
 	/* NEXT, decode this number of bits, if any, to determine the
@@ -5730,8 +5537,7 @@ PrintCxxDefCode_SetSeqPERDecode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 	{
 		fprintf(src, "\n\t// Decode the preamble\n");
 		fprintf(src, "\tAsnBits SnaccOptionalDefaultBits;\n");
-		fprintf(src, "\tbitsDecoded += _b.GetBits(SnaccOptionalDefaultBits, %ld);\n",
-			lOptional_Default_ElmtCount);
+		fprintf(src, "\tbitsDecoded += _b.GetBits(SnaccOptionalDefaultBits, %ld);\n", lOptional_Default_ElmtCount);
 	}
 
 	//******************
@@ -5747,7 +5553,7 @@ PrintCxxDefCode_SetSeqPERDecode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 	//	fprintf(src, "\n");
 
 	/* handle empty set */
-	//RWC;if ((set->basicType->a.set == NULL) || LIST_EMPTY (set->basicType->a.set))
+	// RWC;if ((set->basicType->a.set == NULL) || LIST_EMPTY (set->basicType->a.set))
 	if (iElementCount == 0)
 	{
 		// RWC; Allow for "{" editing...
@@ -5768,8 +5574,7 @@ PrintCxxDefCode_SetSeqPERDecode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 				if (e->type->optional || (e->type->defaultVal != NULL))
 				{
 					tabStr = "\t\t";
-					fprintf(src, "\tif (SnaccOptionalDefaultBits.GetBit(%d))\n",
-						iOptional_Default_ElementIndex++);
+					fprintf(src, "\tif (SnaccOptionalDefaultBits.GetBit(%d))\n", iOptional_Default_ElementIndex++);
 					fprintf(src, "\t{\n");
 				}
 
@@ -5778,11 +5583,10 @@ PrintCxxDefCode_SetSeqPERDecode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 				/* decode content */
 				if (cxxtri->isPtr)
 				{
-					//fprintf(src, "%sif(%s)\n", tabStr, varName);
-					//fprintf(src, "%s%sdelete %s;\n", tabStr, tabStr, varName);
+					// fprintf(src, "%sif(%s)\n", tabStr, varName);
+					// fprintf(src, "%s%sdelete %s;\n", tabStr, tabStr, varName);
 
-					fprintf(src, "%s%s = new %s;\n", tabStr, varName,
-						cxxtri->className);
+					fprintf(src, "%s%s = new %s;\n", tabStr, varName, cxxtri->className);
 					/* END IF subtypes, PER-Visible */
 				}
 
@@ -5814,21 +5618,18 @@ PrintCxxDefCode_SetSeqPERDecode(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td,
 					fprintf(src, "\t}\n\n");
 			}
 		} /* for each elmt */
-	} /* if not empty set clause */
+	}	  /* if not empty set clause */
 
-	fprintf(src, "} // %s::P%s()\n\n", td->cxxTypeDefInfo->className,
-		r->decodeBaseName);
+	fprintf(src, "} // %s::P%s()\n\n", td->cxxTypeDefInfo->className, r->decodeBaseName);
 
-}		/* END PrintCxxDefCode_SetSeqPERDecode(...) */
+} /* END PrintCxxDefCode_SetSeqPERDecode(...) */
 
 /*** This routine handles sorting of groups of NameType element(s) based on the
-*   Set and Choice sorting rules.
-*/
-static void
-PrintCxxDefCode_PERSort(
-	NamedType*** pppElementNamedType, /* OUT, array of sorted NameType(s) */
-	int** ppElementTag,      /* OUT, actual tag for sorted. */
-	AsnList* pElementList)   /* IN, actual eSNACC defs for NameType(s). */
+ *   Set and Choice sorting rules.
+ */
+static void PrintCxxDefCode_PERSort(NamedType*** pppElementNamedType, /* OUT, array of sorted NameType(s) */
+									int** ppElementTag,				  /* OUT, actual tag for sorted. */
+									AsnList* pElementList)			  /* IN, actual eSNACC defs for NameType(s). */
 {
 	NamedType** pElementNamedType;
 	int* pElementTag;
@@ -5841,37 +5642,36 @@ PrintCxxDefCode_PERSort(
 	int ii = 0, iii;
 
 	/*
-	* FIRST, determine encode order by looking at each element tag/type.
-	*  (careful with untagged Choice elements, may be nested).
-	*  If not tagged in the ASN.1 syntax, then we sort based on the IMPLICIT
-	*  tag, even though it may not be encoded for PER.
-	* pElementList->count total elements for PER encode sorting.*/
+	 * FIRST, determine encode order by looking at each element tag/type.
+	 *  (careful with untagged Choice elements, may be nested).
+	 *  If not tagged in the ASN.1 syntax, then we sort based on the IMPLICIT
+	 *  tag, even though it may not be encoded for PER.
+	 * pElementList->count total elements for PER encode sorting.*/
 	pElementTag = *ppElementTag = (int*)calloc(pElementList->count, sizeof(int));
-	pElementNamedType = *pppElementNamedType =
-		(NamedType**)calloc(pElementList->count, sizeof(NamedType*));
+	pElementNamedType = *pppElementNamedType = (NamedType**)calloc(pElementList->count, sizeof(NamedType*));
 	FOR_EACH_LIST_ELMT(e, pElementList)
 	{
 		/*RWC;SEE tag-utils.c, line 175 for example of looking at nested
-		*RWC;  untagged Choice(s).  For PER, NEED to return lowest tag
-		*RWC;  value in nested untagged Choice for sorting.
-		*RWC;  The call to GetTags will only return tags with non-tagged
-		*RWC;  "Choice" elements if present (flagged by "stoleChoiceTags").*/
+		 *RWC;  untagged Choice(s).  For PER, NEED to return lowest tag
+		 *RWC;  value in nested untagged Choice for sorting.
+		 *RWC;  The call to GetTags will only return tags with non-tagged
+		 *RWC;  "Choice" elements if present (flagged by "stoleChoiceTags").*/
 		tags = GetTags(e->type, &stoleChoiceTags);
 
 		if (LIST_EMPTY(tags))
 		{
 			pElementTag[ii] = 0;
 			/* RWC; IGNORE; for now */
-		}       /* END IF (LIST_EMPTY (tags))*/
+		} /* END IF (LIST_EMPTY (tags))*/
 		else if (stoleChoiceTags)
 		{
 			/* FOR untagged Choice, determine lowest possible tag for
-			*  PER sorting order.*/
+			 *  PER sorting order.*/
 			pElementTag[ii] = 9999;
 			FOR_EACH_LIST_ELMT(tag, tags)
 			{
 				if (tag->code < pElementTag[ii])
-					pElementTag[ii] = tag->code;  /* ONLY 1st element for sorting.*/
+					pElementTag[ii] = tag->code; /* ONLY 1st element for sorting.*/
 			}
 		}
 		else
@@ -5879,11 +5679,11 @@ PrintCxxDefCode_PERSort(
 			tag = (Tag*)FIRST_LIST_ELMT(tags);
 			if (!tag)
 				exit(3);
-			pElementTag[ii] = tag->code;  // ONLY 1st element for sorting.
+			pElementTag[ii] = tag->code; // ONLY 1st element for sorting.
 		}
 		pElementNamedType[ii] = e;
 		ii++;
-	}       // END FOR each element.
+	} // END FOR each element.
 
 	// SECOND, sort this group of elements based on these tags.
 	if (!pElementList)
@@ -5892,9 +5692,9 @@ PrintCxxDefCode_PERSort(
 	for (ii = 0; ii < pElementList->count - 1; ii++)
 	{
 		for (iii = ii + 1; iii < pElementList->count; iii++)
-		{   // LOCATE smallest tag value
+		{ // LOCATE smallest tag value
 			if (pElementTag[iii] < pElementTag[ii])
-			{   // THEN switch them.
+			{ // THEN switch them.
 				tagTmp = pElementTag[ii];
 				pnamedTypeTmp = pElementNamedType[ii];
 				pElementTag[ii] = pElementTag[iii];
@@ -5902,14 +5702,14 @@ PrintCxxDefCode_PERSort(
 				pElementTag[iii] = tagTmp;
 				pElementNamedType[iii] = pnamedTypeTmp;
 			}
-		}   // END for remaining elements (for sorting)
-	}       // END FOR each element
-}       /* END PrintCxxDefCode_PERSort(...) */
+		} // END for remaining elements (for sorting)
+	}	  // END FOR each element
+} /* END PrintCxxDefCode_PERSort(...) */
 
 void PrintCxxSimpleDefMeta_1(FILE* hdr, FILE* src, TypeDef* td, int hasNamedElmts, CNamedElmt* n, Module* m)
 {
 #if META
-	const char* T, * t;
+	const char *T, *t;
 	int a3;
 
 	fprintf(hdr, "\n");
@@ -5932,55 +5732,54 @@ void PrintCxxSimpleDefMeta_1(FILE* hdr, FILE* src, TypeDef* td, int hasNamedElmt
 			if (printMetaG == META_backend_names)
 			else /* META_asn1_names */
 #endif
-				fprintf(src, "  \"%s\", %s, // %d\n", n->name, n->name, n->value);
+		fprintf(src, "  \"%s\", %s, // %d\n", n->name, n->name, n->value);
 		fprintf(src, "  NULL, -1\n");
 		fprintf(src, "};\n\n");
 	}
 
 	switch (GetBuiltinType(td->type))
 	{
-	case BASICTYPE_BOOLEAN:
-		T = "BOOLEAN";
-		t = "Bool";
-		a3 = FALSE;
-		break;
-	case BASICTYPE_ENUMERATED:
-		T = "ENUMERATED";
-		t = "Enum";
-		a3 = TRUE;
-		break;
-	case BASICTYPE_INTEGER:
-		T = "INTEGER";
-		t = "Int";
-		a3 = TRUE;
-		break;
-	case BASICTYPE_REAL:
-		T = "REAL";
-		t = "Real";
-		a3 = FALSE;
-		break;
-	case BASICTYPE_OCTETSTRING:
-		T = "OCTET_STRING";
-		t = "Octs";
-		a3 = FALSE;
-		break;
-	case BASICTYPE_BITSTRING:
-		T = "BIT_STRING";
-		t = "Bits";
-		a3 = TRUE;
-		break;
-	case BASICTYPE_OID:
-		T = "OID";
-		t = "Oid";
-		a3 = FALSE;
-	case BASICTYPE_RELATIVE_OID:
-		T = "RELATIVE_OID";
-		t = "RelativeOid";
-		a3 = FALSE;
-	default:
-		T =
-			t = "?";
-		a3 = FALSE;
+		case BASICTYPE_BOOLEAN:
+			T = "BOOLEAN";
+			t = "Bool";
+			a3 = FALSE;
+			break;
+		case BASICTYPE_ENUMERATED:
+			T = "ENUMERATED";
+			t = "Enum";
+			a3 = TRUE;
+			break;
+		case BASICTYPE_INTEGER:
+			T = "INTEGER";
+			t = "Int";
+			a3 = TRUE;
+			break;
+		case BASICTYPE_REAL:
+			T = "REAL";
+			t = "Real";
+			a3 = FALSE;
+			break;
+		case BASICTYPE_OCTETSTRING:
+			T = "OCTET_STRING";
+			t = "Octs";
+			a3 = FALSE;
+			break;
+		case BASICTYPE_BITSTRING:
+			T = "BIT_STRING";
+			t = "Bits";
+			a3 = TRUE;
+			break;
+		case BASICTYPE_OID:
+			T = "OID";
+			t = "Oid";
+			a3 = FALSE;
+		case BASICTYPE_RELATIVE_OID:
+			T = "RELATIVE_OID";
+			t = "RelativeOid";
+			a3 = FALSE;
+		default:
+			T = t = "?";
+			a3 = FALSE;
 	}
 
 	fprintf(hdr, "  static const Asn%sTypeDesc	_desc;\n", t);
@@ -6011,7 +5810,7 @@ void PrintCxxSimpleDefMeta_1(FILE* hdr, FILE* src, TypeDef* td, int hasNamedElmt
 #if TCL
 #endif
 
-#endif //META
+#endif // META
 }
 
 void PrintCxxSimpleDefMeta_2(FILE* hdr, FILE* src, TypeDef* td, int hasNamedElmts, CNamedElmt* n, Module* m, CxxRules* r)
@@ -6055,7 +5854,7 @@ void PrintCxxSimpleDefMeta_2(FILE* hdr, FILE* src, TypeDef* td, int hasNamedElmt
 
 	fprintf(hdr, "#else // META\n\n");
 	fprintf(src, "#endif // META\n\n");
-#endif //META
+#endif // META
 }
 
 void PrintCxxChoiceDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* choice, Module* m, NamedType* e)
@@ -6077,10 +5876,10 @@ void PrintCxxChoiceDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* choice
 	fprintf(src, "const AsnChoiceMemberDesc %s::_mdescs[] =\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
-		if (printMetaG == META_backend_names)
-			fprintf(src, "  AsnChoiceMemberDesc (\"%s\", &%s::_desc), // `%s'\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->fieldName ? e->fieldName : "");
-		else /* META_asn1_names */
-			fprintf(src, "  AsnChoiceMemberDesc (\"%s\", &%s::_desc), // `%s'\n", e->fieldName ? e->fieldName : e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->type->cxxTypeRefInfo->fieldName);
+	if (printMetaG == META_backend_names)
+		fprintf(src, "  AsnChoiceMemberDesc (\"%s\", &%s::_desc), // `%s'\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->fieldName ? e->fieldName : "");
+	else /* META_asn1_names */
+		fprintf(src, "  AsnChoiceMemberDesc (\"%s\", &%s::_desc), // `%s'\n", e->fieldName ? e->fieldName : e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->type->cxxTypeRefInfo->fieldName);
 	fprintf(src, "  AsnChoiceMemberDesc()\n");
 	fprintf(src, "};\n\n");
 
@@ -6250,10 +6049,10 @@ void PrintCxxSeqDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* seq, Modu
 	fprintf(src, "const AsnSequenceMemberDesc %s::_mdescs[] =\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
-		if (printMetaG == META_backend_names)
-			fprintf(src, "  AsnSequenceMemberDesc (\"%s\", &%s::_desc, %s), // `%s'\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->type->optional || e->type->defaultVal ? "true" : "false", e->fieldName ? e->fieldName : "");
-		else /* META_asn1_names */
-			fprintf(src, "  AsnSequenceMemberDesc (\"%s\", &%s::_desc, %s), // `%s'\n", e->fieldName ? e->fieldName : e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->type->optional || e->type->defaultVal ? "true" : "false", e->type->cxxTypeRefInfo->fieldName);
+	if (printMetaG == META_backend_names)
+		fprintf(src, "  AsnSequenceMemberDesc (\"%s\", &%s::_desc, %s), // `%s'\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->type->optional || e->type->defaultVal ? "true" : "false", e->fieldName ? e->fieldName : "");
+	else /* META_asn1_names */
+		fprintf(src, "  AsnSequenceMemberDesc (\"%s\", &%s::_desc, %s), // `%s'\n", e->fieldName ? e->fieldName : e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->type->optional || e->type->defaultVal ? "true" : "false", e->type->cxxTypeRefInfo->fieldName);
 	fprintf(src, "  AsnSequenceMemberDesc()\n");
 	fprintf(src, "};\n\n");
 
@@ -6512,10 +6311,10 @@ void PrintCxxSetDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* set, Modu
 	fprintf(src, "const AsnSetMemberDesc %s::_mdescs[] =\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	FOR_EACH_LIST_ELMT(e, set->basicType->a.set)
-		if (printMetaG == META_backend_names)
-			fprintf(src, "  AsnSetMemberDesc (\"%s\", &%s::_desc, %s), // `%s'\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->type->optional || e->type->defaultVal ? "true" : "false", e->fieldName ? e->fieldName : "");
-		else /* META_asn1_names */
-			fprintf(src, "  AsnSetMemberDesc (\"%s\", &%s::_desc, %s), // `%s'\n", e->fieldName ? e->fieldName : e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->type->optional || e->type->defaultVal ? "true" : "false", e->type->cxxTypeRefInfo->fieldName);
+	if (printMetaG == META_backend_names)
+		fprintf(src, "  AsnSetMemberDesc (\"%s\", &%s::_desc, %s), // `%s'\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->type->optional || e->type->defaultVal ? "true" : "false", e->fieldName ? e->fieldName : "");
+	else /* META_asn1_names */
+		fprintf(src, "  AsnSetMemberDesc (\"%s\", &%s::_desc, %s), // `%s'\n", e->fieldName ? e->fieldName : e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className, e->type->optional || e->type->defaultVal ? "true" : "false", e->type->cxxTypeRefInfo->fieldName);
 	fprintf(src, "  AsnSetMemberDesc()\n");
 	fprintf(src, "};\n\n");
 
@@ -6753,4 +6552,3 @@ void PrintCxxSetDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* set, Modu
 #endif /* META */
 }
 /* EOF gen-code.c (for back-ends/c++-gen) */
-

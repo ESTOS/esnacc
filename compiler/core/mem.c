@@ -21,11 +21,9 @@
 #include <memory.h>
 #include "snacc.h"
 
-extern FILE* errFileG;		// Defined in snacc.c
+extern FILE* errFileG; // Defined in snacc.c
 
-
-void*
-Malloc PARAMS((size), size_t size)
+void* Malloc PARAMS((size), size_t size)
 {
 	void* retVal = malloc(size);
 
@@ -39,11 +37,9 @@ Malloc PARAMS((size), size_t size)
 	memset(retVal, 0, size);
 	return retVal;
 
-}  /* Malloc */
+} /* Malloc */
 
-void* Realloc PARAMS((ptr, size_t newsize),
-	void* ptr _AND_
-	int newsize)
+void* Realloc PARAMS((ptr, size_t newsize), void* ptr _AND_ int newsize)
 {
 	void* retval = realloc(ptr, newsize);
 
@@ -57,8 +53,7 @@ void* Realloc PARAMS((ptr, size_t newsize),
 	return retval;
 }
 
-void Free PARAMS((ptr),
-	void* ptr)
+void Free PARAMS((ptr), void* ptr)
 {
 	free(ptr);
 }

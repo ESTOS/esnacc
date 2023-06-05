@@ -2,7 +2,7 @@
 //
 //  Joseph Grone
 //  14/01/04
-// 
+//
 // This library is free software; you can redistribute it and/or
 // modify it provided that this copyright/license information is retained
 // in original form.
@@ -19,7 +19,6 @@
 
 _BEGIN_SNACC_NAMESPACE
 
-
 AsnRelativeOid::~AsnRelativeOid()
 {
 	if (oid != NULL)
@@ -28,14 +27,13 @@ AsnRelativeOid::~AsnRelativeOid()
 		delete[] m_lpszOidString;
 }
 
-AsnRelativeOid::operator const char* () const
+AsnRelativeOid::operator const char*() const
 {
 	if (m_lpszOidString == NULL)
 		createDottedOidStr();
 
 	return m_lpszOidString;
 }
-
 
 bool AsnRelativeOid::operator==(const char* o) const
 {
@@ -141,10 +139,7 @@ void AsnRelativeOid::Set(const char* szOidCopy)
 		while ((*pEnd != '\0') && (*pEnd != '.'))
 		{
 			if ((*pEnd < '0') || (*pEnd > '9'))
-			{
-				throw OidException("Invalid character in OID string.",
-					STACK_ENTRY);
-			}
+				throw OidException("Invalid character in OID string.", STACK_ENTRY);
 			++pEnd;
 		}
 
@@ -202,10 +197,7 @@ void AsnRelativeOid::Set(const AsnRelativeOid& o)
 			size_t size = strlen(o.m_lpszOidString) + 1;
 			m_lpszOidString = new char[size];
 			if (m_lpszOidString == NULL)
-			{
-				throw SNACC_MEMORY_EXCEPT((long)strlen(o.m_lpszOidString) + 1,
-					"AsnRelativeOid::m_lpszOidString");
-			}
+				throw SNACC_MEMORY_EXCEPT((long)strlen(o.m_lpszOidString) + 1, "AsnRelativeOid::m_lpszOidString");
 			strcpy_s(m_lpszOidString, size, o.m_lpszOidString);
 		}
 	}
@@ -216,12 +208,9 @@ void AsnRelativeOid::Set(unsigned long arcNumArr[], unsigned long arrLength)
 	FUNC("AsnRelativeOid::Set()");
 
 	if ((arcNumArr == NULL) || (arrLength < 1))
-	{
-		throw ParameterException("Invalid arguments in AsnRelativeOid::Set()",
-			STACK_ENTRY);
-	}
+		throw ParameterException("Invalid arguments in AsnRelativeOid::Set()", STACK_ENTRY);
 
-	char* buf = new char[arrLength * 5];	// Sized according to length
+	char* buf = new char[arrLength * 5]; // Sized according to length
 	char* tmpBuf = buf;
 
 	// For each arc number...
@@ -234,15 +223,9 @@ void AsnRelativeOid::Set(unsigned long arcNumArr[], unsigned long arrLength)
 		{
 			// If not a relative OID, munge together first oid arc numbers
 			if ((arrLength < 2) || (arcNumArr[1] == (unsigned long)-1))
-			{
-				throw ParameterException("Invalid parameter to AsnRelativeOid::Set()",
-					STACK_ENTRY);
-			}
+				throw ParameterException("Invalid parameter to AsnRelativeOid::Set()", STACK_ENTRY);
 			if (tmpArcNum > 2)
-			{
-				throw OidException("First arc number must be 0, 1, or 2",
-					STACK_ENTRY);
-			}
+				throw OidException("First arc number must be 0, 1, or 2", STACK_ENTRY);
 			tmpArcNum *= 40;
 			tmpArcNum += arcNumArr[++i];
 		}
@@ -280,21 +263,13 @@ void AsnRelativeOid::Set(unsigned long arcNumArr[], unsigned long arrLength)
 	Set(buf, totalLen);
 	delete[] buf;
 
-}	// end of AsnRelativeOid::Set()
+} // end of AsnRelativeOid::Set()
 
 AsnLen AsnRelativeOid::BEnc(AsnBuf& b) const
 {
 	AsnLen l = BEncContent(b);
 	l += BEncDefLen(b, l);
-
-	if (m_isRelative)
-	{
-		l += BEncTag1(b, UNIV, PRIM, RELATIVE_OID_TAG_CODE);
-	}
-	else
-	{
-		l += BEncTag1(b, UNIV, PRIM, OID_TAG_CODE);
-	}
+	l += BEncTag1(b, UNIV, PRIM, m_isRelative ? RELATIVE_OID_TAG_CODE : OID_TAG_CODE);
 	return l;
 }
 
@@ -304,11 +279,8 @@ void AsnRelativeOid::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 
 	// Decode the tag
 	AsnTag tagId = BDecTag(b, bytesDecoded);
-	if ((m_isRelative && (tagId != MAKE_TAG_ID(UNIV, PRIM, RELATIVE_OID_TAG_CODE))) ||
-		(!m_isRelative && (tagId != MAKE_TAG_ID(UNIV, PRIM, OID_TAG_CODE))))
-	{
+	if ((m_isRelative && (tagId != MAKE_TAG_ID(UNIV, PRIM, RELATIVE_OID_TAG_CODE))) || (!m_isRelative && (tagId != MAKE_TAG_ID(UNIV, PRIM, OID_TAG_CODE))))
 		throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
-	}
 	AsnLen elmtLen = BDecLen(b, bytesDecoded);
 	BDecContent(b, tagId, elmtLen, bytesDecoded);
 }
@@ -337,8 +309,7 @@ AsnLen AsnRelativeOid::BEncContent(AsnBuf& b) const
 	return (int)octetLen;
 }
 
-void AsnRelativeOid::BDecContent(const AsnBuf& b, AsnTag /* tagId */,
-	AsnLen elmtLen, AsnLen& bytesDecoded)
+void AsnRelativeOid::BDecContent(const AsnBuf& b, AsnTag /* tagId */, AsnLen elmtLen, AsnLen& bytesDecoded)
 {
 	FUNC("AsnRelativeOid::BDecContent()");
 
@@ -435,11 +406,8 @@ void AsnRelativeOid::PrintXML(std::ostream& os, const char* lpszTitle) const
 		os << "</" << xmlTag << ">\n";
 }
 
-
 #if META
-const AsnRelativeOidTypeDesc AsnRelativeOid::_desc(NULL, NULL, false,
-	AsnTypeDesc::RELATIVE_OID,
-	NULL);
+const AsnRelativeOidTypeDesc AsnRelativeOid::_desc(NULL, NULL, false, AsnTypeDesc::RELATIVE_OID, NULL);
 const AsnTypeDesc* AsnRelativeOid::_getdesc() const
 {
 	return &_desc;
@@ -454,7 +422,7 @@ int AsnRelativeOid::TclGetVal(Tcl_Interp* interp) const
 		strstream buf;
 		buf << *this;
 		buf.str()[strlen(buf.str()) - 1] = '\0';			// chop the trailing '}'
-		Tcl_SetResult(interp, buf.str() + 1, TCL_VOLATILE);	// copy without leading '{'
+		Tcl_SetResult(interp, buf.str() + 1, TCL_VOLATILE); // copy without leading '{'
 	}
 	return TCL_OK;
 }
@@ -500,7 +468,6 @@ int AsnRelativeOid::TclSetVal(Tcl_Interp* interp, const char* valstr)
 #endif /* TCL */
 #endif /* META */
 
-
 bool AsnRelativeOid::OidEquiv(const AsnRelativeOid& o) const
 {
 	return ((octetLen == o.octetLen) && (memcmp(oid, o.oid, octetLen) == 0));
@@ -515,9 +482,8 @@ void AsnRelativeOid::createDottedOidStr() const
 {
 	FUNC("AsnRelativeOid::createDottedOidStr()");
 
-	if (oid == NULL) {
+	if (oid == NULL)
 		throw OidException("NULL pointer in AsnRelativeOid", STACK_ENTRY);
-	}
 
 	if (m_lpszOidString != NULL)
 	{
@@ -566,6 +532,5 @@ void AsnRelativeOid::createDottedOidStr() const
 	m_lpszOidString = new char[size];
 	strcpy_s(m_lpszOidString, size, tempBuf.c_str());
 }
-
 
 _END_SNACC_NAMESPACE

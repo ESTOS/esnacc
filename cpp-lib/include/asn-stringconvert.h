@@ -3,7 +3,8 @@
 
 #include <string>
 
-class AsnStringConvert {
+class AsnStringConvert
+{
 public:
 	// Converts an ASCII buffer into an UTF8 string
 	static std::string AsciiToUTF8(const char* szASCII, const char* szCodePage = "ISO-8859-1");

@@ -9,11 +9,9 @@ AsnLen BEncUniversalStringContent(GenBuf* b, UniversalString* octs)
 	{
 		Asn1Error("BEncUniversalStringContent: ERROR - Invalid UniversalString Format");
 		GenBufSetWriteError(b, TRUE);
-
 	}
 	return BEncAsnOctsContent(b, octs);
 } /* end of BEncUniversalStringContent() */
-
 
 AsnLen BEncUniversalString(GenBuf* b, UniversalString* v)
 {
@@ -25,10 +23,7 @@ AsnLen BEncUniversalString(GenBuf* b, UniversalString* v)
 	return l;
 } /* end of BEncUniversalString() */
 
-
-void BDecUniversalStringContent(GenBuf* b, AsnTag tagId, AsnLen len,
-	UniversalString* result, AsnLen* bytesDecoded,
-	ENV_TYPE env)
+void BDecUniversalStringContent(GenBuf* b, AsnTag tagId, AsnLen len, UniversalString* result, AsnLen* bytesDecoded, ENV_TYPE env)
 {
 	BDecAsnOctsContent(b, tagId, len, result, bytesDecoded, env);
 	if ((result->octetLen % 4) != 0)
@@ -38,16 +33,12 @@ void BDecUniversalStringContent(GenBuf* b, AsnTag tagId, AsnLen len,
 	}
 } /* end of BDecUniversalStringContent() */
 
-
-void BDecUniversalString(GenBuf* b, UniversalString* result,
-	AsnLen* bytesDecoded, ENV_TYPE env)
+void BDecUniversalString(GenBuf* b, UniversalString* result, AsnLen* bytesDecoded, ENV_TYPE env)
 {
 	AsnTag tag;
 	AsnLen elmtLen1;
 
-	if (((tag = BDecTag(b, bytesDecoded, env)) !=
-		MAKE_TAG_ID(UNIV, PRIM, UNIVERSALSTRING_TAG_CODE)) &&
-		(tag != MAKE_TAG_ID(UNIV, CONS, UNIVERSALSTRING_TAG_CODE)))
+	if (((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, UNIVERSALSTRING_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, UNIVERSALSTRING_TAG_CODE)))
 	{
 		Asn1Error("BDecUniversalString: ERROR - wrong tag\n");
 		longjmp(env, -112);
@@ -56,8 +47,7 @@ void BDecUniversalString(GenBuf* b, UniversalString* result,
 	elmtLen1 = BDecLen(b, bytesDecoded, env);
 	BDecUniversalStringContent(b, tag, elmtLen1, result, bytesDecoded, env);
 
-}  /* BDecUniversalString */
-
+} /* BDecUniversalString */
 
 /* Convert a UniversalString to a wide character string */
 int CvtUniversalString2wchar(UniversalString* inOcts, wchar_t** outStr)
@@ -90,7 +80,7 @@ int CvtUniversalString2wchar(UniversalString* inOcts, wchar_t** outStr)
 				return -5;
 			}
 		}
-		else  /* (wchar_size >= 4) */
+		else /* (wchar_size >= 4) */
 			(*outStr)[i] |= (inOcts->octs[j] << 24) | (inOcts->octs[j + 1] << 16);
 
 		(*outStr)[i] |= (inOcts->octs[j + 2] << 8) | inOcts->octs[j + 3];

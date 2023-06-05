@@ -57,14 +57,15 @@ _BEGIN_SNACC_NAMESPACE
 
 #if META
 
-AsnMemberDesc::AsnMemberDesc(const char* _name, const AsnTypeDesc* _desc) :
-	name(_name),
-	desc(_desc)
+AsnMemberDesc::AsnMemberDesc(const char* _name, const AsnTypeDesc* _desc)
+	: name(_name)
+	, desc(_desc)
 {
 }
 
-AsnMemberDesc::AsnMemberDesc() :
-	name(NULL), desc(NULL)
+AsnMemberDesc::AsnMemberDesc()
+	: name(NULL)
+	, desc(NULL)
 {
 }
 
@@ -88,14 +89,14 @@ int AsnMemberDesc::TclGetDesc2(Tcl_DString* desc) const
 	return TCL_OK;
 }
 
-AsnSe_MemberDesc::AsnSe_MemberDesc(const char* name, const AsnTypeDesc* desc, bool _optional) :
-	AsnMemberDesc(name, desc),
-	optional(_optional)
+AsnSe_MemberDesc::AsnSe_MemberDesc(const char* name, const AsnTypeDesc* desc, bool _optional)
+	: AsnMemberDesc(name, desc)
+	, optional(_optional)
 {
 }
 
-AsnSe_MemberDesc::AsnSe_MemberDesc() :
-	AsnMemberDesc()
+AsnSe_MemberDesc::AsnSe_MemberDesc()
+	: AsnMemberDesc()
 {
 }
 
@@ -105,35 +106,21 @@ int AsnSe_MemberDesc::TclGetDesc2(Tcl_DString* desc) const
 	return TCL_OK;
 }
 
-const char* const AsnTypeDesc::typenames[] =	// NOTE: keep this array in sync with the enum Type
-{
-  "(void)",
-  "(alias)",
+const char* const AsnTypeDesc::typenames[] = // NOTE: keep this array in sync with the enum Type
+	{
+		"(void)",  "(alias)",
 
-  "INTEGER",
-  "REAL",
-  "NULL",
-  "BOOLEAN",
-  "ENUMERATED",
-  "BIT STRING",
-  "OCTET STRING",
-  "OBJECT IDENTIFIER",
-  "RELATIVE-OID",
+		"INTEGER", "REAL",	   "NULL",	 "BOOLEAN",		"ENUMERATED", "BIT STRING", "OCTET STRING", "OBJECT IDENTIFIER", "RELATIVE-OID",
 
-  "SET",
-  "SEQUENCE",
-  "SET OF",
-  "SEQUENCE OF",
-  "CHOICE",
-  "ANY",
+		"SET",	   "SEQUENCE", "SET OF", "SEQUENCE OF", "CHOICE",	  "ANY",
 };
 
-AsnTypeDesc::AsnTypeDesc(const AsnModuleDesc* _module, const char* _name, bool ispdu, Type _type, AsnType* (*_create)()) :
-	module(_module),
-	name(_name),
-	pdu(ispdu),
-	type(_type),
-	create(_create)
+AsnTypeDesc::AsnTypeDesc(const AsnModuleDesc* _module, const char* _name, bool ispdu, Type _type, AsnType* (*_create)())
+	: module(_module)
+	, name(_name)
+	, pdu(ispdu)
+	, type(_type)
+	, create(_create)
 {
 }
 
@@ -159,22 +146,22 @@ AsnTypeDesc::Type AsnTypeDesc::gettype() const
 
 const AsnNameDesc* AsnTypeDesc::getnames() const
 {
-	//Asn1Error << typenames[type] << "::getnames() called" << endl;
+	// Asn1Error << typenames[type] << "::getnames() called" << endl;
 	ASN_THROW(0, "AsnNameDesc *AsnTypeDesc::getnames() called", NULL);
 	abort();
 	return NULL;
 }
 
-//const AsnMemberDesc *AsnTypeDesc::getmembers() const
+// const AsnMemberDesc *AsnTypeDesc::getmembers() const
 //{
-  //Asn1Error << typenames[type] << "::getmembers() called" << endl;
-  //abort();
+// Asn1Error << typenames[type] << "::getmembers() called" << endl;
+// abort();
 //}
 
 //\[banner "names types (int, enum)"]-----------------------------------------------------------------------------------------------
-AsnNamesTypeDesc::AsnNamesTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnNameDesc* _names) :
-	AsnTypeDesc(module, name, ispdu, type, create),
-	names(_names)
+AsnNamesTypeDesc::AsnNamesTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnNameDesc* _names)
+	: AsnTypeDesc(module, name, ispdu, type, create)
+	, names(_names)
 {
 }
 
@@ -184,21 +171,21 @@ const AsnNameDesc* AsnNamesTypeDesc::getnames() const
 }
 
 //\[banner "enum type"]-------------------------------------------------------------------------------------------------------------
-AsnEnumTypeDesc::AsnEnumTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnNameDesc* names) :
-	AsnNamesTypeDesc(module, name, ispdu, type, create, names)
+AsnEnumTypeDesc::AsnEnumTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnNameDesc* names)
+	: AsnNamesTypeDesc(module, name, ispdu, type, create, names)
 {
 }
 
 //\[banner "members types (choice, set, sequence)"]---------------------------------------------------------------------------------
-AsnMembersTypeDesc::AsnMembersTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)()) :
-	AsnTypeDesc(module, name, ispdu, type, create)
+AsnMembersTypeDesc::AsnMembersTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)())
+	: AsnTypeDesc(module, name, ispdu, type, create)
 {
 }
 
 //\[banner "choice type"]-----------------------------------------------------------------------------------------------------------
-AsnChoiceTypeDesc::AsnChoiceTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnChoiceMemberDesc* _members) :
-	AsnMembersTypeDesc(module, name, ispdu, type, create),
-	members(_members)
+AsnChoiceTypeDesc::AsnChoiceTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnChoiceMemberDesc* _members)
+	: AsnMembersTypeDesc(module, name, ispdu, type, create)
+	, members(_members)
 {
 }
 
@@ -217,23 +204,23 @@ const char* AsnChoiceTypeDesc::choicebyvalue(int value) const
 }
 
 //\[banner "set/sequence type"]-----------------------------------------------------------------------------------------------------
-AsnSe_TypeDesc::AsnSe_TypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnSe_MemberDesc* _members) :
-	AsnMembersTypeDesc(module, name, ispdu, type, create),
-	members(_members)
+AsnSe_TypeDesc::AsnSe_TypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnSe_MemberDesc* _members)
+	: AsnMembersTypeDesc(module, name, ispdu, type, create)
+	, members(_members)
 {
 }
 
 //\[banner "list type"]-------------------------------------------------------------------------------------------------------------
-AsnListTypeDesc::AsnListTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnTypeDesc* _base) :
-	AsnTypeDesc(module, name, ispdu, type, create),
-	base(_base)
+AsnListTypeDesc::AsnListTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnTypeDesc* _base)
+	: AsnTypeDesc(module, name, ispdu, type, create)
+	, base(_base)
 {
 }
 
 //\[banner "alias type"]------------------------------------------------------------------------------------------------------------
-AsnAliasTypeDesc::AsnAliasTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnTypeDesc* _alias) :
-	AsnTypeDesc(module, name, ispdu, type, create),
-	alias(_alias)
+AsnAliasTypeDesc::AsnAliasTypeDesc(const AsnModuleDesc* module, const char* name, bool ispdu, Type type, AsnType* (*create)(), const AsnTypeDesc* _alias)
+	: AsnTypeDesc(module, name, ispdu, type, create)
+	, alias(_alias)
 {
 }
 
@@ -262,9 +249,9 @@ const AsnNameDesc* AsnAliasTypeDesc::getnames() const
 	return alias->getnames();
 }
 
-//const AsnMemberDesc *AsnAliasTypeDesc::getmembers() const
+// const AsnMemberDesc *AsnAliasTypeDesc::getmembers() const
 //{
-  //return alias->getmembers();
+// return alias->getmembers();
 //}
 
 //\[banner "Tcl routines"]----------------------------------------------------------------------------------------------------------
@@ -393,22 +380,22 @@ Args::~Args()
 int debinify(Tcl_Interp* interp, const char* bin, size_t len)
 {
 	char* str;
-	int	i, o;
+	int i, o;
 
 	str = (char*)mem_mgr_ptr->Get(2 * len + 2);
 
 	for (o = i = 0; i < len; i++)
 		switch (bin[i])
 		{
-		case '\0':
-			str[o++] = '\\';
-			str[o++] = '0';
-			break;
-		case '\\':
-			str[o++] = '\\';
-			// fall thru
-		default:
-			str[o++] = bin[i];
+			case '\0':
+				str[o++] = '\\';
+				str[o++] = '0';
+				break;
+			case '\\':
+				str[o++] = '\\';
+				// fall thru
+			default:
+				str[o++] = bin[i];
 		}
 	str[o] = '\0';
 
@@ -421,21 +408,21 @@ int debinify(Tcl_Interp* interp, const char* bin, size_t len)
 
 int binify(Tcl_Interp* interp, const char* str, char* buf, size_t* len)
 {
-	for (*len = 0; *str; )
+	for (*len = 0; *str;)
 		if (*str == '\\')
 			switch (*++str)
 			{
-			case '0':
-				buf[(*len)++] = '\0';
-				str++;
-				break;
-			case '\\':
-				buf[(*len)++] = *str++;
-				break;
-			default:
-				Tcl_AppendResult(interp, "illegal use of '\\' in string value", NULL);
-				Tcl_SetErrorCode(interp, "SNACC", "ILLESC", NULL);
-				return TCL_ERROR;
+				case '0':
+					buf[(*len)++] = '\0';
+					str++;
+					break;
+				case '\\':
+					buf[(*len)++] = *str++;
+					break;
+				default:
+					Tcl_AppendResult(interp, "illegal use of '\\' in string value", NULL);
+					Tcl_SetErrorCode(interp, "SNACC", "ILLESC", NULL);
+					return TCL_ERROR;
 			}
 		else
 			buf[(*len)++] = *str++;

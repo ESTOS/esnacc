@@ -1,7 +1,8 @@
 #include <condition_variable>
 #include <mutex>
 
-class SyncEvent {
+class SyncEvent
+{
 public:
 	// Waits for the event for a certain amount of time
 	bool waitfor();

@@ -49,26 +49,34 @@
 #define __FLEX_LEXER_H
 
 #include <iostream>
-#  ifndef FLEX_STD
-#    define FLEX_STD std::
-#  endif
+#ifndef FLEX_STD
+#define FLEX_STD std::
+#endif
 
-extern "C++" {
+extern "C++"
+{
 
 	struct yy_buffer_state;
 	typedef int yy_state_type;
 
-	class FlexLexer {
+	class FlexLexer
+	{
 	public:
-		virtual ~FlexLexer() { }
+		virtual ~FlexLexer()
+		{
+		}
 
-		const char* YYText() const { return yytext; }
-		int YYLeng()	const { return yyleng; }
+		const char* YYText() const
+		{
+			return yytext;
+		}
+		int YYLeng() const
+		{
+			return yyleng;
+		}
 
-		virtual void
-			yy_switch_to_buffer(struct yy_buffer_state* new_buffer) = 0;
-		virtual struct yy_buffer_state*
-			yy_create_buffer(FLEX_STD istream* s, int size) = 0;
+		virtual void yy_switch_to_buffer(struct yy_buffer_state* new_buffer) = 0;
+		virtual struct yy_buffer_state* yy_create_buffer(FLEX_STD istream* s, int size) = 0;
 		virtual void yy_delete_buffer(struct yy_buffer_state* b) = 0;
 		virtual void yyrestart(FLEX_STD istream* s) = 0;
 
@@ -83,33 +91,42 @@ extern "C++" {
 
 		// Switch to new input/output streams.  A nil stream pointer
 		// indicates "keep the current one".
-		virtual void switch_streams(FLEX_STD istream* new_in = 0,
-			FLEX_STD ostream* new_out = 0) = 0;
+		virtual void switch_streams(FLEX_STD istream* new_in = 0, FLEX_STD ostream* new_out = 0) = 0;
 
-		int lineno() const { return yylineno; }
+		int lineno() const
+		{
+			return yylineno;
+		}
 
-		int debug() const { return yy_flex_debug; }
-		void set_debug(int flag) { yy_flex_debug = flag; }
+		int debug() const
+		{
+			return yy_flex_debug;
+		}
+		void set_debug(int flag)
+		{
+			yy_flex_debug = flag;
+		}
 
 	protected:
 		char* yytext;
 		int yyleng;
-		int yylineno;		// only maintained if you use %option yylineno
-		int yy_flex_debug;	// only has effect with -d or "%option debug"
+		int yylineno;	   // only maintained if you use %option yylineno
+		int yy_flex_debug; // only has effect with -d or "%option debug"
 	};
-
 }
 #endif // FLEXLEXER_H
 
-#if defined(yyFlexLexer) || ! defined(yyFlexLexerOnce)
+#if defined(yyFlexLexer) || !defined(yyFlexLexerOnce)
 // Either this is the first time through (yyFlexLexerOnce not defined),
 // or this is a repeated include to define a different flavor of
 // yyFlexLexer, as discussed in the flex manual.
 #define yyFlexLexerOnce
 
-extern "C++" {
+extern "C++"
+{
 
-	class yyFlexLexer : public FlexLexer {
+	class yyFlexLexer : public FlexLexer
+	{
 	public:
 		// arg_yyin and arg_yyout default to the cin and cout, but we
 		// only make that assignment when initializing in yylex().
@@ -153,8 +170,8 @@ extern "C++" {
 		yy_state_type yy_try_NUL_trans(yy_state_type current_state);
 		int yy_get_next_buffer();
 
-		FLEX_STD istream* yyin;	// input source for default LexerInput
-		FLEX_STD ostream* yyout;	// output sink for default LexerOutput
+		FLEX_STD istream* yyin;	 // input source for default LexerInput
+		FLEX_STD ostream* yyout; // output sink for default LexerOutput
 
 		// yy_hold_char holds the character lost when yytext is formed.
 		char yy_hold_char;
@@ -165,16 +182,15 @@ extern "C++" {
 		// Points to current character in buffer.
 		char* yy_c_buf_p;
 
-		int yy_init;		// whether we need to initialize
-		int yy_start;		// start state number
+		int yy_init;  // whether we need to initialize
+		int yy_start; // start state number
 
 		// Flag which is used to allow yywrap()'s to do buffer switches
 		// instead of setting up a fresh yyin.  A bit of a hack ...
 		int yy_did_buffer_switch_on_eof;
 
-
-		size_t yy_buffer_stack_top; /**< index of top of stack. */
-		size_t yy_buffer_stack_max; /**< capacity of stack. */
+		size_t yy_buffer_stack_top;				  /**< index of top of stack. */
+		size_t yy_buffer_stack_max;				  /**< capacity of stack. */
 		struct yy_buffer_state** yy_buffer_stack; /**< Stack as an array. */
 		void yyensure_buffer_stack(void);
 
@@ -199,8 +215,6 @@ extern "C++" {
 		int yy_more_offset;
 		int yy_prev_more_offset;
 	};
-
 }
 
 #endif // yyFlexLexer || ! yyFlexLexerOnce
-

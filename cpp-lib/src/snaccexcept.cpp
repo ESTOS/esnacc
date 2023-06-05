@@ -3,29 +3,13 @@
 //
 #include "../include/snaccexcept.h"
 
-
 namespace SNACC
 {
-	const char* ConstraintErrorStringList[SEQ_OF_SIZE_VALUE_RANGE + 1] = {
-		"INTEGER VALUE CONSTRAINT ERROR :: Integer value is not within Upper and Lower constrained Bounds!!\n",
-		"INTEGER VALUE CONSTRAINT ERROR :: Integer value is not equal to single value constraint!!\n",
-		"STRING SIZE CONSTRAINT ERROR :: String size is not equal to single value size constraint!!\n",
-		"STRING SIZE CONSTRAINT ERROR :: String size is not within Upper and Lower constrained Bounds!!\n",
-		"STRING ALPHA CONSTRAINT ERROR :: String contents not within designated permitted alphabet!!\n",
-		"STRING ALPHA CONSTRAINT ERROR :: String contents not within designated types normal alphabet!!\n",
-		"WIDE STRING SIZE CONSTRAINT ERROR :: String size is not equal to single value size constraint!!\n",
-		"WIDE STRING SIZE CONSTRAINT ERROR :: String size is not within Upper and Lower constrained Bounds!!\n",
-		"WIDE STRING ALPHA CONSTRAINT ERROR :: String contents not within designated permitted alphabet!!\n",
-		"WIDE STRING ALPHA CONSTRAINT ERROR :: String contents not within designated types normal alphabet!!\n",
-		"OCTET STRING CONSTRAINT ERROR :: Octet String size is not equal to single value size constraint!!\n",
-		"OCTET STRING CONSTRAINT ERROR :: Octet String size is not within Upper and Lower constrained Bounds!!\n",
-		"BIT STRING CONSTRAINT ERROR :: Bit String size is not equal to single value size constraint!!\n",
-		"BIT STRING CONSTRAINT ERROR :: Bit String size is not within Upper and Lower constrained Bounds!!\n",
-		"SET OF CONSTRAINT ERROR :: Set Of element count is not equal to single value size constraint!!\n",
-		"SET OF CONSTRAINT ERROR :: Set Of element count is not within Upper and Lower constrained Bounds!!\n",
-		"SEQ OF CONSTRAINT ERROR :: Seq Of element count is not equal to single value size constraint!!\n",
-		"SEQ OF CONSTRAINT ERROR :: Seq Of element count is not within Upper and Lower constrained Bounds!!\n"
-	};
+	const char* ConstraintErrorStringList[SEQ_OF_SIZE_VALUE_RANGE + 1] = {"INTEGER VALUE CONSTRAINT ERROR :: Integer value is not within Upper and Lower constrained Bounds!!\n", "INTEGER VALUE CONSTRAINT ERROR :: Integer value is not equal to single value constraint!!\n",		   "STRING SIZE CONSTRAINT ERROR :: String size is not equal to single value size constraint!!\n",		  "STRING SIZE CONSTRAINT ERROR :: String size is not within Upper and Lower constrained Bounds!!\n",
+																		  "STRING ALPHA CONSTRAINT ERROR :: String contents not within designated permitted alphabet!!\n",		  "STRING ALPHA CONSTRAINT ERROR :: String contents not within designated types normal alphabet!!\n",	   "WIDE STRING SIZE CONSTRAINT ERROR :: String size is not equal to single value size constraint!!\n",	  "WIDE STRING SIZE CONSTRAINT ERROR :: String size is not within Upper and Lower constrained Bounds!!\n",
+																		  "WIDE STRING ALPHA CONSTRAINT ERROR :: String contents not within designated permitted alphabet!!\n",	  "WIDE STRING ALPHA CONSTRAINT ERROR :: String contents not within designated types normal alphabet!!\n", "OCTET STRING CONSTRAINT ERROR :: Octet String size is not equal to single value size constraint!!\n", "OCTET STRING CONSTRAINT ERROR :: Octet String size is not within Upper and Lower constrained Bounds!!\n",
+																		  "BIT STRING CONSTRAINT ERROR :: Bit String size is not equal to single value size constraint!!\n",	  "BIT STRING CONSTRAINT ERROR :: Bit String size is not within Upper and Lower constrained Bounds!!\n",   "SET OF CONSTRAINT ERROR :: Set Of element count is not equal to single value size constraint!!\n",	  "SET OF CONSTRAINT ERROR :: Set Of element count is not within Upper and Lower constrained Bounds!!\n",
+																		  "SEQ OF CONSTRAINT ERROR :: Seq Of element count is not equal to single value size constraint!!\n",	  "SEQ OF CONSTRAINT ERROR :: Seq Of element count is not within Upper and Lower constrained Bounds!!\n"};
 }
 
 using namespace SNACC;
@@ -37,9 +21,7 @@ SnaccException::SnaccException(long errorCode) throw()
 	memset(&stack[0], 0, sizeof(CallStack) * STACK_DEPTH);
 }
 
-SnaccException::SnaccException(const char* file, long line_number,
-	const char* function, const char* whatStrIn,
-	long errorCode) throw()
+SnaccException::SnaccException(const char* file, long line_number, const char* function, const char* whatStrIn, long errorCode) throw()
 {
 
 	memset(&stack[0], 0, sizeof(CallStack) * STACK_DEPTH);
@@ -85,9 +67,7 @@ SnaccException& SnaccException::operator=(const SnaccException& o)
 	return *this;
 }
 
-
-void SnaccException::push(const char* file, long line_number,
-	const char* function) throw()
+void SnaccException::push(const char* file, long line_number, const char* function) throw()
 {
 	if (stackPos < STACK_DEPTH)
 	{
@@ -123,30 +103,28 @@ void SnaccException::getCallStack(std::ostream& os) const
 		if (stack[i].function)
 			os << "\t" << stack[i].function << "\n";
 		else
-			os << "\t" << "\n";
-
+			os << "\t"
+			   << "\n";
 	}
 }
 
-FileException::FileException(const char* filename, enum FileErrType errType,
-	const char* file, long line_number,
-	const char* function)  throw() :
-	SnaccException(file, line_number, function, NULL, FILE_IO_ERROR)
+FileException::FileException(const char* filename, enum FileErrType errType, const char* file, long line_number, const char* function) throw()
+	: SnaccException(file, line_number, function, NULL, FILE_IO_ERROR)
 {
 	switch (errType)
 	{
-	case OPEN:
-		strcpy_s(whatStr, 512, "Error opening file: ");
-		break;
-	case CREATE:
-		strcpy_s(whatStr, 512, "Error creating file: ");
-		break;
-	case READ:
-		strcpy_s(whatStr, 512, "Error reading file: ");
-		break;
-	case WRITE:
-		strcpy_s(whatStr, 512, "Error writing file: ");
-		break;
+		case OPEN:
+			strcpy_s(whatStr, 512, "Error opening file: ");
+			break;
+		case CREATE:
+			strcpy_s(whatStr, 512, "Error creating file: ");
+			break;
+		case READ:
+			strcpy_s(whatStr, 512, "Error reading file: ");
+			break;
+		case WRITE:
+			strcpy_s(whatStr, 512, "Error writing file: ");
+			break;
 	}
 	strcat_s(whatStr, 512, filename);
 }
@@ -156,11 +134,8 @@ const char* FileException::what() const throw()
 	return &whatStr[0];
 }
 
-
-MemoryException::MemoryException(long memorySize, const char* variable,
-	const char* file, long line_number,
-	const char* function) throw() :
-	SnaccException(file, line_number, function, "MemoryException", MEMORY_ERROR)
+MemoryException::MemoryException(long memorySize, const char* variable, const char* file, long line_number, const char* function) throw()
+	: SnaccException(file, line_number, function, "MemoryException", MEMORY_ERROR)
 {
 	sprintf_s(memoryInfo, 128, "Error allocating %ld bytes for ", memorySize);
 	int memUsed = (int)strlen(memoryInfo);
@@ -176,11 +151,8 @@ const char* MemoryException::what() const throw()
 	return &memoryInfo[0];
 }
 
-
-InvalidTagException::InvalidTagException(const char* type, long tagId,
-	const char* file, long line_number,
-	const char* function) throw() :
-	SnaccException(file, line_number, function, "InvalidTagException", INVALID_TAG)
+InvalidTagException::InvalidTagException(const char* type, long tagId, const char* file, long line_number, const char* function) throw()
+	: SnaccException(file, line_number, function, "InvalidTagException", INVALID_TAG)
 {
 	sprintf_s(wrongTagInfo, 128, "Tag [%ld] is invalid for type ", tagId);
 	int memUsed = (int)strlen(wrongTagInfo);
@@ -191,10 +163,8 @@ InvalidTagException::InvalidTagException(const char* type, long tagId,
 	wrongTagInfo[memUsed + len2copy] = '\0';
 }
 
-InvalidTagException::InvalidTagException(const char* type, const char* elementName,
-	const char* file, long line_number,
-	const char* function) throw() :
-	SnaccException(file, line_number, function, "InvalidTagException", INVALID_TAG)
+InvalidTagException::InvalidTagException(const char* type, const char* elementName, const char* file, long line_number, const char* function) throw()
+	: SnaccException(file, line_number, function, "InvalidTagException", INVALID_TAG)
 {
 	sprintf_s(wrongTagInfo, 128, "Json Error [%s] in ", elementName);
 	int memUsed = (int)strlen(wrongTagInfo);
@@ -209,5 +179,3 @@ const char* InvalidTagException::what() const throw()
 {
 	return &wrongTagInfo[0];
 }
-
-

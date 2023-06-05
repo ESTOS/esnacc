@@ -43,7 +43,6 @@
  *
  */
 
-
 typedef struct ExportElmt
 {
 	char* name;
@@ -51,6 +50,4 @@ typedef struct ExportElmt
 	struct ExportElmt* next;
 } ExportElmt;
 
-
-void SetExports PROTO((Module* m, ExportElmt* e, int exportsParsed));
-
+void SetExports PROTO((Module * m, ExportElmt* e, int exportsParsed));

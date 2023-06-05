@@ -37,104 +37,98 @@
  *
  */
 
+void PrintModule PROTO((FILE * f, Module* mod));
 
+void PrintExports PROTO((FILE * f, Module* m));
 
+void PrintOid PROTO((FILE * f, OID* oid));
 
-void PrintModule PROTO((FILE* f, Module* mod));
+void PrintImportElmt PROTO((FILE * f, ImportElmt* impElmt));
 
-void PrintExports PROTO((FILE* f, Module* m));
+void PrintImportLists PROTO((FILE * f, ImportModuleList* impLists));
 
-void PrintOid PROTO((FILE* f, OID* oid));
+void PrintTypeDefs PROTO((FILE * f, TypeDefList* typeDefs));
 
-void PrintImportElmt PROTO((FILE* f, ImportElmt* impElmt));
+void PrintType PROTO((FILE * f, TypeDef* head, Type* t));
 
-void PrintImportLists PROTO((FILE* f, ImportModuleList* impLists));
+void PrintBasicType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt));
 
-void PrintTypeDefs PROTO((FILE* f, TypeDefList* typeDefs));
+void PrintElmtType PROTO((FILE * f, TypeDef* head, Type* t, NamedType* nt));
 
-void PrintType PROTO((FILE* f, TypeDef* head, Type* t));
+void PrintElmtTypes PROTO((FILE * f, TypeDef* head, Type* t, NamedTypeList* e));
 
-void PrintBasicType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt));
+void PrintValueDefs PROTO((FILE * f, ValueDefList* v));
 
-void PrintElmtType PROTO((FILE* f, TypeDef* head, Type* t, NamedType* nt));
+void PrintValueDef PROTO((FILE * f, ValueDef* v));
 
-void PrintElmtTypes PROTO((FILE* f, TypeDef* head, Type* t, NamedTypeList* e));
+void PrintValue PROTO((FILE * f, ValueDef* head, Type* valuesType, Value* v));
 
-void PrintValueDefs PROTO((FILE* f, ValueDefList* v));
+void PrintBasicValue PROTO((FILE * f, ValueDef* head, Type* valuesType, Value* v, BasicValue* bv));
 
-void PrintValueDef PROTO((FILE* f, ValueDef* v));
+void PrintElmtValue PROTO((FILE * f, ValueDef* head, Value* v, NamedValue* nv));
 
-void PrintValue PROTO((FILE* f, ValueDef* head, Type* valuesType, Value* v));
+void PrintElmtValues PROTO((FILE * f, ValueDef* head, Value* v, NamedValueList* e));
 
-void PrintBasicValue PROTO((FILE* f, ValueDef* head, Type* valuesType, Value* v, BasicValue* bv));
+void PrintTag PROTO((FILE * f, Tag* tag));
 
-void PrintElmtValue PROTO((FILE* f, ValueDef* head, Value* v, NamedValue* nv));
+void PrintSubtype PROTO((FILE * f, TypeDef* head, Type* t, Subtype* s));
 
-void PrintElmtValues PROTO((FILE* f, ValueDef* head, Value* v, NamedValueList* e));
+void PrintSubtypeValue PROTO((FILE * f, TypeDef* head, Type* t, SubtypeValue* s));
 
-void PrintTag PROTO((FILE* f, Tag* tag));
+void PrintNamedElmts PROTO((FILE * f, TypeDef* head, Type* t, ValueDefList* n));
 
-void PrintSubtype PROTO((FILE* f, TypeDef* head, Type* t, Subtype* s));
+void PrintInnerSubtype PROTO((FILE * f, TypeDef* head, Type* t, InnerSubtype* i));
 
-void PrintSubtypeValue PROTO((FILE* f, TypeDef* head, Type* t, SubtypeValue* s));
+void PrintMultipleTypeConstraints PROTO((FILE * f, TypeDef* head, Type* t, ConstraintList* c));
 
-void PrintNamedElmts PROTO((FILE* f, TypeDef* head, Type* t, ValueDefList* n));
+void PrintTypeById PROTO((FILE * f, int typeId));
 
-void PrintInnerSubtype PROTO((FILE* f, TypeDef* head, Type* t, InnerSubtype* i));
+void PrintRosOperationMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, RosOperationMacroType* op));
 
-void PrintMultipleTypeConstraints PROTO((FILE* f, TypeDef* head, Type* t, ConstraintList* c));
+void PrintRosErrorMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, RosErrorMacroType* err));
 
-void PrintTypeById PROTO((FILE* f, int typeId));
+void PrintRosBindMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, RosBindMacroType* bind));
 
+void PrintRosAseMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, RosAseMacroType* ase));
 
-void PrintRosOperationMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, RosOperationMacroType* op));
+void PrintRosAcMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, RosAcMacroType* ac));
 
-void PrintRosErrorMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, RosErrorMacroType* err));
+void PrintMtsasExtensionsMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, MtsasExtensionsMacroType* exts));
 
-void PrintRosBindMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, RosBindMacroType* bind));
+void PrintMtsasExtensionMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, MtsasExtensionMacroType* ext));
 
-void PrintRosAseMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, RosAseMacroType* ase));
+void PrintMtsasExtensionAttributeMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, MtsasExtensionAttributeMacroType* ext));
 
-void PrintRosAcMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, RosAcMacroType* ac));
+void PrintMtsasTokenMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, MtsasTokenMacroType* tok));
 
-void PrintMtsasExtensionsMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, MtsasExtensionsMacroType* exts));
+void PrintMtsasTokenDataMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, MtsasTokenDataMacroType* tok));
 
-void PrintMtsasExtensionMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, MtsasExtensionMacroType* ext));
+void PrintMtsasSecurityCategoryMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, MtsasSecurityCategoryMacroType* sec));
 
-void PrintMtsasExtensionAttributeMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, MtsasExtensionAttributeMacroType* ext));
+void PrintAsnObjectMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, AsnObjectMacroType* obj));
 
-void PrintMtsasTokenMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, MtsasTokenMacroType* tok));
+void PrintAsnPortMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, AsnPortMacroType* p));
 
-void PrintMtsasTokenDataMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, MtsasTokenDataMacroType* tok));
+void PrintAsnAbstractBindMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, AsnAbstractBindMacroType* bind));
 
-void PrintMtsasSecurityCategoryMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, MtsasSecurityCategoryMacroType* sec));
+void PrintAfAlgorithmMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, Type* alg));
 
-void PrintAsnObjectMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, AsnObjectMacroType* obj));
+void PrintAfEncryptedMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, Type* encrypt));
 
-void PrintAsnPortMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, AsnPortMacroType* p));
+void PrintAfSignedMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, Type* sign));
 
-void PrintAsnAbstractBindMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, AsnAbstractBindMacroType* bind));
+void PrintAfSignatureMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, Type* sig));
 
-void PrintAfAlgorithmMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, Type* alg));
+void PrintAfProtectedMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, Type* p));
 
-void PrintAfEncryptedMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, Type* encrypt));
+void PrintSnmpObjectTypeMacroType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt, SnmpObjectTypeMacroType* ot));
 
-void PrintAfSignedMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, Type* sign));
+void PrintMacroDef PROTO((FILE * f, TypeDef* head));
 
-void PrintAfSignatureMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, Type* sig));
+void PrintEncodedOid PROTO((FILE * f, AsnOid* eoid));
 
-void PrintAfProtectedMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, Type* p));
+void SpecialPrintType PROTO((FILE * f, TypeDef* head, Type* t));
 
-void PrintSnmpObjectTypeMacroType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt, SnmpObjectTypeMacroType* ot));
+void SpecialPrintBasicType PROTO((FILE * f, TypeDef* head, Type* t, BasicType* bt));
 
-void PrintMacroDef PROTO((FILE* f, TypeDef* head));
-
-void PrintEncodedOid PROTO((FILE* f, AsnOid* eoid));
-
-
-void SpecialPrintType PROTO((FILE* f, TypeDef* head, Type* t));
-
-void SpecialPrintBasicType PROTO((FILE* f, TypeDef* head, Type* t, BasicType* bt));
-
-void SpecialPrintNamedElmts PROTO((FILE* f, TypeDef* head, Type* t));
-
+void SpecialPrintNamedElmts PROTO((FILE * f, TypeDef* head, Type* t));

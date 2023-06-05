@@ -81,14 +81,10 @@
 #include "../include/asn-octs.h"
 #include <memory.h>
 
-
- /*
-  * encodes universal TAG LENGTH and Contents of and ASN.1 OCTET STRING
-  */
-AsnLen
-BEncAsnOcts PARAMS((b, data),
-	GenBuf* b _AND_
-	AsnOcts* data)
+/*
+ * encodes universal TAG LENGTH and Contents of and ASN.1 OCTET STRING
+ */
+AsnLen BEncAsnOcts PARAMS((b, data), GenBuf* b _AND_ AsnOcts* data)
 {
 	AsnLen len;
 
@@ -96,18 +92,12 @@ BEncAsnOcts PARAMS((b, data),
 	len += BEncDefLen(b, len);
 	len += BEncTag1(b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
 	return len;
-}  /* BEncAsnOcts */
-
+} /* BEncAsnOcts */
 
 /*
  * decodes universal TAG LENGTH and Contents of and ASN.1 OCTET STRING
  */
-void
-BDecAsnOcts PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnOcts* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnOcts PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ AsnOcts* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnTag tag;
 	AsnLen elmtLen;
@@ -121,21 +111,16 @@ BDecAsnOcts PARAMS((b, result, bytesDecoded, env),
 	elmtLen = BDecLen(b, bytesDecoded, env);
 	BDecAsnOctsContent(b, tag, elmtLen, result, bytesDecoded, env);
 
-}  /* BDecAsnOcts */
+} /* BDecAsnOcts */
 
 /*
  * BER encodes just the content of an OCTET STRING.
  */
-AsnLen
-BEncAsnOctsContent PARAMS((b, o),
-	GenBuf* b _AND_
-	AsnOcts* o)
+AsnLen BEncAsnOctsContent PARAMS((b, o), GenBuf* b _AND_ AsnOcts* o)
 {
 	BufPutSegRvs(b, o->octs, o->octetLen);
 	return (AsnLen)o->octetLen;
-}  /* BEncAsnOctsContent */
-
-
+} /* BEncAsnOctsContent */
 
 /*
  * Used for decoding constructed OCTET STRING values into
@@ -143,12 +128,7 @@ BEncAsnOctsContent PARAMS((b, o),
  * fills string stack with references to the pieces of a
  * construced octet string
  */
-static void
-FillOctetStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnLen elmtLen0 _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+static void FillOctetStringStk PARAMS((b, elmtLen0, bytesDecoded, env), GenBuf* b _AND_ AsnLen elmtLen0 _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	unsigned long refdLen;
 	unsigned long totalRefdLen;
@@ -157,7 +137,7 @@ FillOctetStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
 	unsigned long tagId1;
 	unsigned long elmtLen1;
 
-	for (; (totalElmtsLen1 < elmtLen0) || (elmtLen0 == INDEFINITE_LEN); )
+	for (; (totalElmtsLen1 < elmtLen0) || (elmtLen0 == INDEFINITE_LEN);)
 	{
 		tagId1 = BDecTag(b, &totalElmtsLen1, env);
 
@@ -195,7 +175,6 @@ FillOctetStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
 			totalElmtsLen1 += elmtLen1;
 		}
 
-
 		else if (tagId1 == MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE))
 		{
 			/*
@@ -204,7 +183,7 @@ FillOctetStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
 			 */
 			FillOctetStringStk(b, elmtLen1, &totalElmtsLen1, env);
 		}
-		else  /* wrong tag */
+		else /* wrong tag */
 		{
 			Asn1Error("BDecConsOctetString: ERROR - decoded non-OCTET STRING tag inside a constructed OCTET STRING\n");
 			longjmp(env, -19);
@@ -213,8 +192,7 @@ FillOctetStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
 
 	(*bytesDecoded) += totalElmtsLen1;
 
-}  /* FillOctetStringStk */
-
+} /* FillOctetStringStk */
 
 /*
  * Decodes a seq of universally tagged octets strings until either EOC is
@@ -222,13 +200,7 @@ FillOctetStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
  * string. puts a NULL terminator on the string but does not include
  * this in the length.
  */
-static void
-BDecConsAsnOcts PARAMS((b, len, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnLen len _AND_
-	AsnOcts* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+static void BDecConsAsnOcts PARAMS((b, len, result, bytesDecoded, env), GenBuf* b _AND_ AsnLen len _AND_ AsnOcts* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	char* bufCurr;
 	unsigned long curr;
@@ -257,19 +229,12 @@ BDecConsAsnOcts PARAMS((b, len, result, bytesDecoded, env),
 	/* add null terminator - this is not included in the str's len */
 	*bufCurr = '\0';
 
-}  /* BDecConsAsnOcts */
+} /* BDecConsAsnOcts */
 
 /*
  * Decodes the content of a BER OCTET STRING value
  */
-void
-BDecAsnOctsContent PARAMS((b, tagId, len, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnTag tagId _AND_
-	AsnLen len _AND_
-	AsnOcts* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnOctsContent PARAMS((b, tagId, len, result, bytesDecoded, env), GenBuf* b _AND_ AsnTag tagId _AND_ AsnLen len _AND_ AsnOcts* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	/*
 	 * tagId is encoded tag shifted into long int.
@@ -300,29 +265,22 @@ BDecAsnOctsContent PARAMS((b, tagId, len, result, bytesDecoded, env),
 		result->octs[len] = '\0';
 		(*bytesDecoded) += len;
 	}
-}  /* BDecAsnOctsContent */
-
+} /* BDecAsnOctsContent */
 
 /*
  * Frees the string part of the given OCTET STRING
  */
-void
-FreeAsnOcts PARAMS((v),
-	AsnOcts* v)
+void FreeAsnOcts PARAMS((v), AsnOcts* v)
 {
 	Asn1Free(v->octs);
-}  /* FreeAsnOcts */
+} /* FreeAsnOcts */
 
 /*
  * Prints the given OCTET STRING value to the given FILE * in ASN.1
  * Value Notation.  Since the value notation uses the hard to read
  * hex format, the ASCII version is included in an ASN.1 comment.
  */
-void
-PrintAsnOcts PARAMS((f, v, indent),
-	FILE* f _AND_
-	AsnOcts* v _AND_
-	unsigned int indent)
+void PrintAsnOcts PARAMS((f, v, indent), FILE* f _AND_ AsnOcts* v _AND_ unsigned int indent)
 {
 	int i;
 
@@ -348,18 +306,11 @@ PrintAsnOcts PARAMS((f, v, indent),
 	fprintf(f, "\" --");
 }
 
-
 /*
  * Returns TRUE if the given OCTET STRING values are identical.
  * Returns FALSE otherwise.
  */
-int
-AsnOctsEquiv PARAMS((o1, o2),
-	AsnOcts* o1 _AND_
-	AsnOcts* o2)
+int AsnOctsEquiv PARAMS((o1, o2), AsnOcts* o1 _AND_ AsnOcts* o2)
 {
 	return o1->octetLen == o2->octetLen && !memcmp(o1->octs, o2->octs, o1->octetLen);
 } /* AsnOctsEquiv */
-
-
-

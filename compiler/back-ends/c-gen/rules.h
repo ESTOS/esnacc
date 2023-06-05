@@ -31,21 +31,21 @@
  *
  */
 
- /* see asn1module.h for CTDI (C type def info) */
+/* see asn1module.h for CTDI (C type def info) */
 
 typedef struct CRules
 {
-	int  maxDigitsToAppend;
-	char* choiceIdFieldName;   /* name of choiceId field */
-	char* choiceIdEnumSuffix;  /* suffix for choiceId enum def name */
+	int maxDigitsToAppend;
+	char* choiceIdFieldName;	/* name of choiceId field */
+	char* choiceIdEnumSuffix;	/* suffix for choiceId enum def name */
 	char* choiceUnionFieldName; /* what the name of the choice's union is */
-	char* choiceUnionDefSuffix;  /* suffix for choice union def name */
-	int   capitalizeNamedElmts;
-	char* printRoutineBaseName;  /* eg if "Print" -> PrintFoo (..) */
+	char* choiceUnionDefSuffix; /* suffix for choice union def name */
+	int capitalizeNamedElmts;
+	char* printRoutineBaseName; /* eg if "Print" -> PrintFoo (..) */
 	char* encodeRoutineBaseName;
 	char* decodeRoutineBaseName;
 	char* freeRoutineBaseName;
 	CTDI typeConvTbl[BASICTYPE_OBJECTCLASSFIELDTYPE + 1];
-}  CRules;
+} CRules;
 
 extern CRules cRulesG;

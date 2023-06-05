@@ -48,7 +48,7 @@ extern "C" int strcasecmp(const char* s1, const char* s2);
 //\[banner "utility functions"]-----------------------------------------------------------------------------------------------------
 static bool strniabbr(const char* pattern, const char* test, size_t min)
 {
-	register      len;
+	register len;
 
 	if (strlen(pattern) < min)
 		fprintf(stderr, "strniabbr(): strlen (pattern) < min\n");
@@ -102,15 +102,15 @@ int ASN1File::finfo(Tcl_Interp* interp)
 		if ((flags = fcntl(fd, F_GETFL)) != -1)
 			switch (flags & O_ACCMODE)
 			{
-			case O_RDONLY:
-				acc = "ro";
-				break;
-			case O_WRONLY:
-				acc = "wo";
-				break;
-			case O_RDWR:
-				acc = "rw";
-				break;
+				case O_RDONLY:
+					acc = "ro";
+					break;
+				case O_WRONLY:
+					acc = "wo";
+					break;
+				case O_RDWR:
+					acc = "rw";
+					break;
 			}
 	}
 	Tcl_AppendElement(interp, acc);
@@ -228,14 +228,11 @@ int ASN1File::write(Tcl_Interp* interp, const char* wfn)
 			Tcl_AppendResult(interp, "can't fcntl \"", wfn, "\": ", Tcl_PosixError(interp), NULL);
 			return TCL_ERROR;
 		}
-		else
+		else if ((flags & O_ACCMODE) == O_RDONLY)
 		{
-			if ((flags & O_ACCMODE) == O_RDONLY)
-			{
-				Tcl_AppendResult(interp, "can't write, file is read only", NULL);
-				Tcl_SetErrorCode(interp, "SNACC", "WRITE", "RDONLY", NULL);
-				return TCL_ERROR;
-			}
+			Tcl_AppendResult(interp, "can't write, file is read only", NULL);
+			Tcl_SetErrorCode(interp, "SNACC", "WRITE", "RDONLY", NULL);
+			return TCL_ERROR;
 		}
 		lseek(wfd = fd, 0l, SEEK_SET);
 	}
@@ -268,7 +265,7 @@ int ASN1File::write(Tcl_Interp* interp, const char* wfn)
 		{
 			Tcl_AppendResult(interp, "write error on \"", wfn, "\": ", Tcl_PosixError(interp), NULL);
 			delete hunk; // may affect errno
-			delete buf; // may affect errno
+			delete buf;	 // may affect errno
 			return TCL_ERROR;
 		}
 	}
@@ -323,7 +320,7 @@ int import(Tcl_Interp* interp, int argc, char** argv)
 	return result;
 }
 
-int export (Tcl_Interp* interp, int argc, char** argv)
+int export(Tcl_Interp* interp, int argc, char** argv)
 {
 	if (argc != 3)
 	{
@@ -331,7 +328,7 @@ int export (Tcl_Interp* interp, int argc, char** argv)
 		return TCL_ERROR;
 	}
 
-	const char* str = argv[1], * fn = argv[2];
+	const char *str = argv[1], *fn = argv[2];
 	char* obuf = new char[strlen(str)]; // the binary buffer is as most as long as the escaped Tcl string.
 	size_t olen;
 	if (binify(interp, str, obuf, &olen) != TCL_OK)
@@ -462,45 +459,45 @@ int SnaccTcl::openfile(int argc, char** argv)
 
 	const char* _typename = argv[1];
 	const char* filename = argv[2];
-	bool		rw_spec = false;
-	int		oflags = 0, omode = 0666, fd = -1;
+	bool rw_spec = false;
+	int oflags = 0, omode = 0666, fd = -1;
 
 	switch (argc)
 	{
-	case 5:
-		if (Tcl_GetInt(interp, argv[4], &omode))
-			return TCL_ERROR;
-		// \(da fall thru
-	case 4:
-	{
-		Args flags;
-		if (Tcl_SplitList(interp, argv[3], &flags.c, &flags.v) != TCL_OK)
-			return TCL_ERROR;
-
-		for (int i = 0; i < flags.c; i++)
-		{
-			if (strniabbr("truncate", flags.v[i], 1))
-				oflags |= O_TRUNC;
-			else if (strniabbr("create", flags.v[i], 1))
-				oflags |= O_CREAT;
-			else if (!strcasecmp("ro", flags.v[i]))
-			{
-				oflags |= O_RDONLY;
-				rw_spec = true;
-			}
-			else if (!strcasecmp("rw", flags.v[i]))
-			{
-				oflags |= O_RDWR;
-				rw_spec = true;
-			}
-			else
-			{
-				Tcl_AppendResult(interp, "snacc open: illegal argument \"", flags.v[i], "\" in flags", NULL);
+		case 5:
+			if (Tcl_GetInt(interp, argv[4], &omode))
 				return TCL_ERROR;
+			// \(da fall thru
+		case 4:
+			{
+				Args flags;
+				if (Tcl_SplitList(interp, argv[3], &flags.c, &flags.v) != TCL_OK)
+					return TCL_ERROR;
+
+				for (int i = 0; i < flags.c; i++)
+				{
+					if (strniabbr("truncate", flags.v[i], 1))
+						oflags |= O_TRUNC;
+					else if (strniabbr("create", flags.v[i], 1))
+						oflags |= O_CREAT;
+					else if (!strcasecmp("ro", flags.v[i]))
+					{
+						oflags |= O_RDONLY;
+						rw_spec = true;
+					}
+					else if (!strcasecmp("rw", flags.v[i]))
+					{
+						oflags |= O_RDWR;
+						rw_spec = true;
+					}
+					else
+					{
+						Tcl_AppendResult(interp, "snacc open: illegal argument \"", flags.v[i], "\" in flags", NULL);
+						return TCL_ERROR;
+					}
+				}
 			}
-		}
-	}
-	break;
+			break;
 	}
 
 	const AsnTypeDesc* typedesc;
@@ -509,9 +506,8 @@ int SnaccTcl::openfile(int argc, char** argv)
 
 	if (rw_spec)
 		fd = open(filename, oflags, omode);
-	else
-		if ((fd = open(filename, oflags | O_RDWR, omode)) < 0)
-			fd = open(filename, oflags | O_RDONLY, omode);
+	else if ((fd = open(filename, oflags | O_RDWR, omode)) < 0)
+		fd = open(filename, oflags | O_RDONLY, omode);
 
 	if (fd < 0)
 	{
@@ -560,20 +556,20 @@ int SnaccTcl::finfo(int argc, char** argv)
 
 int SnaccTcl::read(int argc, char** argv)
 {
-	const char* _typename, * filename;
+	const char *_typename, *filename;
 
 	switch (argc)
 	{
-	case 2: // reread from old fd
-		_typename = filename = NULL;
-		break;
-	case 4:
-		_typename = argv[2];
-		filename = argv[3];
-		break;
-	default:
-		strcpy(interp->result, "wrong # args: should be \"snacc read file ?{module type} filename?\"");
-		return TCL_ERROR;
+		case 2: // reread from old fd
+			_typename = filename = NULL;
+			break;
+		case 4:
+			_typename = argv[2];
+			filename = argv[3];
+			break;
+		default:
+			strcpy(interp->result, "wrong # args: should be \"snacc read file ?{module type} filename?\"");
+			return TCL_ERROR;
 	}
 
 	Tcl_HashEntry* entry = Tcl_FindHashEntry(&files, argv[1]);
@@ -666,30 +662,30 @@ int SnaccTcl::typesinfo(int argc, char** argv)
 {
 	switch (argc)
 	{
-	case 1:
-		Tcl_HashEntry * typeentry;
-		Tcl_HashSearch hi;
-		for (typeentry = Tcl_FirstHashEntry(&types, &hi); typeentry; typeentry = Tcl_NextHashEntry(&hi))
-			Tcl_AppendElement(interp, Tcl_GetHashKey(&types, typeentry));
-		return TCL_OK;
-	case 2:
-		Tcl_HashEntry * moduleentry;
-		if (moduleentry = Tcl_FindHashEntry(&modules, argv[1]))
-		{
-			const AsnModuleDesc* moddesc = (const AsnModuleDesc*)Tcl_GetHashValue(moduleentry);
-			const AsnTypeDesc** typedesc;
-			for (typedesc = moddesc->types; *typedesc; typedesc++)
-				Tcl_AppendElement(interp, (char*)(*typedesc)->name);
+		case 1:
+			Tcl_HashEntry* typeentry;
+			Tcl_HashSearch hi;
+			for (typeentry = Tcl_FirstHashEntry(&types, &hi); typeentry; typeentry = Tcl_NextHashEntry(&hi))
+				Tcl_AppendElement(interp, Tcl_GetHashKey(&types, typeentry));
 			return TCL_OK;
-		}
-		else
-		{
-			Tcl_AppendResult(interp, "snacc types: no module \"", argv[1], "\"", NULL);
+		case 2:
+			Tcl_HashEntry* moduleentry;
+			if (moduleentry = Tcl_FindHashEntry(&modules, argv[1]))
+			{
+				const AsnModuleDesc* moddesc = (const AsnModuleDesc*)Tcl_GetHashValue(moduleentry);
+				const AsnTypeDesc** typedesc;
+				for (typedesc = moddesc->types; *typedesc; typedesc++)
+					Tcl_AppendElement(interp, (char*)(*typedesc)->name);
+				return TCL_OK;
+			}
+			else
+			{
+				Tcl_AppendResult(interp, "snacc types: no module \"", argv[1], "\"", NULL);
+				return TCL_ERROR;
+			}
+		default:
+			strcpy(interp->result, "wrong # args: should be \"snacc types ?module?\"");
 			return TCL_ERROR;
-		}
-	default:
-		strcpy(interp->result, "wrong # args: should be \"snacc types ?module?\"");
-		return TCL_ERROR;
 	}
 }
 
@@ -948,62 +944,62 @@ int Snacc_Cmd(ClientData cd, Tcl_Interp* interp, int argc, char** argv)
 
 	switch (**argv)
 	{
-	case 'c':
-		if (!strcmp(*argv, "close"))
-			return ed->closefile(argc, argv);
-		else if (!strcmp(*argv, "create"))
-			return ed->create(argc, argv);
-		break;
-	case 'e':
-		if (!strcmp(*argv, "export"))
-			return export (interp, argc, argv);
-		break;
-	case 'f':
-		if (!strcmp(*argv, "finfo"))
-			return ed->finfo(argc, argv);
-		break;
-	case 'g':
-		if (!strcmp(*argv, "get"))
-			return ed->getval(argc, argv);
-		break;
-	case 'i':
-		if (!strcmp(*argv, "import"))
-			return import(interp, argc, argv);
-		else if (!strcmp(*argv, "info"))
-			return ed->info(argc, argv);
-		break;
-	case 'm':
-		if (!strcmp(*argv, "modules"))
-			return ed->modulesinfo(argc, argv);
-		break;
-	case 'o':
-		if (!strcmp(*argv, "open"))
-			return ed->openfile(argc, argv);
-		break;
-	case 'r':
-		if (!strcmp(*argv, "read"))
-			return ed->read(argc, argv);
-		break;
-	case 's':
-		if (!strcmp(*argv, "set"))
-			return ed->setval(argc, argv);
-		break;
-	case 't':
-		if (!strcmp(*argv, "test"))
-			return ed->test(argc, argv);
-		else if (!strcmp(*argv, "type"))
-			return ed->typeinfo(argc, argv);
-		else if (!strcmp(*argv, "types"))
-			return ed->typesinfo(argc, argv);
-		break;
-	case 'u':
-		if (!strcmp(*argv, "unset"))
-			return ed->unsetval(argc, argv);
-		break;
-	case 'w':
-		if (!strcmp(*argv, "write"))
-			return ed->write(argc, argv);
-		break;
+		case 'c':
+			if (!strcmp(*argv, "close"))
+				return ed->closefile(argc, argv);
+			else if (!strcmp(*argv, "create"))
+				return ed->create(argc, argv);
+			break;
+		case 'e':
+			if (!strcmp(*argv, "export"))
+				return export(interp, argc, argv);
+			break;
+		case 'f':
+			if (!strcmp(*argv, "finfo"))
+				return ed->finfo(argc, argv);
+			break;
+		case 'g':
+			if (!strcmp(*argv, "get"))
+				return ed->getval(argc, argv);
+			break;
+		case 'i':
+			if (!strcmp(*argv, "import"))
+				return import(interp, argc, argv);
+			else if (!strcmp(*argv, "info"))
+				return ed->info(argc, argv);
+			break;
+		case 'm':
+			if (!strcmp(*argv, "modules"))
+				return ed->modulesinfo(argc, argv);
+			break;
+		case 'o':
+			if (!strcmp(*argv, "open"))
+				return ed->openfile(argc, argv);
+			break;
+		case 'r':
+			if (!strcmp(*argv, "read"))
+				return ed->read(argc, argv);
+			break;
+		case 's':
+			if (!strcmp(*argv, "set"))
+				return ed->setval(argc, argv);
+			break;
+		case 't':
+			if (!strcmp(*argv, "test"))
+				return ed->test(argc, argv);
+			else if (!strcmp(*argv, "type"))
+				return ed->typeinfo(argc, argv);
+			else if (!strcmp(*argv, "types"))
+				return ed->typesinfo(argc, argv);
+			break;
+		case 'u':
+			if (!strcmp(*argv, "unset"))
+				return ed->unsetval(argc, argv);
+			break;
+		case 'w':
+			if (!strcmp(*argv, "write"))
+				return ed->write(argc, argv);
+			break;
 	}
 	sprintf(interp->result, "bad command option %s: should be close, create, export, finfo, get, import, info, modules, open, read, set, type, types, unset or write", *argv);
 
@@ -1014,11 +1010,11 @@ int Snacc_Cmd(ClientData cd, Tcl_Interp* interp, int argc, char** argv)
 
 struct check
 {
-	int	i, j;
+	int i, j;
 
 	check(int);
 
-	bool	bad();
+	bool bad();
 };
 
 static int cki;
@@ -1029,14 +1025,14 @@ check::check(int v)
 	j = ~i;
 }
 
-#define CK	42
+#define CK 42
 
 bool check::bad()
 {
 	return i != CK || j != ~CK;
 }
 
-check	check(CK);
+check check(CK);
 
 //\[banner "initialization & finalization"]-----------------------------------------------------------------------------------------
 void Snacc_Exit(ClientData data)
@@ -1045,7 +1041,7 @@ void Snacc_Exit(ClientData data)
 }
 
 // prohibit function name mangling to enable tkAppInit.c:Tcl_AppInit() to call this function:
-extern "C" int Snacc_Init(Tcl_Interp * interp)
+extern "C" int Snacc_Init(Tcl_Interp* interp)
 {
 	if (check.bad())
 	{

@@ -5,21 +5,30 @@ using namespace SNACC;
 
 #define _MAGIC_SIZE 99999999
 
-//RWC;This class was created to allow a reset of the protected inherited elements
-//RWC;  for a non-destructive read of the contents.  It is used in several 
-//RWC;  places in this source file.
+// RWC;This class was created to allow a reset of the protected inherited elements
+// RWC;  for a non-destructive read of the contents.  It is used in several
+// RWC;  places in this source file.
 class VDAstreambuf : public std::streambuf
 {
 public:
-	//char* pptr() const (return std::streambuf::pptr());
-	char* Vgptr() const { return (this->gptr()); }
-	char* Vegptr() const { return this->egptr(); }
+	// char* pptr() const (return std::streambuf::pptr());
+	char* Vgptr() const
+	{
+		return (this->gptr());
+	}
+	char* Vegptr() const
+	{
+		return this->egptr();
+	}
 	void Vsetg(char* peb, char* pg, char* peg)
 	{
 		this->setg(peb, pg, peg);
 	}
-	char* Veback() const { return this->eback(); }
-	//std::streambuf & operator = ( const std::streambuf &A) 
+	char* Veback() const
+	{
+		return this->eback();
+	}
+	// std::streambuf & operator = ( const std::streambuf &A)
 	//{ (std::streambuf &) *this = A; return *this; }
 };
 
@@ -29,7 +38,6 @@ AsnBufBits::AsnBufBits(const AsnBufBits& buf)
 	m_pbuf = NULL;
 	operator=(buf);
 }
-
 
 AsnBufBits& AsnBufBits::operator=(const AsnBufBits& buf)
 {
@@ -41,31 +49,24 @@ AsnBufBits& AsnBufBits::operator=(const AsnBufBits& buf)
 	{
 		m_pbuf = new std::stringbuf;
 
-
 		// Save current read position
-		std::streambuf::pos_type origPos = buf.m_pbuf->pubseekoff(0,
-			std::ios_base::cur, std::ios_base::in);
+		std::streambuf::pos_type origPos = buf.m_pbuf->pubseekoff(0, std::ios_base::cur, std::ios_base::in);
 
 		// Copy each byte from buf to this new streambuf
 		std::streambuf::int_type ch;
 		while ((ch = buf.m_pbuf->sbumpc()) != EOF)
-		{
 			m_pbuf->sputc((char)ch);
-		}
 
 		// Reset read position to original value
 		buf.m_pbuf->pubseekpos(origPos, std::ios_base::in);
 
-		//m_pbuf = new std::stringbuf(buf.pbuf_str(), buf.pbuf_length());
- //       VDAstreambuf *pVDAbufref = (VDAstreambuf *)buf.m_pbuf;
- //     char* pg=pVDAbufref->Vgptr();
- //       char* peg=pVDAbufref->Vegptr();
- //       char* peb=pVDAbufref->Veback();
+		// m_pbuf = new std::stringbuf(buf.pbuf_str(), buf.pbuf_length());
+		//       VDAstreambuf *pVDAbufref = (VDAstreambuf *)buf.m_pbuf;
+		//     char* pg=pVDAbufref->Vgptr();
+		//       char* peg=pVDAbufref->Vegptr();
+		//       char* peb=pVDAbufref->Veback();
 
-
-
- //       pVDAbufref->Vsetg( peb, pg, peg );
-
+		//       pVDAbufref->Vsetg( peb, pg, peg );
 	}
 	else
 	{
@@ -134,7 +135,7 @@ void AsnBufBits::hexDump(std::ostream& os)
 	while (!done)
 	{
 		ch = tmpbuf.m_pbuf->sbumpc();
-		//std::streambuf::int_type ch = tmpbuf.m_pbuf->sbumpc();
+		// std::streambuf::int_type ch = tmpbuf.m_pbuf->sbumpc();
 		if (ch == EOF)
 			done = true;
 		else
@@ -157,32 +158,31 @@ void AsnBufBits::hexDump(std::ostream& os)
 	os << std::endl;
 	os.unsetf(std::ios_base::hex);
 
-	//m_pbuf->pubseekpos(0 /* REN -- 12/30/03, ios_base::in */);
+	// m_pbuf->pubseekpos(0 /* REN -- 12/30/03, ios_base::in */);
 
-/*
-	while (! done)
-	{
-		try
+	/*
+		while (! done)
 		{
-		 ch = tmpBuf.ReadByte();
-		 os << "0x";
-		 os << ch;
-		 os << "   ";
-	  }
-	  catch (...)
-	  {
-		 os.unsetf(std::ios_base::hex);
-		 done = true;
-	  }
+			try
+			{
+			 ch = tmpBuf.ReadByte();
+			 os << "0x";
+			 os << ch;
+			 os << "   ";
+		  }
+		  catch (...)
+		  {
+			 os.unsetf(std::ios_base::hex);
+			 done = true;
+		  }
 
-   }
+	   }
 
-   pVDAbufref->Vsetg( peb, pg, peg );   //RE-SET referenced shared stream pointer.
+	   pVDAbufref->Vsetg( peb, pg, peg );   //RE-SET referenced shared stream pointer.
 
-   tmpBuf.m_pbuf = NULL; //Be sure not to delete original buffer on a delete
-*/
-}	// END AsnBufBits::hexDump(...)
-
+	   tmpBuf.m_pbuf = NULL; //Be sure not to delete original buffer on a delete
+	*/
+} // END AsnBufBits::hexDump(...)
 
 //
 //
@@ -190,7 +190,7 @@ void AsnBufBits::AppendTo(AsnBufBits& bufBitsOut)
 {
 	FUNC("AsnBufBits::AppendTo()");
 
-	unsigned char ch, * p_ch;
+	unsigned char ch, *p_ch;
 	AsnBufBits tmpBuf(*this);
 	VDAstreambuf* pVDAbufref = (VDAstreambuf*)this->m_pbuf;
 	char* pg = pVDAbufref->Vgptr();
@@ -218,17 +218,16 @@ void AsnBufBits::AppendTo(AsnBufBits& bufBitsOut)
 			{
 				bufBitsOut.PutBits(&ch, iLeft);
 				free(p_ch);
-			}  // END IF p_ch
-		}	 // END IF iLeft
-	}		 // END try
+			} // END IF p_ch
+		}	  // END IF iLeft
+	}		  // END try
 	catch (...)
 	{
 	}
 
-	pVDAbufref->Vsetg(peb, pg, peg);	 //RE-SET referenced shared stream pointer.
+	pVDAbufref->Vsetg(peb, pg, peg); // RE-SET referenced shared stream pointer.
 
-}		// END Append(...)
-
+} // END Append(...)
 
 /*****RWC;PAINFUL DANG THING...
 AsnBufBits::operator AsnBuf *()
@@ -314,7 +313,6 @@ int AsnBufBits::OctetAlignRead()
 	return returnVal;
 }
 
-
 unsigned char AsnBufBits::ReadByte()
 {
 	FUNC("AsnBufBits::ReadByte()");
@@ -343,8 +341,6 @@ unsigned char AsnBufBits::ReadByte()
 	return (unsigned char)ch;
 }
 
-
-
 unsigned char* AsnBufBits::GetBits(unsigned long numBits)
 {
 	FUNC("AsnBufBits::GetBits()");
@@ -352,26 +348,19 @@ unsigned char* AsnBufBits::GetBits(unsigned long numBits)
 	unsigned char* seg = NULL;
 	unsigned long count = 0;
 	unsigned long ulNumBytes = (numBits / 8);
-	int 		  iExtraBits = (numBits % 8);
+	int iExtraBits = (numBits % 8);
 	unsigned char ucTempChar = 0x00;
 
 	// Check that buffer is valid and contains enough bits
 	if (m_pbuf == NULL)
 		throw BufferException("NULL internal m_pbuf pointer", STACK_ENTRY);
 	if (m_ulBitsLeft < numBits)
-	{
-		throw BufferException("Trying to retrieve more bits than in the buffer",
-			STACK_ENTRY);
-	}
+		throw BufferException("Trying to retrieve more bits than in the buffer", STACK_ENTRY);
 
 	if (iExtraBits)
-	{
 		seg = new unsigned char[ulNumBytes + 2];
-	}
 	else
-	{
 		seg = new unsigned char[ulNumBytes + 1];
-	}
 
 	while (count < ulNumBytes)
 	{
@@ -391,7 +380,6 @@ unsigned char* AsnBufBits::GetBits(unsigned long numBits)
 		}
 
 		count++;
-
 	}
 
 	if (iExtraBits > 0)
@@ -410,15 +398,12 @@ unsigned char* AsnBufBits::GetBits(unsigned long numBits)
 			ucTempChar = MaskBits(ucTempChar, (iExtraBits - (8 - m_iReadBitPos)));
 
 			if (m_iReadBitPos != 8)
-			{
 				ucTempChar >>= (8 - m_iReadBitPos);
-			}
 
 			seg[count] = m_ucReadCharBuf[0] |= ucTempChar;
 
 			m_ucReadCharBuf[0] = (unsigned char)(m_ucReadCharBuf[1] << (iExtraBits - (8 - m_iReadBitPos)));
 			m_iReadBitPos = (iExtraBits - (8 - m_iReadBitPos));
-
 		}
 		count++;
 	}
@@ -428,7 +413,6 @@ unsigned char* AsnBufBits::GetBits(unsigned long numBits)
 
 	return seg;
 }
-
 
 bool AsnBufBits::GetBit()
 {
@@ -459,7 +443,6 @@ bool AsnBufBits::GetBit()
 	return bitRead;
 }
 
-
 unsigned char AsnBufBits::GetByte()
 {
 	FUNC("AsnBufBits::GetByte()");
@@ -468,10 +451,7 @@ unsigned char AsnBufBits::GetByte()
 	if (m_pbuf == NULL)
 		throw BufferException("NULL internal m_pbuf pointer", STACK_ENTRY);
 	if (m_ulBitsLeft < 8)
-	{
-		throw BufferException("Trying to retrieve more bits than in the buffer",
-			STACK_ENTRY);
-	}
+		throw BufferException("Trying to retrieve more bits than in the buffer", STACK_ENTRY);
 
 	// If the read buffer is empty, just read the next byte in the stream
 	unsigned char byte;
@@ -503,41 +483,33 @@ unsigned char AsnBufBits::GetByte()
 	return byte;
 }
 
-
 unsigned long AsnBufBits::GetBits(AsnBits& bits, unsigned long numBits)
 {
 	FUNC("AsnBufBits::GetBits()");
 
 	// Check that the buffer contains the required number of bits
 	if (m_ulBitsLeft < numBits)
-	{
-		throw BufferException("Trying to retrieve more bits than in the buffer",
-			STACK_ENTRY);
-	}
+		throw BufferException("Trying to retrieve more bits than in the buffer", STACK_ENTRY);
 
 	// Set the size of the bitstring
 	bits.Set(numBits);
 
 	// Read each bit from the buffer
 	for (unsigned long i = 0; i < numBits; ++i)
-	{
 		if (GetBit())
 			bits.SetBit(i);
-	}
 
 	return numBits;
 } // end of AsnBufBits::GetBits()
 
-
-unsigned long AsnBufBits::PutBits(const unsigned char* seg,
-	unsigned long numBits)
+unsigned long AsnBufBits::PutBits(const unsigned char* seg, unsigned long numBits)
 {
 	FUNC("AsnBufBits::PutBits()");
 
 	unsigned long totalBitsWrote = numBits;
 	// unsigned long ulBitsWrote = 0;
 	unsigned long ulNumBytes = 0;
-	int 		  iExtraBits = 0;
+	int iExtraBits = 0;
 	unsigned long count = 0;
 
 	// Check that buffer is valid
@@ -602,13 +574,12 @@ unsigned long AsnBufBits::PutBits(const unsigned char* seg,
 
 			m_ucWriteCharBuf[0] <<= m_iWriteBitPos;
 		}
-
 	}
 
 	return totalBitsWrote;
 }
 
-unsigned char  AsnBufBits::MaskBits(unsigned char cCharToMask, int iBitsToMask)
+unsigned char AsnBufBits::MaskBits(unsigned char cCharToMask, int iBitsToMask)
 {
 	unsigned char cReturnChar = 0x00;
 
@@ -623,17 +594,15 @@ unsigned char  AsnBufBits::MaskBits(unsigned char cCharToMask, int iBitsToMask)
 	return cReturnChar;
 }
 
-
-
-//RWC;TBD; FIX THIS TO WORK PROPERLY.....
+// RWC;TBD; FIX THIS TO WORK PROPERLY.....
 bool AsnBufBits::operator<(AsnBufBits& rhs)
 {
 	FUNC("AsnBufBits::operator<()");
 
 	bool lessThan = true;
 	bool firstTime = true;
-	//ResetMode();
-	//rhs.ResetMode();
+	// ResetMode();
+	// rhs.ResetMode();
 
 	// Check that both buffers are valid
 	if ((m_pbuf == NULL) || (rhs.m_pbuf == NULL))
@@ -697,11 +666,10 @@ bool AsnBufBits::operator<(AsnBufBits& rhs)
 
 		firstTime = false;
 	}
-	//ResetMode();
-	//rhs.ResetMode();
+	// ResetMode();
+	// rhs.ResetMode();
 	pVDAbufref1->Vsetg(peb1, pg1, peg1);
-	pVDAbufref2->Vsetg(peb2, pg2, peg2);	 //RE-SET referenced shared stream pointer.
+	pVDAbufref2->Vsetg(peb2, pg2, peg2); // RE-SET referenced shared stream pointer.
 
 	return lessThan;
-}		// END AsnBufBits::operator<(AsnBufBits &rhs)
-
+} // END AsnBufBits::operator<(AsnBufBits &rhs)

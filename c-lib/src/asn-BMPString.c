@@ -6,12 +6,9 @@
 AsnLen BEncBMPStringContent(GenBuf* b, BMPString* octs)
 {
 	if ((octs->octetLen % 2) != 0)
-	{
 		BufSetWriteError(b, TRUE);
-	}
 	return BEncAsnOctsContent(b, octs);
 } /* end of BEncBMPStringContent() */
-
 
 AsnLen BEncBMPString(GenBuf* b, BMPString* v)
 {
@@ -23,10 +20,7 @@ AsnLen BEncBMPString(GenBuf* b, BMPString* v)
 	return l;
 } /* end of BEncBMPString() */
 
-
-void BDecBMPStringContent(GenBuf* b, AsnTag tagId, AsnLen len,
-	BMPString* result, AsnLen* bytesDecoded,
-	ENV_TYPE env)
+void BDecBMPStringContent(GenBuf* b, AsnTag tagId, AsnLen len, BMPString* result, AsnLen* bytesDecoded, ENV_TYPE env)
 {
 	BDecAsnOctsContent(b, tagId, len, result, bytesDecoded, env);
 	if ((result->octetLen % 2) != 0)
@@ -36,15 +30,12 @@ void BDecBMPStringContent(GenBuf* b, AsnTag tagId, AsnLen len,
 	}
 }
 
-void BDecBMPString(GenBuf* b, BMPString* result, AsnLen* bytesDecoded,
-	ENV_TYPE env)
+void BDecBMPString(GenBuf* b, BMPString* result, AsnLen* bytesDecoded, ENV_TYPE env)
 {
 	AsnTag tag;
 	AsnLen elmtLen1;
 
-	if (((tag = BDecTag(b, bytesDecoded, env)) !=
-		MAKE_TAG_ID(UNIV, PRIM, BMPSTRING_TAG_CODE)) &&
-		(tag != MAKE_TAG_ID(UNIV, CONS, BMPSTRING_TAG_CODE)))
+	if (((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, BMPSTRING_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, BMPSTRING_TAG_CODE)))
 	{
 		Asn1Error("BDecBMPString: ERROR - wrong tag\n");
 		longjmp(env, -113);
@@ -53,8 +44,7 @@ void BDecBMPString(GenBuf* b, BMPString* result, AsnLen* bytesDecoded,
 	elmtLen1 = BDecLen(b, bytesDecoded, env);
 	BDecBMPStringContent(b, tag, elmtLen1, result, bytesDecoded, env);
 
-}  /* BDecBMPString */
-
+} /* BDecBMPString */
 
 /* Convert a BMPString to a wide character string */
 int CvtBMPString2wchar(BMPString* inOcts, wchar_t** outStr)
@@ -77,4 +67,3 @@ int CvtBMPString2wchar(BMPString* inOcts, wchar_t** outStr)
 	return 0;
 
 } /* end of CvtBMPAsnOcts2wchar() */
-

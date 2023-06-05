@@ -98,9 +98,9 @@
  *
  */
 
- /*
-	 Deepak: Formatting improved as required on 11/Feb/2003
- */
+/*
+	Deepak: Formatting improved as required on 11/Feb/2003
+*/
 
 #include "../../../c-lib/include/asn-incl.h"
 #include "../../core/asn1module.h"
@@ -110,13 +110,10 @@
 #include "../../core/snacc-util.h"
 #include "../../core/enc-rules.h"
 
-
 EncRulesType GetEncRulesType();
-void PrintConstraintValueCheckingCode PROTO((FILE* src, TypeDef* td, Type* t,
-	NamedType* nt));
+void PrintConstraintValueCheckingCode PROTO((FILE * src, TypeDef* td, Type* t, NamedType* nt));
 
-
-//static int moduleImplicitTagsG;
+// static int moduleImplicitTagsG;
 static CRules* genEncCRulesG;
 static char* bufNameG = "b";
 extern char* valueArgNameG;
@@ -131,46 +128,41 @@ extern char* lenTypeNameG;
 extern char* tagTypeNameG;
 extern char* envTypeNameG;
 
-
-void PrintCValueInstantiation PROTO((FILE* hdr, CRules* r, Value* v));
+void PrintCValueInstantiation PROTO((FILE * hdr, CRules* r, Value* v));
 
 /* non-exported prototypes */
-static void PrintCEncoderPrototype PROTO((FILE* hdr, TypeDef* td));
-static void PrintCEncoderDeclaration PROTO((FILE* src, TypeDef* td));
-static void PrintCEncoderDefine PROTO((FILE* src, TypeDef* td));
+static void PrintCEncoderPrototype PROTO((FILE * hdr, TypeDef* td));
+static void PrintCEncoderDeclaration PROTO((FILE * src, TypeDef* td));
+static void PrintCEncoderDefine PROTO((FILE * src, TypeDef* td));
 
-static void PrintCEncoderLocals PROTO((FILE* src, TypeDef* td));
+static void PrintCEncoderLocals PROTO((FILE * src, TypeDef* td));
 
-static void PrintCElmtsEncodeCode PROTO((FILE* src, TypeDef* td, Type* parent, NamedTypeList* e, int level, char* varName));
-static void PrintCElmtEncodeCode PROTO((FILE* src, TypeDef* td, Type* parent, NamedType* e, int level, char* varName));
+static void PrintCElmtsEncodeCode PROTO((FILE * src, TypeDef* td, Type* parent, NamedTypeList* e, int level, char* varName));
+static void PrintCElmtEncodeCode PROTO((FILE * src, TypeDef* td, Type* parent, NamedType* e, int level, char* varName));
 
-static void PrintCListEncoderCode PROTO((FILE* src, TypeDef* td, Type* t, int level, char* varName));
-static void PrintCChoiceEncodeCode PROTO((FILE* src, TypeDef* td, Type* t, int level, char* varName));
+static void PrintCListEncoderCode PROTO((FILE * src, TypeDef* td, Type* t, int level, char* varName));
+static void PrintCChoiceEncodeCode PROTO((FILE * src, TypeDef* td, Type* t, int level, char* varName));
 
-static void PrintCTagAndLenEncodingCode PROTO((FILE* src, TypeDef* td, Type* t));
+static void PrintCTagAndLenEncodingCode PROTO((FILE * src, TypeDef* td, Type* t));
 
-static void PrintEocEncoders PROTO((FILE* src, TypeDef* td, Type* t));
+static void PrintEocEncoders PROTO((FILE * src, TypeDef* td, Type* t));
 
-static void PrintCLenEncodingCode PROTO((FILE* f, int isCons, int isShort));
+static void PrintCLenEncodingCode PROTO((FILE * f, int isCons, int isShort));
 
-static void PrintCTagAndLenList PROTO((FILE* src, Type* t, TagList* tg));
+static void PrintCTagAndLenList PROTO((FILE * src, Type* t, TagList* tg));
 
 // Deepak:18/Apr/2003
-static void PrintCMacroElmtsEncodeCode PROTO((FILE* src, TypeDef* td, Type* parent, MacroType* mt, int level, char* varName));
-static void PrintCRosOperationElmtsEncodeCode PROTO((FILE* src, TypeDef* td, Type* parent, MacroType* mt, RosOperationMacroType* op, int level, char* varName));
+static void PrintCMacroElmtsEncodeCode PROTO((FILE * src, TypeDef* td, Type* parent, MacroType* mt, int level, char* varName));
+static void PrintCRosOperationElmtsEncodeCode PROTO((FILE * src, TypeDef* td, Type* parent, MacroType* mt, RosOperationMacroType* op, int level, char* varName));
 // Deepak: 31/Mar/2003	// Following 4 func's are similar to that in gen-dec.c
-static void PrintCEncoderTableConsType PROTO((FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* t, NamedType* nt));
-static void PrintCEncoderTableConsBasicType PROTO((FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* t, NamedType* nt, BasicType* bt));
-static void PrintCEncoderTableConsElmtTypes PROTO((FILE* src, FILE* hdr, Module* m, TypeDef* td, NamedTypeList* e));
-static void PrintCEncoderTableConsElmtType PROTO((FILE* src, FILE* hdr, Module* m, TypeDef* td, NamedType* n));
+static void PrintCEncoderTableConsType PROTO((FILE * src, FILE* hdr, Module* m, TypeDef* td, Type* t, NamedType* nt));
+static void PrintCEncoderTableConsBasicType PROTO((FILE * src, FILE* hdr, Module* m, TypeDef* td, Type* t, NamedType* nt, BasicType* bt));
+static void PrintCEncoderTableConsElmtTypes PROTO((FILE * src, FILE* hdr, Module* m, TypeDef* td, NamedTypeList* e));
+static void PrintCEncoderTableConsElmtType PROTO((FILE * src, FILE* hdr, Module* m, TypeDef* td, NamedType* n));
 
-
-void	// Deepak: 25/Mar/2003
-PrintCTableConstraintEncoder PARAMS((src, hdr, m, td),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	Module* m _AND_
-	TypeDef* td)
+void // Deepak: 25/Mar/2003
+	PrintCTableConstraintEncoder
+	PARAMS((src, hdr, m, td), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td)
 {
 	fprintf(hdr, "%s %s%s_TableCons(%s %s,%s *v);\n", returnTypeG, GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName, bufTypeNameG, bufNameG, td->cTypeDefInfo->cTypeName);
 	fprintf(hdr, "\n");
@@ -191,14 +183,9 @@ PrintCTableConstraintEncoder PARAMS((src, hdr, m, td),
 	fprintf(src, "\n\n");
 } /* PrintCTableConstraintEncoder */
 
-static void 	// Deepak: 25/Mar/2003
-PrintCEncoderTableConsType PARAMS((src, hdr, m, td, t, nt),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	NamedType* nt)
+static void // Deepak: 25/Mar/2003
+	PrintCEncoderTableConsType
+	PARAMS((src, hdr, m, td, t, nt), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ NamedType* nt)
 {
 	if (t == NULL)
 		return;
@@ -207,66 +194,55 @@ PrintCEncoderTableConsType PARAMS((src, hdr, m, td, t, nt),
 
 } /* PrintCEncoderTableConsType */
 
-static void	// Deepak: 25/Mar/2003
-PrintCEncoderTableConsBasicType PARAMS((src, hdr, m, td, t, nt, bt),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	NamedType* nt _AND_
-	BasicType* bt)
+static void // Deepak: 25/Mar/2003
+	PrintCEncoderTableConsBasicType
+	PARAMS((src, hdr, m, td, t, nt, bt), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ NamedType* nt _AND_ BasicType* bt)
 {
 	if (bt == NULL)
 		return;
 
 	switch (bt->choiceId)
 	{
-	case BASICTYPE_SEQUENCET:		// Deepak: added on 29/Nov/2002
-	case BASICTYPE_SEQUENCE:
-	case BASICTYPE_SET:
-	case BASICTYPE_CHOICE:			// Deepak: process the elements in sequence etc here.
-		PrintCEncoderTableConsElmtTypes(src, hdr, m, td, bt->a.set);
-		break;
+		case BASICTYPE_SEQUENCET: // Deepak: added on 29/Nov/2002
+		case BASICTYPE_SEQUENCE:
+		case BASICTYPE_SET:
+		case BASICTYPE_CHOICE: // Deepak: process the elements in sequence etc here.
+			PrintCEncoderTableConsElmtTypes(src, hdr, m, td, bt->a.set);
+			break;
 
-	case BASICTYPE_SEQUENCEOF:
-	case BASICTYPE_SETOF:
-		//TypeLinkType (m, currMod, head, bt->a.setOf);
-		break;
+		case BASICTYPE_SEQUENCEOF:
+		case BASICTYPE_SETOF:
+			// TypeLinkType (m, currMod, head, bt->a.setOf);
+			break;
 
-	case BASICTYPE_INTEGER:
-		PrintConstraintValueCheckingCode(src, td, t, nt);
-		break;
+		case BASICTYPE_INTEGER:
+			PrintConstraintValueCheckingCode(src, td, t, nt);
+			break;
 
-	case BASICTYPE_OBJECTCLASSFIELDTYPE:
-		//	if(nt->type->basicType->choiceId == 0)
-	{
-		char* objSetName = t->tableConstraint->objSetAssignment->objectSetName;
-		char* typeName = nt->type->typeName;
-		fprintf(src, "\tif(%s[index].m.%sPresent)\n", objSetName, typeName);
-		fprintf(src, "\t{\n");
-		fprintf(src, "\t\titemLen = %s[index].m.encode%s(%s,%s[index].%s);\n", objSetName, typeName, bufNameG, objSetName, typeName);
-		fprintf(src, "\t\tv->%s.octetLen = itemLen;\n", nt->fieldName);
-		fprintf(src, "\t\tv->%s.octs = Asn1Alloc(itemLen);\n", nt->fieldName);
-		fprintf(src, "\t\tmemcpy(v->%s.octs,b->dataStart,itemLen);\n", nt->fieldName);
-		fprintf(src, "\t\ttotalLen += itemLen;\n");
-		fprintf(src, "\t}\n");
-		fprintf(src, "\n");
-	}
-	break;
-	default:
-		break;
+		case BASICTYPE_OBJECTCLASSFIELDTYPE:
+			//	if(nt->type->basicType->choiceId == 0)
+			{
+				char* objSetName = t->tableConstraint->objSetAssignment->objectSetName;
+				char* typeName = nt->type->typeName;
+				fprintf(src, "\tif(%s[index].m.%sPresent)\n", objSetName, typeName);
+				fprintf(src, "\t{\n");
+				fprintf(src, "\t\titemLen = %s[index].m.encode%s(%s,%s[index].%s);\n", objSetName, typeName, bufNameG, objSetName, typeName);
+				fprintf(src, "\t\tv->%s.octetLen = itemLen;\n", nt->fieldName);
+				fprintf(src, "\t\tv->%s.octs = Asn1Alloc(itemLen);\n", nt->fieldName);
+				fprintf(src, "\t\tmemcpy(v->%s.octs,b->dataStart,itemLen);\n", nt->fieldName);
+				fprintf(src, "\t\ttotalLen += itemLen;\n");
+				fprintf(src, "\t}\n");
+				fprintf(src, "\n");
+			}
+			break;
+		default:
+			break;
 	}
 } /* PrintCEncoderTableConsBasicType */
 
-
-static void	// Deepak: 25/Mar/2003
-PrintCEncoderTableConsElmtTypes PARAMS((src, hdr, m, td, e),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	Module* m _AND_
-	TypeDef* td _AND_
-	NamedTypeList* e)
+static void // Deepak: 25/Mar/2003
+	PrintCEncoderTableConsElmtTypes
+	PARAMS((src, hdr, m, td, e), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ NamedTypeList* e)
 {
 	NamedType* n;
 
@@ -277,14 +253,9 @@ PrintCEncoderTableConsElmtTypes PARAMS((src, hdr, m, td, e),
 
 } /* PrintCEncoderTableConsElmtTypes */
 
-
-static void	// Deepak: 25/Mar/2003
-PrintCEncoderTableConsElmtType PARAMS((src, hdr, m, td, n),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	Module* m _AND_
-	TypeDef* td _AND_
-	NamedType* n)
+static void // Deepak: 25/Mar/2003
+	PrintCEncoderTableConsElmtType
+	PARAMS((src, hdr, m, td, n), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ NamedType* n)
 {
 	if (n->type->tableConstraint)
 	{
@@ -293,14 +264,7 @@ PrintCEncoderTableConsElmtType PARAMS((src, hdr, m, td, n),
 	}
 } /* PrintCEncoderTableConsElmtType */
 
-
-void
-PrintCEncoder PARAMS((src, hdr, r, m, td),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CRules* r _AND_
-	Module* m _AND_
-	TypeDef* td)
+void PrintCEncoder PARAMS((src, hdr, r, m, td), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ Module* m _AND_ TypeDef* td)
 {
 	CTDI* ctdi;
 	TagList* tags = NULL;
@@ -312,14 +276,14 @@ PrintCEncoder PARAMS((src, hdr, r, m, td),
 	EncRulesType* encoding;
 	char* pszCode = NULL;
 
-
 	ctdi = td->cTypeDefInfo;
 	if (!ctdi->genEncodeRoutine)
 		return;
 
 	/* Generate encoders for each encoding rule required */
 	encoding = GetEncRules();
-	while (SetEncRules(*encoding)) {
+	while (SetEncRules(*encoding))
+	{
 		encoding++;
 
 		/*
@@ -328,31 +292,25 @@ PrintCEncoder PARAMS((src, hdr, r, m, td),
 		 *  print define to the hdr file
 		 * (a type is a pdu by default if it is ref'd by an ANY)
 		 */
-		if (!IsNewType(td->type) &&
-			(!IsTypeRef(td->type) ||
-				(IsTypeRef(td->type) &&
-					(td->type->basicType->a.localTypeRef->link->cTypeDefInfo->isPdu ||
-						((td->type->basicType->a.localTypeRef->link->anyRefs != NULL) &&
-							!LIST_EMPTY(td->type->basicType->a.localTypeRef->link->anyRefs))))))
+		if (!IsNewType(td->type) && (!IsTypeRef(td->type) || (IsTypeRef(td->type) && (td->type->basicType->a.localTypeRef->link->cTypeDefInfo->isPdu || ((td->type->basicType->a.localTypeRef->link->anyRefs != NULL) && !LIST_EMPTY(td->type->basicType->a.localTypeRef->link->anyRefs))))))
 		{
 			fprintf(hdr, "#define %s%s\t%s%s\n", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName, GetEncRulePrefix(), td->type->cTypeRefInfo->encodeRoutineName);
-			//fprintf(hdr,"#define %s%s(b, v, bytesDecoded, env) %s%s(b, v, bytesDecoded, env)\n", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName, GetEncRulePrefix(), td->type->cTypeRefInfo->encodeRoutineName);
+			// fprintf(hdr,"#define %s%s(b, v, bytesDecoded, env) %s%s(b, v, bytesDecoded, env)\n", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName, GetEncRulePrefix(), td->type->cTypeRefInfo->encodeRoutineName);
 			return;
 		}
 		/* print proto to hdr file */
-  //      fprintf (hdr,"%s %s%s PROTO ((%s b, %s *v));\n\n", lenTypeNameG, GetEncRulePrefix(), ctdi->encodeRoutineName, bufTypeNameG, ctdi->cTypeName);
+		//      fprintf (hdr,"%s %s%s PROTO ((%s b, %s *v));\n\n", lenTypeNameG, GetEncRulePrefix(), ctdi->encodeRoutineName, bufTypeNameG, ctdi->cTypeName);
 		fprintf(hdr, "%s %s%s(%s b,%s *v);\n\n", lenTypeNameG, GetEncRulePrefix(), ctdi->encodeRoutineName, bufTypeNameG, ctdi->cTypeName);
 
 		/* print routine to src file */
-  //      fprintf (src,"%s %s%s PARAMS ((b, v),\n", lenTypeNameG, GetEncRulePrefix(), ctdi->encodeRoutineName);
-  //      fprintf (src,"%s b _AND_\n",bufTypeNameG);
-  //      fprintf (src,"%s *v)\n",ctdi->cTypeName);
-  //      fprintf (src,"{\n");
-  //      fprintf (src,"\t%s l=0;\n", lenTypeNameG);
+		//      fprintf (src,"%s %s%s PARAMS ((b, v),\n", lenTypeNameG, GetEncRulePrefix(), ctdi->encodeRoutineName);
+		//      fprintf (src,"%s b _AND_\n",bufTypeNameG);
+		//      fprintf (src,"%s *v)\n",ctdi->cTypeName);
+		//      fprintf (src,"{\n");
+		//      fprintf (src,"\t%s l=0;\n", lenTypeNameG);
 
-
-		//fprintf (src,"%s %s%s", lenTypeNameG, GetEncRulePrefix(), ctdi->encodeRoutineName);
-		// Deepak: 16/Apr/2003
+		// fprintf (src,"%s %s%s", lenTypeNameG, GetEncRulePrefix(), ctdi->encodeRoutineName);
+		//  Deepak: 16/Apr/2003
 		fprintf(src, "%s %s%s(", lenTypeNameG, GetEncRulePrefix(), ctdi->encodeRoutineName);
 		fprintf(src, "%s b,", bufTypeNameG);
 		fprintf(src, "%s *v)\n", ctdi->cTypeName);
@@ -361,13 +319,14 @@ PrintCEncoder PARAMS((src, hdr, r, m, td),
 
 		PrintEocEncoders(src, td, td->type);
 
-		fprintf(src, "\tl = %s%sContent (b,v);\n", GetEncRulePrefix(),
-			ctdi->encodeRoutineName);
+		fprintf(src, "\tl = %s%sContent (b,v);\n", GetEncRulePrefix(), ctdi->encodeRoutineName);
 
 		/* encode each tag/len pair if any */
 		tags = GetTags(td->type, &stoleChoiceTags);
-		if (!stoleChoiceTags) {
-			FOR_EACH_LIST_ELMT_RVS(tag, tags) {
+		if (!stoleChoiceTags)
+		{
+			FOR_EACH_LIST_ELMT_RVS(tag, tags)
+			{
 				classStr = Class2ClassStr(tag->tclass);
 
 				if (tag->form == ANY_FORM)
@@ -375,21 +334,17 @@ PrintCEncoder PARAMS((src, hdr, r, m, td),
 				formStr = Form2FormStr(tag->form);
 				tagLen = TagByteLen(tag->code);
 
-
 				if (tag->form == CONS)
-					fprintf(src, "\tl += %sEncConsLen(b,l);\n",
-						GetEncRulePrefix());
+					fprintf(src, "\tl += %sEncConsLen(b,l);\n", GetEncRulePrefix());
 				else
-					fprintf(src, "\tl += %sEncDefLen(b,l);\n",
-						GetEncRulePrefix());
+					fprintf(src, "\tl += %sEncDefLen(b,l);\n", GetEncRulePrefix());
 
 				if (tag->tclass == UNIV)
 					pszCode = DetermineCode(tag, &tagLen, 0);
 				else
 					pszCode = DetermineCode(tag, &tagLen, 1);
 
-				fprintf(src, "\tl += %sEncTag%d(b,%s,%s,%s);\n",
-					GetEncRulePrefix(), tagLen, classStr, formStr, pszCode);
+				fprintf(src, "\tl += %sEncTag%d(b,%s,%s,%s);\n", GetEncRulePrefix(), tagLen, classStr, formStr, pszCode);
 				/*RWC;Code2UnivCodeStr (tag->code));
 		   else
 			 fprintf (src,"\tl += %sEncTag%d(b,%s,%s,%d);\n",
@@ -402,18 +357,12 @@ PrintCEncoder PARAMS((src, hdr, r, m, td),
 
 		FreeTags(tags);
 	}
-}  /*  PrintCEncoder */
+} /*  PrintCEncoder */
 
-void
-PrintCContentEncoder PARAMS((src, hdr, r, m, td),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CRules* r _AND_
-	Module* m _AND_
-	TypeDef* td)
+void PrintCContentEncoder PARAMS((src, hdr, r, m, td), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ Module* m _AND_ TypeDef* td)
 {
 	CTDI* ctdi;
-	CTypeId rhsTypeId;  /* cTypeId of the type that defined this typedef */
+	CTypeId rhsTypeId; /* cTypeId of the type that defined this typedef */
 	EncRulesType* encoding;
 
 	genEncCRulesG = r;
@@ -426,157 +375,140 @@ PrintCContentEncoder PARAMS((src, hdr, r, m, td),
 
 	/* Generate encoders for each encoding rule required */
 	encoding = GetEncRules();
-	while (SetEncRules(*encoding)) {
+	while (SetEncRules(*encoding))
+	{
 		encoding++;
 
-		switch (rhsTypeId) {
-		case C_ANY:
-			fprintf(hdr, "/* ANY - Fix Me! */\n");
+		switch (rhsTypeId)
+		{
+			case C_ANY:
+				fprintf(hdr, "/* ANY - Fix Me! */\n");
 
-			/*
-			 * Note - ANY's don't have the 'Content' suffix cause they
-			 * encode their tags and lengths
-			 */
-			fprintf(hdr, "#define %s%s\t%s%s\n",
-				GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName,
-				GetEncRulePrefix(), td->type->cTypeRefInfo->encodeRoutineName);
+				/*
+				 * Note - ANY's don't have the 'Content' suffix cause they
+				 * encode their tags and lengths
+				 */
+				fprintf(hdr, "#define %s%s\t%s%s\n", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName, GetEncRulePrefix(), td->type->cTypeRefInfo->encodeRoutineName);
 
-			/*
-				  fprintf(hdr, "#define %s%s( b, v)  ", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
-				  fprintf (hdr, "%s%s (b, v)", GetEncRulePrefix(), td->type->cTypeRefInfo->encodeRoutineName);
-			*/
+				/*
+					  fprintf(hdr, "#define %s%s( b, v)  ", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
+					  fprintf (hdr, "%s%s (b, v)", GetEncRulePrefix(), td->type->cTypeRefInfo->encodeRoutineName);
+				*/
 
+				break;
 
-			break;
+			case C_LIB:
+			case C_TYPEREF:
+				PrintCEncoderDefine(hdr, td);
+				fprintf(hdr, "\n");
+				break;
 
-		case C_LIB:
-		case C_TYPEREF:
-			PrintCEncoderDefine(hdr, td);
-			fprintf(hdr, "\n");
-			break;
+			case C_CHOICE:
+				PrintCEncoderPrototype(hdr, td);
+				PrintCEncoderDeclaration(src, td);
+				fprintf(src, "{\n");
+				PrintCEncoderLocals(src, td);
+				fprintf(src, "\n\n");
 
-		case C_CHOICE:
-			PrintCEncoderPrototype(hdr, td);
-			PrintCEncoderDeclaration(src, td);
-			fprintf(src, "{\n");
-			PrintCEncoderLocals(src, td);
-			fprintf(src, "\n\n");
+				// Call Enc_TableCons function here
+				/*	if(td->bHasTableConstraint)
+					{
+						fprintf (src,"\tif(!%s%s_TableCons(b, v))\n", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
+						fprintf (src,"\t\treturn 0;\n\n");
+					}
+				  */
+				PrintCChoiceEncodeCode(src, td, td->type, FIRST_LEVEL, valueArgNameG);
+				fprintf(src, "\treturn %s;\n\n", encodedLenVarNameG);
+				fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
+				fprintf(hdr, "\n\n");
+				fprintf(src, "\n\n");
+				break;
 
-			// Call Enc_TableCons function here
-		/*	if(td->bHasTableConstraint)
-			{
-				fprintf (src,"\tif(!%s%s_TableCons(b, v))\n", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
-				fprintf (src,"\t\treturn 0;\n\n");
-			}
-		  */
-			PrintCChoiceEncodeCode(src, td, td->type, FIRST_LEVEL, valueArgNameG);
-			fprintf(src, "\treturn %s;\n\n", encodedLenVarNameG);
-			fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(),
-				td->cTypeDefInfo->encodeRoutineName);
-			fprintf(hdr, "\n\n");
-			fprintf(src, "\n\n");
-			break;
+			case C_STRUCT:
+				PrintCEncoderPrototype(hdr, td);
+				PrintCEncoderDeclaration(src, td);
+				fprintf(src, "{\n");
+				PrintCEncoderLocals(src, td);
+				fprintf(src, "\n\n");
 
-		case C_STRUCT:
-			PrintCEncoderPrototype(hdr, td);
-			PrintCEncoderDeclaration(src, td);
-			fprintf(src, "{\n");
-			PrintCEncoderLocals(src, td);
-			fprintf(src, "\n\n");
+				// Call Enc_TableCons function here
+				/*	if(td->bHasTableConstraint)
+					{
+						fprintf (src,"\tif(!%s%s_TableCons(b, v))\n", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
+						fprintf (src,"\treturn 0;\n");
+					}
+				  */
+				PrintCElmtsEncodeCode(src, td, td->type, td->type->basicType->a.set, FIRST_LEVEL, valueArgNameG);
+				fprintf(src, "\treturn %s;\n\n", encodedLenVarNameG);
+				fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
+				fprintf(hdr, "\n\n");
+				fprintf(src, "\n\n");
+				break;
 
-			// Call Enc_TableCons function here
-		/*	if(td->bHasTableConstraint)
-			{
-				fprintf (src,"\tif(!%s%s_TableCons(b, v))\n", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
-				fprintf (src,"\treturn 0;\n");
-			}
-		  */
-			PrintCElmtsEncodeCode(src, td, td->type, td->type->basicType->a.set, FIRST_LEVEL, valueArgNameG);
-			fprintf(src, "\treturn %s;\n\n", encodedLenVarNameG);
-			fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(),
-				td->cTypeDefInfo->encodeRoutineName);
-			fprintf(hdr, "\n\n");
-			fprintf(src, "\n\n");
-			break;
+			case C_LIST:
+				PrintCEncoderPrototype(hdr, td);
+				fprintf(hdr, "\n\n");
 
+				PrintCEncoderDeclaration(src, td);
+				fprintf(src, "{\n");
+				PrintCEncoderLocals(src, td);
+				fprintf(src, "\n\n");
 
-		case C_LIST:
-			PrintCEncoderPrototype(hdr, td);
-			fprintf(hdr, "\n\n");
+				// Call Enc_TableCons function here
+				//	if(td->bHasTableConstraint)
+				//	{
+				//		fprintf (src,"\tif(!%s%s_TableCons(b, v))\n", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
+				//		fprintf (src,"\treturn 0;\n");
+				//	}
 
-			PrintCEncoderDeclaration(src, td);
-			fprintf(src, "{\n");
-			PrintCEncoderLocals(src, td);
-			fprintf(src, "\n\n");
+				PrintCListEncoderCode(src, td, td->type, FIRST_LEVEL, valueArgNameG);
+				fprintf(src, "\treturn %s;\n\n", listLenNameG);
+				fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
+				fprintf(src, "\n\n");
+				break;
 
-			// Call Enc_TableCons function here
-		//	if(td->bHasTableConstraint)
-		//	{
-		//		fprintf (src,"\tif(!%s%s_TableCons(b, v))\n", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
-		//		fprintf (src,"\treturn 0;\n"); 
-		//	}
+			case C_MACROTYPE:
+				PrintCEncoderPrototype(hdr, td);
+				PrintCEncoderDeclaration(src, td);
+				fprintf(src, "{\n");
+				PrintCEncoderLocals(src, td);
+				fprintf(src, "\n\n");
 
-			PrintCListEncoderCode(src, td, td->type, FIRST_LEVEL, valueArgNameG);
-			fprintf(src, "\treturn %s;\n\n", listLenNameG);
-			fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(),
-				td->cTypeDefInfo->encodeRoutineName);
-			fprintf(src, "\n\n");
-			break;
+				PrintCMacroElmtsEncodeCode(src, td, td->type, td->type->basicType->a.macroType, FIRST_LEVEL, valueArgNameG);
+				fprintf(src, "\treturn %s;\n\n", encodedLenVarNameG);
+				fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
+				fprintf(hdr, "\n\n");
+				fprintf(src, "\n\n");
+				break;
 
+			case C_NO_TYPE:
+				/*            fprintf (src," sorry, unsupported type \n\n"); */
+				break;
 
-		case C_MACROTYPE:
-			PrintCEncoderPrototype(hdr, td);
-			PrintCEncoderDeclaration(src, td);
-			fprintf(src, "{\n");
-			PrintCEncoderLocals(src, td);
-			fprintf(src, "\n\n");
-
-			PrintCMacroElmtsEncodeCode(src, td, td->type, td->type->basicType->a.macroType, FIRST_LEVEL, valueArgNameG);
-			fprintf(src, "\treturn %s;\n\n", encodedLenVarNameG);
-			fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName);
-			fprintf(hdr, "\n\n");
-			fprintf(src, "\n\n");
-			break;
-
-
-		case C_NO_TYPE:
-			/*            fprintf (src," sorry, unsupported type \n\n"); */
-			break;
-
-		default:
-			fprintf(errFileG, "PrintCEncoder: ERROR - unknown c type id\n");
-			break;
+			default:
+				fprintf(errFileG, "PrintCEncoder: ERROR - unknown c type id\n");
+				break;
 		}
 	}
-}  /*  PrintCContentEncoder */
+} /*  PrintCContentEncoder */
 
-
-
-	/*
+/*
  * Prints prototype for encode routine in hdr file
  */
-static void
-PrintCEncoderPrototype PARAMS((hdr, td),
-	FILE* hdr _AND_
-	TypeDef* td)
+static void PrintCEncoderPrototype PARAMS((hdr, td), FILE* hdr _AND_ TypeDef* td)
 {
 	CTDI* ctdi;
 
 	ctdi = td->cTypeDefInfo;
-	//fprintf (hdr,"%s %s%sContent PROTO ((%s b, %s *v));", returnTypeG, GetEncRulePrefix(), ctdi->encodeRoutineName, bufTypeNameG, ctdi->cTypeName);
+	// fprintf (hdr,"%s %s%sContent PROTO ((%s b, %s *v));", returnTypeG, GetEncRulePrefix(), ctdi->encodeRoutineName, bufTypeNameG, ctdi->cTypeName);
 	fprintf(hdr, "%s %s%sContent(%s b,%s *v);", returnTypeG, GetEncRulePrefix(), ctdi->encodeRoutineName, bufTypeNameG, ctdi->cTypeName);
 
-}  /*  PrintCEncoderPrototype */
-
-
+} /*  PrintCEncoderPrototype */
 
 /*
  * Prints declarations of encode routine for the given type def
  */
-static void
-PrintCEncoderDeclaration PARAMS((src, td),
-	FILE* src _AND_
-	TypeDef* td)
+static void PrintCEncoderDeclaration PARAMS((src, td), FILE* src _AND_ TypeDef* td)
 {
 	CTDI* ctdi;
 
@@ -584,10 +516,7 @@ PrintCEncoderDeclaration PARAMS((src, td),
 	//	fprintf (src,"%s\n%s%sContent PARAMS ((b, v),\n%s b _AND_\n%s *v)\n", returnTypeG, GetEncRulePrefix(), ctdi->encodeRoutineName, bufTypeNameG, ctdi->cTypeName);ctdi =  td->cTypeDefInfo;
 	fprintf(src, "%s %s%sContent(%s b,%s *v)\n", returnTypeG, GetEncRulePrefix(), ctdi->encodeRoutineName, bufTypeNameG, ctdi->cTypeName);
 
-}  /*  PrintCEncoderDeclaration */
-
-
-
+} /*  PrintCEncoderDeclaration */
 
 /*
  * makes a define for type refs or primitive type renaming
@@ -595,14 +524,9 @@ PrintCEncoderDeclaration PARAMS((src, td),
  * TypeX ::= INTEGER --> #define BerEncodeTypeX(b,v) BerEncodeInteger(b,v)
  * TypeX ::= TypeY --> #define BerEncodeTypeX(b,v) BerEncodeTypeY(b,v)
  */
-static void
-PrintCEncoderDefine PARAMS((hdr, td),
-	FILE* hdr _AND_
-	TypeDef* td)
+static void PrintCEncoderDefine PARAMS((hdr, td), FILE* hdr _AND_ TypeDef* td)
 {
-	fprintf(hdr, "#define %s%sContent %s%sContent",
-		GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName,
-		GetEncRulePrefix(), td->type->cTypeRefInfo->encodeRoutineName);
+	fprintf(hdr, "#define %s%sContent %s%sContent", GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName, GetEncRulePrefix(), td->type->cTypeRefInfo->encodeRoutineName);
 
 	/*
 		fprintf(hdr, "#define %s%sContent( b, v)  ", GetEncRulePrefix(),
@@ -610,26 +534,19 @@ PrintCEncoderDefine PARAMS((hdr, td),
 		fprintf (hdr, "%s%sContent (b, v)", GetEncRulePrefix(),
 		td->type->cTypeRefInfo->encodeRoutineName);
 	*/
-}  /*  PrintCEncoderDefine */
+} /*  PrintCEncoderDefine */
 
-
-
-
-static void
-PrintCEncoderLocals PARAMS((src, td),
-	FILE* src _AND_
-	TypeDef* td)
+static void PrintCEncoderLocals PARAMS((src, td), FILE* src _AND_ TypeDef* td)
 {
 	fprintf(src, "\tAsnLen %s = 0;\n", encodedLenVarNameG);
 	fprintf(src, "\tAsnLen %s;\n", itemLenNameG);
 	fprintf(src, "\tAsnLen %s;\n", listLenNameG);
 	fprintf(src, "\tvoid *%s;", listComponentNameG);
-}  /*  PrintCEncoderLocals */
-
-
+} /*  PrintCEncoderLocals */
 
 /* Compare the tags of two NamedTypes */
-static int ElmtsTagCmp(const void* a, const void* b) {
+static int ElmtsTagCmp(const void* a, const void* b)
+{
 	NamedType** at = (NamedType**)a;
 	NamedType** bt = (NamedType**)b;
 
@@ -640,14 +557,7 @@ static int ElmtsTagCmp(const void* a, const void* b) {
  * runs through elmts backwards and prints
  * encoding code for each one
  */
-static void
-PrintCElmtsEncodeCode PARAMS((src, td, parent, elmts, level, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts _AND_
-	int level _AND_
-	char* varName)
+static void PrintCElmtsEncodeCode PARAMS((src, td, parent, elmts, level, varName), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* elmts _AND_ int level _AND_ char* varName)
 {
 	NamedType* e;
 	NamedType** elmtlist;
@@ -659,18 +569,17 @@ PrintCElmtsEncodeCode PARAMS((src, td, parent, elmts, level, varName),
 		return;
 	}
 
-
 	/* If the encoding rules to be used are DER and we are generating
 	 * an encoder for a SET, the SET must be encoded in tag order, therefore
 	 * we must sort the elements
 	 */
-	if (GetEncRulesType() == DER &&
-		parent->basicType->choiceId == BASICTYPE_SET) {
+	if (GetEncRulesType() == DER && parent->basicType->choiceId == BASICTYPE_SET)
+	{
 
 		/* Put all the elements in the array */
-		elmtlist = (NamedType**)Asn1Alloc(sizeof(NamedType*) *
-			AsnListCount(elmts));
-		FOR_EACH_LIST_ELMT(e, elmts) {
+		elmtlist = (NamedType**)Asn1Alloc(sizeof(NamedType*) * AsnListCount(elmts));
+		FOR_EACH_LIST_ELMT(e, elmts)
+		{
 			elmtlist[i] = e;
 			i++;
 		}
@@ -679,14 +588,14 @@ PrintCElmtsEncodeCode PARAMS((src, td, parent, elmts, level, varName),
 		qsort(elmtlist, i, sizeof(NamedType*), ElmtsTagCmp);
 
 		/* Generate encoders (backwards) */
-		for (i--; i >= 0; i--) {
+		for (i--; i >= 0; i--)
 			PrintCElmtEncodeCode(src, td, parent, elmtlist[i], level, varName);
-		}
 
 		/* Free list */
 		Asn1Free(elmtlist);
 	}
-	else {
+	else
+	{
 		/*
 		 * remember! encoding "backwards" so recursively traverse
 		 * list backwards
@@ -694,7 +603,7 @@ PrintCElmtsEncodeCode PARAMS((src, td, parent, elmts, level, varName),
 		FOR_EACH_LIST_ELMT_RVS(e, elmts)
 		{
 			if (e->type->basicType->choiceId == BASICTYPE_OBJECTCLASSFIELDTYPE)
-			{	// Deepak: 01/Apr/2003
+			{ // Deepak: 01/Apr/2003
 				fprintf(src, "\t/*~~~~~~~~~~~~~~~~~~ Now encode the OpenType parameter here ~~~~~~~~~~~~~~~~~~*/\n");
 				PrintConstraintValueCheckingCode(src, td, e->type, e);
 				fprintf(src, "\titemLen = %s[index].encode%s(b,&v->%s);\n", e->type->tableConstraint->objSetAssignment->objectSetName, e->type->typeName, e->fieldName);
@@ -713,21 +622,12 @@ PrintCElmtsEncodeCode PARAMS((src, td, parent, elmts, level, varName),
 		}
 	}
 
-}  /* PrintCElmtsEncodeCode */
-
-
+} /* PrintCElmtsEncodeCode */
 
 /*
  * Prints code for encoding the elmts of a SEQ or SET
  */
-static void
-PrintCElmtEncodeCode PARAMS((src, td, parent, e, level, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedType* e _AND_
-	int level _AND_
-	char* varName)
+static void PrintCElmtEncodeCode PARAMS((src, td, parent, e, level, varName), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedType* e _AND_ int level _AND_ char* varName)
 {
 	CTRI* ctri;
 	char elmtVarRef[MAX_VAR_REF];
@@ -746,39 +646,33 @@ PrintCElmtEncodeCode PARAMS((src, td, parent, e, level, varName),
 	if (!ctri->isEncDec)
 		return;
 
-
 	MakeVarPtrRef(genEncCRulesG, td, parent, e->type, varName, elmtVarRef, MAX_VAR_REF);
 
 	/* If we are currently using DER and the value of a component with the
 	 * DEFAULT qualifier is the same as the default value, then we should not
 	 * encode that value
 	 */
-	if (e->type->defaultVal != NULL) {
+	if (e->type->defaultVal != NULL)
+	{
 		if (GetEncRulesType() == DER)
 		{
 			fprintf(src, "\tif(%s (%s) && (", ctri->optTestRoutineName, elmtVarRef);
 			if (GetBuiltinType(e->type) == BASICTYPE_BITSTRING)
-			{
 				fprintf(src, "(*%s).bitLen != ", elmtVarRef);
-			}
 			else
-			{
 				fprintf(src, "*%s != ", elmtVarRef);
-			}
 
 			/* Get default value */
 			switch (e->type->defaultVal->value->basicValue->choiceId)
 			{
-			case BASICVALUE_LOCALVALUEREF:
-				value =
-					e->type->defaultVal->value->basicValue->a.localValueRef->link->value;
-				break;
-			case BASICVALUE_IMPORTVALUEREF:
-				value =
-					e->type->defaultVal->value->basicValue->a.importValueRef->link->value;
-				break;
-			default:
-				value = e->type->defaultVal->value;
+				case BASICVALUE_LOCALVALUEREF:
+					value = e->type->defaultVal->value->basicValue->a.localValueRef->link->value;
+					break;
+				case BASICVALUE_IMPORTVALUEREF:
+					value = e->type->defaultVal->value->basicValue->a.importValueRef->link->value;
+					break;
+				default:
+					value = e->type->defaultVal->value;
 			}
 
 			PrintCValueInstantiation(src, genEncCRulesG, value);
@@ -797,83 +691,79 @@ PrintCElmtEncodeCode PARAMS((src, td, parent, e, level, varName),
 
 	switch (ctri->cTypeId)
 	{
-	case C_ANYDEFINEDBY:
+		case C_ANYDEFINEDBY:
 
-		/* get type of 'defining' field (int/enum/oid)*/
-		idNamedType = e->type->basicType->a.anyDefinedBy->link;
-		tmpTypeId = GetBuiltinType(idNamedType->type);
+			/* get type of 'defining' field (int/enum/oid)*/
+			idNamedType = e->type->basicType->a.anyDefinedBy->link;
+			tmpTypeId = GetBuiltinType(idNamedType->type);
 
-		if (tmpTypeId == BASICTYPE_OID || tmpTypeId == BASICTYPE_RELATIVE_OID)
-		{
-			MakeVarPtrRef(genEncCRulesG, td, parent, idNamedType->type, varName, idVarRef, MAX_VAR_REF);
-			fprintf(src, "\tSetAnyTypeByOid(%s,%s);\n", elmtVarRef, idVarRef);
-		}
-		else
-		{
-			/* want to ref int by value not ptr */
-			MakeVarValueRef(genEncCRulesG, td, parent, idNamedType->type, varName, idVarRef, MAX_VAR_REF);
-			fprintf(src, "\tSetAnyTypeByInt(%s,%s);\n", elmtVarRef, idVarRef);
-		}
-
-		/* ANY's enc's do tag and len so zap the Content suffix */
-		fprintf(src, "\t%s = %s%s(b,%s);\n", itemLenNameG,
-			GetEncRulePrefix(), ctri->encodeRoutineName, elmtVarRef);
-		break;
-
-	case C_TYPEREF:
-		tmpType = ResolveImportedType(e->type);
-
-		/* NOTE: ANY DEFINED BY must be directly in the parent (not ref)*/
-		if (tmpType->cTypeRefInfo->cTypeId != C_ANY)
-		{
-			if (tmpType->basicType->choiceId == BASICTYPE_ENUMERATED) // Deepak: 19/Apr/2003 only if added,
-				fprintf(src, "\t%s = %s%sContent(b,(AsnInt *)%s);\n", itemLenNameG, GetEncRulePrefix(), ctri->encodeRoutineName, elmtVarRef);
+			if (tmpTypeId == BASICTYPE_OID || tmpTypeId == BASICTYPE_RELATIVE_OID)
+			{
+				MakeVarPtrRef(genEncCRulesG, td, parent, idNamedType->type, varName, idVarRef, MAX_VAR_REF);
+				fprintf(src, "\tSetAnyTypeByOid(%s,%s);\n", elmtVarRef, idVarRef);
+			}
 			else
-				fprintf(src, "\t%s = %s%sContent(b,%s);\n", itemLenNameG, GetEncRulePrefix(), ctri->encodeRoutineName, elmtVarRef);
+			{
+				/* want to ref int by value not ptr */
+				MakeVarValueRef(genEncCRulesG, td, parent, idNamedType->type, varName, idVarRef, MAX_VAR_REF);
+				fprintf(src, "\tSetAnyTypeByInt(%s,%s);\n", elmtVarRef, idVarRef);
+			}
+
+			/* ANY's enc's do tag and len so zap the Content suffix */
+			fprintf(src, "\t%s = %s%s(b,%s);\n", itemLenNameG, GetEncRulePrefix(), ctri->encodeRoutineName, elmtVarRef);
 			break;
-		}
-		else  /* fall through */
 
-	case C_ANY:
-		/* ANY's enc's do tag and len so zap the Content suffix */
-		//RWC;fprintf (src,"\t /* ANY - Fix Me! */\n");
-		fprintf(src, "\tSetAnyTypeUnknown(%s);\n", elmtVarRef);
-		//RWC;fprintf (src,"\tSetAnyTypeBy\?\?\?(%s, \?\?\?);\n", elmtVarRef);
-		fprintf(src, "\t%s = %s%s (b, %s);\n", itemLenNameG,
-			GetEncRulePrefix(), "EncAsnAny"/*RWC;NOT VALID FOR C_TYPEREF;ctri->encodeRoutineName*/, elmtVarRef);
-		break;
+		case C_TYPEREF:
+			tmpType = ResolveImportedType(e->type);
 
+			/* NOTE: ANY DEFINED BY must be directly in the parent (not ref)*/
+			if (tmpType->cTypeRefInfo->cTypeId != C_ANY)
+			{
+				if (tmpType->basicType->choiceId == BASICTYPE_ENUMERATED) // Deepak: 19/Apr/2003 only if added,
+					fprintf(src, "\t%s = %s%sContent(b,(AsnInt *)%s);\n", itemLenNameG, GetEncRulePrefix(), ctri->encodeRoutineName, elmtVarRef);
+				else
+					fprintf(src, "\t%s = %s%sContent(b,%s);\n", itemLenNameG, GetEncRulePrefix(), ctri->encodeRoutineName, elmtVarRef);
+				break;
+			}
+			else /* fall through */
 
-	case C_LIB:
-		fprintf(src, "\t%s = %s%sContent(b,%s);\n", itemLenNameG,
-			GetEncRulePrefix(), ctri->encodeRoutineName, elmtVarRef);
-		break;
+			case C_ANY:
+				/* ANY's enc's do tag and len so zap the Content suffix */
+				// RWC;fprintf (src,"\t /* ANY - Fix Me! */\n");
+				fprintf(src, "\tSetAnyTypeUnknown(%s);\n", elmtVarRef);
+			// RWC;fprintf (src,"\tSetAnyTypeBy\?\?\?(%s, \?\?\?);\n", elmtVarRef);
+			fprintf(src, "\t%s = %s%s (b, %s);\n", itemLenNameG, GetEncRulePrefix(), "EncAsnAny" /*RWC;NOT VALID FOR C_TYPEREF;ctri->encodeRoutineName*/, elmtVarRef);
+			break;
 
-	case C_CHOICE:
-		PrintCChoiceEncodeCode(src, td, e->type, level + 1, elmtVarRef);
-		break;
+		case C_LIB:
+			fprintf(src, "\t%s = %s%sContent(b,%s);\n", itemLenNameG, GetEncRulePrefix(), ctri->encodeRoutineName, elmtVarRef);
+			break;
 
-	case C_STRUCT:
-		PrintCElmtsEncodeCode(src, td, e->type, e->type->basicType->a.set, level + 1, elmtVarRef);
-		break;
+		case C_CHOICE:
+			PrintCChoiceEncodeCode(src, td, e->type, level + 1, elmtVarRef);
+			break;
 
-	case C_LIST:
-		PrintCListEncoderCode(src, td, e->type, level + 1, elmtVarRef);
-		fprintf(src, "\t%s = %s;\n", itemLenNameG, listLenNameG);
-		fprintf(src, "\n");
-		break;
+		case C_STRUCT:
+			PrintCElmtsEncodeCode(src, td, e->type, e->type->basicType->a.set, level + 1, elmtVarRef);
+			break;
 
-	case C_NO_TYPE:
-		break;
+		case C_LIST:
+			PrintCListEncoderCode(src, td, e->type, level + 1, elmtVarRef);
+			fprintf(src, "\t%s = %s;\n", itemLenNameG, listLenNameG);
+			fprintf(src, "\n");
+			break;
 
-		//		case C_OBJECTCLASSFIELDTYPE:
-		//		  fprintf (src, "\t%s = %s%sContent (b, %s);\n", itemLenNameG,
-		//			   GetEncRulePrefix(), "AsnOcts" /*ctri->encodeRoutineName*/, elmtVarRef);
-		//			break;
+		case C_NO_TYPE:
+			break;
 
-	default:
-		fprintf(errFileG, "PrintCElmtEncodeCode: ERROR - unknown c type id\n");
-		break;
+			//		case C_OBJECTCLASSFIELDTYPE:
+			//		  fprintf (src, "\t%s = %s%sContent (b, %s);\n", itemLenNameG,
+			//			   GetEncRulePrefix(), "AsnOcts" /*ctri->encodeRoutineName*/, elmtVarRef);
+			//			break;
+
+		default:
+			fprintf(errFileG, "PrintCElmtEncodeCode: ERROR - unknown c type id\n");
+			break;
 	}
 
 	/*RWC;NOT ANY LONGER;if (ctri->cTypeId != C_ANY) / * ANY's do their own tag/lens */
@@ -887,20 +777,13 @@ PrintCElmtEncodeCode PARAMS((src, td, parent, e, level, varName),
 
 	fprintf(src, "\n");
 
-}  /*  PrintCElmtEncodeCode */
+} /*  PrintCElmtEncodeCode */
 
 /*
  * checks for which macroType is there
  * then calls specific function for encoding of that macro
  */
-static void
-PrintCMacroElmtsEncodeCode PARAMS((src, td, parent, mt, level, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	MacroType* mt _AND_
-	int level _AND_
-	char* varName)
+static void PrintCMacroElmtsEncodeCode PARAMS((src, td, parent, mt, level, varName), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ MacroType* mt _AND_ int level _AND_ char* varName)
 {
 	if (mt == NULL)
 	{
@@ -909,40 +792,27 @@ PrintCMacroElmtsEncodeCode PARAMS((src, td, parent, mt, level, varName),
 	}
 
 	switch (mt->choiceId)
-	{	// This switch case copied from do-macros.c
-	case MACROTYPE_ASNABSTRACTOPERATION:
-	case MACROTYPE_ROSOPERATION:
+	{ // This switch case copied from do-macros.c
+		case MACROTYPE_ASNABSTRACTOPERATION:
+		case MACROTYPE_ROSOPERATION:
 
-		PrintCRosOperationElmtsEncodeCode(src, td, parent, mt, mt->a.rosOperation, level, varName);
-		break;
+			PrintCRosOperationElmtsEncodeCode(src, td, parent, mt, mt->a.rosOperation, level, varName);
+			break;
 
-		// Add code for other macro types here
-	default:
-		// Unsupported Macro Type
-		break;
+			// Add code for other macro types here
+		default:
+			// Unsupported Macro Type
+			break;
 	}
-}  /* PrintCMacroElmtsEncodeCode */
+} /* PrintCMacroElmtsEncodeCode */
 
-
-static void
-PrintCRosOperationElmtsEncodeCode PARAMS((src, td, parent, mt, op, level, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	MacroType* mt _AND_
-	RosOperationMacroType* op _AND_
-	int level _AND_
-	char* varName)
+static void PrintCRosOperationElmtsEncodeCode PARAMS((src, td, parent, mt, op, level, varName), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ MacroType* mt _AND_ RosOperationMacroType* op _AND_ int level _AND_ char* varName)
 {
 	if (op->result != NULL)
-	{
 		PrintCElmtEncodeCode(src, td, parent, op->result, level, varName);
-	}
 
 	if (op->arguments != NULL)
-	{
 		PrintCElmtEncodeCode(src, td, parent, op->arguments, level, varName);
-	}
 } /* PrintCRosOperationElmtsEncodeCode */
 
 /*
@@ -963,13 +833,7 @@ PrintCRosOperationElmtsEncodeCode PARAMS((src, td, parent, mt, op, level, varNam
  *    ...
  * }
  */
-static void
-PrintCListEncoderCode PARAMS((src, td, t, level, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	int level _AND_
-	char* varName)
+static void PrintCListEncoderCode PARAMS((src, td, t, level, varName), FILE* src _AND_ TypeDef* td _AND_ Type* t _AND_ int level _AND_ char* varName)
 {
 	CTRI* ctri;
 	char* elmtVarRef = "component";
@@ -985,8 +849,8 @@ PrintCListEncoderCode PARAMS((src, td, t, level, varName),
 	 * of the elements.  This first bit stuffs each encoded elmt into an
 	 * array of bufs.
 	 */
-	if (GetEncRulesType() == DER &&
-		t->basicType->choiceId == BASICTYPE_SETOF) {
+	if (GetEncRulesType() == DER && t->basicType->choiceId == BASICTYPE_SETOF)
+	{
 		/* Print extra locals */
 		fprintf(src, "\tEncodedElmt *bufs;\n");
 		fprintf(src, "\tExpBuf	*xbufp;\n");
@@ -995,8 +859,7 @@ PrintCListEncoderCode PARAMS((src, td, t, level, varName),
 		fprintf(src, "\tlistLen = 0;\n");
 		fprintf(src, "\t/* Encode elements and stuff them in an array */\n");
 		fprintf(src, "\tbufs = (EncodedElmt* ) Asn1Alloc(sizeof(EncodedElmt)*AsnListCount(%s));\n", varName);
-		fprintf(src, "\tfor (i=0; i < AsnListCount(%s); i++) {\n",
-			varName);
+		fprintf(src, "\tfor (i=0; i < AsnListCount(%s); i++) {\n", varName);
 		fprintf(src, "\t  xbufp = ExpBufAllocBufAndData();;\n");
 		fprintf(src, "\t  ExpBufResetInWriteRvsMode(xbufp);// May not need - leave in for now \n ");
 		fprintf(src, "\t  ExpBuftoGenBuf(xbufp, &bufs[i].b);\n   } \n");
@@ -1006,9 +869,9 @@ PrintCListEncoderCode PARAMS((src, td, t, level, varName),
 		itemLenName = itemLenNameG;
 		itemLenNameG = "bufs[i].len";
 		bufNameG = "bufs[i].b";
-
 	}
-	else {
+	else
+	{
 		fprintf(src, "\tlistLen = 0;\n");
 		fprintf(src, "\tFOR_EACH_LIST_ELMT_RVS(component,%s)\n", varName);
 		fprintf(src, "\t{\n");
@@ -1024,50 +887,43 @@ PrintCListEncoderCode PARAMS((src, td, t, level, varName),
 	switch (ctri->cTypeId)
 	{
 
-	case C_TYPEREF:
-		tmpType = ResolveImportedType(t->basicType->a.setOf);
+		case C_TYPEREF:
+			tmpType = ResolveImportedType(t->basicType->a.setOf);
 
-		/* NOTE: ANY DEFINED BY must be directly in the parent (not ref)*/
-		if (tmpType->cTypeRefInfo->cTypeId != C_ANY)
-		{
-			fprintf(src, "\t%s = %s%sContent(%s,%s);\n", itemLenNameG,
-				GetEncRulePrefix(), ctri->encodeRoutineName,
-				bufNameG, elmtVarRef);
+			/* NOTE: ANY DEFINED BY must be directly in the parent (not ref)*/
+			if (tmpType->cTypeRefInfo->cTypeId != C_ANY)
+			{
+				fprintf(src, "\t%s = %s%sContent(%s,%s);\n", itemLenNameG, GetEncRulePrefix(), ctri->encodeRoutineName, bufNameG, elmtVarRef);
+				break;
+			}
+			else /* fall through */
+
+			case C_ANY:
+				/* ANY's enc's do tag and len so zap the Content suffix */
+				fprintf(src, "\t /* ANY - Fix Me! */\n");
+			fprintf(src, "\tSetAnyTypeUnknown(%s);\n", elmtVarRef);
+			// RWC;fprintf (src, "\tSetAnyTypeBy???(%s,???);\n", elmtVarRef);
+			fprintf(src, "\t%s = %s%s(%s,%s);\n", itemLenNameG, GetEncRulePrefix(), ctri->encodeRoutineName, bufNameG, elmtVarRef);
 			break;
-		}
-		else  /* fall through */
 
-	case C_ANY:
-		/* ANY's enc's do tag and len so zap the Content suffix */
-		fprintf(src, "\t /* ANY - Fix Me! */\n");
-		fprintf(src, "\tSetAnyTypeUnknown(%s);\n", elmtVarRef);
-		//RWC;fprintf (src, "\tSetAnyTypeBy???(%s,???);\n", elmtVarRef);
-		fprintf(src, "\t%s = %s%s(%s,%s);\n", itemLenNameG,
-			GetEncRulePrefix(), ctri->encodeRoutineName,
-			bufNameG, elmtVarRef);
-		break;
-
-	default:
-		fprintf(src, "\t%s = %s%sContent(%s,(%s*)%s);\n",
-			itemLenNameG, GetEncRulePrefix(),
-			ctri->encodeRoutineName, bufNameG, ctri->cTypeName,
-			elmtVarRef);
-		break;
+		default:
+			fprintf(src, "\t%s = %s%sContent(%s,(%s*)%s);\n", itemLenNameG, GetEncRulePrefix(), ctri->encodeRoutineName, bufNameG, ctri->cTypeName, elmtVarRef);
+			break;
 	}
 
 	PrintCTagAndLenEncodingCode(src, td, t->basicType->a.setOf);
 	fprintf(src, "\n");
 	fprintf(src, "\t%s += %s;\n", listLenNameG, itemLenNameG);
-	if (GetEncRulesType() == DER &&
-		t->basicType->choiceId == BASICTYPE_SETOF) {
+	if (GetEncRulesType() == DER && t->basicType->choiceId == BASICTYPE_SETOF)
+	{
 		fprintf(src, "\t  BufResetInReadMode(bufs[i].b);\n");
 
 		fprintf(src, "\t  i++;\n");
 	}
 	fprintf(src, "\t}\n");
 
-	if (GetEncRulesType() == DER &&
-		t->basicType->choiceId == BASICTYPE_SETOF) {
+	if (GetEncRulesType() == DER && t->basicType->choiceId == BASICTYPE_SETOF)
+	{
 		/* Sort the encoded results in the array of bufs, then stuff everything
 		 * in the output buf
 		 */
@@ -1086,17 +942,9 @@ PrintCListEncoderCode PARAMS((src, td, t, level, varName),
 		itemLenNameG = itemLenName;
 		bufNameG = "b";
 	}
-}  /*  PrintCListEncoderCode */
+} /*  PrintCListEncoderCode */
 
-
-
-static void
-PrintCChoiceEncodeCode PARAMS((src, td, t, level, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	int level _AND_
-	char* varName)
+static void PrintCChoiceEncodeCode PARAMS((src, td, t, level, varName), FILE* src _AND_ TypeDef* td _AND_ Type* t _AND_ int level _AND_ char* varName)
 {
 	NamedType* e;
 	CTRI* ctri;
@@ -1120,8 +968,6 @@ PrintCChoiceEncodeCode PARAMS((src, td, t, level, varName),
 		else
 			fprintf(src, "\t\tcase ????:\n");
 
-
-
 		PrintCElmtEncodeCode(src, td, t, e, level + 1, varName);
 		fprintf(src, "\tbreak;\n\n");
 
@@ -1129,19 +975,13 @@ PrintCChoiceEncodeCode PARAMS((src, td, t, level, varName),
 	}
 
 	fprintf(src, "\t}\n");
-}  /* PrintCChoiceEncodeCode */
-
-
+} /* PrintCChoiceEncodeCode */
 
 /*
  *  prints DecodeBerEocIfNec (b) for each constructed len
  *  assoc with given type
  */
-static void
-PrintEocEncoders PARAMS((src, td, t),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* t)
+static void PrintEocEncoders PARAMS((src, td, t), FILE* src _AND_ TypeDef* td _AND_ Type* t)
 {
 	TagList* tl;
 	Tag* tag;
@@ -1181,19 +1021,14 @@ PrintEocEncoders PARAMS((src, td, t),
 	*/
 
 	FreeTags(tl);
-}  /* PrintEocEncoders */
-
+} /* PrintEocEncoders */
 
 /*
  *  Recursively walks throught type refs printing lower lvl tags
  *  first (since encoding is done backwards).
  *
  */
-static void
-PrintCTagAndLenEncodingCode PARAMS((src, td, t),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* t)
+static void PrintCTagAndLenEncodingCode PARAMS((src, td, t), FILE* src _AND_ TypeDef* td _AND_ Type* t)
 {
 	TagList* tl;
 	int stoleChoiceTags;
@@ -1210,18 +1045,12 @@ PrintCTagAndLenEncodingCode PARAMS((src, td, t),
 		PrintCTagAndLenList(src, t, tl);
 
 	FreeTags(tl);
-}  /* PrintCTagAndLenEncodingCode */
-
-
+} /* PrintCTagAndLenEncodingCode */
 
 /*
  * prints last tag's encoding code first
  */
-static void
-PrintCTagAndLenList PARAMS((src, t, tagList),
-	FILE* src _AND_
-	Type* t _AND_
-	TagList* tagList)
+static void PrintCTagAndLenList PARAMS((src, t, tagList), FILE* src _AND_ Type* t _AND_ TagList* tagList)
 {
 	char* classStr;
 	char* formStr;
@@ -1239,11 +1068,7 @@ PrintCTagAndLenList PARAMS((src, t, tagList),
 	 * encoded lengths of 0 <= len <= 127
 	 */
 	typesType = GetBuiltinType(t);
-	if ((typesType == BASICTYPE_BOOLEAN) ||
-		(typesType == BASICTYPE_INTEGER) ||
-		(typesType == BASICTYPE_NULL) ||
-		(typesType == BASICTYPE_REAL) ||
-		(typesType == BASICTYPE_ENUMERATED))
+	if ((typesType == BASICTYPE_BOOLEAN) || (typesType == BASICTYPE_INTEGER) || (typesType == BASICTYPE_NULL) || (typesType == BASICTYPE_REAL) || (typesType == BASICTYPE_ENUMERATED))
 		isShort = 1;
 	else
 		isShort = 0;
@@ -1279,13 +1104,11 @@ PrintCTagAndLenList PARAMS((src, t, tagList),
 		else
 			tagLen = 5;
 
-		fprintf(src, "\t%s += %sEncTag%d(%s,%s,%s,%s);\n", itemLenNameG,
-			GetEncRulePrefix(), tagLen, bufNameG, classStr, formStr,
-			DetermineCode(tg, &tagLen, 0));
-		//RWC;Code2UnivCodeStr (tg->code));
+		fprintf(src, "\t%s += %sEncTag%d(%s,%s,%s,%s);\n", itemLenNameG, GetEncRulePrefix(), tagLen, bufNameG, classStr, formStr, DetermineCode(tg, &tagLen, 0));
+		// RWC;Code2UnivCodeStr (tg->code));
 	}
 
-}  /* PrintCTagAndLenList */
+} /* PrintCTagAndLenList */
 
 /*
  * prints length encoding code.  Primitives always use
@@ -1296,27 +1119,17 @@ PrintCTagAndLenList PARAMS((src, t, tagList),
  * Types for which isShort apply are: boolean, null and
  * (almost always) integer and reals
  */
-static void
-PrintCLenEncodingCode PARAMS((f, isCons, isShort),
-	FILE* f _AND_
-	int isCons _AND_
-	int isShort)
+static void PrintCLenEncodingCode PARAMS((f, isCons, isShort), FILE* f _AND_ int isCons _AND_ int isShort)
 {
 	/* fprintf (f, "\t%sER_ENCODE_DEF_LEN (b, itemLen, itemLen);",
 	   GetEncRulePrefix()); */
 	if (isCons)
-		fprintf(f, "\t%s += %sEncConsLen(%s,%s);",
-			itemLenNameG, GetEncRulePrefix(), bufNameG, itemLenNameG);
-	else
+		fprintf(f, "\t%s += %sEncConsLen(%s,%s);", itemLenNameG, GetEncRulePrefix(), bufNameG, itemLenNameG);
+	else if (isShort)
 	{
-		if (isShort)
-		{
-			fprintf(f, "\t%sEncDefLenTo127(%s,%s);\n",
-				GetEncRulePrefix(), bufNameG, itemLenNameG);
-			fprintf(f, "\t%s++;", itemLenNameG);
-		}
-		else
-			fprintf(f, "\t%s += %sEncDefLen(%s,%s);",
-				itemLenNameG, GetEncRulePrefix(), bufNameG, itemLenNameG);
+		fprintf(f, "\t%sEncDefLenTo127(%s,%s);\n", GetEncRulePrefix(), bufNameG, itemLenNameG);
+		fprintf(f, "\t%s++;", itemLenNameG);
 	}
-}  /* PrintCLenEncodingCode */
+	else
+		fprintf(f, "\t%s += %sEncDefLen(%s,%s);", itemLenNameG, GetEncRulePrefix(), bufNameG, itemLenNameG);
+} /* PrintCLenEncodingCode */

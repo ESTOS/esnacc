@@ -7,9 +7,6 @@
 
 void SaveTSConverterFilesToOutputDirectory(const char* szPath);
 
-void PrintTSConverterCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal,
-	int printTypes, int printValues, int printEncoders,
-	int printDecoders, int printJSONEncDec,
-	int novolatilefuncs);
+void PrintTSConverterCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int novolatilefuncs);
 
 #endif // TSCONVERTER_H_INCLUDED

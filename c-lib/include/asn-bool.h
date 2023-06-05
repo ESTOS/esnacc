@@ -19,33 +19,28 @@
 #define _asn_bool_h_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-
 
 	typedef unsigned char AsnBool;
 
+	AsnLen BEncAsnBool PROTO((GenBuf * b, AsnBool* data));
 
-	AsnLen BEncAsnBool PROTO((GenBuf* b, AsnBool* data));
+	void BDecAsnBool PROTO((GenBuf * b, AsnBool* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-	void BDecAsnBool PROTO((GenBuf* b, AsnBool* result, AsnLen* bytesDecoded, ENV_TYPE env));
+	AsnLen BEncAsnBoolContent PROTO((GenBuf * b, AsnBool* data));
 
-	AsnLen BEncAsnBoolContent PROTO((GenBuf* b, AsnBool* data));
-
-	void BDecAsnBoolContent PROTO((GenBuf* b, AsnTag tag, AsnLen len, AsnBool* result, AsnLen* bytesDecoded, ENV_TYPE env));
+	void BDecAsnBoolContent PROTO((GenBuf * b, AsnTag tag, AsnLen len, AsnBool* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
 	/* do nothing  */
-	void FreeAsnBool PROTO((AsnBool* b));
-#define FreeAsnBool( v)
+	void FreeAsnBool PROTO((AsnBool * b));
+#define FreeAsnBool(v)
 
-	void PrintAsnBool PROTO((FILE* f, AsnBool* b, unsigned int indent));
+	void PrintAsnBool PROTO((FILE * f, AsnBool* b, unsigned int indent));
 
 #ifdef __cplusplus
 }
 #endif /* extern 'C' */
 
 #endif
-
-
-
-

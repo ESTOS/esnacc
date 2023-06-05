@@ -4,7 +4,8 @@
 #include <assert.h>
 #include <string.h>
 
-bool IsDeprecatedNoOutput(const long long i64DeprecatedValue) {
+bool IsDeprecatedNoOutput(const long long i64DeprecatedValue)
+{
 	if (!gi64NoDeprecatedSymbols || !i64DeprecatedValue)
 		return false;
 	// If set to 1 no date has been specified on the command line, so we remove ANY deprecated value no matter when it was flagged deprecated
@@ -13,14 +14,16 @@ bool IsDeprecatedNoOutput(const long long i64DeprecatedValue) {
 	return gi64NoDeprecatedSymbols >= i64DeprecatedValue;
 }
 
-bool IsROSEValueDef(Module* mod, ValueDef* vd) {
+bool IsROSEValueDef(Module* mod, ValueDef* vd)
+{
 	if (vd->value->type == NULL)
 		return false;
 	if (vd->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
 		return false;
 	if (vd->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
 		return false;
-	if (gi64NoDeprecatedSymbols) {
+	if (gi64NoDeprecatedSymbols)
+	{
 		RosOperationMacroType* pRoseOperation = vd->value->type->basicType->a.macroType->a.rosOperation;
 		if (!pRoseOperation)
 			return false;
@@ -60,11 +63,12 @@ bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszR
 
 	bool bRetVal = false;
 
-	if (IsROSEValueDef(mod, vd)) {
+	if (IsROSEValueDef(mod, vd))
+	{
 		struct NamedType* pArgument = pOperation->arguments;
-		if (pArgument && (ppszArgument || argumentType)) {
-			if (pArgument->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF ||
-				pArgument->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+		if (pArgument && (ppszArgument || argumentType))
+		{
+			if (pArgument->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF || pArgument->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
 			{
 				if (argumentType)
 					*argumentType = resolver(pArgument->type, ppszArgument);
@@ -77,8 +81,7 @@ bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszR
 		struct NamedType* pResult = pOperation->result;
 		if (pResult && (ppszResult || resultType))
 		{
-			if (pResult->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF ||
-				pResult->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+			if (pResult->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF || pResult->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
 			{
 				if (resultType)
 					*resultType = resolver(pResult->type, ppszResult);
@@ -94,8 +97,7 @@ bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszR
 			TypeOrValue* first = (TypeOrValue*)FIRST_LIST_ELMT(pErrors);
 			if (first->choiceId == TYPEORVALUE_TYPE)
 			{
-				if (first->a.type->basicType->choiceId == BASICTYPE_LOCALTYPEREF ||
-					first->a.type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+				if (first->a.type->basicType->choiceId == BASICTYPE_LOCALTYPEREF || first->a.type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
 				{
 					if (errorType)
 						*errorType = resolver(first->a.type, ppszError);
@@ -112,8 +114,7 @@ bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszR
 BasicType* ResolveBasicTypeReferences(BasicType* type, const char** szName)
 {
 	BasicType* returnType = type;
-	while (returnType->choiceId == BASICTYPE_LOCALTYPEREF ||
-		returnType->choiceId == BASICTYPE_IMPORTTYPEREF)
+	while (returnType->choiceId == BASICTYPE_LOCALTYPEREF || returnType->choiceId == BASICTYPE_IMPORTTYPEREF)
 	{
 		if (returnType->choiceId == BASICTYPE_LOCALTYPEREF)
 		{
@@ -156,8 +157,7 @@ Type* ResolveTypeReferencesOneLevel(Type* type, char** szName)
 Type* ResolveTypeReferencesToRoot(Type* type, char** szName)
 {
 	Type* returnType = type;
-	while (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF ||
-		returnType->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+	while (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF || returnType->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
 	{
 		if (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF)
 		{
@@ -180,10 +180,7 @@ Type* ResolveTypeReferencesToRoot(Type* type, char** szName)
 Type* GetRootType(Type* type, const char** szName)
 {
 	Type* returnType = type;
-	while (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF ||
-		returnType->basicType->choiceId == BASICTYPE_IMPORTTYPEREF ||
-		returnType->basicType->choiceId == BASICTYPE_SEQUENCEOF ||
-		returnType->basicType->choiceId == BASICTYPE_SETOF)
+	while (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF || returnType->basicType->choiceId == BASICTYPE_IMPORTTYPEREF || returnType->basicType->choiceId == BASICTYPE_SEQUENCEOF || returnType->basicType->choiceId == BASICTYPE_SETOF)
 	{
 		if (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF)
 		{
@@ -209,7 +206,6 @@ Type* GetRootType(Type* type, const char** szName)
 				*szName = returnType->basicType->a.setOf->typeName;
 			returnType = returnType->basicType->a.setOf;
 		}
-
 	}
 
 	return returnType;
@@ -219,26 +215,26 @@ int IsSimpleType(const enum BasicTypeChoiceId type)
 {
 	switch (type)
 	{
-	case BASICTYPE_BOOLEAN:
-	case BASICTYPE_REAL:
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_UTF8_STR:
-	case BASICTYPE_BITSTRING:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_NULL:
-	case BASICTYPE_ANY:
-		return TRUE;
-	case BASICTYPE_SEQUENCE:
-	case BASICTYPE_SETOF:
-	case BASICTYPE_CHOICE:
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_IMPORTTYPEREF:
-	case BASICTYPE_SEQUENCEOF:
-		break;
-	default:
-		snacc_exit("Unknown type %d", type);
+		case BASICTYPE_BOOLEAN:
+		case BASICTYPE_REAL:
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_UTF8_STR:
+		case BASICTYPE_BITSTRING:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_NULL:
+		case BASICTYPE_ANY:
+			return TRUE;
+		case BASICTYPE_SEQUENCE:
+		case BASICTYPE_SETOF:
+		case BASICTYPE_CHOICE:
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
+		case BASICTYPE_SEQUENCEOF:
+			break;
+		default:
+			snacc_exit("Unknown type %d", type);
 	}
 	return FALSE;
 }
@@ -272,7 +268,6 @@ BasicType* GetBaseBasicType(BasicType* type, const char** szName)
 		if (szName)
 			*szName = returnType->a.localTypeRef->typeName;
 		returnType = returnType->a.localTypeRef->link->type->basicType;
-
 	}
 	else if (returnType->choiceId == BASICTYPE_IMPORTTYPEREF)
 	{
@@ -321,8 +316,8 @@ char* GetImportFileName(char* Impname, ModuleList* mods)
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
 		/* Find the import Module in the Modules and
-		* return the header file name
-		*/
+		 * return the header file name
+		 */
 		if (strcmp(Impname, currMod->modId->name) == 0)
 		{
 			/* Set the file name and break */
@@ -356,7 +351,8 @@ Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, M
 				}
 			}
 			ElemList->curr = elemStore;
-			if (bFound) {
+			if (bFound)
+			{
 				Module* currMod;
 				FOR_EACH_LIST_ELMT(currMod, mods)
 				{
@@ -372,18 +368,21 @@ Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, M
 		mod->imports->curr = storeImport;
 	}
 
-	if (!returnMod) {
+	if (!returnMod)
+	{
 		TypeDef* typeDef;
 		AsnListNode* storeTypeDef = mod->typeDefs->curr;
 		FOR_EACH_LIST_ELMT(typeDef, mod->typeDefs)
 		{
-			if (strcmp(typeDef->definedName, className) == 0) {
+			if (strcmp(typeDef->definedName, className) == 0)
+			{
 				returnMod = mod;
 				break;
 			}
 		}
 		mod->typeDefs->curr = storeTypeDef;
-		if (!returnMod) {
+		if (!returnMod)
+		{
 			fprintf(stderr, "GetImportModuleRefByClassName() - error unresolved reference");
 			assert(FALSE);
 		}
@@ -394,20 +393,23 @@ Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, M
 	return returnMod;
 }
 
-Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod) {
+Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod)
+{
 	Module* module = NULL;
 	AsnListNode* saved = mods->curr;
 	Module* currMod;
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
-		if (strcmp(impMod->modId->name, currMod->modId->name) == 0) {
+		if (strcmp(impMod->modId->name, currMod->modId->name) == 0)
+		{
 			module = currMod;
 			break;
 		}
 	}
 	mods->curr = saved;
 
-	if (!module) {
+	if (!module)
+	{
 		fprintf(stderr, "GetModuleForImportModule() - error unresolved reference");
 		assert(FALSE);
 	}
@@ -415,11 +417,14 @@ Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod) {
 	return module;
 }
 
-bool IsDeprecatedFlaggedModule(Module* mod) {
+bool IsDeprecatedFlaggedModule(Module* mod)
+{
 	asnmodulecomment comment;
 
-	if (GetModuleComment_UTF8(mod->moduleName, &comment)) {
-		if (comment.i64Deprecated) {
+	if (GetModuleComment_UTF8(mod->moduleName, &comment))
+	{
+		if (comment.i64Deprecated)
+		{
 			if (gi64NoDeprecatedSymbols)
 				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
 			else
@@ -430,7 +435,8 @@ bool IsDeprecatedFlaggedModule(Module* mod) {
 	return false;
 }
 
-bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szElement) {
+bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szElement)
+{
 	enum BasicTypeChoiceId type = td->cxxTypeDefInfo->asn1TypeId;
 
 	// Deprecated may get skipped for:
@@ -439,14 +445,14 @@ bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szEle
 	// - sequences if the property is optional
 	// -> so in any other case false, not skippable
 
-	if (type != BASICTYPE_CHOICE &&
-		type != BASICTYPE_ENUMERATED &&
-		type != BASICTYPE_SEQUENCE)
+	if (type != BASICTYPE_CHOICE && type != BASICTYPE_ENUMERATED && type != BASICTYPE_SEQUENCE)
 		return false;
 
 	asnmembercomment comment;
-	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment)) {
-		if (comment.i64Deprecated) {
+	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment))
+	{
+		if (comment.i64Deprecated)
+		{
 			if (gi64NoDeprecatedSymbols)
 				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
 			else
@@ -457,7 +463,8 @@ bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szEle
 	return false;
 }
 
-bool IsDeprecatedNoOutputModule(Module* mod) {
+bool IsDeprecatedNoOutputModule(Module* mod)
+{
 	if (!gi64NoDeprecatedSymbols)
 		return false;
 
@@ -468,7 +475,8 @@ bool IsDeprecatedNoOutputModule(Module* mod) {
 		return false;
 }
 
-bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szElement) {
+bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szElement)
+{
 	if (!gi64NoDeprecatedSymbols)
 		return false;
 
@@ -480,15 +488,16 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 	// - sequences if the property is optional
 	// -> so in any other case false, not skippable
 
-	if (type != BASICTYPE_CHOICE &&
-		type != BASICTYPE_ENUMERATED &&
-		type != BASICTYPE_SEQUENCE)
+	if (type != BASICTYPE_CHOICE && type != BASICTYPE_ENUMERATED && type != BASICTYPE_SEQUENCE)
 		return false;
 
 	asnmembercomment comment;
-	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment)) {
-		if (IsDeprecatedNoOutput(comment.i64Deprecated)) {
-			if (type == BASICTYPE_SEQUENCE) {
+	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment))
+	{
+		if (IsDeprecatedNoOutput(comment.i64Deprecated))
+		{
+			if (type == BASICTYPE_SEQUENCE)
+			{
 				// We need to check if the property is optional, if that is the case we can skip it
 				NamedType* e;
 				bool bReturn = false;
@@ -497,7 +506,8 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 				{
 					if (strcmp(e->fieldName, szElement) != 0)
 						continue;
-					if (e->type->optional) {
+					if (e->type->optional)
+					{
 						bReturn = true;
 						break;
 					}
@@ -513,10 +523,13 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 	return false;
 }
 
-bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName) {
+bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName)
+{
 	asnsequencecomment comment;
-	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment)) {
-		if (comment.i64Deprecated) {
+	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment))
+	{
+		if (comment.i64Deprecated)
+		{
 			if (gi64NoDeprecatedSymbols)
 				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
 			else
@@ -526,7 +539,8 @@ bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName) {
 	return false;
 }
 
-bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName) {
+bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName)
+{
 	if (!gi64NoDeprecatedSymbols)
 		return false;
 
@@ -537,10 +551,13 @@ bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName) {
 		return false;
 }
 
-bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName) {
+bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName)
+{
 	asnoperationcomment comment;
-	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment)) {
-		if (comment.i64Deprecated) {
+	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment))
+	{
+		if (comment.i64Deprecated)
+		{
 			if (gi64NoDeprecatedSymbols)
 				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
 			else
@@ -550,7 +567,8 @@ bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName) {
 	return false;
 }
 
-bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName) {
+bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName)
+{
 	if (!gi64NoDeprecatedSymbols)
 		return false;
 

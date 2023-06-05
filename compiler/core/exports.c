@@ -64,27 +64,21 @@
  *
  */
 
-
 #include "../../c-lib/include/asn-incl.h"
 #include "asn1module.h"
 #include "snacc-util.h"
 #include "exports.h"
 
-
- /*
-  * called from main in snacc.c to set exported flags for
-  * typeDefs and valueDefs in the given module
-  */
-void
-SetExports PARAMS((m, e, exportsParsed),
-	Module* m _AND_
-	ExportElmt* e _AND_
-	int exportsParsed)
+/*
+ * called from main in snacc.c to set exported flags for
+ * typeDefs and valueDefs in the given module
+ */
+void SetExports PARAMS((m, e, exportsParsed), Module* m _AND_ ExportElmt* e _AND_ int exportsParsed)
 {
 	TypeDef* td;
 	ValueDef* vd;
 
-	if (!exportsParsed)  /* export everything */
+	if (!exportsParsed) /* export everything */
 	{
 		/*
 		 * set all typedefs', valuedefs' and macrodefs' exported flag
@@ -100,7 +94,7 @@ SetExports PARAMS((m, e, exportsParsed),
 			vd->exported = TRUE;
 		}
 	}
-	else  /* EXPORTS sym parsed */
+	else /* EXPORTS sym parsed */
 	{
 		/* init every exports flag to false */
 		FOR_EACH_LIST_ELMT(td, m->typeDefs)
@@ -134,4 +128,4 @@ SetExports PARAMS((m, e, exportsParsed),
 			}
 		}
 	}
-}  /* SetExports */
+} /* SetExports */

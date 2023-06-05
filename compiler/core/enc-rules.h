@@ -28,8 +28,9 @@
 #ifndef _enc_rules_h
 #define _enc_rules_h
 
-#if defined (__cplusplus)
-extern "C" {
+#if defined(__cplusplus)
+extern "C"
+{
 #endif
 
 #include "../../c-lib/include/asn-incl.h"
@@ -43,7 +44,13 @@ extern "C" {
 	  DER
 	  JSON Encoding Rules
 	*/
-	typedef enum { BER, DER, JSONER, NOP } EncRulesType;
+	typedef enum
+	{
+		BER,
+		DER,
+		JSONER,
+		NOP
+	} EncRulesType;
 
 	int SetEncRules(EncRulesType encoding);
 	EncRulesType* GetEncRules();
@@ -51,10 +58,9 @@ extern "C" {
 	char* GetEncRulePrefix();
 	EncRulesType GetEncEncRulesType();
 
-#if defined (__cplusplus)
+#if defined(__cplusplus)
 }
 #endif
 
 /***************************************************************/
 #endif /* _enc_rules_h */
-

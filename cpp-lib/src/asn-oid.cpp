@@ -19,17 +19,17 @@
 
 #include "../include/asn-incl.h"
 
-
 _BEGIN_SNACC_NAMESPACE
 
-
-AsnOid::AsnOid() : AsnRelativeOid()
+AsnOid::AsnOid()
+	: AsnRelativeOid()
 {
 	m_isRelative = false;
 	Set("0.0");
 }
 
-AsnOid::AsnOid(const char* pszOID) : AsnRelativeOid()
+AsnOid::AsnOid(const char* pszOID)
+	: AsnRelativeOid()
 {
 	m_isRelative = false;
 	Set(pszOID);
@@ -65,7 +65,6 @@ AsnOid& AsnOid::operator+=(const AsnRelativeOid& ro)
 	return *this;
 }
 
-
 #if META
 const AsnOidTypeDesc AsnOid::_desc(NULL, NULL, false, AsnTypeDesc::OBJECT_IDENTIFIER, NULL);
 const AsnTypeDesc* AsnOid::_getdesc() const
@@ -73,6 +72,5 @@ const AsnTypeDesc* AsnOid::_getdesc() const
 	return &_desc;
 }
 #endif /* META */
-
 
 _END_SNACC_NAMESPACE

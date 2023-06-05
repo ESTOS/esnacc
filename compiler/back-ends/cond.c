@@ -45,14 +45,12 @@ void PrintConditionalIncludeOpen(FILE* f, char* fileName)
 
 	strcpy_s(hdrFileDefSym, 256, RemovePath(fileName));
 	for (i = 0; i < (int)strlen(hdrFileDefSym); i++)
-		if (hdrFileDefSym[i] == '-' || hdrFileDefSym[i] == '.' ||
-			hdrFileDefSym[i] == '\\' || hdrFileDefSym[i] == '/')
+		if (hdrFileDefSym[i] == '-' || hdrFileDefSym[i] == '.' || hdrFileDefSym[i] == '\\' || hdrFileDefSym[i] == '/')
 			hdrFileDefSym[i] = '_';
 
 	fprintf(f, "#ifndef _%s_\n", hdrFileDefSym);
 	fprintf(f, "#define _%s_\n\n", hdrFileDefSym);
 } /* PrintConditionalIncludeOpen */
-
 
 void PrintConditionalIncludeClose(FILE* f, char* fileName)
 {

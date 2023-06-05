@@ -25,9 +25,9 @@
 #define _asn_len_h_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-
 
 	typedef unsigned long AsnLen;
 
@@ -35,89 +35,82 @@ extern "C" {
 	 * BER Encoding/Decoding routines
 	 */
 
-	 /* max unsigned value  - used for internal rep of indef len */
-#define INDEFINITE_LEN		~0L
-
+	/* max unsigned value  - used for internal rep of indef len */
+#define INDEFINITE_LEN ~0L
 
 #ifdef USE_INDEF_LEN
 
-
-#define BEncEocIfNec( b)	BEncEoc (b)
+#define BEncEocIfNec(b) BEncEoc(b)
 
 /*
  * include len for EOC  (2 must be first due to BEncIndefLen
  * - ack! ugly macros!)
  */
-#define BEncConsLen( b, len)	2 + BEncIndefLen(b)
+#define BEncConsLen(b, len) 2 + BEncIndefLen(b)
 
-
-#else  /* use definite length - faster?/smaller encodings */
-
+#else /* use definite length - faster?/smaller encodings */
 
 /* do nothing since only using definite lens */
-#define BEncEocIfNec( b)
+#define BEncEocIfNec(b)
 
-#define BEncConsLen( b, len)	BEncDefLen(b, len)
-
+#define BEncConsLen(b, len) BEncDefLen(b, len)
 
 #endif
-
-
 
 /*
  * writes indefinite length byte to buffer. 'returns' encoded len (1)
  */
-#define BEncIndefLen( b)\
-    1;\
-    BufPutByteRvs (b, 0x80);
+#define BEncIndefLen(b)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+	1;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	BufPutByteRvs(b, 0x80);
 
 #ifndef _DEBUG
-#define BEncEoc( b)\
-    2;\
-    BufPutByteRvs (b, 0);\
-    BufPutByteRvs (b, 0);
+#define BEncEoc(b)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+	2;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	BufPutByteRvs(b, 0);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+	BufPutByteRvs(b, 0);
 #endif
 
- /*
-  * use if you know the encoded length will be 0 >= len <= 127
-  * Eg for booleans, nulls, any resonable integers and reals
-  *
-  * NOTE: this particular Encode Routine does NOT return the length
-  * encoded (1).
-  */
-#define BEncDefLenTo127( b, len)\
-    BufPutByteRvs (b, (unsigned char) len)
+	/*
+	 * use if you know the encoded length will be 0 >= len <= 127
+	 * Eg for booleans, nulls, any resonable integers and reals
+	 *
+	 * NOTE: this particular Encode Routine does NOT return the length
+	 * encoded (1).
+	 */
+#define BEncDefLenTo127(b, len) BufPutByteRvs(b, (unsigned char)len)
 
-#define BDEC_2ND_EOC_OCTET( b, bytesDecoded, env)\
-{\
-    if ((BufGetByte (b) != 0) || BufReadError (b)) {\
-        Asn1Error ("ERROR - second octet of EOC not zero\n");\
-        longjmp (env, -28);}\
-     (*bytesDecoded)++;\
-}
+#define BDEC_2ND_EOC_OCTET(b, bytesDecoded, env)                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		if ((BufGetByte(b) != 0) || BufReadError(b))                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+		{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+			Asn1Error("ERROR - second octet of EOC not zero\n");                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+			longjmp(env, -28);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+		}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+		(*bytesDecoded)++;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+	}
 
-
-	AsnLen BEncDefLen PROTO((GenBuf* b, AsnLen len));
-	AsnLen BEncDefLen2 PROTO((GenBuf* b, long  len));
-	AsnLen BDecLen PROTO((GenBuf* b, AsnLen* bytesDecoded, ENV_TYPE env));
+	AsnLen BEncDefLen PROTO((GenBuf * b, AsnLen len));
+	AsnLen BEncDefLen2 PROTO((GenBuf * b, long len));
+	AsnLen BDecLen PROTO((GenBuf * b, AsnLen* bytesDecoded, ENV_TYPE env));
 
 #ifdef _DEBUG
-	AsnLen BEncEoc PROTO((GenBuf* b));
+	AsnLen BEncEoc PROTO((GenBuf * b));
 #endif
-	void BDecEoc PROTO((GenBuf* b, AsnLen* bytesDecoded, ENV_TYPE env));
+	void BDecEoc PROTO((GenBuf * b, AsnLen* bytesDecoded, ENV_TYPE env));
 
 #if TTBL
-	int PeekEoc PROTO((GenBuf* b));
+	int PeekEoc PROTO((GenBuf * b));
 #endif
 
 	/*
 	 * DER Encoding/Decoding routines
 	 */
 
-	 /* We always use Definite length encoders */
+	/* We always use Definite length encoders */
 
-	 /* do nothing since only using definite lens */
-#define DEncEocIfNec( b)
+	/* do nothing since only using definite lens */
+#define DEncEocIfNec(b)
 
 #define DEncConsLen DEncDefLen
 
@@ -128,12 +121,11 @@ extern "C" {
  * NOTE: this particular Encode Routine does NOT return the length
  * encoded (1).
  */
-#define DEncDefLenTo127( b, len)\
-    BufPutByteRvs (b, (unsigned char) len)
+#define DEncDefLenTo127(b, len) BufPutByteRvs(b, (unsigned char)len)
 
 #define DEncDefLen BEncDefLen
 
-	AsnLen DDecLen PROTO((GenBuf* b, AsnLen* bytesDecoded, ENV_TYPE env));
+	AsnLen DDecLen PROTO((GenBuf * b, AsnLen* bytesDecoded, ENV_TYPE env));
 
 	/* Error conditions */
 #define DDecEoc(a, b, env) longjmp(env, -666)
@@ -146,4 +138,3 @@ extern "C" {
 #endif /* __cplusplus */
 
 #endif /* conditional include */
-

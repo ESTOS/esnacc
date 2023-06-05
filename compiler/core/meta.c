@@ -37,10 +37,7 @@
 
 #if META
 
-int isMetaPDU PARAMS((module, type, pdus),
-	const char* module _AND_
-	const char* type _AND_
-	MetaPDU* pdus)
+int isMetaPDU PARAMS((module, type, pdus), const char* module _AND_ const char* type _AND_ MetaPDU* pdus)
 {
 	MetaPDU* pdu;
 

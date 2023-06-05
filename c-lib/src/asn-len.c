@@ -60,13 +60,10 @@
 #include "../include/asn-config.h"
 #include "../include/asn-len.h"
 
- /*
-  * BER encode/decode routines
-  */
-AsnLen
-BEncDefLen PARAMS((b, len),
-	GenBuf* b _AND_
-	AsnLen len)
+/*
+ * BER encode/decode routines
+ */
+AsnLen BEncDefLen PARAMS((b, len), GenBuf* b _AND_ AsnLen len)
 {
 	/*
 	 * unrolled for efficiency
@@ -109,14 +106,10 @@ BEncDefLen PARAMS((b, len),
 	}
 } /*  BEncDefLen */
 
-
 /*
  * non unrolled version
  */
-AsnLen
-BEncDefLen2 PARAMS((b, len),
-	GenBuf* b _AND_
-	long len)
+AsnLen BEncDefLen2 PARAMS((b, len), GenBuf* b _AND_ long len)
 {
 	int i;
 	unsigned long j;
@@ -137,15 +130,10 @@ BEncDefLen2 PARAMS((b, len),
 
 } /*  BEncDefLen2 */
 
-
 /*
  * decodes and returns an ASN.1 length
  */
-AsnLen
-BDecLen PARAMS((b, bytesDecoded, env),
-	GenBuf* b _AND_
-	unsigned long* bytesDecoded _AND_
-	jmp_buf env)
+AsnLen BDecLen PARAMS((b, bytesDecoded, env), GenBuf* b _AND_ unsigned long* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnLen len;
 	AsnLen byte;
@@ -160,13 +148,13 @@ BDecLen PARAMS((b, bytesDecoded, env),
 	}
 
 	(*bytesDecoded)++;
-	if (byte < 128)   /* short length */
+	if (byte < 128) /* short length */
 		return byte;
 
-	else if (byte == (AsnLen)0x080)  /* indef len indicator */
+	else if (byte == (AsnLen)0x080) /* indef len indicator */
 		return (unsigned long)INDEFINITE_LEN;
 
-	else  /* long len form */
+	else /* long len form */
 	{
 		/*
 		 * strip high bit to get # bytes left in len
@@ -184,7 +172,6 @@ BDecLen PARAMS((b, bytesDecoded, env),
 		for (len = 0; lenBytes > 0; lenBytes--)
 			len = (len << 8) | (AsnLen)BufGetByte(b);
 
-
 		if (BufReadError(b))
 		{
 			Asn1Error("BDecLen: ERROR - decoded past end of data\n");
@@ -196,16 +183,13 @@ BDecLen PARAMS((b, bytesDecoded, env),
 	/* not reached */
 } /* BDecLen */
 
-
 #ifdef _DEBUG
-AsnLen
-BEncEoc PARAMS((b),
-	GenBuf* b)
+AsnLen BEncEoc PARAMS((b), GenBuf* b)
 {
 	BufPutByteRvs(b, 0);
 	BufPutByteRvs(b, 0);
 	return 2;
-}   /* BEncEoc */
+} /* BEncEoc */
 #endif
 /*
  * Decodes an End of Contents (EOC) marker from the given buffer.
@@ -213,11 +197,7 @@ BEncEoc PARAMS((b),
  * occurs.  Increments bytesDecoded by the length of the EOC marker.
  */
 
-void
-BDecEoc PARAMS((b, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecEoc PARAMS((b, bytesDecoded, env), GenBuf* b _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	if ((BufGetByte(b) != 0) || (BufGetByte(b) != 0) || BufReadError(b))
 	{
@@ -226,31 +206,24 @@ BDecEoc PARAMS((b, bytesDecoded, env),
 	}
 	(*bytesDecoded) += 2;
 
-}  /* BDecEoc */
+} /* BDecEoc */
 
 #if TTBL
 /* returns true if the next tag is actually and EOC */
-int PeekEoc PARAMS((b),
-	GenBuf* b)
+int PeekEoc PARAMS((b), GenBuf* b)
 {
 	return BufPeekByte(b) == 0;
-}  /* PeekEoc */
+} /* PeekEoc */
 #endif
-
 
 /*
  * DER Encoding/Routines
  */
 
-
- /*
-  * decodes and returns a DER encoded ASN.1 length
-  */
-AsnLen
-DDecLen PARAMS((b, bytesDecoded, env),
-	GenBuf* b _AND_
-	unsigned long* bytesDecoded _AND_
-	jmp_buf env)
+/*
+ * decodes and returns a DER encoded ASN.1 length
+ */
+AsnLen DDecLen PARAMS((b, bytesDecoded, env), GenBuf* b _AND_ unsigned long* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnLen len;
 	AsnLen byte;
@@ -265,15 +238,16 @@ DDecLen PARAMS((b, bytesDecoded, env),
 	}
 
 	(*bytesDecoded)++;
-	if (byte < 128)   /* short length */
+	if (byte < 128) /* short length */
 		return byte;
 
-	else if (byte == (AsnLen)0x080) {/* indef len indicator */
+	else if (byte == (AsnLen)0x080)
+	{ /* indef len indicator */
 		Asn1Error("DDecLen: ERROR - Indefinite length decoded");
 		longjmp(env, -666);
 	}
 
-	else  /* long len form */
+	else /* long len form */
 	{
 		/*
 		 * strip high bit to get # bytes left in len
@@ -291,7 +265,6 @@ DDecLen PARAMS((b, bytesDecoded, env),
 		for (len = 0; lenBytes > 0; lenBytes--)
 			len = (len << 8) | (AsnLen)BufGetByte(b);
 
-
 		if (BufReadError(b))
 		{
 			Asn1Error("DDecLen: ERROR - decoded past end of data\n");
@@ -302,4 +275,3 @@ DDecLen PARAMS((b, bytesDecoded, env),
 	}
 	/* not reached */
 } /* DDecLen */
-

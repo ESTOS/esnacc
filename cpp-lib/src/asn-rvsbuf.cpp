@@ -10,7 +10,6 @@ AsnRvsBuf::AsnRvsBuf(char* preFilled, size_t segSize)
 	m_bDeleteable = false;
 	m_pReadLoc = m_buf;
 	m_pStart = m_buf;
-
 }
 
 AsnRvsBuf::AsnRvsBuf(const char* seg, size_t segSize)
@@ -74,9 +73,7 @@ std::streambuf::int_type AsnRvsBuf::underflow()
 std::streambuf::int_type AsnRvsBuf::overflow(int c)
 {
 	if (m_pStart > m_buf && c <= 255 && c >= 0)
-	{
 		*(--m_pStart) = (char)c;
-	}
 	else
 		return EOF;
 	return c;
@@ -101,8 +98,7 @@ std::streamsize AsnRvsBuf::xsputn(const char* s, std::streamsize n)
 	return written;
 }
 
-std::streambuf::pos_type AsnRvsBuf::seekoff(std::streambuf::off_type off, std::ios_base::seekdir way,
-	std::ios_base::openmode which)
+std::streambuf::pos_type AsnRvsBuf::seekoff(std::streambuf::off_type off, std::ios_base::seekdir way, std::ios_base::openmode which)
 {
 	char* pNext = NULL;
 
@@ -116,22 +112,20 @@ std::streambuf::pos_type AsnRvsBuf::seekoff(std::streambuf::off_type off, std::i
 	{
 		switch (way)
 		{
-		case std::ios_base::beg:
-			pNext = m_pStart + off;
-			break;
-		case std::ios_base::end:
-			pNext = m_buf + m_segSize + off;
-			break;
-		case std::ios_base::cur:
-			if (gptr() == NULL)
-			{
-				pNext = m_pStart;
-			}
-			else
-				pNext = gptr() + off;
-			break;
-		default:
-			break;
+			case std::ios_base::beg:
+				pNext = m_pStart + off;
+				break;
+			case std::ios_base::end:
+				pNext = m_buf + m_segSize + off;
+				break;
+			case std::ios_base::cur:
+				if (gptr() == NULL)
+					pNext = m_pStart;
+				else
+					pNext = gptr() + off;
+				break;
+			default:
+				break;
 		}
 
 		if ((pNext <= &m_buf[m_segSize]) && (pNext >= m_pStart))
@@ -145,8 +139,7 @@ std::streambuf::pos_type AsnRvsBuf::seekoff(std::streambuf::off_type off, std::i
 	return (-1);
 }
 
-std::streambuf::pos_type AsnRvsBuf::seekpos(std::streambuf::pos_type sp,
-	std::ios_base::openmode which)
+std::streambuf::pos_type AsnRvsBuf::seekpos(std::streambuf::pos_type sp, std::ios_base::openmode which)
 {
 #ifdef _MSVC_6
 	return (seekoff(sp, std::ios_base::seekdir::beg, which));
@@ -154,4 +147,3 @@ std::streambuf::pos_type AsnRvsBuf::seekpos(std::streambuf::pos_type sp,
 	return (seekoff(sp, std::ios_base::beg, which));
 #endif
 }
-

@@ -20,13 +20,9 @@
 #include "../include/asn-config.h"
 #include "../include/nibble-alloc.h"
 
-
 NibbleMem* nmG = NULL;
 
-void
-InitNibbleMem PARAMS((initialSize, incrementSize),
-	unsigned long initialSize _AND_
-	unsigned long incrementSize)
+void InitNibbleMem PARAMS((initialSize, incrementSize), unsigned long initialSize _AND_ unsigned long incrementSize)
 {
 	NibbleMem* nm;
 
@@ -39,17 +35,14 @@ InitNibbleMem PARAMS((initialSize, incrementSize),
 	nm->firstNibbleBuf->next = NULL;
 	memset(nm->currNibbleBuf->start, 0, initialSize);
 
-	nmG = nm;/* set global */
+	nmG = nm; /* set global */
 
-}  /* InitNibbleAlloc */
-
+} /* InitNibbleAlloc */
 
 /*
  * alloc new nibble buf, link in, reset to curr nibble buf
  */
-void
-ServiceNibbleFault PARAMS((size),
-	unsigned long size)
+void ServiceNibbleFault PARAMS((size), unsigned long size)
 {
 	NibbleMem* nm;
 	unsigned long newBufSize;
@@ -69,14 +62,10 @@ ServiceNibbleFault PARAMS((size),
 	memset(nm->currNibbleBuf->start, 0, newBufSize);
 } /* serviceNibbleFault */
 
-
-
 /*
  * returns requested space filled with zeros
  */
-void*
-NibbleAlloc PARAMS((size),
-	unsigned long size)
+void* NibbleAlloc PARAMS((size), unsigned long size)
 {
 	NibbleMem* nm;
 	char* retVal;
@@ -90,8 +79,8 @@ NibbleAlloc PARAMS((size),
 	 * of memory (which can occur if the ASN.1 data has
 	 * become corrupted, and you were trying to decode).
 	 */
-	if (size > 1024 * 1024)	/* say roughly a meg for now */
-		return(0);
+	if (size > 1024 * 1024) /* say roughly a meg for now */
+		return (0);
 
 	if ((nm->currNibbleBuf->end - nm->currNibbleBuf->curr) < (int)size)
 		ServiceNibbleFault(size);
@@ -118,16 +107,13 @@ NibbleAlloc PARAMS((size),
 		nm->currNibbleBuf->curr += size;
 
 	return retVal;
-}  /* NibbleAlloc */
-
-
+} /* NibbleAlloc */
 
 /*
  * frees all nibble buffers except the first,
  * resets the first to empty and zero's it
  */
-void
-ResetNibbleMem()
+void ResetNibbleMem()
 {
 	NibbleMem* nm;
 	NibbleBuf* tmp;
@@ -145,7 +131,7 @@ ResetNibbleMem()
 	/*
 	 * free incrementally added nibble bufs
 	 */
-	for (tmp = nm->firstNibbleBuf->next; tmp != NULL; )
+	for (tmp = nm->firstNibbleBuf->next; tmp != NULL;)
 	{
 		free(tmp->start);
 		nextTmp = tmp->next;
@@ -159,13 +145,11 @@ ResetNibbleMem()
 
 } /* ResetNibbleMem */
 
-
 /*
  * frees all nibble buffers, closing this
  * NibbleMem completely
  */
-void
-ShutdownNibbleMem()
+void ShutdownNibbleMem()
 {
 	NibbleMem* nm;
 	NibbleBuf* tmp;
@@ -178,7 +162,7 @@ ShutdownNibbleMem()
 	 */
 	if (nm == NULL)
 		return;
-	for (tmp = nm->firstNibbleBuf; tmp != NULL; )
+	for (tmp = nm->firstNibbleBuf; tmp != NULL;)
 	{
 		free(tmp->start);
 		nextTmp = tmp->next;

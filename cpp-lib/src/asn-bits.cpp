@@ -15,14 +15,12 @@
 // of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-
 /*#include <string>*/
 #include "../include/asn-incl.h"
 
 _BEGIN_SNACC_NAMESPACE
 
-char SNACCDLL_API numToHexCharTblG[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-
+char SNACCDLL_API numToHexCharTblG[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
 AsnBits::AsnBits(const char* stringForm)
 {
@@ -37,7 +35,6 @@ AsnBits::~AsnBits()
 {
 	delete[] bits;
 }
-
 
 // Initializes the bits string with a bit string numBits in length.
 // All bits are zeroed.
@@ -148,10 +145,8 @@ bool AsnBits::BitsEquiv(const AsnBits& ab) const
 		return true;
 
 	// trailing bits may not be significant
-	return bitLen == ab.bitLen
-		&& !memcmp(bits, ab.bits, octetsLessOne)
-		&& (bits[octetsLessOne] & (0xFF << unusedBits)) == (ab.bits[octetsLessOne] & (0xFF << unusedBits));
-}  /* AsnBits::BitsEquiv */
+	return bitLen == ab.bitLen && !memcmp(bits, ab.bits, octetsLessOne) && (bits[octetsLessOne] & (0xFF << unusedBits)) == (ab.bits[octetsLessOne] & (0xFF << unusedBits));
+} /* AsnBits::BitsEquiv */
 
 void AsnBits::SetSize(size_t newsize)
 {
@@ -183,13 +178,12 @@ void AsnBits::SetBit(size_t bit)
 	if (bit < bitLen)
 	{
 		size_t octet = bit / 8;
-		size_t octetsBit = 7 - (bit % 8);	// bit zero is first/most sig bit in octet
+		size_t octetsBit = 7 - (bit % 8); // bit zero is first/most sig bit in octet
 		bits[octet] |= 1 << octetsBit;
 	}
 	else
 	{
-		throw ParameterException("Parameter is larger than BIT STRING size",
-			STACK_ENTRY);
+		throw ParameterException("Parameter is larger than BIT STRING size", STACK_ENTRY);
 	}
 } /* AsnBits::SetBit */
 
@@ -201,13 +195,12 @@ void AsnBits::ClrBit(size_t bit)
 	if (bit < bitLen)
 	{
 		size_t octet = bit / 8;
-		size_t octetsBit = 7 - (bit % 8);	// bit zero is first/most sig bit in octet
+		size_t octetsBit = 7 - (bit % 8); // bit zero is first/most sig bit in octet
 		bits[octet] &= ~(1 << octetsBit);
 	}
 	else
 	{
-		throw ParameterException("Parameter is larger than BIT STRING size",
-			STACK_ENTRY);
+		throw ParameterException("Parameter is larger than BIT STRING size", STACK_ENTRY);
 	}
 } /* AsnBits::ClrBit */
 
@@ -218,12 +211,11 @@ bool AsnBits::GetBit(size_t bit) const
 	if (bit < bitLen)
 	{
 		size_t octet = bit / 8;
-		size_t octetsBit = 7 - (bit % 8);	// bit zero is first/most sig bit in octet
+		size_t octetsBit = 7 - (bit % 8); // bit zero is first/most sig bit in octet
 		return !!(bits[octet] & (1 << octetsBit));
 	}
 	return false;
-}  /* AsnBits::GetBit */
-
+} /* AsnBits::GetBit */
 
 // Returns true if the bit string is empty
 bool AsnBits::IsEmpty() const
@@ -235,13 +227,10 @@ bool AsnBits::IsEmpty() const
 	if (bitLen <= 0)
 		return true;
 	for (i = 0; i < bitLen; i++)
-	{
 		if (GetBit(i) == 1)
 			return false;
-	}
 	return true;
-}  /* AsnBits::IsEmpty */
-
+} /* AsnBits::IsEmpty */
 
 // Encodes the content (included unused bits octet) of the BIT STRING
 // to the given buffer.
@@ -251,7 +240,7 @@ AsnLen AsnBits::BEncContent(AsnBuf& b) const
 	size_t byteLen;
 
 	unsigned int i;
-	//bool bStop;
+	// bool bStop;
 
 	// IF bitstring is a NamedBitList
 	if (nblFlag)
@@ -273,7 +262,8 @@ AsnLen AsnBits::BEncContent(AsnBuf& b) const
 		// that has at least one bit set (it's value is not 0).
 		//
 		if (bits != NULL)
-			for (; finalOctet > 0 && bits[finalOctet] == 0; finalOctet--);
+			for (; finalOctet > 0 && bits[finalOctet] == 0; finalOctet--)
+				;
 
 		// Calculate unsigned bits in final octet
 		//
@@ -317,7 +307,6 @@ AsnLen AsnBits::BEncContent(AsnBuf& b) const
 
 } /* AsnBits::BEncContent */
 
-
 // Decodes a BER BIT STRING from the given buffer and stores
 // the value in this object.
 void AsnBits::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded)
@@ -325,9 +314,7 @@ void AsnBits::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen&
 	FUNC("AsnBits::BDecContent");
 
 	if (elmtLen == INDEFINITE_LEN || elmtLen > b.length())
-	{
 		throw MemoryException(elmtLen, "elmtLen requests for too much data", STACK_ENTRY);
-	}
 
 	/*
 	 * tagId is encoded tag shifted into long int.
@@ -354,7 +341,7 @@ void AsnBits::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen&
 		if (bits)
 			delete[] bits;
 
-		//bitLen = max(bitLen, (elmtLen * 8) - iUnusedBitLen);
+		// bitLen = max(bitLen, (elmtLen * 8) - iUnusedBitLen);
 		bitLen = (bitLen > ((elmtLen * 8) - iUnusedBitLen)) ? bitLen : ((elmtLen * 8) - iUnusedBitLen);
 		bits = new unsigned char[(bitLen + 7) / 8 + 1];
 		memset(bits, 0x00, (bitLen + 7) / 8 + 1);
@@ -366,15 +353,13 @@ void AsnBits::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen&
 
 void AsnBits::JEnc(EJson::Value& b) const
 {
-	//Convert to string form
+	// Convert to string form
 	std::string str;
 	for (size_t i = 0; i < bitLen; i++)
-	{
 		if (GetBit(i))
 			str += "1";
 		else
 			str += "0";
-	}
 	b = EJson::Value(str.c_str());
 }
 
@@ -384,14 +369,12 @@ bool AsnBits::JDec(const EJson::Value& b)
 	if (b.isConvertibleTo(EJson::stringValue))
 	{
 		std::string str = b.asString();
-		//Set num bits
+		// Set num bits
 		Set(str.length());
-		//now set each bit
+		// now set each bit
 		for (size_t i = 0; i < str.length(); i++)
-		{
 			if (str[i] == '1')
 				SetBit(i);
-		}
 		return true;
 	}
 	else
@@ -404,7 +387,7 @@ size_t AsnBits::encLen() const
 	size_t byteLen;
 
 	unsigned int i;
-	//bool bStop;
+	// bool bStop;
 
 	// IF bitstring is a NamedBitList
 	if (nblFlag)
@@ -426,7 +409,8 @@ size_t AsnBits::encLen() const
 		// that has at least one bit set (it's value is not 0).
 		//
 		if (bits != NULL)
-			for (; finalOctet > 0 && bits[finalOctet] == 0; finalOctet--);
+			for (; finalOctet > 0 && bits[finalOctet] == 0; finalOctet--)
+				;
 
 		// Calculate unsigned bits in final octet
 		//
@@ -454,7 +438,7 @@ size_t AsnBits::encLen() const
 	return ((byteLen * 8) - unusedBits);
 }
 
-AsnLen AsnBits::EncodeGeneral(AsnBufBits& b)const
+AsnLen AsnBits::EncodeGeneral(AsnBufBits& b) const
 {
 	AsnLen len = 0;
 	unsigned long l_64kFrag = l_16k * 4;
@@ -612,7 +596,6 @@ void AsnBits::DecodeGeneral(AsnBufBits& b, AsnLen& bitsDecoded)
 		bitsDecoded += templen;
 
 		offset += templen;
-
 	}
 	else if ((seg[0] & 0x80) == 0x00)
 	{
@@ -634,7 +617,7 @@ void AsnBits::DecodeGeneral(AsnBufBits& b, AsnLen& bitsDecoded)
 	free(seg);
 }
 
-long AsnBits::FindSizeConstraintBounds(int& iSCLowerBound, int& iSCUpperBound)const
+long AsnBits::FindSizeConstraintBounds(int& iSCLowerBound, int& iSCUpperBound) const
 {
 	int count = 0;
 	int numsizeconstraints;
@@ -643,21 +626,13 @@ long AsnBits::FindSizeConstraintBounds(int& iSCLowerBound, int& iSCUpperBound)co
 	while (count < numsizeconstraints)
 	{
 		if ((unsigned)iSCUpperBound < sizeConstraints[count].lowerBound)
-		{
 			iSCUpperBound = sizeConstraints[count].lowerBound;
-		}
 
-		if (sizeConstraints[count].upperBoundExists == 1 &&
-			(unsigned)iSCUpperBound < sizeConstraints[count].upperBound)
-		{
+		if (sizeConstraints[count].upperBoundExists == 1 && (unsigned)iSCUpperBound < sizeConstraints[count].upperBound)
 			iSCUpperBound = sizeConstraints[count].upperBound;
-		}
 
-		if ((unsigned)iSCLowerBound > sizeConstraints[count].lowerBound &&
-			sizeConstraints[count].lowerBound >= 0)
-		{
+		if ((unsigned)iSCLowerBound > sizeConstraints[count].lowerBound && sizeConstraints[count].lowerBound >= 0)
 			iSCLowerBound = sizeConstraints[count].lowerBound;
-		}
 
 		count++;
 	}
@@ -665,7 +640,7 @@ long AsnBits::FindSizeConstraintBounds(int& iSCLowerBound, int& iSCUpperBound)co
 	return ((iSCUpperBound - iSCLowerBound) + 1);
 }
 
-AsnLen AsnBits::EncodeWithSizeConstraint(AsnBufBits& b)const
+AsnLen AsnBits::EncodeWithSizeConstraint(AsnBufBits& b) const
 {
 	AsnLen len = 0;
 	int numSizeConstraints;
@@ -690,19 +665,13 @@ AsnLen AsnBits::EncodeWithSizeConstraint(AsnBufBits& b)const
 	if (Range > 1)
 	{
 		if ((iSCUpperBound > 16) && b.IsAligned())
-		{
 			len += b.OctetAlignWrite();
-		}
 
 		if (size > iSCUpperBound)
-		{
 			size = iSCUpperBound;
-		}
 
 		if (size < iSCLowerBound)
-		{
 			size = iSCLowerBound;
-		}
 
 		minBytesNeeded = minBitsNeeded / 8;
 		minBitsNeeded = minBitsNeeded % 8;
@@ -720,9 +689,7 @@ AsnLen AsnBits::EncodeWithSizeConstraint(AsnBufBits& b)const
 	}
 
 	if ((iSCUpperBound > 16) && b.IsAligned())
-	{
 		len += b.OctetAlignWrite();
-	}
 
 	if ((unsigned)bitLen < (unsigned)iSCLowerBound)
 	{
@@ -741,7 +708,7 @@ AsnLen AsnBits::EncodeWithSizeConstraint(AsnBufBits& b)const
 		len += b.PutBits((unsigned char*)bits, (unsigned long)bitLen);
 	}
 
-	delete[]pStr;
+	delete[] pStr;
 	return len;
 }
 
@@ -769,27 +736,24 @@ void AsnBits::DecodeWithSizeConstraint(AsnBufBits& b, AsnLen& bitsDecoded)
 		minBitsNeeded += 1;
 	}
 
-
 	if (Range > 1)
 	{
 		if ((iSCUpperBound > 16) && b.IsAligned())
-		{
 			bitsDecoded += b.OctetAlignRead();
-		}
 
 		minBytesNeeded = minBitsNeeded / 8;
 		minBitsNeeded = minBitsNeeded % 8;
 
 		if (minBytesNeeded > 0)
 		{
-			delete[]pStr;
+			delete[] pStr;
 			pStr = b.GetBits(8);
 			bitsDecoded += 8;
 			decodeSize <<= 8;
 			decodeSize |= (long)pStr[0];
 		}
 
-		delete[]pStr;
+		delete[] pStr;
 		pStr = b.GetBits(minBitsNeeded);
 		bitsDecoded += minBitsNeeded;
 
@@ -804,15 +768,10 @@ void AsnBits::DecodeWithSizeConstraint(AsnBufBits& b, AsnLen& bitsDecoded)
 	decodeSize += iSCLowerBound;
 
 	if (decodeSize > iSCUpperBound)
-	{
 		throw EXCEPT("String size not withing restricted bounds", RESTRICTED_TYPE_ERROR);
-	}
-
 
 	if ((iSCUpperBound > 16) && b.IsAligned())
-	{
 		bitsDecoded += b.OctetAlignRead();
-	}
 
 	bitLen = decodeSize;
 	bits = new unsigned char[((decodeSize + 7) / 8) + 1];
@@ -830,13 +789,9 @@ AsnLen AsnBits::PEnc(AsnBufBits& b) const
 	int numSizeConstraints;
 	const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
 	if (sizeConstraints == NULL && numSizeConstraints == 0)
-	{
 		len = EncodeGeneral(b);
-	}
 	else
-	{
 		len = EncodeWithSizeConstraint(b);
-	}
 
 	return len;
 }
@@ -847,14 +802,9 @@ void AsnBits::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 	const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
 
 	if (sizeConstraints == NULL && numSizeConstraints == 0)
-	{
 		DecodeGeneral(b, bitsDecoded);
-	}
 	else
-	{
 		DecodeWithSizeConstraint(b, bitsDecoded);
-	}
-
 }
 
 AsnLen AsnBits::BEnc(AsnBuf& b) const
@@ -874,11 +824,8 @@ void AsnBits::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	AsnTag tag;
 
 	tag = BDecTag(b, bytesDecoded);
-	if ((tag != MAKE_TAG_ID(UNIV, PRIM, BITSTRING_TAG_CODE))
-		&& (tag != MAKE_TAG_ID(UNIV, CONS, BITSTRING_TAG_CODE)))
-	{
+	if ((tag != MAKE_TAG_ID(UNIV, PRIM, BITSTRING_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, BITSTRING_TAG_CODE)))
 		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-	}
 	elmtLen = BDecLen(b, bytesDecoded);
 	BDecContent(b, tag, elmtLen, bytesDecoded);
 }
@@ -904,11 +851,9 @@ void AsnBits::BDecConsBits(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded
 	//
 	i = deck.begin();
 	for (; i < (deck.end() - 1); i++)
-	{
 		if (i->first[0] != 0)
 			throw EXCEPT("Constructed BIT STRING contains a component with a unused bits value other than 0", DECODE_ERROR);
-	}
-}  /* BDecConsBits */
+} /* BDecConsBits */
 
 // prints the BIT STRING to the given ostream.
 void AsnBits::Print(std::ostream& os, unsigned short /*indent*/) const
@@ -917,10 +862,8 @@ void AsnBits::Print(std::ostream& os, unsigned short /*indent*/) const
 
 	os << "'";
 	if (bits && bitLen)
-	{
 		for (unsigned int i = 0; i < octetLen; i++)
 			os << TO_HEX(bits[i] >> 4) << (TO_HEX(bits[i]));
-	}
 	os << "'H  -- BIT STRING bitlen = " << bitLen << " --";
 }
 
@@ -933,7 +876,6 @@ void AsnBits::PrintXML(std::ostream& os, const char* lpszTitle) const
 	Print(os);
 	os << "</BIT_STRING>\n";
 }
-
 
 AsnBits& AsnBits::operator=(const char* stringForm)
 {
@@ -960,10 +902,7 @@ AsnBits& AsnBits::SetEqual(const char* stringForm)
 	pbegin++;
 
 	if (pend == NULL || pbegin == NULL)
-	{
-		throw ParameterException("Invalid string form for BIT STRING",
-			STACK_ENTRY);
-	}
+		throw ParameterException("Invalid string form for BIT STRING", STACK_ENTRY);
 
 	// Set length
 	Set(pend - pbegin);
@@ -978,8 +917,7 @@ AsnBits& AsnBits::SetEqual(const char* stringForm)
 			SetBit(i);
 		else
 			// PIERCE THROW
-			throw ParameterException("Invalid string form for BIT STRING",
-				STACK_ENTRY);
+			throw ParameterException("Invalid string form for BIT STRING", STACK_ENTRY);
 	}
 
 	nblFlag = true;
@@ -1000,9 +938,7 @@ bool AsnBits::soloBitCheck(size_t b)
 		// Clear bit b and check if bit string is empty
 		ClrBit(b);
 		if (IsEmpty())
-		{
 			result = true;
-		}
 		SetBit(b);
 	}
 	return result;
@@ -1029,20 +965,20 @@ int AsnBits::TclGetVal(Tcl_Interp* interp) const
 
 int AsnBits::TclSetVal(Tcl_Interp* interp, const char* valstr)
 {
-	int		i;
+	int i;
 	const char* p;
 
 	for (i = 0, p = valstr; *p; i++, p++)
 		switch (*p)
 		{
-		case '0':
-		case '1':
-			break;
-		default:
-			const char c[2] = { *p, '\0' };
-			Tcl_AppendResult(interp, "illegal character '", c, "' for bit in type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
-			Tcl_SetErrorCode(interp, "SNACC", "ILLBIT", NULL);
-			return TCL_ERROR;
+			case '0':
+			case '1':
+				break;
+			default:
+				const char c[2] = {*p, '\0'};
+				Tcl_AppendResult(interp, "illegal character '", c, "' for bit in type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
+				Tcl_SetErrorCode(interp, "SNACC", "ILLBIT", NULL);
+				return TCL_ERROR;
 		}
 
 	ReSet(i);

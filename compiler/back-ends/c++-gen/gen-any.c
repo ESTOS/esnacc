@@ -91,32 +91,23 @@
  *
  */
 
-#include <string.h>			/* REN -- 5/11/2001 -- added for string functions */
+#include <string.h> /* REN -- 5/11/2001 -- added for string functions */
 #include "../../../c-lib/include/asn-incl.h"
 #include "../../core/asn1module.h"
 #include "../str-util.h"
 #include "rules.h"
-#include "../../core/snacc-util.h"		/* REN -- 5/11/2001 -- added for GetBuiltinType() */
+#include "../../core/snacc-util.h" /* REN -- 5/11/2001 -- added for GetBuiltinType() */
 
-void PrintCxxAnyEnum PROTO((FILE* hdr, Module* m, CxxRules* r));
-void PrintCxxAnyHashInitRoutine PROTO((FILE* src, FILE* hdr, ModuleList* mods,
-	Module* m, CxxRules* r));
-void PrintCxxOidValue PROTO((FILE* f, CxxRules* r, AsnOid* oid, int parenOrQuote));
+void PrintCxxAnyEnum PROTO((FILE * hdr, Module* m, CxxRules* r));
+void PrintCxxAnyHashInitRoutine PROTO((FILE * src, FILE* hdr, ModuleList* mods, Module* m, CxxRules* r));
+void PrintCxxOidValue PROTO((FILE * f, CxxRules* r, AsnOid* oid, int parenOrQuote));
 
 /* REN -- 5/11/2001 -- added following prototype */
-static TypeDef* GetTypeDef PROTO((Type* t));
-
+static TypeDef* GetTypeDef PROTO((Type * t));
 
 extern int anyEnumValG;
 
-
-void
-PrintCxxAnyCode PARAMS((src, hdr, r, mods, m),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CxxRules* r _AND_
-	ModuleList* mods _AND_
-	Module* m)
+void PrintCxxAnyCode PARAMS((src, hdr, r, mods, m), FILE* src _AND_ FILE* hdr _AND_ CxxRules* r _AND_ ModuleList* mods _AND_ Module* m)
 {
 
 	if (!m->hasAnys)
@@ -125,15 +116,9 @@ PrintCxxAnyCode PARAMS((src, hdr, r, mods, m),
 	PrintCxxAnyEnum(hdr, m, r);
 	PrintCxxAnyHashInitRoutine(src, hdr, mods, m, r);
 
-}  /* PrintAnyCode */
+} /* PrintAnyCode */
 
-
-
-void
-PrintCxxAnyEnum PARAMS((hdr, m, r),
-	FILE* hdr _AND_
-	Module* m _AND_
-	CxxRules* r)
+void PrintCxxAnyEnum PARAMS((hdr, m, r), FILE* hdr _AND_ Module* m _AND_ CxxRules* r)
 {
 	int firstPrinted = TRUE;
 	char* modName;
@@ -193,9 +178,7 @@ PrintCxxAnyEnum PARAMS((hdr, m, r),
 		if (vd->value != NULL)
 		{
 			t = vd->value->type;
-			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) &&
-				(t->basicType->a.macroType->choiceId ==
-					MACROTYPE_SNMPOBJECTTYPE))
+			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) && (t->basicType->a.macroType->choiceId == MACROTYPE_SNMPOBJECTTYPE))
 			{
 				strcpy_s(anyId, 512, vd->definedName);
 				Dash2Underscore(anyId, strlen(anyId));
@@ -217,16 +200,9 @@ PrintCxxAnyEnum PARAMS((hdr, m, r),
 	fprintf(hdr, "\n} %sAnyId;\n\n\n", modName);
 	Free(modName);
 
-}  /* PrintAnyEnum */
+} /* PrintAnyEnum */
 
-
-void
-PrintCxxAnyHashInitRoutine PARAMS((src, hdr, mods, m, r),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	CxxRules* r)
+void PrintCxxAnyHashInitRoutine PARAMS((src, hdr, mods, m, r), FILE* src _AND_ FILE* hdr _AND_ ModuleList* mods _AND_ Module* m _AND_ CxxRules* r)
 {
 	TypeDef* td;
 	int i;
@@ -372,9 +348,7 @@ PrintCxxAnyHashInitRoutine PARAMS((src, hdr, mods, m, r),
 		if (vd->value != NULL)
 		{
 			t = vd->value->type;
-			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) &&
-				(t->basicType->a.macroType->choiceId ==
-					MACROTYPE_SNMPOBJECTTYPE))
+			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) && (t->basicType->a.macroType->choiceId == MACROTYPE_SNMPOBJECTTYPE))
 			{
 				bv = vd->value->basicValue;
 				if (bv != NULL)
@@ -382,8 +356,7 @@ PrintCxxAnyHashInitRoutine PARAMS((src, hdr, mods, m, r),
 					installedSomeHashes = TRUE;
 					if (bv->choiceId == BASICVALUE_OID)
 					{
-						fprintf(src, "    %s oid%d",
-							r->typeConvTbl[BASICTYPE_OID].className, i++);
+						fprintf(src, "    %s oid%d", r->typeConvTbl[BASICTYPE_OID].className, i++);
 						PrintCxxOidValue(src, r, bv->a.oid, 1);
 						fprintf(src, ";\n");
 					}
@@ -401,9 +374,7 @@ PrintCxxAnyHashInitRoutine PARAMS((src, hdr, mods, m, r),
 		if (vd->value != NULL)
 		{
 			t = vd->value->type;
-			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) &&
-				(t->basicType->a.macroType->choiceId ==
-					MACROTYPE_SNMPOBJECTTYPE))
+			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) && (t->basicType->a.macroType->choiceId == MACROTYPE_SNMPOBJECTTYPE))
 			{
 				bv = vd->value->basicValue;
 				if (bv != NULL)
@@ -418,10 +389,7 @@ PrintCxxAnyHashInitRoutine PARAMS((src, hdr, mods, m, r),
 					/* If the syntax of this any is a basic type, get the
 					class name from the rules table. */
 					typeId = t->basicType->choiceId;
-					if (((typeId >= BASICTYPE_BOOLEAN) &&
-						(typeId <= BASICTYPE_SETOF)) ||
-						((typeId >= BASICTYPE_NUMERIC_STR) &&
-							(typeId <= BASICTYPE_T61_STR)))
+					if (((typeId >= BASICTYPE_BOOLEAN) && (typeId <= BASICTYPE_SETOF)) || ((typeId >= BASICTYPE_NUMERIC_STR) && (typeId <= BASICTYPE_T61_STR)))
 					{
 						typeName = r->typeConvTbl[typeId].className;
 					}
@@ -442,21 +410,10 @@ PrintCxxAnyHashInitRoutine PARAMS((src, hdr, mods, m, r),
 
 					if (typeName == NULL)
 						fprintf(src, "*** ERROR *** Unknown ANY\n\n");
-					else
-					{
-						if (bv->choiceId == BASICVALUE_OID)
-						{
-							fprintf(src,
-								"    AsnAny::InstallAnyByOid (oid%d, %s, new %s);\n",
-								i++, anyId, typeName);
-						}
-						else if (bv->choiceId == BASICVALUE_INTEGER)
-						{
-							fprintf(src,
-								"    AsnAny::InstallAnyByInt (%d, %s, new %s);\n",
-								bv->a.integer, anyId, typeName);
-						}
-					}
+					else if (bv->choiceId == BASICVALUE_OID)
+						fprintf(src, "    AsnAny::InstallAnyByOid (oid%d, %s, new %s);\n", i++, anyId, typeName);
+					else if (bv->choiceId == BASICVALUE_INTEGER)
+						fprintf(src, "    AsnAny::InstallAnyByInt (%d, %s, new %s);\n", bv->a.integer, anyId, typeName);
 				}
 			}
 		}
@@ -477,35 +434,31 @@ PrintCxxAnyHashInitRoutine PARAMS((src, hdr, mods, m, r),
 		fprintf(src, "     * T1 ::= SEQUENCE { id INTEGER, ANY DEFINED BY id }\n");
 		fprintf(src, "     * and the id 1 maps to the type BOOLEAN use the following:\n");
 		fprintf(src, "     * AsnAny::InstallAnyByInt (1, SOMEBOOL_ANY_ID, new AsnBool);\n");
-		fprintf(src, "     */\n ???????\n");  /* generate compile error */
+		fprintf(src, "     */\n ???????\n"); /* generate compile error */
 	}
 
-
 	fprintf(src, "}  /* InitAny::InitAny */\n\n\n");
-}  /* PrintAnyHashInitRoutine */
-
+} /* PrintAnyHashInitRoutine */
 
 /* REN -- 5/11/2001 -- GetTypeDef() function added to return the type def info
 for the given type. */
-static TypeDef*
-GetTypeDef PARAMS((t),
-	Type* t)
+static TypeDef* GetTypeDef PARAMS((t), Type* t)
 {
 	if (t == NULL)
 		return NULL;
 
 	switch (t->basicType->choiceId)
 	{
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_IMPORTTYPEREF:
-		return t->basicType->a.localTypeRef->link;
-		break;
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
+			return t->basicType->a.localTypeRef->link;
+			break;
 
-	default:
-		return NULL;
+		default:
+			return NULL;
 	}
 	/*fprintf (errFileG, "GetTypeDef: ERROR - cannot get type def for unlinked local/import type refs\n");
 	return NULL;*/
 
-}  /* GetTypeDef */
+} /* GetTypeDef */
 /* REN -- end */

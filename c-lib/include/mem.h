@@ -16,20 +16,19 @@
 #define _snacc_mem_h_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 	void* Malloc PROTO((size_t size));
 	void* Realloc PROTO((void* ptr, size_t newsize));
-	void	Free PROTO((void* ptr));
+	void Free PROTO((void* ptr));
 
 	/* malloc type */
-#define MT( type)	(type *)Malloc (sizeof (type))
-
+#define MT(type) (type*)Malloc(sizeof(type))
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

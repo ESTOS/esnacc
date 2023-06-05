@@ -73,24 +73,21 @@
 #include "lib-types.h"
 #include "print.h"
 
-extern FILE* errFileG;		// Defined in snacc.c
+extern FILE* errFileG; // Defined in snacc.c
 
-static int  indentCountG;
-static int  indentG = 0;
-static int  indentStepG = 4;
+static int indentCountG;
+static int indentG = 0;
+static int indentStepG = 4;
 
-#define INDENT(f, i)\
-    for (indentCountG = 0; indentCountG < (i); indentCountG++)\
-        fputc (' ', (f))\
+#define INDENT(f, i)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+	for (indentCountG = 0; indentCountG < (i); indentCountG++)                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+	fputc(' ', (f))
 
 /*
  * Prints the given Module *, mod, to the given FILE *f in
  * ASN.1 format
  */
-void
-PrintModule PARAMS((f, mod),
-	FILE* f _AND_
-	Module* mod)
+void PrintModule PARAMS((f, mod), FILE* f _AND_ Module* mod)
 {
 
 	if (mod->status == MOD_ERROR)
@@ -99,7 +96,6 @@ PrintModule PARAMS((f, mod),
 		fprintf(f, "(probably some type/value is referenced but is not defined or imported)\n");
 		fprintf(f, "The prog. may croak, cross your fingers!\n");
 	}
-
 
 	fprintf(f, "%s ", mod->modId->name);
 	PrintOid(f, mod->modId->oid);
@@ -114,10 +110,7 @@ PrintModule PARAMS((f, mod),
 	else
 		fprintf(f, "\n\n -- compiler error unknown tag default");
 
-
 	fprintf(f, " ::=\nBEGIN\n\n");
-
-
 
 	PrintExports(f, mod);
 
@@ -128,13 +121,9 @@ PrintModule PARAMS((f, mod),
 
 	fprintf(f, "END\n");
 
-}  /* PrintModule */
+} /* PrintModule */
 
-
-void
-PrintExports PARAMS((f, m),
-	FILE* f _AND_
-	Module* m)
+void PrintExports PARAMS((f, m), FILE* f _AND_ Module* m)
 {
 	TypeDef* td;
 	ValueDef* vd;
@@ -153,33 +142,28 @@ PrintExports PARAMS((f, m),
 		fprintf(f, "\n\nEXPORTS\n");
 		first = 1;
 		FOR_EACH_LIST_ELMT(td, m->typeDefs)
-			if (td->exported)
-			{
-				if (!first)
-					fprintf(f, ", ");
-				fprintf(f, "%s", td->definedName);
-				first = 0;
-			}
+		if (td->exported)
+		{
+			if (!first)
+				fprintf(f, ", ");
+			fprintf(f, "%s", td->definedName);
+			first = 0;
+		}
 
 		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
-			if (vd->exported)
-			{
-				if (!first)
-					fprintf(f, ", ");
-				fprintf(f, "%s", vd->definedName);
-				first = 0;
-			}
+		if (vd->exported)
+		{
+			if (!first)
+				fprintf(f, ", ");
+			fprintf(f, "%s", vd->definedName);
+			first = 0;
+		}
 
 		fprintf(f, "\n;\n\n");
 	}
-}  /* PrintExports */
+} /* PrintExports */
 
-
-
-void
-PrintOid PARAMS((f, oid),
-	FILE* f _AND_
-	OID* oid)
+void PrintOid PARAMS((f, oid), FILE* f _AND_ OID* oid)
 {
 
 	if (oid == NULL)
@@ -203,28 +187,18 @@ PrintOid PARAMS((f, oid),
 		else if (oid->arcNum != NULL_OID_ARCNUM)
 			fprintf(f, "%d", (int)oid->arcNum);
 
-
 		fprintf(f, " ");
 	}
 	fprintf(f, "}");
 
-}  /* PrintOid */
+} /* PrintOid */
 
-
-
-void
-PrintImportElmt PARAMS((f, impElmt),
-	FILE* f _AND_
-	ImportElmt* impElmt)
+void PrintImportElmt PARAMS((f, impElmt), FILE* f _AND_ ImportElmt* impElmt)
 {
 	fprintf(f, "%s", impElmt->name);
-}   /* PrintImportElmt */
+} /* PrintImportElmt */
 
-
-void
-PrintImportElmts PARAMS((f, impElmtList),
-	FILE* f _AND_
-	ImportElmtList* impElmtList)
+void PrintImportElmts PARAMS((f, impElmtList), FILE* f _AND_ ImportElmtList* impElmtList)
 {
 	ImportElmt* ie;
 	ImportElmt* last;
@@ -241,14 +215,9 @@ PrintImportElmts PARAMS((f, impElmtList),
 			fprintf(f, ", ");
 	}
 
-}  /* PrintImportElmts */
+} /* PrintImportElmts */
 
-
-
-void
-PrintImportLists PARAMS((f, impLists),
-	FILE* f _AND_
-	ImportModuleList* impLists)
+void PrintImportLists PARAMS((f, impLists), FILE* f _AND_ ImportModuleList* impLists)
 {
 	ImportModule* impMod;
 
@@ -271,14 +240,9 @@ PrintImportLists PARAMS((f, impLists),
 	}
 	fprintf(f, ";\n\n\n");
 
-}  /* PrintImportLists */
+} /* PrintImportLists */
 
-
-
-void
-PrintTypeDefs PARAMS((f, typeDefs),
-	FILE* f _AND_
-	TypeDefList* typeDefs)
+void PrintTypeDefs PARAMS((f, typeDefs), FILE* f _AND_ TypeDefList* typeDefs)
 {
 	TypeDef* td;
 
@@ -303,22 +267,14 @@ PrintTypeDefs PARAMS((f, typeDefs),
 			fprintf(f, "-- locally refd %d times, ", td->localRefCount);
 			fprintf(f, "import refd %d times\n", td->importRefCount);
 
-
 			fprintf(f, "%s ::= ", td->definedName);
 			PrintType(f, td, td->type);
 		}
 		fprintf(f, "\n\n\n");
 	}
-}  /* PrintTypeDefs */
+} /* PrintTypeDefs */
 
-
-
-
-void
-PrintType PARAMS((f, head, t),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t)
+void PrintType PARAMS((f, head, t), FILE* f _AND_ TypeDef* head _AND_ Type* t)
 {
 	Tag* tag;
 
@@ -328,10 +284,7 @@ PrintType PARAMS((f, head, t),
 	FOR_EACH_LIST_ELMT(tag, t->tags)
 	{
 
-
-
-		if (!((tag->tclass == UNIV) &&
-			(tag->code == LIBTYPE_GET_UNIV_TAG_CODE(t->basicType->choiceId))))
+		if (!((tag->tclass == UNIV) && (tag->code == LIBTYPE_GET_UNIV_TAG_CODE(t->basicType->choiceId))))
 		{
 			PrintTag(f, tag);
 			fprintf(f, " ");
@@ -346,19 +299,15 @@ PrintType PARAMS((f, head, t),
 
 	PrintBasicType(f, head, t, t->basicType);
 
-
 	/*
 	 * sequences of and set of print subtypes a special way
 	 * so ignore them here
 	 */
-	if ((t->subtypes != NULL) &&
-		(t->basicType->choiceId != BASICTYPE_SETOF) &&
-		(t->basicType->choiceId != BASICTYPE_SEQUENCEOF))
+	if ((t->subtypes != NULL) && (t->basicType->choiceId != BASICTYPE_SETOF) && (t->basicType->choiceId != BASICTYPE_SEQUENCEOF))
 	{
 		fprintf(f, " ");
 		PrintSubtype(f, head, t, t->subtypes);
 	}
-
 
 	if (t->defaultVal != NULL)
 	{
@@ -371,379 +320,345 @@ PrintType PARAMS((f, head, t),
 	else if (t->optional)
 		fprintf(f, " OPTIONAL");
 
-
 #ifdef DEBUG
 	fprintf(f, "  -- lineNo = %d --", t->lineNo);
 #endif
 
-}  /* PrintType */
+} /* PrintType */
 
-
-void
-PrintBasicType PARAMS((f, head, t, bt),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt)
+void PrintBasicType PARAMS((f, head, t, bt), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt)
 {
 	switch (bt->choiceId)
 	{
 
-	case BASICTYPE_SEQUENCE:
-		fprintf(f, "SEQUENCE\n");
-		INDENT(f, indentG);
-		fprintf(f, "{\n");
-		indentG += indentStepG;
-		INDENT(f, indentG);
-		PrintElmtTypes(f, head, t, bt->a.sequence);
-		indentG -= indentStepG;
-		fprintf(f, "\n");
-		INDENT(f, indentG);
-		fprintf(f, "}");
-		break;
-
-	case BASICTYPE_SET:
-		fprintf(f, "SET\n");
-		INDENT(f, indentG);
-		fprintf(f, "{\n");
-		indentG += indentStepG;
-		INDENT(f, indentG);
-		PrintElmtTypes(f, head, t, bt->a.set);
-		indentG -= indentStepG;
-		fprintf(f, "\n");
-		INDENT(f, indentG);
-		fprintf(f, "}");
-		break;
-
-	case BASICTYPE_CHOICE:
-		fprintf(f, "CHOICE\n");
-		INDENT(f, indentG);
-		fprintf(f, "{\n");
-		indentG += indentStepG;
-		INDENT(f, indentG);
-		PrintElmtTypes(f, head, t, bt->a.choice);
-		indentG -= indentStepG;
-		fprintf(f, "\n");
-		INDENT(f, indentG);
-		fprintf(f, "}");
-		break;
-
-
-
-	case BASICTYPE_SEQUENCEOF:
-		fprintf(f, "SEQUENCE ");
-		if (t->subtypes != NULL)
-		{
-			PrintSubtype(f, head, t, t->subtypes);
-			fprintf(f, " ");
-		}
-		fprintf(f, "OF ");
-		PrintType(f, head, bt->a.sequenceOf);
-		break;
-
-	case BASICTYPE_SETOF:
-		fprintf(f, "SET ");
-		if (t->subtypes != NULL)
-		{
-			PrintSubtype(f, head, t, t->subtypes);
-			fprintf(f, " ");
-		}
-		fprintf(f, "OF ");
-		PrintType(f, head, bt->a.setOf);
-		break;
-
-
-	case BASICTYPE_SELECTION:
-		fprintf(f, "%s < ", bt->a.selection->fieldName);
-		PrintType(f, head, bt->a.selection->typeRef);
-		break;
-
-
-
-
-	case BASICTYPE_COMPONENTSOF:
-		fprintf(f, "COMPONENTS OF ");
-		PrintType(f, NULL, bt->a.componentsOf);
-		break;
-
-
-
-	case BASICTYPE_ANYDEFINEDBY:
-		fprintf(f, "ANY DEFINED BY %s", bt->a.anyDefinedBy->fieldName);
-		break;
-
-
-	case BASICTYPE_LOCALTYPEREF:
-		fprintf(f, "%s", bt->a.localTypeRef->typeName);
-		break;
-
-	case BASICTYPE_IMPORTTYPEREF:
-		/* attempt to keep special scoping, ie modname.type forms */
-		if (bt->a.importTypeRef->moduleName != NULL)
-			fprintf(f, "%s.", bt->a.importTypeRef->moduleName);
-		fprintf(f, "%s", bt->a.importTypeRef->typeName);
-		break;
-
-
-	case BASICTYPE_UNKNOWN:
-		fprintf(f, "unknown type !?!");
-		break;
-
-	case BASICTYPE_BOOLEAN:
-		fprintf(f, "BOOLEAN");
-		break;
-
-
-	case BASICTYPE_INTEGER:
-		fprintf(f, "INTEGER");
-		if ((bt->a.integer != NULL) && !LIST_EMPTY(bt->a.integer))
-		{
-			fprintf(f, "\n");
+		case BASICTYPE_SEQUENCE:
+			fprintf(f, "SEQUENCE\n");
 			INDENT(f, indentG);
 			fprintf(f, "{\n");
 			indentG += indentStepG;
-			PrintNamedElmts(f, head, t, bt->a.integer);
+			INDENT(f, indentG);
+			PrintElmtTypes(f, head, t, bt->a.sequence);
 			indentG -= indentStepG;
 			fprintf(f, "\n");
 			INDENT(f, indentG);
 			fprintf(f, "}");
-		}
-		break;
+			break;
 
-		/*		case BASICTYPE_BIGINT:
-					fprintf (f, "INTEGER (isBigInt:TRUE)");
-					if ((bt->a.integer != NULL) && !LIST_EMPTY (bt->a.integer))
-					{
-						fprintf (f, "\n");
-						INDENT (f, indentG);
-						fprintf (f, "{\n");
-						indentG += indentStepG;
-						PrintNamedElmts (f, head, t, bt->a.integer);
-						indentG -= indentStepG;
-						fprintf (f, "\n");
-						INDENT (f, indentG);
-						fprintf (f, "}");
-					}
+		case BASICTYPE_SET:
+			fprintf(f, "SET\n");
+			INDENT(f, indentG);
+			fprintf(f, "{\n");
+			indentG += indentStepG;
+			INDENT(f, indentG);
+			PrintElmtTypes(f, head, t, bt->a.set);
+			indentG -= indentStepG;
+			fprintf(f, "\n");
+			INDENT(f, indentG);
+			fprintf(f, "}");
+			break;
+
+		case BASICTYPE_CHOICE:
+			fprintf(f, "CHOICE\n");
+			INDENT(f, indentG);
+			fprintf(f, "{\n");
+			indentG += indentStepG;
+			INDENT(f, indentG);
+			PrintElmtTypes(f, head, t, bt->a.choice);
+			indentG -= indentStepG;
+			fprintf(f, "\n");
+			INDENT(f, indentG);
+			fprintf(f, "}");
+			break;
+
+		case BASICTYPE_SEQUENCEOF:
+			fprintf(f, "SEQUENCE ");
+			if (t->subtypes != NULL)
+			{
+				PrintSubtype(f, head, t, t->subtypes);
+				fprintf(f, " ");
+			}
+			fprintf(f, "OF ");
+			PrintType(f, head, bt->a.sequenceOf);
+			break;
+
+		case BASICTYPE_SETOF:
+			fprintf(f, "SET ");
+			if (t->subtypes != NULL)
+			{
+				PrintSubtype(f, head, t, t->subtypes);
+				fprintf(f, " ");
+			}
+			fprintf(f, "OF ");
+			PrintType(f, head, bt->a.setOf);
+			break;
+
+		case BASICTYPE_SELECTION:
+			fprintf(f, "%s < ", bt->a.selection->fieldName);
+			PrintType(f, head, bt->a.selection->typeRef);
+			break;
+
+		case BASICTYPE_COMPONENTSOF:
+			fprintf(f, "COMPONENTS OF ");
+			PrintType(f, NULL, bt->a.componentsOf);
+			break;
+
+		case BASICTYPE_ANYDEFINEDBY:
+			fprintf(f, "ANY DEFINED BY %s", bt->a.anyDefinedBy->fieldName);
+			break;
+
+		case BASICTYPE_LOCALTYPEREF:
+			fprintf(f, "%s", bt->a.localTypeRef->typeName);
+			break;
+
+		case BASICTYPE_IMPORTTYPEREF:
+			/* attempt to keep special scoping, ie modname.type forms */
+			if (bt->a.importTypeRef->moduleName != NULL)
+				fprintf(f, "%s.", bt->a.importTypeRef->moduleName);
+			fprintf(f, "%s", bt->a.importTypeRef->typeName);
+			break;
+
+		case BASICTYPE_UNKNOWN:
+			fprintf(f, "unknown type !?!");
+			break;
+
+		case BASICTYPE_BOOLEAN:
+			fprintf(f, "BOOLEAN");
+			break;
+
+		case BASICTYPE_INTEGER:
+			fprintf(f, "INTEGER");
+			if ((bt->a.integer != NULL) && !LIST_EMPTY(bt->a.integer))
+			{
+				fprintf(f, "\n");
+				INDENT(f, indentG);
+				fprintf(f, "{\n");
+				indentG += indentStepG;
+				PrintNamedElmts(f, head, t, bt->a.integer);
+				indentG -= indentStepG;
+				fprintf(f, "\n");
+				INDENT(f, indentG);
+				fprintf(f, "}");
+			}
+			break;
+
+			/*		case BASICTYPE_BIGINT:
+						fprintf (f, "INTEGER (isBigInt:TRUE)");
+						if ((bt->a.integer != NULL) && !LIST_EMPTY (bt->a.integer))
+						{
+							fprintf (f, "\n");
+							INDENT (f, indentG);
+							fprintf (f, "{\n");
+							indentG += indentStepG;
+							PrintNamedElmts (f, head, t, bt->a.integer);
+							indentG -= indentStepG;
+							fprintf (f, "\n");
+							INDENT (f, indentG);
+							fprintf (f, "}");
+						}
+						break;
+			*/
+
+		case BASICTYPE_BITSTRING:
+			fprintf(f, "BIT STRING");
+			if ((bt->a.bitString != NULL) && !LIST_EMPTY(bt->a.bitString))
+			{
+				fprintf(f, "\n");
+				INDENT(f, indentG);
+				fprintf(f, "{\n");
+				indentG += indentStepG;
+				PrintNamedElmts(f, head, t, bt->a.bitString);
+				indentG -= indentStepG;
+				fprintf(f, "\n");
+				INDENT(f, indentG);
+				fprintf(f, "}");
+			}
+			break;
+
+		case BASICTYPE_OCTETSTRING:
+			fprintf(f, "OCTET STRING");
+			break;
+
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(f, "OCTET STRING ( CONTAINING UTF8String )");
+			break;
+
+		case BASICTYPE_NULL:
+			fprintf(f, "NULL");
+			break;
+
+		case BASICTYPE_OID:
+			fprintf(f, "OBJECT IDENTIFIER");
+			break;
+
+		case BASICTYPE_RELATIVE_OID:
+			fprintf(f, "RELATIVE-OID");
+			break;
+
+		case BASICTYPE_REAL:
+			fprintf(f, "REAL");
+			break;
+
+		case BASICTYPE_ENUMERATED:
+			fprintf(f, "ENUMERATED");
+			if ((bt->a.enumerated != NULL) && !LIST_EMPTY(bt->a.enumerated))
+			{
+				fprintf(f, "\n");
+				INDENT(f, indentG);
+				fprintf(f, "{\n");
+				indentG += indentStepG;
+				PrintNamedElmts(f, head, t, bt->a.enumerated);
+				indentG -= indentStepG;
+				fprintf(f, "\n");
+				INDENT(f, indentG);
+				fprintf(f, "}");
+			}
+			break;
+
+		case BASICTYPE_NUMERIC_STR:
+			fprintf(f, "NumericString");
+			break;
+
+		case BASICTYPE_PRINTABLE_STR:
+			fprintf(f, "PrintableString");
+			break;
+
+		case BASICTYPE_IA5_STR:
+			fprintf(f, "IA5String");
+			break;
+
+		case BASICTYPE_BMP_STR:
+			fprintf(f, "BMPString");
+			break;
+
+		case BASICTYPE_UNIVERSAL_STR:
+			fprintf(f, "UniversalString");
+			break;
+
+		case BASICTYPE_UTF8_STR:
+			fprintf(f, "UTF8String");
+			break;
+
+		case BASICTYPE_T61_STR:
+			fprintf(f, "TeletexString");
+			break;
+
+		case BASICTYPE_ANY:
+			fprintf(f, "ANY");
+			break;
+
+		case BASICTYPE_MACROTYPE:
+			switch (bt->a.macroType->choiceId)
+			{
+				case MACROTYPE_ROSOPERATION:
+				case MACROTYPE_ASNABSTRACTOPERATION:
+					PrintRosOperationMacroType(f, head, t, bt, bt->a.macroType->a.rosOperation);
 					break;
-		*/
 
+				case MACROTYPE_ROSERROR:
+				case MACROTYPE_ASNABSTRACTERROR:
+					PrintRosErrorMacroType(f, head, t, bt, bt->a.macroType->a.rosError);
+					break;
 
+				case MACROTYPE_ROSBIND:
+				case MACROTYPE_ROSUNBIND:
+					PrintRosBindMacroType(f, head, t, bt, bt->a.macroType->a.rosBind);
+					break;
 
-	case BASICTYPE_BITSTRING:
-		fprintf(f, "BIT STRING");
-		if ((bt->a.bitString != NULL) && !LIST_EMPTY(bt->a.bitString))
-		{
-			fprintf(f, "\n");
-			INDENT(f, indentG);
-			fprintf(f, "{\n");
-			indentG += indentStepG;
-			PrintNamedElmts(f, head, t, bt->a.bitString);
-			indentG -= indentStepG;
-			fprintf(f, "\n");
-			INDENT(f, indentG);
-			fprintf(f, "}");
-		}
-		break;
+				case MACROTYPE_ROSASE:
+					PrintRosAseMacroType(f, head, t, bt, bt->a.macroType->a.rosAse);
+					break;
 
-	case BASICTYPE_OCTETSTRING:
-		fprintf(f, "OCTET STRING");
-		break;
+				case MACROTYPE_MTSASEXTENSIONS:
+					PrintMtsasExtensionsMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtensions);
+					break;
 
-	case BASICTYPE_OCTETCONTAINING:
-		fprintf(f, "OCTET STRING ( CONTAINING UTF8String )");
-		break;
+				case MACROTYPE_MTSASEXTENSION:
+					PrintMtsasExtensionMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtension);
+					break;
 
-	case BASICTYPE_NULL:
-		fprintf(f, "NULL");
-		break;
+				case MACROTYPE_MTSASEXTENSIONATTRIBUTE:
+					PrintMtsasExtensionAttributeMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtensionAttribute);
+					break;
 
-	case BASICTYPE_OID:
-		fprintf(f, "OBJECT IDENTIFIER");
-		break;
+				case MACROTYPE_MTSASTOKEN:
+					PrintMtsasTokenMacroType(f, head, t, bt, bt->a.macroType->a.mtsasToken);
+					break;
 
-	case BASICTYPE_RELATIVE_OID:
-		fprintf(f, "RELATIVE-OID");
-		break;
+				case MACROTYPE_MTSASTOKENDATA:
+					PrintMtsasTokenDataMacroType(f, head, t, bt, bt->a.macroType->a.mtsasTokenData);
+					break;
 
-	case BASICTYPE_REAL:
-		fprintf(f, "REAL");
-		break;
+				case MACROTYPE_MTSASSECURITYCATEGORY:
+					PrintMtsasSecurityCategoryMacroType(f, head, t, bt, bt->a.macroType->a.mtsasSecurityCategory);
+					break;
 
-	case BASICTYPE_ENUMERATED:
-		fprintf(f, "ENUMERATED");
-		if ((bt->a.enumerated != NULL) && !LIST_EMPTY(bt->a.enumerated))
-		{
-			fprintf(f, "\n");
-			INDENT(f, indentG);
-			fprintf(f, "{\n");
-			indentG += indentStepG;
-			PrintNamedElmts(f, head, t, bt->a.enumerated);
-			indentG -= indentStepG;
-			fprintf(f, "\n");
-			INDENT(f, indentG);
-			fprintf(f, "}");
-		}
-		break;
+				case MACROTYPE_ASNOBJECT:
+					PrintAsnObjectMacroType(f, head, t, bt, bt->a.macroType->a.asnObject);
+					break;
 
-	case BASICTYPE_NUMERIC_STR:
-		fprintf(f, "NumericString");
-		break;
+				case MACROTYPE_ASNPORT:
+					PrintAsnPortMacroType(f, head, t, bt, bt->a.macroType->a.asnPort);
+					break;
 
-	case BASICTYPE_PRINTABLE_STR:
-		fprintf(f, "PrintableString");
-		break;
+				case MACROTYPE_ASNABSTRACTBIND:
+				case MACROTYPE_ASNABSTRACTUNBIND:
+					PrintAsnAbstractBindMacroType(f, head, t, bt, bt->a.macroType->a.asnAbstractBind);
+					break;
 
-	case BASICTYPE_IA5_STR:
-		fprintf(f, "IA5String");
-		break;
+				case MACROTYPE_AFALGORITHM:
+					PrintAfAlgorithmMacroType(f, head, t, bt, bt->a.macroType->a.afAlgorithm);
+					break;
 
-	case BASICTYPE_BMP_STR:
-		fprintf(f, "BMPString");
-		break;
+				case MACROTYPE_AFENCRYPTED:
+					PrintAfEncryptedMacroType(f, head, t, bt, bt->a.macroType->a.afEncrypted);
+					break;
 
-	case BASICTYPE_UNIVERSAL_STR:
-		fprintf(f, "UniversalString");
-		break;
+				case MACROTYPE_AFSIGNED:
+					PrintAfSignedMacroType(f, head, t, bt, bt->a.macroType->a.afSigned);
+					break;
 
-	case BASICTYPE_UTF8_STR:
-		fprintf(f, "UTF8String");
-		break;
+				case MACROTYPE_AFSIGNATURE:
+					PrintAfSignatureMacroType(f, head, t, bt, bt->a.macroType->a.afSignature);
+					break;
 
-	case BASICTYPE_T61_STR:
-		fprintf(f, "TeletexString");
-		break;
+				case MACROTYPE_AFPROTECTED:
+					PrintAfProtectedMacroType(f, head, t, bt, bt->a.macroType->a.afProtected);
+					break;
 
-	case BASICTYPE_ANY:
-		fprintf(f, "ANY");
-		break;
+				case MACROTYPE_SNMPOBJECTTYPE:
+					PrintSnmpObjectTypeMacroType(f, head, t, bt, bt->a.macroType->a.snmpObjectType);
+					break;
 
-	case BASICTYPE_MACROTYPE:
-		switch (bt->a.macroType->choiceId)
-		{
-		case MACROTYPE_ROSOPERATION:
-		case MACROTYPE_ASNABSTRACTOPERATION:
-			PrintRosOperationMacroType(f, head, t, bt, bt->a.macroType->a.rosOperation);
+				default:
+					fprintf(f, "< unknown macro type id ?! >");
+
+			} /* end macro type switch */
 			break;
 
-		case MACROTYPE_ROSERROR:
-		case MACROTYPE_ASNABSTRACTERROR:
-			PrintRosErrorMacroType(f, head, t, bt, bt->a.macroType->a.rosError);
-			break;
+			/*
+			 * @MACRO@ add new macro printers above this point
+			 */
 
-		case MACROTYPE_ROSBIND:
-		case MACROTYPE_ROSUNBIND:
-			PrintRosBindMacroType(f, head, t, bt, bt->a.macroType->a.rosBind);
-			break;
-
-		case MACROTYPE_ROSASE:
-			PrintRosAseMacroType(f, head, t, bt, bt->a.macroType->a.rosAse);
-			break;
-
-		case MACROTYPE_MTSASEXTENSIONS:
-			PrintMtsasExtensionsMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtensions);
-			break;
-
-		case MACROTYPE_MTSASEXTENSION:
-			PrintMtsasExtensionMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtension);
-			break;
-
-		case MACROTYPE_MTSASEXTENSIONATTRIBUTE:
-			PrintMtsasExtensionAttributeMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtensionAttribute);
-			break;
-
-		case MACROTYPE_MTSASTOKEN:
-			PrintMtsasTokenMacroType(f, head, t, bt, bt->a.macroType->a.mtsasToken);
-			break;
-
-		case MACROTYPE_MTSASTOKENDATA:
-			PrintMtsasTokenDataMacroType(f, head, t, bt, bt->a.macroType->a.mtsasTokenData);
-			break;
-
-		case MACROTYPE_MTSASSECURITYCATEGORY:
-			PrintMtsasSecurityCategoryMacroType(f, head, t, bt, bt->a.macroType->a.mtsasSecurityCategory);
-			break;
-
-		case MACROTYPE_ASNOBJECT:
-			PrintAsnObjectMacroType(f, head, t, bt, bt->a.macroType->a.asnObject);
-			break;
-
-		case MACROTYPE_ASNPORT:
-			PrintAsnPortMacroType(f, head, t, bt, bt->a.macroType->a.asnPort);
-			break;
-
-		case MACROTYPE_ASNABSTRACTBIND:
-		case MACROTYPE_ASNABSTRACTUNBIND:
-			PrintAsnAbstractBindMacroType(f, head, t, bt, bt->a.macroType->a.asnAbstractBind);
-			break;
-
-		case MACROTYPE_AFALGORITHM:
-			PrintAfAlgorithmMacroType(f, head, t, bt, bt->a.macroType->a.afAlgorithm);
-			break;
-
-		case MACROTYPE_AFENCRYPTED:
-			PrintAfEncryptedMacroType(f, head, t, bt, bt->a.macroType->a.afEncrypted);
-			break;
-
-		case MACROTYPE_AFSIGNED:
-			PrintAfSignedMacroType(f, head, t, bt, bt->a.macroType->a.afSigned);
-			break;
-
-		case MACROTYPE_AFSIGNATURE:
-			PrintAfSignatureMacroType(f, head, t, bt, bt->a.macroType->a.afSignature);
-			break;
-
-		case MACROTYPE_AFPROTECTED:
-			PrintAfProtectedMacroType(f, head, t, bt, bt->a.macroType->a.afProtected);
-			break;
-
-		case MACROTYPE_SNMPOBJECTTYPE:
-			PrintSnmpObjectTypeMacroType(f, head, t, bt, bt->a.macroType->a.snmpObjectType);
+		case BASICTYPE_MACRODEF:
+			/*
+			 * printing this should be handled in PrintTypeDefs
+			 */
 			break;
 
 		default:
-			fprintf(f, "< unknown macro type id ?! >");
-
-		} /* end macro type switch */
-		break;
-
-		/*
-		 * @MACRO@ add new macro printers above this point
-		 */
-
-	case BASICTYPE_MACRODEF:
-		/*
-		 * printing this should be handled in PrintTypeDefs
-		 */
-		break;
-
-
-	default:
-		fprintf(f, "< unknown type id ?! >");
-
+			fprintf(f, "< unknown type id ?! >");
 	}
-}  /* PrintBasicType */
+} /* PrintBasicType */
 
-
-
-void
-PrintElmtType PARAMS((f, head, t, nt),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	NamedType* nt)
+void PrintElmtType PARAMS((f, head, t, nt), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ NamedType* nt)
 {
 	if (nt->fieldName != NULL)
 		fprintf(f, "%s ", nt->fieldName);
 
 	PrintType(f, head, nt->type);
-}  /* PrintElmtType */
+} /* PrintElmtType */
 
-void
-PrintElmtTypes PARAMS((f, head, t, e),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	NamedTypeList* e)
+void PrintElmtTypes PARAMS((f, head, t, e), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ NamedTypeList* e)
 {
 	NamedType* nt;
 	NamedType* last;
@@ -762,28 +677,18 @@ PrintElmtTypes PARAMS((f, head, t, e),
 			INDENT(f, indentG);
 		}
 	}
-}  /* PrintElmtTypes */
+} /* PrintElmtTypes */
 
-
-
-
-void
-PrintValueDefs PARAMS((f, vList),
-	FILE* f _AND_
-	ValueDefList* vList)
+void PrintValueDefs PARAMS((f, vList), FILE* f _AND_ ValueDefList* vList)
 {
 	ValueDef* v;
 	FOR_EACH_LIST_ELMT(v, vList)
 	{
 		PrintValueDef(f, v);
 	}
-}  /* PrintValueDefs */
+} /* PrintValueDefs */
 
-
-void
-PrintValueDef PARAMS((f, v),
-	FILE* f _AND_
-	ValueDef* v)
+void PrintValueDef PARAMS((f, v), FILE* f _AND_ ValueDef* v)
 {
 	fprintf(f, "%s ", v->definedName);
 
@@ -798,161 +703,134 @@ PrintValueDef PARAMS((f, v),
 	PrintValue(f, v, v->value->type, v->value);
 	fprintf(f, "\n\n");
 	indentG -= indentStepG;
-}  /* PrintValueDef */
+} /* PrintValueDef */
 
-
-void
-PrintValue PARAMS((f, head, valuesType, v),
-	FILE* f _AND_
-	ValueDef* head _AND_
-	Type* valuesType _AND_
-	Value* v)
+void PrintValue PARAMS((f, head, valuesType, v), FILE* f _AND_ ValueDef* head _AND_ Type* valuesType _AND_ Value* v)
 {
 	if (v == NULL)
 		return;
 
 	PrintBasicValue(f, head, valuesType, v, v->basicValue);
 
-}  /* PrintValue */
+} /* PrintValue */
 
-
-void
-PrintBasicValue PARAMS((f, head, valuesType, v, bv),
-	FILE* f _AND_
-	ValueDef* head _AND_
-	Type* valuesType _AND_
-	Value* v _AND_
-	BasicValue* bv)
+void PrintBasicValue PARAMS((f, head, valuesType, v, bv), FILE* f _AND_ ValueDef* head _AND_ Type* valuesType _AND_ Value* v _AND_ BasicValue* bv)
 {
 	if (v == NULL)
 		return;
 
-
 	switch (bv->choiceId)
 	{
-	case BASICVALUE_UNKNOWN:
-		fprintf(f, "<unknown value>");
-		break;
+		case BASICVALUE_UNKNOWN:
+			fprintf(f, "<unknown value>");
+			break;
 
-	case BASICVALUE_EMPTY:
-		fprintf(f, "{ }");
-		break;
+		case BASICVALUE_EMPTY:
+			fprintf(f, "{ }");
+			break;
 
-	case BASICVALUE_INTEGER:
-		fprintf(f, "%d", bv->a.integer);
-		break;
+		case BASICVALUE_INTEGER:
+			fprintf(f, "%d", bv->a.integer);
+			break;
 
-	case BASICVALUE_SPECIALINTEGER:
-		if (bv->a.specialInteger == MAX_INT)
-			fprintf(f, "MAX");
-		else
-			fprintf(f, "MIN");
+		case BASICVALUE_SPECIALINTEGER:
+			if (bv->a.specialInteger == MAX_INT)
+				fprintf(f, "MAX");
+			else
+				fprintf(f, "MIN");
 
-		break;
+			break;
 
-	case BASICVALUE_BOOLEAN:
-		if (bv->a.boolean)
-			fprintf(f, "TRUE");
-		else
-			fprintf(f, "FALSE");
-		break;
+		case BASICVALUE_BOOLEAN:
+			if (bv->a.boolean)
+				fprintf(f, "TRUE");
+			else
+				fprintf(f, "FALSE");
+			break;
 
-	case BASICVALUE_REAL:
-		fprintf(f, "%f", bv->a.real);
-		break;
+		case BASICVALUE_REAL:
+			fprintf(f, "%f", bv->a.real);
+			break;
 
-	case BASICVALUE_SPECIALREAL:
-		if (bv->a.specialReal == PLUS_INFINITY_REAL)
-			fprintf(f, "PLUS INFINITY");
-		else
-			fprintf(f, "MINUS INFINITY");
+		case BASICVALUE_SPECIALREAL:
+			if (bv->a.specialReal == PLUS_INFINITY_REAL)
+				fprintf(f, "PLUS INFINITY");
+			else
+				fprintf(f, "MINUS INFINITY");
 
-		break;
+			break;
 
-	case BASICVALUE_ASCIITEXT:
-		fprintf(f, "\"%s\"", bv->a.asciiText->octs);
-		break;
+		case BASICVALUE_ASCIITEXT:
+			fprintf(f, "\"%s\"", bv->a.asciiText->octs);
+			break;
 
-	case BASICVALUE_ASCIIHEX:
-		fprintf(f, "\"%s\"", bv->a.asciiHex->octs);
-		break;
+		case BASICVALUE_ASCIIHEX:
+			fprintf(f, "\"%s\"", bv->a.asciiHex->octs);
+			break;
 
-	case BASICVALUE_ASCIIBITSTRING:
-		fprintf(f, "\"%s\"", bv->a.asciiBitString->octs);
-		break;
+		case BASICVALUE_ASCIIBITSTRING:
+			fprintf(f, "\"%s\"", bv->a.asciiBitString->octs);
+			break;
 
-	case BASICVALUE_OID:
-		PrintEncodedOid(f, bv->a.oid);
-		break;
+		case BASICVALUE_OID:
+			PrintEncodedOid(f, bv->a.oid);
+			break;
 
-	case BASICVALUE_LINKEDOID:
-		PrintOid(f, bv->a.linkedOid);
-		break;
+		case BASICVALUE_LINKEDOID:
+			PrintOid(f, bv->a.linkedOid);
+			break;
 
-	case BASICVALUE_BERVALUE:
-		fprintf(f, "<PrintBerValue not coded yet");
-		break;
+		case BASICVALUE_BERVALUE:
+			fprintf(f, "<PrintBerValue not coded yet");
+			break;
 
-	case BASICVALUE_PERVALUE:
-		fprintf(f, "<PrintPerValue not coded yet");
-		break;
+		case BASICVALUE_PERVALUE:
+			fprintf(f, "<PrintPerValue not coded yet");
+			break;
 
-	case BASICVALUE_NAMEDVALUE:
-		fprintf(f, "\n");
-		INDENT(f, indentG);
-		fprintf(f, "{\n");
-		indentG += indentStepG;
-		PrintElmtValue(f, head, v, bv->a.namedValue);
-		indentG -= indentStepG;
-		fprintf(f, "\n");
-		INDENT(f, indentG);
-		fprintf(f, "}");
-		break;
+		case BASICVALUE_NAMEDVALUE:
+			fprintf(f, "\n");
+			INDENT(f, indentG);
+			fprintf(f, "{\n");
+			indentG += indentStepG;
+			PrintElmtValue(f, head, v, bv->a.namedValue);
+			indentG -= indentStepG;
+			fprintf(f, "\n");
+			INDENT(f, indentG);
+			fprintf(f, "}");
+			break;
 
-	case BASICVALUE_NULL:
-		fprintf(f, "NULL");
-		break;
+		case BASICVALUE_NULL:
+			fprintf(f, "NULL");
+			break;
 
-	case BASICVALUE_LOCALVALUEREF:
-		fprintf(f, "%s", bv->a.localValueRef->valueName);
-		break;
+		case BASICVALUE_LOCALVALUEREF:
+			fprintf(f, "%s", bv->a.localValueRef->valueName);
+			break;
 
-	case BASICVALUE_IMPORTVALUEREF:
-		fprintf(f, "%s", bv->a.importValueRef->valueName);
-		break;
+		case BASICVALUE_IMPORTVALUEREF:
+			fprintf(f, "%s", bv->a.importValueRef->valueName);
+			break;
 
-	case BASICVALUE_VALUENOTATION:
-		fprintf(f, "-- snacc warning: can't parse this value yet --");
-		fprintf(f, "%s", bv->a.valueNotation->octs);
-		break;
+		case BASICVALUE_VALUENOTATION:
+			fprintf(f, "-- snacc warning: can't parse this value yet --");
+			fprintf(f, "%s", bv->a.valueNotation->octs);
+			break;
 
-
-	default:
-		fprintf(errFileG, "PrintBasicValue: ERROR - unknown value type\n");
+		default:
+			fprintf(errFileG, "PrintBasicValue: ERROR - unknown value type\n");
 	}
-}  /* PrintBasicValue */
+} /* PrintBasicValue */
 
-
-void
-PrintElmtValue PARAMS((f, head, v, nv),
-	FILE* f _AND_
-	ValueDef* head _AND_
-	Value* v _AND_
-	NamedValue* nv)
+void PrintElmtValue PARAMS((f, head, v, nv), FILE* f _AND_ ValueDef* head _AND_ Value* v _AND_ NamedValue* nv)
 {
 	if (nv->fieldName != NULL)
 		fprintf(f, "%s ", nv->fieldName);
 
 	PrintValue(f, NULL, NULL, nv->value);
-}  /* PrintElmtValue */
+} /* PrintElmtValue */
 
-
-void
-PrintElmtValues PARAMS((f, head, v, e),
-	FILE* f _AND_
-	ValueDef* head _AND_
-	Value* v _AND_
-	NamedValueList* e)
+void PrintElmtValues PARAMS((f, head, v, e), FILE* f _AND_ ValueDef* head _AND_ Value* v _AND_ NamedValueList* e)
 {
 	NamedValue* nv;
 	NamedValue* last;
@@ -970,164 +848,142 @@ PrintElmtValues PARAMS((f, head, v, e),
 			INDENT(f, indentG);
 		}
 	}
-}  /* PrintElmtValues */
+} /* PrintElmtValues */
 
-
-void
-PrintTypeById PARAMS((f, typeId),
-	FILE* f _AND_
-	int typeId)
+void PrintTypeById PARAMS((f, typeId), FILE* f _AND_ int typeId)
 {
 	switch (typeId)
 	{
-	case BASICTYPE_UNKNOWN:
-		fprintf(f, "UNKNOWN");
-		break;
+		case BASICTYPE_UNKNOWN:
+			fprintf(f, "UNKNOWN");
+			break;
 
-	case BASICTYPE_BOOLEAN:
-		fprintf(f, "BOOLEAN");
-		break;
+		case BASICTYPE_BOOLEAN:
+			fprintf(f, "BOOLEAN");
+			break;
 
-	case BASICTYPE_INTEGER:
-		fprintf(f, "INTEGER");
-		break;
+		case BASICTYPE_INTEGER:
+			fprintf(f, "INTEGER");
+			break;
 
-	case BASICTYPE_BITSTRING:
-		fprintf(f, "BIT STRING");
-		break;
+		case BASICTYPE_BITSTRING:
+			fprintf(f, "BIT STRING");
+			break;
 
-	case BASICTYPE_OCTETSTRING:
-		fprintf(f, "OCTET STRING");
-		break;
+		case BASICTYPE_OCTETSTRING:
+			fprintf(f, "OCTET STRING");
+			break;
 
-	case BASICTYPE_OCTETCONTAINING:
-		fprintf(f, "OCTET STRING ( CONTAINING UTF8String )");
-		break;
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(f, "OCTET STRING ( CONTAINING UTF8String )");
+			break;
 
-	case BASICTYPE_NULL:
-		fprintf(f, "NULL");
-		break;
+		case BASICTYPE_NULL:
+			fprintf(f, "NULL");
+			break;
 
-	case BASICTYPE_SEQUENCE:
-		fprintf(f, "SEQUENCE");
-		break;
+		case BASICTYPE_SEQUENCE:
+			fprintf(f, "SEQUENCE");
+			break;
 
-	case BASICTYPE_SEQUENCEOF:
-		fprintf(f, "SEQUENCE OF");
-		break;
+		case BASICTYPE_SEQUENCEOF:
+			fprintf(f, "SEQUENCE OF");
+			break;
 
-	case BASICTYPE_SET:
-		fprintf(f, "SET");
-		break;
+		case BASICTYPE_SET:
+			fprintf(f, "SET");
+			break;
 
-	case BASICTYPE_SETOF:
-		fprintf(f, "SET OF");
-		break;
+		case BASICTYPE_SETOF:
+			fprintf(f, "SET OF");
+			break;
 
-	case BASICTYPE_CHOICE:
-		fprintf(f, "CHOICE");
-		break;
+		case BASICTYPE_CHOICE:
+			fprintf(f, "CHOICE");
+			break;
 
-	case BASICTYPE_SELECTION:
-		fprintf(f, "SELECTION");
-		break;
+		case BASICTYPE_SELECTION:
+			fprintf(f, "SELECTION");
+			break;
 
-	case BASICTYPE_ANY:
-		fprintf(f, "ANY");
-		break;
+		case BASICTYPE_ANY:
+			fprintf(f, "ANY");
+			break;
 
-	case BASICTYPE_ANYDEFINEDBY:
-		fprintf(f, "ANY DEFINED BY");
-		break;
+		case BASICTYPE_ANYDEFINEDBY:
+			fprintf(f, "ANY DEFINED BY");
+			break;
 
-	case BASICTYPE_OID:
-		fprintf(f, "OBJECT IDENTIFIER");
-		break;
+		case BASICTYPE_OID:
+			fprintf(f, "OBJECT IDENTIFIER");
+			break;
 
-	case BASICTYPE_RELATIVE_OID:
-		fprintf(f, "RELATIVE-OID");
-		break;
+		case BASICTYPE_RELATIVE_OID:
+			fprintf(f, "RELATIVE-OID");
+			break;
 
-	case BASICTYPE_ENUMERATED:
-		fprintf(f, "ENUMERATED");
-		break;
+		case BASICTYPE_ENUMERATED:
+			fprintf(f, "ENUMERATED");
+			break;
 
-	case BASICTYPE_REAL:
-		fprintf(f, "REAL");
-		break;
+		case BASICTYPE_REAL:
+			fprintf(f, "REAL");
+			break;
 
-	case BASICTYPE_COMPONENTSOF:
-		fprintf(f, "COMPONENTS OF");
-		break;
+		case BASICTYPE_COMPONENTSOF:
+			fprintf(f, "COMPONENTS OF");
+			break;
 
-	case BASICTYPE_NUMERIC_STR:
-		fprintf(f, "NumericString");
-		break;
+		case BASICTYPE_NUMERIC_STR:
+			fprintf(f, "NumericString");
+			break;
 
-	case BASICTYPE_PRINTABLE_STR:
-		fprintf(f, "PrintableString");
-		break;
+		case BASICTYPE_PRINTABLE_STR:
+			fprintf(f, "PrintableString");
+			break;
 
-	case BASICTYPE_IA5_STR:
-		fprintf(f, "IA5String");
-		break;
+		case BASICTYPE_IA5_STR:
+			fprintf(f, "IA5String");
+			break;
 
-	case BASICTYPE_BMP_STR:
-		fprintf(f, "BMPString");
-		break;
+		case BASICTYPE_BMP_STR:
+			fprintf(f, "BMPString");
+			break;
 
-	case BASICTYPE_UNIVERSAL_STR:
-		fprintf(f, "UniversalString");
-		break;
+		case BASICTYPE_UNIVERSAL_STR:
+			fprintf(f, "UniversalString");
+			break;
 
-	case BASICTYPE_UTF8_STR:
-		fprintf(f, "UTF8String");
-		break;
+		case BASICTYPE_UTF8_STR:
+			fprintf(f, "UTF8String");
+			break;
 
-	case BASICTYPE_T61_STR:
-		fprintf(f, "TeletexString");
-		break;
+		case BASICTYPE_T61_STR:
+			fprintf(f, "TeletexString");
+			break;
 
-	default:
-		fprintf(f, "ERROR - %d is an unknown type id\n", typeId);
+		default:
+			fprintf(f, "ERROR - %d is an unknown type id\n", typeId);
 	}
-}  /* PrintTypeById */
+} /* PrintTypeById */
 
-
-void
-PrintTag PARAMS((f, tag),
-	FILE* f _AND_
-	Tag* tag)
+void PrintTag PARAMS((f, tag), FILE* f _AND_ Tag* tag)
 {
 	if (tag->tclass == UNIV)
-	{
 		fprintf(f, "[UNIVERSAL %d]", tag->code);
-	}
-	else  if (tag->tclass == APPL)
-	{
+	else if (tag->tclass == APPL)
 		fprintf(f, "[APPLICATION %d]", tag->code);
-	}
-	else  if (tag->tclass == PRIV)
-	{
+	else if (tag->tclass == PRIV)
 		fprintf(f, "[PRIVATE %d]", tag->code);
-	}
-	else  if (tag->tclass == CNTX)
-	{
+	else if (tag->tclass == CNTX)
 		fprintf(f, "[%d]", tag->code);
-	}
 
 	if (tag->_explicit)
 		fprintf(f, " EXPLICIT");
 
-}  /* PrintTag */
+} /* PrintTag */
 
-
-void
-PrintSubtype PARAMS((f, head, t, s),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	Subtype* s)
+void PrintSubtype PARAMS((f, head, t, s), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ Subtype* s)
 {
 	Subtype* tmpS;
 	Subtype* last = NULL;
@@ -1139,111 +995,93 @@ PrintSubtype PARAMS((f, head, t, s),
 
 	switch (s->choiceId)
 	{
-	case SUBTYPE_SINGLE:
-		PrintSubtypeValue(f, head, t, s->a.single);
-		break;
+		case SUBTYPE_SINGLE:
+			PrintSubtypeValue(f, head, t, s->a.single);
+			break;
 
-	case SUBTYPE_AND:
-		FOR_EACH_LIST_ELMT(tmpS, s->a. and)
-		{
-			fprintf(f, "(");
-			PrintSubtype(f, head, t, tmpS);
+		case SUBTYPE_AND:
+			FOR_EACH_LIST_ELMT(tmpS, s->a.and)
+			{
+				fprintf(f, "(");
+				PrintSubtype(f, head, t, tmpS);
+				fprintf(f, ")");
+			}
+			break;
+
+		case SUBTYPE_OR:
+			if ((s->a.or != NULL) && !LIST_EMPTY(s->a.or))
+				last = (Subtype*)LAST_LIST_ELMT(s->a.or);
+			FOR_EACH_LIST_ELMT(tmpS, s->a.or)
+			{
+				fprintf(f, "(");
+				PrintSubtype(f, head, t, tmpS);
+				fprintf(f, ")");
+				if (tmpS != last)
+					fprintf(f, " | ");
+			}
+			break;
+
+		case SUBTYPE_NOT:
+			fprintf(f, "NOT (");
+			PrintSubtype(f, head, t, s->a.not );
 			fprintf(f, ")");
-		}
-		break;
+			break;
 
-
-	case SUBTYPE_OR:
-		if ((s->a.or != NULL) && !LIST_EMPTY(s->a. or ))
-			last = (Subtype*)LAST_LIST_ELMT(s->a. or );
-		FOR_EACH_LIST_ELMT(tmpS, s->a. or )
-		{
-			fprintf(f, "(");
-			PrintSubtype(f, head, t, tmpS);
-			fprintf(f, ")");
-			if (tmpS != last)
-				fprintf(f, " | ");
-		}
-		break;
-
-	case SUBTYPE_NOT:
-		fprintf(f, "NOT (");
-		PrintSubtype(f, head, t, s->a.not);
-		fprintf(f, ")");
-		break;
-
-	default:
-		fprintf(errFileG, "PrintSubtype: ERROR - unknown Subtypes choiceId\n");
-		break;
+		default:
+			fprintf(errFileG, "PrintSubtype: ERROR - unknown Subtypes choiceId\n");
+			break;
 	}
 
 	/*     fprintf (f, ")"); */
 
+} /* PrintSubtype */
 
-}  /* PrintSubtype */
-
-
-
-void
-PrintSubtypeValue PARAMS((f, head, t, s),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	SubtypeValue* s)
+void PrintSubtypeValue PARAMS((f, head, t, s), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ SubtypeValue* s)
 {
 	if (s == NULL)
 		return;
 
 	switch (s->choiceId)
 	{
-	case SUBTYPEVALUE_SINGLEVALUE:
-		PrintValue(f, NULL, NULL, s->a.singleValue);
-		break;
+		case SUBTYPEVALUE_SINGLEVALUE:
+			PrintValue(f, NULL, NULL, s->a.singleValue);
+			break;
 
-	case SUBTYPEVALUE_CONTAINED:
-		fprintf(f, "<PrintContainedSubtype not coded yet\n");
-		break;
+		case SUBTYPEVALUE_CONTAINED:
+			fprintf(f, "<PrintContainedSubtype not coded yet\n");
+			break;
 
-	case SUBTYPEVALUE_VALUERANGE:
-		PrintValue(f, NULL, NULL,
-			s->a.valueRange->lowerEndValue->endValue);
-		if (!s->a.valueRange->lowerEndValue->valueInclusive)
-			fprintf(f, " >");
-		fprintf(f, "..");
-		if (!s->a.valueRange->upperEndValue->valueInclusive)
-			fprintf(f, "< ");
-		PrintValue(f, NULL, NULL,
-			s->a.valueRange->upperEndValue->endValue);
-		break;
+		case SUBTYPEVALUE_VALUERANGE:
+			PrintValue(f, NULL, NULL, s->a.valueRange->lowerEndValue->endValue);
+			if (!s->a.valueRange->lowerEndValue->valueInclusive)
+				fprintf(f, " >");
+			fprintf(f, "..");
+			if (!s->a.valueRange->upperEndValue->valueInclusive)
+				fprintf(f, "< ");
+			PrintValue(f, NULL, NULL, s->a.valueRange->upperEndValue->endValue);
+			break;
 
+		case SUBTYPEVALUE_PERMITTEDALPHABET:
+			fprintf(f, "FROM ");
+			PrintSubtype(f, head, t, s->a.permittedAlphabet);
+			break;
 
-	case SUBTYPEVALUE_PERMITTEDALPHABET:
-		fprintf(f, "FROM ");
-		PrintSubtype(f, head, t, s->a.permittedAlphabet);
-		break;
+		case SUBTYPEVALUE_SIZECONSTRAINT:
+			fprintf(f, "SIZE ");
+			PrintSubtype(f, head, t, s->a.sizeConstraint);
+			break;
 
-	case SUBTYPEVALUE_SIZECONSTRAINT:
-		fprintf(f, "SIZE ");
-		PrintSubtype(f, head, t, s->a.sizeConstraint);
-		break;
+		case SUBTYPEVALUE_INNERSUBTYPE:
+			PrintInnerSubtype(f, head, t, s->a.innerSubtype);
+			break;
 
-	case SUBTYPEVALUE_INNERSUBTYPE:
-		PrintInnerSubtype(f, head, t, s->a.innerSubtype);
-		break;
-
-	default:
-		fprintf(errFileG, "PrintSubtype: ERROR - unknown Subtype choiceId\n");
-		break;
+		default:
+			fprintf(errFileG, "PrintSubtype: ERROR - unknown Subtype choiceId\n");
+			break;
 	}
-}   /* PrintSubtype */
+} /* PrintSubtype */
 
-
-void
-PrintInnerSubtype PARAMS((f, head, t, i),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	InnerSubtype* i)
+void PrintInnerSubtype PARAMS((f, head, t, i), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ InnerSubtype* i)
 {
 	Constraint* constraint;
 	if (i->constraintType == SINGLE_CT)
@@ -1268,18 +1106,10 @@ PrintInnerSubtype PARAMS((f, head, t, i),
 		fprintf(f, "\n");
 		INDENT(f, indentG);
 		fprintf(f, "}");
-
 	}
-}  /* PrintInnerSubtype */
+} /* PrintInnerSubtype */
 
-
-
-void
-PrintMultipleTypeConstraints PARAMS((f, head, t, cList),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	ConstraintList* cList)
+void PrintMultipleTypeConstraints PARAMS((f, head, t, cList), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ ConstraintList* cList)
 {
 	Constraint* c;
 	Constraint* last;
@@ -1296,7 +1126,6 @@ PrintMultipleTypeConstraints PARAMS((f, head, t, cList),
 			fprintf(f, "%s ", c->fieldRef);
 		}
 
-
 		PrintSubtype(f, head, t, c->valueConstraints);
 
 		if (c->presenceConstraint == ABSENT_CT)
@@ -1308,18 +1137,10 @@ PrintMultipleTypeConstraints PARAMS((f, head, t, cList),
 
 		if (c != last)
 			fprintf(f, ",\n");
-
 	}
 } /* PrintMultipleTypeConstraints */
 
-
-
-void
-PrintNamedElmts PARAMS((f, head, t, n),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	ValueDefList* n)
+void PrintNamedElmts PARAMS((f, head, t, n), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ ValueDefList* n)
 {
 	ValueDef* vd;
 	ValueDef* last;
@@ -1337,18 +1158,9 @@ PrintNamedElmts PARAMS((f, head, t, n),
 		if (vd != last)
 			fprintf(f, ",\n");
 	}
-}  /* PrintNamedElmts */
+} /* PrintNamedElmts */
 
-
-
-
-void
-PrintRosOperationMacroType PARAMS((f, head, t, bt, op),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	RosOperationMacroType* op)
+void PrintRosOperationMacroType PARAMS((f, head, t, bt, op), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ RosOperationMacroType* op)
 {
 	TypeOrValue* tOrV;
 	TypeOrValue* last;
@@ -1391,7 +1203,7 @@ PrintRosOperationMacroType PARAMS((f, head, t, bt, op),
 		indentG -= indentStepG;
 	}
 
-	//if ((op->errors == NULL) || (!LIST_EMPTY (op->errors)))
+	// if ((op->errors == NULL) || (!LIST_EMPTY (op->errors)))
 	if ((op->errors != NULL) /*|| (!LIST_EMPTY (op->errors))*/)
 	{
 		fprintf(f, "\n");
@@ -1412,7 +1224,6 @@ PrintRosOperationMacroType PARAMS((f, head, t, bt, op),
 
 			if (tOrV != last)
 				fprintf(f, ",\n");
-
 		}
 		indentG -= indentStepG;
 		fprintf(f, "\n");
@@ -1451,15 +1262,7 @@ PrintRosOperationMacroType PARAMS((f, head, t, bt, op),
 
 } /* PrintRosOperationMacroType */
 
-
-
-void
-PrintRosErrorMacroType PARAMS((f, head, t, bt, err),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	RosErrorMacroType* err)
+void PrintRosErrorMacroType PARAMS((f, head, t, bt, err), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ RosErrorMacroType* err)
 {
 	if (bt->a.macroType->choiceId == MACROTYPE_ROSERROR)
 		fprintf(f, "ERROR\n");
@@ -1478,16 +1281,9 @@ PrintRosErrorMacroType PARAMS((f, head, t, bt, err),
 	}
 	indentG -= indentStepG;
 
-}  /* PrintRosErrorMacroType */
+} /* PrintRosErrorMacroType */
 
-
-void
-PrintRosBindMacroType PARAMS((f, head, t, bt, bind),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	RosBindMacroType* bind)
+void PrintRosBindMacroType PARAMS((f, head, t, bt, bind), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ RosBindMacroType* bind)
 {
 	if (bt->a.macroType->choiceId == MACROTYPE_ROSBIND)
 		fprintf(f, "BIND");
@@ -1535,16 +1331,9 @@ PrintRosBindMacroType PARAMS((f, head, t, bt, bind),
 
 	indentG -= indentStepG;
 
-}  /* PrintRosBindMacroType */
+} /* PrintRosBindMacroType */
 
-
-void
-PrintRosAseMacroType PARAMS((f, head, t, bt, ase),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	RosAseMacroType* ase)
+void PrintRosAseMacroType PARAMS((f, head, t, bt, ase), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ RosAseMacroType* ase)
 {
 	Value* v;
 	Value* last;
@@ -1576,7 +1365,7 @@ PrintRosAseMacroType PARAMS((f, head, t, bt, ase),
 		fprintf(f, "}");
 	}
 
-	else  /* either suuplier invokes or consumer invokes will be valid */
+	else /* either suuplier invokes or consumer invokes will be valid */
 	{
 		if ((ase->consumerInvokes != NULL) && (!LIST_EMPTY(ase->consumerInvokes)))
 		{
@@ -1624,18 +1413,9 @@ PrintRosAseMacroType PARAMS((f, head, t, bt, ase),
 		}
 	}
 	indentG -= indentStepG;
-}  /* PrintRosAseMacrType */
+} /* PrintRosAseMacrType */
 
-
-
-
-void
-PrintRosAcMacroType PARAMS((f, head, t, bt, ac),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	RosAcMacroType* ac)
+void PrintRosAcMacroType PARAMS((f, head, t, bt, ac), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ RosAcMacroType* ac)
 {
 	Value* v;
 	Value* last = NULL;
@@ -1682,7 +1462,6 @@ PrintRosAcMacroType PARAMS((f, head, t, bt, ac),
 	fprintf(f, "UNBIND\n");
 	INDENT(f, indentG);
 	PrintType(f, head, ac->unbindMacroType);
-
 
 	if (ac->remoteOperations != NULL)
 	{
@@ -1783,16 +1562,9 @@ PrintRosAcMacroType PARAMS((f, head, t, bt, ac),
 	fprintf(f, "}");
 
 	indentG -= indentStepG;
-}  /* PrintRosAcMacroType */
+} /* PrintRosAcMacroType */
 
-
-void
-PrintMtsasExtensionsMacroType PARAMS((f, head, t, bt, exts),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	MtsasExtensionsMacroType* exts)
+void PrintMtsasExtensionsMacroType PARAMS((f, head, t, bt, exts), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasExtensionsMacroType* exts)
 {
 	Value* v;
 	Value* last = NULL;
@@ -1816,16 +1588,9 @@ PrintMtsasExtensionsMacroType PARAMS((f, head, t, bt, exts),
 	indentG -= indentStepG;
 	INDENT(f, indentG);
 	fprintf(f, "}");
-}  /* PrintMtsasExtensionsMacroType */
+} /* PrintMtsasExtensionsMacroType */
 
-
-void
-PrintMtsasExtensionMacroType PARAMS((f, head, t, bt, ext),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	MtsasExtensionMacroType* ext)
+void PrintMtsasExtensionMacroType PARAMS((f, head, t, bt, ext), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasExtensionMacroType* ext)
 {
 
 	fprintf(f, "EXTENSION");
@@ -1844,9 +1609,7 @@ PrintMtsasExtensionMacroType PARAMS((f, head, t, bt, ext),
 		}
 	}
 
-	if ((ext->criticalForSubmission != NULL) ||
-		(ext->criticalForTransfer != NULL) ||
-		(ext->criticalForDelivery != NULL))
+	if ((ext->criticalForSubmission != NULL) || (ext->criticalForTransfer != NULL) || (ext->criticalForDelivery != NULL))
 	{
 		fprintf(f, "\n");
 		INDENT(f, indentG);
@@ -1855,8 +1618,7 @@ PrintMtsasExtensionMacroType PARAMS((f, head, t, bt, ext),
 		if (ext->criticalForSubmission != NULL)
 		{
 			fprintf(f, "SUBMISSION");
-			if ((ext->criticalForTransfer != NULL) ||
-				(ext->criticalForDelivery != NULL))
+			if ((ext->criticalForTransfer != NULL) || (ext->criticalForDelivery != NULL))
 				fprintf(f, ", ");
 		}
 
@@ -1869,22 +1631,12 @@ PrintMtsasExtensionMacroType PARAMS((f, head, t, bt, ext),
 
 		if (ext->criticalForDelivery != NULL)
 			fprintf(f, "DELIVERY");
-
 	}
 
 	indentG -= indentStepG;
-}  /* PrintMtsasExtensionMacroType */
+} /* PrintMtsasExtensionMacroType */
 
-
-
-
-void
-PrintMtsasExtensionAttributeMacroType PARAMS((f, head, t, bt, ext),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	MtsasExtensionAttributeMacroType* ext)
+void PrintMtsasExtensionAttributeMacroType PARAMS((f, head, t, bt, ext), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasExtensionAttributeMacroType* ext)
 {
 
 	fprintf(f, "EXTENSION-ATTRIBUTE");
@@ -1898,17 +1650,9 @@ PrintMtsasExtensionAttributeMacroType PARAMS((f, head, t, bt, ext),
 		indentG -= indentStepG;
 	}
 
-}  /* PrintMtsasExtensionAttributeMacroType */
+} /* PrintMtsasExtensionAttributeMacroType */
 
-
-
-void
-PrintMtsasTokenMacroType PARAMS((f, head, t, bt, tok),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	MtsasTokenMacroType* tok)
+void PrintMtsasTokenMacroType PARAMS((f, head, t, bt, tok), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasTokenMacroType* tok)
 {
 
 	fprintf(f, "TOKEN");
@@ -1920,16 +1664,9 @@ PrintMtsasTokenMacroType PARAMS((f, head, t, bt, tok),
 		PrintType(f, head, tok->type);
 		indentG -= indentStepG;
 	}
-}  /* PrintMtsasTokenMacro */
+} /* PrintMtsasTokenMacro */
 
-
-void
-PrintMtsasTokenDataMacroType PARAMS((f, head, t, bt, tok),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	MtsasTokenDataMacroType* tok)
+void PrintMtsasTokenDataMacroType PARAMS((f, head, t, bt, tok), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasTokenDataMacroType* tok)
 {
 
 	fprintf(f, "TOKEN-DATA");
@@ -1942,16 +1679,9 @@ PrintMtsasTokenDataMacroType PARAMS((f, head, t, bt, tok),
 		PrintType(f, head, tok->type);
 		indentG -= indentStepG;
 	}
-}  /* PrintMtsasTokenDataMacro */
+} /* PrintMtsasTokenDataMacro */
 
-
-void
-PrintMtsasSecurityCategoryMacroType PARAMS((f, head, t, bt, sec),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	MtsasSecurityCategoryMacroType* sec)
+void PrintMtsasSecurityCategoryMacroType PARAMS((f, head, t, bt, sec), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasSecurityCategoryMacroType* sec)
 {
 
 	fprintf(f, "SECURITY-CATEGORY");
@@ -1964,17 +1694,9 @@ PrintMtsasSecurityCategoryMacroType PARAMS((f, head, t, bt, sec),
 		PrintType(f, head, sec->type);
 		indentG -= indentStepG;
 	}
-}  /* PrintMtsasSecurityCategoryMacroType */
+} /* PrintMtsasSecurityCategoryMacroType */
 
-
-
-void
-PrintAsnObjectMacroType PARAMS((f, head, t, bt, obj),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	AsnObjectMacroType* obj)
+void PrintAsnObjectMacroType PARAMS((f, head, t, bt, obj), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ AsnObjectMacroType* obj)
 {
 	AsnPort* ap;
 	AsnPort* last;
@@ -2013,17 +1735,9 @@ PrintAsnObjectMacroType PARAMS((f, head, t, bt, obj),
 		fprintf(f, "}");
 	}
 	indentG -= indentStepG;
-}  /* PrintAsnObjectMacroType */
+} /* PrintAsnObjectMacroType */
 
-
-
-void
-PrintAsnPortMacroType PARAMS((f, head, t, bt, p),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	AsnPortMacroType* p)
+void PrintAsnPortMacroType PARAMS((f, head, t, bt, p), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ AsnPortMacroType* p)
 {
 	TypeOrValue* tOrV;
 	TypeOrValue* last;
@@ -2116,18 +1830,9 @@ PrintAsnPortMacroType PARAMS((f, head, t, bt, p),
 	}
 
 	indentG -= indentStepG;
-}  /* PrintAsnPortMacroType */
+} /* PrintAsnPortMacroType */
 
-
-
-
-void
-PrintAsnAbstractBindMacroType PARAMS((f, head, t, bt, bind),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	AsnAbstractBindMacroType* bind)
+void PrintAsnAbstractBindMacroType PARAMS((f, head, t, bt, bind), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ AsnAbstractBindMacroType* bind)
 {
 	AsnPort* ap;
 	AsnPort* last;
@@ -2182,92 +1887,49 @@ PrintAsnAbstractBindMacroType PARAMS((f, head, t, bt, bind),
 
 	indentG -= indentStepG;
 
-}  /* PrintAsnAbstractBindMacroType */
+} /* PrintAsnAbstractBindMacroType */
 
-
-
-void
-PrintAfAlgorithmMacroType PARAMS((f, head, t, bt, alg),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	Type* alg)
+void PrintAfAlgorithmMacroType PARAMS((f, head, t, bt, alg), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ Type* alg)
 {
 	indentG += indentStepG;
 	fprintf(f, "ALGORITHM PARAMETER ");
 	PrintType(f, head, alg);
 	indentG -= indentStepG;
-}  /* PrintAfAlgorithmMacroType */
+} /* PrintAfAlgorithmMacroType */
 
-
-void
-PrintAfEncryptedMacroType PARAMS((f, head, t, bt, encrypt),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	Type* encrypt)
+void PrintAfEncryptedMacroType PARAMS((f, head, t, bt, encrypt), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ Type* encrypt)
 {
 	indentG += indentStepG;
 	fprintf(f, "ENCRYPTED ");
 	PrintType(f, head, encrypt);
 	indentG -= indentStepG;
-}  /* PrintAfEncryptedMacroType */
+} /* PrintAfEncryptedMacroType */
 
-
-void
-PrintAfSignedMacroType PARAMS((f, head, t, bt, sign),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	Type* sign)
+void PrintAfSignedMacroType PARAMS((f, head, t, bt, sign), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ Type* sign)
 {
 	indentG += indentStepG;
 	fprintf(f, "SIGNED ");
 	PrintType(f, head, sign);
 	indentG -= indentStepG;
-}  /* PrintAfSignedMacroType */
+} /* PrintAfSignedMacroType */
 
-
-void
-PrintAfSignatureMacroType PARAMS((f, head, t, bt, sig),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	Type* sig)
+void PrintAfSignatureMacroType PARAMS((f, head, t, bt, sig), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ Type* sig)
 {
 	indentG += indentStepG;
 	fprintf(f, "SIGNATURE ");
 	PrintType(f, head, sig);
 	indentG -= indentStepG;
-}  /* PrintAfSignatureMacroType */
+} /* PrintAfSignatureMacroType */
 
-
-void
-PrintAfProtectedMacroType PARAMS((f, head, t, bt, p),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	Type* p)
+void PrintAfProtectedMacroType PARAMS((f, head, t, bt, p), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ Type* p)
 {
 	indentG += indentStepG;
 	fprintf(f, "PROTECTED ");
 	PrintType(f, head, p);
 	indentG -= indentStepG;
-}  /* PrintAfMacroType */
+} /* PrintAfMacroType */
 
-
-void
-PrintSnmpObjectTypeMacroType PARAMS((f, head, t, bt, ot),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	SnmpObjectTypeMacroType* ot)
+void PrintSnmpObjectTypeMacroType PARAMS((f, head, t, bt, ot), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ SnmpObjectTypeMacroType* ot)
 {
 	TypeOrValue* tOrV;
 	TypeOrValue* last;
@@ -2285,24 +1947,24 @@ PrintSnmpObjectTypeMacroType PARAMS((f, head, t, bt, ot),
 	fprintf(f, "ACCESS ");
 	switch (ot->access)
 	{
-	case SNMP_READ_ONLY:
-		fprintf(f, "read-only");
-		break;
+		case SNMP_READ_ONLY:
+			fprintf(f, "read-only");
+			break;
 
-	case SNMP_READ_WRITE:
-		fprintf(f, "read-write");
-		break;
+		case SNMP_READ_WRITE:
+			fprintf(f, "read-write");
+			break;
 
-	case SNMP_WRITE_ONLY:
-		fprintf(f, "write-only");
-		break;
+		case SNMP_WRITE_ONLY:
+			fprintf(f, "write-only");
+			break;
 
-	case SNMP_NOT_ACCESSIBLE:
-		fprintf(f, "not-accessible");
-		break;
+		case SNMP_NOT_ACCESSIBLE:
+			fprintf(f, "not-accessible");
+			break;
 
-	default:
-		fprintf(f, " < ?? unknown access type ?? >");
+		default:
+			fprintf(f, " < ?? unknown access type ?? >");
 	}
 
 	fprintf(f, "\n");
@@ -2310,24 +1972,24 @@ PrintSnmpObjectTypeMacroType PARAMS((f, head, t, bt, ot),
 	fprintf(f, "STATUS ");
 	switch (ot->status)
 	{
-	case SNMP_MANDATORY:
-		fprintf(f, "mandatory");
-		break;
+		case SNMP_MANDATORY:
+			fprintf(f, "mandatory");
+			break;
 
-	case SNMP_OPTIONAL:
-		fprintf(f, "optional");
-		break;
+		case SNMP_OPTIONAL:
+			fprintf(f, "optional");
+			break;
 
-	case SNMP_OBSOLETE:
-		fprintf(f, "obsolete");
-		break;
+		case SNMP_OBSOLETE:
+			fprintf(f, "obsolete");
+			break;
 
-	case SNMP_DEPRECATED:
-		fprintf(f, "deprecated");
-		break;
+		case SNMP_DEPRECATED:
+			fprintf(f, "deprecated");
+			break;
 
-	default:
-		fprintf(f, " < ?? unknown status type ?? >");
+		default:
+			fprintf(f, " < ?? unknown status type ?? >");
 	}
 
 	if (ot->description != NULL)
@@ -2388,17 +2050,13 @@ PrintSnmpObjectTypeMacroType PARAMS((f, head, t, bt, ot),
 	fprintf(f, "\n");
 
 	indentG -= indentStepG;
-}  /* PrintSnmpObjectTypeMacroType */
-
+} /* PrintSnmpObjectTypeMacroType */
 
 /*
  * @MACRO@ add new macro print routines above this point
  */
 
-void
-PrintMacroDef PARAMS((f, head),
-	FILE* f _AND_
-	TypeDef* head)
+void PrintMacroDef PARAMS((f, head), FILE* f _AND_ TypeDef* head)
 {
 	char* s;
 
@@ -2411,14 +2069,9 @@ PrintMacroDef PARAMS((f, head),
 	fprintf(f, "%s MACRO ::=\n", head->definedName);
 	fprintf(f, "%s", s);
 
-}  /* PrintMacroDef */
+} /* PrintMacroDef */
 
-
-
-void
-PrintEncodedOid PARAMS((f, eoid),
-	FILE* f _AND_
-	AsnOid* eoid)
+void PrintEncodedOid PARAMS((f, eoid), FILE* f _AND_ AsnOid* eoid)
 {
 	int i;
 	int arcNum;
@@ -2444,7 +2097,7 @@ PrintEncodedOid PARAMS((f, eoid),
 
 	fprintf(f, "%d ", firstArcNum);
 	fprintf(f, "%d ", secondArcNum);
-	for (; i < (int)(eoid->octetLen); )
+	for (; i < (int)(eoid->octetLen);)
 	{
 		for (arcNum = 0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80); i++)
 			arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
@@ -2457,9 +2110,7 @@ PrintEncodedOid PARAMS((f, eoid),
 
 	fprintf(f, "}");
 
-}  /* PrintEncodedOid */
-
-
+} /* PrintEncodedOid */
 
 /*
  * this just prints  a short form of the given type.  It
@@ -2468,286 +2119,267 @@ PrintEncodedOid PARAMS((f, eoid),
  * This is used by the header file generators to annotate
  * the C/C++ types
  */
-void
-SpecialPrintBasicType PARAMS((f, head, t, bt),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	BasicType* bt)
+void SpecialPrintBasicType PARAMS((f, head, t, bt), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt)
 {
 	switch (bt->choiceId)
 	{
-	case BASICTYPE_OBJECTCLASSFIELDTYPE:
-		fprintf(f, "ObjectClassFieldType: TypeField");
-		break;
+		case BASICTYPE_OBJECTCLASSFIELDTYPE:
+			fprintf(f, "ObjectClassFieldType: TypeField");
+			break;
 
-	case BASICTYPE_SEQUENCE:
-		fprintf(f, "SEQUENCE");
-		break;
+		case BASICTYPE_SEQUENCE:
+			fprintf(f, "SEQUENCE");
+			break;
 
-	case BASICTYPE_SEQUENCET:		// Deepak: 30/Nov/2002
-		fprintf(f, "SEQUENCET");
-		break;
+		case BASICTYPE_SEQUENCET: // Deepak: 30/Nov/2002
+			fprintf(f, "SEQUENCET");
+			break;
 
-	case BASICTYPE_SET:
-		fprintf(f, "SET");
-		break;
+		case BASICTYPE_SET:
+			fprintf(f, "SET");
+			break;
 
-	case BASICTYPE_CHOICE:
-		fprintf(f, "CHOICE");
-		break;
+		case BASICTYPE_CHOICE:
+			fprintf(f, "CHOICE");
+			break;
 
-	case BASICTYPE_OBJECTCLASS:		// Deepak: 11/Mar/2003
-		fprintf(f, "CLASS");
-		break;
+		case BASICTYPE_OBJECTCLASS: // Deepak: 11/Mar/2003
+			fprintf(f, "CLASS");
+			break;
 
+		case BASICTYPE_SEQUENCEOF:
+			fprintf(f, "SEQUENCE ");
+			if (t->subtypes != NULL)
+			{
+				PrintSubtype(f, head, t, t->subtypes);
+				fprintf(f, " ");
+			}
+			fprintf(f, "OF ");
+			SpecialPrintType(f, head, t->basicType->a.sequenceOf);
+			break;
 
-	case BASICTYPE_SEQUENCEOF:
-		fprintf(f, "SEQUENCE ");
-		if (t->subtypes != NULL)
-		{
-			PrintSubtype(f, head, t, t->subtypes);
-			fprintf(f, " ");
-		}
-		fprintf(f, "OF ");
-		SpecialPrintType(f, head, t->basicType->a.sequenceOf);
-		break;
+		case BASICTYPE_SETOF:
+			fprintf(f, "SET ");
+			if (t->subtypes != NULL)
+			{
+				PrintSubtype(f, head, t, t->subtypes);
+				fprintf(f, " ");
+			}
+			fprintf(f, "OF ");
+			SpecialPrintType(f, head, t->basicType->a.sequenceOf);
+			break;
 
-	case BASICTYPE_SETOF:
-		fprintf(f, "SET ");
-		if (t->subtypes != NULL)
-		{
-			PrintSubtype(f, head, t, t->subtypes);
-			fprintf(f, " ");
-		}
-		fprintf(f, "OF ");
-		SpecialPrintType(f, head, t->basicType->a.sequenceOf);
-		break;
+		case BASICTYPE_SELECTION:
+			fprintf(f, "%s < ", bt->a.selection->fieldName);
+			PrintType(f, head, bt->a.selection->typeRef);
+			break;
 
+		case BASICTYPE_COMPONENTSOF:
+			fprintf(f, "COMPONENTS OF ");
+			PrintType(f, NULL, bt->a.componentsOf);
+			break;
 
-	case BASICTYPE_SELECTION:
-		fprintf(f, "%s < ", bt->a.selection->fieldName);
-		PrintType(f, head, bt->a.selection->typeRef);
-		break;
+		case BASICTYPE_ANYDEFINEDBY:
+			fprintf(f, "ANY DEFINED BY %s", bt->a.anyDefinedBy->fieldName);
+			break;
 
+		case BASICTYPE_LOCALTYPEREF:
+			fprintf(f, "%s", bt->a.localTypeRef->typeName);
+			break;
 
+		case BASICTYPE_IMPORTTYPEREF:
+			fprintf(f, "%s", bt->a.importTypeRef->typeName);
+			break;
 
+		case BASICTYPE_UNKNOWN:
+			fprintf(f, "unknown type !?!");
+			break;
 
-	case BASICTYPE_COMPONENTSOF:
-		fprintf(f, "COMPONENTS OF ");
-		PrintType(f, NULL, bt->a.componentsOf);
-		break;
+		case BASICTYPE_BOOLEAN:
+			fprintf(f, "BOOLEAN");
+			break;
 
+		case BASICTYPE_INTEGER:
+			fprintf(f, "INTEGER");
+			if ((bt->a.integer != NULL) && !LIST_EMPTY(bt->a.integer))
+				SpecialPrintNamedElmts(f, head, t);
+			break;
 
+			/* 		case BASICTYPE_BIGINT:
+						fprintf (f, "INTEGER (isBigInt:TRUE)");
+						if ((bt->a.integer != NULL) && !LIST_EMPTY (bt->a.integer))
+							SpecialPrintNamedElmts (f, head, t);
+						break;
+			*/
 
-	case BASICTYPE_ANYDEFINEDBY:
-		fprintf(f, "ANY DEFINED BY %s", bt->a.anyDefinedBy->fieldName);
-		break;
+		case BASICTYPE_BITSTRING:
+			fprintf(f, "BIT STRING");
+			if ((bt->a.bitString != NULL) && !LIST_EMPTY(bt->a.bitString))
+				SpecialPrintNamedElmts(f, head, t);
+			break;
 
+		case BASICTYPE_OCTETSTRING:
+			fprintf(f, "OCTET STRING");
+			break;
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(f, "OCTET STRING ( CONTAINING UTF8String )");
+			break;
+		case BASICTYPE_NULL:
+			fprintf(f, "NULL");
+			break;
 
-	case BASICTYPE_LOCALTYPEREF:
-		fprintf(f, "%s", bt->a.localTypeRef->typeName);
-		break;
+		case BASICTYPE_OID:
+			fprintf(f, "OBJECT IDENTIFIER");
+			break;
+		case BASICTYPE_RELATIVE_OID:
+			fprintf(f, "RELATIVE-OID");
+			break;
+		case BASICTYPE_REAL:
+			fprintf(f, "REAL");
+			break;
 
-	case BASICTYPE_IMPORTTYPEREF:
-		fprintf(f, "%s", bt->a.importTypeRef->typeName);
-		break;
+		case BASICTYPE_ENUMERATED:
+			fprintf(f, "ENUMERATED");
+			if ((bt->a.enumerated != NULL) && !LIST_EMPTY(bt->a.enumerated))
+				SpecialPrintNamedElmts(f, head, t);
 
+			break;
 
-	case BASICTYPE_UNKNOWN:
-		fprintf(f, "unknown type !?!");
-		break;
+		case BASICTYPE_NUMERIC_STR:
+			fprintf(f, "NumericString");
+			break;
 
-	case BASICTYPE_BOOLEAN:
-		fprintf(f, "BOOLEAN");
-		break;
+		case BASICTYPE_PRINTABLE_STR:
+			fprintf(f, "PrintableString");
+			break;
 
+		case BASICTYPE_IA5_STR:
+			fprintf(f, "IA5String");
+			break;
 
-	case BASICTYPE_INTEGER:
-		fprintf(f, "INTEGER");
-		if ((bt->a.integer != NULL) && !LIST_EMPTY(bt->a.integer))
-			SpecialPrintNamedElmts(f, head, t);
-		break;
+		case BASICTYPE_BMP_STR:
+			fprintf(f, "BMPString");
+			break;
 
-		/* 		case BASICTYPE_BIGINT:
-					fprintf (f, "INTEGER (isBigInt:TRUE)");
-					if ((bt->a.integer != NULL) && !LIST_EMPTY (bt->a.integer))
-						SpecialPrintNamedElmts (f, head, t);
+		case BASICTYPE_UNIVERSAL_STR:
+			fprintf(f, "UniversalString");
+			break;
+
+		case BASICTYPE_UTF8_STR:
+			fprintf(f, "UTF8String");
+			break;
+
+		case BASICTYPE_T61_STR:
+			fprintf(f, "TeletexString");
+			break;
+
+		case BASICTYPE_ANY:
+			fprintf(f, "ANY");
+			break;
+
+		case BASICTYPE_MACROTYPE:
+			switch (bt->a.macroType->choiceId)
+			{
+				case MACROTYPE_ROSOPERATION:
+				case MACROTYPE_ASNABSTRACTOPERATION:
+					PrintRosOperationMacroType(f, head, t, bt, bt->a.macroType->a.rosOperation);
 					break;
-		*/
 
+				case MACROTYPE_ROSERROR:
+				case MACROTYPE_ASNABSTRACTERROR:
+					PrintRosErrorMacroType(f, head, t, bt, bt->a.macroType->a.rosError);
+					break;
 
-	case BASICTYPE_BITSTRING:
-		fprintf(f, "BIT STRING");
-		if ((bt->a.bitString != NULL) && !LIST_EMPTY(bt->a.bitString))
-			SpecialPrintNamedElmts(f, head, t);
-		break;
+				case MACROTYPE_ROSBIND:
+				case MACROTYPE_ROSUNBIND:
+					PrintRosBindMacroType(f, head, t, bt, bt->a.macroType->a.rosBind);
+					break;
 
-	case BASICTYPE_OCTETSTRING:
-		fprintf(f, "OCTET STRING");
-		break;
-	case BASICTYPE_OCTETCONTAINING:
-		fprintf(f, "OCTET STRING ( CONTAINING UTF8String )");
-		break;
-	case BASICTYPE_NULL:
-		fprintf(f, "NULL");
-		break;
+				case MACROTYPE_ROSASE:
+					PrintRosAseMacroType(f, head, t, bt, bt->a.macroType->a.rosAse);
+					break;
 
-	case BASICTYPE_OID:
-		fprintf(f, "OBJECT IDENTIFIER");
-		break;
-	case BASICTYPE_RELATIVE_OID:
-		fprintf(f, "RELATIVE-OID");
-		break;
-	case BASICTYPE_REAL:
-		fprintf(f, "REAL");
-		break;
+				case MACROTYPE_MTSASEXTENSIONS:
+					PrintMtsasExtensionsMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtensions);
+					break;
 
-	case BASICTYPE_ENUMERATED:
-		fprintf(f, "ENUMERATED");
-		if ((bt->a.enumerated != NULL) && !LIST_EMPTY(bt->a.enumerated))
-			SpecialPrintNamedElmts(f, head, t);
+				case MACROTYPE_MTSASEXTENSION:
+					PrintMtsasExtensionMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtension);
+					break;
 
-		break;
+				case MACROTYPE_MTSASEXTENSIONATTRIBUTE:
+					PrintMtsasExtensionAttributeMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtensionAttribute);
+					break;
 
-	case BASICTYPE_NUMERIC_STR:
-		fprintf(f, "NumericString");
-		break;
+				case MACROTYPE_MTSASTOKEN:
+					PrintMtsasTokenMacroType(f, head, t, bt, bt->a.macroType->a.mtsasToken);
+					break;
 
-	case BASICTYPE_PRINTABLE_STR:
-		fprintf(f, "PrintableString");
-		break;
+				case MACROTYPE_MTSASTOKENDATA:
+					PrintMtsasTokenDataMacroType(f, head, t, bt, bt->a.macroType->a.mtsasTokenData);
+					break;
 
-	case BASICTYPE_IA5_STR:
-		fprintf(f, "IA5String");
-		break;
+				case MACROTYPE_MTSASSECURITYCATEGORY:
+					PrintMtsasSecurityCategoryMacroType(f, head, t, bt, bt->a.macroType->a.mtsasSecurityCategory);
+					break;
 
-	case BASICTYPE_BMP_STR:
-		fprintf(f, "BMPString");
-		break;
+				case MACROTYPE_ASNOBJECT:
+					PrintAsnObjectMacroType(f, head, t, bt, bt->a.macroType->a.asnObject);
+					break;
 
-	case BASICTYPE_UNIVERSAL_STR:
-		fprintf(f, "UniversalString");
-		break;
+				case MACROTYPE_ASNPORT:
+					PrintAsnPortMacroType(f, head, t, bt, bt->a.macroType->a.asnPort);
+					break;
 
-	case BASICTYPE_UTF8_STR:
-		fprintf(f, "UTF8String");
-		break;
+				case MACROTYPE_ASNABSTRACTBIND:
+				case MACROTYPE_ASNABSTRACTUNBIND:
+					PrintAsnAbstractBindMacroType(f, head, t, bt, bt->a.macroType->a.asnAbstractBind);
+					break;
 
-	case BASICTYPE_T61_STR:
-		fprintf(f, "TeletexString");
-		break;
+				case MACROTYPE_AFALGORITHM:
+					PrintAfAlgorithmMacroType(f, head, t, bt, bt->a.macroType->a.afAlgorithm);
+					break;
 
-	case BASICTYPE_ANY:
-		fprintf(f, "ANY");
-		break;
+				case MACROTYPE_AFENCRYPTED:
+					PrintAfEncryptedMacroType(f, head, t, bt, bt->a.macroType->a.afEncrypted);
+					break;
 
-	case BASICTYPE_MACROTYPE:
-		switch (bt->a.macroType->choiceId)
-		{
-		case MACROTYPE_ROSOPERATION:
-		case MACROTYPE_ASNABSTRACTOPERATION:
-			PrintRosOperationMacroType(f, head, t, bt, bt->a.macroType->a.rosOperation);
+				case MACROTYPE_AFSIGNED:
+					PrintAfSignedMacroType(f, head, t, bt, bt->a.macroType->a.afSigned);
+					break;
+
+				case MACROTYPE_AFSIGNATURE:
+					PrintAfSignatureMacroType(f, head, t, bt, bt->a.macroType->a.afSignature);
+					break;
+
+				case MACROTYPE_AFPROTECTED:
+					PrintAfProtectedMacroType(f, head, t, bt, bt->a.macroType->a.afProtected);
+					break;
+
+				case MACROTYPE_SNMPOBJECTTYPE:
+					PrintSnmpObjectTypeMacroType(f, head, t, bt, bt->a.macroType->a.snmpObjectType);
+					break;
+
+				default:
+					fprintf(f, "< unknown macro type id ?! >");
+
+			} /* end macro type switch */
 			break;
 
-		case MACROTYPE_ROSERROR:
-		case MACROTYPE_ASNABSTRACTERROR:
-			PrintRosErrorMacroType(f, head, t, bt, bt->a.macroType->a.rosError);
-			break;
+			/*
+			 * @MACRO@ add new macro printers above this point
+			 */
 
-		case MACROTYPE_ROSBIND:
-		case MACROTYPE_ROSUNBIND:
-			PrintRosBindMacroType(f, head, t, bt, bt->a.macroType->a.rosBind);
-			break;
-
-		case MACROTYPE_ROSASE:
-			PrintRosAseMacroType(f, head, t, bt, bt->a.macroType->a.rosAse);
-			break;
-
-		case MACROTYPE_MTSASEXTENSIONS:
-			PrintMtsasExtensionsMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtensions);
-			break;
-
-		case MACROTYPE_MTSASEXTENSION:
-			PrintMtsasExtensionMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtension);
-			break;
-
-		case MACROTYPE_MTSASEXTENSIONATTRIBUTE:
-			PrintMtsasExtensionAttributeMacroType(f, head, t, bt, bt->a.macroType->a.mtsasExtensionAttribute);
-			break;
-
-		case MACROTYPE_MTSASTOKEN:
-			PrintMtsasTokenMacroType(f, head, t, bt, bt->a.macroType->a.mtsasToken);
-			break;
-
-		case MACROTYPE_MTSASTOKENDATA:
-			PrintMtsasTokenDataMacroType(f, head, t, bt, bt->a.macroType->a.mtsasTokenData);
-			break;
-
-		case MACROTYPE_MTSASSECURITYCATEGORY:
-			PrintMtsasSecurityCategoryMacroType(f, head, t, bt, bt->a.macroType->a.mtsasSecurityCategory);
-			break;
-
-		case MACROTYPE_ASNOBJECT:
-			PrintAsnObjectMacroType(f, head, t, bt, bt->a.macroType->a.asnObject);
-			break;
-
-		case MACROTYPE_ASNPORT:
-			PrintAsnPortMacroType(f, head, t, bt, bt->a.macroType->a.asnPort);
-			break;
-
-		case MACROTYPE_ASNABSTRACTBIND:
-		case MACROTYPE_ASNABSTRACTUNBIND:
-			PrintAsnAbstractBindMacroType(f, head, t, bt, bt->a.macroType->a.asnAbstractBind);
-			break;
-
-		case MACROTYPE_AFALGORITHM:
-			PrintAfAlgorithmMacroType(f, head, t, bt, bt->a.macroType->a.afAlgorithm);
-			break;
-
-		case MACROTYPE_AFENCRYPTED:
-			PrintAfEncryptedMacroType(f, head, t, bt, bt->a.macroType->a.afEncrypted);
-			break;
-
-		case MACROTYPE_AFSIGNED:
-			PrintAfSignedMacroType(f, head, t, bt, bt->a.macroType->a.afSigned);
-			break;
-
-		case MACROTYPE_AFSIGNATURE:
-			PrintAfSignatureMacroType(f, head, t, bt, bt->a.macroType->a.afSignature);
-			break;
-
-		case MACROTYPE_AFPROTECTED:
-			PrintAfProtectedMacroType(f, head, t, bt, bt->a.macroType->a.afProtected);
-			break;
-
-		case MACROTYPE_SNMPOBJECTTYPE:
-			PrintSnmpObjectTypeMacroType(f, head, t, bt, bt->a.macroType->a.snmpObjectType);
+		case BASICTYPE_MACRODEF:
+			/*
+			 * printing this should be handled in PrintTypeDefs
+			 */
 			break;
 
 		default:
-			fprintf(f, "< unknown macro type id ?! >");
-
-		} /* end macro type switch */
-		break;
-
-		/*
-		 * @MACRO@ add new macro printers above this point
-		 */
-
-	case BASICTYPE_MACRODEF:
-		/*
-		 * printing this should be handled in PrintTypeDefs
-		 */
-		break;
-
-
-	default:
-		fprintf(f, "< unknown type id ?! >");
-
+			fprintf(f, "< unknown type id ?! >");
 	}
-}  /* SpecialPrintBasicType */
-
+} /* SpecialPrintBasicType */
 
 /*
  * this just prints  a short form of the given type.  It
@@ -2756,11 +2388,7 @@ SpecialPrintBasicType PARAMS((f, head, t, bt),
  * This is used by the header file generators to annotate
  * the C types
  */
-void
-SpecialPrintType PARAMS((f, head, t),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t)
+void SpecialPrintType PARAMS((f, head, t), FILE* f _AND_ TypeDef* head _AND_ Type* t)
 {
 	Tag* tag;
 
@@ -2784,19 +2412,15 @@ SpecialPrintType PARAMS((f, head, t),
 
 	SpecialPrintBasicType(f, head, t, t->basicType);
 
-
 	/*
 	 * sequences of and set of print subtypes a special way
 	 * so ignore them here
 	 */
-	if ((t->subtypes != NULL) &&
-		(t->basicType->choiceId != BASICTYPE_SETOF) &&
-		(t->basicType->choiceId != BASICTYPE_SEQUENCEOF))
+	if ((t->subtypes != NULL) && (t->basicType->choiceId != BASICTYPE_SETOF) && (t->basicType->choiceId != BASICTYPE_SEQUENCEOF))
 	{
 		fprintf(f, " ");
 		PrintSubtype(f, head, t, t->subtypes);
 	}
-
 
 	if (t->defaultVal != NULL)
 	{
@@ -2809,14 +2433,12 @@ SpecialPrintType PARAMS((f, head, t),
 	else if (t->optional)
 		fprintf(f, " OPTIONAL");
 
-
 #ifdef DEBUG
 	fprintf(f, "  -- lineNo = %d", t->lineNo);
 	fprintf(f, " --");
 #endif
 
-}  /* SpecialPrintType */
-
+} /* SpecialPrintType */
 
 /*
  * This is used by the header file generators to annotate
@@ -2826,11 +2448,7 @@ SpecialPrintType PARAMS((f, head, t),
  * NOTE: this can only be called after the CTRI infor is filled in
  * so the C/C++ names can be accessed
  */
-void
-SpecialPrintNamedElmts PARAMS((f, head, t),
-	FILE* f _AND_
-	TypeDef* head _AND_
-	Type* t)
+void SpecialPrintNamedElmts PARAMS((f, head, t), FILE* f _AND_ TypeDef* head _AND_ Type* t)
 {
 	CNamedElmt* last;
 	CNamedElmt* cne;
@@ -2841,7 +2459,6 @@ SpecialPrintNamedElmts PARAMS((f, head, t),
 
 	if ((n == NULL) && (t->cxxTypeRefInfo != NULL))
 		n = t->cxxTypeRefInfo->namedElmts;
-
 
 	if ((n == NULL) || LIST_EMPTY(n))
 		return;
@@ -2855,4 +2472,4 @@ SpecialPrintNamedElmts PARAMS((f, head, t),
 			fprintf(f, ", ");
 	}
 	fprintf(f, " } ");
-}  /* SpecialPrintNamedElmts */
+} /* SpecialPrintNamedElmts */

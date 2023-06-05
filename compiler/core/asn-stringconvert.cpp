@@ -7,12 +7,16 @@
 #include <Windows.h>
 #endif
 
-template<class Facet>
-struct deletable_facet : Facet
+template <class Facet> struct deletable_facet : Facet
 {
-	template<class... Args>
-	deletable_facet(Args&&... args) : Facet(std::forward<Args>(args)...) {}
-	~deletable_facet() {}
+	template <class... Args>
+	deletable_facet(Args&&... args)
+		: Facet(std::forward<Args>(args)...)
+	{
+	}
+	~deletable_facet()
+	{
+	}
 };
 
 #ifdef _DEBUG
@@ -24,7 +28,8 @@ struct deletable_facet : Facet
 #endif
 
 #ifdef _WIN32
-int getWindowsCodePage(const char* szCodePage) {
+int getWindowsCodePage(const char* szCodePage)
+{
 	// https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
 	if (strstr(szCodePage, "windows-") == szCodePage)
 		return atoi(szCodePage + 8);
@@ -35,7 +40,8 @@ int getWindowsCodePage(const char* szCodePage) {
 }
 #endif
 
-std::string AsnStringConvert::AsciiToUTF8(const char* szASCII, const char* szCodePage /* = "ISO-8859-1" */) {
+std::string AsnStringConvert::AsciiToUTF8(const char* szASCII, const char* szCodePage /* = "ISO-8859-1" */)
+{
 	std::string strUTF8;
 	try
 	{
@@ -58,7 +64,8 @@ std::string AsnStringConvert::AsciiToUTF8(const char* szASCII, const char* szCod
 	return strUTF8;
 }
 
-std::string AsnStringConvert::UTF8ToAscii(const char* szUTF8, const char* szCodePage /* = "ISO-8859-1" */) {
+std::string AsnStringConvert::UTF8ToAscii(const char* szUTF8, const char* szCodePage /* = "ISO-8859-1" */)
+{
 	std::string strASCII;
 	try
 	{
@@ -81,24 +88,27 @@ std::string AsnStringConvert::UTF8ToAscii(const char* szUTF8, const char* szCode
 	return strASCII;
 }
 
-
-std::wstring AsnStringConvert::AsciiToUTF16(const char* szASCII, const char* szCodePage /* = "ISO-8859-1" */) {
+std::wstring AsnStringConvert::AsciiToUTF16(const char* szASCII, const char* szCodePage /* = "ISO-8859-1" */)
+{
 	std::wstring strUTF16;
 	try
 	{
 #ifdef _WIN32
 		int size = (int)strlen(szASCII);
-		if (size) {
+		if (size)
+		{
 			int iCodePage = getWindowsCodePage(szCodePage);
 			int size_needed = MultiByteToWideChar(iCodePage, 0, szASCII, size, NULL, 0);
-			if (size_needed) {
+			if (size_needed)
+			{
 				strUTF16.resize(size_needed, FILLCHAR_W);
 #ifdef _DEBUG
 				int iConverted =
 #endif
 					MultiByteToWideChar(iCodePage, 0, szASCII, size, &strUTF16[0], size_needed);
 #ifdef _DEBUG
-				if (size_needed != iConverted) {
+				if (size_needed != iConverted)
+				{
 					DWORD dwErr = GetLastError();
 					dwErr;
 					assert(FALSE);
@@ -119,23 +129,27 @@ std::wstring AsnStringConvert::AsciiToUTF16(const char* szASCII, const char* szC
 	return strUTF16;
 }
 
-std::string AsnStringConvert::UTF16ToAscii(const wchar_t* szUTF16, const char* szCodePage /* = "ISO-8859-1" */) {
+std::string AsnStringConvert::UTF16ToAscii(const wchar_t* szUTF16, const char* szCodePage /* = "ISO-8859-1" */)
+{
 	std::string strASCII;
 	try
 	{
 #ifdef _WIN32
 		int size = (int)wcslen(szUTF16);
-		if (size) {
+		if (size)
+		{
 			int iCodePage = getWindowsCodePage(szCodePage);
 			int size_needed = WideCharToMultiByte(iCodePage, 0, szUTF16, size, NULL, 0, NULL, NULL);
-			if (size_needed) {
+			if (size_needed)
+			{
 				strASCII.resize(size_needed, FILLCHAR_A);
 #ifdef _DEBUG
 				int iConverted =
 #endif
 					WideCharToMultiByte(iCodePage, 0, szUTF16, size, &strASCII[0], size_needed, NULL, NULL);
 #ifdef _DEBUG
-				if (size_needed != iConverted) {
+				if (size_needed != iConverted)
+				{
 					DWORD dwErr = GetLastError();
 					dwErr;
 					assert(FALSE);
@@ -156,22 +170,26 @@ std::string AsnStringConvert::UTF16ToAscii(const wchar_t* szUTF16, const char* s
 	return strASCII;
 }
 
-std::wstring AsnStringConvert::UTF8ToUTF16(const char* szUTF8) {
+std::wstring AsnStringConvert::UTF8ToUTF16(const char* szUTF8)
+{
 	std::wstring strUTF16;
 	try
 	{
 #ifdef _WIN32
 		int size = (int)strlen(szUTF8);
-		if (size) {
+		if (size)
+		{
 			int size_needed = MultiByteToWideChar(CP_UTF8, 0, szUTF8, size, NULL, 0);
-			if (size_needed) {
+			if (size_needed)
+			{
 				strUTF16.resize(size_needed, FILLCHAR_W);
 #ifdef _DEBUG
 				int iConverted =
 #endif
 					MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, szUTF8, size, &strUTF16[0], size_needed);
 #ifdef _DEBUG
-				if (size_needed != iConverted) {
+				if (size_needed != iConverted)
+				{
 					DWORD dwErr = GetLastError();
 					dwErr;
 					assert(FALSE);
@@ -192,22 +210,26 @@ std::wstring AsnStringConvert::UTF8ToUTF16(const char* szUTF8) {
 	return strUTF16;
 }
 
-std::string AsnStringConvert::UTF16ToUTF8(const wchar_t* szUTF16) {
+std::string AsnStringConvert::UTF16ToUTF8(const wchar_t* szUTF16)
+{
 	std::string strUTF8;
 	try
 	{
 #ifdef _WIN32
 		int size = (int)wcslen(szUTF16);
-		if (size) {
+		if (size)
+		{
 			int size_needed = WideCharToMultiByte(CP_UTF8, 0, szUTF16, size, NULL, 0, NULL, NULL);
-			if (size_needed) {
+			if (size_needed)
+			{
 				strUTF8.resize(size_needed, FILLCHAR_A);
 #ifdef _DEBUG
 				int iConverted =
 #endif
 					WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, szUTF16, size, &strUTF8[0], size_needed, NULL, NULL);
 #ifdef _DEBUG
-				if (size_needed != iConverted) {
+				if (size_needed != iConverted)
+				{
 					DWORD dwErr = GetLastError();
 					dwErr;
 					assert(FALSE);
@@ -227,4 +249,3 @@ std::string AsnStringConvert::UTF16ToUTF8(const wchar_t* szUTF16) {
 	}
 	return strUTF8;
 }
-

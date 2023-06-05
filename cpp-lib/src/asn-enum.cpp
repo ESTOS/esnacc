@@ -108,7 +108,7 @@ AsnLen AsnEnum::BEnc(AsnBuf& b) const
 
 /*Takes the enumerated list, sorts them, and returns the index of the */
 /*number that matches the value                                       */
-long AsnEnum::IndexedVal(long* penumList, long numVals)const
+long AsnEnum::IndexedVal(long* penumList, long numVals) const
 {
 	FUNC("AsnEnum::IndexedVal");
 	long* indexedList = penumList;
@@ -184,9 +184,7 @@ void AsnEnum::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 
 	tagId = BDecTag(b, bytesDecoded);
 	if (tagId != MAKE_TAG_ID(UNIV, PRIM, ENUM_TAG_CODE))
-	{
 		throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
-	}
 
 	elmtLen = BDecLen(b, bytesDecoded);
 	BDecContent(b, MAKE_TAG_ID(UNIV, PRIM, ENUM_TAG_CODE), elmtLen, bytesDecoded);

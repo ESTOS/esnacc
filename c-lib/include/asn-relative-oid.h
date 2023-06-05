@@ -23,33 +23,30 @@
 #include "asn-octs.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
+	typedef AsnOcts AsnRelativeOid; /* standard oid type  */
 
-	typedef AsnOcts AsnRelativeOid;  /* standard oid type  */
+#define ASNRELATIVE_OID_PRESENT(aoid) ASNOCTS_PRESENT(aoid)
 
+	AsnLen BEncAsnRelativeOid PROTO((GenBuf * b, AsnRelativeOid* data));
 
-#define ASNRELATIVE_OID_PRESENT( aoid)	ASNOCTS_PRESENT (aoid)
+	void BDecAsnRelativeOid PROTO((GenBuf * b, AsnRelativeOid* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-	AsnLen BEncAsnRelativeOid PROTO((GenBuf* b, AsnRelativeOid* data));
+#define BEncAsnRelativeOidContent(b, oid) BEncAsnOctsContent(b, oid)
 
-	void BDecAsnRelativeOid PROTO((GenBuf* b, AsnRelativeOid* result, AsnLen* bytesDecoded, ENV_TYPE env));
+	void BDecAsnRelativeOidContent PROTO((GenBuf * b, AsnTag tag, AsnLen len, AsnRelativeOid* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-#define BEncAsnRelativeOidContent( b, oid)   BEncAsnOctsContent (b, oid)
+#define FreeAsnRelativeOid FreeAsnOcts
 
+	void PrintAsnRelativeOid PROTO((FILE * f, AsnRelativeOid* b, unsigned int indent));
 
-	void BDecAsnRelativeOidContent PROTO((GenBuf* b, AsnTag tag, AsnLen len, AsnRelativeOid* result, AsnLen* bytesDecoded, ENV_TYPE env));
-
-
-#define FreeAsnRelativeOid	FreeAsnOcts
-
-	void PrintAsnRelativeOid PROTO((FILE* f, AsnRelativeOid* b, unsigned int indent));
-
-#define AsnRelativeOidsEquiv( o1, o2) AsnOctsEquiv (o1, o2)
+#define AsnRelativeOidsEquiv(o1, o2) AsnOctsEquiv(o1, o2)
 
 	/* linked oid type that may be easier to use in some circumstances */
-#define NULL_RELATIVE_OID_ARCNUM	-1
+#define NULL_RELATIVE_OID_ARCNUM -1
 	typedef struct RELATIVE_OID
 	{
 		struct RELATIVE_OID* next;
@@ -59,14 +56,13 @@ extern "C" {
 #endif
 	} RELATIVE_OID;
 
-	AsnLen EncodedRelativeOidLen PROTO((RELATIVE_OID* oid));
+	AsnLen EncodedRelativeOidLen PROTO((RELATIVE_OID * oid));
 
-	void BuildEncodedRelativeOid PROTO((RELATIVE_OID* oid, AsnRelativeOid* result));
+	void BuildEncodedRelativeOid PROTO((RELATIVE_OID * oid, AsnRelativeOid* result));
 
-	void UnbuildEncodedRelativeOid PROTO((AsnRelativeOid* eoid, RELATIVE_OID** result));
+	void UnbuildEncodedRelativeOid PROTO((AsnRelativeOid * eoid, RELATIVE_OID** result));
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 #endif /* conditional include */
-

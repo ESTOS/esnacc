@@ -59,16 +59,14 @@
 #include "../include/asn-config.h"
 #include "../include/asn-list.h"
 #ifdef _WIN32
-#pragma  warning( disable : 4706 )  /* IGNORE assign w/in conditional expression. */
-#endif // _WIN32
+#pragma warning(disable : 4706) /* IGNORE assign w/in conditional expression. */
+#endif							// _WIN32
 
- /* remove the entire list and all its nodes (not the actual list data elmts) */
- /* this is set up for the snace compiler */
-void
-AsnListFree PARAMS((list),
-	AsnList* list)
+/* remove the entire list and all its nodes (not the actual list data elmts) */
+/* this is set up for the snace compiler */
+void AsnListFree PARAMS((list), AsnList* list)
 {
-	AsnListNode* node, * next;
+	AsnListNode *node, *next;
 
 	node = list->first;
 	while (node)
@@ -79,17 +77,14 @@ AsnListFree PARAMS((list),
 	}
 
 	Asn1Free(list);
-}  /* AsnListFree */
-
+} /* AsnListFree */
 
 /*
  * this routine removes the current node from the list. After removal the
  * current pointer will point to the next node in line, or NULL if the
  * removed item was at the tail of the list.
  */
-void
-AsnListRemove PARAMS((list),
-	AsnList* list)
+void AsnListRemove PARAMS((list), AsnList* list)
 {
 	AsnListNode* node;
 
@@ -120,9 +115,7 @@ AsnListRemove PARAMS((list),
  * to point to the newly added node in the list. If the current pointer is
  * initially off the list then this operation fails.
  */
-void*
-AsnListAdd PARAMS((list),
-	AsnList* list)
+void* AsnListAdd PARAMS((list), AsnList* list)
 {
 	AsnListNode* newNode;
 	void* dataAddr;
@@ -156,9 +149,7 @@ AsnListAdd PARAMS((list),
  * to point to the newly added node in the list. If the current pointer is
  * initially off the list then this operation fails.
  */
-void*
-AsnListInsert PARAMS((list),
-	AsnList* list)
+void* AsnListInsert PARAMS((list), AsnList* list)
 {
 	AsnListNode* newNode;
 	void* dataAddr;
@@ -186,22 +177,15 @@ AsnListInsert PARAMS((list),
 	return dataAddr;
 }
 
-
-void
-AsnListInit PARAMS((list, dataSize),
-	AsnList* list _AND_
-	int dataSize)
+void AsnListInit PARAMS((list, dataSize), AsnList* list _AND_ int dataSize)
 {
 	list->first = list->last = list->curr = NULL;
 	list->count = 0;
 	list->dataSize = dataSize;
 
-}  /* AsnListInit */
+} /* AsnListInit */
 
-
-AsnList*
-AsnListNew PARAMS((dataSize),
-	int dataSize)
+AsnList* AsnListNew PARAMS((dataSize), int dataSize)
 {
 	AsnList* list;
 
@@ -218,9 +202,7 @@ AsnListNew PARAMS((dataSize),
  * current node. If the current pointer is off the list, the new current node
  * will be the last node of the list (unless the list is empty).
  */
-void*
-AsnListPrev PARAMS((list),
-	AsnList* list)
+void* AsnListPrev PARAMS((list), AsnList* list)
 {
 	void* retVal;
 
@@ -242,9 +224,7 @@ AsnListPrev PARAMS((list),
  * current node. If the current pointer is off the list, the new current node
  * will be the first node of the list (unless the list is empty).
  */
-void*
-AsnListNext PARAMS((list),
-	AsnList* list)
+void* AsnListNext PARAMS((list), AsnList* list)
 {
 	void* retVal;
 
@@ -265,9 +245,7 @@ AsnListNext PARAMS((list),
  * returns the data address of the last node (if there is one) and sets the
  * current pointer to this node.
  */
-void*
-AsnListLast PARAMS((list),
-	AsnList* list)
+void* AsnListLast PARAMS((list), AsnList* list)
 {
 	void* retVal;
 
@@ -285,9 +263,7 @@ AsnListLast PARAMS((list),
  * returns the data address of the first node (if there is one) and sets the
  * current pointer to this node.
  */
-void*
-AsnListFirst PARAMS((list),
-	AsnList* list)
+void* AsnListFirst PARAMS((list), AsnList* list)
 {
 	void* retVal;
 
@@ -306,9 +282,7 @@ AsnListFirst PARAMS((list),
  * address of the memory allocated for data. The current pointer is changed
  * to point to the newly added node in the list.
  */
-void*
-AsnListPrepend PARAMS((list),
-	AsnList* list)
+void* AsnListPrepend PARAMS((list), AsnList* list)
 {
 	AsnListNode* newNode;
 	void* dataAddr;
@@ -341,9 +315,7 @@ AsnListPrepend PARAMS((list),
  * address of the memory allocated for data. The current pointer is changed
  * to point to the newly added node in the list.
  */
-void*
-AsnListAppend PARAMS((list),
-	AsnList* list)
+void* AsnListAppend PARAMS((list), AsnList* list)
 {
 	AsnListNode* newNode;
 	void* dataAddr;
@@ -371,9 +343,7 @@ AsnListAppend PARAMS((list),
 	return dataAddr;
 }
 
-void*
-AsnListCurr PARAMS((list),
-	AsnList* list)
+void* AsnListCurr PARAMS((list), AsnList* list)
 {
 	void* retVal;
 
@@ -386,10 +356,7 @@ AsnListCurr PARAMS((list),
 }
 
 /* Sort the list in ascending order of content */
-AsnList*
-AsnListSort PARAMS((list, cmp),
-	AsnList* list _AND_
-	int((*cmp)(const void*, const void*)))
+AsnList* AsnListSort PARAMS((list, cmp), AsnList* list _AND_ int((*cmp)(const void*, const void*)))
 {
 	void** sortArray;
 	void* elmt;
@@ -398,17 +365,14 @@ AsnListSort PARAMS((list, cmp),
 	void** tmpVar;
 
 	/* Make sure list is not null */
-	if (!(list)) {
+	if (!(list))
 		return NULL;
-	}
 
 	/* Create array of elements so we can qsort the list */
 	sortArray = (void**)Asn1Alloc(list->count * sizeof(void*));
 
 	/* Copy the elements from the list into the sort array */
-	for ((list)->curr = (list)->first, i = 0;
-		(list)->curr && i < list->count;
-		(list)->curr = (list)->curr->next, i++)
+	for ((list)->curr = (list)->first, i = 0; (list)->curr && i < list->count; (list)->curr = (list)->curr->next, i++)
 	{
 		(elmt) = (void*)(list)->curr->data;
 		sortArray[i] = elmt;
@@ -419,29 +383,22 @@ AsnListSort PARAMS((list, cmp),
 
 	/* Make a new list from the sorted Array */
 	ret = AsnListNew(list->dataSize);
-	for (i = 0; i < list->count; i++) {
+	for (i = 0; i < list->count; i++)
+	{
 		tmpVar = (void**)AsnListAppend(ret);
 		(*tmpVar) = sortArray[i];
-
 	}
 
 	/* Return the sorted list */
 	return ret;
-
 }
 
-int
-AsnListCount PARAMS((list),
-	AsnList* list)
+int AsnListCount PARAMS((list), AsnList* list)
 {
 	return list->count;
 }
 
-
-AsnList*
-AsnListConcat PARAMS((l1, l2),
-	AsnList* l1 _AND_
-	AsnList* l2)
+AsnList* AsnListConcat PARAMS((l1, l2), AsnList* l1 _AND_ AsnList* l2)
 {
 	if (l2->count == 0)
 		return l1;
@@ -464,21 +421,17 @@ AsnListConcat PARAMS((l1, l2),
 	return l1;
 }
 
-
 /*
  * Returns the index (starting a 0 for the first elmt)
  * of the given elmt in the given list
  * returns -1 if the elmt is not in the list
  * Assumes that the list node contains a single pointer
  */
-long
-GetAsnListElmtIndex PARAMS((elmt, list),
-	void* elmt _AND_
-	AsnList* list)
+long GetAsnListElmtIndex PARAMS((elmt, list), void* elmt _AND_ AsnList* list)
 {
 	void* tmp;
 	void* tmpElmt;
-	long  index;
+	long index;
 
 	index = 0;
 	tmp = (void*)CURR_LIST_NODE(list);
@@ -496,8 +449,7 @@ GetAsnListElmtIndex PARAMS((elmt, list),
 	SET_CURR_LIST_NODE(list, tmp);
 	return -1;
 
-}  /* GetAsnListElmtIndex */
-
+} /* GetAsnListElmtIndex */
 
 #if TTBL
 /*
@@ -506,10 +458,7 @@ GetAsnListElmtIndex PARAMS((elmt, list),
  * returns NULL if the index is too large.
  * Assumes that the list node contains a single pointer.
  */
-void*
-GetAsnListElmt PARAMS((list, index),
-	AsnList* list _AND_
-	unsigned int index)
+void* GetAsnListElmt PARAMS((list, index), AsnList* list _AND_ unsigned int index)
 {
 	void* tmp;
 	void* tmpElmt;
@@ -532,5 +481,5 @@ GetAsnListElmt PARAMS((list, index),
 	SET_CURR_LIST_NODE(list, tmp);
 	return NULL;
 
-}  /* GetAsnListElmt */
+} /* GetAsnListElmt */
 #endif /* TTBL */

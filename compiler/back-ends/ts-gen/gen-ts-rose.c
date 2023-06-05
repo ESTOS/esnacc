@@ -13,7 +13,8 @@
 #include <ctype.h>
 #include <string.h>
 
-void PrintTSROSEHeader(FILE* src, Module* m, const bool bInterface) {
+void PrintTSROSEHeader(FILE* src, Module* m, const bool bInterface)
+{
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "/**\n");
 	if (bInterface)
@@ -34,62 +35,63 @@ void PrintTSROSEHeader(FILE* src, Module* m, const bool bInterface) {
 
 void SaveTSROSEFilesToOutputDirectory(const int genRoseStubs, const char* szPath)
 {
-	if (genRoseStubs) {
+	if (genRoseStubs)
+	{
 		{
-			char szFileName[_MAX_PATH] = { 0 };
+			char szFileName[_MAX_PATH] = {0};
 			strcpy_s(szFileName, _MAX_PATH, szPath);
 			strcat_s(szFileName, _MAX_PATH, "TSASN1Base.ts");
 			SaveResourceToFile(ETS_ASN1_BASE, szFileName);
 		}
 		if (genRoseStubs & 0x01)
 		{
-			char szFileName[_MAX_PATH] = { 0 };
+			char szFileName[_MAX_PATH] = {0};
 			strcpy_s(szFileName, _MAX_PATH, szPath);
 			strcat_s(szFileName, _MAX_PATH, "TSASN1Server.ts");
 			SaveResourceToFile(ETS_ASN1_SERVER, szFileName);
 		}
 		if (genRoseStubs & 0x02 || genRoseStubs & 0x04)
 		{
-			char szFileName[_MAX_PATH] = { 0 };
+			char szFileName[_MAX_PATH] = {0};
 			strcpy_s(szFileName, _MAX_PATH, szPath);
 			strcat_s(szFileName, _MAX_PATH, "TSASN1Client.ts");
 			SaveResourceToFile(ETS_ASN1_CLIENT, szFileName);
 		}
 		if (genRoseStubs & 0x02)
 		{
-			char szFileName[_MAX_PATH] = { 0 };
+			char szFileName[_MAX_PATH] = {0};
 			strcpy_s(szFileName, _MAX_PATH, szPath);
 			strcat_s(szFileName, _MAX_PATH, "TSASN1NodeClient.ts");
 			SaveResourceToFile(ETS_ASN1_NODE_CLIENT, szFileName);
 		}
 		if (genRoseStubs & 0x04)
 		{
-			char szFileName[_MAX_PATH] = { 0 };
+			char szFileName[_MAX_PATH] = {0};
 			strcpy_s(szFileName, _MAX_PATH, szPath);
 			strcat_s(szFileName, _MAX_PATH, "TSASN1BrowserClient.ts");
 			SaveResourceToFile(ETS_ASN1_BROWSER_CLIENT, szFileName);
 		}
 		{
-			char szFileName[_MAX_PATH] = { 0 };
+			char szFileName[_MAX_PATH] = {0};
 			strcpy_s(szFileName, _MAX_PATH, szPath);
 			strcat_s(szFileName, _MAX_PATH, "TSROSEBase.ts");
 			SaveResourceToFile(ETS_ROSE_BASE, szFileName);
 		}
 		{
-			char szFileName[_MAX_PATH] = { 0 };
+			char szFileName[_MAX_PATH] = {0};
 			strcpy_s(szFileName, _MAX_PATH, szPath);
 			strcat_s(szFileName, _MAX_PATH, "SNACCROSE.ts");
 			SaveResourceToFile(ETS_SNACCROSE, szFileName);
 		}
 		{
-			char szFileName[_MAX_PATH] = { 0 };
+			char szFileName[_MAX_PATH] = {0};
 			strcpy_s(szFileName, _MAX_PATH, szPath);
 			strcat_s(szFileName, _MAX_PATH, "SNACCROSE_Converter.ts");
 			SaveResourceToFile(ETS_SNACCROSE_CONVERTER, szFileName);
 		}
 	}
 	{
-		char szFileName[_MAX_PATH] = { 0 };
+		char szFileName[_MAX_PATH] = {0};
 		strcpy_s(szFileName, _MAX_PATH, szPath);
 		strcat_s(szFileName, _MAX_PATH, "TSOptionalParamConverter.ts");
 		SaveResourceToFile(ETS_OPTIONALPARAM_CONVERTER, szFileName);
@@ -167,7 +169,8 @@ void PrintTSROSEInterfaceEntry(FILE* src, ModuleList* mods, ValueDef* vd, bool b
 			const char* resultNS = GetNameSpace(resultMod);
 			fprintf(src, bAsComment ? "public " : "\t");
 			fprintf(src, "invoke_%s(argument: %s.%s, invokeContext?: ISendInvokeContextParams): Promise<%s.%s", pszFunction, argumentNS, pszArgument, resultNS, pszResult);
-			if (pszError) {
+			if (pszError)
+			{
 				Module* errorMod = GetImportModuleRefByClassName(pszError, mods, m);
 				const char* pszErrorNS = GetNameSpace(errorMod);
 				if (pszErrorNS)
@@ -234,7 +237,8 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 			fprintf(src, " * @param argument -");
 
 			char* szComment = getNakedCommentDupped(argumentComment.szShort);
-			if (szComment) {
+			if (szComment)
+			{
 				if (strlen(szComment))
 					fprintf(src, " %s", szComment);
 				free(szComment);
@@ -255,7 +259,8 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 		Module* resultMod = GetImportModuleRefByClassName(pszResult, mods, m);
 		const char* resultNS = GetNameSpace(resultMod);
 		fprintf(src, "onInvoke_%s(argument: %s.%s, invokeContext: IReceiveInvokeContext): Promise<%s.%s", pszFunction, argumentNS, pszArgument, resultNS, pszResult);
-		if (pszError) {
+		if (pszError)
+		{
 			Module* errorMod = GetImportModuleRefByClassName(pszError, mods, m);
 			const char* errorNS = GetNameSpace(errorMod);
 			if (errorNS)
@@ -287,7 +292,6 @@ void PrintTSROSEImport(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
 
 	PrintTSImports(src, mods, mod, false, false, false);
-
 }
 
 void PrintTSROSEInterface(FILE* src, ModuleList* mods, Module* m)
@@ -297,15 +301,16 @@ void PrintTSROSEInterface(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "export interface I%s {\n", m->ROSEClassName);
 
 	ValueDef* vd;
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
 			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEInterfaceEntry(src, mods, vd, false, m);
 		}
 	}
 	fprintf(src, "}\n");
-
 }
 
 void PrintTSROSEHandlerInterface(FILE* src, ModuleList* mods, Module* m)
@@ -317,8 +322,10 @@ void PrintTSROSEHandlerInterface(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t// Allows the implementer to (globally) implement an async local storage (thread local storage) for calls inside the called environment)\n");
 	fprintf(src, "\tsetLogContext?(argument: unknown, invokeContext: IReceiveInvokeContext): void;\n");
 	ValueDef* vd;
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
 			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEHandlerInterfaceEntry(src, mods, m, vd, false, true, false);
@@ -330,8 +337,10 @@ void PrintTSROSEHandlerInterface(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "export interface I%s_Event_Handler {\n", m->ROSEClassName);
 	fprintf(src, "\t// Allows the implementer to (globally) implement an async local storage (thread local storage) for calls inside the called environment)\n");
 	fprintf(src, "\tsetLogContext?(argument: unknown, invokeContext: IReceiveInvokeContext): void;\n");
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
 			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEHandlerInterfaceEntry(src, mods, m, vd, false, false, false);
@@ -369,8 +378,10 @@ void PrintTSROSEServerCopyPasteInterface(FILE* src, ModuleList* mods, Module* m)
 	ValueDef* vd;
 	bool bAddNewLine = false;
 	// Writes invokes
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
 			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			bAddNewLine = PrintTSROSEHandlerInterfaceEntry(src, mods, m, vd, true, true, bAddNewLine);
@@ -378,14 +389,15 @@ void PrintTSROSEServerCopyPasteInterface(FILE* src, ModuleList* mods, Module* m)
 	}
 
 	// Writes events
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
 			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			bAddNewLine = PrintTSROSEHandlerInterfaceEntry(src, mods, m, vd, true, false, bAddNewLine);
 		}
 	}
-
 }
 
 void PrintTSROSEConstructor(FILE* src, Module* m)
@@ -465,7 +477,8 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 
 		Module* resultMod = NULL;
 		const char* szResultNS = NULL;
-		if (pszResult) {
+		if (pszResult)
+		{
 			resultMod = GetImportModuleRefByClassName(pszResult, mods, m);
 			szResultNS = GetNameSpace(resultMod);
 		}
@@ -532,8 +545,10 @@ void PrintTSROSEOnInvokeswitchCase(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t\tswitch (invoke.operationID) {\n");
 
 	ValueDef* vd;
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
 			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEOnInvokeswitchCaseEntry(src, mods, 0, vd, m);
@@ -543,7 +558,8 @@ void PrintTSROSEOnInvokeswitchCase(FILE* src, ModuleList* mods, Module* m)
 	int addedOne = 0;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
 			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			const char* pszFunction = vd->definedName;
@@ -595,8 +611,10 @@ void PrintTSROSEOnEventSwitchCase(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t\tswitch (invoke.operationID) {\n");
 
 	ValueDef* vd;
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs) {
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
 			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEOnInvokeswitchCaseEntry(src, mods, 1, vd, m);
@@ -623,7 +641,8 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 
 		const char* szResultNS = NULL;
 		Module* resultMod = NULL;
-		if (pszResult) {
+		if (pszResult)
+		{
 			resultMod = GetImportModuleRefByClassName(pszResult, mods, m);
 			szResultNS = GetNameSpace(resultMod);
 		}
@@ -653,7 +672,8 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 						fprintf(src, "\t *\n");
 					if (operationComment.i64Deprecated || operationComment.iPrivate)
 					{
-						if (operationComment.i64Deprecated) {
+						if (operationComment.i64Deprecated)
+						{
 							fprintf(src, "\t * @deprecated %s\n", getDeprecated(operationComment.szDeprecated, COMMENTSTYLE_JSON));
 							bDeprecated = true;
 						}
@@ -693,7 +713,8 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 					fprintf(src, "%s_Converter.%s_Converter, ", szResultNS, pszResult);
 				fprintf(src, "invokeContext");
 
-				if (pszError && strcmp(pszError, "AsnRequestError") != 0) {
+				if (pszError && strcmp(pszError, "AsnRequestError") != 0)
+				{
 					// Custom error, also müssen wir den Converter bekannt machen
 					if (errorMod == m)
 						fprintf(src, ", Converter.%s_Converter", pszError);
@@ -731,7 +752,8 @@ void PrintTSROSEInvokeMethods(FILE* src, ModuleList* mods, Module* m)
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
 			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEInvokeMethod(src, mods, 0, vd, m);
@@ -739,7 +761,8 @@ void PrintTSROSEInvokeMethods(FILE* src, ModuleList* mods, Module* m)
 	}
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
-		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE) {
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
 			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 				continue;
 			PrintTSROSEInvokeMethod(src, mods, 1, vd, m);
@@ -776,7 +799,8 @@ void PrintTSROSEModuleComment(FILE* src, Module* m)
 	printModuleComment(src, m->moduleName, COMMENTSTYLE_JSON);
 }
 
-bool hasEvents(Module* m) {
+bool hasEvents(Module* m)
+{
 	bool bHasEvents = false;
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
@@ -845,7 +869,6 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t\t\t\treturn \"\";\n");
 	fprintf(src, "\t\t}\n");
 	fprintf(src, "\t}\n");
-
 
 	PrintTSROSEConstructor(src, m);
 	PrintTSROSESetHandler(src, m);

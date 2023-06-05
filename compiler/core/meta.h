@@ -41,7 +41,7 @@ typedef enum
 {
 	META_off = 0,		/* metacode generation disabled */
 	META_asn1_names,	/* names as defined in .asn1 file */
-	META_backend_names,	/* names as being used by the backend code */
+	META_backend_names, /* names as being used by the backend code */
 } MetaNameStyle;
 
 typedef struct
@@ -52,13 +52,12 @@ typedef struct
 
 typedef struct MetaPDU
 {
-	const char* module, * type;
-	int		used;
+	const char *module, *type;
+	int used;
 
 	struct MetaPDU* next;
 } MetaPDU;
 
-extern int	isMetaPDU PROTO((const char* module, const char* type, MetaPDU* pdus));
+extern int isMetaPDU PROTO((const char* module, const char* type, MetaPDU* pdus));
 
 #endif /* META */
-

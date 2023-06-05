@@ -67,14 +67,10 @@
 #include "../include/asn-octs.h"
 #include "../include/asn-oid.h"
 
-
- /*
-  * encodes universal TAG LENGTH and Contents of and ASN.1 OBJECT ID
-  */
-AsnLen
-BEncAsnOid PARAMS((b, data),
-	GenBuf* b _AND_
-	AsnOid* data)
+/*
+ * encodes universal TAG LENGTH and Contents of and ASN.1 OBJECT ID
+ */
+AsnLen BEncAsnOid PARAMS((b, data), GenBuf* b _AND_ AsnOid* data)
 {
 	AsnLen len;
 
@@ -82,18 +78,12 @@ BEncAsnOid PARAMS((b, data),
 	len += BEncDefLen(b, len);
 	len += BEncTag1(b, UNIV, PRIM, OID_TAG_CODE);
 	return len;
-}  /* BEncAsnOid */
-
+} /* BEncAsnOid */
 
 /*
  * decodes universal TAG LENGTH and Contents of and ASN.1 OBJECT ID
  */
-void
-BDecAsnOid PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnOid* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnOid PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ AsnOid* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnTag tag;
 	AsnLen elmtLen;
@@ -107,22 +97,13 @@ BDecAsnOid PARAMS((b, result, bytesDecoded, env),
 	elmtLen = BDecLen(b, bytesDecoded, env);
 	BDecAsnOidContent(b, tag, elmtLen, result, bytesDecoded, env);
 
-}  /* BDecAsnOid */
-
-
+} /* BDecAsnOid */
 
 /*
  * Decodes just the content of the OID.
  * AsnOid is handled the same as a primtive octet string
  */
-void
-BDecAsnOidContent PARAMS((b, tagId, len, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnTag tagId _AND_
-	AsnLen len _AND_
-	AsnOid* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnOidContent PARAMS((b, tagId, len, result, bytesDecoded, env), GenBuf* b _AND_ AsnTag tagId _AND_ AsnLen len _AND_ AsnOid* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	if (len == INDEFINITE_LEN)
 	{
@@ -139,20 +120,14 @@ BDecAsnOidContent PARAMS((b, tagId, len, result, bytesDecoded, env),
 		longjmp(env, -21);
 	}
 	(*bytesDecoded) += len;
-}  /* BDecAsnOidContent */
-
-
+} /* BDecAsnOidContent */
 
 /*
  * Prints the given OID to the given FILE * in ASN.1 Value Notation.
  * Since the internal rep of an OID is 'encoded', this routine
  * decodes each individual arc number to print it.
  */
-void
-PrintAsnOid PARAMS((f, v, indent),
-	FILE* f _AND_
-	AsnOid* v _AND_
-	unsigned int indent)
+void PrintAsnOid PARAMS((f, v, indent), FILE* f _AND_ AsnOid* v _AND_ unsigned int indent)
 {
 	unsigned int firstArcNum;
 	unsigned int arcNum;
@@ -172,7 +147,7 @@ PrintAsnOid PARAMS((f, v, indent),
 
 	fprintf(f, "%u %u", (unsigned int)firstArcNum, arcNum - (firstArcNum * 40));
 
-	for (; i < (int)(v->octetLen); )
+	for (; i < (int)(v->octetLen);)
 	{
 		for (arcNum = 0; (i < (int)(v->octetLen)) && (v->octs[i] & 0x80); i++)
 			arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
@@ -184,14 +159,10 @@ PrintAsnOid PARAMS((f, v, indent),
 	fprintf(f, "}");
 } /* PrintAsnOid */
 
-
-
 /*
  * given an OID, figures out the length for the encoded version
  */
-AsnLen
-EncodedOidLen PARAMS((oid),
-	OID* oid)
+AsnLen EncodedOidLen PARAMS((oid), OID* oid)
 {
 	AsnLen totalLen;
 	unsigned long headArcNum;
@@ -222,8 +193,7 @@ EncodedOidLen PARAMS((oid),
 
 	return totalLen;
 
-}  /* EncodedOidLen */
-
+} /* EncodedOidLen */
 
 /*
  * given an oid list and a pre-allocated ENC_OID
@@ -231,16 +201,13 @@ EncodedOidLen PARAMS((oid),
  * fills the ENC_OID with a BER encoded version
  * of the oid.
  */
-void
-BuildEncodedOid PARAMS((oid, result),
-	OID* oid _AND_
-	AsnOid* result)
+void BuildEncodedOid PARAMS((oid, result), OID* oid _AND_ AsnOid* result)
 {
 	unsigned long len;
 	unsigned long headArcNum;
 	unsigned long tmpArcNum;
 	char* buf;
-	int           i;
+	int i;
 	OID* tmpOid;
 
 	buf = result->octs;
@@ -278,7 +245,6 @@ BuildEncodedOid PARAMS((oid, result),
 	 */
 	*(buf++) = (char)(0x7f & headArcNum);
 
-
 	/*
 	 * write following arc nums, if any
 	 */
@@ -290,7 +256,6 @@ BuildEncodedOid PARAMS((oid, result),
 		tmpArcNum = tmpOid->arcNum;
 		for (len = 0; (tmpArcNum >>= 7) != 0; len++)
 			;
-
 
 		/*
 		 * write more signifcant bytes (if any)
@@ -307,15 +272,11 @@ BuildEncodedOid PARAMS((oid, result),
 	result->octetLen = (buf - result->octs);
 } /* BuildEncodedOid */
 
-
 /*
  * convert an AsnOid into an OID (linked list)
  * NOT RECOMMENDED for use in protocol implementations
  */
-void
-UnbuildEncodedOid PARAMS((eoid, result),
-	AsnOid* eoid _AND_
-	OID** result)
+void UnbuildEncodedOid PARAMS((eoid, result), AsnOid* eoid _AND_ OID** result)
 {
 	OID** nextOid;
 	OID* headOid;
@@ -342,7 +303,7 @@ UnbuildEncodedOid PARAMS((eoid, result),
 	headOid->next->arcNum = secondArcNum;
 	nextOid = &headOid->next->next;
 
-	for (; i < (int)(eoid->octetLen); )
+	for (; i < (int)(eoid->octetLen);)
 	{
 		for (arcNum = 0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80); i++)
 			arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
@@ -353,7 +314,6 @@ UnbuildEncodedOid PARAMS((eoid, result),
 		(*nextOid)->arcNum = arcNum;
 		(*nextOid)->next = NULL;
 		nextOid = &(*nextOid)->next;
-
 	}
 
 	*result = headOid;

@@ -5,7 +5,8 @@
 #include <map>
 #include <filesystem>
 
-class CASN1File {
+class CASN1File
+{
 public:
 	// The Filename of the file (e.g. structure.asn1)
 	std::string m_strFileName;
@@ -18,13 +19,15 @@ public:
 };
 
 // The list of files we are processing, the key is the filename
-class CASN1Files : public std::map<std::string, CASN1File> {
+class CASN1Files : public std::map<std::string, CASN1File>
+{
 };
 // A globalobject to hold the files we are processing (makes it easier to hold this in cpp than in c)
 extern CASN1Files fileCache;
 
 // The list of loop ids which are used to loop over the EASN1Files
-class CASN1FileLoopIDs : public std::map<int, CASN1Files::const_iterator> {
+class CASN1FileLoopIDs : public std::map<int, CASN1Files::const_iterator>
+{
 };
 // A globalobject to hold the loop ids and corresponding iterators to loop over the files from c
 extern CASN1FileLoopIDs fileCacheLoopIDs;

@@ -17,14 +17,15 @@ void Print_BER_EncoderChoiceNamedType(FILE* src, ModuleList* mods, Module* m, en
 void SaveTSConverterFilesToOutputDirectory(const char* szPath)
 {
 	{
-		char szFileName[_MAX_PATH] = { 0 };
+		char szFileName[_MAX_PATH] = {0};
 		strcpy_s(szFileName, _MAX_PATH, szPath);
 		strcat_s(szFileName, _MAX_PATH, "TSConverterBase.ts");
 		SaveResourceToFile(ETS_CONVERTER_BASE, szFileName);
 	}
 }
 
-void PrintTSConverterComments(FILE* src, Module* m) {
+void PrintTSConverterComments(FILE* src, Module* m)
+{
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "/*\n");
 	fprintf(src, " * %s\n", RemovePath(m->tsConverterFileName));
@@ -49,29 +50,28 @@ void PrintTSConverterImports(FILE* src, ModuleList* mods, Module* mod)
 	PrintTSImports(src, mods, mod, true, true, false);
 }
 
-
 const char* GetJSONType(const enum BasicTypeChoiceId basicTypeChoiseId)
 {
 	switch (basicTypeChoiseId)
 	{
-	case BASICTYPE_BOOLEAN:
-		return "boolean";
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_REAL:
-		return "number";
-	case BASICTYPE_UTF8_STR:
-		return "string";
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-		return "Uint8Array";
-	case BASICTYPE_NULL:
-	case BASICTYPE_ANY:
-		return "object";
-	case BASICTYPE_ASNSYSTEMTIME:
-		return "Date";
-	default:
-		snacc_exit("unknown basicTypeChoiseId %d", basicTypeChoiseId);
+		case BASICTYPE_BOOLEAN:
+			return "boolean";
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_REAL:
+			return "number";
+		case BASICTYPE_UTF8_STR:
+			return "string";
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+			return "Uint8Array";
+		case BASICTYPE_NULL:
+		case BASICTYPE_ANY:
+			return "object";
+		case BASICTYPE_ASNSYSTEMTIME:
+			return "Date";
+		default:
+			snacc_exit("unknown basicTypeChoiseId %d", basicTypeChoiseId);
 	}
 
 	return "";
@@ -94,30 +94,35 @@ void Print_JSON_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	enum BasicTypeChoiceId baseChoice = pBase->choiceId;
 
 	// Ist der Typ den wir iterieren eine basis Type?
-	if (IsSimpleType(baseChoice)) {
+	if (IsSimpleType(baseChoice))
+	{
 		fprintf(src, "\t\tfor (const se of s) {\n");
 		fprintf(src, "\t\t\tif (TSConverter.validateParamType(se, \"%s\", \"%s\", errors, newContext, %s))\n", szConverted, GetJSONType(rootBasicType), td->type->optional ? "true" : "false");
 		fprintf(src, "\t\t\t\tt.push(se);\n");
 		fprintf(src, "\t\t}\n");
 	}
-	else {
+	else
+	{
 		fprintf(src, "\t\tfor (const id in s) {\n");
 		fprintf(src, "\t\t\tconst se = s[id];\n");
 		fprintf(src, "\t\t\tif (se === undefined)\n");
 		fprintf(src, "\t\t\t\tcontinue;\n");
-		if (choice == BASICTYPE_IMPORTTYPEREF) {
+		if (choice == BASICTYPE_IMPORTTYPEREF)
+		{
 			Module* mod = GetImportModuleRefByClassName(szTypeName, mods, m);
 			const char* szNameSpace = GetNameSpace(mod);
 			fprintf(src, "\t\t\tconst val = %s_Converter.%s_Converter.toJSON(se, errors, newContext, \"%s\")\n", szNameSpace, szTypeName, szTypeName);
 			fprintf(src, "\t\t\tif (val)\n");
 			fprintf(src, "\t\t\t\tt.push(val);\n");
 		}
-		else if (choice == BASICTYPE_LOCALTYPEREF) {
+		else if (choice == BASICTYPE_LOCALTYPEREF)
+		{
 			fprintf(src, "\t\t\tconst val = %s_Converter.toJSON(se, errors, newContext, \"%s\");\n", szTypeName, szTypeName);
 			fprintf(src, "\t\t\tif (val)\n");
 			fprintf(src, "\t\t\t\tt.push(val);\n");
 		}
-		else {
+		else
+		{
 			assert(FALSE);
 		}
 		fprintf(src, "\t\t}\n");
@@ -143,15 +148,18 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	enum BasicTypeChoiceId baseChoice = pBase->choiceId;
 
 	// Ist der Typ den wir iterieren eine basis Type?
-	if (IsSimpleType(baseChoice)) {
+	if (IsSimpleType(baseChoice))
+	{
 		fprintf(src, "\t\tfor (const se of s) {\n");
 		fprintf(src, "\t\t\tif (TSConverter.validateParamType(se, \"%s\", \"%s\", errors, newContext, %s))\n", szConverted, GetJSONType(rootBasicType), td->type->optional ? "true" : "false");
 		fprintf(src, "\t\t\t\tt.push(new asn1ts.%s({ value: se }));\n", GetBERType(baseChoice));
 		fprintf(src, "\t\t}\n");
 	}
-	else {
+	else
+	{
 		fprintf(src, "\t\tfor (const id in s) {\n");
-		if (choice == BASICTYPE_IMPORTTYPEREF) {
+		if (choice == BASICTYPE_IMPORTTYPEREF)
+		{
 			Module* mod = GetImportModuleRefByClassName(szTypeName, mods, m);
 			const char* szNameSpace = GetNameSpace(mod);
 			fprintf(src, "\t\t\tconst val = %s_Converter.%s_Converter.toBER(s[id], errors, newContext, \"%s\");\n", szNameSpace, szTypeName, szTypeName);
@@ -188,34 +196,34 @@ void Print_JSON_DecoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 
 		switch (type->choiceId)
 		{
-		case BASICTYPE_BOOLEAN:
-			szElement = "se";
-			szType = "boolean";
-			break;
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_ENUMERATED:
-		case BASICTYPE_REAL:
-			szElement = "se";
-			szType = "number";
-			break;
-		case BASICTYPE_UTF8_STR:
-			szElement = "se";
-			szType = "string";
-			break;
-		case BASICTYPE_ASNSYSTEMTIME:
-			// Verwenden wir für AsnSystemTime intern
-			szElement = "addDateParam(elem)";
-			szType = "Date";
-			bInstanceOfCompare = true;
-			break;
-		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
-			szElement = "TSConverter.decode64(elem)";
-			szType = "Uint8Array";
-			bInstanceOfCompare = true;
-			break;
-		default:
-			snacc_exit("unknown type->choiceId %d", type->choiceId);
+			case BASICTYPE_BOOLEAN:
+				szElement = "se";
+				szType = "boolean";
+				break;
+			case BASICTYPE_INTEGER:
+			case BASICTYPE_ENUMERATED:
+			case BASICTYPE_REAL:
+				szElement = "se";
+				szType = "number";
+				break;
+			case BASICTYPE_UTF8_STR:
+				szElement = "se";
+				szType = "string";
+				break;
+			case BASICTYPE_ASNSYSTEMTIME:
+				// Verwenden wir für AsnSystemTime intern
+				szElement = "addDateParam(elem)";
+				szType = "Date";
+				bInstanceOfCompare = true;
+				break;
+			case BASICTYPE_OCTETSTRING:
+			case BASICTYPE_OCTETCONTAINING:
+				szElement = "TSConverter.decode64(elem)";
+				szType = "Uint8Array";
+				bInstanceOfCompare = true;
+				break;
+			default:
+				snacc_exit("unknown type->choiceId %d", type->choiceId);
 		}
 
 		fprintf(src, "%sfor (const se of s) {\n", szIdendt);
@@ -232,7 +240,8 @@ void Print_JSON_DecoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		fprintf(src, "%s\tconst se = s[id];\n", szIdendt);
 		fprintf(src, "%s\tif (se === undefined)\n", szIdendt);
 		fprintf(src, "%s\t\tcontinue;\n", szIdendt);
-		if (seqOf->basicType->a.sequenceOf->basicType->choiceId == BASICTYPE_IMPORTTYPEREF) {
+		if (seqOf->basicType->a.sequenceOf->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+		{
 			Module* mod = GetImportModuleRefByClassName(szTypeName, mods, m);
 			fprintf(src, "%s\tconst val = %s_Converter.%s_Converter.fromJSON(se, errors, newContext, \"%s\", optional);\n", szIdendt, GetNameSpace(mod), szClassName, szClassName);
 		}
@@ -272,20 +281,23 @@ void Print_BER_DecoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 			fprintf(src, "\"%s\"", GetJSONType(choiceId));
 		fprintf(src, ", errors, newContext, false))");
 
-		if (type->choiceId == BASICTYPE_ASNSYSTEMTIME) {
+		if (type->choiceId == BASICTYPE_ASNSYSTEMTIME)
+		{
 			fprintf(src, " {\n");
 			fprintf(src, "%s\t\t\tconst date = TSConverter.getDateTimeFromVariantTime(value);\n", szIdendt);
 			fprintf(src, "%s\t\t\tt.push(date);\n", szIdendt);
 			fprintf(src, "%s\t\t}\n", szIdendt);
 		}
-		else {
+		else
+		{
 			fprintf(src, "\n");
 			fprintf(src, "%s\t\t\tt.push(value);\n", szIdendt);
 		}
 	}
 	else
 	{
-		if (seqOf->basicType->a.sequenceOf->basicType->choiceId == BASICTYPE_IMPORTTYPEREF) {
+		if (seqOf->basicType->a.sequenceOf->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+		{
 			Module* mod = GetImportModuleRefByClassName(szTypeName, mods, m);
 			fprintf(src, "%s\t\tconst val = %s_Converter.%s_Converter.fromBER(se, errors, newContext, \"%s\", optional);\n", szIdendt, GetNameSpace(mod), szClassName, szClassName);
 		}
@@ -301,7 +313,6 @@ void Print_BER_DecoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	free(szConverted);
 }
 
-
 void Print_JSON_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* choice, int novolatilefuncs)
 {
 	fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
@@ -315,7 +326,8 @@ void Print_JSON_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
 		fprintf(src, "\t\t");
-		if (bCurly) {
+		if (bCurly)
+		{
 			fprintf(src, "} ");
 			bCurly = false;
 		}
@@ -335,7 +347,8 @@ void Print_JSON_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 			}
 		}
 
-		if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF) {
+		if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
+		{
 			bCurly = true;
 			fprintf(src, " {\n");
 		}
@@ -374,7 +387,8 @@ void Print_BER_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 			else
 			{
 				enum BasicTypeChoiceId baseType = GetBaseBasicTypeChoiceId(e->type->basicType);
-				if (IsSimpleType(baseType)) {
+				if (IsSimpleType(baseType))
+				{
 					choiceId = baseType;
 					type = type->basicType->a.importTypeRef->link->type;
 				}
@@ -388,9 +402,8 @@ void Print_BER_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		else
 			fprintf(src, "\t\telse if ");
 
-		if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF) {
+		if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
 			fprintf(src, "(s.%s)\n", szSourceFieldName);
-		}
 
 		Print_BER_EncoderChoiceNamedType(src, mods, m, choiceId, type, szIndent, szSourceFieldName, GetContextID(e->type));
 		free(szSourceFieldName);
@@ -439,39 +452,39 @@ void Print_JSON_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 
 		switch (choiceId)
 		{
-		case BASICTYPE_BOOLEAN:
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_ENUMERATED:
-		case BASICTYPE_REAL:
-		case BASICTYPE_UTF8_STR:
-		case BASICTYPE_ASNSYSTEMTIME:
-		case BASICTYPE_NULL:
-			fprintf(src, "%s\tif (TSConverter.validateParam(s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, GetJSONType(type->choiceId));
-			fprintf(src, "%s\t\tt.%s = s.%s;\n", szIdendt, e->fieldName, e->fieldName);
-			break;
-		case BASICTYPE_OCTETCONTAINING:
-		case BASICTYPE_OCTETSTRING:
-			fprintf(src, "%s\tif (TSConverter.validateParam(s, \"%s\", \"string\", errors, newContext))\n", szIdendt, e->fieldName);
-			fprintf(src, "%s\t\tt.%s = TSConverter.decode64(s.%s as unknown as string);\n", szIdendt, e->fieldName, e->fieldName);
-			break;
-		case BASICTYPE_LOCALTYPEREF:
-		case BASICTYPE_IMPORTTYPEREF:
-		{
-			Module* mod = m;
-			if (choiceId == BASICTYPE_IMPORTTYPEREF)
-				mod = GetImportModuleRefByClassName(e->type->cxxTypeRefInfo->className, mods, m);
-			const char* ns = GetNameSpace(mod);
-			if (mod == m)
-				fprintf(src, "%s\tt.%s = %s_Converter.fromJSON(s.%s, errors, newContext, \"%s\");\n", szIdendt, e->fieldName, e->type->cxxTypeRefInfo->className, e->fieldName, e->fieldName);
-			else
-				fprintf(src, "%s\tt.%s = %s_Converter.%s_Converter.fromJSON(s.%s, errors, newContext, \"%s\");\n", szIdendt, e->fieldName, ns, e->type->cxxTypeRefInfo->className, e->fieldName, e->fieldName);
-		}
-		break;
-		case BASICTYPE_EXTENSION:
-			// Do Nothing here
-			break;
-		default:
-			snacc_exit("unknown choiceId %d", choiceId);
+			case BASICTYPE_BOOLEAN:
+			case BASICTYPE_INTEGER:
+			case BASICTYPE_ENUMERATED:
+			case BASICTYPE_REAL:
+			case BASICTYPE_UTF8_STR:
+			case BASICTYPE_ASNSYSTEMTIME:
+			case BASICTYPE_NULL:
+				fprintf(src, "%s\tif (TSConverter.validateParam(s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, GetJSONType(type->choiceId));
+				fprintf(src, "%s\t\tt.%s = s.%s;\n", szIdendt, e->fieldName, e->fieldName);
+				break;
+			case BASICTYPE_OCTETCONTAINING:
+			case BASICTYPE_OCTETSTRING:
+				fprintf(src, "%s\tif (TSConverter.validateParam(s, \"%s\", \"string\", errors, newContext))\n", szIdendt, e->fieldName);
+				fprintf(src, "%s\t\tt.%s = TSConverter.decode64(s.%s as unknown as string);\n", szIdendt, e->fieldName, e->fieldName);
+				break;
+			case BASICTYPE_LOCALTYPEREF:
+			case BASICTYPE_IMPORTTYPEREF:
+				{
+					Module* mod = m;
+					if (choiceId == BASICTYPE_IMPORTTYPEREF)
+						mod = GetImportModuleRefByClassName(e->type->cxxTypeRefInfo->className, mods, m);
+					const char* ns = GetNameSpace(mod);
+					if (mod == m)
+						fprintf(src, "%s\tt.%s = %s_Converter.fromJSON(s.%s, errors, newContext, \"%s\");\n", szIdendt, e->fieldName, e->type->cxxTypeRefInfo->className, e->fieldName, e->fieldName);
+					else
+						fprintf(src, "%s\tt.%s = %s_Converter.%s_Converter.fromJSON(s.%s, errors, newContext, \"%s\");\n", szIdendt, e->fieldName, ns, e->type->cxxTypeRefInfo->className, e->fieldName, e->fieldName);
+				}
+				break;
+			case BASICTYPE_EXTENSION:
+				// Do Nothing here
+				break;
+			default:
+				snacc_exit("unknown choiceId %d", choiceId);
 		}
 	}
 	fprintf(src, "%s", szIdendt);
@@ -518,54 +531,54 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 
 		switch (choiceId)
 		{
-		case BASICTYPE_BOOLEAN:
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_ENUMERATED:
-		case BASICTYPE_REAL:
-		case BASICTYPE_UTF8_STR:
-		case BASICTYPE_NULL:
-			fprintf(src, "%s\tconst _%s = s.getValue();\n", szIdendt, e->fieldName);
-			fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId));
-			fprintf(src, "%s\t\tt.%s = _%s;\n", szIdendt, e->fieldName, e->fieldName);
-			break;
-		case BASICTYPE_OCTETCONTAINING:
-		case BASICTYPE_OCTETSTRING:
-			fprintf(src, "%s\tconst _%s = s.getValue();\n", szIdendt, e->fieldName);
-			fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId));
-			fprintf(src, "%s\t\tt.%s = new Uint8Array(_%s);\n", szIdendt, e->fieldName, e->fieldName);
-			break;
-		case BASICTYPE_ASNSYSTEMTIME:
-			fprintf(src, "%s\tconst _%s = s.getValue();\n", szIdendt, e->fieldName);
-			fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId));
-			fprintf(src, "%s\t\tt.%s = TSConverter.getDateTimeFromVariantTime(_%s);\n", szIdendt, e->fieldName, e->fieldName);
-			break;
-		case BASICTYPE_SEQUENCEOF:
-		case BASICTYPE_SETOF:
-		case BASICTYPE_SEQUENCE:
-		case BASICTYPE_SET:
-		{
-			size_t size = strlen(e->fieldName) + 1;
-			char* pBuffer = malloc(size);
-			pBuffer[0] = 0;
-			strcpy_s(pBuffer, size, e->fieldName);
-			_strlwr_s(pBuffer, size);
+			case BASICTYPE_BOOLEAN:
+			case BASICTYPE_INTEGER:
+			case BASICTYPE_ENUMERATED:
+			case BASICTYPE_REAL:
+			case BASICTYPE_UTF8_STR:
+			case BASICTYPE_NULL:
+				fprintf(src, "%s\tconst _%s = s.getValue();\n", szIdendt, e->fieldName);
+				fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId));
+				fprintf(src, "%s\t\tt.%s = _%s;\n", szIdendt, e->fieldName, e->fieldName);
+				break;
+			case BASICTYPE_OCTETCONTAINING:
+			case BASICTYPE_OCTETSTRING:
+				fprintf(src, "%s\tconst _%s = s.getValue();\n", szIdendt, e->fieldName);
+				fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId));
+				fprintf(src, "%s\t\tt.%s = new Uint8Array(_%s);\n", szIdendt, e->fieldName, e->fieldName);
+				break;
+			case BASICTYPE_ASNSYSTEMTIME:
+				fprintf(src, "%s\tconst _%s = s.getValue();\n", szIdendt, e->fieldName);
+				fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId));
+				fprintf(src, "%s\t\tt.%s = TSConverter.getDateTimeFromVariantTime(_%s);\n", szIdendt, e->fieldName, e->fieldName);
+				break;
+			case BASICTYPE_SEQUENCEOF:
+			case BASICTYPE_SETOF:
+			case BASICTYPE_SEQUENCE:
+			case BASICTYPE_SET:
+				{
+					size_t size = strlen(e->fieldName) + 1;
+					char* pBuffer = malloc(size);
+					pBuffer[0] = 0;
+					strcpy_s(pBuffer, size, e->fieldName);
+					_strlwr_s(pBuffer, size);
 
-			Module* mod = m;
-			if (e->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
-				mod = GetImportModuleRefByClassName(e->type->cxxTypeRefInfo->className, mods, m);
-			const char* ns = GetNameSpace(mod);
-			if (mod == m)
-				fprintf(src, "%s\tt.%s = %s_Converter.fromBER(s, undefined, newContext, \"%s\");\n", szIdendt, e->fieldName, e->type->cxxTypeRefInfo->className, pBuffer);
-			else
-				fprintf(src, "%s\tt.%s = %s_Converter.%s_Converter.fromBER(s, undefined, newContext, \"%s\");\n", szIdendt, e->fieldName, ns, e->type->cxxTypeRefInfo->className, pBuffer);
-			free(pBuffer);
-		}
-		break;
-		case BASICTYPE_EXTENSION:
-			// Do Nothing here
-			break;
-		default:
-			snacc_exit("unknown choiceId %d", choiceId);
+					Module* mod = m;
+					if (e->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+						mod = GetImportModuleRefByClassName(e->type->cxxTypeRefInfo->className, mods, m);
+					const char* ns = GetNameSpace(mod);
+					if (mod == m)
+						fprintf(src, "%s\tt.%s = %s_Converter.fromBER(s, undefined, newContext, \"%s\");\n", szIdendt, e->fieldName, e->type->cxxTypeRefInfo->className, pBuffer);
+					else
+						fprintf(src, "%s\tt.%s = %s_Converter.%s_Converter.fromBER(s, undefined, newContext, \"%s\");\n", szIdendt, e->fieldName, ns, e->type->cxxTypeRefInfo->className, pBuffer);
+					free(pBuffer);
+				}
+				break;
+			case BASICTYPE_EXTENSION:
+				// Do Nothing here
+				break;
+			default:
+				snacc_exit("unknown choiceId %d", choiceId);
 		}
 	}
 	fprintf(src, "%s", szIdendt);
@@ -585,108 +598,112 @@ void Print_JSON_EncoderNamedType(FILE* src, ModuleList* mods, Module* m, enum Ba
 
 	switch (type)
 	{
-	case BASICTYPE_BOOLEAN:
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_REAL:
-	case BASICTYPE_UTF8_STR:
-	case BASICTYPE_OCTETCONTAINING:
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_NULL:
-	case BASICTYPE_ANY:
-		fprintf(src, "%sTSConverter.fillJSONParam(s, %s, \"%s\", \"%s\", errors, newContext%s);\n", szIndent, szObjectName, szFieldName, GetJSONType(type), szOptional);
-		break;
-	case BASICTYPE_ASNSYSTEMTIME:
-		fprintf(src, "%sTSConverter.fillJSONParam(s, %s, \"%s\", \"Date\", errors, newContext%s);\n", szIndent, szObjectName, szFieldName, szOptional);
-		break;
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_IMPORTTYPEREF:
-	{
-		const char* szIndent2 = "";
-		if (bOptional) {
-			fprintf(src, "%sif (s.%s) {\n", szIndent, szFieldName);
-			szIndent2 = "\t";
-		}
+		case BASICTYPE_BOOLEAN:
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_REAL:
+		case BASICTYPE_UTF8_STR:
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_NULL:
+		case BASICTYPE_ANY:
+			fprintf(src, "%sTSConverter.fillJSONParam(s, %s, \"%s\", \"%s\", errors, newContext%s);\n", szIndent, szObjectName, szFieldName, GetJSONType(type), szOptional);
+			break;
+		case BASICTYPE_ASNSYSTEMTIME:
+			fprintf(src, "%sTSConverter.fillJSONParam(s, %s, \"%s\", \"Date\", errors, newContext%s);\n", szIndent, szObjectName, szFieldName, szOptional);
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
+			{
+				const char* szIndent2 = "";
+				if (bOptional)
+				{
+					fprintf(src, "%sif (s.%s) {\n", szIndent, szFieldName);
+					szIndent2 = "\t";
+				}
 
-		const char* szNameSpace = "";
-		if (type == BASICTYPE_LOCALTYPEREF)
-			szNameSpace = GetNameSpace(m);
-		else {
-			Module* ref = GetImportModuleRefByClassName(szClassName, mods, m);
-			szNameSpace = GetNameSpace(ref);
-		}
-		if (type == BASICTYPE_LOCALTYPEREF)
-			fprintf(src, "%s%sconst _%s = %s_Converter.toJSON(s.%s, errors, newContext, \"%s\");\n", szIndent, szIndent2, szFieldName, szClassName, szFieldName, szFieldName);
-		else
-			fprintf(src, "%s%sconst _%s = %s_Converter.%s_Converter.toJSON(s.%s, errors, newContext, \"%s\");\n", szIndent, szIndent2, szFieldName, szNameSpace, szClassName, szFieldName, szFieldName);
-		fprintf(src, "%s%sif (_%s)\n", szIndent, szIndent2, szFieldName);
-		fprintf(src, "%s%s\t%s%s%s = _%s;\n", szIndent, szIndent2, szObjectName, szObjectName ? "." : "", szFieldName, szFieldName);
-		if (bOptional)
-			fprintf(src, "%s}\n", szIndent);
-		break;
-	}
-	case BASICTYPE_EXTENSION:
-		break;
-	default:
-		snacc_exit("unknown type %d", type);
+				const char* szNameSpace = "";
+				if (type == BASICTYPE_LOCALTYPEREF)
+					szNameSpace = GetNameSpace(m);
+				else
+				{
+					Module* ref = GetImportModuleRefByClassName(szClassName, mods, m);
+					szNameSpace = GetNameSpace(ref);
+				}
+				if (type == BASICTYPE_LOCALTYPEREF)
+					fprintf(src, "%s%sconst _%s = %s_Converter.toJSON(s.%s, errors, newContext, \"%s\");\n", szIndent, szIndent2, szFieldName, szClassName, szFieldName, szFieldName);
+				else
+					fprintf(src, "%s%sconst _%s = %s_Converter.%s_Converter.toJSON(s.%s, errors, newContext, \"%s\");\n", szIndent, szIndent2, szFieldName, szNameSpace, szClassName, szFieldName, szFieldName);
+				fprintf(src, "%s%sif (_%s)\n", szIndent, szIndent2, szFieldName);
+				fprintf(src, "%s%s\t%s%s%s = _%s;\n", szIndent, szIndent2, szObjectName, szObjectName ? "." : "", szFieldName, szFieldName);
+				if (bOptional)
+					fprintf(src, "%s}\n", szIndent);
+				break;
+			}
+		case BASICTYPE_EXTENSION:
+			break;
+		default:
+			snacc_exit("unknown type %d", type);
 	}
 }
 
-
 void Print_BER_EncoderChoiceNamedType(FILE* src, ModuleList* mods, Module* m, enum BasicTypeChoiceId choiceId, Type* type, const char* szIndent, const char* szSourceFieldName, int iOptionalID)
 {
-	char szOptionalParam[128] = { 0 };
-	char szOptionalID[128] = { 0 };
-	if (iOptionalID >= 0) {
+	char szOptionalParam[128] = {0};
+	char szOptionalID[128] = {0};
+	if (iOptionalID >= 0)
+	{
 		sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", idBlock: { optionalID: %i }", iOptionalID);
 		sprintf_s(szOptionalID, sizeof(szOptionalID), ", %i", iOptionalID);
 	}
 
 	switch (choiceId)
 	{
-	case BASICTYPE_BOOLEAN:
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_REAL:
-	case BASICTYPE_UTF8_STR:
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-	case BASICTYPE_NULL:
-	case BASICTYPE_ANY:
-	case BASICTYPE_ASNSYSTEMTIME:
-		fprintf(src, "(TSConverter.validateParam(s, \"%s\", \"%s\", errors, newContext, true))\n", szSourceFieldName, GetJSONType(choiceId));
-		if (choiceId == BASICTYPE_OCTETSTRING)
-			fprintf(src, "%st = new asn1ts.%s({ valueHex: s.%s, name: \"%s\"%s });\n", szIndent, GetBERType(choiceId), szSourceFieldName, szSourceFieldName, szOptionalParam);
-		else if (choiceId == BASICTYPE_NULL)
-			fprintf(src, "%st = new asn1ts.%s({ name: \"%s\"%s });\n", szIndent, GetBERType(choiceId), szSourceFieldName, szOptionalParam);
-		else if (choiceId == BASICTYPE_ANY) {
-			fprintf(src, "%s// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment\n", szIndent);
-			fprintf(src, "%st = new asn1ts.%s({ value: s.%s, name: \"%s\"%s });\n", szIndent, GetBERType(choiceId), szSourceFieldName, szSourceFieldName, szOptionalParam);
-		}
-		else
-			fprintf(src, "%st = new asn1ts.%s({ value: s.%s, name: \"%s\"%s });\n", szIndent, GetBERType(choiceId), szSourceFieldName, szSourceFieldName, szOptionalParam);
-		break;
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_IMPORTTYPEREF:
-	{
-		const char* szNameSpace = "";
-		const char* szClassName = type->cxxTypeRefInfo->className;
-		if (choiceId == BASICTYPE_LOCALTYPEREF)
-			szNameSpace = GetNameSpace(m);
-		else {
-			Module* ref = GetImportModuleRefByClassName(szClassName, mods, m);
-			szNameSpace = GetNameSpace(ref);
-		}
-		if (choiceId == BASICTYPE_LOCALTYPEREF)
-			fprintf(src, "%st = %s_Converter.toBER(s.%s, errors, newContext, \"%s\"%s);\n", szIndent, szClassName, szSourceFieldName, szSourceFieldName, szOptionalID);
-		else
-			fprintf(src, "%st = %s_Converter.%s_Converter.toBER(s.%s, errors, newContext, \"%s\"%s);\n", szIndent, szNameSpace, szClassName, szSourceFieldName, szSourceFieldName, szOptionalID);
-		break;
-	}
-	case BASICTYPE_EXTENSION:
-		break;
-	default:
-		snacc_exit("unknown choiceId %d", choiceId);
+		case BASICTYPE_BOOLEAN:
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_REAL:
+		case BASICTYPE_UTF8_STR:
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_NULL:
+		case BASICTYPE_ANY:
+		case BASICTYPE_ASNSYSTEMTIME:
+			fprintf(src, "(TSConverter.validateParam(s, \"%s\", \"%s\", errors, newContext, true))\n", szSourceFieldName, GetJSONType(choiceId));
+			if (choiceId == BASICTYPE_OCTETSTRING)
+				fprintf(src, "%st = new asn1ts.%s({ valueHex: s.%s, name: \"%s\"%s });\n", szIndent, GetBERType(choiceId), szSourceFieldName, szSourceFieldName, szOptionalParam);
+			else if (choiceId == BASICTYPE_NULL)
+				fprintf(src, "%st = new asn1ts.%s({ name: \"%s\"%s });\n", szIndent, GetBERType(choiceId), szSourceFieldName, szOptionalParam);
+			else if (choiceId == BASICTYPE_ANY)
+			{
+				fprintf(src, "%s// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment\n", szIndent);
+				fprintf(src, "%st = new asn1ts.%s({ value: s.%s, name: \"%s\"%s });\n", szIndent, GetBERType(choiceId), szSourceFieldName, szSourceFieldName, szOptionalParam);
+			}
+			else
+				fprintf(src, "%st = new asn1ts.%s({ value: s.%s, name: \"%s\"%s });\n", szIndent, GetBERType(choiceId), szSourceFieldName, szSourceFieldName, szOptionalParam);
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
+			{
+				const char* szNameSpace = "";
+				const char* szClassName = type->cxxTypeRefInfo->className;
+				if (choiceId == BASICTYPE_LOCALTYPEREF)
+					szNameSpace = GetNameSpace(m);
+				else
+				{
+					Module* ref = GetImportModuleRefByClassName(szClassName, mods, m);
+					szNameSpace = GetNameSpace(ref);
+				}
+				if (choiceId == BASICTYPE_LOCALTYPEREF)
+					fprintf(src, "%st = %s_Converter.toBER(s.%s, errors, newContext, \"%s\"%s);\n", szIndent, szClassName, szSourceFieldName, szSourceFieldName, szOptionalID);
+				else
+					fprintf(src, "%st = %s_Converter.%s_Converter.toBER(s.%s, errors, newContext, \"%s\"%s);\n", szIndent, szNameSpace, szClassName, szSourceFieldName, szSourceFieldName, szOptionalID);
+				break;
+			}
+		case BASICTYPE_EXTENSION:
+			break;
+		default:
+			snacc_exit("unknown choiceId %d", choiceId);
 	}
 	// free(szSourceFieldName);
 }
@@ -697,8 +714,9 @@ void Print_BER_EncoderValidateProperty(FILE* src, ModuleList* mods, Module* m, e
 	{
 		const bool bOptional = e->type->optional;
 		const char* szOptional = bOptional ? ", true" : "";
-		char szOptionalParam[128] = { 0 };
-		if (bOptional) {
+		char szOptionalParam[128] = {0};
+		if (bOptional)
+		{
 			int iOptionalID = GetContextID(e->type);
 			if (iOptionalID >= 0)
 				sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", %i", iOptionalID);
@@ -710,41 +728,41 @@ void Print_BER_EncoderValidateProperty(FILE* src, ModuleList* mods, Module* m, e
 
 		switch (type)
 		{
-		case BASICTYPE_UTF8_STR:
-		case BASICTYPE_BOOLEAN:
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_REAL:
-		case BASICTYPE_ENUMERATED:
-		case BASICTYPE_ANY:
-			fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"%s\", errors, newContext%s);\n", szIndent, szFieldName, GetJSONType(type), szOptional);
-			break;
-		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
-			fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"Uint8Array\", errors, newContext%s);\n", szIndent, szFieldName, szOptional);
-			break;
-		case BASICTYPE_ASNSYSTEMTIME:
-			fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"Date\", errors, newContext%s);\n", szIndent, szFieldName, szOptional);
-			break;
-		case BASICTYPE_LOCALTYPEREF:
-		case BASICTYPE_IMPORTTYPEREF:
-		{
-			const char* szIndent2 = "";
-			const char* szClassName = e->type->cxxTypeRefInfo->className;
-			if (type == BASICTYPE_IMPORTTYPEREF)
-				m = GetImportModuleRefByClassName(szClassName, mods, m);
-			const char* szNameSpace = GetNameSpace(m);
+			case BASICTYPE_UTF8_STR:
+			case BASICTYPE_BOOLEAN:
+			case BASICTYPE_INTEGER:
+			case BASICTYPE_REAL:
+			case BASICTYPE_ENUMERATED:
+			case BASICTYPE_ANY:
+				fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"%s\", errors, newContext%s);\n", szIndent, szFieldName, GetJSONType(type), szOptional);
+				break;
+			case BASICTYPE_OCTETSTRING:
+			case BASICTYPE_OCTETCONTAINING:
+				fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"Uint8Array\", errors, newContext%s);\n", szIndent, szFieldName, szOptional);
+				break;
+			case BASICTYPE_ASNSYSTEMTIME:
+				fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"Date\", errors, newContext%s);\n", szIndent, szFieldName, szOptional);
+				break;
+			case BASICTYPE_LOCALTYPEREF:
+			case BASICTYPE_IMPORTTYPEREF:
+				{
+					const char* szIndent2 = "";
+					const char* szClassName = e->type->cxxTypeRefInfo->className;
+					if (type == BASICTYPE_IMPORTTYPEREF)
+						m = GetImportModuleRefByClassName(szClassName, mods, m);
+					const char* szNameSpace = GetNameSpace(m);
 
-			fprintf(src, "%s%sconst _%s = ", szIndent, szIndent2, szFieldName);
-			if (type == BASICTYPE_IMPORTTYPEREF)
-				fprintf(src, "%s_Converter.", szNameSpace);
-			fprintf(src, "%s_Converter.toBER(s.%s, errors, newContext, \"%s\"%s);\n", szClassName, szFieldName, szFieldName, szOptionalParam);
+					fprintf(src, "%s%sconst _%s = ", szIndent, szIndent2, szFieldName);
+					if (type == BASICTYPE_IMPORTTYPEREF)
+						fprintf(src, "%s_Converter.", szNameSpace);
+					fprintf(src, "%s_Converter.toBER(s.%s, errors, newContext, \"%s\"%s);\n", szClassName, szFieldName, szFieldName, szOptionalParam);
 
-			break;
-		}
-		case BASICTYPE_NULL:
-			break;
-		default:
-			snacc_exit("unknown type %d", type);
+					break;
+				}
+			case BASICTYPE_NULL:
+				break;
+			default:
+				snacc_exit("unknown type %d", type);
 		}
 
 		free(szFieldName);
@@ -756,9 +774,10 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 	const char* szFieldName = e->fieldName;
 	const bool bOptional = e->type->optional ? true : false;
 	const bool bImplicit = e->type->implicit ? true : false;
-	char szOptional[128] = { 0 };
+	char szOptional[128] = {0};
 	int iOptionalID = -1;
-	if (bOptional) {
+	if (bOptional)
+	{
 		iOptionalID = GetContextID(e->type);
 		if (bImplicit && iOptionalID >= 0)
 			sprintf_s(szOptional, sizeof(szOptional), ", idBlock: { optionalID: %i }", iOptionalID);
@@ -779,34 +798,34 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 
 		switch (type)
 		{
-		case BASICTYPE_UTF8_STR:
-		case BASICTYPE_BOOLEAN:
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_REAL:
-		case BASICTYPE_ENUMERATED:
-			fprintf(src, "new asn1ts.%s({ value: s.%s, name: \"%s\"%s })", GetBERType(type), szAccessName, szAccessName, szOptional);
-			break;
-		case BASICTYPE_NULL:
-			fprintf(src, "new asn1ts.%s({ name: \"%s\"%s })", GetBERType(type), szAccessName, szOptional);
-			break;
-		case BASICTYPE_ANY:
-			fprintf(src, "s.%s as asn1ts.Sequence", szAccessName);
-			break;
-		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
-			fprintf(src, "new asn1ts.%s({ valueHex: s.%s, name: \"%s\"%s })", GetBERType(type), szAccessName, szAccessName, szOptional);
-			break;
-		case BASICTYPE_ASNSYSTEMTIME:
-			fprintf(src, "new asn1ts.Real({ value: TSConverter.getVariantTimeFromDateTime(s.%s), name: \"%s\"%s })", szAccessName, szAccessName, szOptional);
-			break;
-		case BASICTYPE_LOCALTYPEREF:
-		case BASICTYPE_IMPORTTYPEREF:
-		{
-			fprintf(src, "_%s", szFieldName);
-			break;
-		}
-		default:
-			snacc_exit("unknown type %d", type);
+			case BASICTYPE_UTF8_STR:
+			case BASICTYPE_BOOLEAN:
+			case BASICTYPE_INTEGER:
+			case BASICTYPE_REAL:
+			case BASICTYPE_ENUMERATED:
+				fprintf(src, "new asn1ts.%s({ value: s.%s, name: \"%s\"%s })", GetBERType(type), szAccessName, szAccessName, szOptional);
+				break;
+			case BASICTYPE_NULL:
+				fprintf(src, "new asn1ts.%s({ name: \"%s\"%s })", GetBERType(type), szAccessName, szOptional);
+				break;
+			case BASICTYPE_ANY:
+				fprintf(src, "s.%s as asn1ts.Sequence", szAccessName);
+				break;
+			case BASICTYPE_OCTETSTRING:
+			case BASICTYPE_OCTETCONTAINING:
+				fprintf(src, "new asn1ts.%s({ valueHex: s.%s, name: \"%s\"%s })", GetBERType(type), szAccessName, szAccessName, szOptional);
+				break;
+			case BASICTYPE_ASNSYSTEMTIME:
+				fprintf(src, "new asn1ts.Real({ value: TSConverter.getVariantTimeFromDateTime(s.%s), name: \"%s\"%s })", szAccessName, szAccessName, szOptional);
+				break;
+			case BASICTYPE_LOCALTYPEREF:
+			case BASICTYPE_IMPORTTYPEREF:
+				{
+					fprintf(src, "_%s", szFieldName);
+					break;
+				}
+			default:
+				snacc_exit("unknown type %d", type);
 		}
 		if (!bImplicit && iOptionalID >= 0)
 			fprintf(src, "] })");
@@ -816,7 +835,6 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 		free(szAccessName);
 	}
 }
-
 
 void Print_JSON_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
 {
@@ -851,7 +869,8 @@ void Print_JSON_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 	free(szConverted);
 }
 
-enum BasicTypeChoiceId TSResolveImportedType(NamedType* obj) {
+enum BasicTypeChoiceId TSResolveImportedType(NamedType* obj)
+{
 	enum BasicTypeChoiceId type = obj->type->basicType->choiceId;
 	if (type == BASICTYPE_LOCALTYPEREF || type == BASICTYPE_IMPORTTYPEREF)
 	{
@@ -890,8 +909,8 @@ void Print_BER_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 			iLines++;
 	}
 
-
-	if (iLines) {
+	if (iLines)
+	{
 		// If the validation succeeded we assign them to the asn1 object
 		fprintf(src, "\t\tif (errors.validateResult(errorCount, newContext, \"%s\")) {\n", td->definedName);
 		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
@@ -909,7 +928,6 @@ void Print_BER_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 	}
 	else
 		fprintf(src, "\n\t\treturn result;\n");
-
 }
 
 void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedType* type, enum BasicTypeChoiceId choice, const char* szIndent)
@@ -925,56 +943,58 @@ void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTy
 
 	switch (choice)
 	{
-	case BASICTYPE_BOOLEAN:
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_REAL:
-	case BASICTYPE_UTF8_STR:
-		fprintf(src, "%sTSConverter.fillJSONParam(s, t, \"%s\", \"%s\", errors, context, %s);\n", szIndent, szAccessName, GetJSONType(choice), szOptional);
-		break;
-	case BASICTYPE_ASNSYSTEMTIME:
-		fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, context, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
-		fprintf(src, "%s\tt.%s = new Date(s.%s);\n", szIndent, szAccessName, szAccessName);
-		break;
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-		fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, context, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
-		fprintf(src, "%s\tt.%s = TSConverter.decode64(s.%s as unknown as string);\n", szIndent, szAccessName, szAccessName);
-		break;
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_IMPORTTYPEREF:
-	{
-		char* pBuffer = _strdup(szAccessName);
-		_strlwr_s(pBuffer, strlen(szAccessName) + 1);
-		if (bOptional)
-			fprintf(src, "%st.%s = ", szIndent, szAccessName);
-		else
-			fprintf(src, "%sconst _%s = ", szIndent, pBuffer);
+		case BASICTYPE_BOOLEAN:
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_REAL:
+		case BASICTYPE_UTF8_STR:
+			fprintf(src, "%sTSConverter.fillJSONParam(s, t, \"%s\", \"%s\", errors, context, %s);\n", szIndent, szAccessName, GetJSONType(choice), szOptional);
+			break;
+		case BASICTYPE_ASNSYSTEMTIME:
+			fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, context, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
+			fprintf(src, "%s\tt.%s = new Date(s.%s);\n", szIndent, szAccessName, szAccessName);
+			break;
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, context, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
+			fprintf(src, "%s\tt.%s = TSConverter.decode64(s.%s as unknown as string);\n", szIndent, szAccessName, szAccessName);
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
+			{
+				char* pBuffer = _strdup(szAccessName);
+				_strlwr_s(pBuffer, strlen(szAccessName) + 1);
+				if (bOptional)
+					fprintf(src, "%st.%s = ", szIndent, szAccessName);
+				else
+					fprintf(src, "%sconst _%s = ", szIndent, pBuffer);
 
-		if (choice == BASICTYPE_IMPORTTYPEREF) {
-			Module* mod = GetImportModuleRefByClassName(szClassName, mods, m);
-			fprintf(src, "%s_Converter.", GetNameSpace(mod));
-		}
+				if (choice == BASICTYPE_IMPORTTYPEREF)
+				{
+					Module* mod = GetImportModuleRefByClassName(szClassName, mods, m);
+					fprintf(src, "%s_Converter.", GetNameSpace(mod));
+				}
 
-		fprintf(src, "%s_Converter.fromJSON(s.%s, errors, newContext, \"%s\", %s);\n", szClassName, szAccessName, szAccessName, szOptional);
-		if (!bOptional) {
-			fprintf(src, "%sif (_%s)\n", szIndent, pBuffer);
-			fprintf(src, "%s\tt.%s = _%s;\n", szIndent, szAccessName, pBuffer);
-		}
-		free(pBuffer);
-	}
-	break;
-	case BASICTYPE_ANY:
-		fprintf(src, "%sif (TSConverter.validateAnyParam(s, \"%s\", errors, newContext, %s))\n", szIndent, szAccessName, szOptional);
-		fprintf(src, "%s\t// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment\n", szIndent);
-		fprintf(src, "%s\tt.%s = s.%s;\n", szIndent, szAccessName, szAccessName);
-		break;
-	case BASICTYPE_EXTENSION:
-	case BASICTYPE_NULL:
-		// Do Nothing here
-		break;
-	default:
-		snacc_exit("unknown choice %d", choice);
+				fprintf(src, "%s_Converter.fromJSON(s.%s, errors, newContext, \"%s\", %s);\n", szClassName, szAccessName, szAccessName, szOptional);
+				if (!bOptional)
+				{
+					fprintf(src, "%sif (_%s)\n", szIndent, pBuffer);
+					fprintf(src, "%s\tt.%s = _%s;\n", szIndent, szAccessName, pBuffer);
+				}
+				free(pBuffer);
+			}
+			break;
+		case BASICTYPE_ANY:
+			fprintf(src, "%sif (TSConverter.validateAnyParam(s, \"%s\", errors, newContext, %s))\n", szIndent, szAccessName, szOptional);
+			fprintf(src, "%s\t// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment\n", szIndent);
+			fprintf(src, "%s\tt.%s = s.%s;\n", szIndent, szAccessName, szAccessName);
+			break;
+		case BASICTYPE_EXTENSION:
+		case BASICTYPE_NULL:
+			// Do Nothing here
+			break;
+		default:
+			snacc_exit("unknown choice %d", choice);
 	}
 
 	free(szAccessName);
@@ -991,51 +1011,53 @@ void Print_BER_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTyp
 
 	switch (choice)
 	{
-	case BASICTYPE_BOOLEAN:
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_REAL:
-	case BASICTYPE_UTF8_STR:
-	case BASICTYPE_OCTETCONTAINING:
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_ASNSYSTEMTIME:
-	case BASICTYPE_ANY:
-	case BASICTYPE_NULL:
-		fprintf(src, "%sTSConverter.fillASN1Param(s, t, \"%s\", \"%s\", errors, newContext%s);\n", szIndent, szAccessName, GetBERType(choice), szOptional);
-		break;
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_IMPORTTYPEREF:
-	{
-		char* pBuffer = _strdup(szAccessName);
-		_strlwr_s(pBuffer, strlen(szAccessName) + 1);
-		fprintf(src, "%s", szIndent);
-		if (bOptional)
-			fprintf(src, "t.%s = ", szAccessName);
-		else
-			fprintf(src, "const _%s = ", pBuffer);
+		case BASICTYPE_BOOLEAN:
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_REAL:
+		case BASICTYPE_UTF8_STR:
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_ASNSYSTEMTIME:
+		case BASICTYPE_ANY:
+		case BASICTYPE_NULL:
+			fprintf(src, "%sTSConverter.fillASN1Param(s, t, \"%s\", \"%s\", errors, newContext%s);\n", szIndent, szAccessName, GetBERType(choice), szOptional);
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
+			{
+				char* pBuffer = _strdup(szAccessName);
+				_strlwr_s(pBuffer, strlen(szAccessName) + 1);
+				fprintf(src, "%s", szIndent);
+				if (bOptional)
+					fprintf(src, "t.%s = ", szAccessName);
+				else
+					fprintf(src, "const _%s = ", pBuffer);
 
-		if (choice == BASICTYPE_IMPORTTYPEREF) {
-			Module* mod = GetImportModuleRefByClassName(szClassName, mods, m);
-			fprintf(src, "%s_Converter.", GetNameSpace(mod));
-		}
-		enum BasicTypeChoiceId rootBasicType = GetBaseBasicTypeChoiceId(type->type->basicType);
-		if (rootBasicType == BASICTYPE_SEQUENCEOF || rootBasicType == BASICTYPE_SETOF)
-			rootBasicType = BASICTYPE_SEQUENCE;
-		if (rootBasicType == BASICTYPE_CHOICE)
-			fprintf(src, "%s_Converter.fromBER(s.getValueByName(\"%s\"), errors, newContext, \"%s\"%s);\n", szClassName, szAccessName, szAccessName, szOptional);
-		else
-			fprintf(src, "%s_Converter.fromBER(s.getTypedValueByName(asn1ts.%s, \"%s\"), errors, newContext, \"%s\"%s);\n", szClassName, GetBERType(rootBasicType), szAccessName, szAccessName, szOptional);
-		if (!bOptional) {
-			fprintf(src, "%sif (_%s)\n", szIndent, pBuffer);
-			fprintf(src, "%s\tt.%s = _%s;\n", szIndent, szAccessName, pBuffer);
-		}
-		free(pBuffer);
-	}
-	case BASICTYPE_EXTENSION:
-		// Do Nothing here
-		break;
-	default:
-		snacc_exit("unknown choice %d", choice);
+				if (choice == BASICTYPE_IMPORTTYPEREF)
+				{
+					Module* mod = GetImportModuleRefByClassName(szClassName, mods, m);
+					fprintf(src, "%s_Converter.", GetNameSpace(mod));
+				}
+				enum BasicTypeChoiceId rootBasicType = GetBaseBasicTypeChoiceId(type->type->basicType);
+				if (rootBasicType == BASICTYPE_SEQUENCEOF || rootBasicType == BASICTYPE_SETOF)
+					rootBasicType = BASICTYPE_SEQUENCE;
+				if (rootBasicType == BASICTYPE_CHOICE)
+					fprintf(src, "%s_Converter.fromBER(s.getValueByName(\"%s\"), errors, newContext, \"%s\"%s);\n", szClassName, szAccessName, szAccessName, szOptional);
+				else
+					fprintf(src, "%s_Converter.fromBER(s.getTypedValueByName(asn1ts.%s, \"%s\"), errors, newContext, \"%s\"%s);\n", szClassName, GetBERType(rootBasicType), szAccessName, szAccessName, szOptional);
+				if (!bOptional)
+				{
+					fprintf(src, "%sif (_%s)\n", szIndent, pBuffer);
+					fprintf(src, "%s\tt.%s = _%s;\n", szIndent, szAccessName, pBuffer);
+				}
+				free(pBuffer);
+			}
+		case BASICTYPE_EXTENSION:
+			// Do Nothing here
+			break;
+		default:
+			snacc_exit("unknown choice %d", choice);
 	}
 
 	free(szAccessName);
@@ -1206,24 +1228,24 @@ void Print_JSON_EncoderCodeStructuredType(FILE* src, ModuleList* mods, Module* m
 	enum BasicTypeChoiceId choice = td->type->basicType->choiceId;
 	switch (choice)
 	{
-	case BASICTYPE_SEQUENCEOF:			/* list types */
-	case BASICTYPE_SETOF:
-		Print_JSON_EncoderSetOfDefCode(src, mods, m, td, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_CHOICE:
-		Print_JSON_EncoderChoiceDefCode(src, mods, m, td, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_SEQUENCE:
-		Print_JSON_EncoderSeqDefCode(src, mods, m, td, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_IMPORTTYPEREF:
-		Print_JSON_EncoderImportTypeRef(src, mods, m, td, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_LOCALTYPEREF:
-		Print_JSON_EncoderLocalTypeRef(src, mods, m, td, td->type, novolatilefuncs);
-		break;
-	default:
-		snacc_exit("unknown choice %d", choice);
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			Print_JSON_EncoderSetOfDefCode(src, mods, m, td, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_CHOICE:
+			Print_JSON_EncoderChoiceDefCode(src, mods, m, td, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_SEQUENCE:
+			Print_JSON_EncoderSeqDefCode(src, mods, m, td, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_IMPORTTYPEREF:
+			Print_JSON_EncoderImportTypeRef(src, mods, m, td, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+			Print_JSON_EncoderLocalTypeRef(src, mods, m, td, td->type, novolatilefuncs);
+			break;
+		default:
+			snacc_exit("unknown choice %d", choice);
 	}
 }
 
@@ -1232,24 +1254,24 @@ void Print_BER_EncoderCodeStructuredType(FILE* src, ModuleList* mods, Module* m,
 	enum BasicTypeChoiceId choice = td->type->basicType->choiceId;
 	switch (choice)
 	{
-	case BASICTYPE_SEQUENCEOF:			/* list types */
-	case BASICTYPE_SETOF:
-		Print_BER_EncoderSetOfDefCode(src, mods, m, td, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_CHOICE:
-		Print_BER_EncoderChoiceDefCode(src, mods, m, td, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_SEQUENCE:
-		Print_BER_EncoderSeqDefCode(src, mods, m, td, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_IMPORTTYPEREF:
-		Print_BER_EncoderImportTypeRef(src, mods, m, td, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_LOCALTYPEREF:
-		Print_BER_EncoderLocalTypeRef(src, mods, m, td, td->type, novolatilefuncs);
-		break;
-	default:
-		snacc_exit("unknown choice %d", choice);
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			Print_BER_EncoderSetOfDefCode(src, mods, m, td, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_CHOICE:
+			Print_BER_EncoderChoiceDefCode(src, mods, m, td, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_SEQUENCE:
+			Print_BER_EncoderSeqDefCode(src, mods, m, td, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_IMPORTTYPEREF:
+			Print_BER_EncoderImportTypeRef(src, mods, m, td, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+			Print_BER_EncoderLocalTypeRef(src, mods, m, td, td->type, novolatilefuncs);
+			break;
+		default:
+			snacc_exit("unknown choice %d", choice);
 	}
 }
 
@@ -1263,27 +1285,27 @@ void Print_JSON_DecoderCodeStructuredType(FILE* src, ModuleList* mods, Module* m
 	enum BasicTypeChoiceId choice = td->type->basicType->choiceId;
 	switch (choice)
 	{
-	case BASICTYPE_SEQUENCEOF:			/* list types */
-	case BASICTYPE_SETOF:
-		Print_JSON_DecoderSetOfDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
-		break;
-	case BASICTYPE_CHOICE:
-		Print_JSON_DecoderChoiceDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
-		break;
-	case BASICTYPE_SEQUENCE:
-		Print_JSON_DecoderSeqDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
-		break;
-	case BASICTYPE_IMPORTTYPEREF:
-		Print_JSON_DecoderImportTypeRef(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
-		break;
-	case BASICTYPE_LOCALTYPEREF:
-		Print_JSON_DecoderLocalTypeRef(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
-		break;
-	case BASICTYPE_ENUMERATED:
-		//PrintTSDecoderNamedType(src, td->type->typeName, BASICTYPE_ENUMERATED);
-		break;
-	default:
-		snacc_exit("unknown choice %d", choice);
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			Print_JSON_DecoderSetOfDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
+			break;
+		case BASICTYPE_CHOICE:
+			Print_JSON_DecoderChoiceDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
+			break;
+		case BASICTYPE_SEQUENCE:
+			Print_JSON_DecoderSeqDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
+			break;
+		case BASICTYPE_IMPORTTYPEREF:
+			Print_JSON_DecoderImportTypeRef(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+			Print_JSON_DecoderLocalTypeRef(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
+			break;
+		case BASICTYPE_ENUMERATED:
+			// PrintTSDecoderNamedType(src, td->type->typeName, BASICTYPE_ENUMERATED);
+			break;
+		default:
+			snacc_exit("unknown choice %d", choice);
 	}
 }
 
@@ -1292,30 +1314,29 @@ void Print_BER_DecoderCodeStructuredType(FILE* src, ModuleList* mods, Module* m,
 	enum BasicTypeChoiceId choice = td->type->basicType->choiceId;
 	switch (choice)
 	{
-	case BASICTYPE_SEQUENCEOF:			/* list types */
-	case BASICTYPE_SETOF:
-		Print_BER_DecoderSetOfDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
-		break;
-	case BASICTYPE_CHOICE:
-		Print_BER_DecoderChoiceDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
-		break;
-	case BASICTYPE_SEQUENCE:
-		Print_BER_DecoderSeqDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
-		break;
-	case BASICTYPE_IMPORTTYPEREF:
-		Print_BER_DecoderImportTypeRef(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
-		break;
-	case BASICTYPE_LOCALTYPEREF:
-		Print_BER_DecoderLocalTypeRef(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
-		break;
-	case BASICTYPE_ENUMERATED:
-		//PrintTSDecoderNamedType(src, td->type->typeName, BASICTYPE_ENUMERATED);
-		break;
-	default:
-		snacc_exit("unknown choice %d", choice);
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			Print_BER_DecoderSetOfDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
+			break;
+		case BASICTYPE_CHOICE:
+			Print_BER_DecoderChoiceDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
+			break;
+		case BASICTYPE_SEQUENCE:
+			Print_BER_DecoderSeqDefCode(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
+			break;
+		case BASICTYPE_IMPORTTYPEREF:
+			Print_BER_DecoderImportTypeRef(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+			Print_BER_DecoderLocalTypeRef(src, mods, m, td, td->type, novolatilefuncs, szIdendt);
+			break;
+		case BASICTYPE_ENUMERATED:
+			// PrintTSDecoderNamedType(src, td->type->typeName, BASICTYPE_ENUMERATED);
+			break;
+		default:
+			snacc_exit("unknown choice %d", choice);
 	}
 }
-
 
 // ********************************************************************************************************************************************
 // ********************************************************************************************************************************************
@@ -1340,7 +1361,8 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 		if (printEncoders)
 		{
 			fprintf(src, "\n\tpublic static toJSON(s: %s.%s, errors?: ConverterErrors, context?: IEncodeContext, name?: string): %s.%s", szNameSpace, szConverted, szNameSpace, szConverted);
-			if (type != BASICTYPE_SEQUENCEOF && type != BASICTYPE_SETOF) {
+			if (type != BASICTYPE_SEQUENCEOF && type != BASICTYPE_SETOF)
+			{
 				// Sequence of only contains the elements, no additional stuff
 				fprintf(src, " & INamedType");
 			}
@@ -1356,12 +1378,14 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			else
 				fprintf(src, "\t\tconst t = {} as %s.%s & INamedType;\n\n", szNameSpace, szConverted);
 
-			if (strcmp(szConverted, "AsnOptionalParam") == 0) {
+			if (strcmp(szConverted, "AsnOptionalParam") == 0)
+			{
 				fprintf(src, "\t\t// It is not possible to encode a single AsnOptionalParam into the ucserver notation. Needs the AsnOptionalParameters envelop!\n");
 				fprintf(src, "\t\tif (newContext?.bUCServerOptionalParams)\n");
 				fprintf(src, "\t\t\tdebugger;\n\n");
 			}
-			else if (strcmp(szConverted, "AsnOptionalParameters") == 0) {
+			else if (strcmp(szConverted, "AsnOptionalParameters") == 0)
+			{
 				fprintf(src, "\t\tif (newContext?.bUCServerOptionalParams) {\n");
 				fprintf(src, "\t\t\tconst params = EAsnOptionalParameters_Converter.toJSON(s, errors, newContext, name);\n");
 				fprintf(src, "\t\t\tif (errors.validateResult(errorCount, newContext, \"EAsnOptionalParameters\"))\n");
@@ -1388,7 +1412,8 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			fprintf(src, "\t\tconst s = TSConverter.prepareJSONData<%s.%s>(data, errors, newContext, optional);\n", szNameSpace, szConverted);
 			fprintf(src, "\t\tif (s !== undefined) {");
 			enum BasicTypeChoiceId choice = td->type->basicType->choiceId;
-			if (choice != BASICTYPE_LOCALTYPEREF && choice != BASICTYPE_IMPORTTYPEREF) {
+			if (choice != BASICTYPE_LOCALTYPEREF && choice != BASICTYPE_IMPORTTYPEREF)
+			{
 				fprintf(src, "\n");
 				if (type == BASICTYPE_SEQUENCEOF || type == BASICTYPE_SETOF)
 					fprintf(src, "\t\t\tt = new %s.%s();", szNameSpace, szConverted);
@@ -1398,7 +1423,8 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 
 			const char* szIdendt = "\t\t\t";
 
-			if (strcmp(szConverted, "AsnOptionalParam") == 0) {
+			if (strcmp(szConverted, "AsnOptionalParam") == 0)
+			{
 				fprintf(src, "\n");
 				fprintf(src, "\t\t\t// It is not possible to decode a single AsnOptionalParam from the ucserver notation. Needs the AsnOptionalParameters envelop!\n");
 				fprintf(src, "\t\t\tif (s.key === undefined)\n");
@@ -1406,7 +1432,8 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 				fprintf(src, "\t\t\telse {");
 				szIdendt = "\t\t\t\t";
 			}
-			else if (strcmp(szConverted, "AsnOptionalParameters") == 0) {
+			else if (strcmp(szConverted, "AsnOptionalParameters") == 0)
+			{
 				fprintf(src, "\n");
 				fprintf(src, "\t\t\tif (s.length === undefined) {\n");
 				fprintf(src, "\t\t\t\t// Proprietary UCServer AsnOptionalParameters decoding\n");
@@ -1440,7 +1467,8 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			fprintf(src, "\t\t\treturn undefined;\n");
 			fprintf(src, "\t\t}\n\n");
 
-			if (td->type->basicType->choiceId != BASICTYPE_CHOICE) {
+			if (td->type->basicType->choiceId != BASICTYPE_CHOICE)
+			{
 				fprintf(src, "\t\tconst result = new asn1ts.Sequence(TSConverter.getASN1TSConstructorParams(name, optional));\n");
 				fprintf(src, "\t\tconst t = result.valueBlock.value;\n");
 			}
@@ -1472,7 +1500,8 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 				fprintf(src, "\t\tif (s) {");
 
 			enum BasicTypeChoiceId choice = td->type->basicType->choiceId;
-			if (choice != BASICTYPE_IMPORTTYPEREF && choice != BASICTYPE_LOCALTYPEREF) {
+			if (choice != BASICTYPE_IMPORTTYPEREF && choice != BASICTYPE_LOCALTYPEREF)
+			{
 				fprintf(src, "\n");
 				if (type == BASICTYPE_SEQUENCEOF || type == BASICTYPE_SETOF)
 					fprintf(src, "\t\t\tt = new %s.%s();", szNameSpace, szConverted);
@@ -1491,8 +1520,6 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			fprintf(src, "\t}\n");
 		}
 		fprintf(src, "}\n");
-
-
 	}
 	free(szConverted);
 }
@@ -1511,7 +1538,8 @@ void PrintTSConverterCode(FILE* src, ModuleList* mods, Module* m, long longJmpVa
 	PrintTSRootTypes(src, m, "_Converter");
 
 	TypeDef* td;
-	FOR_EACH_LIST_ELMT(td, m->typeDefs) {
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+	{
 		if (IsDeprecatedNoOutputSequence(m, td->definedName))
 			continue;
 		PrintTSEncoderDecoderCode(src, mods, m, td, novolatilefuncs, printEncoders, printDecoders);

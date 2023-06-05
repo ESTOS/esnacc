@@ -74,22 +74,16 @@
 #include "../../../c-lib/include/print.h"
 #include "../../core/print.h"
 
+/* Function Prototypes */
+void PrintConditionalIncludeOpen PROTO((FILE * f, char* fileName));
+void PrintConditionalIncludeClose PROTO((FILE * f, char* fileName));
+void PrintIDLValueDef PROTO((FILE * idl, IDLRules* r, ValueDef* v));
+void PrintIDLValueDefsName PROTO((FILE * f, IDLRules* r, ValueDef* v));
 
- /* Function Prototypes */
-void PrintConditionalIncludeOpen PROTO((FILE* f, char* fileName));
-void PrintConditionalIncludeClose PROTO((FILE* f, char* fileName));
-void PrintIDLValueDef PROTO((FILE* idl, IDLRules* r, ValueDef* v));
-void PrintIDLValueDefsName PROTO((FILE* f, IDLRules* r, ValueDef* v));
-
-
-static long		longJmpValG = -100;
-
+static long longJmpValG = -100;
 
 /*\[sep]--------------------------------------------------------------------------------------------------------------------------*/
-static void
-PrintComment PARAMS((idl, m),
-	FILE* idl _AND_
-	Module* m)
+static void PrintComment PARAMS((idl, m), FILE* idl _AND_ Module* m)
 {
 	fprintf(idl, "//\n");
 	fprintf(idl, "// %s -- IDL for ASN.1 module %s\n", m->idlFileName, m->modId->name);
@@ -102,11 +96,7 @@ PrintComment PARAMS((idl, m),
 } /* PrintComment */
 
 /*\[sep]--------------------------------------------------------------------------------------------------------------------------*/
-static void
-PrintIncludes PARAMS((idl, mods, m),
-	FILE* idl _AND_
-	ModuleList* mods _AND_
-	Module* m)
+static void PrintIncludes PARAMS((idl, mods, m), FILE* idl _AND_ ModuleList* mods _AND_ Module* m)
 {
 	void* tmp;
 	Module* currMod;
@@ -116,47 +106,36 @@ PrintIncludes PARAMS((idl, mods, m),
 
 	tmp = (void*)CURR_LIST_NODE(mods); /* remember curr loc */
 	FOR_EACH_LIST_ELMT(currMod, mods)
-		fprintf(idl, "#include \"%s\"\n", RemovePath(currMod->idlFileName));
+	fprintf(idl, "#include \"%s\"\n", RemovePath(currMod->idlFileName));
 	SET_CURR_LIST_NODE(mods, tmp);
 } /* PrintIncludes */
 
 /*\[sep]--------------------------------------------------------------------------------------------------------------------------*/
-static void
-PrintTypeDecl PARAMS((f, td),
-	FILE* f _AND_
-	TypeDef* td)
+static void PrintTypeDecl PARAMS((f, td), FILE* f _AND_ TypeDef* td)
 {
 	switch (td->type->basicType->choiceId)
 	{
-	case BASICTYPE_COMPONENTSOF:
-	case BASICTYPE_SELECTION:
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_MACRODEF:
-	case BASICTYPE_MACROTYPE:
-		return; /* do nothing */
+		case BASICTYPE_COMPONENTSOF:
+		case BASICTYPE_SELECTION:
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_MACRODEF:
+		case BASICTYPE_MACROTYPE:
+			return; /* do nothing */
 
-	case BASICTYPE_ENUMERATED:
-		if (IsNewType(td->type))
-			fprintf(f, "  enum %s;\n", td->idlTypeDefInfo->typeName);
-		break;
+		case BASICTYPE_ENUMERATED:
+			if (IsNewType(td->type))
+				fprintf(f, "  enum %s;\n", td->idlTypeDefInfo->typeName);
+			break;
 
-	default:
-		if (IsNewType(td->type))
-			fprintf(f, "  struct %s;\n", td->idlTypeDefInfo->typeName);
+		default:
+			if (IsNewType(td->type))
+				fprintf(f, "  struct %s;\n", td->idlTypeDefInfo->typeName);
 	}
 
 } /* PrintTypeDecl */
 
 /*\[sep]--------------------------------------------------------------------------------------------------------------------------*/
-static void
-PrintIDLTypeAndName PARAMS((idl, mods, m, r, td, parent, t),
-	FILE* idl _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	IDLRules* r _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	Type* t)
+static void PrintIDLTypeAndName PARAMS((idl, mods, m, r, td, parent, t), FILE* idl _AND_ ModuleList* mods _AND_ Module* m _AND_ IDLRules* r _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* t)
 {
 	if (t->optional)
 		fprintf(idl, "union %sOptional switch (boolean) { case True: %s %s; };\n", t->idlTypeRefInfo->typeName, t->idlTypeRefInfo->typeName, t->idlTypeRefInfo->fieldName);
@@ -174,13 +153,9 @@ PrintIDLTypeAndName PARAMS((idl, mods, m, r, td, parent, t),
  * prints typedef or new class given an ASN.1  type def of a primitive type
  * or typeref.  Uses inheritance to cover re-tagging and named elmts.
  */
-static void
-PrintIDLSimpleDef PARAMS((idl, r, td),
-	FILE* idl _AND_
-	IDLRules* r _AND_
-	TypeDef* td)
+static void PrintIDLSimpleDef PARAMS((idl, r, td), FILE* idl _AND_ IDLRules* r _AND_ TypeDef* td)
 {
-	int	hasNamedElmts;
+	int hasNamedElmts;
 	CNamedElmt* n;
 
 	fprintf(idl, "  /* ");
@@ -192,28 +167,28 @@ PrintIDLSimpleDef PARAMS((idl, r, td),
 		int tlen = (int)(strlen(td->idlTypeDefInfo->typeName) - strlen(r->typeSuffix));
 		switch (GetBuiltinType(td->type))
 		{
-		case BASICTYPE_INTEGER:
-			fprintf(idl, "  typedef %s %s;\n", td->type->idlTypeRefInfo->typeName, td->idlTypeDefInfo->typeName);
-			FOR_EACH_LIST_ELMT(n, td->type->idlTypeRefInfo->namedElmts)
+			case BASICTYPE_INTEGER:
+				fprintf(idl, "  typedef %s %s;\n", td->type->idlTypeRefInfo->typeName, td->idlTypeDefInfo->typeName);
+				FOR_EACH_LIST_ELMT(n, td->type->idlTypeRefInfo->namedElmts)
 				fprintf(idl, "  const %s %.*s_%s = %d;\n", td->idlTypeDefInfo->typeName, tlen, td->idlTypeDefInfo->typeName, n->name, n->value);
-			break;
-		case BASICTYPE_ENUMERATED:
-			fprintf(idl, "  enum %s\n", td->idlTypeDefInfo->typeName);
-			fprintf(idl, "  {\n");
-			FOR_EACH_LIST_ELMT(n, td->type->idlTypeRefInfo->namedElmts)
-			{
-				char comma = (char)((n != (CNamedElmt*)LAST_LIST_ELMT(td->type->idlTypeRefInfo->namedElmts)) ? ',' : ' ');
-				fprintf(idl, "    %s%c	// (original value = %d)\n", n->name, comma, n->value);
-			}
-			fprintf(idl, "  };\n");
-			break;
-		case BASICTYPE_BITSTRING:
-			fprintf(idl, "  typedef %s %s;\n", td->type->idlTypeRefInfo->typeName, td->idlTypeDefInfo->typeName);
-			FOR_EACH_LIST_ELMT(n, td->type->idlTypeRefInfo->namedElmts)
+				break;
+			case BASICTYPE_ENUMERATED:
+				fprintf(idl, "  enum %s\n", td->idlTypeDefInfo->typeName);
+				fprintf(idl, "  {\n");
+				FOR_EACH_LIST_ELMT(n, td->type->idlTypeRefInfo->namedElmts)
+				{
+					char comma = (char)((n != (CNamedElmt*)LAST_LIST_ELMT(td->type->idlTypeRefInfo->namedElmts)) ? ',' : ' ');
+					fprintf(idl, "    %s%c	// (original value = %d)\n", n->name, comma, n->value);
+				}
+				fprintf(idl, "  };\n");
+				break;
+			case BASICTYPE_BITSTRING:
+				fprintf(idl, "  typedef %s %s;\n", td->type->idlTypeRefInfo->typeName, td->idlTypeDefInfo->typeName);
+				FOR_EACH_LIST_ELMT(n, td->type->idlTypeRefInfo->namedElmts)
 				fprintf(idl, "  const unsigned long %.*s_%s = %d;\n", tlen, td->idlTypeDefInfo->typeName, n->name, n->value);
-			break;
-		default:
-			fprintf(idl, "  \?\?\?!\n");
+				break;
+			default:
+				fprintf(idl, "  \?\?\?!\n");
 		}
 	}
 	else
@@ -222,15 +197,7 @@ PrintIDLSimpleDef PARAMS((idl, r, td),
 } /* PrintIDLSimpleDef */
 
 /*\[sep]--------------------------------------------------------------------------------------------------------------------------*/
-static void
-PrintIDLChoiceDefCode PARAMS((idl, mods, m, r, td, parent, choice),
-	FILE* idl _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	IDLRules* r _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	Type* choice)
+static void PrintIDLChoiceDefCode PARAMS((idl, mods, m, r, td, parent, choice), FILE* idl _AND_ ModuleList* mods _AND_ Module* m _AND_ IDLRules* r _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* choice)
 {
 	NamedType* e;
 
@@ -265,17 +232,8 @@ PrintIDLChoiceDefCode PARAMS((idl, mods, m, r, td, parent, choice),
 	fprintf(idl, "  };\n\n");
 } /* PrintIDLChoiceDefCode */
 
-
 /*\[sep]--------------------------------------------------------------------------------------------------------------------------*/
-static void
-PrintIDLSeqDefCode PARAMS((idl, mods, m, r, td, parent, seq),
-	FILE* idl _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	IDLRules* r _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	Type* seq)
+static void PrintIDLSeqDefCode PARAMS((idl, mods, m, r, td, parent, seq), FILE* idl _AND_ ModuleList* mods _AND_ Module* m _AND_ IDLRules* r _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* seq)
 {
 	NamedType* e;
 
@@ -296,15 +254,7 @@ PrintIDLSeqDefCode PARAMS((idl, mods, m, r, td, parent, seq),
 } /* PrintIDLSeqDefCode */
 
 /*\[sep]--------------------------------------------------------------------------------------------------------------------------*/
-static void
-PrintIDLSetDefCode PARAMS((idl, mods, m, r, td, parent, set),
-	FILE* idl _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	IDLRules* r _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	Type* set)
+static void PrintIDLSetDefCode PARAMS((idl, mods, m, r, td, parent, set), FILE* idl _AND_ ModuleList* mods _AND_ Module* m _AND_ IDLRules* r _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* set)
 {
 	NamedType* e;
 
@@ -324,15 +274,7 @@ PrintIDLSetDefCode PARAMS((idl, mods, m, r, td, parent, set),
 } /* PrintIDLSetDefCode */
 
 /*\[sep]--------------------------------------------------------------------------------------------------------------------------*/
-static void
-PrintCxxSetOfDefCode PARAMS((idl, mods, m, r, td, parent, setOf),
-	FILE* idl _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	IDLRules* r _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	Type* setOf)
+static void PrintCxxSetOfDefCode PARAMS((idl, mods, m, r, td, parent, setOf), FILE* idl _AND_ ModuleList* mods _AND_ Module* m _AND_ IDLRules* r _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* setOf)
 {
 	char* lcn; /* list class name */
 	char* ecn; /* (list) elmt class name */
@@ -343,17 +285,8 @@ PrintCxxSetOfDefCode PARAMS((idl, mods, m, r, td, parent, setOf),
 
 } /* PrintCxxSetOfDefCode */
 
-
 /*\[sep]--------------------------------------------------------------------------------------------------------------------------*/
-static void
-PrintCxxAnyDefCode PARAMS((idl, mods, m, r, td, parent, any),
-	FILE* idl _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	IDLRules* r _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	Type* any)
+static void PrintCxxAnyDefCode PARAMS((idl, mods, m, r, td, parent, any), FILE* idl _AND_ ModuleList* mods _AND_ Module* m _AND_ IDLRules* r _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* any)
 {
 	fprintf(idl, "  /* ");
 	SpecialPrintType(idl, td, td->type);
@@ -361,86 +294,72 @@ PrintCxxAnyDefCode PARAMS((idl, mods, m, r, td, parent, any),
 	fprintf(idl, "  typedef %s %s;\n\n", td->type->idlTypeRefInfo->typeName, td->idlTypeDefInfo->typeName);
 } /* PrintCxxAnyDefCode */
 
-
 /*\[sep]--------------------------------------------------------------------------------------------------------------------------*/
-static void
-PrintIDLTypeDefCode PARAMS((idl, mods, m, r, td),
-	FILE* idl _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	IDLRules* r _AND_
-	TypeDef* td)
+static void PrintIDLTypeDefCode PARAMS((idl, mods, m, r, td), FILE* idl _AND_ ModuleList* mods _AND_ Module* m _AND_ IDLRules* r _AND_ TypeDef* td)
 {
 	switch (td->type->basicType->choiceId)
 	{
-	case BASICTYPE_BOOLEAN:  /* library type */
-	case BASICTYPE_REAL:  /* library type */
-	case BASICTYPE_OCTETSTRING:  /* library type */
-	case BASICTYPE_NULL:  /* library type */
-	case BASICTYPE_OID:  /* library type */
-	case BASICTYPE_RELATIVE_OID:
-	case BASICTYPE_INTEGER:  /* library type */
-	case BASICTYPE_BITSTRING:  /* library type */
-	case BASICTYPE_ENUMERATED:  /* library type */
-		PrintIDLSimpleDef(idl, r, td);
-		break;
+		case BASICTYPE_BOOLEAN:		/* library type */
+		case BASICTYPE_REAL:		/* library type */
+		case BASICTYPE_OCTETSTRING: /* library type */
+		case BASICTYPE_NULL:		/* library type */
+		case BASICTYPE_OID:			/* library type */
+		case BASICTYPE_RELATIVE_OID:
+		case BASICTYPE_INTEGER:	   /* library type */
+		case BASICTYPE_BITSTRING:  /* library type */
+		case BASICTYPE_ENUMERATED: /* library type */
+			PrintIDLSimpleDef(idl, r, td);
+			break;
 
-	case BASICTYPE_SEQUENCEOF:  /* list types */
-	case BASICTYPE_SETOF:
-		PrintCxxSetOfDefCode(idl, mods, m, r, td, NULL, td->type);
-		break;
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			PrintCxxSetOfDefCode(idl, mods, m, r, td, NULL, td->type);
+			break;
 
-	case BASICTYPE_IMPORTTYPEREF:  /* type references */
-	case BASICTYPE_LOCALTYPEREF:
-		/*
-		 * if this type has been re-tagged then
-		 * must create new class instead of using a typedef
-		 */
-		PrintIDLSimpleDef(idl, r, td);
-		break;
+		case BASICTYPE_IMPORTTYPEREF: /* type references */
+		case BASICTYPE_LOCALTYPEREF:
+			/*
+			 * if this type has been re-tagged then
+			 * must create new class instead of using a typedef
+			 */
+			PrintIDLSimpleDef(idl, r, td);
+			break;
 
-	case BASICTYPE_ANYDEFINEDBY:  /* ANY types */
-	case BASICTYPE_ANY:
-		/*
-					fprintf (errFileG, "  ANY types require modification. ");
-					fprintf (errFileG, "  The source files will have a \" ANY - Fix Me! \" comment before related code.\n\n");
-		*/
-		PrintCxxAnyDefCode(idl, mods, m, r, td, NULL, td->type);
-		break;
+		case BASICTYPE_ANYDEFINEDBY: /* ANY types */
+		case BASICTYPE_ANY:
+			/*
+						fprintf (errFileG, "  ANY types require modification. ");
+						fprintf (errFileG, "  The source files will have a \" ANY - Fix Me! \" comment before related code.\n\n");
+			*/
+			PrintCxxAnyDefCode(idl, mods, m, r, td, NULL, td->type);
+			break;
 
-	case BASICTYPE_CHOICE:
-		PrintIDLChoiceDefCode(idl, mods, m, r, td, NULL, td->type);
-		break;
+		case BASICTYPE_CHOICE:
+			PrintIDLChoiceDefCode(idl, mods, m, r, td, NULL, td->type);
+			break;
 
-	case BASICTYPE_SET:
-		PrintIDLSetDefCode(idl, mods, m, r, td, NULL, td->type);
-		break;
+		case BASICTYPE_SET:
+			PrintIDLSetDefCode(idl, mods, m, r, td, NULL, td->type);
+			break;
 
-	case BASICTYPE_SEQUENCE:
-		PrintIDLSeqDefCode(idl, mods, m, r, td, NULL, td->type);
-		break;
+		case BASICTYPE_SEQUENCE:
+			PrintIDLSeqDefCode(idl, mods, m, r, td, NULL, td->type);
+			break;
 
-	case BASICTYPE_COMPONENTSOF:
-	case BASICTYPE_SELECTION:
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_MACRODEF:
-	case BASICTYPE_MACROTYPE:
-		/* do nothing */
-		break;
-	default:
-		break;
+		case BASICTYPE_COMPONENTSOF:
+		case BASICTYPE_SELECTION:
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_MACRODEF:
+		case BASICTYPE_MACROTYPE:
+			/* do nothing */
+			break;
+		default:
+			break;
 	}
 } /* PrintIDLTypeDefCode */
 
 /*\[sep]--------------------------------------------------------------------------------------------------------------------------*/
-void
-PrintIDLCode PARAMS((idl, mods, m, r, longJmpVal),
-	FILE* idl _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	IDLRules* r _AND_
-	long	longJmpVal _AND_
-	int		printValues)
+void PrintIDLCode PARAMS((idl, mods, m, r, longJmpVal), FILE* idl _AND_ ModuleList* mods _AND_ Module* m _AND_ IDLRules* r _AND_ long longJmpVal _AND_ int printValues)
 {
 	TypeDef* td;
 	ValueDef* vd;
@@ -459,7 +378,7 @@ PrintIDLCode PARAMS((idl, mods, m, r, longJmpVal),
 	fprintf(idl, "  //----------------------------------------------------------------------------\n");
 	fprintf(idl, "  // type declarations:\n\n");
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
-		PrintTypeDecl(idl, td);
+	PrintTypeDecl(idl, td);
 	fprintf(idl, "\n");
 
 	if (printValues)
@@ -467,7 +386,7 @@ PrintIDLCode PARAMS((idl, mods, m, r, longJmpVal),
 		fprintf(idl, "  //----------------------------------------------------------------------------\n");
 		fprintf(idl, "  // value definitions:\n\n");
 		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
-			PrintIDLValueDef(idl, r, vd);
+		PrintIDLValueDef(idl, r, vd);
 		fprintf(idl, "\n");
 	}
 
