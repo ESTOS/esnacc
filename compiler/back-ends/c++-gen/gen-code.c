@@ -219,7 +219,7 @@ void PrintConstructor(FILE* hdr, FILE* src, Module* m, char* className)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "%s::%s()\n{\n", className, className);
 
-	if (IsDeprecatedFlaggedSequence(m, className))
+	if (IsDeprecatedNoOutputSequence(m, className))
 		fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Object(\"%s\", \"%s\");\n", m->moduleName, className);
 
 	fprintf(src, "\tInit();\n");
@@ -232,7 +232,7 @@ void PrintCopyConstructor(FILE* hdr, FILE* src, Module* m, char* className)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "%s::%s(const %s &that)\n{\n", className, className, className);
 
-	if (IsDeprecatedFlaggedSequence(m, className))
+	if (IsDeprecatedNoOutputSequence(m, className))
 		fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Object(\"%s\", \"%s\");\n", m->moduleName, className);
 
 	fprintf(src, "\tInit();\n");
@@ -1096,7 +1096,7 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 			fprintf(src, "\t\t\t\tpBase->PrintAsnType(false, &argument, pinvoke);\n");
 			fprintf(src, "\n");
 
-			if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(mod, vd->definedName))
 			{
 				fprintf(src, "\t\t\t// This method has been flagged deprecated\n");
 				fprintf(src, "\t\t\tSNACCDeprecated::DeprecatedASN1Method(\"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::in%s);\n\n", mod->moduleName, vd->definedName, pszResult ? ", cxt" : "");
@@ -1302,7 +1302,7 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			fprintf(src, "\tif(m_pSB->GetLogLevel(true))\n");
 			fprintf(src, "\t\tm_pSB->PrintAsnType(true, argument, &InvokeMsg);\n\n");
 
-			if (IsDeprecatedFlaggedOperation(m, vd->definedName))
+			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 			{
 				fprintf(src, "\t// This method has been flagged deprecated\n");
 				fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Method(\"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out%s);\n\n", m->moduleName, vd->definedName, pszResult ? ", cxt" : "");
@@ -1717,7 +1717,7 @@ void PrintChoiceDefCodeBerEncodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 	fprintf(src, "\t{\n");
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
 	{
-		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
 
 		cxxtri = e->type->cxxTypeRefInfo;
@@ -1829,7 +1829,7 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 	fprintf(src, "\t{\n");
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
 	{
-		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
 
 		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
@@ -2141,7 +2141,7 @@ void PrintChoiceDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 	fprintf(src, "\t{\n");
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
 	{
-		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
 
 		cxxtri = e->type->cxxTypeRefInfo;
@@ -2189,7 +2189,7 @@ void PrintChoiceDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
 	{
-		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
 
 		cxxtri = e->type->cxxTypeRefInfo;
@@ -4784,7 +4784,7 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 	bool bHasDeprecatedElements = false;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
-		if (IsDeprecatedFlaggedSequence(m, td->definedName))
+		if (IsDeprecatedNoOutputSequence(m, td->definedName))
 		{
 			// Special for the SNACCROSE header as it is place in the include folder
 			// The generated code for the product that is using the snacc lib is placed into a different folder and thus needs a different place to look for the includes
