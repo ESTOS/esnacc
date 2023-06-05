@@ -1,4 +1,4 @@
-# json cpp comes from https://github.com/open-source-parsers/jsoncpp and should not receive any formatting
+BasedOnStyle:  LLVM
+DerivePointerAlignment: false
+PointerAlignment: Left
 
-DisableFormat: true
-SortIncludes: false
