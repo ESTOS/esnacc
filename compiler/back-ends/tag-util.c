@@ -65,43 +65,40 @@
 #include "tag-util.h"
 #include <memory.h>
 
- /*
-  * returns the tags for the given type (stops at next type definition).
-  * if no tags have been grabbed yet and an untagged CHOICE is encountered,
-  * all of the CHOICE's top level tags are returned and the stoleChoiceTags
-  * flag is set.  If the type has no tags an empty list is returned, not
-  * NULL.
-  *
-  * ASSUMES: tag list's and implicit flags have been adjusted according
-  *          to module level IMPLICIT/EXPLICIT-TAGS and type level
-  *          IMPLICIT/EXPLICIT tagging.
-  *
-  * EXAMPLE:
-  *
-  *   typeX ::= SEQUENCE                         SomeChoice ::= CHOICE
-  *   {                                          {
-  *         foo [0] INTEGER,                          [0] INTEGER,
-  *         bar SomeChoice,                           [1] BOOLEAN,
-  *         bell [1] IMPLICIT BOOLEAN,                [2] IA5String
-  *         gumby [2] SomeChoice,                }
-			poki SomeOtherChoice
-  *   }
-  *
-  *  SomeOtherChoice ::= [APPLICATION 99] CHOICE { ....}
-  *
-  *  GetTags (foo's type) -->  CNTX 0, UNIV INTEGER_TAG_CODE   stoleChoiceTags = FALSE
-  *  GetTags (bar)        -->  CNTX 0, CNTX 1, CNTX 2   (SomeChoice Elmt's first Tags)
-  *                                                      stoleChoiceTags = TRUE
-  *  GetTags (bell)       -->  CNTX 1    stoleChoiceTags = FALSE
-  *  GetTags (gumby)      -->  CNTX 2    stoleChoiceTags = FALSE
-  *  GetTags (poki)       -->  APPLICATION 99    stoleChoiceTags = FALSE
-  *
-  * MS 92/03/04 Added tag form information
-  */
-TagList*
-GetTags PARAMS((t, stoleChoiceTags),
-	Type* t _AND_
-	int* stoleChoiceTags)
+/*
+ * returns the tags for the given type (stops at next type definition).
+ * if no tags have been grabbed yet and an untagged CHOICE is encountered,
+ * all of the CHOICE's top level tags are returned and the stoleChoiceTags
+ * flag is set.  If the type has no tags an empty list is returned, not
+ * NULL.
+ *
+ * ASSUMES: tag list's and implicit flags have been adjusted according
+ *          to module level IMPLICIT/EXPLICIT-TAGS and type level
+ *          IMPLICIT/EXPLICIT tagging.
+ *
+ * EXAMPLE:
+ *
+ *   typeX ::= SEQUENCE                         SomeChoice ::= CHOICE
+ *   {                                          {
+ *         foo [0] INTEGER,                          [0] INTEGER,
+ *         bar SomeChoice,                           [1] BOOLEAN,
+ *         bell [1] IMPLICIT BOOLEAN,                [2] IA5String
+ *         gumby [2] SomeChoice,                }
+		   poki SomeOtherChoice
+ *   }
+ *
+ *  SomeOtherChoice ::= [APPLICATION 99] CHOICE { ....}
+ *
+ *  GetTags (foo's type) -->  CNTX 0, UNIV INTEGER_TAG_CODE   stoleChoiceTags = FALSE
+ *  GetTags (bar)        -->  CNTX 0, CNTX 1, CNTX 2   (SomeChoice Elmt's first Tags)
+ *                                                      stoleChoiceTags = TRUE
+ *  GetTags (bell)       -->  CNTX 1    stoleChoiceTags = FALSE
+ *  GetTags (gumby)      -->  CNTX 2    stoleChoiceTags = FALSE
+ *  GetTags (poki)       -->  APPLICATION 99    stoleChoiceTags = FALSE
+ *
+ * MS 92/03/04 Added tag form information
+ */
+TagList* GetTags PARAMS((t, stoleChoiceTags), Type* t _AND_ int* stoleChoiceTags)
 {
 	Tag* tag;
 	TagList* tl;
@@ -133,19 +130,16 @@ GetTags PARAMS((t, stoleChoiceTags),
 			memcpy(tagCopy, tag, sizeof(Tag));
 			tagHndl = (Tag**)AsnListAppend(retVal);
 			*tagHndl = tagCopy;
-
 		}
 
 		/*
 		 * follow tags of referenced types
 		 */
 
-		if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-			(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+		if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 		{
 			if (!implicitRef)
 				implicitRef = t->implicit;
-
 
 			if (t->basicType->a.localTypeRef->link == NULL)
 			{
@@ -164,7 +158,6 @@ GetTags PARAMS((t, stoleChoiceTags),
 					implicitRef = FALSE;
 				}
 			}
-
 		}
 
 		/*
@@ -211,13 +204,12 @@ GetTags PARAMS((t, stoleChoiceTags),
 				FreeTags(tl);
 			}
 
-			break;  /* exit for loop */
+			break; /* exit for loop */
 		}
 
 		else
 			break; /* exit for loop */
 	}
-
 
 	if (!*stoleChoiceTags && (retVal != NULL) && !LIST_EMPTY(retVal))
 	{
@@ -232,12 +224,9 @@ GetTags PARAMS((t, stoleChoiceTags),
 	AsnListFirst(retVal);
 	return retVal;
 
-}  /* GetTags */
+} /* GetTags */
 
-
-void
-FreeTags PARAMS((tl),
-	TagList* tl)
+void FreeTags PARAMS((tl), TagList* tl)
 {
 	Tag* tag;
 	AsnListNode* listNode;
@@ -250,7 +239,7 @@ FreeTags PARAMS((tl),
 	}
 
 	/* free list nodes */
-	for (ln = FIRST_LIST_NODE(tl); ln != NULL; )
+	for (ln = FIRST_LIST_NODE(tl); ln != NULL;)
 	{
 		listNode = ln;
 		ln = ln->next;
@@ -260,15 +249,13 @@ FreeTags PARAMS((tl),
 	/* free list head */
 	Free(tl);
 
-}  /* FreeTags */
+} /* FreeTags */
 
 /*
  * Returns the number of tags that GetTags would return for
  * the same type.
  */
-int
-CountTags PARAMS((t),
-	Type* t)
+int CountTags PARAMS((t), Type* t)
 {
 	int tagCount;
 	Tag* tag;
@@ -297,12 +284,10 @@ CountTags PARAMS((t),
 		 * follow tags of referenced types
 		 */
 
-		if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-			(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+		if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 		{
 			if (!implicitRef)
 				implicitRef = t->implicit;
-
 
 			if (t->basicType->a.localTypeRef->link == NULL)
 			{
@@ -321,7 +306,6 @@ CountTags PARAMS((t),
 					implicitRef = FALSE;
 				}
 			}
-
 		}
 		else
 			break;
@@ -329,12 +313,9 @@ CountTags PARAMS((t),
 
 	return tagCount;
 
-}  /* CountTags */
+} /* CountTags */
 
-
-unsigned long
-TagByteLen PARAMS((tagCode),
-	unsigned long tagCode)
+unsigned long TagByteLen PARAMS((tagCode), unsigned long tagCode)
 {
 	unsigned long tagLen;
 
@@ -352,186 +333,171 @@ TagByteLen PARAMS((tagCode),
 	return tagLen;
 } /* TagByteLen */
 
-
-
-char*
-Class2ClassStr PARAMS((class),
-	int class)
+char* Class2ClassStr PARAMS((class), int class)
 {
 	switch (class)
 	{
-	case UNIV:
-		return "UNIV";
-		break;
+		case UNIV:
+			return "UNIV";
+			break;
 
-	case APPL:
-		return "APPL";
-		break;
+		case APPL:
+			return "APPL";
+			break;
 
-	case CNTX:
-		return "CNTX";
-		break;
+		case CNTX:
+			return "CNTX";
+			break;
 
-	case PRIV:
-		return "PRIV";
-		break;
+		case PRIV:
+			return "PRIV";
+			break;
 
-	default:
-		return "UNKNOWN";
-		break;
+		default:
+			return "UNKNOWN";
+			break;
 	}
 } /* Class2ClassStr */
 
-
-
-char*
-Form2FormStr PARAMS((form),
-	BER_FORM form)
+char* Form2FormStr PARAMS((form), BER_FORM form)
 {
 	switch (form)
 	{
-	case PRIM:
-		return "PRIM";
-		break;
+		case PRIM:
+			return "PRIM";
+			break;
 
-	case CONS:
-		return "CONS";
-		break;
+		case CONS:
+			return "CONS";
+			break;
 
-	default:
-		return "UNKNOWN";
-		break;
+		default:
+			return "UNKNOWN";
+			break;
 	}
 } /* Form2FormStr */
 
-
-
-char*
-Code2UnivCodeStr PARAMS((code),
-	BER_UNIV_CODE code)
+char* Code2UnivCodeStr PARAMS((code), BER_UNIV_CODE code)
 {
-	//static char UNKNOWN_TAG_CODE[10];
-
+	// static char UNKNOWN_TAG_CODE[10];
 
 	switch (code)
 	{
-	case BOOLEAN_TAG_CODE:
-		return "BOOLEAN_TAG_CODE";
-		break;
+		case BOOLEAN_TAG_CODE:
+			return "BOOLEAN_TAG_CODE";
+			break;
 
-	case INTEGER_TAG_CODE:
-		return "INTEGER_TAG_CODE";
-		break;
+		case INTEGER_TAG_CODE:
+			return "INTEGER_TAG_CODE";
+			break;
 
-	case BITSTRING_TAG_CODE:
-		return "BITSTRING_TAG_CODE";
-		break;
+		case BITSTRING_TAG_CODE:
+			return "BITSTRING_TAG_CODE";
+			break;
 
-	case OCTETSTRING_TAG_CODE:
-		return "OCTETSTRING_TAG_CODE";
-		break;
+		case OCTETSTRING_TAG_CODE:
+			return "OCTETSTRING_TAG_CODE";
+			break;
 
-	case NULLTYPE_TAG_CODE:
-		return "NULLTYPE_TAG_CODE";
-		break;
+		case NULLTYPE_TAG_CODE:
+			return "NULLTYPE_TAG_CODE";
+			break;
 
-	case OID_TAG_CODE:
-		return "OID_TAG_CODE";
-		break;
+		case OID_TAG_CODE:
+			return "OID_TAG_CODE";
+			break;
 
-	case OD_TAG_CODE:
-		return "OD_TAG_CODE";
-		break;
+		case OD_TAG_CODE:
+			return "OD_TAG_CODE";
+			break;
 
-	case EXTERNAL_TAG_CODE:
-		return "EXTERNAL_TAG_CODE";
-		break;
+		case EXTERNAL_TAG_CODE:
+			return "EXTERNAL_TAG_CODE";
+			break;
 
-	case REAL_TAG_CODE:
-		return "REAL_TAG_CODE";
-		break;
+		case REAL_TAG_CODE:
+			return "REAL_TAG_CODE";
+			break;
 
-	case ENUM_TAG_CODE:
-		return "ENUM_TAG_CODE";
-		break;
+		case ENUM_TAG_CODE:
+			return "ENUM_TAG_CODE";
+			break;
 
-	case SEQ_TAG_CODE:
-		return "SEQ_TAG_CODE";
-		break;
+		case SEQ_TAG_CODE:
+			return "SEQ_TAG_CODE";
+			break;
 
-	case SET_TAG_CODE:
-		return "SET_TAG_CODE";
-		break;
+		case SET_TAG_CODE:
+			return "SET_TAG_CODE";
+			break;
 
-	case NUMERICSTRING_TAG_CODE:
-		return "NUMERICSTRING_TAG_CODE";
-		break;
+		case NUMERICSTRING_TAG_CODE:
+			return "NUMERICSTRING_TAG_CODE";
+			break;
 
-	case PRINTABLESTRING_TAG_CODE:
-		return "PRINTABLESTRING_TAG_CODE";
-		break;
+		case PRINTABLESTRING_TAG_CODE:
+			return "PRINTABLESTRING_TAG_CODE";
+			break;
 
-	case TELETEXSTRING_TAG_CODE:
-		return "TELETEXSTRING_TAG_CODE";
-		break;
+		case TELETEXSTRING_TAG_CODE:
+			return "TELETEXSTRING_TAG_CODE";
+			break;
 
-	case VIDEOTEXSTRING_TAG_CODE:
-		return "VIDEOTEXSTRING_TAG_CODE";
-		break;
+		case VIDEOTEXSTRING_TAG_CODE:
+			return "VIDEOTEXSTRING_TAG_CODE";
+			break;
 
-	case IA5STRING_TAG_CODE:
-		return "IA5STRING_TAG_CODE";
-		break;
+		case IA5STRING_TAG_CODE:
+			return "IA5STRING_TAG_CODE";
+			break;
 
-	case UTCTIME_TAG_CODE:
-		return "UTCTIME_TAG_CODE";
-		break;
+		case UTCTIME_TAG_CODE:
+			return "UTCTIME_TAG_CODE";
+			break;
 
-	case GENERALIZEDTIME_TAG_CODE:
-		return "GENERALIZEDTIME_TAG_CODE";
-		break;
+		case GENERALIZEDTIME_TAG_CODE:
+			return "GENERALIZEDTIME_TAG_CODE";
+			break;
 
-	case GRAPHICSTRING_TAG_CODE:
-		return "GRAPHICSTRING_TAG_CODE";
-		break;
+		case GRAPHICSTRING_TAG_CODE:
+			return "GRAPHICSTRING_TAG_CODE";
+			break;
 
-	case VISIBLESTRING_TAG_CODE:
-		return "VISIBLESTRING_TAG_CODE";
-		break;
+		case VISIBLESTRING_TAG_CODE:
+			return "VISIBLESTRING_TAG_CODE";
+			break;
 
-	case GENERALSTRING_TAG_CODE:
-		return "GENERALSTRING_TAG_CODE";
-		break;
+		case GENERALSTRING_TAG_CODE:
+			return "GENERALSTRING_TAG_CODE";
+			break;
 
-	case UNIVERSALSTRING_TAG_CODE:
-		return "UNIVERSALSTRING_TAG_CODE";
-		break;
+		case UNIVERSALSTRING_TAG_CODE:
+			return "UNIVERSALSTRING_TAG_CODE";
+			break;
 
-	case BMPSTRING_TAG_CODE:
-		return "BMPSTRING_TAG_CODE";
-		break;
+		case BMPSTRING_TAG_CODE:
+			return "BMPSTRING_TAG_CODE";
+			break;
 
-	case UTF8STRING_TAG_CODE:
-		return "UTF8STRING_TAG_CODE";
-		break;
+		case UTF8STRING_TAG_CODE:
+			return "UTF8STRING_TAG_CODE";
+			break;
 
-	default:
-	{
-		/* if the universal type is not known then just return the
-		 * unvisersal tag code.  This is useful for defining new types
-		 * in local modules w/o having to modify the compiler.
-		 */
-		static char retstring[3];
-		sprintf_s(retstring, 3, "%d", code);
-		return retstring;
-	}
+		default:
+			{
+				/* if the universal type is not known then just return the
+				 * unvisersal tag code.  This is useful for defining new types
+				 * in local modules w/o having to modify the compiler.
+				 */
+				static char retstring[3];
+				sprintf_s(retstring, 3, "%d", code);
+				return retstring;
+			}
 	}
 } /* TagId2FormStr */
 
 /* Compare the tags of two types */
-int CmpTags PARAMS((a, b),
-	Type* a _AND_
-	Type* b)
+int CmpTags PARAMS((a, b), Type* a _AND_ Type* b)
 {
 	TagList* t1;
 	TagList* t2;
@@ -551,9 +517,11 @@ int CmpTags PARAMS((a, b),
 	len2 = 0;
 
 	/* Get tags for item 1 */
-	FOR_EACH_LIST_ELMT(tg1, t1) {
+	FOR_EACH_LIST_ELMT(tg1, t1)
+	{
 		tagBuf1[len1++] = MAKE_TAG_ID(tg1->tclass, tg1->form, tg1->code);
-		if (len1 == 256) {
+		if (len1 == 256)
+		{
 			/* XXX Can do better than this */
 			fprintf(errFileG, "CmpTags: Tag length too long");
 			abort();
@@ -561,9 +529,11 @@ int CmpTags PARAMS((a, b),
 	}
 
 	/* Get tags for item2 */
-	FOR_EACH_LIST_ELMT(tg2, t2) {
+	FOR_EACH_LIST_ELMT(tg2, t2)
+	{
 		tagBuf2[len2++] = MAKE_TAG_ID(tg2->tclass, tg2->form, tg2->code);
-		if (len1 == 256) {
+		if (len1 == 256)
+		{
 			/* XXX Can do better than this */
 			fprintf(errFileG, "CmpTags: Tag length too long");
 			abort();
@@ -573,15 +543,11 @@ int CmpTags PARAMS((a, b),
 	/* Compare results */
 	min = (len1 > len2) ? len2 : len1;
 	cmp = memcmp(tagBuf1, tagBuf2, min * sizeof(unsigned));
-	if (cmp != 0) {
+	if (cmp != 0)
 		return cmp;
-	}
-	else {
+	else
 		return len1 - len2;
-	}
-
 }
-
 
 //
 //
@@ -589,7 +555,7 @@ char* DetermineCode(Tag* tag, int* ptagLen, int bJustIntegerFlag)
 {
 	static char retstring[5];
 	char* codeStr = NULL;
-	int iValue = 500;     // WILL indicate a problem on source creation...
+	int iValue = 500; // WILL indicate a problem on source creation...
 
 	if (tag->valueRef == NULL)
 	{
@@ -601,59 +567,41 @@ char* DetermineCode(Tag* tag, int* ptagLen, int bJustIntegerFlag)
 		{
 			sprintf_s(retstring, 5, "%d", tag->code);
 			codeStr = retstring;
-		}       // END IF bJustIntegerFlag
+		} // END IF bJustIntegerFlag
 		if (ptagLen)
 			*ptagLen = TagByteLen(tag->code);
 	}
 	else
 	{
-		if (tag->valueRef && tag->valueRef->basicValue &&
-			tag->valueRef->basicValue->choiceId == BASICVALUE_LOCALVALUEREF &&
-			tag->valueRef->basicValue->a.localValueRef &&
-			tag->valueRef->basicValue->a.localValueRef->link &&
-			tag->valueRef->basicValue->a.localValueRef->link->value &&
-			tag->valueRef->basicValue->a.localValueRef->link->value->basicValue)
+		if (tag->valueRef && tag->valueRef->basicValue && tag->valueRef->basicValue->choiceId == BASICVALUE_LOCALVALUEREF && tag->valueRef->basicValue->a.localValueRef && tag->valueRef->basicValue->a.localValueRef->link && tag->valueRef->basicValue->a.localValueRef->link->value && tag->valueRef->basicValue->a.localValueRef->link->value->basicValue)
 		{
-			if (tag->valueRef->basicValue->a.localValueRef->link->value->basicValue->choiceId ==
-				BASICVALUE_INTEGER)
+			if (tag->valueRef->basicValue->a.localValueRef->link->value->basicValue->choiceId == BASICVALUE_INTEGER)
 			{
-				iValue = tag->valueRef->basicValue->a.localValueRef->link->
-					value->basicValue->a.integer;
-			}       // IF Integer
-			else if (tag->valueRef->basicValue->a.localValueRef->link->value->basicValue->choiceId ==
-				BASICVALUE_LOCALVALUEREF)
+				iValue = tag->valueRef->basicValue->a.localValueRef->link->value->basicValue->a.integer;
+			} // IF Integer
+			else if (tag->valueRef->basicValue->a.localValueRef->link->value->basicValue->choiceId == BASICVALUE_LOCALVALUEREF)
 			{
 				ValueRef* pvalueRef = NULL;
 				if (tag->valueRef->basicValue->a.localValueRef->link->value->basicValue->choiceId == BASICVALUE_LOCALVALUEREF)
 				{
 					pvalueRef = tag->valueRef->basicValue->a.localValueRef->link->value->basicValue->a.localValueRef;
-					if (pvalueRef->link->value && pvalueRef->link->value->basicValue &&
-						pvalueRef->link->value->basicValue->choiceId == BASICVALUE_INTEGER)
+					if (pvalueRef->link->value && pvalueRef->link->value->basicValue && pvalueRef->link->value->basicValue->choiceId == BASICVALUE_INTEGER)
 						iValue = pvalueRef->link->value->basicValue->a.integer;
 				}
-			}       // END IF Integer/Import
+			} // END IF Integer/Import
 			else
 			{
 				printf("Tag value type NOT RECOGNIZED; COULD NOT RESOLVE tag integer!\n");
 			}
 		}
-		else if (tag->valueRef->basicValue->choiceId == BASICVALUE_IMPORTVALUEREF &&
-			tag->valueRef->basicValue->a.importValueRef &&
-			tag->valueRef->basicValue->a.importValueRef->link &&
-			tag->valueRef->basicValue->a.importValueRef->link->value &&
-			tag->valueRef->basicValue->a.importValueRef->link->value->
-			basicValue &&
-			tag->valueRef->basicValue->a.importValueRef->link->value->
-			basicValue->choiceId == BASICVALUE_INTEGER)
+		else if (tag->valueRef->basicValue->choiceId == BASICVALUE_IMPORTVALUEREF && tag->valueRef->basicValue->a.importValueRef && tag->valueRef->basicValue->a.importValueRef->link && tag->valueRef->basicValue->a.importValueRef->link->value && tag->valueRef->basicValue->a.importValueRef->link->value->basicValue && tag->valueRef->basicValue->a.importValueRef->link->value->basicValue->choiceId == BASICVALUE_INTEGER)
 		{
-			iValue = tag->valueRef->basicValue->a.importValueRef->link->
-				value->basicValue->a.integer;
-		}       // END IF Integer/Import
+			iValue = tag->valueRef->basicValue->a.importValueRef->link->value->basicValue->a.integer;
+		} // END IF Integer/Import
 		sprintf_s(retstring, 5, "%d", iValue);
 		codeStr = retstring;
 		if (ptagLen)
 			*ptagLen = TagByteLen(iValue);
-	}       // END IF tag->valueRef
-	return(codeStr);
-}       // END DetermineCode(...)
-
+	} // END IF tag->valueRef
+	return (codeStr);
+} // END DetermineCode(...)

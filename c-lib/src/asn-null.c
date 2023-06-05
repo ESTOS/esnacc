@@ -69,14 +69,10 @@
 #include "../include/asn-tag.h"
 #include "../include/asn-null.h"
 
-
- /*
-  * encodes universal TAG LENGTH and Contents of and ASN.1 NULL
-  */
-AsnLen
-BEncAsnNull PARAMS((b, data),
-	GenBuf* b _AND_
-	AsnNull* data)
+/*
+ * encodes universal TAG LENGTH and Contents of and ASN.1 NULL
+ */
+AsnLen BEncAsnNull PARAMS((b, data), GenBuf* b _AND_ AsnNull* data)
 {
 	AsnLen len;
 
@@ -84,18 +80,12 @@ BEncAsnNull PARAMS((b, data),
 	len += BEncDefLen(b, len);
 	len += BEncTag1(b, UNIV, PRIM, NULLTYPE_TAG_CODE);
 	return len;
-}  /* BEncAsnNull */
-
+} /* BEncAsnNull */
 
 /*
  * decodes universal TAG LENGTH and Contents of and ASN.1 NULL
  */
-void
-BDecAsnNull PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnNull* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnNull PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ AsnNull* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnTag tag;
 	AsnLen elmtLen;
@@ -109,41 +99,26 @@ BDecAsnNull PARAMS((b, result, bytesDecoded, env),
 	elmtLen = BDecLen(b, bytesDecoded, env);
 	BDecAsnNullContent(b, tag, elmtLen, result, bytesDecoded, env);
 
-}  /* BDecAsnNull */
+} /* BDecAsnNull */
 
-
-void
-BDecAsnNullContent PARAMS((b, tagId, len, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnTag tagId _AND_
-	AsnLen len _AND_
-	AsnNull* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnNullContent PARAMS((b, tagId, len, result, bytesDecoded, env), GenBuf* b _AND_ AsnTag tagId _AND_ AsnLen len _AND_ AsnNull* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	if (len != 0)
 	{
 		Asn1Error("BDecAsnNullContent: ERROR - NULL type's len must be 0\n");
 		longjmp(env, -17);
 	}
-}  /* BDecAsnNullContent */
+} /* BDecAsnNullContent */
 
 /*
  * Prints the NULL value to the given FILE * in Value Notation.
  * ignores the indent.
  */
-void
-PrintAsnNull PARAMS((f, v, indent),
-	FILE* f _AND_
-	AsnNull* v _AND_
-	unsigned int indent)
+void PrintAsnNull PARAMS((f, v, indent), FILE* f _AND_ AsnNull* v _AND_ unsigned int indent)
 {
 	fprintf(f, "NULL");
 }
 
-
 void FreeAsnNull PARAMS((b), AsnNull* b)
 {
 }
-
-

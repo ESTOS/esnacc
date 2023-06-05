@@ -27,35 +27,25 @@ static char* indentTypeNameG = "unsigned int";
 static CRules* genPrintCRulesG;
 /* non-exported prototypes */
 
-static void PrintCPrintPrototype PROTO((FILE* hdr, TypeDef* td));
-static void PrintCPrintDeclaration PROTO((FILE* src, TypeDef* td));
-static void PrintCPrintDefine PROTO((FILE* hdr, TypeDef* td));
-static void PrintCPrintLocals PROTO((FILE* src, TypeDef* td));
+static void PrintCPrintPrototype PROTO((FILE * hdr, TypeDef* td));
+static void PrintCPrintDeclaration PROTO((FILE * src, TypeDef* td));
+static void PrintCPrintDefine PROTO((FILE * hdr, TypeDef* td));
+static void PrintCPrintLocals PROTO((FILE * src, TypeDef* td));
 /*
 static void PrintCPrintElmts PROTO ((FILE *src, TypeDef *td, Type *parent, NamedTypeList *elmts, char *varName));
 */
-static void PrintCChoiceElmtPrint PROTO((FILE* src, TypeDef* td, Type* parent, NamedTypeList* elmts, NamedType* e, char* varName));
+static void PrintCChoiceElmtPrint PROTO((FILE * src, TypeDef* td, Type* parent, NamedTypeList* elmts, NamedType* e, char* varName));
 
+static void PrintCElmtPrintWithIndent PROTO((FILE * src, TypeDef* td, Type* parent, NamedTypeList* elmts, NamedType* e, char* varName, int allOpt));
 
-static void PrintCElmtPrintWithIndent PROTO((FILE* src, TypeDef* td, Type* parent, NamedTypeList* elmts, NamedType* e, char* varName, int allOpt));
+static void PrintCChoicePrintRoutine PROTO((FILE * src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, TypeDef* td));
 
-static void PrintCChoicePrintRoutine PROTO((FILE* src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, TypeDef* td));
+static void PrintCSetPrintRoutine PROTO((FILE * src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, TypeDef* td));
+static void PrintCSeqPrintRoutine PROTO((FILE * src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, TypeDef* td));
+static void PrintCSeqOfPrintRoutine PROTO((FILE * src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, TypeDef* td));
+static void PrintCSetOfPrintRoutine PROTO((FILE * src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, TypeDef* td));
 
-static void PrintCSetPrintRoutine  PROTO((FILE* src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, TypeDef* td));
-static void PrintCSeqPrintRoutine  PROTO((FILE* src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, TypeDef* td));
-static void PrintCSeqOfPrintRoutine PROTO((FILE* src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, TypeDef* td));
-static void PrintCSetOfPrintRoutine PROTO((FILE* src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, TypeDef* td));
-
-
-
-void
-PrintCPrinter PARAMS((src, hdr, r, mods, m, td),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CRules* r _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	TypeDef* td)
+void PrintCPrinter PARAMS((src, hdr, r, mods, m, td), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ ModuleList* mods _AND_ Module* m _AND_ TypeDef* td)
 {
 	if ((td->cTypeDefInfo == NULL) || !(td->cTypeDefInfo->genPrintRoutine))
 		return;
@@ -63,123 +53,99 @@ PrintCPrinter PARAMS((src, hdr, r, mods, m, td),
 	genPrintCRulesG = r;
 	switch (td->type->basicType->choiceId)
 	{
-	case BASICTYPE_IMPORTTYPEREF:  /* type references */
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_BOOLEAN:  /* library type */
-	case BASICTYPE_REAL:  /* library type */
-	case BASICTYPE_OCTETSTRING:  /* library type */
-	case BASICTYPE_NULL:  /* library type */
-	case BASICTYPE_OID:  /* library type */
-	case BASICTYPE_RELATIVE_OID:
-	case BASICTYPE_INTEGER:  /* library type */
-		/*        case BASICTYPE_BIGINT:  */ /* library type */
-	case BASICTYPE_BITSTRING:  /* library type */
-	case BASICTYPE_ENUMERATED:  /* library type */
-	case BASICTYPE_ANYDEFINEDBY:  /* ANY types */
-	case BASICTYPE_ANY:
-	case BASICTYPE_NUMERIC_STR:
-	case BASICTYPE_PRINTABLE_STR:
-	case BASICTYPE_IA5_STR:
-	case BASICTYPE_BMP_STR:
-	case BASICTYPE_UNIVERSAL_STR:
-	case BASICTYPE_UTF8_STR:
-	case BASICTYPE_T61_STR:
-	case BASICTYPE_VISIBLE_STR:
-	case BASICTYPE_GENERALIZEDTIME:
-	case BASICTYPE_UTCTIME:
-		PrintCPrintDefine(hdr, td);
-		fprintf(hdr, "\n\n");
-		break;
+		case BASICTYPE_IMPORTTYPEREF: /* type references */
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_BOOLEAN:		/* library type */
+		case BASICTYPE_REAL:		/* library type */
+		case BASICTYPE_OCTETSTRING: /* library type */
+		case BASICTYPE_NULL:		/* library type */
+		case BASICTYPE_OID:			/* library type */
+		case BASICTYPE_RELATIVE_OID:
+		case BASICTYPE_INTEGER:					 /* library type */
+			/*        case BASICTYPE_BIGINT:  */ /* library type */
+		case BASICTYPE_BITSTRING:				 /* library type */
+		case BASICTYPE_ENUMERATED:				 /* library type */
+		case BASICTYPE_ANYDEFINEDBY:			 /* ANY types */
+		case BASICTYPE_ANY:
+		case BASICTYPE_NUMERIC_STR:
+		case BASICTYPE_PRINTABLE_STR:
+		case BASICTYPE_IA5_STR:
+		case BASICTYPE_BMP_STR:
+		case BASICTYPE_UNIVERSAL_STR:
+		case BASICTYPE_UTF8_STR:
+		case BASICTYPE_T61_STR:
+		case BASICTYPE_VISIBLE_STR:
+		case BASICTYPE_GENERALIZEDTIME:
+		case BASICTYPE_UTCTIME:
+			PrintCPrintDefine(hdr, td);
+			fprintf(hdr, "\n\n");
+			break;
 
-	case BASICTYPE_SETOF:
-		PrintCSetOfPrintRoutine(src, hdr, r, mods, m, td);
-		break;
+		case BASICTYPE_SETOF:
+			PrintCSetOfPrintRoutine(src, hdr, r, mods, m, td);
+			break;
 
-	case BASICTYPE_SEQUENCEOF:
-		PrintCSeqOfPrintRoutine(src, hdr, r, mods, m, td);
-		break;
+		case BASICTYPE_SEQUENCEOF:
+			PrintCSeqOfPrintRoutine(src, hdr, r, mods, m, td);
+			break;
 
-	case BASICTYPE_CHOICE:
-		PrintCChoicePrintRoutine(src, hdr, r, mods, m, td);
-		break;
+		case BASICTYPE_CHOICE:
+			PrintCChoicePrintRoutine(src, hdr, r, mods, m, td);
+			break;
 
-	case BASICTYPE_SET:
-		PrintCSetPrintRoutine(src, hdr, r, mods, m, td);
-		break;
+		case BASICTYPE_SET:
+			PrintCSetPrintRoutine(src, hdr, r, mods, m, td);
+			break;
 
+		case BASICTYPE_SEQUENCE:
+			PrintCSeqPrintRoutine(src, hdr, r, mods, m, td);
+			break;
 
-	case BASICTYPE_SEQUENCE:
-		PrintCSeqPrintRoutine(src, hdr, r, mods, m, td);
-		break;
-
-	default:
-		break;
+		default:
+			break;
 	}
-}  /*  PrintCPrint */
-
+} /*  PrintCPrint */
 
 /*
  * Prints prototype for encode routine in hdr file
  */
-static void
-PrintCPrintPrototype PARAMS((hdr, td),
-	FILE* hdr _AND_
-	TypeDef* td)
+static void PrintCPrintPrototype PARAMS((hdr, td), FILE* hdr _AND_ TypeDef* td)
 {
 	CTDI* ctdi;
 
 	ctdi = td->cTypeDefInfo;
-	fprintf(hdr, "%s %s PROTO ((%s f, %s *v, %s indent));\n", returnTypeG,
-		ctdi->printRoutineName, fileTypeNameG, ctdi->cTypeName,
-		indentTypeNameG);
+	fprintf(hdr, "%s %s PROTO ((%s f, %s *v, %s indent));\n", returnTypeG, ctdi->printRoutineName, fileTypeNameG, ctdi->cTypeName, indentTypeNameG);
 
-}  /*  PrintCPrintPrototype */
-
-
+} /*  PrintCPrintPrototype */
 
 /*
  * Prints declarations of encode routine for the given type def
  */
-static void
-PrintCPrintDeclaration PARAMS((src, td),
-	FILE* src _AND_
-	TypeDef* td)
+static void PrintCPrintDeclaration PARAMS((src, td), FILE* src _AND_ TypeDef* td)
 {
 	CTDI* ctdi;
 
 	ctdi = td->cTypeDefInfo;
-	fprintf(src, "%s\n%s PARAMS ((f, v, indent),\n%s f _AND_\n%s *v _AND_"
-		"\n%s indent)\n", returnTypeG, ctdi->printRoutineName, fileTypeNameG,
-		ctdi->cTypeName, indentTypeNameG);
+	fprintf(src,
+			"%s\n%s PARAMS ((f, v, indent),\n%s f _AND_\n%s *v _AND_"
+			"\n%s indent)\n",
+			returnTypeG, ctdi->printRoutineName, fileTypeNameG, ctdi->cTypeName, indentTypeNameG);
 
-}  /*  PrintCPrintDeclaration */
+} /*  PrintCPrintDeclaration */
 
-
-
-
-static void
-PrintCPrintDefine PARAMS((hdr, td),
-	FILE* hdr _AND_
-	TypeDef* td)
+static void PrintCPrintDefine PARAMS((hdr, td), FILE* hdr _AND_ TypeDef* td)
 {
 	fprintf(hdr, "#define %s %s", td->cTypeDefInfo->printRoutineName, td->type->cTypeRefInfo->printRoutineName);
 	/*
 		fprintf(hdr, "#define %s(f, v, indent)  ", td->cTypeDefInfo->printRoutineName);
 		fprintf (hdr, "%s (f, v, indent)", td->type->cTypeRefInfo->printRoutineName);
 	*/
-}  /*  PrintCPrintDefine */
+} /*  PrintCPrintDefine */
 
-
-
-
-static void
-PrintCPrintLocals PARAMS((src, td),
-	FILE* src _AND_
-	TypeDef* td)
+static void PrintCPrintLocals PARAMS((src, td), FILE* src _AND_ TypeDef* td)
 {
 	/* none yet */
-}  /*  PrintCPrintLocals */
-
+} /*  PrintCPrintLocals */
 
 /*
 static void
@@ -197,20 +163,11 @@ PrintCPrintElmts PARAMS ((src, td, parent, elmts, varName),
 		PrintCElmtPrint (src, td, parent, elmts, e, varName);
 }  PrintCPrintElmts */
 
-
-
 /*
  * Prints code for printing a CHOICE element
  *
  */
-static void
-PrintCChoiceElmtPrint PARAMS((src, td, parent, elmts, e, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts _AND_
-	NamedType* e _AND_
-	char* varName)
+static void PrintCChoiceElmtPrint PARAMS((src, td, parent, elmts, e, varName), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* elmts _AND_ NamedType* e _AND_ char* varName)
 {
 	char elmtVarRef[MAX_VAR_REF];
 
@@ -221,7 +178,7 @@ PrintCChoiceElmtPrint PARAMS((src, td, parent, elmts, e, varName),
 		fprintf(src, "\t\tfprintf (f, \"%s \");\n", e->fieldName);
 
 	fprintf(src, "\t\t%s (f, %s, indent);\n", e->type->cTypeRefInfo->printRoutineName, elmtVarRef);
-}  /*  PrintCChoiceElmtPrint */
+} /*  PrintCChoiceElmtPrint */
 
 /*
  * Prints code for printing an elmt of a SEQ or SET
@@ -242,15 +199,7 @@ PrintCChoiceElmtPrint PARAMS((src, td, parent, elmts, e, varName),
  * }
  */
 
-static void
-PrintCElmtPrintWithIndent PARAMS((src, td, parent, elmts, e, varName, allOpt),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts _AND_
-	NamedType* e _AND_
-	char* varName _AND_
-	int allOpt)
+static void PrintCElmtPrintWithIndent PARAMS((src, td, parent, elmts, e, varName, allOpt), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* elmts _AND_ NamedType* e _AND_ char* varName _AND_ int allOpt)
 {
 	CTRI* ctri;
 	char elmtVarRef[MAX_VAR_REF];
@@ -268,8 +217,7 @@ PrintCElmtPrintWithIndent PARAMS((src, td, parent, elmts, e, varName, allOpt),
 	/* if optional then put in NULL check */
 	if (e->type->optional || (e->type->defaultVal != NULL))
 	{
-		fprintf(src, "\tif (%s (%s))\n    {\n", ctri->optTestRoutineName,
-			elmtVarRef);
+		fprintf(src, "\tif (%s (%s))\n    {\n", ctri->optTestRoutineName, elmtVarRef);
 		tabStr = "\t\t";
 	}
 
@@ -290,30 +238,18 @@ PrintCElmtPrintWithIndent PARAMS((src, td, parent, elmts, e, varName, allOpt),
 	if (e->fieldName != NULL)
 		fprintf(src, "%sfprintf (f, \"%s \");\n", tabStr, e->fieldName);
 
-	fprintf(src, "%s%s (f, %s, indent + 1);\n", tabStr,
-		e->type->cTypeRefInfo->printRoutineName, elmtVarRef);
+	fprintf(src, "%s%s (f, %s, indent + 1);\n", tabStr, e->type->cTypeRefInfo->printRoutineName, elmtVarRef);
 
-	if ((e != LAST_LIST_ELMT(elmts)) &&
-		(!inTailOpts) &&
-		(!NextIsTailOptional(elmts)))
+	if ((e != LAST_LIST_ELMT(elmts)) && (!inTailOpts) && (!NextIsTailOptional(elmts)))
 		fprintf(src, "%sfprintf (f, \",\\n\");\n", tabStr);
-
 
 	/* write closing brkt for NULL check for optional elmts */
 	if (e->type->optional || (e->type->defaultVal != NULL))
 		fprintf(src, "\t}\n");
 
-}  /*  PrintCElmtPrintWithIndent */
+} /*  PrintCElmtPrintWithIndent */
 
-
-static void
-PrintCChoicePrintRoutine PARAMS((src, hdr, r, mods, m, td),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CRules* r _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	TypeDef* td)
+static void PrintCChoicePrintRoutine PARAMS((src, hdr, r, mods, m, td), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ ModuleList* mods _AND_ Module* m _AND_ TypeDef* td)
 {
 	NamedType* e;
 
@@ -322,8 +258,7 @@ PrintCChoicePrintRoutine PARAMS((src, hdr, r, mods, m, td),
 	PrintCPrintDeclaration(src, td);
 	fprintf(src, "{\n");
 	PrintCPrintLocals(src, td);
-	fprintf(src, "\tswitch (%s->%s)\n", valueArgNameG,
-		td->type->cTypeRefInfo->choiceIdEnumFieldName);
+	fprintf(src, "\tswitch (%s->%s)\n", valueArgNameG, td->type->cTypeRefInfo->choiceIdEnumFieldName);
 	fprintf(src, "\t{\n");
 
 	FOR_EACH_LIST_ELMT(e, td->type->basicType->a.choice)
@@ -336,16 +271,7 @@ PrintCChoicePrintRoutine PARAMS((src, hdr, r, mods, m, td),
 	fprintf(src, "}  /* %s */\n\n", td->cTypeDefInfo->printRoutineName);
 } /* PrintCChoicePrintRoutine */
 
-
-
-static void
-PrintCSetPrintRoutine PARAMS((src, hdr, r, mods, m, td),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CRules* r _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	TypeDef* td)
+static void PrintCSetPrintRoutine PARAMS((src, hdr, r, mods, m, td), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ ModuleList* mods _AND_ Module* m _AND_ TypeDef* td)
 {
 	NamedType* e;
 	int allOpt;
@@ -369,11 +295,9 @@ PrintCSetPrintRoutine PARAMS((src, hdr, r, mods, m, td),
 
 	fprintf(src, "\tfprintf (f,\"{ -- SET --\\n\");\n\n");
 
-
 	FOR_EACH_LIST_ELMT(e, td->type->basicType->a.set)
 	{
-		PrintCElmtPrintWithIndent(src, td, td->type,
-			td->type->basicType->a.set, e, valueArgNameG, allOpt);
+		PrintCElmtPrintWithIndent(src, td, td->type, td->type->basicType->a.set, e, valueArgNameG, allOpt);
 	}
 	fprintf(src, "\tfprintf (f, \"\\n\");\n");
 	fprintf(src, "\tIndent (f, indent);\n");
@@ -382,16 +306,7 @@ PrintCSetPrintRoutine PARAMS((src, hdr, r, mods, m, td),
 	fprintf(src, "}  /* %s */\n\n", td->cTypeDefInfo->printRoutineName);
 } /* PrintCSetPrintRoutine */
 
-
-
-static void
-PrintCSeqPrintRoutine PARAMS((src, hdr, r, mods, m, td),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CRules* r _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	TypeDef* td)
+static void PrintCSeqPrintRoutine PARAMS((src, hdr, r, mods, m, td), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ ModuleList* mods _AND_ Module* m _AND_ TypeDef* td)
 {
 	NamedType* e;
 	int allOpt;
@@ -417,8 +332,7 @@ PrintCSeqPrintRoutine PARAMS((src, hdr, r, mods, m, td),
 
 	FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
 	{
-		PrintCElmtPrintWithIndent(src, td, td->type,
-			td->type->basicType->a.sequence, e, valueArgNameG, allOpt);
+		PrintCElmtPrintWithIndent(src, td, td->type, td->type->basicType->a.sequence, e, valueArgNameG, allOpt);
 	}
 	fprintf(src, "\tfprintf (f, \"\\n\");\n");
 	fprintf(src, "\tIndent (f, indent);\n");
@@ -427,16 +341,7 @@ PrintCSeqPrintRoutine PARAMS((src, hdr, r, mods, m, td),
 	fprintf(src, "}  /* %s */\n\n", td->cTypeDefInfo->printRoutineName);
 } /* PrintCSeqPrintRoutine */
 
-
-
-static void
-PrintCSetOfPrintRoutine PARAMS((src, hdr, r, mods, m, td),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CRules* r _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	TypeDef* td)
+static void PrintCSetOfPrintRoutine PARAMS((src, hdr, r, mods, m, td), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ ModuleList* mods _AND_ Module* m _AND_ TypeDef* td)
 {
 
 	PrintCPrintPrototype(hdr, td);
@@ -445,8 +350,7 @@ PrintCSetOfPrintRoutine PARAMS((src, hdr, r, mods, m, td),
 	fprintf(src, "{\n");
 	PrintCPrintLocals(src, td);
 
-	fprintf(src, "\t%s *tmp;\n",
-		td->type->basicType->a.setOf->cTypeRefInfo->cTypeName);
+	fprintf(src, "\t%s *tmp;\n", td->type->basicType->a.setOf->cTypeRefInfo->cTypeName);
 
 	fprintf(src, "\tif (%s == NULL)\n", valueArgNameG);
 	fprintf(src, "\t\treturn;\n");
@@ -456,10 +360,8 @@ PrintCSetOfPrintRoutine PARAMS((src, hdr, r, mods, m, td),
 	fprintf(src, "\tFOR_EACH_LIST_ELMT (tmp, %s)\n", valueArgNameG);
 	fprintf(src, "\t{\n");
 	fprintf(src, "\t\tIndent (f, indent + 1);\n");
-	fprintf(src, "\t\t%s (f, tmp, indent + 1);\n",
-		td->type->basicType->a.setOf->cTypeRefInfo->printRoutineName);
-	fprintf(src, "\t\tif (tmp != (%s*)LAST_LIST_ELMT (%s))\n",
-		td->type->basicType->a.setOf->cTypeRefInfo->cTypeName, valueArgNameG);
+	fprintf(src, "\t\t%s (f, tmp, indent + 1);\n", td->type->basicType->a.setOf->cTypeRefInfo->printRoutineName);
+	fprintf(src, "\t\tif (tmp != (%s*)LAST_LIST_ELMT (%s))\n", td->type->basicType->a.setOf->cTypeRefInfo->cTypeName, valueArgNameG);
 	fprintf(src, "\t\t\tfprintf (f, \",\\n\");\n");
 	fprintf(src, "\t}\n");
 	fprintf(src, "\tfprintf (f, \"\\n\");\n");
@@ -469,14 +371,7 @@ PrintCSetOfPrintRoutine PARAMS((src, hdr, r, mods, m, td),
 	fprintf(src, "}  /* %s */\n\n", td->cTypeDefInfo->printRoutineName);
 } /* PrintCSetOfPrintRoutine */
 
-static void
-PrintCSeqOfPrintRoutine PARAMS((src, hdr, r, mods, m, td),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CRules* r _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	TypeDef* td)
+static void PrintCSeqOfPrintRoutine PARAMS((src, hdr, r, mods, m, td), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ ModuleList* mods _AND_ Module* m _AND_ TypeDef* td)
 {
 
 	PrintCPrintPrototype(hdr, td);
@@ -485,8 +380,7 @@ PrintCSeqOfPrintRoutine PARAMS((src, hdr, r, mods, m, td),
 	fprintf(src, "{\n");
 	PrintCPrintLocals(src, td);
 
-	fprintf(src, "\t%s *tmp;\n",
-		td->type->basicType->a.setOf->cTypeRefInfo->cTypeName);
+	fprintf(src, "\t%s *tmp;\n", td->type->basicType->a.setOf->cTypeRefInfo->cTypeName);
 
 	fprintf(src, "\tif (%s == NULL)\n", valueArgNameG);
 	fprintf(src, "\t\treturn;\n");
@@ -496,10 +390,8 @@ PrintCSeqOfPrintRoutine PARAMS((src, hdr, r, mods, m, td),
 	fprintf(src, "\tFOR_EACH_LIST_ELMT (tmp, %s)\n", valueArgNameG);
 	fprintf(src, "\t{\n");
 	fprintf(src, "\t\tIndent (f, indent+ 1);\n");
-	fprintf(src, "\t\t%s (f, tmp, indent + 1);\n",
-		td->type->basicType->a.setOf->cTypeRefInfo->printRoutineName);
-	fprintf(src, "\t\tif (tmp != (%s*)LAST_LIST_ELMT (%s))\n",
-		td->type->basicType->a.setOf->cTypeRefInfo->cTypeName, valueArgNameG);
+	fprintf(src, "\t\t%s (f, tmp, indent + 1);\n", td->type->basicType->a.setOf->cTypeRefInfo->printRoutineName);
+	fprintf(src, "\t\tif (tmp != (%s*)LAST_LIST_ELMT (%s))\n", td->type->basicType->a.setOf->cTypeRefInfo->cTypeName, valueArgNameG);
 	fprintf(src, "\t\t\tfprintf (f, \",\\n\");\n");
 	fprintf(src, "\t}\n");
 	fprintf(src, "\tfprintf (f, \"\\n\");\n");

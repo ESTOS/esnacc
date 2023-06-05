@@ -74,7 +74,7 @@
 
 #include <ctype.h>
 #if HAVE_UNISTD_H
-#include <unistd.h>  /* for pathconf (..) */
+#include <unistd.h> /* for pathconf (..) */
 #endif
 #include <string.h>
 #include <stdio.h>
@@ -84,10 +84,9 @@
 #include "c-gen/type-info.h"
 #include "str-util.h"
 
+#define DIGIT_TO_ASCII(d) (((d) % 10) + '0')
 
-#define DIGIT_TO_ASCII( d)	(((d) % 10) + '0')
-
-char gszOutputPath[100] = { 0 };
+char gszOutputPath[100] = {0};
 
 int IsCKeyWord PROTO((char* str));
 int IsCxxKeyWord PROTO((char* str));
@@ -96,9 +95,7 @@ int IsCxxKeyWord PROTO((char* str));
  * allocates new and returns a copy of the given
  * string with '-'s (dashes) replaced by  '_'s (underscores)
  */
-char*
-Asn1TypeName2CTypeName PARAMS((aName),
-	const char* aName)
+char* Asn1TypeName2CTypeName PARAMS((aName), const char* aName)
 {
 	char* retVal;
 	if (aName == NULL)
@@ -110,16 +107,13 @@ Asn1TypeName2CTypeName PARAMS((aName),
 	Dash2Underscore(retVal, strlen(retVal));
 
 	return retVal;
-}  /* Asn1TypeName2CTypeName */
-
+} /* Asn1TypeName2CTypeName */
 
 /*
  * allocates new str and returns a copy of the given
  * string with '-'s (dashes) replaced by  '_'s (underscores)
  */
-char*
-Asn1FieldName2CFieldName PARAMS((aName),
-	char* aName)
+char* Asn1FieldName2CFieldName PARAMS((aName), char* aName)
 {
 	char* retVal;
 	if (aName == NULL)
@@ -131,16 +125,13 @@ Asn1FieldName2CFieldName PARAMS((aName),
 	Dash2Underscore(retVal, strlen(retVal));
 
 	return retVal;
-}  /* Asn1FieldName2CFieldName */
-
+} /* Asn1FieldName2CFieldName */
 
 /*
  * allocates new str and returns a copy of the given
  * string with '-'s (dashes) replaced by  '_'s (underscores)
  */
-char*
-Asn1ValueName2CValueName PARAMS((aName),
-	char* aName)
+char* Asn1ValueName2CValueName PARAMS((aName), char* aName)
 {
 	char* retVal;
 	if (aName == NULL)
@@ -152,16 +143,13 @@ Asn1ValueName2CValueName PARAMS((aName),
 	Dash2Underscore(retVal, strlen(retVal));
 
 	return retVal;
-}  /* Asn1FieldName2CFieldName */
-
+} /* Asn1FieldName2CFieldName */
 
 /*
  * allocates and returns a string with all of
  * the caps from the given string
  */
-char*
-GetCaps PARAMS((str),
-	char* str)
+char* GetCaps PARAMS((str), char* str)
 {
 	int i, j;
 	char* retVal;
@@ -172,25 +160,20 @@ GetCaps PARAMS((str),
 	retVal = Malloc(strlen(str) + 1);
 
 	for (j = 0, i = 0; i < (int)strlen(str); i++)
-	{
 		if (isupper(str[i]))
 			retVal[j++] = str[i];
-	}
 
-	retVal[j] = '\0';  /* null terminate */
+	retVal[j] = '\0'; /* null terminate */
 
 	return retVal;
 
-}  /* GetCaps */
-
+} /* GetCaps */
 
 /*
  * allocates and returns a string with all of
  * the caps and digits from the given string
  */
-char*
-GetCapsAndDigits PARAMS((str),
-	char* str)
+char* GetCapsAndDigits PARAMS((str), char* str)
 {
 	int i, j;
 	char* retVal;
@@ -201,74 +184,53 @@ GetCapsAndDigits PARAMS((str),
 	retVal = Malloc(strlen(str) + 1);
 
 	for (j = 0, i = 0; i < (int)strlen(str); i++)
-	{
 		if ((isupper(str[i])) || (isdigit(str[i])))
 			retVal[j++] = str[i];
-	}
 
-	retVal[j] = '\0';  /* null terminate */
+	retVal[j] = '\0'; /* null terminate */
 
 	return retVal;
 
-}  /* GetCapsAndDigits */
-
+} /* GetCapsAndDigits */
 
 /*
  * replaces lowercase chars in given str
  * with upper case version
  * NOTE: modifies given str
  */
-void
-Str2UCase PARAMS((str, len),
-	char* str _AND_
-	size_t len)
+void Str2UCase PARAMS((str, len), char* str _AND_ size_t len)
 {
 	size_t i;
 	for (i = 0; i < len; i++)
-	{
 		if (islower(str[i]))
 			str[i] = (char)toupper(str[i]);
-	}
 } /* Str2UCase */
-
 
 /*
  * replaces uppercase chars in given str
  * with lower case version
  * NOTE: modifies given str
  */
-void
-Str2LCase PARAMS((str, len),
-	char* str _AND_
-	size_t len)
+void Str2LCase PARAMS((str, len), char* str _AND_ size_t len)
 {
-	size_t  i;
+	size_t i;
 	for (i = 0; i < len; i++)
-	{
 		if (isupper(str[i]))
 			str[i] = (char)tolower(str[i]);
-	}
 } /* Str2LCase */
-
 
 /*
  * replace dash chars in given str
  * with underscores
  * NOTE: modifies given str
  */
-void
-Dash2Underscore PARAMS((str, len),
-	char* str _AND_
-	size_t len)
+void Dash2Underscore PARAMS((str, len), char* str _AND_ size_t len)
 {
 	size_t i;
 	for (i = 0; i < len; i++)
-	{
 		if (str[i] == '-')
 			str[i] = '_';
-	}
 } /* Dash2Underscore */
-
 
 /*
  * tacks on the ascii version of the given digit
@@ -301,13 +263,10 @@ void AppendDigit(char* str, size_t bufferSize, int digit)
 		strcat_s(str, bufferSize, "0");
 	else
 	{
-		digitStr[currDigit] = '\0';  /* null terminate */
+		digitStr[currDigit] = '\0'; /* null terminate */
 		strcat_s(str, bufferSize, digitStr);
 	}
 } /* AppendDigit */
-
-
-
 
 /*
  * given a defined object list containing null termintated strs,
@@ -322,13 +281,7 @@ void AppendDigit(char* str, size_t bufferSize, int digit)
  * Eg  MakeCStrUnique ({ "Foo", "Bar" }, "Foo\0   ", 3, 1)
  *         modifies the the Str "Foo" to "Foo1"
  */
-void
-MakeCStrUnique PARAMS((nameList, str, bufferSize, maxDigits, startingDigit),
-	DefinedObj* nameList _AND_
-	char* str _AND_
-	size_t bufferSize _AND_
-	int maxDigits _AND_
-	int startingDigit)
+void MakeCStrUnique PARAMS((nameList, str, bufferSize, maxDigits, startingDigit), DefinedObj* nameList _AND_ char* str _AND_ size_t bufferSize _AND_ int maxDigits _AND_ int startingDigit)
 {
 	int digit, maxDigitVal;
 	size_t len;
@@ -346,19 +299,12 @@ MakeCStrUnique PARAMS((nameList, str, bufferSize, maxDigits, startingDigit),
 			AppendDigit(str, bufferSize, digit++);
 		} while (ObjIsDefined(nameList, str, StrObjCmp) && (digit < maxDigitVal));
 	}
-}  /* MakeCStrUnique */
-
+} /* MakeCStrUnique */
 
 /*
  * same as MakeCStrUnique except checks against C++ keywords
  */
-void
-MakeCxxStrUnique PARAMS((nameList, str, bufferSize, maxDigits, startingDigit),
-	DefinedObj* nameList _AND_
-	char* str _AND_
-	size_t bufferSize _AND_
-	int maxDigits _AND_
-	int startingDigit)
+void MakeCxxStrUnique PARAMS((nameList, str, bufferSize, maxDigits, startingDigit), DefinedObj* nameList _AND_ char* str _AND_ size_t bufferSize _AND_ int maxDigits _AND_ int startingDigit)
 {
 	int digit, maxDigitVal;
 	size_t len;
@@ -376,10 +322,10 @@ MakeCxxStrUnique PARAMS((nameList, str, bufferSize, maxDigits, startingDigit),
 			AppendDigit(str, bufferSize, digit++);
 		} while (ObjIsDefined(nameList, str, StrObjCmp) && (digit < maxDigitVal));
 	}
-}  /* MakeCxxStrUnique */
+} /* MakeCxxStrUnique */
 
-
-char* str_replace(const char* string, const char* substr, const char* replacement) {
+char* str_replace(const char* string, const char* substr, const char* replacement)
+{
 	char* tok = NULL;
 	char* newstr = NULL;
 	char* oldstr = NULL;
@@ -391,17 +337,18 @@ char* str_replace(const char* string, const char* substr, const char* replacemen
 	substr_len = strlen(substr);
 	replacement_len = strlen(replacement);
 
-	if (substr == NULL || replacement == NULL) {
+	if (substr == NULL || replacement == NULL)
 		return newstr;
-	}
 
 	tok = strstr(newstr, substr);
-	while (tok) {
+	while (tok)
+	{
 		oldstr = newstr;
 		oldstr_len = strlen(oldstr);
 		newstr = (char*)malloc(sizeof(char) * (oldstr_len - substr_len + replacement_len + 1));
 
-		if (newstr == NULL) {
+		if (newstr == NULL)
+		{
 			free(oldstr);
 			return NULL;
 		}
@@ -424,12 +371,11 @@ char* getNakedCommentDupped(const char* szString)
 	return str_replace(szString, "\\n", "");
 }
 
-
 char* MakeBaseFileName PARAMS((refName), const char* refName)
 {
-	char* base, * dot;
-	size_t		stublen;
-	size_t		pathLen = 0;
+	char *base, *dot;
+	size_t stublen;
+	size_t pathLen = 0;
 	char* stub;
 
 	char szSeperator;
@@ -460,8 +406,7 @@ char* MakeBaseFileName PARAMS((refName), const char* refName)
 	return stub;
 } /* MakeBaseFileName */
 
-const char*
-FileNameOnly(const char* path)
+const char* FileNameOnly(const char* path)
 {
 	size_t i = strlen(path);
 	for (; i != 0; i--)
@@ -475,7 +420,6 @@ FileNameOnly(const char* path)
 	return &path[i];
 }
 
-
 /*
  * given a module name and a suffix, the
  * suffix is appended to the module name
@@ -483,16 +427,13 @@ FileNameOnly(const char* path)
  * and underscores are inserted in likely places
  * (ie MTSAbstractSvc.h -> mts_abstract_svc.h)
  */
-char*
-MakeFileName PARAMS((refName, suffix),
-	const char* refName _AND_
-	const char* suffix)
+char* MakeFileName PARAMS((refName, suffix), const char* refName _AND_ const char* suffix)
 {
 	const char* fn = FileNameOnly(refName);
 
-	size_t	baselen = strlen(fn);
-	size_t  sufflen = strlen(suffix);
-	size_t  pathLen = strlen(gszOutputPath);
+	size_t baselen = strlen(fn);
+	size_t sufflen = strlen(suffix);
+	size_t pathLen = strlen(gszOutputPath);
 	size_t size = pathLen + baselen + sufflen + 1;
 	char* filename = Malloc(size);
 
@@ -501,17 +442,14 @@ MakeFileName PARAMS((refName, suffix),
 	strcat_s(filename, size, suffix);
 
 	return filename;
-}  /* MakeFileName */
+} /* MakeFileName */
 
-char*
-MakeFileNameWithoutOutputPath PARAMS((refName, suffix),
-	const char* refName _AND_
-	const char* suffix)
+char* MakeFileNameWithoutOutputPath PARAMS((refName, suffix), const char* refName _AND_ const char* suffix)
 {
 	const char* fn = FileNameOnly(refName);
 
-	size_t	baselen = strlen(fn);
-	size_t  sufflen = strlen(suffix);
+	size_t baselen = strlen(fn);
+	size_t sufflen = strlen(suffix);
 	size_t size = baselen + sufflen + 1;
 	char* filename = Malloc(size);
 
@@ -519,86 +457,63 @@ MakeFileNameWithoutOutputPath PARAMS((refName, suffix),
 	strcat_s(filename, size, suffix);
 
 	return filename;
-}  /* MakeFileName */
+} /* MakeFileName */
 
-
-char*
-MakeCHdrFileName PARAMS((refName),
-	const char* refName)
+char* MakeCHdrFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, ".h");
 }
 
-char*
-MakeCSrcFileName PARAMS((refName),
-	const char* refName)
+char* MakeCSrcFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, ".c");
 }
 
-char*
-MakeCxxHdrFileName PARAMS((refName),
-	const char* refName)
+char* MakeCxxHdrFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, ".h");
 }
 
-char*
-MakeCxxSrcFileName PARAMS((refName),
-	const char* refName)
+char* MakeCxxSrcFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, ".cpp");
 }
 
-char*
-MakeSwiftFileName PARAMS((refName),
-	const char* refName)
+char* MakeSwiftFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, ".swift");
 }
 
-char*
-MakeJSFileName PARAMS((refName),
-	const char* refName)
+char* MakeJSFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, ".js");
 }
 
-char*
-MakeTSFileName PARAMS((refName),
-	const char* refName)
+char* MakeTSFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, ".ts");
 }
 
-char*
-MakeTSEncDecFileName PARAMS((refName),
-	const char* refName)
+char* MakeTSEncDecFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, "_Converter.ts");
 }
 
-char*
-MakeJsonDocFileName PARAMS((refName),
-	const char* refName)
+char* MakeJsonDocFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, ".json");
 }
 
-char*
-MakeDelphiFileName PARAMS((refName),
-	const char* refName)
+char* MakeDelphiFileName PARAMS((refName), const char* refName)
 {
 	char* retVal = MakeFileName(refName, ".pas");
 	// BUILDSYS-151: Dash2Underscore must only be applied to filename not to path:
-	char* szRefFilename = RemovePathNonConst(retVal);	// rely on the current (2018-07-25) implementation of RemovePath, returning just a pointer to the last portion of retVal
+	char* szRefFilename = RemovePathNonConst(retVal); // rely on the current (2018-07-25) implementation of RemovePath, returning just a pointer to the last portion of retVal
 	Dash2Underscore(szRefFilename, strlen(szRefFilename));
 	return retVal;
 }
 
-char*
-MakeROSEHdrFileName PARAMS((refName),
-	const char* refName)
+char* MakeROSEHdrFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, "ROSE.h");
 }
@@ -633,41 +548,29 @@ char* RemovePathNonConst(char* refName)
 	return szFileNameWithoutPath;
 }
 
-
-char*
-MakeROSESrcFileName PARAMS((refName),
-	const char* refName)
+char* MakeROSESrcFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, "ROSE.cpp");
 }
 
-char*
-MakeROSESrcCSFileName PARAMS((refName),
-	const char* refName)
+char* MakeROSESrcCSFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, "ROSE.cs");
 }
 
-char*
-MakeROSESrcJAVAFileName PARAMS((refName),
-	const char* refName)
+char* MakeROSESrcJAVAFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, "ROSE.java");
 }
 
-
-char*
-MakeModuleName PARAMS((refName),
-	const char* refName)
+char* MakeModuleName PARAMS((refName), const char* refName)
 {
 	char* szClassName = MakeFileNameWithoutOutputPath(Asn1TypeName2CTypeName(refName), "");
 	Dash2Underscore(szClassName, strlen(szClassName));
 	return szClassName;
 }
 
-char*
-MakeROSEClassName PARAMS((refName),
-	const char* refName)
+char* MakeROSEClassName PARAMS((refName), const char* refName)
 {
 	return MakeFileNameWithoutOutputPath(Asn1TypeName2CTypeName(refName), "ROSE");
 }
@@ -764,12 +667,8 @@ char* GetPropertyName(const char* szName)
 	return szReturn;
 }
 
-
-
 #if IDL
-char*
-MakeIDLFileName PARAMS((refName),
-	const char* refName)
+char* MakeIDLFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, ".idl");
 }

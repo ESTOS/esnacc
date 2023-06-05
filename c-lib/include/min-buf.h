@@ -34,32 +34,27 @@
 #ifndef _min_buf_h_
 #define _min_buf_h_
 
-#define MinBufGetByte(b)\
-    (unsigned char)(*((*(b))++))
+#define MinBufGetByte(b) (unsigned char)(*((*(b))++))
 
-#define MinBufGetSeg( b, lenPtr)\
-    *(b);\
-    (*b) += *lenPtr;
+#define MinBufGetSeg(b, lenPtr)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+	*(b);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+	(*b) += *lenPtr;
 
-#define MinBufCopy( dst, b, len)\
-    memcpy ((dst), *(b), (len));\
-    (*(b)) += (len);
+#define MinBufCopy(dst, b, len)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+	memcpy((dst), *(b), (len));                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+	(*(b)) += (len);
 
-#define MinBufSkip( b, len) ((*(b)) += len)
+#define MinBufSkip(b, len) ((*(b)) += len)
 
-#define MinBufPeekByte( b)  (**(b))
+#define MinBufPeekByte(b) (**(b))
 
+#define MinBufPutByteRvs(b, byte) (*(--(*(b))) = (byte))
 
-#define MinBufPutByteRvs( b,  byte)\
-    (*(--(*(b))) = (byte))
+#define MinBufPutSegRvs(b, data, len)                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+	((*(b)) = (*(b)) - (len));                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+	memcpy(*(b), (data), (len));
 
-#define MinBufPutSegRvs( b, data, len)\
-    ((*(b)) = (*(b)) - (len));\
-    memcpy (*(b), (data), (len));
-
-
-#define MinBufReadError( b)	0  /* always false */
-#define MinBufWriteError( b)	0  /* always false */
+#define MinBufReadError(b) 0  /* always false */
+#define MinBufWriteError(b) 0 /* always false */
 
 #endif /* conditional include */
-

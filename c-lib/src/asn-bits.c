@@ -28,17 +28,12 @@
 
 static unsigned short unusedBitsG;
 
-char numToHexCharTblG[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-
-
+char numToHexCharTblG[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
 /*
  * encodes universal TAG LENGTH and Contents of and ASN.1 BIT STRING
  */
-AsnLen
-BEncAsnBits PARAMS((b, data),
-	GenBuf* b _AND_
-	AsnBits* data)
+AsnLen BEncAsnBits PARAMS((b, data), GenBuf* b _AND_ AsnBits* data)
 {
 	AsnLen len;
 
@@ -46,25 +41,17 @@ BEncAsnBits PARAMS((b, data),
 	len += BEncDefLen(b, len);
 	len += BEncTag1(b, UNIV, PRIM, BITSTRING_TAG_CODE);
 	return len;
-}  /* BEncAsnInt */
-
+} /* BEncAsnInt */
 
 /*
  * decodes universal TAG LENGTH and Contents of and ASN.1 BIT STRING
  */
-void
-BDecAsnBits PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnBits* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnBits PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ AsnBits* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnTag tag;
 	AsnLen elmtLen;
 
-	if (((tag = BDecTag(b, bytesDecoded, env)) !=
-		MAKE_TAG_ID(UNIV, PRIM, BITSTRING_TAG_CODE)) &&
-		(tag != MAKE_TAG_ID(UNIV, CONS, BITSTRING_TAG_CODE)))
+	if (((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, BITSTRING_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, BITSTRING_TAG_CODE)))
 	{
 		Asn1Error("BDecAsnBits: ERROR - wrong tag on BIT STRING.\n");
 		longjmp(env, -40);
@@ -73,28 +60,21 @@ BDecAsnBits PARAMS((b, result, bytesDecoded, env),
 	elmtLen = BDecLen(b, bytesDecoded, env);
 	BDecAsnBitsContent(b, tag, elmtLen, result, bytesDecoded, env);
 
-}  /* BDecAsnBits */
-
-
+} /* BDecAsnBits */
 
 /*
  * Encodes the BIT STRING value (including the unused bits
  * byte) to the given buffer.
  */
-AsnLen
-BEncAsnBitsContent PARAMS((b, bits),
-	GenBuf* b _AND_
-	AsnBits* bits)
+AsnLen BEncAsnBitsContent PARAMS((b, bits), GenBuf* b _AND_ AsnBits* bits)
 {
 	unsigned long unusedBits;
 	unsigned long byteLen;
 	int i = 0;
 	/* Check for a dumb special case */
 	for (i = 0; i < bits->bitLen / 8 + 1; i++)
-	{
 		if (bits->bits[i] != 0)
 			break;
-	}
 	if (i == bits->bitLen / 8 + 1)
 	{
 		bits->bitLen = 1;
@@ -107,19 +87,19 @@ BEncAsnBitsContent PARAMS((b, bits),
 		unusedBits = 8 - unusedBits;
 
 	/* Work out number of bytes */
-	if (bits->bitLen == 0) {
+	if (bits->bitLen == 0)
+	{
 		byteLen = 0;
 	}
-	else {
+	else
+	{
 		byteLen = ((bits->bitLen - 1) / 8) + 1;
 
 		/* Ensure last byte is zero padded */
-		if (unusedBits) {
+		if (unusedBits)
+		{
 			if ((byteLen == 1) && (bits->bits[0] != 0))
-			{
-				bits->bits[byteLen - 1] = (char)(bits->bits[byteLen - 1] &
-					(0xff << unusedBits));
-			}
+				bits->bits[byteLen - 1] = (char)(bits->bits[byteLen - 1] & (0xff << unusedBits));
 		}
 	}
 
@@ -137,7 +117,6 @@ BEncAsnBitsContent PARAMS((b, bits),
 
 } /* BEncAsnBitsContent */
 
-
 /*
  * Used when decoding to combine constructed pieces into one
  * contiguous block.
@@ -145,12 +124,7 @@ BEncAsnBitsContent PARAMS((b, bits),
  * construced bit string. sets unusedBitsG appropriately.
  * and strStkG.totalByteLenG to bytelen needed to hold the bitstring
  */
-static void
-FillBitStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnLen elmtLen0 _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+static void FillBitStringStk PARAMS((b, elmtLen0, bytesDecoded, env), GenBuf* b _AND_ AsnLen elmtLen0 _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	unsigned long refdLen;
 	unsigned long totalRefdLen;
@@ -160,7 +134,7 @@ FillBitStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
 	unsigned long elmtLen1;
 	unsigned long lenToRef;
 
-	for (; (totalElmtsLen1 < elmtLen0) || (elmtLen0 == INDEFINITE_LEN); )
+	for (; (totalElmtsLen1 < elmtLen0) || (elmtLen0 == INDEFINITE_LEN);)
 	{
 		tagId1 = BDecTag(b, &totalElmtsLen1, env);
 
@@ -178,9 +152,9 @@ FillBitStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
 			 * str stack
 			 */
 
-			 /*
-			  * get unused bits octet
-			  */
+			/*
+			 * get unused bits octet
+			 */
 			if (unusedBitsG != 0)
 			{
 				/*
@@ -216,7 +190,6 @@ FillBitStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
 			totalElmtsLen1 += elmtLen1;
 		}
 
-
 		else if (tagId1 == MAKE_TAG_ID(UNIV, CONS, BITSTRING_TAG_CODE))
 		{
 			/*
@@ -225,7 +198,7 @@ FillBitStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
 			 */
 			FillBitStringStk(b, elmtLen1, &totalElmtsLen1, env);
 		}
-		else  /* wrong tag */
+		else /* wrong tag */
 		{
 			Asn1Error("FillBitStringStk: ERROR - decoded non-BIT STRING tag inside a constructed BIT STRING\n");
 			longjmp(env, -3);
@@ -234,21 +207,14 @@ FillBitStringStk PARAMS((b, elmtLen0, bytesDecoded, env),
 
 	(*bytesDecoded) += totalElmtsLen1;
 
-}  /* FillBitStringStk */
-
+} /* FillBitStringStk */
 
 /*
  * Decodes a seq of universally tagged bits until either EOC is
  * encountered or the given len decoded.  Returns them in a
  * single concatenated bit string
  */
-static void
-BDecConsAsnBits PARAMS((b, len, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnLen len _AND_
-	AsnBits* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+static void BDecConsAsnBits PARAMS((b, len, result, bytesDecoded, env), GenBuf* b _AND_ AsnLen len _AND_ AsnBits* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	char* bufCurr;
 	unsigned long curr;
@@ -274,20 +240,13 @@ BDecConsAsnBits PARAMS((b, len, result, bytesDecoded, env),
 		bufCurr += strStkG.stk[curr].len;
 	}
 
-}  /* BDecConsAsnBits */
+} /* BDecConsAsnBits */
 
 /*
  * Decodes the content of a BIT STRING (including the unused bits octet)
  * Always returns a single contiguous bit string
  */
-void
-BDecAsnBitsContent PARAMS((b, tagId, len, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnTag tagId _AND_
-	AsnLen len _AND_
-	AsnBits* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnBitsContent PARAMS((b, tagId, len, result, bytesDecoded, env), GenBuf* b _AND_ AsnTag tagId _AND_ AsnLen len _AND_ AsnBits* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	/*
 	 * tagId is encoded tag shifted into long int.
@@ -314,31 +273,22 @@ BDecAsnBitsContent PARAMS((b, tagId, len, result, bytesDecoded, env),
 			longjmp(env, -4);
 		}
 	}
-}  /* BDecAsnBitsContent */
-
-
+} /* BDecAsnBitsContent */
 
 /*
  * Frees the string part of a BIT STRING
  */
-void
-FreeAsnBits PARAMS((v),
-	AsnBits* v)
+void FreeAsnBits PARAMS((v), AsnBits* v)
 {
 	Asn1Free(v->bits);
 } /* FreeAsnBits  */
-
 
 /*
  * Prints the contents of the given BIT STRING to the
  * given file. indent is ignored.  Always uses ASN.1 Value Notaion
  * Hex format. (Should be binary versions in some cases)
  */
-void
-PrintAsnBits PARAMS((f, v, indent),
-	FILE* f _AND_
-	AsnBits* v _AND_
-	unsigned int indent)
+void PrintAsnBits PARAMS((f, v, indent), FILE* f _AND_ AsnBits* v _AND_ unsigned int indent)
 {
 	int i;
 	unsigned long octetLen;
@@ -359,10 +309,7 @@ PrintAsnBits PARAMS((f, v, indent),
  * Returns TRUE if the given BIT STRINGs are identical.
  * Otherwise returns FALSE.
  */
-int
-AsnBitsEquiv PARAMS((b1, b2),
-	AsnBits* b1 _AND_
-	AsnBits* b2)
+int AsnBitsEquiv PARAMS((b1, b2), AsnBits* b1 _AND_ AsnBits* b2)
 {
 	int octetsLessOne;
 	int unusedBits;
@@ -376,21 +323,15 @@ AsnBitsEquiv PARAMS((b1, b2),
 		unusedBits = 8 - unusedBits;
 
 	/* trailing bits may not be significant  */
-	return  b1->bitLen == b2->bitLen &&
-		!memcmp(b1->bits, b2->bits, octetsLessOne) &&
-		((b1->bits[octetsLessOne] & (0xFF << unusedBits)) == (b2->bits[octetsLessOne] & (0xFF << unusedBits)));
+	return b1->bitLen == b2->bitLen && !memcmp(b1->bits, b2->bits, octetsLessOne) && ((b1->bits[octetsLessOne] & (0xFF << unusedBits)) == (b2->bits[octetsLessOne] & (0xFF << unusedBits)));
 
 } /* AsnBitsEquiv */
-
 
 /*
  * Set given bit to 1.  Most significant bit is bit 0, least significant
  * is bit (v1->bitLen -1)
  */
-void
-SetAsnBit PARAMS((b1, bit),
-	AsnBits* b1 _AND_
-	size_t bit)
+void SetAsnBit PARAMS((b1, bit), AsnBits* b1 _AND_ size_t bit)
 {
 	size_t octet;
 	size_t octetsBit;
@@ -398,20 +339,16 @@ SetAsnBit PARAMS((b1, bit),
 	if (bit < (size_t)b1->bitLen)
 	{
 		octet = bit / 8;
-		octetsBit = 7 - (bit % 8);/* bit zero is first/most sig bit in octet */
+		octetsBit = 7 - (bit % 8); /* bit zero is first/most sig bit in octet */
 		b1->bits[octet] |= 1 << octetsBit;
 	}
-}  /* SetAsnBit */
-
+} /* SetAsnBit */
 
 /*
  * Set given bit to 0.  Most significant bit is bit 0, least significant
  * is bit (v1->bitLen -1)
  */
-void
-ClrAsnBit PARAMS((b1, bit),
-	AsnBits* b1 _AND_
-	size_t bit)
+void ClrAsnBit PARAMS((b1, bit), AsnBits* b1 _AND_ size_t bit)
 {
 	size_t octet;
 	size_t octetsBit;
@@ -419,22 +356,18 @@ ClrAsnBit PARAMS((b1, bit),
 	if (bit < (size_t)b1->bitLen)
 	{
 		octet = bit / 8;
-		octetsBit = 7 - (bit % 8);/* bit zero is first/most sig bit in octet */
+		octetsBit = 7 - (bit % 8); /* bit zero is first/most sig bit in octet */
 		b1->bits[octet] &= ~(1 << octetsBit);
 	}
 
-}  /* ClrAsnBit */
-
+} /* ClrAsnBit */
 
 /*
  * Get given bit.  Most significant bit is bit 0, least significant
  * is bit (v1->bitLen -1).  Returns TRUE if the bit is 1. Returns FALSE
  * if the bit is 0.  if the bit is out of range then returns 0.
  */
-int
-GetAsnBit PARAMS((b1, bit),
-	AsnBits* b1 _AND_
-	size_t bit)
+int GetAsnBit PARAMS((b1, bit), AsnBits* b1 _AND_ size_t bit)
 {
 	size_t octet;
 	size_t octetsBit;
@@ -446,6 +379,4 @@ GetAsnBit PARAMS((b1, bit),
 		return b1->bits[octet] & (1 << octetsBit);
 	}
 	return 0;
-}  /* AsnBits::GetBit */
-
-
+} /* AsnBits::GetBit */

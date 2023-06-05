@@ -2,7 +2,6 @@
 
 using namespace SNACC;
 
-
 EXTERNALChoice::EXTERNALChoice(const EXTERNALChoice& that)
 {
 	Init();
@@ -18,24 +17,24 @@ void EXTERNALChoice::Clear()
 {
 	switch (choiceId)
 	{
-	case single_ASN1_typeCid:
-		delete single_ASN1_type;
-		single_ASN1_type = NULL;
-		break;
-	case octet_alignedCid:
-		delete octet_aligned;
-		octet_aligned = NULL;
-		break;
-	case arbitraryCid:
-		delete arbitrary;
-		arbitrary = NULL;
-		break;
-	default:
-		arbitrary = NULL;
+		case single_ASN1_typeCid:
+			delete single_ASN1_type;
+			single_ASN1_type = NULL;
+			break;
+		case octet_alignedCid:
+			delete octet_aligned;
+			octet_aligned = NULL;
+			break;
+		case arbitraryCid:
+			delete arbitrary;
+			arbitrary = NULL;
+			break;
+		default:
+			arbitrary = NULL;
 	} // end of switch
 } // end of Clear
 
-EXTERNALChoice& EXTERNALChoice::operator = (const EXTERNALChoice& that)
+EXTERNALChoice& EXTERNALChoice::operator=(const EXTERNALChoice& that)
 {
 	if (this != &that)
 	{
@@ -43,63 +42,61 @@ EXTERNALChoice& EXTERNALChoice::operator = (const EXTERNALChoice& that)
 
 		switch (choiceId = that.choiceId)
 		{
-		case single_ASN1_typeCid:
-			single_ASN1_type = new AsnOcts;
-			*single_ASN1_type = *that.single_ASN1_type;
-			break;
-		case octet_alignedCid:
-			octet_aligned = new AsnOcts;
-			*octet_aligned = *that.octet_aligned;
-			break;
-		case arbitraryCid:
-			arbitrary = new AsnBits;
-			*arbitrary = *that.arbitrary;
-			break;
-		default:
-			arbitrary = NULL;
+			case single_ASN1_typeCid:
+				single_ASN1_type = new AsnOcts;
+				*single_ASN1_type = *that.single_ASN1_type;
+				break;
+			case octet_alignedCid:
+				octet_aligned = new AsnOcts;
+				*octet_aligned = *that.octet_aligned;
+				break;
+			case arbitraryCid:
+				arbitrary = new AsnBits;
+				*arbitrary = *that.arbitrary;
+				break;
+			default:
+				arbitrary = NULL;
 		}
 	}
 
 	return *this;
 }
 
-AsnLen
-EXTERNALChoice::BEncContent(AsnBuf& b) const
+AsnLen EXTERNALChoice::BEncContent(AsnBuf& b) const
 {
 	FUNC("EXTERNALChoice::BEncContent");
 
 	AsnLen l = 0;
 	switch (choiceId)
 	{
-	case single_ASN1_typeCid:
-		l = single_ASN1_type->BEncContent(b);
-		l += BEncDefLen(b, l);
-		l += BEncTag1(b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
-		l += BEncConsLen(b, l);
-		l += BEncTag1(b, CNTX, CONS, 0);
-		break;
+		case single_ASN1_typeCid:
+			l = single_ASN1_type->BEncContent(b);
+			l += BEncDefLen(b, l);
+			l += BEncTag1(b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
+			l += BEncConsLen(b, l);
+			l += BEncTag1(b, CNTX, CONS, 0);
+			break;
 
-	case octet_alignedCid:
-		l = octet_aligned->BEncContent(b);
-		l += BEncDefLen(b, l);
-		l += BEncTag1(b, CNTX, PRIM, 1);
-		break;
+		case octet_alignedCid:
+			l = octet_aligned->BEncContent(b);
+			l += BEncDefLen(b, l);
+			l += BEncTag1(b, CNTX, PRIM, 1);
+			break;
 
-	case arbitraryCid:
-		l = arbitrary->BEncContent(b);
-		l += BEncDefLen(b, l);
-		l += BEncTag1(b, CNTX, PRIM, 2);
-		break;
+		case arbitraryCid:
+			l = arbitrary->BEncContent(b);
+			l += BEncDefLen(b, l);
+			l += BEncTag1(b, CNTX, PRIM, 2);
+			break;
 
-	default:
-		throw EXCEPT("Can not encode non optional empty CHOICE", ENCODE_ERROR);
+		default:
+			throw EXCEPT("Can not encode non optional empty CHOICE", ENCODE_ERROR);
 
 	} // end switch
 	return l;
 } // EXTERNALChoice::BEncContent
 
-
-void EXTERNALChoice::BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen0, AsnLen& bytesDecoded/*, s env*/)
+void EXTERNALChoice::BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen0, AsnLen& bytesDecoded /*, s env*/)
 {
 	FUNC("EXTERNALChoice::BDecContent()");
 
@@ -107,39 +104,36 @@ void EXTERNALChoice::BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen0, A
 	AsnLen elmtLen1;
 	switch (tag)
 	{
-	case MAKE_TAG_ID(CNTX, CONS, 0):
-		tag = BDecTag(b, bytesDecoded);
-		if ((tag != MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE))
-			&& (tag != MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE)))
-		{
+		case MAKE_TAG_ID(CNTX, CONS, 0):
+			tag = BDecTag(b, bytesDecoded);
+			if ((tag != MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE)))
+				throw InvalidTagException(typeName(), tag, STACK_ENTRY);
+
+			elmtLen1 = BDecLen(b, bytesDecoded);
+			choiceId = single_ASN1_typeCid;
+			single_ASN1_type = new AsnOcts;
+			single_ASN1_type->BDecContent(b, tag, elmtLen1, bytesDecoded);
+			if (elmtLen0 == INDEFINITE_LEN)
+				BDecEoc(b, bytesDecoded);
+			break;
+
+		case MAKE_TAG_ID(CNTX, PRIM, 1):
+		case MAKE_TAG_ID(CNTX, CONS, 1):
+			choiceId = octet_alignedCid;
+			octet_aligned = new AsnOcts;
+			octet_aligned->BDecContent(b, tag, elmtLen0, bytesDecoded);
+			break;
+
+		case MAKE_TAG_ID(CNTX, PRIM, 2):
+		case MAKE_TAG_ID(CNTX, CONS, 2):
+			choiceId = arbitraryCid;
+			arbitrary = new AsnBits;
+			arbitrary->BDecContent(b, tag, elmtLen0, bytesDecoded);
+			break;
+
+		default:
 			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-		}
-
-		elmtLen1 = BDecLen(b, bytesDecoded);
-		choiceId = single_ASN1_typeCid;
-		single_ASN1_type = new AsnOcts;
-		single_ASN1_type->BDecContent(b, tag, elmtLen1, bytesDecoded);
-		if (elmtLen0 == INDEFINITE_LEN)
-			BDecEoc(b, bytesDecoded);
-		break;
-
-	case MAKE_TAG_ID(CNTX, PRIM, 1):
-	case MAKE_TAG_ID(CNTX, CONS, 1):
-		choiceId = octet_alignedCid;
-		octet_aligned = new AsnOcts;
-		octet_aligned->BDecContent(b, tag, elmtLen0, bytesDecoded);
-		break;
-
-	case MAKE_TAG_ID(CNTX, PRIM, 2):
-	case MAKE_TAG_ID(CNTX, CONS, 2):
-		choiceId = arbitraryCid;
-		arbitrary = new AsnBits;
-		arbitrary->BDecContent(b, tag, elmtLen0, bytesDecoded);
-		break;
-
-	default:
-		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-		break;
+			break;
 	} // end switch
 } // EXTERNALChoice::BDecContent
 
@@ -156,7 +150,7 @@ AsnLen EXTERNALChoice::BEnc(AsnBuf& b) const
 	return l;
 }
 
-void EXTERNALChoice::BDec(const AsnBuf& b, AsnLen& bytesDecoded/*, s env*/)
+void EXTERNALChoice::BDec(const AsnBuf& b, AsnLen& bytesDecoded /*, s env*/)
 {
 	AsnLen elmtLen;
 	AsnTag tag;
@@ -168,39 +162,38 @@ void EXTERNALChoice::BDec(const AsnBuf& b, AsnLen& bytesDecoded/*, s env*/)
 	BDecContent(b, tag, elmtLen, bytesDecoded);
 }
 
-
 void EXTERNALChoice::Print(std::ostream& os, unsigned short indent) const
 {
 	FUNC("EXTERNALChoice::Print");
 
 	switch (choiceId)
 	{
-	case single_ASN1_typeCid:
-		os << "single-ASN1-type ";
-		if (single_ASN1_type)
-			single_ASN1_type->Print(os, indent);
-		else
-			os << "-- void3 --\n";
-		break;
+		case single_ASN1_typeCid:
+			os << "single-ASN1-type ";
+			if (single_ASN1_type)
+				single_ASN1_type->Print(os, indent);
+			else
+				os << "-- void3 --\n";
+			break;
 
-	case octet_alignedCid:
-		os << "octet-aligned ";
-		if (octet_aligned)
-			octet_aligned->Print(os, indent);
-		else
-			os << "-- void3 --\n";
-		break;
+		case octet_alignedCid:
+			os << "octet-aligned ";
+			if (octet_aligned)
+				octet_aligned->Print(os, indent);
+			else
+				os << "-- void3 --\n";
+			break;
 
-	case arbitraryCid:
-		os << "arbitrary ";
-		if (arbitrary)
-			arbitrary->Print(os, indent);
-		else
-			os << "-- void3 --\n";
-		break;
+		case arbitraryCid:
+			os << "arbitrary ";
+			if (arbitrary)
+				arbitrary->Print(os, indent);
+			else
+				os << "-- void3 --\n";
+			break;
 
-	default:
-		throw EXCEPT("Can not encode non optional empty CHOICE", ENCODE_ERROR);
+		default:
+			throw EXCEPT("Can not encode non optional empty CHOICE", ENCODE_ERROR);
 	} // end of switch
 } // EXTERNALChoice::Print
 
@@ -212,37 +205,37 @@ void EXTERNALChoice::PrintXML(std::ostream& os, const char* lpszTitle) const
 	os << "-" << std::endl;
 	switch (choiceId)
 	{
-	case single_ASN1_typeCid:
-		if (single_ASN1_type)
-			single_ASN1_type->PrintXML(os, "single-ASN1-type");
-		else
-		{
-			os << "<single-ASN1-type>";
-			os << "-- void3 --</single-ASN1-type>" << std::endl;
-		}
-		break;
+		case single_ASN1_typeCid:
+			if (single_ASN1_type)
+				single_ASN1_type->PrintXML(os, "single-ASN1-type");
+			else
+			{
+				os << "<single-ASN1-type>";
+				os << "-- void3 --</single-ASN1-type>" << std::endl;
+			}
+			break;
 
-	case octet_alignedCid:
-		if (octet_aligned)
-			octet_aligned->PrintXML(os, "octet-aligned");
-		else
-		{
-			os << "<octet-aligned>";
-			os << "-- void3 --</octet-aligned>" << std::endl;
-		}
-		break;
+		case octet_alignedCid:
+			if (octet_aligned)
+				octet_aligned->PrintXML(os, "octet-aligned");
+			else
+			{
+				os << "<octet-aligned>";
+				os << "-- void3 --</octet-aligned>" << std::endl;
+			}
+			break;
 
-	case arbitraryCid:
-		if (arbitrary)
-			arbitrary->PrintXML(os, "arbitrary");
-		else
-		{
-			os << "<arbitrary>";
-			os << "-- void3 --</arbitrary>" << std::endl;
-		}
-		break;
-	default:
-		break;
+		case arbitraryCid:
+			if (arbitrary)
+				arbitrary->PrintXML(os, "arbitrary");
+			else
+			{
+				os << "<arbitrary>";
+				os << "-- void3 --</arbitrary>" << std::endl;
+			}
+			break;
+		default:
+			break;
 	} // end of switch
 	os << "</EXTERNALChoice-CHOICE>" << std::endl;
 } // EXTERNALChoice::PrintXML
@@ -277,7 +270,7 @@ EXTERNAL::EXTERNAL(const EXTERNAL& that)
 	*this = that;
 }
 
-EXTERNAL& EXTERNAL::operator = (const EXTERNAL& that)
+EXTERNAL& EXTERNAL::operator=(const EXTERNAL& that)
 {
 	if (this != &that)
 	{
@@ -331,8 +324,7 @@ EXTERNAL& EXTERNAL::operator = (const EXTERNAL& that)
 	return *this;
 }
 
-AsnLen
-EXTERNAL::BEncContent(AsnBuf& b) const
+AsnLen EXTERNAL::BEncContent(AsnBuf& b) const
 {
 	AsnLen totalLen = 0;
 	AsnLen l = 0;
@@ -370,8 +362,7 @@ EXTERNAL::BEncContent(AsnBuf& b) const
 	return totalLen;
 } // EXTERNAL::BEncContent
 
-
-void EXTERNAL::BDecContent(const AsnBuf& b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded/*, s env*/)
+void EXTERNAL::BDecContent(const AsnBuf& b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded /*, s env*/)
 {
 	FUNC("EXTERNAL::BDecContent()");
 
@@ -397,8 +388,7 @@ void EXTERNAL::BDecContent(const AsnBuf& b, AsnTag /*tag0*/, AsnLen elmtLen0, As
 		tag1 = BDecTag(b, seqBytesDecoded);
 	}
 
-	if ((tag1 == MAKE_TAG_ID(UNIV, PRIM, OD_TAG_CODE))
-		|| (tag1 == MAKE_TAG_ID(UNIV, CONS, OD_TAG_CODE)))
+	if ((tag1 == MAKE_TAG_ID(UNIV, PRIM, OD_TAG_CODE)) || (tag1 == MAKE_TAG_ID(UNIV, CONS, OD_TAG_CODE)))
 	{
 		elmtLen1 = BDecLen(b, seqBytesDecoded);
 		data_value_descriptor = new ObjectDescriptor;
@@ -406,11 +396,7 @@ void EXTERNAL::BDecContent(const AsnBuf& b, AsnTag /*tag0*/, AsnLen elmtLen0, As
 		tag1 = BDecTag(b, seqBytesDecoded);
 	}
 
-	if ((tag1 == MAKE_TAG_ID(CNTX, CONS, 0))
-		|| (tag1 == MAKE_TAG_ID(CNTX, PRIM, 1))
-		|| (tag1 == MAKE_TAG_ID(CNTX, CONS, 1))
-		|| (tag1 == MAKE_TAG_ID(CNTX, PRIM, 2))
-		|| (tag1 == MAKE_TAG_ID(CNTX, CONS, 2)))
+	if ((tag1 == MAKE_TAG_ID(CNTX, CONS, 0)) || (tag1 == MAKE_TAG_ID(CNTX, PRIM, 1)) || (tag1 == MAKE_TAG_ID(CNTX, CONS, 1)) || (tag1 == MAKE_TAG_ID(CNTX, PRIM, 2)) || (tag1 == MAKE_TAG_ID(CNTX, CONS, 2)))
 	{
 		elmtLen1 = BDecLen(b, seqBytesDecoded);
 		encoding = new EXTERNALChoice;
@@ -450,7 +436,7 @@ AsnLen EXTERNAL::BEnc(AsnBuf& b) const
 	return l;
 }
 
-void EXTERNAL::BDec(const AsnBuf& b, AsnLen& bytesDecoded/*, s env*/)
+void EXTERNAL::BDec(const AsnBuf& b, AsnLen& bytesDecoded /*, s env*/)
 {
 	FUNC("EXTERNAL::BDec()");
 
@@ -458,13 +444,10 @@ void EXTERNAL::BDec(const AsnBuf& b, AsnLen& bytesDecoded/*, s env*/)
 	AsnLen elmtLen1;
 
 	if ((tag = BDecTag(b, bytesDecoded)) != MAKE_TAG_ID(UNIV, CONS, EXTERNAL_TAG_CODE))
-	{
 		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-	}
 	elmtLen1 = BDecLen(b, bytesDecoded);
 	BDecContent(b, tag, elmtLen1, bytesDecoded);
 }
-
 
 void EXTERNAL::Print(std::ostream& os, unsigned short indent) const
 {
@@ -532,9 +515,7 @@ void EXTERNAL::Print(std::ostream& os, unsigned short indent) const
 	os << "}";
 } // EXTERNAL::Print
 
-
-void EXTERNAL::PrintXML(std::ostream& os,
-	const char* lpszTitle) const
+void EXTERNAL::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	if (lpszTitle)
 	{
@@ -546,38 +527,27 @@ void EXTERNAL::PrintXML(std::ostream& os,
 		os << "<" << typeName() << "> SEQUENCE" << std::endl;
 	}
 	if (NOT_NULL(direct_reference))
-	{
 		direct_reference->PrintXML(os, "direct-reference");
-	}
 	else
 		os << "<direct-reference>-- void --</direct-reference>" << std::endl;
 
 	if (NOT_NULL(indirect_reference))
-	{
 		indirect_reference->PrintXML(os, "indirect-reference");
-	}
 	else
 		os << "<indirect-reference>-- void --</indirect-reference>" << std::endl;
 
 	if (NOT_NULL(data_value_descriptor))
-	{
 		data_value_descriptor->PrintXML(os, "data-value-descriptor");
-	}
 	else
 		os << "<data-value-descriptor>-- void --</data-value-descriptor>" << std::endl;
 
 	if (NOT_NULL(encoding))
-	{
 		encoding->PrintXML(os, "encoding");
-	}
 	else
 		os << "<encoding>-- void --</encoding>" << std::endl;
 
 	if (lpszTitle)
-	{
 		os << "</" << lpszTitle << ">" << std::endl;
-	}
 	else
 		os << "</" << typeName() << ">" << std::endl;
 } // EXTERNAL::PrintXML
-

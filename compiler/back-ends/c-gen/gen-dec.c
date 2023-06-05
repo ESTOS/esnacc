@@ -33,7 +33,6 @@
 #include "../tag-util.h"
 #include "../../core/enc-rules.h"
 
-
 static CRules* genDecCRulesG;
 char* valueArgNameG = "v";
 static long* longJmpValG;
@@ -46,51 +45,28 @@ char* lenTypeNameG = "AsnLen";
 char* tagTypeNameG = "AsnTag";
 char* envTypeNameG = "ENV_TYPE";
 
-
-
 /* non-exported prototypes */
 
-static void PrintCDecoderPrototype PROTO((FILE* hdr, TypeDef* td));
-static void PrintCDecoderDeclaration PROTO((FILE* src, TypeDef* td));
-static void PrintCDecoderDefine PROTO((FILE* src, TypeDef* td));
+static void PrintCDecoderPrototype PROTO((FILE * hdr, TypeDef* td));
+static void PrintCDecoderDeclaration PROTO((FILE * src, TypeDef* td));
+static void PrintCDecoderDefine PROTO((FILE * src, TypeDef* td));
 
-static int RecCountVariableLevels PROTO((Type* t));
-static int CountVariableLevels PROTO((Type* t));
-static void PrintCDecoderLocals PROTO((FILE* src, TypeDef* td));
+static int RecCountVariableLevels PROTO((Type * t));
+static int CountVariableLevels PROTO((Type * t));
+static void PrintCDecoderLocals PROTO((FILE * src, TypeDef* td));
 /*static void PrintCListDecoderLocals PROTO ((FILE *src));*/
 
-static void PrintCSetDecodeCode PROTO((FILE* src, TypeDef* td, Type* parent,
-	NamedTypeList* e, int elmtLevel,
-	int totalLevel, int tagLevel,
-	char* varName));
-static void PrintCSeqDecodeCode PROTO((FILE* src, TypeDef* td, Type* parent,
-	NamedTypeList* e, int elmtLevel,
-	int totalLevel, int tagLevel,
-	char* varName));
-static void PrintCListDecoderCode PROTO((FILE* src, TypeDef* td, Type* t,
-	int elmtLevel, int totalLevel,
-	int tagLevel, char* varName));
-static void PrintCChoiceDecodeCode PROTO((FILE* src, TypeDef* td, Type* t,
-	int elmtLevel, int totalLevel,
-	int tagLevel, char* varName));
+static void PrintCSetDecodeCode PROTO((FILE * src, TypeDef* td, Type* parent, NamedTypeList* e, int elmtLevel, int totalLevel, int tagLevel, char* varName));
+static void PrintCSeqDecodeCode PROTO((FILE * src, TypeDef* td, Type* parent, NamedTypeList* e, int elmtLevel, int totalLevel, int tagLevel, char* varName));
+static void PrintCListDecoderCode PROTO((FILE * src, TypeDef* td, Type* t, int elmtLevel, int totalLevel, int tagLevel, char* varName));
+static void PrintCChoiceDecodeCode PROTO((FILE * src, TypeDef* td, Type* t, int elmtLevel, int totalLevel, int tagLevel, char* varName));
 /*static void PrintCLenDecodingCode PROTO ((FILE *f));
 static void PrintCDecoderIncludes PROTO ((FILE *src, Module *m,
 										 ModuleList *mods));
 */
-static void PrintCElmtDecodeCode PROTO((FILE* src, TypeDef* td, Type* parent,
-	Type* t, int elmtLevel, int totalLevel,
-	int tagLevel, char* parnetVarName,
-	char* elmtVarName, int stoleChoiceTags));
+static void PrintCElmtDecodeCode PROTO((FILE * src, TypeDef* td, Type* parent, Type* t, int elmtLevel, int totalLevel, int tagLevel, char* parnetVarName, char* elmtVarName, int stoleChoiceTags));
 
-
-void
-PrintCDecoder PARAMS((src, hdr, r, m, td, longJmpVal),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CRules* r _AND_
-	Module* m _AND_
-	TypeDef* td _AND_
-	long* longJmpVal)
+void PrintCDecoder PARAMS((src, hdr, r, m, td, longJmpVal), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ long* longJmpVal)
 {
 	int i;
 	enum BasicTypeChoiceId typeId;
@@ -108,7 +84,8 @@ PrintCDecoder PARAMS((src, hdr, r, m, td, longJmpVal),
 		return;
 
 	encoding = GetEncRules();
-	while (SetEncRules(*encoding)) {
+	while (SetEncRules(*encoding))
+	{
 		encoding++;
 
 		/*
@@ -117,15 +94,9 @@ PrintCDecoder PARAMS((src, hdr, r, m, td, longJmpVal),
 		 *  print define to the hdr file
 		 * (a type is a pdu by default if it is ref'd by an ANY)
 		 */
-		if (!IsNewType(td->type) &&
-			(!IsTypeRef(td->type) ||
-				(IsTypeRef(td->type) &&
-					(td->type->basicType->a.localTypeRef->link->cTypeDefInfo->isPdu ||
-						((td->type->basicType->a.localTypeRef->link->anyRefs != NULL) &&
-							!LIST_EMPTY(td->type->basicType->a.localTypeRef->link->anyRefs)))))) {
-			fprintf(hdr, "#define %s%s %s%s\n",
-				GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName,
-				GetEncRulePrefix(), td->type->cTypeRefInfo->decodeRoutineName);
+		if (!IsNewType(td->type) && (!IsTypeRef(td->type) || (IsTypeRef(td->type) && (td->type->basicType->a.localTypeRef->link->cTypeDefInfo->isPdu || ((td->type->basicType->a.localTypeRef->link->anyRefs != NULL) && !LIST_EMPTY(td->type->basicType->a.localTypeRef->link->anyRefs))))))
+		{
+			fprintf(hdr, "#define %s%s %s%s\n", GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName, GetEncRulePrefix(), td->type->cTypeRefInfo->decodeRoutineName);
 			/*
 				 fprintf(hdr,"#define %s%s(b, v, bytesDecoded, env) %s%s(b, v, bytesDecoded, env)\n",
 			 GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName,
@@ -134,19 +105,13 @@ PrintCDecoder PARAMS((src, hdr, r, m, td, longJmpVal),
 			return;
 		}
 
-
-
 		typeId = GetBuiltinType(td->type);
 
 		/* print proto type to hdr file */
-		fprintf(hdr,
-			"void %s%s PROTO ((%s b, %s *result, %s *bytesDecoded, %s env));\n",
-			GetEncRulePrefix(), ctdi->decodeRoutineName, bufTypeNameG,
-			ctdi->cTypeName, lenTypeNameG, envTypeNameG);
+		fprintf(hdr, "void %s%s PROTO ((%s b, %s *result, %s *bytesDecoded, %s env));\n", GetEncRulePrefix(), ctdi->decodeRoutineName, bufTypeNameG, ctdi->cTypeName, lenTypeNameG, envTypeNameG);
 
 		/* print routine in src */
-		fprintf(src, "void %s%s PARAMS ((b, result, bytesDecoded, env),\n",
-			GetEncRulePrefix(), ctdi->decodeRoutineName);
+		fprintf(src, "void %s%s PARAMS ((b, result, bytesDecoded, env),\n", GetEncRulePrefix(), ctdi->decodeRoutineName);
 		fprintf(src, "%s b _AND_\n", bufTypeNameG);
 		fprintf(src, "%s *result _AND_\n", ctdi->cTypeName);
 		fprintf(src, "%s *bytesDecoded _AND_\n", lenTypeNameG);
@@ -167,36 +132,36 @@ PrintCDecoder PARAMS((src, hdr, r, m, td, longJmpVal),
 
 		/* decode tag/length pairs */
 		elmtLevel = 0;
-		if (!stoleChoiceTags) {
-			FOR_EACH_LIST_ELMT(tag, tags) {
+		if (!stoleChoiceTags)
+		{
+			FOR_EACH_LIST_ELMT(tag, tags)
+			{
 				classStr = Class2ClassStr(tag->tclass);
 				if (tag->form == ANY_FORM)
 					formStr = Form2FormStr(PRIM);
 				else
 					formStr = Form2FormStr(tag->form);
 
-				fprintf(src,
-					"    if (((tag = %sDecTag (b, bytesDecoded, env)) != \n",
-					GetEncRulePrefix());
+				fprintf(src, "    if (((tag = %sDecTag (b, bytesDecoded, env)) != \n", GetEncRulePrefix());
 
-				if (tag->tclass == UNIV) {
-					fprintf(src, "MAKE_TAG_ID (%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 0));//RWC;Code2UnivCodeStr (tag->code));
+				if (tag->tclass == UNIV)
+				{
+					fprintf(src, "MAKE_TAG_ID (%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 0)); // RWC;Code2UnivCodeStr (tag->code));
 					if (tag->form == ANY_FORM)
-						fprintf(src, "&&\n         (tag != MAKE_TAG_ID (%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 0));//RWC;Code2UnivCodeStr (tag->code));
+						fprintf(src, "&&\n         (tag != MAKE_TAG_ID (%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 0)); // RWC;Code2UnivCodeStr (tag->code));
 					else
 						fprintf(src, ")\n");
 				}
-				else {
-					fprintf(src, "MAKE_TAG_ID (%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+				else
+				{
+					fprintf(src, "MAKE_TAG_ID (%s, %s, %s))", classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 					if (tag->form == ANY_FORM)
-						fprintf(src, "&&\n        (tag != MAKE_TAG_ID (%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
+						fprintf(src, "&&\n        (tag != MAKE_TAG_ID (%s, %s, %s)))\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 					else
 						fprintf(src, ")\n");
-
 				}
 				fprintf(src, "    {\n");
-				fprintf(src, "        Asn1Error (\"%s%s: ERROR - wrong tag\\n\");\n",
-					GetEncRulePrefix(), ctdi->decodeRoutineName);
+				fprintf(src, "        Asn1Error (\"%s%s: ERROR - wrong tag\\n\");\n", GetEncRulePrefix(), ctdi->decodeRoutineName);
 				fprintf(src, "        longjmp (env, %d);\n", (int)(*longJmpVal)--);
 				fprintf(src, "    }\n");
 
@@ -205,7 +170,8 @@ PrintCDecoder PARAMS((src, hdr, r, m, td, longJmpVal),
 		}
 
 		/* for choices always decode first tag of the choice's content */
-		if (typeId == BASICTYPE_CHOICE) {
+		if (typeId == BASICTYPE_CHOICE)
+		{
 			fprintf(src, "    tag = %sDecTag (b, bytesDecoded, env);\n", GetEncRulePrefix());
 			fprintf(src, "    elmtLen%d = %sDecLen (b, bytesDecoded, env);\n", ++elmtLevel, GetEncRulePrefix());
 		}
@@ -213,37 +179,25 @@ PrintCDecoder PARAMS((src, hdr, r, m, td, longJmpVal),
 		if ((typeId != BASICTYPE_ANY) && (typeId != BASICTYPE_ANYDEFINEDBY))
 			fprintf(src, "    %s%sContent (b, tag, elmtLen%d, result, bytesDecoded, env);\n", GetEncRulePrefix(), ctdi->decodeRoutineName, elmtLevel);
 		else
-			fprintf(src, "    %s%s (b, result, bytesDecoded, env);\n",
-				GetEncRulePrefix(), ctdi->decodeRoutineName);
-
+			fprintf(src, "    %s%s (b, result, bytesDecoded, env);\n", GetEncRulePrefix(), ctdi->decodeRoutineName);
 
 		/* grab any EOCs that match redundant, indef lengths */
-		for (i = elmtLevel - 1; i > 0; i--) {
+		for (i = elmtLevel - 1; i > 0; i--)
+		{
 			fprintf(src, "\tif (elmtLen%d == INDEFINITE_LEN)\n", i);
-			fprintf(src, "\t\t%sDecEoc(b, bytesDecoded, env);\n",
-				GetEncRulePrefix());
+			fprintf(src, "\t\t%sDecEoc(b, bytesDecoded, env);\n", GetEncRulePrefix());
 		}
 
-
-		fprintf(src, "}  /* %s%s */\n\n", GetEncRulePrefix(),
-			ctdi->decodeRoutineName);
+		fprintf(src, "}  /* %s%s */\n\n", GetEncRulePrefix(), ctdi->decodeRoutineName);
 
 		FreeTags(tags);
 	}
-}  /*  PrintCDecoder */
+} /*  PrintCDecoder */
 
-
-void
-PrintCContentDecoder PARAMS((src, hdr, r, m, td, longJmpVal),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CRules* r _AND_
-	Module* m _AND_
-	TypeDef* td _AND_
-	long* longJmpVal)
+void PrintCContentDecoder PARAMS((src, hdr, r, m, td, longJmpVal), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ long* longJmpVal)
 {
 	CTDI* ctdi;
-	CTypeId rhsTypeId;  /* cTypeId of the type that defined this typedef */
+	CTypeId rhsTypeId; /* cTypeId of the type that defined this typedef */
 	EncRulesType* encoding;
 
 	longJmpValG = longJmpVal;
@@ -263,138 +217,116 @@ PrintCContentDecoder PARAMS((src, hdr, r, m, td, longJmpVal),
 	rhsTypeId = td->type->cTypeRefInfo->cTypeId;
 
 	encoding = GetEncRules();
-	while (SetEncRules(*encoding)) {
+	while (SetEncRules(*encoding))
+	{
 		encoding++;
-		switch (rhsTypeId) {
-			/*
-			 * type refs or primitive types are
-			 * defined as calls to the referenced type
-			 */
-		case C_ANY:
-			//RWC;fprintf (hdr, "/* ANY - Fix Me! */\n");
-		case C_ANYDEFINEDBY:
-			fprintf(hdr, "#define %s%s %s%s\n",
-				GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName,
-				GetEncRulePrefix(),
-				td->type->cTypeRefInfo->decodeRoutineName);
+		switch (rhsTypeId)
+		{
+				/*
+				 * type refs or primitive types are
+				 * defined as calls to the referenced type
+				 */
+			case C_ANY:
+				// RWC;fprintf (hdr, "/* ANY - Fix Me! */\n");
+			case C_ANYDEFINEDBY:
+				fprintf(hdr, "#define %s%s %s%s\n", GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName, GetEncRulePrefix(), td->type->cTypeRefInfo->decodeRoutineName);
 
-			/*
-			  fprintf(hdr, "#define %s%s( b, tagId, elmtLen, v, bytesDecoded, env)  ", GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName);
-			  fprintf (hdr, "%s%s (b, tagId, elmtLen, v, bytesDecoded, env)",
-			  GetEncRulePrefix(), td->type->cTypeRefInfo->decodeRoutineName);
-			*/
-			fprintf(hdr, "\n\n");
-			break;
+				/*
+				  fprintf(hdr, "#define %s%s( b, tagId, elmtLen, v, bytesDecoded, env)  ", GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName);
+				  fprintf (hdr, "%s%s (b, tagId, elmtLen, v, bytesDecoded, env)",
+				  GetEncRulePrefix(), td->type->cTypeRefInfo->decodeRoutineName);
+				*/
+				fprintf(hdr, "\n\n");
+				break;
 
-		case C_LIB:
-		case C_TYPEREF:
-			PrintCDecoderDefine(hdr, td);
-			fprintf(hdr, "\n\n");
-			break;
+			case C_LIB:
+			case C_TYPEREF:
+				PrintCDecoderDefine(hdr, td);
+				fprintf(hdr, "\n\n");
+				break;
 
+			case C_CHOICE:
+				PrintCDecoderPrototype(hdr, td);
+				fprintf(hdr, "\n\n");
+				PrintCDecoderDeclaration(src, td);
+				fprintf(src, "{\n");
+				PrintCDecoderLocals(src, td);
+				fprintf(src, "\n\n");
+				PrintCChoiceDecodeCode(src, td, td->type, FIRST_LEVEL - 1, FIRST_LEVEL, FIRST_LEVEL - 1, valueArgNameG);
 
-		case C_CHOICE:
-			PrintCDecoderPrototype(hdr, td);
-			fprintf(hdr, "\n\n");
-			PrintCDecoderDeclaration(src, td);
-			fprintf(src, "{\n");
-			PrintCDecoderLocals(src, td);
-			fprintf(src, "\n\n");
-			PrintCChoiceDecodeCode(src, td, td->type, FIRST_LEVEL - 1, FIRST_LEVEL, FIRST_LEVEL - 1, valueArgNameG);
+				fprintf(src, "    (*bytesDecoded) += totalElmtsLen1;\n");
+				fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName);
+				fprintf(src, "\n\n");
+				break;
 
-			fprintf(src, "    (*bytesDecoded) += totalElmtsLen1;\n");
-			fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(),
-				td->cTypeDefInfo->decodeRoutineName);
-			fprintf(src, "\n\n");
-			break;
+			case C_STRUCT:
+				PrintCDecoderPrototype(hdr, td);
+				fprintf(hdr, "\n\n");
+				PrintCDecoderDeclaration(src, td);
+				fprintf(src, "{\n");
+				PrintCDecoderLocals(src, td);
+				fprintf(src, "\n\n");
+				if (td->type->basicType->choiceId == BASICTYPE_SET)
+					PrintCSetDecodeCode(src, td, td->type, td->type->basicType->a.set, FIRST_LEVEL - 1, FIRST_LEVEL, FIRST_LEVEL - 1, valueArgNameG);
+				else
+					PrintCSeqDecodeCode(src, td, td->type, td->type->basicType->a.sequence, FIRST_LEVEL - 1, FIRST_LEVEL, FIRST_LEVEL - 1, valueArgNameG);
 
-		case C_STRUCT:
-			PrintCDecoderPrototype(hdr, td);
-			fprintf(hdr, "\n\n");
-			PrintCDecoderDeclaration(src, td);
-			fprintf(src, "{\n");
-			PrintCDecoderLocals(src, td);
-			fprintf(src, "\n\n");
-			if (td->type->basicType->choiceId == BASICTYPE_SET)
-				PrintCSetDecodeCode(src, td, td->type, td->type->basicType->a.set, FIRST_LEVEL - 1, FIRST_LEVEL, FIRST_LEVEL - 1, valueArgNameG);
-			else
-				PrintCSeqDecodeCode(src, td, td->type, td->type->basicType->a.sequence, FIRST_LEVEL - 1, FIRST_LEVEL, FIRST_LEVEL - 1, valueArgNameG);
+				fprintf(src, "    (*bytesDecoded) += totalElmtsLen1;\n");
+				fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName);
+				fprintf(src, "\n\n");
+				break;
 
-			fprintf(src, "    (*bytesDecoded) += totalElmtsLen1;\n");
-			fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(),
-				td->cTypeDefInfo->decodeRoutineName);
-			fprintf(src, "\n\n");
-			break;
+			case C_LIST:
+				PrintCDecoderPrototype(hdr, td);
+				fprintf(hdr, "\n\n");
 
+				PrintCDecoderDeclaration(src, td);
+				fprintf(src, "{\n");
+				PrintCDecoderLocals(src, td);
+				fprintf(src, "\n\n");
+				PrintCListDecoderCode(src, td, td->type, FIRST_LEVEL - 1, FIRST_LEVEL, FIRST_LEVEL - 1, valueArgNameG);
 
-		case C_LIST:
-			PrintCDecoderPrototype(hdr, td);
-			fprintf(hdr, "\n\n");
+				fprintf(src, "    (*bytesDecoded) += totalElmtsLen1;\n");
+				fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName);
+				fprintf(src, "\n\n");
+				break;
 
-			PrintCDecoderDeclaration(src, td);
-			fprintf(src, "{\n");
-			PrintCDecoderLocals(src, td);
-			fprintf(src, "\n\n");
-			PrintCListDecoderCode(src, td, td->type, FIRST_LEVEL - 1, FIRST_LEVEL, FIRST_LEVEL - 1, valueArgNameG);
+			case C_NO_TYPE:
+				/*            fprintf (src,"< sorry, unsupported type >\n\n"); */
+				return; /* dont' print newlines */
+				break;
 
-			fprintf(src, "    (*bytesDecoded) += totalElmtsLen1;\n");
-			fprintf(src, "}  /* %s%sContent */", GetEncRulePrefix(),
-				td->cTypeDefInfo->decodeRoutineName);
-			fprintf(src, "\n\n");
-			break;
-
-		case C_NO_TYPE:
-			/*            fprintf (src,"< sorry, unsupported type >\n\n"); */
-			return; /* dont' print newlines */
-			break;
-
-		default:
-			fprintf(stderr, "PrintCContentDecoder: ERROR - unknown c type id\n");
-			return;
-			break;
+			default:
+				fprintf(stderr, "PrintCContentDecoder: ERROR - unknown c type id\n");
+				return;
+				break;
 		}
 	}
-}  /*  PrintCContentDecoder */
-
-
-
+} /*  PrintCContentDecoder */
 
 /*
  * Prints prototype for decode routine in hdr file
  */
 
-static void
-PrintCDecoderPrototype PARAMS((hdr, td),
-	FILE* hdr _AND_
-	TypeDef* td)
+static void PrintCDecoderPrototype PARAMS((hdr, td), FILE* hdr _AND_ TypeDef* td)
 {
 	CTDI* ctdi;
 
 	ctdi = td->cTypeDefInfo;
-	fprintf(hdr, "void %s%sContent PROTO ((%s b, %s tagId%d, %s elmtLen%d, %s *v, %s *bytesDecoded, %s env));\n", GetEncRulePrefix(),
-		ctdi->decodeRoutineName, bufTypeNameG, tagTypeNameG,
-		FIRST_LEVEL - 1, lenTypeNameG, FIRST_LEVEL - 1, ctdi->cTypeName,
-		lenTypeNameG, envTypeNameG);
+	fprintf(hdr, "void %s%sContent PROTO ((%s b, %s tagId%d, %s elmtLen%d, %s *v, %s *bytesDecoded, %s env));\n", GetEncRulePrefix(), ctdi->decodeRoutineName, bufTypeNameG, tagTypeNameG, FIRST_LEVEL - 1, lenTypeNameG, FIRST_LEVEL - 1, ctdi->cTypeName, lenTypeNameG, envTypeNameG);
 
-}  /*  PrintCDecoderPrototype */
-
-
+} /*  PrintCDecoderPrototype */
 
 /*
  * Prints declarations of decode routine for the given type def
  */
-static void
-PrintCDecoderDeclaration PARAMS((src, td),
-	FILE* src _AND_
-	TypeDef* td)
+static void PrintCDecoderDeclaration PARAMS((src, td), FILE* src _AND_ TypeDef* td)
 {
 	CTDI* ctdi;
 
 	ctdi = td->cTypeDefInfo;
 	fprintf(src, "void\n");
-	fprintf(src, "%s%sContent PARAMS ((b, tagId%d, elmtLen%d, v, bytesDecoded, env),\n",
-		GetEncRulePrefix(), ctdi->decodeRoutineName, FIRST_LEVEL - 1,
-		FIRST_LEVEL - 1);
+	fprintf(src, "%s%sContent PARAMS ((b, tagId%d, elmtLen%d, v, bytesDecoded, env),\n", GetEncRulePrefix(), ctdi->decodeRoutineName, FIRST_LEVEL - 1, FIRST_LEVEL - 1);
 	fprintf(src, "%s b _AND_\n", bufTypeNameG);
 	fprintf(src, "%s tagId%d _AND_\n", tagTypeNameG, FIRST_LEVEL - 1);
 	fprintf(src, "%s elmtLen%d _AND_\n", lenTypeNameG, FIRST_LEVEL - 1);
@@ -402,9 +334,7 @@ PrintCDecoderDeclaration PARAMS((src, td),
 	fprintf(src, "%s *bytesDecoded _AND_\n", lenTypeNameG);
 	fprintf(src, "%s env)\n", envTypeNameG);
 
-}  /*  PrintCDecoderDeclaration */
-
-
+} /*  PrintCDecoderDeclaration */
 
 /*
  * makes a define for type refs or primitive type renaming
@@ -412,29 +342,20 @@ PrintCDecoderDeclaration PARAMS((src, td),
  * TypeX ::= INTEGER --> #define BerDecodeTypeX(b,v) BerDecodeInteger(b,v)
  * TypeX ::= TypeY --> #define BerDecodeTypeX(b,v) BerDecodeTypeY(b,v)
  */
-static void
-PrintCDecoderDefine PARAMS((hdr, td),
-	FILE* hdr _AND_
-	TypeDef* td)
+static void PrintCDecoderDefine PARAMS((hdr, td), FILE* hdr _AND_ TypeDef* td)
 {
-	fprintf(hdr, "#define %s%sContent %s%sContent",
-		GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName,
-		GetEncRulePrefix(), td->type->cTypeRefInfo->decodeRoutineName);
+	fprintf(hdr, "#define %s%sContent %s%sContent", GetEncRulePrefix(), td->cTypeDefInfo->decodeRoutineName, GetEncRulePrefix(), td->type->cTypeRefInfo->decodeRoutineName);
 
 	/*
 		fprintf(hdr, "#define %sContent( b, tagId, elmtLen, v, bytesDecoded, env)  ", td->cTypeDefInfo->decodeRoutineName);
 		fprintf (hdr, "%s%sContent (b, tagId, elmtLen, v, bytesDecoded, env)", td->type->cTypeRefInfo->decodeRoutineName);
 	*/
-}  /*  PrintCDecoderDefine */
-
-
+} /*  PrintCDecoderDefine */
 
 /*
  * used to figure out local variables to declare
  */
-static int
-RecCountVariableLevels PARAMS((t),
-	Type* t)
+static int RecCountVariableLevels PARAMS((t), Type* t)
 {
 	CTRI* ctri;
 	int maxLevels = 0;
@@ -448,8 +369,7 @@ RecCountVariableLevels PARAMS((t),
 	typeId = GetBuiltinType(t);
 
 	/* embedded struct/choices aren't really an issue any more */
-	if ((ctri->cTypeId == C_STRUCT) ||
-		(ctri->cTypeId == C_CHOICE))
+	if ((ctri->cTypeId == C_STRUCT) || (ctri->cTypeId == C_CHOICE))
 	{
 		maxLevels = 1;
 
@@ -480,17 +400,13 @@ RecCountVariableLevels PARAMS((t),
 	else
 		return CountTags(t);
 
-}  /* RecCountVariableLevels */
-
-
+} /* RecCountVariableLevels */
 
 /*
  * returns the number of variable contexts needed for
  * decoding the contents of this type.  Does not consider tags on this type.
  */
-static int
-CountVariableLevels PARAMS((t),
-	Type* t)
+static int CountVariableLevels PARAMS((t), Type* t)
 {
 	CTRI* ctri;
 	int maxLevels = 0;
@@ -500,8 +416,7 @@ CountVariableLevels PARAMS((t),
 
 	ctri = t->cTypeRefInfo;
 
-	if ((ctri->cTypeId == C_STRUCT) ||
-		(ctri->cTypeId == C_CHOICE))
+	if ((ctri->cTypeId == C_STRUCT) || (ctri->cTypeId == C_CHOICE))
 	{
 		maxLevels = 1;
 		tmp = (void*)CURR_LIST_NODE(t->basicType->a.set);
@@ -524,22 +439,16 @@ CountVariableLevels PARAMS((t),
 	}
 	else if (ctri->cTypeId == C_LIST)
 		return RecCountVariableLevels(t->basicType->a.setOf);
-	else if ((ctri->cTypeId == C_ANY) ||
-		(ctri->cTypeId == C_ANYDEFINEDBY))
+	else if ((ctri->cTypeId == C_ANY) || (ctri->cTypeId == C_ANYDEFINEDBY))
 		return 1;
 	else
 		return 0;
-}  /* CountVariableLevels */
-
-
+} /* CountVariableLevels */
 
 /*
  * prints local vars for constructed types (set/seq/choice)
  */
-static void
-PrintCDecoderLocals PARAMS((src, td),
-	FILE* src _AND_
-	TypeDef* td)
+static void PrintCDecoderLocals PARAMS((src, td), FILE* src _AND_ TypeDef* td)
 {
 	int levels;
 	int i;
@@ -557,8 +466,7 @@ PrintCDecoderLocals PARAMS((src, td),
 			fprintf(src, "    int mandatoryElmtCount%d = 0;\n", i + FIRST_LEVEL);
 	}
 
-}  /*  PrintCDecoderLocals */
-
+} /*  PrintCDecoderLocals */
 
 /*
  * given the Type *(t) of an elmt in a set/seq/choice/list,
@@ -571,18 +479,7 @@ PrintCDecoderLocals PARAMS((src, td),
  * totalLevel - totalElmtsLen# to be used for running total of dec bytes
  * tagIdLevel - last tagId# var that is valid/used (contains a tag)
  */
-static void
-PrintCElmtDecodeCode PARAMS((src, td, parent, t, elmtLevel, totalLevel, tagLevel, parentVarName, elmtVarName, stoleChoiceTags),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	Type* t _AND_
-	int elmtLevel _AND_
-	int totalLevel _AND_
-	int tagLevel _AND_
-	char* parentVarName _AND_
-	char* elmtVarName _AND_
-	int stoleChoiceTags)
+static void PrintCElmtDecodeCode PARAMS((src, td, parent, t, elmtLevel, totalLevel, tagLevel, parentVarName, elmtVarName, stoleChoiceTags), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* t _AND_ int elmtLevel _AND_ int totalLevel _AND_ int tagLevel _AND_ char* parentVarName _AND_ char* elmtVarName _AND_ int stoleChoiceTags)
 {
 	CTRI* ctri;
 	Type* tmpType;
@@ -605,10 +502,8 @@ PrintCElmtDecodeCode PARAMS((src, td, parent, t, elmtLevel, totalLevel, tagLevel
 		{
 			fprintf(src, "/* ANY - Fix Me ! */\n");
 			fprintf(src, "\tSetAnyTypeUnknown(%s);\n", elmtVarName);
-			//RWC;fprintf (src,"    SetAnyTypeBy\?\?\?(%s, \?\?\?);\n", elmtVarName);
-			fprintf(src, "    %s%s (b, %s, &%s%d, env);\n",
-				GetEncRulePrefix(), "DecAsnAny"/*RWC;NOT VALID FOR C_TYPEREF;ctri->decodeRoutineName*/,
-				elmtVarName, decodedLenVarNameG, totalLevel);
+			// RWC;fprintf (src,"    SetAnyTypeBy\?\?\?(%s, \?\?\?);\n", elmtVarName);
+			fprintf(src, "    %s%s (b, %s, &%s%d, env);\n", GetEncRulePrefix(), "DecAsnAny" /*RWC;NOT VALID FOR C_TYPEREF;ctri->decodeRoutineName*/, elmtVarName, decodedLenVarNameG, totalLevel);
 		}
 		else if (tmpType->basicType->choiceId == BASICTYPE_ANYDEFINEDBY)
 		{
@@ -627,119 +522,90 @@ PrintCElmtDecodeCode PARAMS((src, td, parent, t, elmtLevel, totalLevel, tagLevel
 				MakeVarValueRef(genDecCRulesG, td, parent, idNamedType->type, parentVarName, idVarRef, MAX_VAR_REF);
 				fprintf(src, "    SetAnyTypeByInt (%s, %s);\n", elmtVarName, idVarRef);
 			}
-			fprintf(src, "    %s%s (b, %s, &%s%d, env);\n",
-				GetEncRulePrefix(), ctri->decodeRoutineName,
-				elmtVarName, decodedLenVarNameG, totalLevel);
+			fprintf(src, "    %s%s (b, %s, &%s%d, env);\n", GetEncRulePrefix(), ctri->decodeRoutineName, elmtVarName, decodedLenVarNameG, totalLevel);
 		}
-		else switch (ctri->cTypeId)
-		{
-		case C_LIB:
-		case C_TYPEREF:
-			/*
-			 * choices and octet/bit str types need tagId argument
-			 */
-			if ((tmpType->basicType->choiceId == BASICTYPE_CHOICE) &&
-				!stoleChoiceTags)
+		else
+			switch (ctri->cTypeId)
 			{
-				/*
-				 * strip off top tag of choice in not already done
-				 * since choice decoders assume you are passing in
-				 * their top tag
-				 */
-				fprintf(src, "    %s%d = %sDecTag (b, &%s%d, env);\n",
-					tagIdVarNameG, ++tagLevel,
-					GetEncRulePrefix(), decodedLenVarNameG, totalLevel);
-				fprintf(src, "    %s%d = %sDecLen (b, &%s%d, env);\n",
-					itemLenVarNameG, ++elmtLevel,
-					GetEncRulePrefix(), decodedLenVarNameG, totalLevel);
+				case C_LIB:
+				case C_TYPEREF:
+					/*
+					 * choices and octet/bit str types need tagId argument
+					 */
+					if ((tmpType->basicType->choiceId == BASICTYPE_CHOICE) && !stoleChoiceTags)
+					{
+						/*
+						 * strip off top tag of choice in not already done
+						 * since choice decoders assume you are passing in
+						 * their top tag
+						 */
+						fprintf(src, "    %s%d = %sDecTag (b, &%s%d, env);\n", tagIdVarNameG, ++tagLevel, GetEncRulePrefix(), decodedLenVarNameG, totalLevel);
+						fprintf(src, "    %s%d = %sDecLen (b, &%s%d, env);\n", itemLenVarNameG, ++elmtLevel, GetEncRulePrefix(), decodedLenVarNameG, totalLevel);
+					}
+					fprintf(src, "    %s%sContent (b, %s%d, %s%d, %s, &%s%d, env);\n", GetEncRulePrefix(), ctri->decodeRoutineName, tagIdVarNameG, tagLevel, itemLenVarNameG, elmtLevel, elmtVarName, decodedLenVarNameG, totalLevel);
+
+					/* From ftp://ftp.cs.ubc.ca/pub/local/src/snacc/bugs-in-1.1 */
+					if ((tmpType->basicType->choiceId == BASICTYPE_CHOICE) && !stoleChoiceTags)
+					{
+						fprintf(src, "\tif (elmtLen%d == INDEFINITE_LEN)\n", elmtLevel - 1);
+						fprintf(src, "\t\t%sDecEoc(b, &totalElmtsLen%d, env);\n", GetEncRulePrefix(), totalLevel);
+					}
+
+					break;
+
+					/*
+					 * NOTE: the CHOICE, STRUCT and LIST switch clauses won't
+					 * fire due to the current 'normalization'
+					 * (see normalize.c)
+					 */
+
+				case C_CHOICE:
+					/*
+					 * strip off top tag of choice in not already done
+					 * since choice decoders assume you are passing in
+					 * their top tag
+					 */
+					if (!stoleChoiceTags)
+					{
+						fprintf(src, "    %s%d = %sDecTag (b, &%s%d, env);\n\n", tagIdVarNameG, ++tagLevel, GetEncRulePrefix(), decodedLenVarNameG, totalLevel);
+
+						fprintf(src, "    %s%d = %sDecLen (b, &%s%d, env);\n", itemLenVarNameG, ++elmtLevel, GetEncRulePrefix(), decodedLenVarNameG, totalLevel);
+					}
+					PrintCChoiceDecodeCode(src, td, t, elmtLevel, totalLevel + 1, tagLevel, elmtVarName);
+					break;
+
+				case C_STRUCT:
+					if (t->basicType->choiceId == BASICTYPE_SET)
+						PrintCSetDecodeCode(src, td, t, t->basicType->a.set, elmtLevel, totalLevel + 1, tagLevel, elmtVarName);
+					else
+					{
+						PrintCSeqDecodeCode(src, td, t, t->basicType->a.sequence, elmtLevel, totalLevel + 1, tagLevel, elmtVarName);
+						fprintf(src, "    seqDone = FALSE;\n");
+					}
+					fprintf(src, "             %s%d += %s%d;\n", decodedLenVarNameG, totalLevel, decodedLenVarNameG, totalLevel + 1);
+					break;
+
+				case C_LIST:
+					PrintCListDecoderCode(src, td, t, elmtLevel, totalLevel + 1, tagLevel, elmtVarName);
+					fprintf(src, "\n\n");
+					fprintf(src, "             %s%d += %s%d;\n", decodedLenVarNameG, totalLevel, decodedLenVarNameG, totalLevel + 1);
+					break;
+
+				case C_NO_TYPE:
+					break;
+
+				default:
+					fprintf(stderr, "PrintCElmtDecodeCode: ERROR - unknown c type id\n");
+					break;
 			}
-			fprintf(src, "    %s%sContent (b, %s%d, %s%d, %s, &%s%d, env);\n",
-				GetEncRulePrefix(), ctri->decodeRoutineName,
-				tagIdVarNameG, tagLevel, itemLenVarNameG, elmtLevel,
-				elmtVarName, decodedLenVarNameG, totalLevel);
-
-			/* From ftp://ftp.cs.ubc.ca/pub/local/src/snacc/bugs-in-1.1 */
-			if ((tmpType->basicType->choiceId == BASICTYPE_CHOICE)
-				&& !stoleChoiceTags)
-			{
-				fprintf(src, "\tif (elmtLen%d == INDEFINITE_LEN)\n", elmtLevel - 1);
-				fprintf(src, "\t\t%sDecEoc(b, &totalElmtsLen%d, env);\n",
-					GetEncRulePrefix(), totalLevel);
-			}
-
-			break;
-
-
-			/*
-			 * NOTE: the CHOICE, STRUCT and LIST switch clauses won't
-			 * fire due to the current 'normalization'
-			 * (see normalize.c)
-			 */
-
-		case C_CHOICE:
-			/*
-			 * strip off top tag of choice in not already done
-			 * since choice decoders assume you are passing in
-			 * their top tag
-			 */
-			if (!stoleChoiceTags)
-			{
-				fprintf(src, "    %s%d = %sDecTag (b, &%s%d, env);\n\n",
-					tagIdVarNameG, ++tagLevel,
-					GetEncRulePrefix(), decodedLenVarNameG, totalLevel);
-
-				fprintf(src, "    %s%d = %sDecLen (b, &%s%d, env);\n",
-					itemLenVarNameG, ++elmtLevel,
-					GetEncRulePrefix(), decodedLenVarNameG, totalLevel);
-			}
-			PrintCChoiceDecodeCode(src, td, t, elmtLevel, totalLevel + 1, tagLevel, elmtVarName);
-			break;
-
-
-		case C_STRUCT:
-			if (t->basicType->choiceId == BASICTYPE_SET)
-				PrintCSetDecodeCode(src, td, t, t->basicType->a.set, elmtLevel, totalLevel + 1, tagLevel, elmtVarName);
-			else
-			{
-				PrintCSeqDecodeCode(src, td, t, t->basicType->a.sequence, elmtLevel, totalLevel + 1, tagLevel, elmtVarName);
-				fprintf(src, "    seqDone = FALSE;\n");
-			}
-			fprintf(src, "             %s%d += %s%d;\n", decodedLenVarNameG, totalLevel, decodedLenVarNameG, totalLevel + 1);
-			break;
-
-
-		case C_LIST:
-			PrintCListDecoderCode(src, td, t, elmtLevel, totalLevel + 1, tagLevel, elmtVarName);
-			fprintf(src, "\n\n");
-			fprintf(src, "             %s%d += %s%d;\n", decodedLenVarNameG, totalLevel, decodedLenVarNameG, totalLevel + 1);
-			break;
-
-
-		case C_NO_TYPE:
-			break;
-
-		default:
-			fprintf(stderr, "PrintCElmtDecodeCode: ERROR - unknown c type id\n");
-			break;
-		}
 	}
 
 } /* PrintCElmtDecodeCode */
 
-
 /*
  * Prints code for decoding the elmts of SET
  */
-static void
-PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLevel, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts _AND_
-	int elmtLevel _AND_
-	int totalLevel _AND_
-	int tagLevel _AND_
-	char* varName)
+static void PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLevel, varName), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* elmts _AND_ int elmtLevel _AND_ int totalLevel _AND_ int tagLevel _AND_ char* varName)
 {
 	NamedType* e;
 	CTRI* ctri;
@@ -749,17 +615,15 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 	char* classStr;
 	char* formStr;
 	char* codeStr;
-	int   mandatoryCount = 0;
-	char  tmpVarName[MAX_VAR_REF];
-	int   stoleChoiceTags;
+	int mandatoryCount = 0;
+	char tmpVarName[MAX_VAR_REF];
+	int stoleChoiceTags;
 	char* routineName;
 	int initialTagLevel;
 	int initialElmtLevel;
 
-
 	initialTagLevel = tagLevel;
 	initialElmtLevel = elmtLevel;
-
 
 	routineName = td->cTypeDefInfo->decodeRoutineName;
 
@@ -767,8 +631,7 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 	{
 		fprintf(src, "    if (elmtLen%d == INDEFINITE_LEN)\n", elmtLevel);
 		fprintf(src, "    {\n");
-		fprintf(src, "        %sDecEoc (b, &totalElmtsLen%d, env);\n",
-			GetEncRulePrefix(), totalLevel);
+		fprintf(src, "        %sDecEoc (b, &totalElmtsLen%d, env);\n", GetEncRulePrefix(), totalLevel);
 		fprintf(src, "    }\n");
 		fprintf(src, "    else if (elmtLen%d != 0)\n", elmtLevel);
 		fprintf(src, "    {\n");
@@ -798,20 +661,16 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 		return;
 	}
 
-
 	fprintf(src, "for ( ; (totalElmtsLen%d < elmtLen%d) || (elmtLen%d == INDEFINITE_LEN);)\n", totalLevel, elmtLevel, elmtLevel);
 	fprintf(src, "{\n");
-	fprintf(src, "    tagId%d = %sDecTag (b, &totalElmtsLen%d, env);\n\n",
-		++tagLevel, GetEncRulePrefix(), totalLevel);
+	fprintf(src, "    tagId%d = %sDecTag (b, &totalElmtsLen%d, env);\n\n", ++tagLevel, GetEncRulePrefix(), totalLevel);
 	fprintf(src, "    if ((tagId%d == EOC_TAG_ID) && (elmtLen%d == INDEFINITE_LEN))\n", tagLevel, elmtLevel);
 	fprintf(src, "    {\n");
-	fprintf(src, "        %sDEC_2ND_EOC_OCTET (b, &totalElmtsLen%d, env)\n",
-		GetEncRulePrefix(), totalLevel);
+	fprintf(src, "        %sDEC_2ND_EOC_OCTET (b, &totalElmtsLen%d, env)\n", GetEncRulePrefix(), totalLevel);
 	fprintf(src, "        break; /* got EOC so can exit this SET's for loop*/\n");
 	fprintf(src, "    }\n");
 
-	fprintf(src, "    elmtLen%d = %sDecLen (b, &totalElmtsLen%d, env);\n",
-		++elmtLevel, GetEncRulePrefix(), totalLevel);
+	fprintf(src, "    elmtLen%d = %sDecLen (b, &totalElmtsLen%d, env);\n", ++elmtLevel, GetEncRulePrefix(), totalLevel);
 
 	fprintf(src, "    switch (tagId%d)\n", tagLevel);
 	fprintf(src, "    {\n");
@@ -840,14 +699,12 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 
 			if ((tags == NULL) || LIST_EMPTY(tags))
 			{
-				if ((builtinType != BASICTYPE_ANY) &&
-					(builtinType != BASICTYPE_ANYDEFINEDBY))
+				if ((builtinType != BASICTYPE_ANY) && (builtinType != BASICTYPE_ANYDEFINEDBY))
 				{
 					if (e->type->extensionAddition)
 					{
 						fprintf(src, "<Extensibility not supported in c-library>\n");
 						fprintf(src, "<--Suggest removing extension marker and making all respective extension additions optional>\n");
-
 					}
 					else
 					{
@@ -864,7 +721,7 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 			{
 				tag = (Tag*)FIRST_LIST_ELMT(tags);
 				classStr = Class2ClassStr(tag->tclass);
-				codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+				codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 				formStr = Form2FormStr(tag->form);
 
 				if (tag->tclass == UNIV)
@@ -877,24 +734,21 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 					else
 						fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, formStr, codeStr);
 				}
-				else
+				else if (tag->form == ANY_FORM)
 				{
-					if (tag->form == ANY_FORM)
-					{
-						fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
+					fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 
-						fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-					}
-					else
-						fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+					fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 				}
+				else
+					fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 
 				AsnListFirst(tags);
 				AsnListNext(tags); /* set curr to 2nd tag */
 				FOR_REST_LIST_ELMT(tag, tags)
 				{
 
-					codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+					codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 					classStr = Class2ClassStr(tag->tclass);
 					formStr = Form2FormStr(tag->form);
 
@@ -904,9 +758,9 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 						{
 							if (tag->form == ANY_FORM)
 							{
-								fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
+								fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 
-								fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
+								fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 							}
 							fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, formStr, codeStr);
 						}
@@ -914,11 +768,11 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 						{
 							if (tag->form == ANY_FORM)
 							{
-								fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
+								fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 
-								fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
+								fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 							}
-							fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+							fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 						}
 					}
 					else
@@ -926,8 +780,7 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 						tagLevel = initialTagLevel + 2;
 						if (tag->form == ANY_FORM)
 						{
-							fprintf(src, "    tagId%d = %sDecTag (b, &totalElmtsLen%d, env);\n",
-								tagLevel, GetEncRulePrefix(), totalLevel);
+							fprintf(src, "    tagId%d = %sDecTag (b, &totalElmtsLen%d, env);\n", tagLevel, GetEncRulePrefix(), totalLevel);
 							if (tag->tclass == UNIV)
 							{
 								fprintf(src, "if ((tagId%d != MAKE_TAG_ID (%s, %s, %s)) &&\n", tagLevel, classStr, Form2FormStr(PRIM), codeStr);
@@ -935,17 +788,16 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 							}
 							else
 							{
-								fprintf(src, "if ((tagId%d != MAKE_TAG_ID (%s, %s, %s)) &&\n", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-								fprintf(src, "   (tagId%d != MAKE_TAG_ID (%s, %s, %s)))\n", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
+								fprintf(src, "if ((tagId%d != MAKE_TAG_ID (%s, %s, %s)) &&\n", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
+								fprintf(src, "   (tagId%d != MAKE_TAG_ID (%s, %s, %s)))\n", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));	 // RWC;tag->code);
 							}
-
 						}
 						else
 						{
 							if (tag->tclass == UNIV)
 								fprintf(src, "if (%sDecTag (b, &totalElmtsLen%d, env) != MAKE_TAG_ID (%s, %s, %s))\n", GetEncRulePrefix(), totalLevel, classStr, formStr, codeStr);
 							else
-								fprintf(src, "if (%sDecTag (b, &totalElmtsLen%d, env) != MAKE_TAG_ID (%s, %s, %s))\n", GetEncRulePrefix(), totalLevel, classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+								fprintf(src, "if (%sDecTag (b, &totalElmtsLen%d, env) != MAKE_TAG_ID (%s, %s, %s))\n", GetEncRulePrefix(), totalLevel, classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 						}
 
 						fprintf(src, "    {\n");
@@ -955,7 +807,6 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 						fprintf(src, "elmtLen%d = %sDecLen (b, &totalElmtsLen%d, env);\n", ++elmtLevel, GetEncRulePrefix(), totalLevel);
 					}
 				}
-
 			}
 
 			MakeVarPtrRef(genDecCRulesG, td, parent, e->type, varName, tmpVarName, MAX_VAR_REF);
@@ -972,8 +823,7 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 			 * Since the any decode routines
 			 * decode their own first tag/len pair
 			 */
-			if ((builtinType == BASICTYPE_ANY) ||
-				(builtinType == BASICTYPE_ANYDEFINEDBY))
+			if ((builtinType == BASICTYPE_ANY) || (builtinType == BASICTYPE_ANYDEFINEDBY))
 				PrintEocDecoders(src, elmtLevel, initialElmtLevel, itemLenVarNameG, totalLevel, decodedLenVarNameG);
 			/*
 			 * must check for another EOC for tagged CHOICEs
@@ -982,8 +832,7 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 			 * they are only passed the tag/len of the choice's
 			 * component.
 			 */
-			else if ((builtinType == BASICTYPE_CHOICE) && !(stoleChoiceTags) &&
-				((tags != NULL) && !LIST_EMPTY(tags)))
+			else if ((builtinType == BASICTYPE_CHOICE) && !(stoleChoiceTags) && ((tags != NULL) && !LIST_EMPTY(tags)))
 				PrintEocDecoders(src, elmtLevel, initialElmtLevel, itemLenVarNameG, totalLevel, decodedLenVarNameG);
 
 			else
@@ -998,7 +847,7 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 			FreeTags(tags);
 		}
 		fprintf(src, "    break;\n\n");
-	}  /* end for */
+	} /* end for */
 
 	fprintf(src, "    default:\n");
 	fprintf(src, "        Asn1Error (\"%s%sContent: ERROR - Unexpected tag in SET\\n\");\n", GetEncRulePrefix(), routineName);
@@ -1020,24 +869,12 @@ PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 	fprintf(src, "        longjmp (env, %d);\n", (int)(*longJmpValG)--);
 	fprintf(src, "    }\n");
 
-}  /*  PrintCSetDecodeCode */
-
-
-
+} /*  PrintCSetDecodeCode */
 
 /*
  * Prints code for decoding the elmts of a SEQUENCE
  */
-static void
-PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLevel, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts _AND_
-	int elmtLevel _AND_
-	int totalLevel _AND_
-	int tagLevel _AND_
-	char* varName)
+static void PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLevel, varName), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* elmts _AND_ int elmtLevel _AND_ int totalLevel _AND_ int tagLevel _AND_ char* varName)
 {
 	CTRI* ctri;
 	NamedType* e;
@@ -1050,12 +887,11 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 	char* classStr;
 	char* formStr;
 	char* codeStr;
-	char  tmpVarName[MAX_VAR_REF];
-	int   stoleChoiceTags;
-	int   inTailOptElmts = FALSE;
-	int   initialElmtLevel;
-	int   initialTagLevel;
-
+	char tmpVarName[MAX_VAR_REF];
+	int stoleChoiceTags;
+	int inTailOptElmts = FALSE;
+	int initialElmtLevel;
+	int initialTagLevel;
 
 	initialTagLevel = tagLevel;
 	initialElmtLevel = elmtLevel;
@@ -1064,8 +900,7 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 	{
 		fprintf(src, "    if (elmtLen%d == INDEFINITE_LEN)\n", elmtLevel);
 		fprintf(src, "    {\n");
-		fprintf(src, "        %sDecEoc (b, &totalElmtsLen%d, env);\n",
-			GetEncRulePrefix(), totalLevel);
+		fprintf(src, "        %sDecEoc (b, &totalElmtsLen%d, env);\n", GetEncRulePrefix(), totalLevel);
 		fprintf(src, "    }\n");
 		fprintf(src, "    else if (elmtLen%d != 0)\n", elmtLevel);
 		fprintf(src, "    {\n");
@@ -1107,9 +942,7 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 	tagLevel++;
 	if (!inTailOptElmts)
 	{
-		if (((tmpTypeId == BASICTYPE_ANY) ||
-			(tmpTypeId == BASICTYPE_ANYDEFINEDBY)) &&
-			(CountTags(e->type) == 0))
+		if (((tmpTypeId == BASICTYPE_ANY) || (tmpTypeId == BASICTYPE_ANYDEFINEDBY)) && (CountTags(e->type) == 0))
 		{
 			if ((e->type->optional) && (e != (NamedType*)LAST_LIST_ELMT(elmts)))
 			{
@@ -1127,9 +960,7 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 		fprintf(src, "    else\n");
 		fprintf(src, "    {\n");
 
-		if (((tmpTypeId == BASICTYPE_ANY) ||
-			(tmpTypeId == BASICTYPE_ANYDEFINEDBY)) &&
-			(CountTags(e->type) == 0))
+		if (((tmpTypeId == BASICTYPE_ANY) || (tmpTypeId == BASICTYPE_ANYDEFINEDBY)) && (CountTags(e->type) == 0))
 		{
 			if ((e->type->optional) && (e != (NamedType*)LAST_LIST_ELMT(elmts)))
 			{
@@ -1168,11 +999,9 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 		tags = GetTags(e->type, &stoleChoiceTags);
 		builtinType = GetBuiltinType(e->type);
 
-
 		if ((tags == NULL) || LIST_EMPTY(tags))
 		{
-			if ((builtinType != BASICTYPE_ANY) &&
-				(builtinType != BASICTYPE_ANYDEFINEDBY))
+			if ((builtinType != BASICTYPE_ANY) && (builtinType != BASICTYPE_ANYDEFINEDBY))
 			{
 				if (e->type->extensionAddition)
 				{
@@ -1186,9 +1015,7 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 			}
 
 			if (inTailOptElmts)
-			{
 				fprintf(src, "    if (!seqDone)");
-			}
 			/* always enclose elmt decoder in block */
 			fprintf(src, "    {\n");
 
@@ -1200,15 +1027,13 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 						}
 			*/
 		}
-		else  /* has tags */
+		else /* has tags */
 		{
 			tag = (Tag*)FIRST_LIST_ELMT(tags);
 
 			classStr = Class2ClassStr(tag->tclass);
-			codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+			codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 			formStr = Form2FormStr(tag->form);
-
-
 
 			if (inTailOptElmts)
 				fprintf(src, "    if ((!seqDone) && (");
@@ -1225,16 +1050,13 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 				else
 					fprintf(src, "(tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, formStr, codeStr);
 			}
-			else
+			else if (tag->form == ANY_FORM)
 			{
-				if (tag->form == ANY_FORM)
-				{
-					fprintf(src, "(tagId%d == MAKE_TAG_ID (%s, %s, %s)) ||\n", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-					fprintf(src, "(tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-				}
-				else
-					fprintf(src, "(tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+				fprintf(src, "(tagId%d == MAKE_TAG_ID (%s, %s, %s)) ||\n", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
+				fprintf(src, "(tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));		 // RWC;tag->code);
 			}
+			else
+				fprintf(src, "(tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 
 			if (!stoleChoiceTags)
 			{
@@ -1249,9 +1071,8 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 			FOR_REST_LIST_ELMT(tag, tags)
 			{
 				classStr = Class2ClassStr(tag->tclass);
-				codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+				codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 				formStr = Form2FormStr(tag->form);
-
 
 				if (stoleChoiceTags)
 				{
@@ -1266,16 +1087,13 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 						else
 							fprintf(src, "     (tagId%d ==MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, formStr, codeStr);
 					}
-					else
+					else if (tag->form == ANY_FORM)
 					{
-						if (tag->form == ANY_FORM)
-						{
-							fprintf(src, "    (tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-							fprintf(src, "||\n    (tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-						}
-						else
-							fprintf(src, "    (tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+						fprintf(src, "    (tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));		// RWC;tag->code);
+						fprintf(src, "||\n    (tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 					}
+					else
+						fprintf(src, "    (tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 				}
 				else
 				{
@@ -1292,17 +1110,13 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 						else
 							fprintf(src, "    if (tagId%d != MAKE_TAG_ID (%s, %s, %s))\n", tagLevel, classStr, formStr, codeStr);
 					}
-					else
+					else if (tag->form == ANY_FORM)
 					{
-						if (tag->form == ANY_FORM)
-						{
-							fprintf(src, "    if ((tagId%d != MAKE_TAG_ID (%s, %s, %s)) &&\n", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-							fprintf(src, "        (tagId%d != MAKE_TAG_ID (%s, %s, %s)))\n", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-						}
-						else
-							fprintf(src, "    if (tagId%d != MAKE_TAG_ID (%s, %s, %s))\n", tagLevel, classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+						fprintf(src, "    if ((tagId%d != MAKE_TAG_ID (%s, %s, %s)) &&\n", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
+						fprintf(src, "        (tagId%d != MAKE_TAG_ID (%s, %s, %s)))\n", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));	 // RWC;tag->code);
 					}
-
+					else
+						fprintf(src, "    if (tagId%d != MAKE_TAG_ID (%s, %s, %s))\n", tagLevel, classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 
 					fprintf(src, "    {\n");
 					fprintf(src, "         Asn1Error (\"Unexpected Tag\\n\");\n");
@@ -1320,7 +1134,6 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 			}
 		}
 
-
 		MakeVarPtrRef(genDecCRulesG, td, parent, e->type, varName, tmpVarName, MAX_VAR_REF);
 
 		/*
@@ -1335,8 +1148,7 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 		 * Since the any decode routines
 		 * decode their own first tag/len pair
 		 */
-		if ((builtinType == BASICTYPE_ANY) ||
-			(builtinType == BASICTYPE_ANYDEFINEDBY))
+		if ((builtinType == BASICTYPE_ANY) || (builtinType == BASICTYPE_ANYDEFINEDBY))
 			PrintEocDecoders(src, elmtLevel, initialElmtLevel, itemLenVarNameG, totalLevel, decodedLenVarNameG);
 		/*
 		 * must check for another EOC for tagged CHOICEs
@@ -1345,13 +1157,11 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 		 * they are only passed the tag/len of the choice's
 		 * component.
 		 */
-		else if ((builtinType == BASICTYPE_CHOICE) && (!stoleChoiceTags) &&
-			((tags != NULL) && !LIST_EMPTY(tags)))
+		else if ((builtinType == BASICTYPE_CHOICE) && (!stoleChoiceTags) && ((tags != NULL) && !LIST_EMPTY(tags)))
 			PrintEocDecoders(src, elmtLevel, initialElmtLevel, itemLenVarNameG, totalLevel, decodedLenVarNameG);
 
 		else
 			PrintEocDecoders(src, elmtLevel - 1, initialElmtLevel, itemLenVarNameG, totalLevel, decodedLenVarNameG);
-
 
 		/*  could check cons len vs decode len here */
 
@@ -1377,12 +1187,9 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 			tmpTypeId = GetBuiltinType(tmpElmt->type);
 			if (!inTailOptElmts)
 			{
-				if (((tmpTypeId == BASICTYPE_ANY) ||
-					(tmpTypeId == BASICTYPE_ANYDEFINEDBY)) &&
-					(CountTags(tmpElmt->type) == 0))
+				if (((tmpTypeId == BASICTYPE_ANY) || (tmpTypeId == BASICTYPE_ANYDEFINEDBY)) && (CountTags(tmpElmt->type) == 0))
 				{
-					if ((e->type->optional) ||
-						((tmpElmt->type->optional) && (tmpElmt != last)))
+					if ((e->type->optional) || ((tmpElmt->type->optional) && (tmpElmt != last)))
 					{
 						/* let this cause a compile error in the gen'd code */
 						fprintf(src, "  <problems with untagged ANY that is optional or follows an optional sequence element - you must fix this>\n");
@@ -1398,16 +1205,12 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 				fprintf(src, "        seqDone = TRUE;\n");
 				fprintf(src, "    else\n");
 				fprintf(src, "    {\n");
-				if (((tmpTypeId == BASICTYPE_ANY) ||
-					(tmpTypeId == BASICTYPE_ANYDEFINEDBY)) &&
-					(CountTags(tmpElmt->type) == 0))
+				if (((tmpTypeId == BASICTYPE_ANY) || (tmpTypeId == BASICTYPE_ANYDEFINEDBY)) && (CountTags(tmpElmt->type) == 0))
 				{
-					if ((e->type->optional) ||
-						((tmpElmt->type->optional) && (tmpElmt != last)))
+					if ((e->type->optional) || ((tmpElmt->type->optional) && (tmpElmt != last)))
 					{
 						/* let this cause a compile error in the gen'd code */
 						fprintf(src, "  <problems with untagged ANY that is optional or follows an optional sequence element - you must fix this>\n");
-
 					}
 
 					/* peek ahead for first octet of eoc */
@@ -1445,9 +1248,7 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 		 * errors
 		 */
 		tmpTypeId = GetBuiltinType(e->type);
-		if (((tmpTypeId == BASICTYPE_ANYDEFINEDBY) ||
-			(tmpTypeId == BASICTYPE_ANY)) &&
-			(CountTags(e->type) == 0))
+		if (((tmpTypeId == BASICTYPE_ANYDEFINEDBY) || (tmpTypeId == BASICTYPE_ANY)) && (CountTags(e->type) == 0))
 		{
 			/* close if stmt block */
 			fprintf(src, "    }\n");
@@ -1468,7 +1269,6 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 		FreeTags(tags);
 	}
 
-
 	/*
 	 * print code to make sure that truly finished with sequence
 	 */
@@ -1476,8 +1276,7 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
 	fprintf(src, "    if (!seqDone)\n");
 	fprintf(src, "        longjmp (env, %d);\n\n", (int)(*longJmpValG)--);
 
-}  /*  PrintCSeqDecodeCode */
-
+} /*  PrintCSeqDecodeCode */
 
 /*
  * Generates code for internally defined lists
@@ -1501,15 +1300,7 @@ PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, totalLevel, tagLe
  *    ...
  * }
  */
-static void
-PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* list _AND_
-	int elmtLevel _AND_
-	int totalLevel _AND_
-	int tagLevel _AND_
-	char* varName)
+static void PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, varName), FILE* src _AND_ TypeDef* td _AND_ Type* list _AND_ int elmtLevel _AND_ int totalLevel _AND_ int tagLevel _AND_ char* varName)
 {
 	CTRI* ctri;
 	TagList* tags;
@@ -1519,7 +1310,7 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 	char* formStr;
 	char* codeStr;
 	char tmpVarName[MAX_VAR_REF];
-	int  stoleChoiceTags;
+	int stoleChoiceTags;
 	int initialTagLevel;
 	int initialElmtLevel;
 	int taglessAny;
@@ -1531,9 +1322,7 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 	tags = GetTags(list->basicType->a.setOf, &stoleChoiceTags);
 	builtinType = GetBuiltinType(list->basicType->a.setOf);
 
-	taglessAny = (((tags == NULL) || LIST_EMPTY(tags)) &&
-		((builtinType == BASICTYPE_ANY) ||
-			(builtinType == BASICTYPE_ANYDEFINEDBY)));
+	taglessAny = (((tags == NULL) || LIST_EMPTY(tags)) && ((builtinType == BASICTYPE_ANY) || (builtinType == BASICTYPE_ANYDEFINEDBY)));
 
 	fprintf(src, "    for (totalElmtsLen%d = 0; (totalElmtsLen%d < elmtLen%d) || (elmtLen%d == INDEFINITE_LEN);)\n", totalLevel, totalLevel, elmtLevel, elmtLevel);
 	fprintf(src, "    {\n");
@@ -1544,8 +1333,7 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 		fprintf(src, "    tagId%d = BufPeekByte (b);\n\n", ++tagLevel);
 		fprintf(src, "    if ((tagId%d == EOC_TAG_ID) && (elmtLen%d == INDEFINITE_LEN))\n", tagLevel, elmtLevel);
 		fprintf(src, "    {\n");
-		fprintf(src, "        %sDecEoc (b, &totalElmtsLen%d, env);\n",
-			GetEncRulePrefix(), totalLevel);
+		fprintf(src, "        %sDecEoc (b, &totalElmtsLen%d, env);\n", GetEncRulePrefix(), totalLevel);
 		fprintf(src, "        break; /* got EOC so can exit this SET OF/SEQ OF's for loop*/\n");
 		fprintf(src, "    }\n");
 	}
@@ -1559,7 +1347,6 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 		fprintf(src, "    }\n");
 	}
 
-
 	if ((tags == NULL) || LIST_EMPTY(tags))
 	{
 		if (!taglessAny)
@@ -1571,13 +1358,12 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 					fprintf (src,"    {\n");
 				}
 		*/
-
 	}
 	else if (!stoleChoiceTags) /* choice decoder will check tag */
 	{
 		tag = (Tag*)FIRST_LIST_ELMT(tags);
 		classStr = Class2ClassStr(tag->tclass);
-		codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+		codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 		formStr = Form2FormStr(tag->form);
 
 		if (tag->tclass == UNIV)
@@ -1591,16 +1377,13 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 			else
 				fprintf(src, "    if ((tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, formStr, codeStr);
 		}
-		else
+		else if (tag->form == ANY_FORM)
 		{
-			if (tag->form == ANY_FORM)
-			{
-				fprintf(src, "    if ((tagId%d == MAKE_TAG_ID (%s, %s, %s)) ||\n", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-				fprintf(src, "       (tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-			}
-			else
-				fprintf(src, "    if ((tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+			fprintf(src, "    if ((tagId%d == MAKE_TAG_ID (%s, %s, %s)) ||\n", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
+			fprintf(src, "       (tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));		 // RWC;tag->code);
 		}
+		else
+			fprintf(src, "    if ((tagId%d == MAKE_TAG_ID (%s, %s, %s))", tagLevel, classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 
 		fprintf(src, ")\n");
 		fprintf(src, "    {\n");
@@ -1613,7 +1396,7 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 			tagLevel = initialTagLevel + 2;
 			fprintf(src, "        tagId%d = %sDecTag (b, &totalElmtsLen%d, env);\n\n", tagLevel, GetEncRulePrefix(), totalLevel);
 			classStr = Class2ClassStr(tag->tclass);
-			codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+			codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 			formStr = Form2FormStr(tag->form);
 
 			if (tag->tclass == UNIV)
@@ -1626,18 +1409,13 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 				else
 					fprintf(src, "    if (tagId%d != MAKE_TAG_ID (%s, %s, %s))\n", tagLevel, classStr, formStr, codeStr);
 			}
-			else
+			else if (tag->form == ANY_FORM)
 			{
-				if (tag->form == ANY_FORM)
-				{
-					fprintf(src, "    if ((tagId%d != MAKE_TAG_ID (%s, %s, %s)) ||\n", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-					fprintf(src, "        (tagId%d != MAKE_TAG_ID (%s, %s, %s)))\n", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-
-				}
-				else
-					fprintf(src, "    if (tagId%d != MAKE_TAG_ID (%s, %s, %s))\n", tagLevel, classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+				fprintf(src, "    if ((tagId%d != MAKE_TAG_ID (%s, %s, %s)) ||\n", tagLevel, classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
+				fprintf(src, "        (tagId%d != MAKE_TAG_ID (%s, %s, %s)))\n", tagLevel, classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));	 // RWC;tag->code);
 			}
-
+			else
+				fprintf(src, "    if (tagId%d != MAKE_TAG_ID (%s, %s, %s))\n", tagLevel, classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 
 			fprintf(src, "    {\n");
 			fprintf(src, "         Asn1Error (\"Unexpected Tag\\n\");\n");
@@ -1647,11 +1425,7 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 		}
 	}
 	if (stoleChoiceTags)
-	{
 		fprintf(src, "        elmtLen%d = %sDecLen (b, &totalElmtsLen%d, env);\n", ++elmtLevel, GetEncRulePrefix(), totalLevel);
-	}
-
-
 
 	strcpy_s(tmpVarName, MAX_VAR_REF, "(*tmpVar)");
 	fprintf(src, "    tmpVar = (%s**) AsnListAppend (%s);\n", ctri->cTypeName, varName);
@@ -1665,8 +1439,7 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 	 * Since the any decode routines
 	 * decode their own first tag/len pair
 	 */
-	if ((builtinType == BASICTYPE_ANY) ||
-		(builtinType == BASICTYPE_ANYDEFINEDBY))
+	if ((builtinType == BASICTYPE_ANY) || (builtinType == BASICTYPE_ANYDEFINEDBY))
 		PrintEocDecoders(src, elmtLevel, initialElmtLevel, itemLenVarNameG, totalLevel, decodedLenVarNameG);
 	/*
 	 * must check for another EOC for tagged CHOICEs
@@ -1675,13 +1448,11 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 	 * they are only passed the tag/len of the choice's
 	 * component.
 	 */
-	else if ((builtinType == BASICTYPE_CHOICE) && (!stoleChoiceTags) &&
-		((tags != NULL) && !LIST_EMPTY(tags)))
+	else if ((builtinType == BASICTYPE_CHOICE) && (!stoleChoiceTags) && ((tags != NULL) && !LIST_EMPTY(tags)))
 		PrintEocDecoders(src, elmtLevel, initialElmtLevel, itemLenVarNameG, totalLevel, decodedLenVarNameG);
 
 	else
 		PrintEocDecoders(src, elmtLevel - 1, initialElmtLevel, itemLenVarNameG, totalLevel, decodedLenVarNameG);
-
 
 	if ((!stoleChoiceTags) && (!taglessAny))
 	{
@@ -1696,22 +1467,12 @@ PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, tagLevel, va
 
 	FreeTags(tags);
 
-}  /*  PrintCListDecodeCode */
-
-
+} /*  PrintCListDecodeCode */
 
 /*
  * t is the choice type pointer
  */
-static void
-PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	int elmtLevel _AND_
-	int totalLevel _AND_
-	int tagLevel _AND_
-	char* varName)
+static void PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varName), FILE* src _AND_ TypeDef* td _AND_ Type* t _AND_ int elmtLevel _AND_ int totalLevel _AND_ int tagLevel _AND_ char* varName)
 {
 	NamedType* e;
 	CTRI* ctri;
@@ -1721,9 +1482,9 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 	char* classStr;
 	char* formStr;
 	char* codeStr;
-	char  tmpVarName[MAX_VAR_REF];
-	char  choiceIdVarName[MAX_VAR_REF];
-	int   stoleChoiceTags;
+	char tmpVarName[MAX_VAR_REF];
+	char choiceIdVarName[MAX_VAR_REF];
+	int stoleChoiceTags;
 	void* tmp;
 	int initialTagLevel;
 	int initialElmtLevel;
@@ -1733,7 +1494,6 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 
 	fprintf(src, "    switch (tagId%d)\n", tagLevel);
 	fprintf(src, "    {\n");
-
 
 	FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
 	{
@@ -1762,8 +1522,7 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 
 		if ((tags == NULL) || LIST_EMPTY(tags))
 		{
-			if ((builtinType != BASICTYPE_ANY) &&
-				(builtinType != BASICTYPE_ANYDEFINEDBY))
+			if ((builtinType != BASICTYPE_ANY) && (builtinType != BASICTYPE_ANYDEFINEDBY))
 			{
 				if (e->type->extensionAddition)
 				{
@@ -1780,13 +1539,12 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 				fprintf(src, "    /* You must hand code ANY type refs */\n");
 				fprintf(src, "       case MAKE_TAG_ID (?, ?, ?):\n");
 			}
-
 		}
 		else
 		{
 			tag = (Tag*)FIRST_LIST_ELMT(tags);
 			classStr = Class2ClassStr(tag->tclass);
-			codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+			codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 			formStr = Form2FormStr(tag->form);
 
 			if (tag->tclass == UNIV)
@@ -1799,26 +1557,21 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 				else
 					fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, formStr, codeStr);
 			}
-			else
+			else if (tag->form == ANY_FORM)
 			{
-				if (tag->form == ANY_FORM)
-				{
-					fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-					fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1));//RWC;tag->code);
-				}
-				else
-					fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, formStr, DetermineCode(tag, NULL, 1));//RWC;tag->code);
+				fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(PRIM), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
+				fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(CONS), DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 			}
-
+			else
+				fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, formStr, DetermineCode(tag, NULL, 1)); // RWC;tag->code);
 
 			AsnListFirst(tags);
 			AsnListNext(tags); /* set curr ptr to 2nd elmt */
 			FOR_REST_LIST_ELMT(tag, tags)
 			{
 				classStr = Class2ClassStr(tag->tclass);
-				codeStr = DetermineCode(tag, NULL, 0);//RWC;Code2UnivCodeStr (tag->code);
+				codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 				formStr = Form2FormStr(tag->form);
-
 
 				if (stoleChoiceTags)
 				{
@@ -1837,11 +1590,11 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 						codeStr = DetermineCode(tag, NULL, 1);
 						if (tag->form == ANY_FORM)
 						{
-							fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(PRIM), codeStr);//RWC;tag->code);
-							fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(CONS), codeStr);//RWC;tag->code);
+							fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(PRIM), codeStr); // RWC;tag->code);
+							fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, Form2FormStr(CONS), codeStr); // RWC;tag->code);
 						}
 						else
-							fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, formStr, codeStr);//RWC;tag->code);
+							fprintf(src, "       case MAKE_TAG_ID (%s, %s, %s):\n", classStr, formStr, codeStr); // RWC;tag->code);
 					}
 				}
 				else
@@ -1858,10 +1611,9 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 						else
 						{
 							codeStr = DetermineCode(tag, NULL, 1);
-							fprintf(src, "if ((tagId%d != MAKE_TAG_ID (%s, %s, %s)) &&\n", tagLevel, classStr, Form2FormStr(PRIM), codeStr);//RWC;tag->code);
-							fprintf(src, "   (tagId%d != MAKE_TAG_ID (%s, %s, %s)))\n", tagLevel, classStr, Form2FormStr(CONS), codeStr);//RWC;tag->code);
+							fprintf(src, "if ((tagId%d != MAKE_TAG_ID (%s, %s, %s)) &&\n", tagLevel, classStr, Form2FormStr(PRIM), codeStr); // RWC;tag->code);
+							fprintf(src, "   (tagId%d != MAKE_TAG_ID (%s, %s, %s)))\n", tagLevel, classStr, Form2FormStr(CONS), codeStr);	 // RWC;tag->code);
 						}
-
 					}
 					else
 					{
@@ -1870,7 +1622,7 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 						else
 						{
 							codeStr = DetermineCode(tag, NULL, 1);
-							fprintf(src, "if (%sDecTag (b, &totalElmtsLen%d, env) != MAKE_TAG_ID (%s, %s, %s))\n", GetEncRulePrefix(), totalLevel, classStr, formStr, codeStr);//RWC;tag->code);
+							fprintf(src, "if (%sDecTag (b, &totalElmtsLen%d, env) != MAKE_TAG_ID (%s, %s, %s))\n", GetEncRulePrefix(), totalLevel, classStr, formStr, codeStr); // RWC;tag->code);
 						}
 					}
 
@@ -1882,7 +1634,6 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 				}
 			}
 		}
-
 
 		MakeChoiceIdValueRef(genDecCRulesG, td, t, e->type, varName, choiceIdVarName, MAX_VAR_REF);
 		fprintf(src, "        %s = %s;\n", choiceIdVarName, ctri->choiceIdSymbol);
@@ -1903,8 +1654,7 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 		 * Since the any decode routines
 		 * decode their own first tag/len pair
 		 */
-		if ((builtinType == BASICTYPE_ANY) ||
-			(builtinType == BASICTYPE_ANYDEFINEDBY))
+		if ((builtinType == BASICTYPE_ANY) || (builtinType == BASICTYPE_ANYDEFINEDBY))
 			PrintEocDecoders(src, elmtLevel, initialElmtLevel - 1, itemLenVarNameG, totalLevel, decodedLenVarNameG);
 		/*
 		 * must check for another EOC for tagged CHOICEs
@@ -1913,13 +1663,11 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 		 * they are only passed the tag/len of the choice's
 		 * component.
 		 */
-		else if ((builtinType == BASICTYPE_CHOICE) && (!stoleChoiceTags) &&
-			((tags != NULL) && !LIST_EMPTY(tags)))
+		else if ((builtinType == BASICTYPE_CHOICE) && (!stoleChoiceTags) && ((tags != NULL) && !LIST_EMPTY(tags)))
 			PrintEocDecoders(src, elmtLevel, initialElmtLevel - 1, itemLenVarNameG, totalLevel, decodedLenVarNameG);
 
 		else
 			PrintEocDecoders(src, elmtLevel - 1, initialElmtLevel - 1, itemLenVarNameG, totalLevel, decodedLenVarNameG);
-
 
 		FreeTags(tags);
 
@@ -1927,7 +1675,7 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 
 		/* reset curr list node to value remember at beg of loop */
 		SET_CURR_LIST_NODE(t->basicType->a.choice, tmp);
-	}  /* end for */
+	} /* end for */
 
 	fprintf(src, "    default:\n");
 	fprintf(src, "        Asn1Error (\"ERROR - unexpected tag in CHOICE\\n\");\n");
@@ -1936,9 +1684,7 @@ PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, tagLevel, varN
 
 	fprintf(src, "    } /* end switch */\n");
 
-}  /* PrintCChoiceDecodeCode */
-
-
+} /* PrintCChoiceDecodeCode */
 
 /*static void
 PrintCLenDecodingCode PARAMS ((f),

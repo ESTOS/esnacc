@@ -69,35 +69,25 @@
 #include "rules.h"
 #include "../str-util.h"
 #include "../../core/enc-rules.h"
- /* REN -- 1/13/98 -- added next line for proto of GetBuiltinType() */
+/* REN -- 1/13/98 -- added next line for proto of GetBuiltinType() */
 #include "../../core/snacc-util.h"
 
 int anyEnumValG = 0;
 
+void PrintCAnyEnum PROTO((FILE * hdr, Module* m, CRules* r));
 
-void PrintCAnyEnum PROTO((FILE* hdr, Module* m, CRules* r));
-
-void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods,
-	Module* m, CRules* r, int printEncoders,
-	int printDecoders, int printPrinters,
-	int printFree);
-void PrintCOidValue PROTO((FILE* f, CRules* r, AsnOid* oid));
-
+void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods, Module* m, CRules* r, int printEncoders, int printDecoders, int printPrinters, int printFree);
+void PrintCOidValue PROTO((FILE * f, CRules* r, AsnOid* oid));
 
 /* REN -- 1/13/98 -- added following prototype */
-TypeDef* GetTypeDef PROTO((Type* t));
+TypeDef* GetTypeDef PROTO((Type * t));
 
-
-void PrintCAnyCode(FILE* src, FILE* hdr, CRules* r, ModuleList* mods,
-	Module* m, int printEncoders, int printDecoders,
-	int printPrinters, int printFree)
+void PrintCAnyCode(FILE* src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, int printEncoders, int printDecoders, int printPrinters, int printFree)
 {
 	EncRulesType* encoding;
 
-
-	if (!m->hasAnys) {
+	if (!m->hasAnys)
 		return;
-	}
 
 	/* XXX - Currently any types will only be able to be used with one of
 	 * the encoding rules.  To fix, we need seperate hashes for each encoding
@@ -107,18 +97,11 @@ void PrintCAnyCode(FILE* src, FILE* hdr, CRules* r, ModuleList* mods,
 	SetEncRules(*encoding);
 
 	PrintCAnyEnum(hdr, m, r);
-	PrintCAnyHashInitRoutine(src, hdr, mods, m, r, printEncoders,
-		printDecoders, printPrinters, printFree);
+	PrintCAnyHashInitRoutine(src, hdr, mods, m, r, printEncoders, printDecoders, printPrinters, printFree);
 
-}  /* PrintAnyCode */
+} /* PrintAnyCode */
 
-
-
-void
-PrintCAnyEnum PARAMS((hdr, m, r),
-	FILE* hdr _AND_
-	Module* m _AND_
-	CRules* r)
+void PrintCAnyEnum PARAMS((hdr, m, r), FILE* hdr _AND_ Module* m _AND_ CRules* r)
 {
 	/*	TypeDef *td;
 		AnyRef *ar;
@@ -204,9 +187,7 @@ PrintCAnyEnum PARAMS((hdr, m, r),
 		if (vd->value != NULL)
 		{
 			t = vd->value->type;
-			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) &&
-				(t->basicType->a.macroType->choiceId ==
-					MACROTYPE_SNMPOBJECTTYPE))
+			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) && (t->basicType->a.macroType->choiceId == MACROTYPE_SNMPOBJECTTYPE))
 			{
 				strcpy_s(anyId, 256, vd->definedName);
 				Dash2Underscore(anyId, strlen(anyId));
@@ -227,13 +208,9 @@ PrintCAnyEnum PARAMS((hdr, m, r),
 
 	fprintf(hdr, "} %sAnyId;\n\n\n", modName);
 	Free(modName);
-}  /* PrintAnyEnum */
+} /* PrintAnyEnum */
 
-
-void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods,
-	Module* m, CRules* r, int printEncoders,
-	int printDecoders, int printPrinters,
-	int printFree)
+void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods, Module* m, CRules* r, int printEncoders, int printDecoders, int printPrinters, int printFree)
 {
 	TypeDef* td;
 	/*	AnyRef *ar;
@@ -256,7 +233,7 @@ void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods,
 	char* typeName = NULL;
 	/* REN -- end */
 
-		/* print proto in hdr file */
+	/* print proto in hdr file */
 	modName = Asn1TypeName2CTypeName(m->modId->name);
 	fprintf(hdr, "void InitAny%s();\n\n", modName);
 
@@ -398,9 +375,7 @@ void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods,
 		if (vd->value != NULL)
 		{
 			t = vd->value->type;
-			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) &&
-				(t->basicType->a.macroType->choiceId ==
-					MACROTYPE_SNMPOBJECTTYPE))
+			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) && (t->basicType->a.macroType->choiceId == MACROTYPE_SNMPOBJECTTYPE))
 			{
 				bv = vd->value->basicValue;
 				if (bv != NULL)
@@ -408,8 +383,7 @@ void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods,
 					installedSomeHashes = TRUE;
 					if (bv->choiceId == BASICVALUE_OID)
 					{
-						fprintf(src, "    %s oid%d =",
-							r->typeConvTbl[BASICTYPE_OID].cTypeName, i++);
+						fprintf(src, "    %s oid%d =", r->typeConvTbl[BASICTYPE_OID].cTypeName, i++);
 						PrintCOidValue(src, r, bv->a.oid);
 						fprintf(src, ";\n");
 					}
@@ -427,9 +401,7 @@ void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods,
 		if (vd->value != NULL)
 		{
 			t = vd->value->type;
-			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) &&
-				(t->basicType->a.macroType->choiceId ==
-					MACROTYPE_SNMPOBJECTTYPE))
+			if ((GetBuiltinType(t) == BASICTYPE_MACROTYPE) && (t->basicType->a.macroType->choiceId == MACROTYPE_SNMPOBJECTTYPE))
 			{
 				bv = vd->value->basicValue;
 				if (bv != NULL)
@@ -443,30 +415,23 @@ void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods,
 
 					/* If the syntax of this any is a basic type, get the
 					function pointers from the rules table. */
-					if (((t->basicType->choiceId >= BASICTYPE_BOOLEAN) &&
-						(t->basicType->choiceId <= BASICTYPE_SETOF)) ||
-						((t->basicType->choiceId >= BASICTYPE_NUMERIC_STR) &&
-							(t->basicType->choiceId <= BASICTYPE_T61_STR)))
+					if (((t->basicType->choiceId >= BASICTYPE_BOOLEAN) && (t->basicType->choiceId <= BASICTYPE_SETOF)) || ((t->basicType->choiceId >= BASICTYPE_NUMERIC_STR) && (t->basicType->choiceId <= BASICTYPE_T61_STR)))
 					{
 						typeId = t->basicType->choiceId;
-						encRoutineName =
-							r->typeConvTbl[typeId].encodeRoutineName;
-						decRoutineName =
-							r->typeConvTbl[typeId].decodeRoutineName;
-						printRoutineName =
-							r->typeConvTbl[typeId].printRoutineName;
+						encRoutineName = r->typeConvTbl[typeId].encodeRoutineName;
+						decRoutineName = r->typeConvTbl[typeId].decodeRoutineName;
+						printRoutineName = r->typeConvTbl[typeId].printRoutineName;
 						switch (typeId)
 						{
-						case BASICTYPE_BOOLEAN:
-						case BASICTYPE_INTEGER:
-						case BASICTYPE_NULL:
-						case BASICTYPE_REAL:
-						case BASICTYPE_ENUMERATED:
-							freeRoutineName = "NULL";
-							break;
-						default:
-							freeRoutineName =
-								r->typeConvTbl[typeId].freeRoutineName;
+							case BASICTYPE_BOOLEAN:
+							case BASICTYPE_INTEGER:
+							case BASICTYPE_NULL:
+							case BASICTYPE_REAL:
+							case BASICTYPE_ENUMERATED:
+								freeRoutineName = "NULL";
+								break;
+							default:
+								freeRoutineName = r->typeConvTbl[typeId].freeRoutineName;
 						}
 
 						typeName = r->typeConvTbl[typeId].cTypeName;
@@ -492,16 +457,13 @@ void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods,
 					}
 
 					if (bv->choiceId == BASICVALUE_OID)
-						fprintf(src, "    InstallAnyByOid (%s, &oid%d, ",
-							anyId, i++);
+						fprintf(src, "    InstallAnyByOid (%s, &oid%d, ", anyId, i++);
 					else if (bv->choiceId == BASICVALUE_INTEGER)
-						fprintf(src, "    InstallAnyByInt (%s, %d, ",
-							anyId, bv->a.integer);
+						fprintf(src, "    InstallAnyByInt (%s, %d, ", anyId, bv->a.integer);
 
 					if (encRoutineName != NULL)
 					{
-						fprintf(src, "sizeof (%s), (EncodeFcn)B%s, ", typeName,
-							encRoutineName);
+						fprintf(src, "sizeof (%s), (EncodeFcn)B%s, ", typeName, encRoutineName);
 						fprintf(src, "(DecodeFcn)B%s, ", decRoutineName);
 						if (printFree)
 							fprintf(src, "(FreeFcn)%s, ", freeRoutineName);
@@ -534,35 +496,33 @@ void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods,
 		fprintf(src, "     * T1 ::= SEQUENCE { id INTEGER, ANY DEFINED BY id }\n");
 		fprintf(src, "     * and the id 1 maps to the type BOOLEAN use the following:\n");
 		fprintf(src, "     * InstallAnyByInt (SOMEBOOL_ANY_ID, 1, sizeof (AsnBool), (EncodeFcn) %sEncAsnBool, (DecodeFcn)%sDecAsnBool, (FreeFcn)NULL, (PrintFcn)PrintAsnBool);;\n", GetEncRulePrefix(), GetEncRulePrefix());
-		fprintf(src, "     */\n ???????\n");  /* generate compile error */
+		fprintf(src, "     */\n ???????\n"); /* generate compile error */
 	}
 
 	fprintf(src, "}  /* InitAny%s */\n\n\n", modName);
 
 	Free(modName);
-}  /* PrintAnyHashInitRoutine */
+} /* PrintAnyHashInitRoutine */
 
 /* REN -- 1/13/98 -- GetTypeDef() function added to return the type def info
 for the given type. */
-TypeDef*
-GetTypeDef PARAMS((t),
-	Type* t)
+TypeDef* GetTypeDef PARAMS((t), Type* t)
 {
 	if (t == NULL)
 		return NULL;
 
 	switch (t->basicType->choiceId)
 	{
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_IMPORTTYPEREF:
-		return t->basicType->a.localTypeRef->link;
-		break;
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
+			return t->basicType->a.localTypeRef->link;
+			break;
 
-	default:
-		return NULL;
+		default:
+			return NULL;
 	}
 	/*fprintf (fHandle, "GetTypeDef: ERROR - cannot get type def for unlinked local/import type refs\n");
 	return NULL;*/
 
-}  /* GetTypeDef */
+} /* GetTypeDef */
 /* REN -- end */

@@ -19,9 +19,9 @@
 #ifndef _nibble_alloc_h_
 #define _nibble_alloc_h_
 
-
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 	typedef struct NibbleBuf
@@ -32,15 +32,12 @@ extern "C" {
 		struct NibbleBuf* next;
 	} NibbleBuf;
 
-
 	typedef struct NibbleMem
 	{
 		NibbleBuf* firstNibbleBuf;
 		NibbleBuf* currNibbleBuf;
 		unsigned long incrementSize;
 	} NibbleMem;
-
-
 
 	void InitNibbleMem PROTO((unsigned long initialSize, unsigned long incrementSize));
 
@@ -52,11 +49,8 @@ extern "C" {
 
 	void ResetNibbleMem();
 
-
 #ifdef __cplusplus
 }
 #endif
 
-
 #endif /* conditional include */
-

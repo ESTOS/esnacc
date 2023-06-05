@@ -41,7 +41,6 @@ AsnLen AsnBool::PEnc(AsnBufBits& b) const
 	return len;
 }
 
-
 void AsnBool::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 {
 	unsigned char* cBool;
@@ -49,20 +48,14 @@ void AsnBool::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 	cBool = b.GetBits(1);
 
 	if ((cBool[0] & 0x80) == 0x80)
-	{
 		value = true;
-	}
 	else
-	{
 		value = false;
-	}
 
 	bitsDecoded += 1;
 
 	free(cBool);
 }
-
-
 
 AsnLen AsnBool::BEnc(AsnBuf& b) const
 {
@@ -83,9 +76,7 @@ void AsnBool::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 
 	tagId = BDecTag(b, bytesDecoded);
 	if (tagId != MAKE_TAG_ID(UNIV, PRIM, BOOLEAN_TAG_CODE))
-	{
 		throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
-	}
 	elmtLen = BDecLen(b, bytesDecoded);
 
 	BDecContent(b, MAKE_TAG_ID(UNIV, PRIM, BOOLEAN_TAG_CODE), elmtLen, bytesDecoded);
@@ -99,9 +90,7 @@ void AsnBool::BDecContent(const AsnBuf& b, AsnTag /*tagId*/, AsnLen elmtLen, Asn
 	FUNC("AsnBool::BDecContent");
 
 	if (elmtLen != 1)
-	{
 		throw BoundsException("AsnBool max length exceeded", STACK_ENTRY);
-	}
 
 	value = (b.GetByte() != 0);
 	bytesDecoded++;
@@ -127,9 +116,11 @@ void AsnBool::Print(std::ostream& os, unsigned short /*indent*/) const
 void AsnBool::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	os << "<BOOLEAN>";
-	if (lpszTitle) os << lpszTitle;
+	if (lpszTitle)
+		os << lpszTitle;
 	os << "-";
-	Print(os); os << "</BOOLEAN>\n";
+	Print(os);
+	os << "</BOOLEAN>\n";
 }
 
 char* AsnBool::checkBoolSingleVal(const bool m_SingleVal) const
@@ -153,7 +144,6 @@ char* AsnBool::checkBoolSingleVal(const bool m_SingleVal) const
 #endif
 		pError = _strdup(cTmperr);
 		return pError;
-
 	}
 }
 

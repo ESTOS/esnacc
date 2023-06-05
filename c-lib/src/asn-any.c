@@ -41,10 +41,7 @@ Table* anyIntHashTblG = NULL;
  * this any values type (gets ptr to hash tbl entry from int key).
  * The hash table entry contains ptrs to the encode/decode etc. routines.
  */
-void
-SetAnyTypeByInt PARAMS((v, id),
-	AsnAny* v _AND_
-	AsnInt id)
+void SetAnyTypeByInt PARAMS((v, id), AsnAny* v _AND_ AsnInt id)
 {
 	Hash hash;
 	void* anyInfo;
@@ -56,7 +53,6 @@ SetAnyTypeByInt PARAMS((v, id),
 	else
 		v->ai = NULL; /* indicates failure */
 
-
 } /* SetAnyTypeByInt */
 
 /* -------- ========== DAD =========== -------------- */
@@ -65,7 +61,7 @@ SetAnyTypeByInt PARAMS((v, id),
  */
 AsnLen BEncUnknownAsnAny(GenBuf* b, void* value)
 {
-	AsnOcts* data;	/* where we will store the stuff */
+	AsnOcts* data; /* where we will store the stuff */
 	/* since the unknown type was just block copied into a oct's struct, we
 	 * only need copy it out.... you will need to change this if
 	 * you decide to stuff unknown any types for encoding in a
@@ -74,7 +70,6 @@ AsnLen BEncUnknownAsnAny(GenBuf* b, void* value)
 	data = (AsnOcts*)value;
 	BufPutSegRvs(b, data->octs, data->octetLen);
 	return (AsnLen)(data->octetLen);
-
 }
 
 void BDecUnknownAsnAny(GenBuf* b, void* value, AsnLen* bytesDecoded, ENV_TYPE env)
@@ -87,12 +82,12 @@ void BDecUnknownAsnAny(GenBuf* b, void* value, AsnLen* bytesDecoded, ENV_TYPE en
 	 * into a buffer which we will have to allocate.
 	 */
 
-	 /* need to record the current read location in the buffer so
-	  * that we can copy out the tag+len+data later on.
-	  */
+	/* need to record the current read location in the buffer so
+	 * that we can copy out the tag+len+data later on.
+	 */
 #ifdef OLD_CODE
 #ifdef USE_EXP_BUF
-	loc = (**b).curr;	/* for XBUF */
+	loc = (**b).curr; /* for XBUF */
 #endif
 #endif
 
@@ -103,8 +98,8 @@ void BDecUnknownAsnAny(GenBuf* b, void* value, AsnLen* bytesDecoded, ENV_TYPE en
 
 #ifdef OLD_CODE
 
-	tagId1 = BDecTag(b, &totalElmtsLen1, env);			/* item tag */
-	elmtLen1 = BDecLen(b, &totalElmtsLen1, env);		/* len of item */
+	tagId1 = BDecTag(b, &totalElmtsLen1, env);	 /* item tag */
+	elmtLen1 = BDecLen(b, &totalElmtsLen1, env); /* len of item */
 	if (elmtLen1 == INDEFINITE_LEN)
 	{
 		/* can't deal with indef len unknown types here (at least for now) */
@@ -113,8 +108,8 @@ void BDecUnknownAsnAny(GenBuf* b, void* value, AsnLen* bytesDecoded, ENV_TYPE en
 	}
 
 	/* and now decode the contents */
-	data = (AsnOcts*)value;	/* allocated by the any routine */
-	data->octetLen = elmtLen1 + totalElmtsLen1;	/* tag+len+data lengths */
+	data = (AsnOcts*)value;						/* allocated by the any routine */
+	data->octetLen = elmtLen1 + totalElmtsLen1; /* tag+len+data lengths */
 	data->octs = Asn1Alloc(data->octetLen + 1);
 	CheckAsn1Alloc(data->octs, env);
 	/* b was inc'd by our reading the tag - need to mem copy the data
@@ -141,33 +136,29 @@ void BDecUnknownAsnAny(GenBuf* b, void* value, AsnLen* bytesDecoded, ENV_TYPE en
 /*
  * Same as SetAnyTypeByInt except that the hash key is an OBJECT IDENTIFER.
  */
-void SetAnyTypeByOid PARAMS((v, id),
-	AsnAny* v _AND_
-	AsnOid* id)
+void SetAnyTypeByOid PARAMS((v, id), AsnAny* v _AND_ AsnOid* id)
 {
 	Hash hash;
 	void* anyInfo;
 
 	/* use encoded oid as hash string */
 	hash = MakeHash(id->octs, id->octetLen);
-	if (CheckForAndReturnValue(anyOidHashTblG, hash, &anyInfo)) {
+	if (CheckForAndReturnValue(anyOidHashTblG, hash, &anyInfo))
 		v->ai = (AnyInfo*)anyInfo;
-	}
-	else {
+	else
 		v->ai = NULL; /* indicates failure */
-	}
 
 	/* DAD - 1/21/98
 	 * Modification to deal with Unknown ANY's - we wish to
 	 * leave them in an octet chunk
 	 */
-	if (v->ai == NULL)	/* no table entry */
+	if (v->ai == NULL) /* no table entry */
 	{
 		v->ai = (AnyInfo*)Asn1Alloc(sizeof(AnyInfo));
 
 		/*		v->ai = (AnyInfo*) malloc(sizeof(AnyInfo)); */ /* fix2 */
-				/* CheckAsn1Alloc((v->ai), env); fix */
-			 /*   v->ai->anyId = (int) hash;	 need id numbers - use hash for now*/
+															   /* CheckAsn1Alloc((v->ai), env); fix */
+															   /*   v->ai->anyId = (int) hash;	 need id numbers - use hash for now*/
 
 		/* mod for CM v1.2, we will place an unknown any constant into the
 		 * ID field so that our higher level code can detect an unknown any based
@@ -186,8 +177,7 @@ void SetAnyTypeByOid PARAMS((v, id),
 		v->ai->Print = (PrintFcn)PrintAsnOcts;
 #else
 		v->ai->Print = (PrintFcn)NULL;
-#endif	/* _USE_PRINTING_ */
-
+#endif /* _USE_PRINTING_ */
 
 		/* Additional mod - for CM version 1.2 we will no longer place the Unknown
 		 * any handler into the table, intead catching the failed lookup each
@@ -195,17 +185,17 @@ void SetAnyTypeByOid PARAMS((v, id),
 		 */
 #ifdef _OLDER_LIB_
 
-		 /* after this is called with an oid we didn't have, from now on
-		  * this generic handler will be found for all further calls with
-		  * the given oid.
-		  */
+		/* after this is called with an oid we didn't have, from now on
+		 * this generic handler will be found for all further calls with
+		 * the given oid.
+		 */
 		if (anyOidHashTblG == NULL)
 			anyOidHashTblG = InitHash();
 
-		if (anyOidHashTblG != NULL)	/* make sure we didn't fail */
+		if (anyOidHashTblG != NULL) /* make sure we didn't fail */
 			Insert(anyOidHashTblG, v->ai, hash);
 
-#endif /* _OLDER_LIB_ */	    	
+#endif /* _OLDER_LIB_ */
 	}
 
 } /* SetAnyTypeByOid */
@@ -213,11 +203,10 @@ void SetAnyTypeByOid PARAMS((v, id),
 /*
  *RWC;ADDED this new "C" function to allow generic ANY's to be encoded/decoded.
  */
-void SetAnyTypeUnknown PARAMS((v),
-	AsnAny* v)
+void SetAnyTypeUnknown PARAMS((v), AsnAny* v)
 {
-	v->ai = NULL; /* indicates failure */
-	if (v->ai == NULL)	/* no table entry */
+	v->ai = NULL;	   /* indicates failure */
+	if (v->ai == NULL) /* no table entry */
 	{
 		v->ai = (AnyInfo*)Asn1Alloc(sizeof(AnyInfo));
 
@@ -233,12 +222,10 @@ void SetAnyTypeUnknown PARAMS((v),
 		v->ai->Print = (PrintFcn)PrintAsnOcts;
 #else
 		v->ai->Print = (PrintFcn)NULL;
-#endif	/* _USE_PRINTING_ */
-
+#endif /* _USE_PRINTING_ */
 	}
 
 } /* SetAnyTypeByUnknown */
-
 
 /*
  * Creates an entry in the hash table that contains the
@@ -253,15 +240,7 @@ void SetAnyTypeUnknown PARAMS((v),
  * once for each possible ANY type to set up the hash table.
  * Future calls to SetAnyTypeByInt/Oid will reference this table.
  */
-void
-InstallAnyByInt PARAMS((anyId, intId, size, Encode, Decode, Free, Print),
-	int anyId _AND_
-	AsnInt intId _AND_
-	unsigned int size _AND_
-	EncodeFcn Encode _AND_
-	DecodeFcn Decode _AND_
-	FreeFcn Free _AND_
-	PrintFcn Print)
+void InstallAnyByInt PARAMS((anyId, intId, size, Encode, Decode, Free, Print), int anyId _AND_ AsnInt intId _AND_ unsigned int size _AND_ EncodeFcn Encode _AND_ DecodeFcn Decode _AND_ FreeFcn Free _AND_ PrintFcn Print)
 {
 	AnyInfo* a;
 	Hash h;
@@ -281,24 +260,15 @@ InstallAnyByInt PARAMS((anyId, intId, size, Encode, Decode, Free, Print),
 		anyIntHashTblG = InitHash();
 
 	h = MakeHash((char*)&intId, sizeof(intId));
-	if (anyIntHashTblG != NULL)	/* make sure we didn't fail */
+	if (anyIntHashTblG != NULL) /* make sure we didn't fail */
 		Insert(anyIntHashTblG, a, h);
 
-}  /* InstallAnyByOid */
-
+} /* InstallAnyByOid */
 
 /*
  * Same as InstallAnyByInt except the oid is used as the hash key
  */
-void
-InstallAnyByOid PARAMS((anyId, oid, size, Encode, Decode, Free, Print),
-	int anyId _AND_
-	AsnOid* oid _AND_
-	unsigned int size _AND_
-	EncodeFcn Encode _AND_
-	DecodeFcn Decode _AND_
-	FreeFcn Free _AND_
-	PrintFcn Print)
+void InstallAnyByOid PARAMS((anyId, oid, size, Encode, Decode, Free, Print), int anyId _AND_ AsnOid* oid _AND_ unsigned int size _AND_ EncodeFcn Encode _AND_ DecodeFcn Decode _AND_ FreeFcn Free _AND_ PrintFcn Print)
 {
 	AnyInfo* a;
 	Hash h;
@@ -315,17 +285,16 @@ InstallAnyByOid PARAMS((anyId, oid, size, Encode, Decode, Free, Print),
 
 	h = MakeHash(oid->octs, oid->octetLen);
 
-	if (anyOidHashTblG == NULL) {
+	if (anyOidHashTblG == NULL)
 		anyOidHashTblG = InitHash();
-	}
 
-	if (anyOidHashTblG != NULL) {
+	if (anyOidHashTblG != NULL)
+	{
 		/* make sure we didn't fail */
 		Insert(anyOidHashTblG, a, h);
 	}
 
-}  /* InstallAnyByOid */
-
+} /* InstallAnyByOid */
 
 /*
  * Calls the free routine in this type's any info.
@@ -333,14 +302,11 @@ InstallAnyByOid PARAMS((anyId, oid, size, Encode, Decode, Free, Print),
  * (This is the case for INTEGERs, BOOLEANs and other simple
  * values)
  */
-void
-FreeAsnAny PARAMS((v),
-	AsnAny* v)
+void FreeAsnAny PARAMS((v), AsnAny* v)
 {
 	if ((v->ai != NULL) && (v->ai->Free != NULL))
 		v->ai->Free(v->value);
 } /* FreeAsnAny */
-
 
 /*
  * Calls the Encode routine pointed to in the given type's
@@ -349,10 +315,7 @@ FreeAsnAny PARAMS((v),
  * Note: this calls the BEncFoo not BEncFooContent routine form
  * since the tags are needed too.
  */
-AsnLen
-BEncAsnAny PARAMS((b, v),
-	GenBuf* b _AND_
-	AsnAny* v)
+AsnLen BEncAsnAny PARAMS((b, v), GenBuf* b _AND_ AsnAny* v)
 {
 	if ((v->ai != NULL) && (v->ai->Encode != NULL))
 		return v->ai->Encode(b, v->value);
@@ -360,18 +323,13 @@ BEncAsnAny PARAMS((b, v),
 		return 0;
 } /* BEncAsnAny */
 
-
 /*
  * Calls the Decode routine pointed to in the given type's
  * Any Info.  If the routine ptr is NULL any error is flagged.
  * Note: this calls the BDecFoo not BDecFooContent routine form
  * since the tags are needed too.
  */
-void BDecAsnAny PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnAny* result _AND_
-	AsnLen* bytesDecoded _AND_
-	ENV_TYPE env)
+void BDecAsnAny PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ AsnAny* result _AND_ AsnLen* bytesDecoded _AND_ ENV_TYPE env)
 {
 	if ((result->ai != NULL) && (result->ai->Decode != NULL))
 	{
@@ -391,10 +349,7 @@ void BDecAsnAny PARAMS((b, result, bytesDecoded, env),
  * Any Info.  Prints an error if the type does not have
  * any 'AnyInfo' or if the AnyInfo has a NULL Print routine ptr.
  */
-void PrintAsnAny PARAMS((f, v, indent),
-	FILE* f _AND_
-	AsnAny* v _AND_
-	unsigned int indent)
+void PrintAsnAny PARAMS((f, v, indent), FILE* f _AND_ AsnAny* v _AND_ unsigned int indent)
 {
 	if ((v->ai != NULL) && (v->ai->Print != NULL))
 		v->ai->Print(f, v->value, indent);

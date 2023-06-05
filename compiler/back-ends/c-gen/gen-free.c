@@ -56,9 +56,9 @@
  *
  */
 
- /*
-	 Deepak: Formatting improved as required on 11/Feb/2003
- */
+/*
+	Deepak: Formatting improved as required on 11/Feb/2003
+*/
 
 #include <stdio.h>
 
@@ -70,7 +70,7 @@
 #include "../str-util.h"
 #include "util.h"
 
-extern FILE* errFileG;		// Defined in snacc.c
+extern FILE* errFileG; // Defined in snacc.c
 
 static char* returnTypeG = "void";
 static char* valueArgNameG = "v";
@@ -78,33 +78,25 @@ static CRules* genFreeCRulesG;
 
 /* non-exported prototypes */
 
-static void PrintCFreePrototype PROTO((FILE* hdr, TypeDef* td));
-static void PrintCFreeDeclaration PROTO((FILE* src, TypeDef* td));
-static void PrintCFreeDefine PROTO((FILE* hdr, TypeDef* td));
-static void PrintCFreeLocals PROTO((FILE* src, TypeDef* td));
-static void PrintCFreeElmts PROTO((FILE* src, TypeDef* td, Type* parent, NamedTypeList* elmts, char* varName));
-static void PrintCElmtFree PROTO((FILE* src, TypeDef* td, Type* parent, Type* e, char* varName));
-static void PrintCFreeListElmts PROTO((FILE* src, TypeDef* td, Type* t, char* varName));
-static void PrintCFreeListRoutineBody PROTO((FILE* src, TypeDef* td, Type* t, char* varName));
+static void PrintCFreePrototype PROTO((FILE * hdr, TypeDef* td));
+static void PrintCFreeDeclaration PROTO((FILE * src, TypeDef* td));
+static void PrintCFreeDefine PROTO((FILE * hdr, TypeDef* td));
+static void PrintCFreeLocals PROTO((FILE * src, TypeDef* td));
+static void PrintCFreeElmts PROTO((FILE * src, TypeDef* td, Type* parent, NamedTypeList* elmts, char* varName));
+static void PrintCElmtFree PROTO((FILE * src, TypeDef* td, Type* parent, Type* e, char* varName));
+static void PrintCFreeListElmts PROTO((FILE * src, TypeDef* td, Type* t, char* varName));
+static void PrintCFreeListRoutineBody PROTO((FILE * src, TypeDef* td, Type* t, char* varName));
 /*static void PrintCFreeListDefine PROTO ((FILE *hdr,TypeDef *td));*/
-static void PrintCFreeChoiceElmts PROTO((FILE* src, TypeDef* td, Type* t, char* varName));
+static void PrintCFreeChoiceElmts PROTO((FILE * src, TypeDef* td, Type* t, char* varName));
 
-//Deepak: 18/Apr/2003
-static void PrintCFreeMacroElmts PROTO((FILE* src, TypeDef* td, Type* parent, MacroType* mt, char* varName));
-static void PrintCRosOperationElmtsFree PROTO((FILE* src, TypeDef* td, Type* parent, MacroType* elmts, RosOperationMacroType* op, char* varName));
+// Deepak: 18/Apr/2003
+static void PrintCFreeMacroElmts PROTO((FILE * src, TypeDef* td, Type* parent, MacroType* mt, char* varName));
+static void PrintCRosOperationElmtsFree PROTO((FILE * src, TypeDef* td, Type* parent, MacroType* elmts, RosOperationMacroType* op, char* varName));
 
-
-void
-PrintCFree PARAMS((src, hdr, r, mods, m, td),
-	FILE* src _AND_
-	FILE* hdr _AND_
-	CRules* r _AND_
-	ModuleList* mods _AND_
-	Module* m _AND_
-	TypeDef* td)
+void PrintCFree PARAMS((src, hdr, r, mods, m, td), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ ModuleList* mods _AND_ Module* m _AND_ TypeDef* td)
 {
 	CTDI* ctdi;
-	CTypeId rhsTypeId;  /* cTypeId of the type that defined this typedef */
+	CTypeId rhsTypeId; /* cTypeId of the type that defined this typedef */
 
 	genFreeCRulesG = r;
 
@@ -121,85 +113,76 @@ PrintCFree PARAMS((src, hdr, r, mods, m, td),
 	rhsTypeId = td->type->cTypeRefInfo->cTypeId;
 	switch (rhsTypeId)
 	{
-	case C_ANY:
-	case C_ANYDEFINEDBY:
-	case C_LIB:
-	case C_TYPEREF:
-		PrintCFreeDefine(hdr, td);
-		fprintf(hdr, "\n");
-		break;
+		case C_ANY:
+		case C_ANYDEFINEDBY:
+		case C_LIB:
+		case C_TYPEREF:
+			PrintCFreeDefine(hdr, td);
+			fprintf(hdr, "\n");
+			break;
 
-	case C_CHOICE:
-		PrintCFreePrototype(hdr, td);
-		PrintCFreeDeclaration(src, td);
-		fprintf(src, "{\n");
-		PrintCFreeLocals(src, td);
-		fprintf(src, "\tif(%s == NULL)\n", valueArgNameG);
-		fprintf(src, "\t\treturn;\n");
-		PrintCFreeChoiceElmts(src, td, td->type, valueArgNameG);
-		fprintf(src, "}  /* %s */", td->cTypeDefInfo->freeRoutineName);
-		fprintf(hdr, "\n\n");
-		fprintf(src, "\n\n");
-		break;
+		case C_CHOICE:
+			PrintCFreePrototype(hdr, td);
+			PrintCFreeDeclaration(src, td);
+			fprintf(src, "{\n");
+			PrintCFreeLocals(src, td);
+			fprintf(src, "\tif(%s == NULL)\n", valueArgNameG);
+			fprintf(src, "\t\treturn;\n");
+			PrintCFreeChoiceElmts(src, td, td->type, valueArgNameG);
+			fprintf(src, "}  /* %s */", td->cTypeDefInfo->freeRoutineName);
+			fprintf(hdr, "\n\n");
+			fprintf(src, "\n\n");
+			break;
 
-	case C_STRUCT:
-		PrintCFreePrototype(hdr, td);
-		PrintCFreeDeclaration(src, td);
-		fprintf(src, "{\n");
-		PrintCFreeLocals(src, td);
-		fprintf(src, "\tif(%s == NULL)\n", valueArgNameG);
-		fprintf(src, "\t\treturn;\n");
-		PrintCFreeElmts(src, td, td->type, td->type->basicType->a.set, valueArgNameG);
-		fprintf(src, "}  /* %s */", td->cTypeDefInfo->freeRoutineName);
-		fprintf(hdr, "\n\n");
-		fprintf(src, "\n\n");
-		break;
+		case C_STRUCT:
+			PrintCFreePrototype(hdr, td);
+			PrintCFreeDeclaration(src, td);
+			fprintf(src, "{\n");
+			PrintCFreeLocals(src, td);
+			fprintf(src, "\tif(%s == NULL)\n", valueArgNameG);
+			fprintf(src, "\t\treturn;\n");
+			PrintCFreeElmts(src, td, td->type, td->type->basicType->a.set, valueArgNameG);
+			fprintf(src, "}  /* %s */", td->cTypeDefInfo->freeRoutineName);
+			fprintf(hdr, "\n\n");
+			fprintf(src, "\n\n");
+			break;
 
+		case C_LIST:
+			PrintCFreePrototype(hdr, td);
+			PrintCFreeDeclaration(src, td);
+			fprintf(src, "{\n");
+			PrintCFreeLocals(src, td);
+			fprintf(src, "\tif(%s == NULL)\n", valueArgNameG);
+			fprintf(src, "\t\treturn;\n");
+			PrintCFreeListRoutineBody(src, td, td->type, valueArgNameG);
+			fprintf(src, "}  /* %s */", td->cTypeDefInfo->freeRoutineName);
+			fprintf(hdr, "\n\n");
+			fprintf(src, "\n\n");
+			break;
 
-	case C_LIST:
-		PrintCFreePrototype(hdr, td);
-		PrintCFreeDeclaration(src, td);
-		fprintf(src, "{\n");
-		PrintCFreeLocals(src, td);
-		fprintf(src, "\tif(%s == NULL)\n", valueArgNameG);
-		fprintf(src, "\t\treturn;\n");
-		PrintCFreeListRoutineBody(src, td, td->type, valueArgNameG);
-		fprintf(src, "}  /* %s */", td->cTypeDefInfo->freeRoutineName);
-		fprintf(hdr, "\n\n");
-		fprintf(src, "\n\n");
-		break;
+		case C_MACROTYPE:
+			PrintCFreePrototype(hdr, td);
+			PrintCFreeDeclaration(src, td);
+			fprintf(src, "{\n");
+			PrintCFreeLocals(src, td);
+			fprintf(src, "\tif(%s == NULL)\n", valueArgNameG);
+			fprintf(src, "\t\treturn;\n");
+			PrintCFreeMacroElmts(src, td, td->type, td->type->basicType->a.macroType, valueArgNameG);
+			fprintf(src, "}  /* %s */", td->cTypeDefInfo->freeRoutineName);
+			fprintf(hdr, "\n\n");
+			fprintf(src, "\n\n");
+			break;
 
+		case C_NO_TYPE:
+			break;
 
-	case C_MACROTYPE:
-		PrintCFreePrototype(hdr, td);
-		PrintCFreeDeclaration(src, td);
-		fprintf(src, "{\n");
-		PrintCFreeLocals(src, td);
-		fprintf(src, "\tif(%s == NULL)\n", valueArgNameG);
-		fprintf(src, "\t\treturn;\n");
-		PrintCFreeMacroElmts(src, td, td->type, td->type->basicType->a.macroType, valueArgNameG);
-		fprintf(src, "}  /* %s */", td->cTypeDefInfo->freeRoutineName);
-		fprintf(hdr, "\n\n");
-		fprintf(src, "\n\n");
-		break;
-
-	case C_NO_TYPE:
-		break;
-
-	default:
-		fprintf(errFileG, "PrintCFree: ERROR - unknown c type id\n");
-		break;
+		default:
+			fprintf(errFileG, "PrintCFree: ERROR - unknown c type id\n");
+			break;
 	}
-}  /*  PrintCFree */
+} /*  PrintCFree */
 
-
-static void
-PrintCFreeMacroElmts PARAMS((src, td, parent, mt, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	MacroType* mt _AND_
-	char* varName)
+static void PrintCFreeMacroElmts PARAMS((src, td, parent, mt, varName), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ MacroType* mt _AND_ char* varName)
 {
 	if (mt == NULL)
 	{
@@ -208,69 +191,50 @@ PrintCFreeMacroElmts PARAMS((src, td, parent, mt, varName),
 	}
 
 	switch (mt->choiceId)
-	{	// This switch case copied from do-macros.c
-	case MACROTYPE_ASNABSTRACTOPERATION:
-	case MACROTYPE_ROSOPERATION:
+	{ // This switch case copied from do-macros.c
+		case MACROTYPE_ASNABSTRACTOPERATION:
+		case MACROTYPE_ROSOPERATION:
 
-		PrintCRosOperationElmtsFree(src, td, parent, mt, mt->a.rosOperation, varName);
+			PrintCRosOperationElmtsFree(src, td, parent, mt, mt->a.rosOperation, varName);
 
-		break;
+			break;
 
-		// Add code for other macro types here
-	default:
-		// Unsupported Macro Type
-		break;
+			// Add code for other macro types here
+		default:
+			// Unsupported Macro Type
+			break;
 	}
 
-	//PrintCElmtFree (src, td, parent, e->type, varName);
+	// PrintCElmtFree (src, td, parent, e->type, varName);
 
-}  /* PrintCFreeMacroElmts */
+} /* PrintCFreeMacroElmts */
 
-static void
-PrintCRosOperationElmtsFree PARAMS((src, td, parent, mt, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	MacroType* mt _AND_
-	RosOperationMacroType* op _AND_
-	char* varName)
+static void PrintCRosOperationElmtsFree PARAMS((src, td, parent, mt, varName), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ MacroType* mt _AND_ RosOperationMacroType* op _AND_ char* varName)
 {
 	if (op->arguments != NULL)
-	{
 		PrintCElmtFree(src, td, parent, op->arguments->type, varName);
-	}
 
 	if (op->result != NULL)
-	{
 		PrintCElmtFree(src, td, parent, op->result->type, varName);
-	}
 } /* PrintCRosOperationElmtsFree */
 
 /*
  * Prints prototype for encode routine in hdr file
  */
-static void
-PrintCFreePrototype PARAMS((hdr, td),
-	FILE* hdr _AND_
-	TypeDef* td)
+static void PrintCFreePrototype PARAMS((hdr, td), FILE* hdr _AND_ TypeDef* td)
 {
 	CTDI* ctdi;
 
 	ctdi = td->cTypeDefInfo;
-	//fprintf (hdr,"%s %s PROTO ((%s *v));\n", returnTypeG, ctdi->freeRoutineName, ctdi->cTypeName);
+	// fprintf (hdr,"%s %s PROTO ((%s *v));\n", returnTypeG, ctdi->freeRoutineName, ctdi->cTypeName);
 	fprintf(hdr, "%s %s(%s *v);\n", returnTypeG, ctdi->freeRoutineName, ctdi->cTypeName);
 
-}  /*  PrintCFreePrototype */
-
-
+} /*  PrintCFreePrototype */
 
 /*
  * Prints declarations of encode routine for the given type def
  */
-static void
-PrintCFreeDeclaration PARAMS((src, td),
-	FILE* src _AND_
-	TypeDef* td)
+static void PrintCFreeDeclaration PARAMS((src, td), FILE* src _AND_ TypeDef* td)
 {
 	CTDI* ctdi;
 
@@ -278,15 +242,9 @@ PrintCFreeDeclaration PARAMS((src, td),
 	//	fprintf (src,"%s\n%s PARAMS ((v),\n%s *v)\n", returnTypeG, ctdi->freeRoutineName,  ctdi->cTypeName);
 	fprintf(src, "%s %s(%s *v)\n", returnTypeG, ctdi->freeRoutineName, ctdi->cTypeName);
 
-}  /*  PrintCFreeDeclaration */
+} /*  PrintCFreeDeclaration */
 
-
-
-
-static void
-PrintCFreeDefine PARAMS((hdr, td),
-	FILE* hdr _AND_
-	TypeDef* td)
+static void PrintCFreeDefine PARAMS((hdr, td), FILE* hdr _AND_ TypeDef* td)
 {
 
 	fprintf(hdr, "#define %s %s ", td->cTypeDefInfo->freeRoutineName, td->type->cTypeRefInfo->freeRoutineName);
@@ -295,36 +253,21 @@ PrintCFreeDefine PARAMS((hdr, td),
 		fprintf(hdr, "#define %s(v)  ", td->cTypeDefInfo->freeRoutineName);
 		fprintf (hdr, "%s (v)", td->type->cTypeRefInfo->freeRoutineName);
 	*/
-}  /*  PrintCFreeDefine */
+} /*  PrintCFreeDefine */
 
-
-
-
-static void
-PrintCFreeLocals PARAMS((src, td),
-	FILE* src _AND_
-	TypeDef* td)
+static void PrintCFreeLocals PARAMS((src, td), FILE* src _AND_ TypeDef* td)
 {
 	fprintf(src, "\n");
 
-	if ((td->type->basicType->choiceId == BASICTYPE_SETOF) ||
-		(td->type->basicType->choiceId == BASICTYPE_SEQUENCEOF))
+	if ((td->type->basicType->choiceId == BASICTYPE_SETOF) || (td->type->basicType->choiceId == BASICTYPE_SEQUENCEOF))
 	{
 		fprintf(src, "\tAsnListNode *l;\n");
 		fprintf(src, "\tAsnListNode *tmp;\n");
 	}
 
-}  /*  PrintCFreeLocals */
+} /*  PrintCFreeLocals */
 
-
-
-static void
-PrintCFreeElmts PARAMS((src, td, parent, elmts, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts _AND_
-	char* varName)
+static void PrintCFreeElmts PARAMS((src, td, parent, elmts, varName), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* elmts _AND_ char* varName)
 {
 	NamedType* e;
 
@@ -335,22 +278,14 @@ PrintCFreeElmts PARAMS((src, td, parent, elmts, varName),
 	}
 
 	FOR_EACH_LIST_ELMT(e, elmts)
-		PrintCElmtFree(src, td, parent, e->type, varName);
+	PrintCElmtFree(src, td, parent, e->type, varName);
 
-}  /* PrintCFreeElmts */
-
-
+} /* PrintCFreeElmts */
 
 /*
  * Prints code for encoding the elmts of a SEQ or SET
  */
-static void
-PrintCElmtFree PARAMS((src, td, parent, e, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	Type* e _AND_
-	char* varName)
+static void PrintCElmtFree PARAMS((src, td, parent, e, varName), FILE* src _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* e _AND_ char* varName)
 {
 	CTRI* ctri;
 	char elmtVarRef[MAX_VAR_REF];
@@ -370,39 +305,39 @@ PrintCElmtFree PARAMS((src, td, parent, e, varName),
 	/* free contents of elmt first */
 	switch (ctri->cTypeId)
 	{
-	case C_ANY:
-	case C_ANYDEFINEDBY:
-	case C_LIB:
-	case C_TYPEREF:
-		fprintf(src, "\t%s%s;", ctri->freeRoutineName, elmtVarRef);
-		break;
+		case C_ANY:
+		case C_ANYDEFINEDBY:
+		case C_LIB:
+		case C_TYPEREF:
+			fprintf(src, "\t%s%s;", ctri->freeRoutineName, elmtVarRef);
+			break;
 
-	case C_LIST:
-		PrintCFreeListElmts(src, td, e, elmtVarRef);
-		break;
+		case C_LIST:
+			PrintCFreeListElmts(src, td, e, elmtVarRef);
+			break;
 
-		/*
-		 * this  follwing shouldn't happen since embedded
-		 * choices/struct are moved to separate typedefs
-		 * in normalize.c.
-		 */
-	case C_CHOICE:
-		PrintCFreeChoiceElmts(src, td, e, elmtVarRef);
-		break;
+			/*
+			 * this  follwing shouldn't happen since embedded
+			 * choices/struct are moved to separate typedefs
+			 * in normalize.c.
+			 */
+		case C_CHOICE:
+			PrintCFreeChoiceElmts(src, td, e, elmtVarRef);
+			break;
 
-	case C_STRUCT:
-		PrintCFreeElmts(src, td, e, e->basicType->a.set, elmtVarRef);
-		break;
+		case C_STRUCT:
+			PrintCFreeElmts(src, td, e, e->basicType->a.set, elmtVarRef);
+			break;
 
-	case C_MACROTYPE:
-		break;
+		case C_MACROTYPE:
+			break;
 
-	case C_NO_TYPE:
-		break;
+		case C_NO_TYPE:
+			break;
 
-	default:
-		fprintf(errFileG, "PrintCElmtFree: ERROR - unknown c type id\n");
-		break;
+		default:
+			fprintf(errFileG, "PrintCElmtFree: ERROR - unknown c type id\n");
+			break;
 	}
 
 	/* free elmt itself if it is ref'd by ptr */
@@ -415,8 +350,7 @@ PrintCElmtFree PARAMS((src, td, parent, e, varName),
 
 	fprintf(src, "\n");
 
-}  /*  PrintCElmtFree */
-
+} /*  PrintCElmtFree */
 
 /*static void
 PrintCFreeListDefine PARAMS ((hdr, td),
@@ -427,13 +361,7 @@ PrintCFreeListDefine PARAMS ((hdr, td),
 	fprintf (hdr, "ASN1_FREE_LIST (v, %s)", td->type->cTypeRefInfo->freeRoutineName);
 }*/
 
-
-static void
-PrintCFreeListRoutineBody PARAMS((src, td, t, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	char* varName)
+static void PrintCFreeListRoutineBody PARAMS((src, td, t, varName), FILE* src _AND_ TypeDef* td _AND_ Type* t _AND_ char* varName)
 {
 	Type* e;
 	CTRI* ctri;
@@ -447,38 +375,38 @@ PrintCFreeListRoutineBody PARAMS((src, td, t, varName),
 	elmtVarRef = "(l->data)";
 	switch (ctri->cTypeId)
 	{
-	case C_ANY:
-	case C_LIB:
-	case C_TYPEREF:
-		fprintf(src, "\t\t%s (%s);\n", ctri->freeRoutineName, elmtVarRef);
-		break;
+		case C_ANY:
+		case C_LIB:
+		case C_TYPEREF:
+			fprintf(src, "\t\t%s (%s);\n", ctri->freeRoutineName, elmtVarRef);
+			break;
 
-	case C_LIST:
-		PrintCFreeListElmts(src, td, e, elmtVarRef);
-		break;
+		case C_LIST:
+			PrintCFreeListElmts(src, td, e, elmtVarRef);
+			break;
 
-		/*
-		 * this  follwing shouldn't happen since embedded
-		 * choices/struct are moved to separate typedefs
-		 * in normalize.c.
-		 */
-	case C_CHOICE:
-		PrintCFreeChoiceElmts(src, td, e, elmtVarRef);
-		break;
+			/*
+			 * this  follwing shouldn't happen since embedded
+			 * choices/struct are moved to separate typedefs
+			 * in normalize.c.
+			 */
+		case C_CHOICE:
+			PrintCFreeChoiceElmts(src, td, e, elmtVarRef);
+			break;
 
-	case C_STRUCT:
-		PrintCFreeElmts(src, td, e, e->basicType->a.set, elmtVarRef);
-		break;
+		case C_STRUCT:
+			PrintCFreeElmts(src, td, e, e->basicType->a.set, elmtVarRef);
+			break;
 
-	case C_MACROTYPE:
-		break;
+		case C_MACROTYPE:
+			break;
 
-	case C_NO_TYPE:
-		break;
+		case C_NO_TYPE:
+			break;
 
-	default:
-		fprintf(errFileG, "PrintCElmtFree: ERROR - unknown c type id\n");
-		break;
+		default:
+			fprintf(errFileG, "PrintCElmtFree: ERROR - unknown c type id\n");
+			break;
 	}
 
 	fprintf(src, "\t\ttmp = l->next;\n");
@@ -488,12 +416,7 @@ PrintCFreeListRoutineBody PARAMS((src, td, t, varName),
 	fprintf(src, "\t}\n");
 }
 
-static void
-PrintCFreeListElmts PARAMS((src, td, t, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	char* varName)
+static void PrintCFreeListElmts PARAMS((src, td, t, varName), FILE* src _AND_ TypeDef* td _AND_ Type* t _AND_ char* varName)
 {
 	Type* e;
 	CTRI* ctri;
@@ -505,43 +428,42 @@ PrintCFreeListElmts PARAMS((src, td, t, varName),
 	fprintf(src, "\t\tfor (l = FIRST_LIST_NODE (%s); l != NULL; )\n", varName);
 	fprintf(src, "\t\t{\n");
 
-
 	e = t->basicType->a.setOf;
 	ctri = e->cTypeRefInfo;
 	elmtVarRef = "(l->data)";
 	switch (ctri->cTypeId)
 	{
-	case C_LIB:
-	case C_TYPEREF:
-		fprintf(src, "\t\t%s (%s);\n", ctri->freeRoutineName, elmtVarRef);
-		break;
+		case C_LIB:
+		case C_TYPEREF:
+			fprintf(src, "\t\t%s (%s);\n", ctri->freeRoutineName, elmtVarRef);
+			break;
 
-	case C_LIST:
-		PrintCFreeListElmts(src, td, e, elmtVarRef);
-		break;
+		case C_LIST:
+			PrintCFreeListElmts(src, td, e, elmtVarRef);
+			break;
 
-		/*
-		 * this  follwing shouldn't happen since embedded
-		 * choices/struct are moved to separate typedefs
-		 * in normalize.c.
-		 */
-	case C_CHOICE:
-		PrintCFreeChoiceElmts(src, td, e, elmtVarRef);
-		break;
+			/*
+			 * this  follwing shouldn't happen since embedded
+			 * choices/struct are moved to separate typedefs
+			 * in normalize.c.
+			 */
+		case C_CHOICE:
+			PrintCFreeChoiceElmts(src, td, e, elmtVarRef);
+			break;
 
-	case C_STRUCT:
-		PrintCFreeElmts(src, td, e, e->basicType->a.set, elmtVarRef);
-		break;
+		case C_STRUCT:
+			PrintCFreeElmts(src, td, e, e->basicType->a.set, elmtVarRef);
+			break;
 
-	case C_MACROTYPE:
-		break;
+		case C_MACROTYPE:
+			break;
 
-	case C_NO_TYPE:
-		break;
+		case C_NO_TYPE:
+			break;
 
-	default:
-		fprintf(errFileG, "PrintCElmtFree: ERROR - unknown c type id\n");
-		break;
+		default:
+			fprintf(errFileG, "PrintCElmtFree: ERROR - unknown c type id\n");
+			break;
 	}
 
 	fprintf(src, "\t\t   tmp = l->next;\n");
@@ -552,14 +474,7 @@ PrintCFreeListElmts PARAMS((src, td, t, varName),
 	fprintf(src, "\t}\n");
 } /* PrintCFreeListELmts */
 
-
-
-static void
-PrintCFreeChoiceElmts PARAMS((src, td, t, varName),
-	FILE* src _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	char* varName)
+static void PrintCFreeChoiceElmts PARAMS((src, td, t, varName), FILE* src _AND_ TypeDef* td _AND_ Type* t _AND_ char* varName)
 {
 	NamedType* e;
 	CTRI* ctri;

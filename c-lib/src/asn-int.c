@@ -86,13 +86,10 @@
 #include "../include/asn-tag.h"
 #include "../include/asn-int.h"
 
- /*
-  * encodes universal TAG LENGTH and Contents of and ASN.1 INTEGER
-  */
-AsnLen
-BEncAsnInt PARAMS((b, data),
-	GenBuf* b _AND_
-	AsnInt* data)
+/*
+ * encodes universal TAG LENGTH and Contents of and ASN.1 INTEGER
+ */
+AsnLen BEncAsnInt PARAMS((b, data), GenBuf* b _AND_ AsnInt* data)
 {
 	AsnLen len;
 
@@ -100,18 +97,12 @@ BEncAsnInt PARAMS((b, data),
 	len += BEncDefLen(b, len);
 	len += BEncTag1(b, UNIV, PRIM, INTEGER_TAG_CODE);
 	return len;
-}  /* BEncAsnInt */
-
+} /* BEncAsnInt */
 
 /*
  * decodes universal TAG LENGTH and Contents of and ASN.1 INTEGER
  */
-void
-BDecAsnInt PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnInt* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnInt PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ AsnInt* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnTag tag;
 	AsnLen elmtLen;
@@ -125,20 +116,16 @@ BDecAsnInt PARAMS((b, result, bytesDecoded, env),
 	elmtLen = BDecLen(b, bytesDecoded, env);
 	BDecAsnIntContent(b, tag, elmtLen, result, bytesDecoded, env);
 
-}  /* BDecAsnInt */
-
+} /* BDecAsnInt */
 
 /*
  * encodes signed long integer's contents
  */
-AsnLen
-BEncAsnIntContent PARAMS((b, data),
-	GenBuf* b _AND_
-	AsnInt* data)
+AsnLen BEncAsnIntContent PARAMS((b, data), GenBuf* b _AND_ AsnInt* data)
 {
-	int             len;
-	int             i;
-	unsigned long  mask;
+	int len;
+	int i;
+	unsigned long mask;
 	long dataCpy;
 
 #define INT_MASK (0x7f80 << ((sizeof(AsnInt) - 2) * 8))
@@ -151,20 +138,16 @@ BEncAsnIntContent PARAMS((b, data),
 	mask = INT_MASK;
 	if (dataCpy < 0)
 		for (len = sizeof(AsnInt); len > 1; --len)
-		{
 			if ((dataCpy & mask) == mask)
 				mask >>= 8;
 			else
 				break;
-		}
 	else
 		for (len = sizeof(AsnInt); len > 1; --len)
-		{
 			if ((dataCpy & mask) == 0)
 				mask >>= 8;
 			else
 				break;
-		}
 
 	/*
 	 * write the BER integer
@@ -177,25 +160,16 @@ BEncAsnIntContent PARAMS((b, data),
 
 	return len;
 
-}  /* BEncAsnIntContent */
-
+} /* BEncAsnIntContent */
 
 /*
  * Decodes content of BER a INTEGER value.  The given tag is ignored.
  */
-void
-BDecAsnIntContent PARAMS((b, tagId, len, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnTag     tagId _AND_
-	AsnLen     len _AND_
-	AsnInt* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnIntContent PARAMS((b, tagId, len, result, bytesDecoded, env), GenBuf* b _AND_ AsnTag tagId _AND_ AsnLen len _AND_ AsnInt* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
-	int   i;
+	int i;
 	long retVal;
 	unsigned long byte;
-
 
 	if (len > sizeof(AsnInt))
 	{
@@ -208,7 +182,7 @@ BDecAsnIntContent PARAMS((b, tagId, len, result, bytesDecoded, env),
 	 */
 	byte = (unsigned long)BufGetByte(b);
 
-	if (byte & 0x80)   /* top bit of first byte is sign bit */
+	if (byte & 0x80) /* top bit of first byte is sign bit */
 		retVal = (0x80 << 8) | byte;
 	else
 		retVal = byte;
@@ -227,22 +201,16 @@ BDecAsnIntContent PARAMS((b, tagId, len, result, bytesDecoded, env),
 	(*bytesDecoded) += len;
 
 	*result = retVal;
-}  /* BDecAsnIntContent */
-
+} /* BDecAsnIntContent */
 
 /*
  * Prints the given integer to the given FILE * in Value Notation.
  * indent is ignored.
  */
-void
-PrintAsnInt PARAMS((f, v, indent),
-	FILE* f _AND_
-	AsnInt* v _AND_
-	unsigned int indent)
+void PrintAsnInt PARAMS((f, v, indent), FILE* f _AND_ AsnInt* v _AND_ unsigned int indent)
 {
 	fprintf(f, "%d", *v);
 }
-
 
 /*
  * The following deal with unsigned longs.
@@ -252,14 +220,10 @@ PrintAsnInt PARAMS((f, v, indent),
  * based on subtype info but it does not).
  */
 
-
- /*
-  * encodes universal TAG LENGTH and Contents of and ASN.1 INTEGER
-  */
-AsnLen
-BEncUAsnInt PARAMS((b, data),
-	GenBuf* b _AND_
-	UAsnInt* data)
+/*
+ * encodes universal TAG LENGTH and Contents of and ASN.1 INTEGER
+ */
+AsnLen BEncUAsnInt PARAMS((b, data), GenBuf* b _AND_ UAsnInt* data)
 {
 	AsnLen len;
 
@@ -267,18 +231,12 @@ BEncUAsnInt PARAMS((b, data),
 	len += BEncDefLen(b, len);
 	len += BEncTag1(b, UNIV, PRIM, INTEGER_TAG_CODE);
 	return len;
-}  /* BEncUAsnInt */
-
+} /* BEncUAsnInt */
 
 /*
  * decodes universal TAG LENGTH and Contents of and ASN.1 INTEGER
  */
-void
-BDecUAsnInt PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	UAsnInt* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecUAsnInt PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ UAsnInt* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnTag tag;
 	AsnLen elmtLen;
@@ -292,22 +250,18 @@ BDecUAsnInt PARAMS((b, result, bytesDecoded, env),
 	elmtLen = BDecLen(b, bytesDecoded, env);
 	BDecUAsnIntContent(b, tag, elmtLen, result, bytesDecoded, env);
 
-}  /* BDecUAsnInt */
-
+} /* BDecUAsnInt */
 
 /*
  * encodes unsigned longeger.  This allows you to correctly
  * handle unsiged values that used the most significant (sign) bit.
  */
-AsnLen
-BEncUAsnIntContent PARAMS((b, data),
-	GenBuf* b _AND_
-	UAsnInt* data)
+AsnLen BEncUAsnIntContent PARAMS((b, data), GenBuf* b _AND_ UAsnInt* data)
 {
-	int             len;
-	int             i;
-	unsigned long   mask;
-	unsigned long   dataCpy;
+	int len;
+	int i;
+	unsigned long mask;
+	unsigned long dataCpy;
 
 	dataCpy = *data;
 
@@ -337,12 +291,10 @@ BEncUAsnIntContent PARAMS((b, data),
 	else
 	{
 		for (len = sizeof(UAsnInt); len > 1; --len)
-		{
 			if ((dataCpy & mask) == 0)
 				mask >>= 8;
 			else
 				break;
-		}
 
 		/* write the BER integer */
 		for (i = 0; i < len; i++)
@@ -353,24 +305,16 @@ BEncUAsnIntContent PARAMS((b, data),
 		return len;
 	}
 
-}  /* BEncUAsnIntContent */
-
+} /* BEncUAsnIntContent */
 
 /*
  * decode integer portion - no tag or length expected or decoded
  * assumes unsigned integer - This routine is useful for
  * integer subtyped to > 0 eg Guage ::= INTEGER (0..4294967295)
  */
-void
-BDecUAsnIntContent PARAMS((b, tag, len, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnTag   tag _AND_
-	AsnLen   len _AND_
-	UAsnInt* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf  env)
+void BDecUAsnIntContent PARAMS((b, tag, len, result, bytesDecoded, env), GenBuf* b _AND_ AsnTag tag _AND_ AsnLen len _AND_ UAsnInt* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
-	int   i;
+	int i;
 	unsigned long retVal;
 
 	retVal = (unsigned long)BufGetByte(b);
@@ -380,7 +324,7 @@ BDecUAsnIntContent PARAMS((b, tag, len, result, bytesDecoded, env),
 		Asn1Error("BDecUAsnIntContent: ERROR - integer to big to decode.\n");
 		longjmp(env, -9);
 	}
-	else if (retVal & 0x80)   /* top bit of first byte is sign bit */
+	else if (retVal & 0x80) /* top bit of first byte is sign bit */
 	{
 		Asn1Error("BDecUAsnIntContent: ERROR - integer is negative.\n");
 		longjmp(env, -10);
@@ -410,16 +354,9 @@ BDecUAsnIntContent PARAMS((b, tag, len, result, bytesDecoded, env),
 	(*bytesDecoded) += len;
 
 	*result = retVal;
-}  /* BDecUAsnIntContent */
+} /* BDecUAsnIntContent */
 
-
-void
-PrintUAsnInt PARAMS((f, v, indent),
-	FILE* f _AND_
-	UAsnInt* v _AND_
-	unsigned int indent)
+void PrintUAsnInt PARAMS((f, v, indent), FILE* f _AND_ UAsnInt* v _AND_ unsigned int indent)
 {
 	fprintf(f, "%u", *v);
 }
-
-

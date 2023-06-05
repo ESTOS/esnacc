@@ -44,7 +44,6 @@ typedef struct DefinedObj
 	struct DefinedObj* next;
 } DefinedObj;
 
-
 typedef int (*CmpObjsRoutine)(void* obj1, void* obj2);
 typedef int (*FreeObjRoutine)(void* obj);
 

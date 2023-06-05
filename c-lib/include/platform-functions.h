@@ -3,7 +3,8 @@
 #include <stdio.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 	char* mytolower(char* s);
@@ -12,4 +13,3 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-

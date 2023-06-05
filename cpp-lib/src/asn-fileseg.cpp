@@ -17,9 +17,7 @@ AsnFileSeg::AsnFileSeg(const char* pFilename)
 
 	m_segSize = (long)m_fb->pubseekoff(0, std::ios_base::end, std::ios_base::in);
 	if (m_segSize == -1)
-	{
 		throw FileException(m_filename, FileException::READ, STACK_ENTRY);
-	}
 
 	m_fb->pubseekpos(0, std::ios_base::in);
 }
@@ -70,9 +68,7 @@ std::streambuf::int_type AsnFileSeg::underflow()
 	//
 	long currPos = (long)m_fb->pubseekoff(0, std::ios_base::cur);
 	if ((currPos - m_offset) < (long)m_segSize)
-	{
 		return m_fb->sgetc();
-	}
 	else
 		return EOF;
 }
@@ -83,13 +79,10 @@ std::streambuf::int_type AsnFileSeg::uflow()
 	//
 	long currPos = (long)m_fb->pubseekoff(0, std::ios_base::cur);
 	if ((currPos - m_offset) < (long)m_segSize)
-	{
 		return m_fb->sbumpc();
-	}
 	else
 		return EOF;
 }
-
 
 std::streamsize AsnFileSeg::xsgetn(char* s, std::streamsize n)
 {
@@ -98,23 +91,17 @@ std::streamsize AsnFileSeg::xsgetn(char* s, std::streamsize n)
 	// if the file segment contains the number of bytes requested
 	// then grab it.
 	if (n <= (m_segSize - (currPos - m_offset)))
-	{
 		return m_fb->sgetn(s, n);
-	}
 	else
-	{
 		return EOF;
-	}
 }
 
-std::streambuf::pos_type AsnFileSeg::seekoff(off_type off, std::ios_base::seekdir way,
-	std::ios_base::openmode which)
+std::streambuf::pos_type AsnFileSeg::seekoff(off_type off, std::ios_base::seekdir way, std::ios_base::openmode which)
 {
 	return (m_fb->pubseekoff((m_offset + off), way, which));
 }
 
-std::streambuf::pos_type AsnFileSeg::seekpos(std::streambuf::pos_type sp,
-	std::ios_base::openmode which)
+std::streambuf::pos_type AsnFileSeg::seekpos(std::streambuf::pos_type sp, std::ios_base::openmode which)
 {
 	return (seekoff(sp, std::ios_base::beg, which));
 }

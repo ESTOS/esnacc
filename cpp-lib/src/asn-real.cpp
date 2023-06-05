@@ -153,7 +153,8 @@ _BEGIN_SNACC_NAMESPACE
 
 #ifndef IEEE_REAL_LIB
 /* ieee functions (in case not in math.h)*/
-extern "C" {
+extern "C"
+{
 	extern int iszero(double);
 #ifdef VDAIEEE_NOT_GPP_30
 	extern int isinf(double);
@@ -176,31 +177,30 @@ double AsnMinusInfinity();
 const AsnReal PLUS_INFINITY(AsnPlusInfinity());
 const AsnReal MINUS_INFINITY(AsnMinusInfinity());
 
-#define ENC_PLUS_INFINITY	0x40
-#define ENC_MINUS_INFINITY	0x41
+#define ENC_PLUS_INFINITY 0x40
+#define ENC_MINUS_INFINITY 0x41
 
-#define REAL_BINARY		0x80
-#define REAL_SIGN		0x40
-#define REAL_EXPLEN_MASK	0x03
-#define REAL_EXPLEN_1		0x00
-#define REAL_EXPLEN_2		0x01
-#define REAL_EXPLEN_3		0x02
-#define REAL_EXPLEN_LONG	0x03
-#define REAL_FACTOR_MASK	0x0c
-#define REAL_BASE_MASK		0x30
-#define REAL_BASE_2		0x00
-#define REAL_BASE_8		0x10
-#define REAL_BASE_16		0x20
+#define REAL_BINARY 0x80
+#define REAL_SIGN 0x40
+#define REAL_EXPLEN_MASK 0x03
+#define REAL_EXPLEN_1 0x00
+#define REAL_EXPLEN_2 0x01
+#define REAL_EXPLEN_3 0x02
+#define REAL_EXPLEN_LONG 0x03
+#define REAL_FACTOR_MASK 0x0c
+#define REAL_BASE_MASK 0x30
+#define REAL_BASE_2 0x00
+#define REAL_BASE_8 0x10
+#define REAL_BASE_16 0x20
 
 // Returns the smallest octet length needed to hold the given long int value
-unsigned int
-SignedIntOctetLen(long int val)
+unsigned int SignedIntOctetLen(long int val)
 {
 	unsigned long int mask = (0x7f80L << ((sizeof(long int) - 2) * 8));
 	unsigned int retVal = sizeof(long int);
 
 	if (val < 0)
-		val = val ^ (~0L);  /* XOR val with all 1's */
+		val = val ^ (~0L); /* XOR val with all 1's */
 
 	while ((retVal > 1) && ((val & mask) == 0))
 	{
@@ -211,8 +211,6 @@ SignedIntOctetLen(long int val)
 	return retVal;
 
 } /* SignedIntOctetLen */
-
-
 
 #ifdef IEEE_REAL_FMT
 
@@ -262,10 +260,10 @@ double AsnMinusInfinity()
  */
 AsnLen AsnReal::BEncContent(AsnBuf& b) const
 {
-	int	exponent;
+	int exponent;
 	int isNeg;
 #if SIZEOF_LONG == 8
-	unsigned long mantissa, val, * p;
+	unsigned long mantissa, val, *p;
 	int i;
 #elif SIZEOF_LONG == 4
 	unsigned char* dbl;
@@ -293,13 +291,9 @@ AsnLen AsnReal::BEncContent(AsnBuf& b) const
 	if (!finite(value))
 	{
 		if (isNeg)
-		{
 			b.PutByteRvs(ENC_MINUS_INFINITY);
-		}
 		else
-		{
 			b.PutByteRvs(ENC_PLUS_INFINITY);
-		}
 
 		return 1;
 	}
@@ -340,8 +334,8 @@ AsnLen AsnReal::BEncContent(AsnBuf& b) const
 	 *
 	 */
 
-	first4 = (unsigned long int*) (dbl = (unsigned char*)&value);
-	second4 = (unsigned long int*) (dbl + sizeof(long int));
+	first4 = (unsigned long int*)(dbl = (unsigned char*)&value);
+	second4 = (unsigned long int*)(dbl + sizeof(long int));
 
 	/* no contents for 0.0 reals */
 	if (value == 0.0) /* all bits zero, disregarding top/sign bit */
@@ -359,7 +353,7 @@ AsnLen AsnReal::BEncContent(AsnBuf& b) const
 
 		return 1;
 	}
-	else  /* encode a binary real value */
+	else /* encode a binary real value */
 	{
 		exponent = (((*first4) >> 20) & 0x07ff);
 
@@ -400,26 +394,26 @@ AsnLen AsnReal::BEncContent(AsnBuf& b) const
 #error long neither 8 nor 4 bytes in size?
 #endif
 
-	/*  write the exponent  */
-	b.PutByteRvs(exponent & 0xff);
-	b.PutByteRvs(exponent >> 8);
+		/*  write the exponent  */
+		b.PutByteRvs(exponent & 0xff);
+		b.PutByteRvs(exponent >> 8);
 
-	/* write format octet */
-	/* bb is 00 since base is 2 so do nothing */
-	/* ff is 00 since no other shifting is nec */
-	if (isNeg)
-		b.PutByteRvs(REAL_BINARY | REAL_EXPLEN_2 | REAL_SIGN);
-	else
-		b.PutByteRvs(REAL_BINARY | REAL_EXPLEN_2);
+		/* write format octet */
+		/* bb is 00 since base is 2 so do nothing */
+		/* ff is 00 since no other shifting is nec */
+		if (isNeg)
+			b.PutByteRvs(REAL_BINARY | REAL_EXPLEN_2 | REAL_SIGN);
+		else
+			b.PutByteRvs(REAL_BINARY | REAL_EXPLEN_2);
 
-	return sizeof(double) + 2;
+		return sizeof(double) + 2;
 	}
 
-/* not reached */
+	/* not reached */
 
-	}  /*  AsnReal::BEncContent */
+} /*  AsnReal::BEncContent */
 
-#else  /* IEEE_REAL_FMT not def */
+#else /* IEEE_REAL_FMT not def */
 
 #ifdef IEEE_REAL_LIB
 
@@ -438,7 +432,7 @@ double AsnMinusInfinity()
 
 // This routine uses the ieee library routines to encode
 // this AsnReal's double value
-AsnLen AsnReal::BEncContent(AsnBuf & b) const
+AsnLen AsnReal::BEncContent(AsnBuf& b) const
 {
 	AsnLen encLen;
 	double mantissa;
@@ -465,7 +459,7 @@ AsnLen AsnReal::BEncContent(AsnBuf & b) const
 
 		encLen = 1;
 	}
-	else  /* encode a binary real value */
+	else /* encode a binary real value */
 	{
 		if (signbit(value))
 			sign = -1;
@@ -476,7 +470,6 @@ AsnLen AsnReal::BEncContent(AsnBuf & b) const
 
 		/* get the absolute value of the mantissa (subtract 1 to make < 1) */
 		mantissa = scalbn(fabs(value), -exponent - 1);
-
 
 		tmpMantissa = mantissa;
 
@@ -550,18 +543,18 @@ AsnLen AsnReal::BEncContent(AsnBuf & b) const
 
 		switch (expLen)
 		{
-		case 1:
-			firstOctet |= REAL_EXPLEN_1;
-			break;
-		case 2:
-			firstOctet |= REAL_EXPLEN_2;
-			break;
-		case 3:
-			firstOctet |= REAL_EXPLEN_3;
-			break;
-		default:
-			firstOctet |= REAL_EXPLEN_LONG;
-			break;
+			case 1:
+				firstOctet |= REAL_EXPLEN_1;
+				break;
+			case 2:
+				firstOctet |= REAL_EXPLEN_2;
+				break;
+			case 3:
+				firstOctet |= REAL_EXPLEN_3;
+				break;
+			default:
+				firstOctet |= REAL_EXPLEN_LONG;
+				break;
 		}
 
 		encLen = mantissaLen + expLen + 1;
@@ -585,14 +578,12 @@ AsnLen AsnReal::BEncContent(AsnBuf & b) const
 
 		/* write the format octet */
 		b.PutByteRvs(firstOctet);
-
 	}
 	return encLen;
 
-}  /*  AsnReal::BEncContent */
+} /*  AsnReal::BEncContent */
 
-#else  /* neither IEEE_REAL_FMT or IEEE_REAL_LIB are def */
-
+#else /* neither IEEE_REAL_FMT or IEEE_REAL_LIB are def */
 
 // Returns the PLUS INFINITY in double format
 // This assumes that a C++ double is an IEEE double.
@@ -625,7 +616,7 @@ double AsnMinusInfinity()
  * or the existence of the IEEE library routines.  Uses old style
  * UNIX frexp etc.
  */
-AsnLen AsnReal::BEncContent(AsnBuf & b) const
+AsnLen AsnReal::BEncContent(AsnBuf& b) const
 {
 	unsigned long int encLen;
 	double mantissa;
@@ -653,7 +644,7 @@ AsnLen AsnReal::BEncContent(AsnBuf & b) const
 		b.PutByteRvs(ENC_PLUS_INFINITY);
 		encLen = 1;
 	}
-	else  /* encode a binary real value */
+	else /* encode a binary real value */
 	{
 		/*
 		 * this is what frexp gets from value
@@ -670,7 +661,6 @@ AsnLen AsnReal::BEncContent(AsnBuf & b) const
 		}
 		else
 			sign = 1;
-
 
 		tmpMantissa = mantissa;
 
@@ -741,23 +731,23 @@ AsnLen AsnReal::BEncContent(AsnBuf & b) const
 		 * double to an int shifted the decimal mantissaLen * 8
 		 * to the right - so correct that here
 		 */
-		 //exponent -= (mantissaLen * 8);
+		// exponent -= (mantissaLen * 8);
 		expLen = SignedIntOctetLen(exponent);
 
 		switch (expLen)
 		{
-		case 1:
-			firstOctet |= REAL_EXPLEN_1;
-			break;
-		case 2:
-			firstOctet |= REAL_EXPLEN_2;
-			break;
-		case 3:
-			firstOctet |= REAL_EXPLEN_3;
-			break;
-		default:
-			firstOctet |= REAL_EXPLEN_LONG;
-			break;
+			case 1:
+				firstOctet |= REAL_EXPLEN_1;
+				break;
+			case 2:
+				firstOctet |= REAL_EXPLEN_2;
+				break;
+			case 3:
+				firstOctet |= REAL_EXPLEN_3;
+				break;
+			default:
+				firstOctet |= REAL_EXPLEN_LONG;
+				break;
 		}
 
 		encLen = mantissaLen + expLen + 1;
@@ -769,7 +759,7 @@ AsnLen AsnReal::BEncContent(AsnBuf & b) const
 		for (i = expLen; i > 0; i--)
 		{
 			b.PutByteRvs((unsigned char)exponent);
-			//RWC;10/10/00;I suspect we need this for multi-byte exponents... 
+			// RWC;10/10/00;I suspect we need this for multi-byte exponents...
 			exponent = exponent >> 8;
 		}
 
@@ -782,21 +772,17 @@ AsnLen AsnReal::BEncContent(AsnBuf & b) const
 
 		/* write the format octet */
 		b.PutByteRvs(firstOctet);
-
 	}
 	return encLen;
 
-}  /*  AsnReal::BEncContent */
-
-
+} /*  AsnReal::BEncContent */
 
 #endif
 #endif
-
 
 // Decode a REAL value's content from the given buffer.
 // places the result in this object.
-void AsnReal::BDecContent(const AsnBuf & b, AsnTag /* tagId */, AsnLen elmtLen, AsnLen & bytesDecoded)
+void AsnReal::BDecContent(const AsnBuf& b, AsnTag /* tagId */, AsnLen elmtLen, AsnLen& bytesDecoded)
 {
 	FUNC("AsnReal::BDecContent()");
 
@@ -827,22 +813,18 @@ void AsnReal::BDecContent(const AsnBuf & b, AsnTag /* tagId */, AsnLen elmtLen, 
 		else if (firstOctet == ENC_MINUS_INFINITY)
 			value = MINUS_INFINITY;
 		else
-		{
 			throw EXCEPT("unrecognized 1 octet length real number", DECODE_ERROR);
-		}
 	}
-	else
+	else if (firstOctet & REAL_BINARY)
 	{
-		if (firstOctet & REAL_BINARY)
-		{
-			sign = (firstOctet & REAL_SIGN) ? -1 : 1;	/* bit 7 */
-			scaleF = (firstOctet & REAL_FACTOR_MASK) >> 2;	/* bits 4 to 3 */
+		sign = (firstOctet & REAL_SIGN) ? -1 : 1;	   /* bit 7 */
+		scaleF = (firstOctet & REAL_FACTOR_MASK) >> 2; /* bits 4 to 3 */
 
-			firstExpOctet = b.GetByte();
-			if (firstExpOctet & 0x80)
-				exponent = -1;
-			switch (firstOctet & REAL_EXPLEN_MASK)
-			{
+		firstExpOctet = b.GetByte();
+		if (firstExpOctet & 0x80)
+			exponent = -1;
+		switch (firstOctet & REAL_EXPLEN_MASK)
+		{
 			case REAL_EXPLEN_1:
 				expLen = 1;
 				exponent = (exponent << 8) | firstExpOctet;
@@ -850,16 +832,16 @@ void AsnReal::BDecContent(const AsnBuf & b, AsnTag /* tagId */, AsnLen elmtLen, 
 
 			case REAL_EXPLEN_2:
 				expLen = 2;
-				exponent = (exponent << 16) | (((unsigned long int) firstExpOctet) << 8) | b.GetByte();
+				exponent = (exponent << 16) | (((unsigned long int)firstExpOctet) << 8) | b.GetByte();
 				break;
 
 			case REAL_EXPLEN_3:
 				expLen = 3;
-				exponent = (exponent << 16) | (((unsigned long int) firstExpOctet) << 8) | b.GetByte();
+				exponent = (exponent << 16) | (((unsigned long int)firstExpOctet) << 8) | b.GetByte();
 				exponent = (exponent << 8) | b.GetByte();
 				break;
 
-			default:  /* long form */
+			default: /* long form */
 				// The following code makese no sense and needs to get validated...
 				// -1 << 8 is undefined in certain compilers
 				// the loop below is checking i > 0 but is not touching i inside the loop
@@ -877,18 +859,18 @@ void AsnReal::BDecContent(const AsnBuf & b, AsnTag /* tagId */, AsnLen elmtLen, 
 						exponent = (exponent << 8) | b.GetByte();
 				*/
 				break;
-			}
+		}
 
-			unsigned char cValue;
-			for (i = 1 + expLen; i < (int)elmtLen; i++)
-			{
-				cValue = b.GetByte();
-				numberN = numberN * 256;
-				numberN += cValue;
-			}
+		unsigned char cValue;
+		for (i = 1 + expLen; i < (int)elmtLen; i++)
+		{
+			cValue = b.GetByte();
+			numberN = numberN * 256;
+			numberN += cValue;
+		}
 
-			switch (firstOctet & REAL_BASE_MASK)
-			{
+		switch (firstOctet & REAL_BASE_MASK)
+		{
 			case REAL_BASE_2:
 				base = 2;
 				break;
@@ -904,38 +886,36 @@ void AsnReal::BDecContent(const AsnBuf & b, AsnTag /* tagId */, AsnLen elmtLen, 
 			default:
 				throw EXCEPT("unsupported base for a binary real number.", DECODE_ERROR);
 				break;
-
-			}
-
-			//M = S x N x 2^F
-			//mantissa = sign * numberN * pow(2, scaleF);
-			mantissa = sign * ldexp(numberN, scaleF);
-
-			if (base == 2)
-			{
-				value = ldexp(mantissa, exponent);
-			}
-			else
-			{
-				//Aus mantissa, base und exp das value bauen
-				value = mantissa * pow((double)base, (double)exponent);
-			}
-
-			bytesDecoded += elmtLen;
 		}
-		else /* decimal version */
+
+		// M = S x N x 2^F
+		// mantissa = sign * numberN * pow(2, scaleF);
+		mantissa = sign * ldexp(numberN, scaleF);
+
+		if (base == 2)
 		{
-			throw EXCEPT("decimal REAL form is not currently supported", DECODE_ERROR);
+			value = ldexp(mantissa, exponent);
 		}
+		else
+		{
+			// Aus mantissa, base und exp das value bauen
+			value = mantissa * pow((double)base, (double)exponent);
+		}
+
+		bytesDecoded += elmtLen;
+	}
+	else /* decimal version */
+	{
+		throw EXCEPT("decimal REAL form is not currently supported", DECODE_ERROR);
 	}
 } /* AsnInt::BDecContent */
 
-void AsnReal::JEnc(EJson::Value & b) const
+void AsnReal::JEnc(EJson::Value& b) const
 {
 	b = EJson::Value(value);
 }
 
-bool AsnReal::JDec(const EJson::Value & b)
+bool AsnReal::JDec(const EJson::Value& b)
 {
 	value = 0;
 	if (b.isConvertibleTo(EJson::realValue))
@@ -946,7 +926,7 @@ bool AsnReal::JDec(const EJson::Value & b)
 	return false;
 }
 
-AsnLen AsnReal::PEnc(AsnBufBits & b) const
+AsnLen AsnReal::PEnc(AsnBufBits& b) const
 {
 	AsnLen len = 0;
 	long templen = 0;
@@ -968,7 +948,6 @@ AsnLen AsnReal::PEnc(AsnBufBits & b) const
 
 		len += b.OctetAlignWrite();
 
-
 		len += b.PutBits((unsigned char*)seg, templen);
 	}
 
@@ -976,8 +955,7 @@ AsnLen AsnReal::PEnc(AsnBufBits & b) const
 	return len;
 }
 
-
-void AsnReal::PDec(AsnBufBits & b, AsnLen & bitsDecoded)
+void AsnReal::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 {
 	AsnBuf tempBuf;
 	AsnLen bytesDecoded = 0;
@@ -995,15 +973,13 @@ void AsnReal::PDec(AsnBufBits & b, AsnLen & bitsDecoded)
 
 	tempBuf.PutSegRvs((char*)seg, lseg);
 
-
 	BDecContent(tempBuf, MAKE_TAG_ID(UNIV, PRIM, REAL_TAG_CODE), lseg, bytesDecoded);
 
 	bitsDecoded += (bytesDecoded * 8);
 	free(seg);
 }
 
-
-AsnLen AsnReal::BEnc(AsnBuf & b) const
+AsnLen AsnReal::BEnc(AsnBuf& b) const
 {
 	AsnLen l;
 	l = BEncContent(b);
@@ -1012,7 +988,7 @@ AsnLen AsnReal::BEnc(AsnBuf & b) const
 	return l;
 }
 
-void AsnReal::BDec(const AsnBuf & b, AsnLen & bytesDecoded)
+void AsnReal::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 {
 	FUNC("AsnReal::BDec()");
 
@@ -1021,27 +997,26 @@ void AsnReal::BDec(const AsnBuf & b, AsnLen & bytesDecoded)
 
 	tagId = BDecTag(b, bytesDecoded);
 	if (tagId != MAKE_TAG_ID(UNIV, PRIM, REAL_TAG_CODE))
-	{
 		throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
-	}
 	elmtLen = BDecLen(b, bytesDecoded);
 
 	BDecContent(b, MAKE_TAG_ID(UNIV, PRIM, REAL_TAG_CODE), elmtLen, bytesDecoded);
 }
 
-void AsnReal::Print(std::ostream & os, unsigned short /*indent*/) const
+void AsnReal::Print(std::ostream& os, unsigned short /*indent*/) const
 {
 	os << value;
 }
 
-void AsnReal::PrintXML(std::ostream & os, const char* lpszTitle) const
+void AsnReal::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	os << "<REAL>";
-	if (lpszTitle) os << lpszTitle;
+	if (lpszTitle)
+		os << lpszTitle;
 	os << "-";
-	Print(os); os << "</REAL>\n";
+	Print(os);
+	os << "</REAL>\n";
 }
-
 
 char* AsnReal::checkRealValRange(const double m_Lower, const double m_Upper) const
 {
@@ -1050,31 +1025,27 @@ char* AsnReal::checkRealValRange(const double m_Lower, const double m_Upper) con
 	char* pError = NULL;
 	char cTmperr[200];
 
-
 	ltemp = value;
 
 	if (ltemp <= m_Upper && ltemp >= m_Lower)
 	{
 		return pError;
 	}
+	else if (ltemp > m_Upper)
+	{
+		sprintf_s(cTmperr, 200, "_______\nREAL--Valuerange Constraints:\n_______\nError: --Value out of range--\nValue: %.5f is above the Upper Limit: %.5f \n", ltemp, m_Upper);
+		pError = _strdup(cTmperr);
+		return pError;
+	}
+	else if (ltemp < m_Lower)
+	{
+		sprintf_s(cTmperr, 200, "_______\nREAL--Valuerange Constraints:\n_______\nError: --Value out of range--\nValue: %.5f is below the Lower Limit: %.5f \n", ltemp, m_Lower);
+		pError = _strdup(cTmperr);
+		return pError;
+	}
 	else
 	{
-		if (ltemp > m_Upper)
-		{
-			sprintf_s(cTmperr, 200, "_______\nREAL--Valuerange Constraints:\n_______\nError: --Value out of range--\nValue: %.5f is above the Upper Limit: %.5f \n", ltemp, m_Upper);
-			pError = _strdup(cTmperr);
-			return pError;
-		}
-		else if (ltemp < m_Lower)
-		{
-			sprintf_s(cTmperr, 200, "_______\nREAL--Valuerange Constraints:\n_______\nError: --Value out of range--\nValue: %.5f is below the Lower Limit: %.5f \n", ltemp, m_Lower);
-			pError = _strdup(cTmperr);
-			return pError;
-		}
-		else
-		{
-			return pError;
-		}
+		return pError;
 	}
 }
 
@@ -1084,7 +1055,6 @@ char* AsnReal::checkRealSingleVal(const double m_SingleVal) const
 	double ltemp;
 	char* pError = NULL;
 	char cTmperr[200];
-
 
 	ltemp = value;
 
@@ -1097,12 +1067,8 @@ char* AsnReal::checkRealSingleVal(const double m_SingleVal) const
 		sprintf_s(cTmperr, 200, "_______\nREAL--SingleValue Constraints:\n_______\nError: --Values must match--\nValue: %.5f is not equal to the Constraint Single Value:  %.5f \n", ltemp, m_SingleVal);
 		pError = _strdup(cTmperr);
 		return pError;
-
 	}
 }
-
-
-
 
 #if META
 
@@ -1115,7 +1081,7 @@ const AsnTypeDesc* AsnReal::_getdesc() const
 
 #if TCL
 
-int AsnReal::TclGetVal(Tcl_Interp * interp) const
+int AsnReal::TclGetVal(Tcl_Interp* interp) const
 {
 	if (value == PLUS_INFINITY)
 		strcpy(interp->result, "+inf");
@@ -1126,7 +1092,7 @@ int AsnReal::TclGetVal(Tcl_Interp * interp) const
 	return TCL_OK;
 }
 
-int AsnReal::TclSetVal(Tcl_Interp * interp, const char* valstr)
+int AsnReal::TclSetVal(Tcl_Interp* interp, const char* valstr)
 {
 	double valval;
 
@@ -1144,8 +1110,5 @@ int AsnReal::TclSetVal(Tcl_Interp * interp, const char* valstr)
 
 #endif /* TCL */
 #endif /* META */
-
-
-
 
 _END_SNACC_NAMESPACE

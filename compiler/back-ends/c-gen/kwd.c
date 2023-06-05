@@ -41,20 +41,11 @@
 #include "../../../snacc.h"
 #include <string.h>
 
- /*
-  * last elmt must be NULL.
-  * key words grabbed from K&R 2nd Ed
-  */
-static char* cKWdG[] =
-{
-	"auto", "break", "case", "char", "const", "continue",
-	"default", "do", "double", "else", "enum", "extern",
-	"float", "for", "goto", "if", "int", "long", "register",
-	"return", "short", "signed", "sizeof", "static", "struct",
-	"switch",  "typedef", "union", "unsigned", "void", "volatile",
-	"while", NULL
-};
-
+/*
+ * last elmt must be NULL.
+ * key words grabbed from K&R 2nd Ed
+ */
+static char* cKWdG[] = {"auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", NULL};
 
 /*
  * returns non-zero if the given str is a C key word

@@ -10,12 +10,8 @@
  *    NOTE: This is a machine generated file--editing not recommended
  */
 
-
 #ifndef _tbl_h_
 #define _tbl_h_
-
-
-
 
 typedef enum
 {
@@ -38,15 +34,9 @@ typedef enum
 
 #define BEncTBLTypeIdContent BEncAsnEnumContent
 
-
-
-
 typedef AsnInt TBLTypeDefId; /* INTEGER */
 
 #define BEncTBLTypeDefIdContent BEncAsnIntContent
-
-
-
 
 typedef enum
 {
@@ -58,58 +48,40 @@ typedef enum
 
 #define BEncTBLTagClassContent BEncAsnEnumContent
 
-
-
-
 typedef struct TBLTypeRef /* SEQUENCE */
 {
 	TBLTypeDefId typeDef; /* TBLTypeDefId */
-	AsnBool implicit; /* BOOLEAN */
+	AsnBool implicit;	  /* BOOLEAN */
 } TBLTypeRef;
 
-AsnLen BEncTBLTypeRefContent PROTO((GenBuf* b, TBLTypeRef* v));
-
-
-
+AsnLen BEncTBLTypeRefContent PROTO((GenBuf * b, TBLTypeRef* v));
 
 typedef struct TBLTag /* SEQUENCE */
 {
 	TBLTagClass tclass; /* TBLTagClass */
-	AsnInt code; /* INTEGER (0..MAX) */
+	AsnInt code;		/* INTEGER (0..MAX) */
 } TBLTag;
 
-AsnLen BEncTBLTagContent PROTO((GenBuf* b, TBLTag* v));
-
-
-
+AsnLen BEncTBLTagContent PROTO((GenBuf * b, TBLTag* v));
 
 typedef AsnList TBLTypeSeqOf; /* SEQUENCE OF TBLTag */
 
-AsnLen BEncTBLTypeSeqOfContent PROTO((GenBuf* b, TBLTypeSeqOf* v));
-
-
-
+AsnLen BEncTBLTypeSeqOfContent PROTO((GenBuf * b, TBLTypeSeqOf* v));
 
 typedef AsnList TBLTypeContentSeqOf; /* SEQUENCE OF TBLType */
 
-AsnLen BEncTBLTypeContentSeqOfContent PROTO((GenBuf* b, TBLTypeContentSeqOf* v));
-
-
-
+AsnLen BEncTBLTypeContentSeqOfContent PROTO((GenBuf * b, TBLTypeContentSeqOf* v));
 
 typedef struct TBLType /* SEQUENCE */
 {
-	TBLTypeId typeId; /* [0] IMPLICIT TBLTypeId */
-	AsnBool optional; /* [1] IMPLICIT BOOLEAN */
-	TBLTypeSeqOf* tagList; /* [2] IMPLICIT TBLTypeSeqOf OPTIONAL */
+	TBLTypeId typeId;				/* [0] IMPLICIT TBLTypeId */
+	AsnBool optional;				/* [1] IMPLICIT BOOLEAN */
+	TBLTypeSeqOf* tagList;			/* [2] IMPLICIT TBLTypeSeqOf OPTIONAL */
 	struct TBLTypeContent* content; /* [3] TBLTypeContent */
-	PrintableString fieldName; /* [4] IMPLICIT PrintableString OPTIONAL */
+	PrintableString fieldName;		/* [4] IMPLICIT PrintableString OPTIONAL */
 } TBLType;
 
-AsnLen BEncTBLTypeContent PROTO((GenBuf* b, TBLType* v));
-
-
-
+AsnLen BEncTBLTypeContent PROTO((GenBuf * b, TBLType* v));
 
 typedef struct TBLTypeContent /* CHOICE */
 {
@@ -121,73 +93,54 @@ typedef struct TBLTypeContent /* CHOICE */
 	} choiceId;
 	union TBLTypeContentChoiceUnion
 	{
-		AsnNull primType; /* [0] IMPLICIT NULL */
+		AsnNull primType;			/* [0] IMPLICIT NULL */
 		TBLTypeContentSeqOf* elmts; /* [1] IMPLICIT TBLTypeContentSeqOf */
 		struct TBLTypeRef* typeRef; /* [2] IMPLICIT TBLTypeRef */
 	} a;
 } TBLTypeContent;
 
-AsnLen BEncTBLTypeContentContent PROTO((GenBuf* b, TBLTypeContent* v));
-
-
-
+AsnLen BEncTBLTypeContentContent PROTO((GenBuf * b, TBLTypeContent* v));
 
 typedef struct TBLTypeDef /* SEQUENCE */
 {
-	TBLTypeDefId typeDefId; /* TBLTypeDefId */
+	TBLTypeDefId typeDefId;	  /* TBLTypeDefId */
 	PrintableString typeName; /* PrintableString OPTIONAL */
-	struct TBLType* type; /* TBLType */
+	struct TBLType* type;	  /* TBLType */
 } TBLTypeDef;
 
-AsnLen BEncTBLTypeDefContent PROTO((GenBuf* b, TBLTypeDef* v));
-
-
-
+AsnLen BEncTBLTypeDefContent PROTO((GenBuf * b, TBLTypeDef* v));
 
 typedef AsnList TBLModuleSeqOf; /* SEQUENCE OF TBLTypeDef */
 
-AsnLen BEncTBLModuleSeqOfContent PROTO((GenBuf* b, TBLModuleSeqOf* v));
-
-
-
+AsnLen BEncTBLModuleSeqOfContent PROTO((GenBuf * b, TBLModuleSeqOf* v));
 
 typedef struct TBLModule /* SEQUENCE */
 {
-	PrintableString name; /* [0] IMPLICIT PrintableString */
-	AsnOid id; /* [1] IMPLICIT OBJECT IDENTIFIER OPTIONAL */
-	AsnBool isUseful; /* [2] IMPLICIT BOOLEAN */
+	PrintableString name;	  /* [0] IMPLICIT PrintableString */
+	AsnOid id;				  /* [1] IMPLICIT OBJECT IDENTIFIER OPTIONAL */
+	AsnBool isUseful;		  /* [2] IMPLICIT BOOLEAN */
 	TBLModuleSeqOf* typeDefs; /* [3] IMPLICIT TBLModuleSeqOf */
 } TBLModule;
 
-AsnLen BEncTBLModuleContent PROTO((GenBuf* b, TBLModule* v));
-
-
-
+AsnLen BEncTBLModuleContent PROTO((GenBuf * b, TBLModule* v));
 
 typedef AsnList TBLSeqOf; /* SEQUENCE OF TBLModule */
 
-AsnLen BEncTBLSeqOfContent PROTO((GenBuf* b, TBLSeqOf* v));
-
-
-
+AsnLen BEncTBLSeqOfContent PROTO((GenBuf * b, TBLSeqOf* v));
 
 typedef struct TBL /* SEQUENCE */
 {
-	AsnInt totalNumModules; /* INTEGER */
+	AsnInt totalNumModules;	 /* INTEGER */
 	AsnInt totalNumTypeDefs; /* INTEGER */
-	AsnInt totalNumTypes; /* INTEGER */
-	AsnInt totalNumTags; /* INTEGER */
-	AsnInt totalNumStrings; /* INTEGER */
-	AsnInt totalLenStrings; /* INTEGER */
-	TBLSeqOf* modules; /* TBLSeqOf */
+	AsnInt totalNumTypes;	 /* INTEGER */
+	AsnInt totalNumTags;	 /* INTEGER */
+	AsnInt totalNumStrings;	 /* INTEGER */
+	AsnInt totalLenStrings;	 /* INTEGER */
+	TBLSeqOf* modules;		 /* TBLSeqOf */
 } TBL;
 
-AsnLen BEncTBL PROTO((GenBuf* b, TBL* v));
+AsnLen BEncTBL PROTO((GenBuf * b, TBL* v));
 
-AsnLen BEncTBLContent PROTO((GenBuf* b, TBL* v));
-
-
-
-
+AsnLen BEncTBLContent PROTO((GenBuf * b, TBL* v));
 
 #endif /* conditional include of tbl.h */

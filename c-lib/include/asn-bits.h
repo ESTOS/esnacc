@@ -15,35 +15,32 @@
  * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-
 #ifndef _asn_bits_h_
 #define _asn_bits_h_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-
-
 
 	typedef struct AsnBits
 	{
-		int	bitLen;
+		int bitLen;
 		char* bits;
 	} AsnBits;
 
 	extern char numToHexCharTblG[];
 
-
 	/*
 	 * BER encode/decode routines
 	 */
-	AsnLen BEncAsnBits PROTO((GenBuf* b, AsnBits* data));
+	AsnLen BEncAsnBits PROTO((GenBuf * b, AsnBits* data));
 
-	void BDecAsnBits PROTO((GenBuf* b, AsnBits* result, AsnLen* bytesDecoded, ENV_TYPE env));
+	void BDecAsnBits PROTO((GenBuf * b, AsnBits* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
-	AsnLen BEncAsnBitsContent PROTO((GenBuf* b, AsnBits* bits));
+	AsnLen BEncAsnBitsContent PROTO((GenBuf * b, AsnBits* bits));
 
-	void BDecAsnBitsContent PROTO((GenBuf* b, AsnTag tagId, AsnLen len, AsnBits* result, AsnLen* bytesDecoded, ENV_TYPE env));
+	void BDecAsnBitsContent PROTO((GenBuf * b, AsnTag tagId, AsnLen len, AsnBits* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
 	/*
 	 * DER encode/decode routines
@@ -58,31 +55,26 @@ extern "C" {
 
 #define DDecAsnBitsContent BDecAsnBitsContent
 
-	 /* Print and Free routines */
-	void FreeAsnBits PROTO((AsnBits* v));
+	/* Print and Free routines */
+	void FreeAsnBits PROTO((AsnBits * v));
 
-	void PrintAsnBits PROTO((FILE* f, AsnBits* b, unsigned int indent));
-
-
-
+	void PrintAsnBits PROTO((FILE * f, AsnBits* b, unsigned int indent));
 
 	/* Utility routines */
-#define TO_HEX( fourBits)	(numToHexCharTblG[(fourBits) & 0x0f])
+#define TO_HEX(fourBits) (numToHexCharTblG[(fourBits)&0x0f])
 
+#define ASNBITS_PRESENT(abits) ((abits)->bits != NULL)
 
-#define ASNBITS_PRESENT( abits)	((abits)->bits != NULL)
+	int AsnBitsEquiv PROTO((AsnBits * b1, AsnBits* b2));
 
-	int AsnBitsEquiv PROTO((AsnBits* b1, AsnBits* b2));
+	void SetAsnBit PROTO((AsnBits * b1, size_t bit));
 
-	void SetAsnBit PROTO((AsnBits* b1, size_t bit));
+	void ClrAsnBit PROTO((AsnBits * b1, size_t bit));
 
-	void ClrAsnBit PROTO((AsnBits* b1, size_t bit));
-
-	int GetAsnBit PROTO((AsnBits* b1, size_t bit));
+	int GetAsnBit PROTO((AsnBits * b1, size_t bit));
 
 #ifdef __cplusplus
 }
 #endif /* extern 'C' */
 
 #endif /* conditional include */
-

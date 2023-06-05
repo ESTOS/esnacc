@@ -15,11 +15,11 @@ _BEGIN_SNACC_NAMESPACE
 #ifdef _WIN32
 
 // Copied from EDate.
-#define ONEDAY			1.0
-#define ONEHOUR			(ONEDAY/24)
-#define ONEMINUTE		(ONEHOUR/60)
-#define ONESECOND		(ONEMINUTE/60)
-#define ONEMILLISECOND	(ONESECOND/1000)
+#define ONEDAY 1.0
+#define ONEHOUR (ONEDAY / 24)
+#define ONEMINUTE (ONEHOUR / 60)
+#define ONESECOND (ONEMINUTE / 60)
+#define ONEMILLISECOND (ONESECOND / 1000)
 
 // Copied from EDate.
 bool VariantTimeToSystemTimeWithMilliseconds(const DATE& dVariantTime, SYSTEMTIME& st)
@@ -53,13 +53,13 @@ bool VariantTimeToSystemTimeWithMilliseconds(const DATE& dVariantTime, SYSTEMTIM
 
 std::string DateToISO8601(DATE dt)
 {
-	//so alte Daten verwerfen wir gleich
+	// so alte Daten verwerfen wir gleich
 	if (dt < 10)
 		return "";
 
-	//2012-04-23T18:25:43.511Z
-	//2012-04-23T18:25:43.500Z		// Nullen am Ende rein technisch überflüssig, erleichtern aber die Lesbarkeit.
-	char szDateTime[40] = { 0 };
+	// 2012-04-23T18:25:43.511Z
+	// 2012-04-23T18:25:43.500Z		// Nullen am Ende rein technisch überflüssig, erleichtern aber die Lesbarkeit.
+	char szDateTime[40] = {0};
 	SYSTEMTIME sysTime;
 	memset(&sysTime, 0x00, sizeof(sysTime));
 	if (VariantTimeToSystemTimeWithMilliseconds(dt, sysTime))
@@ -101,7 +101,7 @@ double ISO8601ToDATE(const char* szDateTime)
 
 	if (iLen == 20)
 	{
-		//2012-04-23T18:25:43Z
+		// 2012-04-23T18:25:43Z
 #if _MSC_VER < 1900
 		sscanf(szDateTime, "%04d-%02d-%02dT%02d:%02d:%02dZ", &sysTime.wYear, &sysTime.wMonth, &sysTime.wDay, &sysTime.wHour, &sysTime.wMinute, &sysTime.wSecond);
 #else
@@ -110,9 +110,9 @@ double ISO8601ToDATE(const char* szDateTime)
 	}
 	else if (iLen > 20)
 	{
-		//2012-04-23T18:25:43.511Z
-		//2012-04-23T18:25:43.500Z
-		//2012-04-23T18:25:43.5Z
+		// 2012-04-23T18:25:43.511Z
+		// 2012-04-23T18:25:43.500Z
+		// 2012-04-23T18:25:43.5Z
 		float fSecs = 0.0f;
 #if _MSC_VER < 1900
 		sscanf(szDateTime, "%04d-%02d-%02dT%02d:%02d:%fZ", &sysTime.wYear, &sysTime.wMonth, &sysTime.wDay, &sysTime.wHour, &sysTime.wMinute, &fSecs);
@@ -126,10 +126,7 @@ double ISO8601ToDATE(const char* szDateTime)
 	}
 
 	if (sysTime.wYear && sysTime.wMonth && sysTime.wDay)
-	{
 		SystemTimeToVariantTimeWithMilliseconds(sysTime, dblValue);
-	}
-
 
 	return dblValue;
 }
@@ -137,13 +134,13 @@ double ISO8601ToDATE(const char* szDateTime)
 
 time_t AsnSystemTime::get_time_t() const
 {
-	//25569 days offset, 86400 seconds per day
+	// 25569 days offset, 86400 seconds per day
 	return (time_t)((value - 25569) * 86400);
 }
 
 void AsnSystemTime::set_time_t(time_t tim)
 {
-	//25569 days offset, 86400 seconds per day
+	// 25569 days offset, 86400 seconds per day
 	double dbltmp = (double)tim;
 	dbltmp = dbltmp / 86400;
 	value = dbltmp + 25569;
@@ -151,8 +148,8 @@ void AsnSystemTime::set_time_t(time_t tim)
 
 void AsnSystemTime::JEnc(EJson::Value& b) const
 {
-	//ISO 8601
-	//2012-04-23T18:25:43.511Z
+	// ISO 8601
+	// 2012-04-23T18:25:43.511Z
 #ifdef _WIN32
 	b = EJson::Value(DateToISO8601(value));
 #else
@@ -171,8 +168,8 @@ bool AsnSystemTime::JDec(const EJson::Value& b)
 #ifdef _WIN32
 	else if (b.isString())
 	{
-		//ISO 8601
-		//2012-04-23T18:25:43.511Z
+		// ISO 8601
+		// 2012-04-23T18:25:43.511Z
 		value = ISO8601ToDATE(b.asCString());
 		return true;
 	}
@@ -188,10 +185,11 @@ void AsnSystemTime::Print(std::ostream& os, unsigned short /*indent*/) const
 void AsnSystemTime::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
 	os << "<REAL>";
-	if (lpszTitle) os << lpszTitle;
+	if (lpszTitle)
+		os << lpszTitle;
 	os << "-";
-	Print(os); os << "</REAL>\n";
+	Print(os);
+	os << "</REAL>\n";
 }
-
 
 _END_SNACC_NAMESPACE

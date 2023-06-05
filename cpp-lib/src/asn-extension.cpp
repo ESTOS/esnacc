@@ -12,8 +12,6 @@ AsnLen AsnExtension::BEnc(AsnBuf& b) const
 	return l;
 }
 
-
-
 AsnLen AsnExtension::PEnc(AsnBufBits& b) const
 {
 	AsnLen l = 0;
@@ -25,7 +23,6 @@ AsnLen AsnExtension::PEnc(AsnBufBits& b) const
 	return l;
 }
 
-
 void AsnExtension::Print(std::ostream& os, unsigned short indent) const
 {
 	std::list<AsnAny>::const_iterator i;
@@ -34,9 +31,7 @@ void AsnExtension::Print(std::ostream& os, unsigned short indent) const
 		i->Print(os, indent);
 		os << "\n";
 		Indent(os, indent);
-
 	}
 }
 
 _END_SNACC_NAMESPACE
-

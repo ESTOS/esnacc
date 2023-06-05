@@ -9,25 +9,17 @@
 
 ---
 # We'll use defaults from the LLVM style
+Language: Cpp
 BasedOnStyle: LLVM
 IndentWidth: 4
 TabWidth: 4
 UseTab: Always
 
----
-Language: Cpp
-# Zusammenhaengende Assignments stehen immer untereinander auf gleicher Hoehe
-AlignConsecutiveAssignments: false
-AlignConsecutiveMacros:
-  Enabled: true
-  AcrossEmptyLines: true
-  AcrossComments: true
-  
-# Constructor und Initializer sollten dem gleichen folgen
+# Constructor und initializer should follow the same rules
 BreakInheritanceList: AfterColon
 BreakConstructorInitializers: AfterColon
 
-# public private protected ganz linksbündig 
+# public private protected always moved left for clearer visibility
 AccessModifierOffset: -4
 
 # Aligning:
@@ -35,16 +27,12 @@ IndentCaseBlocks: true
 IndentCaseLabels: true
 NamespaceIndentation: All
 
-# Die Zeilen sind genau so lang wie der Entwickler es in dem Kontext in dem er sich gerade aufhält für nötig erachtet
+# We don´t care about line limits...
 ColumnLimit: 500
-
-# Mehrere Argumente in einer Methode die nicht in eine Zeile passen
 AlignAfterOpenBracket: Align
-
-# Kommentare
 AlignTrailingComments: true
 
-# Klammersetzung, bei uns Ausnahmslos immer in neuer Zeile
+# Braces in an extra line and none for one liners...
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterEnum: true
@@ -58,38 +46,20 @@ BraceWrapping:
   BeforeCatch: true
   AfterControlStatement: true
   SplitEmptyFunction: true
-
-# Keine Klammern um one liner statements
 RemoveBracesLLVM: true
 
-# Pointer und Referenzen stehen immer neben dem Type int* variable, CStdString& strData
+# Pointer and reference always next to the type int*, std::wstring& strData
 PointerAlignment: Left
 
-# Konstruktor intialisierer umbrüche
+# Constructor intialisierer
 BreakConstructorInitializers: BeforeComma
 
-# Alle Singleliner verbieten
+# No unreadable single liners
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortBlocksOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: false
 
-# Sorting von Headern deaktivieren
-SortIncludes: CaseInsensitive
-IncludeCategories:
-  - Regex:        'stdafx.h|pch.h'
-    Priority:     -1
-    SortPriority: -1
-  - Regex:        'wincrypt.h|softpub.h'
-    Priority:     100
-    SortPriority: 100
-  - Regex:        '^<'
-    Priority:     2
-    SortPriority: 2
-  - Regex:        '\.\.'
-    Priority:     3
-    SortPriority: 3
-  - Regex:        '.*'
-    Priority:     4
-    SortPriority: 4
+# No change in the sorting of includes (grown code)
+SortIncludes: Never

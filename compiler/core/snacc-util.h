@@ -60,56 +60,54 @@
 
 #include "asn1module.h"
 
-#define PrintErrLoc( fileName, lineNo)\
-			fprintf (errFileG, "%s(%ld) : ", fileName, (lineNo))
+#define PrintErrLoc(fileName, lineNo) fprintf(errFileG, "%s(%ld) : ", fileName, (lineNo))
 
- /*
-  * macro to allocate room for str & null & put in give STR*
-  */
-#define SETUP_STR( strPtr, string)\
-    (strPtr)->str = Malloc (strlen (string) + 1);\
-    strcpy ((strPtr)->str, string);\
-    (strPtr)->len = strlen (string) + 1
+/*
+ * macro to allocate room for str & null & put in give STR*
+ */
+#define SETUP_STR(strPtr, string)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+	(strPtr)->str = Malloc(strlen(string) + 1);                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+	strcpy((strPtr)->str, string);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+	(strPtr)->len = strlen(string) + 1
 
+/*
+ * Create a new list type such that each elmt has space
+ * to hold a pointer
+ */
+#define NEWLIST() AsnListNew(sizeof(void*))
 
-  /*
-   * Create a new list type such that each elmt has space
-   * to hold a pointer
-   */
-#define NEWLIST()	AsnListNew (sizeof (void *))
+/*
+ *    macro to append an element to the end of linked list
+ *    - helps on left recursion when order must be maintained
+ *
+ *  be careful of calling context if list is null
+ *  that is, make sure the change to list is not lost.
+ */
+#define APPEND(elmt, list)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		void** tmpPtr;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+		if ((list) == NULL)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+			(list) = NEWLIST();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+		tmpPtr = (void**)AsnListAppend((AsnList*)list);                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+		*tmpPtr = (void*)(elmt);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+	}
 
-   /*
-	*    macro to append an element to the end of linked list
-	*    - helps on left recursion when order must be maintained
-	*
-	*  be careful of calling context if list is null
-	*  that is, make sure the change to list is not lost.
-	*/
-#define APPEND( elmt, list) \
-{\
-    void **tmpPtr;\
-    if ((list) == NULL)\
-        (list) = NEWLIST();\
-    tmpPtr = (void **) AsnListAppend ((AsnList *)list);\
-    *tmpPtr = (void *) (elmt);\
-}
+/*
+ * like APPEND except puts elmt at head of  list
+ */
+#define PREPEND(elmt, list)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		void** tmpPtr;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+		if ((list) == NULL)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+			(list) = NEWLIST();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+		tmpPtr = (void**)AsnListPrepend((AsnList*)list);                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+		*tmpPtr = (void*)(elmt);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+	}
 
-	/*
-	 * like APPEND except puts elmt at head of  list
-	 */
-#define PREPEND( elmt, list) \
-{\
-    void **tmpPtr;\
-    if ((list) == NULL)\
-        (list) = NEWLIST();\
-    tmpPtr = (void **)AsnListPrepend ((AsnList *)list);\
-    *tmpPtr = (void *) (elmt);\
-}
-
-#define CONCAT( list1, list2)\
-{\
-    AsnListConcat(list1, list2);\
-}
+#define CONCAT(list1, list2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		AsnListConcat(list1, list2);                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+	}
 
 BasicValue* GetLastNamedNumberValue(NamedNumberList* valueList);
 
@@ -118,7 +116,6 @@ void SetupType(Type** t, enum BasicTypeChoiceId typeId, unsigned long lineNum);
 void SetupMacroType(Type** t, enum MacroTypeChoiceId macroTypeId, unsigned long lineNum);
 
 void SetupValue(Value** v, enum BasicValueChoiceId valId, unsigned long lineNum);
-
 
 void AddPrivateImportElmt(Module* m, char* name, char* refModuleName, long lineNo);
 
@@ -152,7 +149,6 @@ Type* ParanoidGetType(Type* t);
 
 enum BasicTypeChoiceId GetBuiltinType(Type* t);
 enum BasicTypeChoiceId ParanoidGetBuiltinType(Type* t);
-
 
 NamedNumberList* GetNamedElmts(Type* t);
 
@@ -194,5 +190,4 @@ AnyRefList** GetAnyRefListHndl(Type* t);
 
 void AppendSubtype(Subtype** s, Subtype* newSubtype, enum SubtypeChoiceId op);
 
-
-extern FILE* errFileG;		// Defined in snacc.c
+extern FILE* errFileG; // Defined in snacc.c

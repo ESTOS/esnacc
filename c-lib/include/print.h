@@ -19,18 +19,16 @@
 #define _snaccc_print_h_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-
-	void Indent PROTO((FILE* f, unsigned int i));
+	void Indent PROTO((FILE * f, unsigned int i));
 
 	void Asn1DefaultErrorHandler PROTO((char* str, int severity));
-
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* conditional include */
-

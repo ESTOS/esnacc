@@ -103,7 +103,6 @@
 // no message
 //
 
-
 // Revision 1.54  2003/03/28 14:10:16  leonberp
 // added pragmas to get rid of warnings
 //
@@ -324,8 +323,6 @@
 
 _BEGIN_SNACC_NAMESPACE
 
-
-
 #if META
 
 const AsnIntTypeDesc AsnInt::_desc(NULL, NULL, false, AsnTypeDesc::INTEGER, NULL, NULL);
@@ -337,7 +334,7 @@ const AsnTypeDesc* AsnInt::_getdesc() const
 
 #if TCL
 
-#define RETURN_NAME_INSTEAD_OF_VALUE	0
+#define RETURN_NAME_INSTEAD_OF_VALUE 0
 
 int AsnInt::TclGetVal(Tcl_Interp* interp) const
 {
@@ -379,8 +376,7 @@ int AsnInt::TclSetVal(Tcl_Interp* interp, const char* valstr)
 #endif /* TCL */
 #endif /* META */
 
-
-//RWC;6/4/01; newly added functionality (along with changes above).
+// RWC;6/4/01; newly added functionality (along with changes above).
 
 //------------------------------------------------------------------------------
 // class member definitions:
@@ -410,16 +406,13 @@ void AsnInt::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	AsnTag tag;
 	AsnLen elmtLen1;
 
-	if (((tag = BDecTag(b, bytesDecoded)) != MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
-		&& (tag != MAKE_TAG_ID(UNIV, CONS, INTEGER_TAG_CODE)))
-	{
+	if (((tag = BDecTag(b, bytesDecoded)) != MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, INTEGER_TAG_CODE)))
 		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-	}
 	elmtLen1 = BDecLen(b, bytesDecoded);
 	BDecContent(b, tag, elmtLen1, bytesDecoded);
 }
 
-AsnLen  AsnInt::BEncContent(AsnBuf& b) const
+AsnLen AsnInt::BEncContent(AsnBuf& b) const
 {
 	b.PutSegRvs((char*)m_bytes, m_len);
 	return m_len;
@@ -496,7 +489,7 @@ AsnInt::AsnInt(const char* str, bool unsignedFlag)
 	unsigned int length = (unsigned int)strlen(str);
 	unsigned int i = 0;
 
-	//std::basic_string<unsigned char> localBytes;
+	// std::basic_string<unsigned char> localBytes;
 	std::vector<unsigned char> localBytes;
 
 	AsnIntType l = 0;
@@ -511,10 +504,10 @@ AsnInt::AsnInt(const char* str, bool unsignedFlag)
 
 	switch (str[length - 1])
 	{
-	case 'h':
-	case 'H':
-		radix = 16;
-		break;
+		case 'h':
+		case 'H':
+			radix = 16;
+			break;
 	}
 
 	if (radix == 16)
@@ -524,27 +517,19 @@ AsnInt::AsnInt(const char* str, bool unsignedFlag)
 		length -= 2;
 		i = 1;
 	}
-	else
+	else if (strncmp("0x", str, 2) == 0)
 	{
-		if (strncmp("0x", str, 2) == 0)
-		{
-			radix = 16;
-			i = 2;
-		}
-		else  // assume it's a decimal
-		{
-			// make sure the number isn't out of range
-			if (((strlen(str) >= 11) && (str[0] != '-')) ||
-				((strlen(str) == 11) && (str[0] == '-') && (str[1] >= '2') && (str[2] >= '1')) ||
-				((strlen(str) == 10) && (str[0] >= '2') && (str[1] >= '1')))
-			{
-				throw EXCEPT("decimal string is too big to convert to an integer",
-					INTEGER_ERROR);
-			}
+		radix = 16;
+		i = 2;
+	}
+	else // assume it's a decimal
+	{
+		// make sure the number isn't out of range
+		if (((strlen(str) >= 11) && (str[0] != '-')) || ((strlen(str) == 11) && (str[0] == '-') && (str[1] >= '2') && (str[2] >= '1')) || ((strlen(str) == 10) && (str[0] >= '2') && (str[1] >= '1')))
+			throw EXCEPT("decimal string is too big to convert to an integer", INTEGER_ERROR);
 
-			l = atol(str);
-			Set(l);
-		}
+		l = atol(str);
+		Set(l);
 	}
 
 	if (radix == 16)
@@ -574,7 +559,7 @@ AsnInt::AsnInt(const char* str, bool unsignedFlag)
 				prevDigit <<= 4;
 				prevDigit |= digit;
 
-				//localBytes += prevDigit;
+				// localBytes += prevDigit;
 				localBytes.push_back(prevDigit);
 
 				flag = false;
@@ -615,9 +600,9 @@ void AsnInt::storeDERInteger(const unsigned char* pData, long dataLen, bool unsi
 		m_len = dataLen;
 
 		/* If the application generates a r,s,p,q,g, or y value in which the
-		* MSB is set to 1, THEN the software prepends a single octet in which
-		* all bits are set to 0.
-		*/
+		 * MSB is set to 1, THEN the software prepends a single octet in which
+		 * all bits are set to 0.
+		 */
 		if (*pData & 0x80)
 		{
 			// Prepend a leading octet
@@ -627,7 +612,6 @@ void AsnInt::storeDERInteger(const unsigned char* pData, long dataLen, bool unsi
 		}
 		else
 			memcpy(m_bytes, pData, dataLen);
-
 	}
 	/*
 	 * ASN.1 rules state that the first 9 bits of an integer encoding can
@@ -636,7 +620,7 @@ void AsnInt::storeDERInteger(const unsigned char* pData, long dataLen, bool unsi
 	else if (dataLen > 1)
 	{
 		/* check for first first 9 bits all ones
-			*/
+		 */
 		while ((dataLen > 1) && (pData[0] == 0xFF) && (pData[1] & 0x80))
 		{
 			++pData;
@@ -644,7 +628,7 @@ void AsnInt::storeDERInteger(const unsigned char* pData, long dataLen, bool unsi
 		}
 
 		/* check for first 9 bits all zeros
-		*/
+		 */
 		while ((dataLen > 1) && (pData[0] == 0) && ((pData[1] & 0x80) == 0))
 		{
 			++pData;
@@ -657,7 +641,7 @@ void AsnInt::storeDERInteger(const unsigned char* pData, long dataLen, bool unsi
 	m_value = GetLongLong();
 }
 
-AsnInt& AsnInt::operator =(const AsnInt& that)
+AsnInt& AsnInt::operator=(const AsnInt& that)
 {
 	if (this != &that)
 	{
@@ -680,16 +664,12 @@ AsnInt::operator AsnIntType() const
 	AsnIntType iResult = 0;
 
 	if (m_len > sizeof(AsnIntType))
-	{
 		throw EXCEPT("integer is too big for conversion to AsnIntType", INTEGER_ERROR);
-	}
 
 	// If big int is negative initialize result to -1
 	//
 	if ((m_bytes[0] >> 7 == 1))
-	{
 		iResult = -1;
-	}
 
 	if (m_len > 0)
 	{
@@ -714,16 +694,12 @@ long long AsnInt::GetLongLong() const
 	long long iResult = 0;
 
 	if (m_len > sizeof(long long))
-	{
 		throw EXCEPT("integer is too big for conversion to AsnIntType", INTEGER_ERROR);
-	}
 
 	// If big int is negative initialize result to -1
 	//
 	if ((m_bytes[0] >> 7 == 1))
-	{
 		iResult = -1;
-	}
 
 	if (m_len > 0)
 	{
@@ -815,14 +791,12 @@ void AsnInt::getPadded(unsigned char*& bigIntDataOut, size_t& bigIntLen, const s
 		else if (bigIntLen > padToSize)
 		{
 			if (bigIntData[0] != 0)
-			{
 				throw EXCEPT("Extra octet is not zero.", INTEGER_ERROR);
-			}
 			bigIntLen--;
 			bigIntDataOut = (unsigned char*)calloc(1, bigIntLen);
 			memcpy(&bigIntDataOut[0], &bigIntData[1], bigIntLen);
 		}
-		else      // Exact length.
+		else // Exact length.
 		{
 			bigIntDataOut = (unsigned char*)calloc(1, bigIntLen);
 			memcpy(&bigIntDataOut[0], &bigIntData[0], bigIntLen);
@@ -830,7 +804,6 @@ void AsnInt::getPadded(unsigned char*& bigIntDataOut, size_t& bigIntLen, const s
 	}
 	// bigIntData AND bigIntLen contain the results.
 }
-
 
 bool AsnInt::operator==(const AsnInt& o) const
 {
@@ -895,7 +868,7 @@ void AsnInt::Print(std::ostream& os, unsigned short /*indent*/) const
 		snprintf(buf, 3, "%2.2x", (int)m_bytes[i]);
 #endif
 		os << buf;
-	}        //END for all data.
+	} // END for all data.
 	os << "'H  -- ";
 	os.unsetf(std::ios::hex);
 }
@@ -911,7 +884,7 @@ void AsnInt::PrintXML(std::ostream& os, const char* lpszTitle) const
 	{
 		os << "<INTEGER>\n";
 	}
-	//RWC:os << "-";
+	// RWC:os << "-";
 	Print(os);
 	if (lpszTitle)
 		os << "</" << lpszTitle << ">\n";
@@ -919,21 +892,19 @@ void AsnInt::PrintXML(std::ostream& os, const char* lpszTitle) const
 		os << "</INTEGER>\n";
 }
 
-int AsnInt::checkConstraints(ConstraintFailList* pConstraintFails)const
+int AsnInt::checkConstraints(ConstraintFailList* pConstraintFails) const
 {
 	FUNC("AsnInt::checkConstraints");
 	int numValueRanges;
 	const ValueRange* valueRanges = ValueRanges(numValueRanges);
 	int count = 0;
 	int failed = 1;
-	std::string  ptr;
+	std::string ptr;
 	AsnIntType ltemp = 0;
 	const char* tmpptr = NULL;
 
 	if (m_len > sizeof(AsnIntType) && (numValueRanges > 0))
-	{
 		throw EXCEPT("Integer is out of constraint range", CONSTRAINT_ERROR);
-	}
 
 	if (valueRanges)
 	{
@@ -945,33 +916,23 @@ int AsnInt::checkConstraints(ConstraintFailList* pConstraintFails)const
 			if (valueRanges[count].upperBoundExists == 1)
 			{
 				if ((ltemp < valueRanges[count].lowerBound) || (ltemp > valueRanges[count].upperBound))
-				{
 					tmpptr = ConstraintErrorStringList[INTEGER_VALUE_RANGE];
-				}
 			}
 			else if (valueRanges[count].upperBoundExists == 2)
 			{
 				if (ltemp != valueRanges[count].lowerBound)
-				{
 					tmpptr = ConstraintErrorStringList[INTEGER_SINGLE_VALUE];
-				}
 			}
 			else if (valueRanges[count].upperBoundExists == 0)
 			{
 				if (ltemp < valueRanges[count].lowerBound)
-				{
 					tmpptr = ConstraintErrorStringList[INTEGER_VALUE_RANGE];
-				}
 			}
 
 			if (tmpptr)
-			{
 				ptr += tmpptr;
-			}
 			else
-			{
 				failed = 0;
-			}
 		}
 	}
 	else
@@ -995,11 +956,11 @@ void AsnInt::putByte(long offset, unsigned char cByte)
 void AsnInt::Allocate(long size)
 {
 	unsigned char* temp = new unsigned char[m_len + size];
-	if (m_len)          // RWC;
-	{                   // RWC;
+	if (m_len) // RWC;
+	{		   // RWC;
 		memcpy(temp, m_bytes, m_len);
 		size += m_len;
-	}                   //RWC;
+	} // RWC;
 
 	Clear();
 
@@ -1033,23 +994,17 @@ void AsnInt::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 		for (x = 0; x < numValueRanges; x++)
 		{
 			if (lowerBound > valueRanges[x].lowerBound)
-			{
 				lowerBound = valueRanges[x].lowerBound;
-			}
 
 			if (upperBound < valueRanges[x].lowerBound)
-			{
 				upperBound = valueRanges[x].lowerBound;
-			}
 
 			if (valueRanges[x].upperBoundExists == 1)
 			{
 				upperBoundFound = 1;
 
 				if (upperBound < valueRanges[x].upperBound)
-				{
 					upperBound = valueRanges[x].upperBound;
-				}
 			}
 		}
 
@@ -1064,19 +1019,11 @@ void AsnInt::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 		else
 		{
 			if (numValueRanges == 1 && valueRanges[0].upperBoundExists == 2)
-			{
 				Set(lowerBound);
-			}
 			else
-			{
 				PDecSemiConstrained(b, lowerBound, bitsDecoded);
-			}
-
 		}
-
 	}
-
-
 }
 
 void AsnInt::PDecSemiConstrained(AsnBufBits& b, long lowerBound, AsnLen& bitsDecoded)
@@ -1094,10 +1041,7 @@ void AsnInt::PDecSemiConstrained(AsnBufBits& b, long lowerBound, AsnLen& bitsDec
 	m_len = (long)seg[0];
 
 	if (m_len > 4)
-	{
-		throw EXCEPT("integer is too big for decoding from offset",
-			INTEGER_ERROR);
-	}
+		throw EXCEPT("integer is too big for decoding from offset", INTEGER_ERROR);
 
 	free(seg);
 	seg = (unsigned char*)b.GetBits(m_len * 8);
@@ -1126,7 +1070,7 @@ void AsnInt::PDecFullyConstrained(AsnBufBits& b, long lowerBound, long upperBoun
 	long minBitsNeeded = 0;
 	long numBytes = 0;
 	long count = 0;
-	unsigned char pChar[] = { 0x00, 0x00 };
+	unsigned char pChar[] = {0x00, 0x00};
 
 	Clear();
 
@@ -1176,9 +1120,7 @@ void AsnInt::PDecFullyConstrained(AsnBufBits& b, long lowerBound, long upperBoun
 				minBitsNeeded /= 8;
 
 				if ((minBitsNeeded % 8) != 0)
-				{
 					minBitsNeeded += 1;
-				}
 
 				minBitsNeeded -= 1;
 
@@ -1206,7 +1148,6 @@ void AsnInt::PDecFullyConstrained(AsnBufBits& b, long lowerBound, long upperBoun
 					l_intval |= (long)seg[count];
 					count++;
 				}
-
 			}
 		}
 		else
@@ -1229,7 +1170,6 @@ void AsnInt::PDecFullyConstrained(AsnBufBits& b, long lowerBound, long upperBoun
 					l_intval |= (long)seg[count];
 					count++;
 				}
-
 			}
 			else
 			{
@@ -1256,7 +1196,6 @@ void AsnInt::PDecFullyConstrained(AsnBufBits& b, long lowerBound, long upperBoun
 					count++;
 				}
 			}
-
 		}
 	}
 
@@ -1266,8 +1205,7 @@ void AsnInt::PDecFullyConstrained(AsnBufBits& b, long lowerBound, long upperBoun
 	free(seg);
 }
 
-
-AsnLen AsnInt::Interpret(AsnBufBits& b, long offset)const
+AsnLen AsnInt::Interpret(AsnBufBits& b, long offset) const
 {
 	AsnLen len = 8;
 	unsigned char* pEncodedVal = NULL;
@@ -1292,8 +1230,7 @@ void AsnInt::Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset)
 	free(seg);
 }
 
-
-AsnLen AsnInt::PEnc(AsnBufBits& b)const
+AsnLen AsnInt::PEnc(AsnBufBits& b) const
 {
 	FUNC("AsnInt::PEnc");
 
@@ -1305,9 +1242,8 @@ AsnLen AsnInt::PEnc(AsnBufBits& b)const
 	int lowerBound = 0;
 	int upperBound = 0;
 
-	if (checkConstraints(NULL) != 0) {
+	if (checkConstraints(NULL) != 0)
 		throw ConstraintException("Integer not within constraints", STACK_ENTRY);
-	}
 
 	if (numValueRanges <= 0)
 	{
@@ -1322,23 +1258,17 @@ AsnLen AsnInt::PEnc(AsnBufBits& b)const
 		for (x = 0; x < numValueRanges; x++)
 		{
 			if (lowerBound > valueRanges[x].lowerBound)
-			{
 				lowerBound = valueRanges[x].lowerBound;
-			}
 
 			if (upperBound < valueRanges[x].lowerBound)
-			{
 				upperBound = valueRanges[x].lowerBound;
-			}
 
 			if (valueRanges[x].upperBoundExists == 1)
 			{
 				upperBoundFound = 1;
 
 				if (upperBound < valueRanges[x].upperBound)
-				{
 					upperBound = valueRanges[x].upperBound;
-				}
 			}
 		}
 
@@ -1350,30 +1280,22 @@ AsnLen AsnInt::PEnc(AsnBufBits& b)const
 			if (lowerBound != upperBound)
 				len = PEncFullyConstrained(b, lowerBound, upperBound);
 		}
+		else if (numValueRanges == 1 && valueRanges[0].upperBoundExists == 2)
+		{
+			if ((long)*this != lowerBound)
+				throw EXCEPT("integer does not match singlevalue size constraint", INTEGER_ERROR);
+		}
 		else
 		{
-			if (numValueRanges == 1 && valueRanges[0].upperBoundExists == 2)
-			{
-				if ((long)*this != lowerBound)
-				{
-					throw EXCEPT("integer does not match singlevalue size constraint",
-						INTEGER_ERROR);
-				}
-			}
-			else
-			{
-				len = PEncSemiConstrained(b, lowerBound);
-			}
-
+			len = PEncSemiConstrained(b, lowerBound);
 		}
-
 	}
 
 	return len;
 }
 
 /*PER encoding of an semi-constrained integer*/
-AsnLen AsnInt::PEncSemiConstrained(AsnBufBits& b, long lowerBound)const
+AsnLen AsnInt::PEncSemiConstrained(AsnBufBits& b, long lowerBound) const
 {
 
 	FUNC("AsnInt::PEnc(...Semi-Constrained Int...)");
@@ -1383,10 +1305,7 @@ AsnLen AsnInt::PEncSemiConstrained(AsnBufBits& b, long lowerBound)const
 	AsnInt tempInt = AsnInt();
 
 	if (m_len > 4)
-	{
-		throw EXCEPT("integer is too big for encoding from offset",
-			INTEGER_ERROR);
-	}
+		throw EXCEPT("integer is too big for encoding from offset", INTEGER_ERROR);
 
 	tempval = *this;
 
@@ -1401,10 +1320,7 @@ AsnLen AsnInt::PEncSemiConstrained(AsnBufBits& b, long lowerBound)const
 	}
 
 	if (tempInt.m_len > 4)
-	{
-		throw EXCEPT("offset from lower bound too large to be encoded",
-			INTEGER_ERROR);
-	}
+		throw EXCEPT("offset from lower bound too large to be encoded", INTEGER_ERROR);
 
 	len = tempInt.EncodeGeneral(b);
 
@@ -1412,7 +1328,7 @@ AsnLen AsnInt::PEncSemiConstrained(AsnBufBits& b, long lowerBound)const
 }
 
 /*PER encoding of constrained integer types*/
-AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBound)const
+AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBound) const
 {
 	FUNC("AsnInt::PEnc(...Constrained Int...)");
 	unsigned long range = ((upperBound - lowerBound) + 1);
@@ -1423,21 +1339,15 @@ AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBo
 	int minBitsNeeded = 0;
 	long tempRange = range;
 	int oddBits = 0;
-	unsigned char pChar[] = { 0x00, 0x00, 0x00, 0x00 };
+	unsigned char pChar[] = {0x00, 0x00, 0x00, 0x00};
 
 	if (m_len > 4)
-	{
-		throw EXCEPT("decimal string is too big to convert to an integer",
-			INTEGER_ERROR);
-	}
+		throw EXCEPT("decimal string is too big to convert to an integer", INTEGER_ERROR);
 
 	tempval = *this;
 
 	if (tempval < lowerBound || tempval > upperBound)
-	{
-		throw EXCEPT("Integer is out of range",
-			INTEGER_ERROR);
-	}
+		throw EXCEPT("Integer is out of range", INTEGER_ERROR);
 
 	tempval -= lowerBound;
 
@@ -1450,16 +1360,10 @@ AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBo
 	}
 
 	if (range <= 0)
-	{
-		throw EXCEPT("upperBound cannot be smaller than lowerBound",
-			INTEGER_ERROR);
-	}
+		throw EXCEPT("upperBound cannot be smaller than lowerBound", INTEGER_ERROR);
 
 	if (tempInt.m_len > 4)
-	{
-		throw EXCEPT("offset from lower bound too large to be encoded",
-			INTEGER_ERROR);
-	}
+		throw EXCEPT("offset from lower bound too large to be encoded", INTEGER_ERROR);
 
 	if (range != 1)
 	{
@@ -1500,9 +1404,7 @@ AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBo
 				minBitsNeeded /= 8;
 
 				if ((minBitsNeeded % 8) != 0)
-				{
 					minBitsNeeded += 1;
-				}
 
 				minBitsNeeded -= 1;
 
@@ -1522,7 +1424,7 @@ AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBo
 					minBitsNeeded -= (minBitsNeeded - (tempInt2.m_len * 8));
 				}
 
-				//TBD, NOT SURE IF THIS LOGIC WORKS CORRECTLY
+				// TBD, NOT SURE IF THIS LOGIC WORKS CORRECTLY
 				oddBits = (minBitsNeeded % 8);
 				if (oddBits == 0)
 				{
@@ -1535,9 +1437,7 @@ AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBo
 					len += b.PutBits(pChar, oddBits);
 
 					if (tempInt2.m_len > 1)
-					{
 						len += b.PutBits(&tempInt2.m_bytes[1], (tempInt2.m_len - 1) * 8);
-					}
 				}
 
 				len += b.PutBits(tempInt.m_bytes, tempInt.m_len * 8);
@@ -1563,11 +1463,8 @@ AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBo
 				len += b.PutBits(pChar, oddBits);
 
 				if (tempInt.m_len > 1)
-				{
 					len += b.PutBits(&tempInt.m_bytes[1], (tempInt.m_len - 1) * 8);
-				}
 			}
-
 		}
 	}
 
@@ -1589,7 +1486,7 @@ bool AsnInt::JDec(const EJson::Value& b)
 	}
 	else if (b.isConvertibleTo(EJson::stringValue))
 	{
-		//Compatibility - if string contains a parseable int, then take it.
+		// Compatibility - if string contains a parseable int, then take it.
 #if !_WIN32 || _MSC_VER >= 1800
 		Set(atoll(b.asString().c_str()));
 #else
@@ -1601,4 +1498,3 @@ bool AsnInt::JDec(const EJson::Value& b)
 }
 
 _END_SNACC_NAMESPACE
-

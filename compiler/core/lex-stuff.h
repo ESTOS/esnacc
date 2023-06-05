@@ -41,7 +41,7 @@ extern unsigned long myLineNoG;
 #ifdef YYTEXT_POINTER
 extern char* yytext;
 #else
-extern char	yytext[];
+extern char yytext[];
 #endif
 
 extern FILE* yyin;
@@ -51,11 +51,10 @@ int LexBeginMacroDefContext();
 int LexBeginBraceBalContext();
 int LexBeginCommentContext();
 
-
-#define COUNT_NEWLINES( cumulativeTotal, nullTermStr)\
-{\
-     int cnlStrIndex;\
-     for (cnlStrIndex = 0; nullTermStr[cnlStrIndex] != '\0'; cnlStrIndex++)\
-        if (nullTermStr[cnlStrIndex] == '\n')\
-           cumulativeTotal++;\
-}
+#define COUNT_NEWLINES(cumulativeTotal, nullTermStr)                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		int cnlStrIndex;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+		for (cnlStrIndex = 0; nullTermStr[cnlStrIndex] != '\0'; cnlStrIndex++)                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+			if (nullTermStr[cnlStrIndex] == '\n')                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+				cumulativeTotal++;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+	}

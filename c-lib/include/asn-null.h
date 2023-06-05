@@ -19,34 +19,28 @@
 #define _asn_null_h_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-
 
 	typedef char AsnNull;
 
+	AsnLen BEncAsnNull PROTO((GenBuf * b, AsnNull* data));
 
-	AsnLen BEncAsnNull PROTO((GenBuf* b, AsnNull* data));
-
-	void BDecAsnNull PROTO((GenBuf* b, AsnNull* result, AsnLen* bytesDecoded, ENV_TYPE env));
-
+	void BDecAsnNull PROTO((GenBuf * b, AsnNull* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
 	/* 'return' length of encoded NULL value, 0 */
 #define BEncAsnNullContent(b, data) 0
 
-	void BDecAsnNullContent PROTO((GenBuf* b, AsnTag tag, AsnLen len, AsnNull* result, AsnLen* bytesDecoded, ENV_TYPE env));
+	void BDecAsnNullContent PROTO((GenBuf * b, AsnTag tag, AsnLen len, AsnNull* result, AsnLen* bytesDecoded, ENV_TYPE env));
 
 	/* do nothing */
-	void FreeAsnNull PROTO((AsnNull* b));
-#define FreeAsnNull( v)
+	void FreeAsnNull PROTO((AsnNull * b));
+#define FreeAsnNull(v)
 
-	void PrintAsnNull PROTO((FILE* f, AsnNull* b, unsigned int indent));
+	void PrintAsnNull PROTO((FILE * f, AsnNull* b, unsigned int indent));
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 #endif /* conditional include */
-
-
-
-

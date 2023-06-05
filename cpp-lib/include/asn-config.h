@@ -149,9 +149,9 @@
 
 #ifndef _WIN32
 #include <stdlib.h> /* for wchar_t on UNIX */
-#endif // _WIN32
+#endif				// _WIN32
 
-//ESTOS: wir linken immer statisch
+// ESTOS: wir linken immer statisch
 #ifndef SNACCDLL_NONE
 #define SNACCDLL_NONE
 #endif
@@ -168,13 +168,15 @@
 #define SNACCDLL_API __declspec(dllimport)
 #endif // SNACCDLL_NONE
 #endif // SNACCDLL_EXPORTS
-#else // _WIN32
+#else  // _WIN32
 #define SNACCDLL_API
 #endif // _WIN32
 #endif // SNACCDLL_API
 
 #ifndef NO_NAMESPACE
-#define _BEGIN_SNACC_NAMESPACE namespace SNACC {
+#define _BEGIN_SNACC_NAMESPACE                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+	namespace SNACC                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+	{
 #define _END_SNACC_NAMESPACE }
 #else
 #define _BEGIN_SNACC_NAMESPACE
@@ -187,26 +189,26 @@
 
 // used not only by AsnInt (asn-int.h), but by AsnNameDesc (meta.h) as well:
 #if SIZEOF_INT == 4
-#  define I		int
+#define I int
 #else
-#  if SIZEOF_LONG == 4
-#    define I		long
-#  elif SIZEOF_SHORT == 4
-#      define I		short
-#  else
-#    define I int
-#  endif
+#if SIZEOF_LONG == 4
+#define I long
+#elif SIZEOF_SHORT == 4
+#define I short
+#else
+#define I int
+#endif
 #endif
 #ifdef I
-typedef I		AsnIntType;
-typedef unsigned I	AsnUIntType;
-#  undef I
+typedef I AsnIntType;
+typedef unsigned I AsnUIntType;
+#undef I
 #else
-#  error "can't find integer type which is 4 bytes in size"
+#error "can't find integer type which is 4 bytes in size"
 #endif
 
 /* used to test if optionals are present */
-#define NOT_NULL( ptr)		((ptr) != NULL)
+#define NOT_NULL(ptr) ((ptr) != NULL)
 
 #ifndef _WIN32
 // Replaces the microsoft specific "secure" string operations

@@ -3,12 +3,14 @@
 
 _BEGIN_SNACC_NAMESPACE
 
-
-//Base64 Functions
-//Decoder
+// Base64 Functions
+// Decoder
 typedef enum
 {
-	step_a, step_b, step_c, step_d
+	step_a,
+	step_b,
+	step_c,
+	step_d
 } base64_decodestep;
 
 typedef struct
@@ -25,10 +27,11 @@ int base64_decode_block(const char* code_in, const int length_in, char* plaintex
 
 int base64_decode_value(char value_in)
 {
-	static const char decoding[] = { 62,-1,-1,-1,63,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-2,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,-1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51 };
+	static const char decoding[] = {62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -2, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51};
 	static const char decoding_size = sizeof(decoding);
 	value_in -= 43;
-	if (value_in < 0 || value_in >= decoding_size) return -1;
+	if (value_in < 0 || value_in >= decoding_size)
+		return -1;
 	return decoding[(int)value_in];
 }
 
@@ -50,64 +53,68 @@ int base64_decode_block(const char* code_in, const int length_in, char* plaintex
 	{
 		while (1)
 		{
-	case step_a:
-		do {
-			if (codechar == code_in + length_in)
-			{
-				state_in->step = step_a;
-				state_in->plainchar = *plainchar;
-				return (int)(plainchar - plaintext_out);
-			}
-			fragment = (char)base64_decode_value(*codechar++);
-		} while (fragment < 0);
-		*plainchar = (fragment & 0x03f) << 2;
-	case step_b:
-		do {
-			if (codechar == code_in + length_in)
-			{
-				state_in->step = step_b;
-				state_in->plainchar = *plainchar;
-				return (int)(plainchar - plaintext_out);
-			}
-			fragment = (char)base64_decode_value(*codechar++);
-		} while (fragment < 0);
-		*plainchar++ |= (fragment & 0x030) >> 4;
-		*plainchar = (fragment & 0x00f) << 4;
-	case step_c:
-		do {
-			if (codechar == code_in + length_in)
-			{
-				state_in->step = step_c;
-				state_in->plainchar = *plainchar;
-				return (int)(plainchar - plaintext_out);
-			}
-			fragment = (char)base64_decode_value(*codechar++);
-		} while (fragment < 0);
-		*plainchar++ |= (fragment & 0x03c) >> 2;
-		*plainchar = (fragment & 0x003) << 6;
-	case step_d:
-		do {
-			if (codechar == code_in + length_in)
-			{
-				state_in->step = step_d;
-				state_in->plainchar = *plainchar;
-				return (int)(plainchar - plaintext_out);
-			}
-			fragment = (char)base64_decode_value(*codechar++);
-		} while (fragment < 0);
-		*plainchar++ |= (fragment & 0x03f);
+			case step_a:
+				do
+				{
+					if (codechar == code_in + length_in)
+					{
+						state_in->step = step_a;
+						state_in->plainchar = *plainchar;
+						return (int)(plainchar - plaintext_out);
+					}
+					fragment = (char)base64_decode_value(*codechar++);
+				} while (fragment < 0);
+				*plainchar = (fragment & 0x03f) << 2;
+			case step_b:
+				do
+				{
+					if (codechar == code_in + length_in)
+					{
+						state_in->step = step_b;
+						state_in->plainchar = *plainchar;
+						return (int)(plainchar - plaintext_out);
+					}
+					fragment = (char)base64_decode_value(*codechar++);
+				} while (fragment < 0);
+				*plainchar++ |= (fragment & 0x030) >> 4;
+				*plainchar = (fragment & 0x00f) << 4;
+			case step_c:
+				do
+				{
+					if (codechar == code_in + length_in)
+					{
+						state_in->step = step_c;
+						state_in->plainchar = *plainchar;
+						return (int)(plainchar - plaintext_out);
+					}
+					fragment = (char)base64_decode_value(*codechar++);
+				} while (fragment < 0);
+				*plainchar++ |= (fragment & 0x03c) >> 2;
+				*plainchar = (fragment & 0x003) << 6;
+			case step_d:
+				do
+				{
+					if (codechar == code_in + length_in)
+					{
+						state_in->step = step_d;
+						state_in->plainchar = *plainchar;
+						return (int)(plainchar - plaintext_out);
+					}
+					fragment = (char)base64_decode_value(*codechar++);
+				} while (fragment < 0);
+				*plainchar++ |= (fragment & 0x03f);
 		}
 	}
 	/* control should not reach here */
 	return (int)(plainchar - plaintext_out);
 }
 
-
-
-//Encoder
+// Encoder
 typedef enum
 {
-	step_A, step_B, step_C
+	step_A,
+	step_B,
+	step_C
 } base64_encodestep;
 
 typedef struct
@@ -137,7 +144,8 @@ void base64_init_encodestate(base64_encodestate* state_in)
 char base64_encode_value(char value_in)
 {
 	static const char* encoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-	if (value_in > 63) return '=';
+	if (value_in > 63)
+		return '=';
 	return encoding[(int)value_in];
 }
 
@@ -155,47 +163,47 @@ int base64_encode_block(const char* plaintext_in, int length_in, char* code_out,
 	{
 		while (1)
 		{
-	case step_A:
-		if (plainchar == plaintextend)
-		{
-			state_in->result = result;
-			state_in->step = step_A;
-			return (int)(codechar - code_out);
-		}
-		fragment = *plainchar++;
-		result = (fragment & 0x0fc) >> 2;
-		*codechar++ = base64_encode_value(result);
-		result = (fragment & 0x003) << 4;
-	case step_B:
-		if (plainchar == plaintextend)
-		{
-			state_in->result = result;
-			state_in->step = step_B;
-			return (int)(codechar - code_out);
-		}
-		fragment = *plainchar++;
-		result |= (fragment & 0x0f0) >> 4;
-		*codechar++ = base64_encode_value(result);
-		result = (fragment & 0x00f) << 2;
-	case step_C:
-		if (plainchar == plaintextend)
-		{
-			state_in->result = result;
-			state_in->step = step_C;
-			return (int)(codechar - code_out);
-		}
-		fragment = *plainchar++;
-		result |= (fragment & 0x0c0) >> 6;
-		*codechar++ = base64_encode_value(result);
-		result = (fragment & 0x03f) >> 0;
-		*codechar++ = base64_encode_value(result);
+			case step_A:
+				if (plainchar == plaintextend)
+				{
+					state_in->result = result;
+					state_in->step = step_A;
+					return (int)(codechar - code_out);
+				}
+				fragment = *plainchar++;
+				result = (fragment & 0x0fc) >> 2;
+				*codechar++ = base64_encode_value(result);
+				result = (fragment & 0x003) << 4;
+			case step_B:
+				if (plainchar == plaintextend)
+				{
+					state_in->result = result;
+					state_in->step = step_B;
+					return (int)(codechar - code_out);
+				}
+				fragment = *plainchar++;
+				result |= (fragment & 0x0f0) >> 4;
+				*codechar++ = base64_encode_value(result);
+				result = (fragment & 0x00f) << 2;
+			case step_C:
+				if (plainchar == plaintextend)
+				{
+					state_in->result = result;
+					state_in->step = step_C;
+					return (int)(codechar - code_out);
+				}
+				fragment = *plainchar++;
+				result |= (fragment & 0x0c0) >> 6;
+				*codechar++ = base64_encode_value(result);
+				result = (fragment & 0x03f) >> 0;
+				*codechar++ = base64_encode_value(result);
 
-		++(state_in->stepcount);
-		if (state_in->stepcount == CHARS_PER_LINE / 4)
-		{
-			//*codechar++ = '\n';
-			//state_in->stepcount = 0;
-		}
+				++(state_in->stepcount);
+				if (state_in->stepcount == CHARS_PER_LINE / 4)
+				{
+					//*codechar++ = '\n';
+					// state_in->stepcount = 0;
+				}
 		}
 	}
 	/* control should not reach here */
@@ -208,24 +216,22 @@ int base64_encode_blockend(char* code_out, base64_encodestate* state_in)
 
 	switch (state_in->step)
 	{
-	case step_B:
-		*codechar++ = base64_encode_value(state_in->result);
-		*codechar++ = '=';
-		*codechar++ = '=';
-		break;
-	case step_C:
-		*codechar++ = base64_encode_value(state_in->result);
-		*codechar++ = '=';
-		break;
-	case step_A:
-		break;
+		case step_B:
+			*codechar++ = base64_encode_value(state_in->result);
+			*codechar++ = '=';
+			*codechar++ = '=';
+			break;
+		case step_C:
+			*codechar++ = base64_encode_value(state_in->result);
+			*codechar++ = '=';
+			break;
+		case step_A:
+			break;
 	}
 	//*codechar++ = '\n';
 
 	return (int)(codechar - code_out);
 }
-
-
 
 // Copy Constructor
 //
@@ -305,8 +311,7 @@ void AsnOcts::Set(const char* str, size_t len)
 }
 
 // Prints the AsnOcts to the given ostream in Value Notation.
-void AsnOcts::PrintXML(std::ostream& os, const char* lpszTitle,
-	const char* lpszType) const
+void AsnOcts::PrintXML(std::ostream& os, const char* lpszTitle, const char* lpszType) const
 {
 	if (lpszType)
 		os << "<" << lpszType << ">";
@@ -316,7 +321,7 @@ void AsnOcts::PrintXML(std::ostream& os, const char* lpszTitle,
 		os << lpszTitle;
 	os << "-";
 	Print(os);
-	//PrintXMLSupport(&os, ((AsnOcts *)this)->Access(), octetLen);
+	// PrintXMLSupport(&os, ((AsnOcts *)this)->Access(), octetLen);
 	if (lpszType)
 		os << "</" << lpszType << ">\n";
 	else
@@ -335,15 +340,12 @@ void AsnOcts::Print(std::ostream& os, unsigned short /*indent*/) const
 
 	/* put printable parts in ASN.1 comment */
 	for (i = 0; i < (int)Len(); i++)
-	{
 		if (isspace((unsigned char)c_ustr()[i]) || !isprint(c_ustr()[i]))
-			os << ".";  /* newlines->space (so don't screw up ASN.1 comment) */
+			os << "."; /* newlines->space (so don't screw up ASN.1 comment) */
 		else
 			os << c_ustr()[i];
-	}
 	os << "\" --";
 } /* AsnOcts::Print */
-
 
 AsnLen AsnOcts::BEncContent(AsnBuf& b) const
 {
@@ -407,9 +409,8 @@ void AsnOcts::JEnc(EJson::Value& b) const
 		const size_t sizeDataIn = m_str.size();
 		const size_t sizeBufferOut =
 			// encoding every first and second byte need one byte each in the output buffer, every 3rd byte needs two bytes in the output buffer.
-			((sizeDataIn / 3) * 4) + sizeDataIn % 3 +
-			3 +		// base64_encode_blockend addes up to 3 bytes.
-			1;		// null byte string termination for use with printf.
+			((sizeDataIn / 3) * 4) + sizeDataIn % 3 + 3 + // base64_encode_blockend addes up to 3 bytes.
+			1;											  // null byte string termination for use with printf.
 
 		char* output = (char*)malloc(sizeBufferOut);
 		if (output)
@@ -428,15 +429,13 @@ void AsnOcts::JEnc(EJson::Value& b) const
 			c += cnt;
 			/* since we have encoded the entire input string, we know that
 			   there is no more input data; finalise the encoding */
-			   /* store the number of bytes encoded by a single call */
+			/* store the number of bytes encoded by a single call */
 			unsigned int cntend = base64_encode_blockend(c, &s);
 			c += cntend;
 			/*---------- STOP ENCODING  ----------*/
 
 			if (sizeBufferOut < cnt + cntend + 1 /* including null byte string termination */)
-			{
 				throw EXCEPT("AsnOcts size not withing restricted bounds", RESTRICTED_TYPE_ERROR);
-			}
 
 			/* we want to print the encoded data, so null-terminate it: */
 			*c = 0;
@@ -485,7 +484,7 @@ bool AsnOcts::JDec(const EJson::Value& b)
 	return false;
 }
 
-AsnLen AsnOcts::EncodeWithSizeConstraint(AsnBufBits& b)const
+AsnLen AsnOcts::EncodeWithSizeConstraint(AsnBufBits& b) const
 {
 	FUNC("AsnOcts::EncodeWithSizeConstraint");
 
@@ -508,17 +507,12 @@ AsnLen AsnOcts::EncodeWithSizeConstraint(AsnBufBits& b)const
 	}
 
 	if (size < iSCLowerBound || size > iSCUpperBound)
-	{
 		throw EXCEPT("AsnOcts size not withing restricted bounds", RESTRICTED_TYPE_ERROR);
-	}
-
 
 	if (Range > 1)
 	{
 		if ((iSCUpperBound <= 2) && b.IsAligned())
-		{
 			len += b.OctetAlignWrite();
-		}
 
 		minBytesNeeded = minBitsNeeded / 8;
 		minBitsNeeded = minBitsNeeded % 8;
@@ -538,9 +532,7 @@ AsnLen AsnOcts::EncodeWithSizeConstraint(AsnBufBits& b)const
 	if (iSCUpperBound > 0)
 	{
 		if ((iSCUpperBound <= 2) && b.IsAligned())
-		{
 			len += b.OctetAlignWrite();
-		}
 
 		len += b.PutBits((unsigned char*)c_ustr(), (length() * 8));
 	}
@@ -574,13 +566,10 @@ void AsnOcts::DecodeWithSizeConstraint(AsnBufBits& b, AsnLen& bitsDecoded)
 		minBitsNeeded += 1;
 	}
 
-
 	if (Range > 1)
 	{
 		if ((iSCUpperBound <= 2) && b.IsAligned())
-		{
 			bitsDecoded += b.OctetAlignRead();
-		}
 
 		minBytesNeeded = minBitsNeeded / 8;
 		minBitsNeeded = minBitsNeeded % 8;
@@ -608,18 +597,12 @@ void AsnOcts::DecodeWithSizeConstraint(AsnBufBits& b, AsnLen& bitsDecoded)
 	decodeSize += iSCLowerBound;
 
 	if (decodeSize > iSCUpperBound)
-	{
 		throw EXCEPT("String size not withing restricted bounds", RESTRICTED_TYPE_ERROR);
-	}
-
 
 	if (iSCUpperBound > 0)
 	{
 		if ((iSCUpperBound <= 2) && b.IsAligned())
-		{
 			bitsDecoded += b.OctetAlignRead();
-		}
-
 
 		seg = b.GetBits(decodeSize * 8);
 		m_str.append((const char*)seg, decodeSize);
@@ -630,7 +613,7 @@ void AsnOcts::DecodeWithSizeConstraint(AsnBufBits& b, AsnLen& bitsDecoded)
 	free(pStr);
 }
 
-long AsnOcts::FindSizeConstraintBounds(int& iSCLowerBound, int& iSCUpperBound)const
+long AsnOcts::FindSizeConstraintBounds(int& iSCLowerBound, int& iSCUpperBound) const
 {
 	int count = 0;
 
@@ -639,21 +622,13 @@ long AsnOcts::FindSizeConstraintBounds(int& iSCLowerBound, int& iSCUpperBound)co
 	while (count < numSizeConstraints)
 	{
 		if ((unsigned)iSCUpperBound < sizeConstraints[count].lowerBound)
-		{
 			iSCUpperBound = sizeConstraints[count].lowerBound;
-		}
 
-		if (sizeConstraints[count].upperBoundExists == 1 &&
-			(unsigned)iSCUpperBound < sizeConstraints[count].upperBound)
-		{
+		if (sizeConstraints[count].upperBoundExists == 1 && (unsigned)iSCUpperBound < sizeConstraints[count].upperBound)
 			iSCUpperBound = sizeConstraints[count].upperBound;
-		}
 
-		if ((unsigned)iSCLowerBound > sizeConstraints[count].lowerBound &&
-			sizeConstraints[count].lowerBound >= 0)
-		{
+		if ((unsigned)iSCLowerBound > sizeConstraints[count].lowerBound && sizeConstraints[count].lowerBound >= 0)
 			iSCLowerBound = sizeConstraints[count].lowerBound;
-		}
 
 		count++;
 	}
@@ -661,7 +636,7 @@ long AsnOcts::FindSizeConstraintBounds(int& iSCLowerBound, int& iSCUpperBound)co
 	return ((iSCUpperBound - iSCLowerBound) + 1);
 }
 
-AsnLen AsnOcts::EncodeGeneral(AsnBufBits& b)const
+AsnLen AsnOcts::EncodeGeneral(AsnBufBits& b) const
 {
 	AsnLen len = 0;
 	unsigned long l_64kFrag = l_16k * 4;
@@ -671,8 +646,6 @@ AsnLen AsnOcts::EncodeGeneral(AsnBufBits& b)const
 	unsigned char ch = 0x00;
 	unsigned char* c = NULL;
 	long offset = 0;
-
-
 
 	if (tempLen >= l_16k)
 	{
@@ -722,7 +695,6 @@ AsnLen AsnOcts::EncodeGeneral(AsnBufBits& b)const
 
 			return len;
 		}
-
 	}
 
 	/*if there are less than 128 bytes of data*/
@@ -755,7 +727,6 @@ AsnLen AsnOcts::EncodeGeneral(AsnBufBits& b)const
 	return len;
 }
 
-
 void AsnOcts::DecodeGeneral(AsnBufBits& b, AsnLen& bitsDecoded)
 {
 	unsigned char* seg;
@@ -784,9 +755,7 @@ void AsnOcts::DecodeGeneral(AsnBufBits& b, AsnLen& bitsDecoded)
 		free(seg);
 		seg = (unsigned char*)b.GetBits(8);
 		bitsDecoded += 8;
-
 	}
-
 
 	if ((seg[0] & 0xC0) == 0x80)
 	{
@@ -829,13 +798,9 @@ AsnLen AsnOcts::PEnc(AsnBufBits& b) const
 	int numSizeConstraints;
 	const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
 	if (sizeConstraints == NULL && numSizeConstraints == 0)
-	{
 		len = EncodeGeneral(b);
-	}
 	else
-	{
 		len = EncodeWithSizeConstraint(b);
-	}
 
 	return len;
 }
@@ -846,15 +811,10 @@ void AsnOcts::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 	const SizeConstraint* sizeConstraints = SizeConstraints(numSizeConstraints);
 
 	if (sizeConstraints == NULL && numSizeConstraints == 0)
-	{
 		DecodeGeneral(b, bitsDecoded);
-	}
 	else
-	{
 		DecodeWithSizeConstraint(b, bitsDecoded);
-	}
 }
-
 
 AsnLen AsnOcts::BEnc(AsnBuf& b) const
 {
@@ -873,15 +833,11 @@ void AsnOcts::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	AsnTag tag;
 
 	tag = BDecTag(b, bytesDecoded);
-	if ((tag != MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE)) &&
-		(tag != MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE)))
-	{
+	if ((tag != MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE)))
 		throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-	}
 	elmtLen = BDecLen(b, bytesDecoded);
 	BDecContent(b, tag, elmtLen, bytesDecoded);
 }
-
 
 /*
  * decodes a seq of universally tagged octets until either EOC is
@@ -895,20 +851,26 @@ void AsnOcts::BDecConsOcts(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded
 	strDeck.Fill(b, elmtLen, bytesDecoded);
 	strDeck.Collapse(m_str);
 
-}  /* BDecConsOcts */
-
+} /* BDecConsOcts */
 
 class RefNode
 {
 public:
-	~RefNode() { /***RWC;TBD; ***/ }
-	AsnLen  length;
-	AsnLen  count;
+	~RefNode()
+	{ /***RWC;TBD; ***/
+	}
+	AsnLen length;
+	AsnLen count;
 
-	RefNode() { length = (unsigned long)-1; count = (unsigned long)-1; }
+	RefNode()
+	{
+		length = (unsigned long)-1;
+		count = (unsigned long)-1;
+	}
 	RefNode(AsnLen l, AsnLen c)
 	{
-		length = l; count = c;
+		length = l;
+		count = c;
 	}
 };
 
@@ -939,7 +901,6 @@ void ConsStringDeck::Fill(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded)
 				{
 					++curr->count;
 					break;
-
 				}
 				else
 				{
@@ -955,9 +916,7 @@ void ConsStringDeck::Fill(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded)
 				totalElmtsLen1 = BDecLen(b, curr->count);
 
 				if (totalElmtsLen1 == INDEFINITE_LEN)
-				{
 					throw InvalidTagException("Primitive String can not have INDEFINITE_LEN", tagId1, STACK_ENTRY);
-				}
 				strPtr = (unsigned char*)b.GetSeg(totalElmtsLen1);
 				push_back(StringPair(strPtr, totalElmtsLen1));
 				curr->count += totalElmtsLen1;
@@ -971,15 +930,13 @@ void ConsStringDeck::Fill(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded)
 
 				totalElmtsLen1 = BDecLen(b, curr->count);
 
-				if ((totalElmtsLen1 != INDEFINITE_LEN) && (totalElmtsLen1 + curr->count) > curr->length/*elmtLen*/)
-				{
+				if ((totalElmtsLen1 != INDEFINITE_LEN) && (totalElmtsLen1 + curr->count) > curr->length /*elmtLen*/)
 					throw BoundsException("Invalid constructed object", STACK_ENTRY);
-				}
 
 				curr = refList.insert(refList.end(), RefNode(totalElmtsLen1, 0));
-				//curr = curr->next;
+				// curr = curr->next;
 
-			   //Fill(b, curr->length, curr->count);
+				// Fill(b, curr->length, curr->count);
 			}
 			else if (m_baseTag == 0 && TAG_IS_CONS(tagId1))
 			{
@@ -987,27 +944,21 @@ void ConsStringDeck::Fill(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded)
 				 */
 				totalElmtsLen1 = BDecLen(b, curr->count);
 
-				if ((totalElmtsLen1 != INDEFINITE_LEN) && (totalElmtsLen1 + curr->count) > curr->length/*elmtLen*/)
-				{
+				if ((totalElmtsLen1 != INDEFINITE_LEN) && (totalElmtsLen1 + curr->count) > curr->length /*elmtLen*/)
 					throw BoundsException("Invalid constructed object", STACK_ENTRY);
-				}
 
 				curr = refList.insert(refList.end(), RefNode(totalElmtsLen1, 0));
-				//Fill(b, curr->length, curr->count);
+				// Fill(b, curr->length, curr->count);
 			}
 			else if (m_baseTag == 0)
 			{
 				totalElmtsLen1 = BDecLen(b, curr->count);
 
 				if (totalElmtsLen1 == INDEFINITE_LEN)
-				{
 					throw InvalidTagException("Primitive String can not have INDEFINITE_LEN", tagId1, STACK_ENTRY);
-				}
 
 				if (totalElmtsLen1 > b.length())
-				{
 					throw InvalidTagException("Primitive String, length", tagId1, STACK_ENTRY);
-				}
 
 				strPtr = (unsigned char*)b.GetSeg(totalElmtsLen1);
 				push_back(StringPair(strPtr, totalElmtsLen1));
@@ -1031,7 +982,6 @@ void ConsStringDeck::Fill(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded)
 		{
 			done = true;
 		}
-
 	}
 
 	bytesDecoded += refList.begin()->count;
@@ -1042,10 +992,7 @@ void ConsStringDeck::Collapse(std::string& str)
 	iterator i;
 	i = begin();
 	for (; i != end(); i++)
-	{
 		str.append((char*)i->first, i->second);
-	}
-
 }
 
 ConsStringDeck::~ConsStringDeck()
@@ -1068,8 +1015,7 @@ bool AsnOcts::operator==(const AsnOcts& o) const
 
 bool AsnOcts::operator!=(const AsnOcts& o) const
 {
-	return !operator ==(o);
+	return !operator==(o);
 }
-
 
 _END_SNACC_NAMESPACE

@@ -2,12 +2,11 @@
 
 using namespace SNACC;
 
-
 // AsnBuf.cpp
 AsnBuf::AsnBuf()
 {
 	m_card = m_deck.begin();
-	//m_card = m_deck.insert(m_deck.begin(), new Card());
+	// m_card = m_deck.insert(m_deck.begin(), new Card());
 }
 
 AsnBuf::AsnBuf(const char* seg, size_t segLen)
@@ -30,7 +29,6 @@ AsnBuf::AsnBuf(const AsnBuf& o)
 {
 	operator=(o);
 }
-
 
 SNACC::AsnBuf::~AsnBuf()
 {
@@ -85,9 +83,7 @@ AsnBuf::AsnBuf(const char* pFilename)
 void AsnBuf::clear()
 {
 	for (m_card = m_deck.begin(); m_card != m_deck.end(); m_card++)
-	{
-		delete* m_card;
-	}
+		delete *m_card;
 	m_deck.clear();
 }
 
@@ -97,9 +93,7 @@ void AsnBuf::PutByteRvs(char byte)
 	// if empty add an AsnRvsBuf card
 	//
 	if (m_deck.empty())
-	{
 		m_card = m_deck.insert(m_deck.begin(), new Card(new AsnRvsBuf));
-	}
 
 	if ((*m_card)->rdbuf()->sputc(byte) == EOF)
 	{
@@ -113,9 +107,7 @@ void AsnBuf::PutSegRvs(const char* seg, size_t segLen)
 	// if empty add an AsnRvsBuf card
 	//
 	if (m_deck.empty())
-	{
 		m_card = m_deck.insert(m_deck.begin(), new Card(new AsnRvsBuf));
-	}
 
 	while (segLen > 0)
 	{
@@ -131,11 +123,11 @@ void AsnBuf::PutSegRvs(const char* seg, size_t segLen)
 	}
 }
 
-//#ifdef _WIN32
-//void AsnBuf::ResetMode(std::ios_base::open_mode mode) const
-//#else // _WIN32
+// #ifdef _WIN32
+// void AsnBuf::ResetMode(std::ios_base::open_mode mode) const
+// #else // _WIN32
 void AsnBuf::ResetMode(std::ios_base::openmode mode) const
-//#endif // _WIN32
+// #endif // _WIN32
 {
 	AsnRvsBuf tmp;
 	Deck::iterator i;
@@ -177,7 +169,6 @@ AsnFileSeg* AsnBuf::GetFileSeg(long segLen) const
 {
 	FUNC("AsnBuf::GetFileSeg()");
 
-
 	// If the bufType == FILE_TYPE then the card is a AsnFileSeg
 	// cast it and pass it to the AsnFileSeg constructor
 	//
@@ -218,8 +209,7 @@ char* AsnBuf::GetSeg(long segLen) const
 	}
 }
 
-
-//unsigned long AsnBuf::GetSeg(char *seg, long segLen) const
+// unsigned long AsnBuf::GetSeg(char *seg, long segLen) const
 void AsnBuf::GetSeg(char* seg, long segLen) const
 {
 	FUNC("AsnBuf::GetSeg()");
@@ -239,7 +229,7 @@ void AsnBuf::GetSeg(char* seg, long segLen) const
 	if (segLen > 0)
 		throw BufferException("Read past end of data", STACK_ENTRY);
 
-	//return bytesRead;
+	// return bytesRead;
 }
 // FUNCTION: GetSeg()
 // PURPOSE: Retrieve the contents of the AsnBuf into a std::string.
@@ -255,15 +245,12 @@ void AsnBuf::GetSeg(std::string& seg, long segLen) const
 	if (segLen == 0)
 		segLen = length();
 
-	if ((unsigned long)segLen > this->length()) //RWC; TOO MUCH DATA requested...
-	{
+	if ((unsigned long)segLen > this->length()) // RWC; TOO MUCH DATA requested...
+
 		throw BufferException("GetSeg attempt to read past end of data", STACK_ENTRY);
-	}
 	seg.resize(segLen);
 	for (i = 0; i < segLen; i++)
-	{
 		seg[i] = GetByte();
-	}
 }
 
 bool AsnBuf::operator<(const AsnBuf& rhs) const
@@ -333,7 +320,7 @@ unsigned long AsnBuf::length() const
 
 	if (!m_deck.empty())
 	{
-		//AsnBufLoc readLoc = GetReadLoc();
+		// AsnBufLoc readLoc = GetReadLoc();
 
 		// ResetMode();    //RWC;
 
@@ -350,7 +337,7 @@ unsigned long AsnBuf::length() const
 			tmpCard++;
 		}
 
-		//SetReadLoc(readLoc);
+		// SetReadLoc(readLoc);
 	}
 
 	return bytesRemaining;
@@ -366,23 +353,14 @@ void AsnBuf::UnGetBytes(long lBytesToPutBack) const
 	while (lBytesToPutBack)
 	{
 		if (((*m_card)->rdbuf()->sungetc()) == EOF)
-		{
 			if (m_card != m_deck.begin())
-			{
 				m_card--;
-			}
 			else
-			{
 				throw BufferException("Failed putting bytes back", STACK_ENTRY);
-			}
-		}
 		else
-		{
 			lBytesToPutBack--;
-		}
 	}
 }
-
 
 char AsnBuf::GetByte() const
 {
@@ -401,12 +379,8 @@ char AsnBuf::GetByte() const
 		{
 			m_card++;
 
-
 			if ((m_card == m_deck.end()))
-			{
 				throw BufferException("Read past end of data", STACK_ENTRY);
-			}
-
 		}
 	}
 	else
@@ -414,7 +388,6 @@ char AsnBuf::GetByte() const
 
 	return (char)ch;
 }
-
 
 // FUNCTION: GrabAny()
 // PURPOSE : copy the current sequence of bytes (i.e. Tag Length and associated data)
@@ -442,7 +415,8 @@ void AsnBuf::GrabAny(AsnBuf& anyBuf, AsnLen& bytesDecoded) const
 	if (len == INDEFINITE_LEN)
 	{
 		ConsStringDeck deck(0);
-		try {
+		try
+		{
 			deck.Fill(*this, len, lTmpbytesDecoded);
 		}
 		catch (... /*std::exception &e*/)
@@ -458,7 +432,7 @@ void AsnBuf::GrabAny(AsnBuf& anyBuf, AsnLen& bytesDecoded) const
 
 	SetReadLoc(readLoc);
 
-	// length is greater than the magic size and 
+	// length is greater than the magic size and
 	// the m_card contains a file then store a
 	// AsnFileSeg object in output buf.
 	//
@@ -482,8 +456,7 @@ void AsnBuf::GrabAny(AsnBuf& anyBuf, AsnLen& bytesDecoded) const
 	GetSeg(pRvsBuf->m_buf, tmpLen);
 
 	pRvsBuf->m_pStart = pRvsBuf->m_buf;
-	anyBuf.m_card =
-		anyBuf.m_deck.insert(anyBuf.m_deck.begin(), new Card(pRvsBuf));
+	anyBuf.m_card = anyBuf.m_deck.insert(anyBuf.m_deck.begin(), new Card(pRvsBuf));
 	bytesDecoded += len;
 
 	/*
@@ -507,8 +480,7 @@ char AsnBuf::PeekByte() const
 		if ((ch = (*m_card)->rdbuf()->sgetc()) == EOF)
 		{
 			m_card++;
-			if ((m_card == m_deck.end()) ||
-				(ch = (*m_card)->rdbuf()->sgetc()) == EOF)
+			if ((m_card == m_deck.end()) || (ch = (*m_card)->rdbuf()->sgetc()) == EOF)
 				throw BufferException("Read past end of data", STACK_ENTRY);
 		}
 	}
@@ -517,7 +489,6 @@ char AsnBuf::PeekByte() const
 
 	return (unsigned char)ch;
 }
-
 
 AsnBufLoc AsnBuf::GetReadLoc() const
 {
@@ -546,9 +517,7 @@ void AsnBuf::SetReadLoc(const AsnBufLoc& bl) const
 	//
 
 	while (i != bl.m_card && i != m_deck.end())
-	{
 		i++;
-	}
 
 	if (i == bl.m_card)
 	{
@@ -588,9 +557,7 @@ void AsnBuf::skip(size_t skipBytes)
 		}
 	}
 	if (skipBytes > 0)
-	{
 		throw BufferException("Skipped past end of buffer", STACK_ENTRY);
-	}
 }
 
 // insert()
@@ -602,10 +569,9 @@ void AsnBuf::skip(size_t skipBytes)
 long AsnBuf::splice(AsnBuf& b)
 {
 	// If the current card is empty, delete it
-	if ((m_card != m_deck.end()) &&
-		((*m_card == NULL) || ((*m_card)->length() == 0)))
+	if ((m_card != m_deck.end()) && ((*m_card == NULL) || ((*m_card)->length() == 0)))
 	{
-		delete* m_card;
+		delete *m_card;
 		m_card = m_deck.erase(m_card);
 	}
 
@@ -613,9 +579,7 @@ long AsnBuf::splice(AsnBuf& b)
 
 	Deck::reverse_iterator ib;
 	for (ib = b.m_deck.rbegin(); ib != b.m_deck.rend(); ++ib)
-	{
 		m_card = m_deck.insert(m_deck.begin(), *ib);
-	}
 	b.m_deck.clear();
 
 	b.m_card = m_deck.end();
@@ -635,7 +599,7 @@ void BDEC_2ND_EOC_OCTET(const SNACC::AsnBuf& b, SNACC::AsnLen& bytesDecoded)
 
 void sortSet(std::list<SNACC::AsnBuf>& bufList)
 {
-	//std::greater<SNACC::AsnBuf> sortByByte;
+	// std::greater<SNACC::AsnBuf> sortByByte;
 	std::list<SNACC::AsnBuf> i;
 
 	std::list<SNACC::AsnBuf>::iterator j;
@@ -643,14 +607,14 @@ void sortSet(std::list<SNACC::AsnBuf>& bufList)
 	for (j = bufList.begin(); j != bufList.end(); j++)
 		j->ResetMode();
 
-	//bufList.sort(sortByByte);
+	// bufList.sort(sortByByte);
 	bufList.sort();
 }
 
-#define ASN_UNIVERSAL   0x00
+#define ASN_UNIVERSAL 0x00
 #define ASN_APPLICATION 0x40
-#define ASN_CONTEXT     0x80
-#define ASN_PRIVATE     0xC0
+#define ASN_CONTEXT 0x80
+#define ASN_PRIVATE 0xC0
 
 /*
 // Sort by encoding included tag, length, and data
@@ -733,13 +697,8 @@ void AsnBuf::hexDump(std::ostream& os) const
 			os.unsetf(std::ios_base::hex);
 			done = true;
 		}
-
 	}
-
-
 }
-
-
 
 std::ostream& operator<<(std::ostream& os, const SNACC::AsnBuf& b)
 {
@@ -813,25 +772,22 @@ void AsnBuf::status(std::ostream& os)
 	std::cout << "**** AsnBuf Status ****\n";
 }
 
-
 // AsnBufType { FILE_TYPE=0, RVS_BUF_TYPE, IN_MEM_TYPE, EXT_MEM_TYPE} ;
 
 const char* Card::bufTypeStr()
 {
 	switch (this->bufType())
 	{
-	case RVS_BUF_TYPE:
-		return "ASN_RVS_BUF";
-	case FILE_TYPE:
-		return "FILE_TYPE";
-	case IN_MEM_TYPE:
-		return "IN_MEM_TYPE";
-	case EXT_MEM_TYPE:
-		return "EXT_MEM_TYPE";
+		case RVS_BUF_TYPE:
+			return "ASN_RVS_BUF";
+		case FILE_TYPE:
+			return "FILE_TYPE";
+		case IN_MEM_TYPE:
+			return "IN_MEM_TYPE";
+		case EXT_MEM_TYPE:
+			return "EXT_MEM_TYPE";
 	}
 	return NULL;
 }
 
-
 #endif
-

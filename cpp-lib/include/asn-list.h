@@ -4,7 +4,6 @@
 
 #include <list>
 
-
 //////////////////////////
 // Base List template  //
 ////////////////////////
@@ -17,51 +16,116 @@ protected:
 	struct ListElmt
 	{
 		T* elmt;
-		struct ListElmt* next, * prev;
-	} *first, * last;
+		struct ListElmt *next, *prev;
+	} *first, *last;
 
 	mutable ListElmt* curr;
 
 public:
-	List() { count = 0; first = curr = last = NULL; }
-	virtual ~List() { RemoveAll(); }
+	List()
+	{
+		count = 0;
+		first = curr = last = NULL;
+	}
+	virtual ~List()
+	{
+		RemoveAll();
+	}
 	List(const List<T>& that);
 
 	List<T>& operator=(const List<T>& that);
 
-	void  SetCurrElmt(unsigned long index) const;
+	void SetCurrElmt(unsigned long index) const;
 	unsigned long GetCurrElmtIndex(void) const;
-	void  SetCurrToFirst(void) const { curr = first; }
-	void  SetCurrToLast(void) const { curr = last; }
-
+	void SetCurrToFirst(void) const
+	{
+		curr = first;
+	}
+	void SetCurrToLast(void) const
+	{
+		curr = last;
+	}
 
 	// reading member fcns
-	T* Curr() { return curr ? curr->elmt : NULL; }
-	T* First() { return count > 0 ? first->elmt : NULL; }
-	T* Last() { return count > 0 ? last->elmt : NULL; }
-	T* Next() { return curr && curr->next ? curr->next->elmt : NULL; }
-	T* Prev() { return curr && curr->prev ? curr->prev->elmt : NULL; }
-	int Count() const { return count; }
-	const T* Curr()  const { return curr ? curr->elmt : NULL; }
-	const T* First() const { return count > 0 ? first->elmt : NULL; }
-	const T* Last()  const { return count > 0 ? last->elmt : NULL; }
-	const T* Next()  const { return curr && curr->next ? curr->next->elmt : NULL; }
-	const T* Prev()  const { return curr && curr->prev ? curr->prev->elmt : NULL; }
-	const T* GoNext() const { if (curr) curr = curr->next; return Curr(); }
-	const T* GoPrev() const { if (curr) curr = curr->prev; return Curr(); }
+	T* Curr()
+	{
+		return curr ? curr->elmt : NULL;
+	}
+	T* First()
+	{
+		return count > 0 ? first->elmt : NULL;
+	}
+	T* Last()
+	{
+		return count > 0 ? last->elmt : NULL;
+	}
+	T* Next()
+	{
+		return curr && curr->next ? curr->next->elmt : NULL;
+	}
+	T* Prev()
+	{
+		return curr && curr->prev ? curr->prev->elmt : NULL;
+	}
+	int Count() const
+	{
+		return count;
+	}
+	const T* Curr() const
+	{
+		return curr ? curr->elmt : NULL;
+	}
+	const T* First() const
+	{
+		return count > 0 ? first->elmt : NULL;
+	}
+	const T* Last() const
+	{
+		return count > 0 ? last->elmt : NULL;
+	}
+	const T* Next() const
+	{
+		return curr && curr->next ? curr->next->elmt : NULL;
+	}
+	const T* Prev() const
+	{
+		return curr && curr->prev ? curr->prev->elmt : NULL;
+	}
+	const T* GoNext() const
+	{
+		if (curr)
+			curr = curr->next;
+		return Curr();
+	}
+	const T* GoPrev() const
+	{
+		if (curr)
+			curr = curr->prev;
+		return Curr();
+	}
 
 	// routines that move the curr elmt
-	T* GoNext() { if (curr) curr = curr->next; return Curr(); }
-	T* GoPrev() { if (curr) curr = curr->prev; return Curr(); }
+	T* GoNext()
+	{
+		if (curr)
+			curr = curr->next;
+		return Curr();
+	}
+	T* GoPrev()
+	{
+		if (curr)
+			curr = curr->prev;
+		return Curr();
+	}
 
 	// write & alloc fcns - returns new elmt
-	T* Append();   // add elmt to end of list
-	T* Prepend();   // add elmt to begginning of list
+	T* Append();  // add elmt to end of list
+	T* Prepend(); // add elmt to begginning of list
 
 	// write & alloc & copy - returns list after copying elmt
 	List<T>& AppendCopy(const List<T>& list);
-	List<T>& AppendCopy(const T& elmt);   // add elmt to end of list
-	List<T>& PrependCopy(const T& elmt);   // add elmt to begginning of list
+	List<T>& AppendCopy(const T& elmt);	 // add elmt to end of list
+	List<T>& PrependCopy(const T& elmt); // add elmt to begginning of list
 
 	// Special append -- does not copy element
 	void AppendNoCopy(T* pElmt);
@@ -75,28 +139,22 @@ public:
 	void RemoveAll();
 };
 
-
-
 //////////////////////////
 // Base List template  //
 //       CODE         //
 ///////////////////////
-template <class T>
-void List<T>::convertTo(std::list<T>& stdList)
+template <class T> void List<T>::convertTo(std::list<T>& stdList)
 {
 	// PIERCE: Note should I clear stdList first?
 	//
 	SetCurrToFirst();
 	for (; Curr() != NULL; GoNext())
-	{
 		stdList.push_back(*Curr());
-	}
 }
 
 // Copy elements from stdList into this list.
 //
-template <class T>
-void List<T>::convertFrom(const std::list<T>& stdList)
+template <class T> void List<T>::convertFrom(const std::list<T>& stdList)
 {
 	RemoveAll();
 
@@ -106,8 +164,7 @@ void List<T>::convertFrom(const std::list<T>& stdList)
 		AppendCopy(*ci);
 }
 
-template <class T>
-void List<T>::SetCurrElmt(unsigned long index) const
+template <class T> void List<T>::SetCurrElmt(unsigned long index) const
 {
 	unsigned long i;
 	curr = first;
@@ -115,28 +172,24 @@ void List<T>::SetCurrElmt(unsigned long index) const
 		curr = curr->next;
 }
 
-template <class T>
-unsigned long List<T>::GetCurrElmtIndex(void) const
+template <class T> unsigned long List<T>::GetCurrElmtIndex(void) const
 {
 	unsigned long int i;
 	ListElmt* tmp;
 	if (curr != NULL)
 	{
 		for (i = 0, tmp = first; tmp != NULL; i++)
-		{
 			if (tmp == curr)
 				return i;
 			else
 				tmp = tmp->next;
-		}
 	}
 	return count;
 }
 
 // alloc new list elmt, put at end of list
 //  and return the component type
-template <class T>
-T* List<T>::Append()
+template <class T> T* List<T>::Append()
 {
 	ListElmt* newElmt;
 	newElmt = new ListElmt;
@@ -158,11 +211,9 @@ T* List<T>::Append()
 
 } /* List::Append */
 
-
 // alloc new list elmt, put at end of list
 //  and add the component
-template <class T>
-void List<T>::AppendNoCopy(T* pElmt)
+template <class T> void List<T>::AppendNoCopy(T* pElmt)
 {
 	if (pElmt == NULL)
 		return;
@@ -185,11 +236,9 @@ void List<T>::AppendNoCopy(T* pElmt)
 	count++;
 } /* List::AppendNoCopy */
 
-
 // alloc new list elmt, put at beggining of list
 //  and return the component type
-template <class T>
-T* List<T>::Prepend()
+template <class T> T* List<T>::Prepend()
 {
 	ListElmt* newElmt;
 	newElmt = new ListElmt;
@@ -210,9 +259,7 @@ T* List<T>::Prepend()
 	return (curr = newElmt)->elmt;
 } /* AsnList::Prepend */
 
-
-template <class T>
-List<T>& List<T>::AppendCopy(const List<T>& list)
+template <class T> List<T>& List<T>::AppendCopy(const List<T>& list)
 {
 	ListElmt* pTemp = list.first;
 	ListElmt* pLast = list.last;
@@ -231,9 +278,7 @@ List<T>& List<T>::AppendCopy(const List<T>& list)
 	return *this;
 }
 
-
-template <class T>
-List<T>& List<T>::AppendCopy(const T& elmt)
+template <class T> List<T>& List<T>::AppendCopy(const T& elmt)
 {
 	ListElmt* newElmt;
 	newElmt = new ListElmt;
@@ -256,8 +301,7 @@ List<T>& List<T>::AppendCopy(const T& elmt)
 
 } /* AppendAndCopy */
 
-template <class T>
-List<T>& List<T>::PrependCopy(const T& elmt)
+template <class T> List<T>& List<T>::PrependCopy(const T& elmt)
 {
 	ListElmt* newElmt;
 	newElmt = new ListElmt;
@@ -280,9 +324,7 @@ List<T>& List<T>::PrependCopy(const T& elmt)
 
 } /* PrependAndCopy */
 
-
-template <class T>
-void List<T>::RemoveCurrFromList()
+template <class T> void List<T>::RemoveCurrFromList()
 {
 	ListElmt* del_elmt;
 
@@ -315,8 +357,7 @@ void List<T>::RemoveCurrFromList()
 	}
 }
 
-template <class T>
-void List<T>::RemoveAll()
+template <class T> void List<T>::RemoveAll()
 {
 	curr = first;
 	while (curr != NULL)
@@ -332,16 +373,14 @@ void List<T>::RemoveAll()
 	last = NULL;
 }
 
-template <class T>
-List<T>::List(const List<T>& that)
+template <class T> List<T>::List(const List<T>& that)
 {
 	count = 0;
 	first = curr = last = NULL;
 	operator=(that);
 }
 
-template <class T>
-List<T>& List<T>::operator=(const List<T>& that)
+template <class T> List<T>& List<T>::operator=(const List<T>& that)
 {
 	if (this != &that)
 		AppendCopy(that);

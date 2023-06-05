@@ -1,7 +1,6 @@
 #ifndef _ASN_BUF_H
 #define _ASN_BUF_H 1
 
-
 #ifdef _WIN32
 #ifndef _SCL_SECURE_NO_DEPRECATE
 #define _SCL_SECURE_NO_DEPRECATE
@@ -49,8 +48,6 @@
 
 #define _SEG_SIZE 4096
 
-
-
 namespace SNACC
 {
 
@@ -59,16 +56,15 @@ namespace SNACC
 	class AsnFileSeg;
 	class AsnBits;
 
-	typedef unsigned long      AsnLen;
+	typedef unsigned long AsnLen;
 
 	typedef std::deque<Card*> Deck;
 
 	struct SNACCDLL_API AsnBufLoc
 	{
 		Deck::iterator m_card;
-		long           m_offset;
+		long m_offset;
 	};
-
 
 	class SNACCDLL_API AsnBuf
 	{
@@ -87,7 +83,8 @@ namespace SNACC
 
 		void PutByteRvs(char byte);
 		void PutSegRvs(const char* seg, size_t segLen);
-		void PutSegRvs(const unsigned char* seg, size_t segLen) {
+		void PutSegRvs(const unsigned char* seg, size_t segLen)
+		{
 			PutSegRvs((const char*)seg, segLen);
 		}
 		void PutStream(std::streambuf* sb);
@@ -95,10 +92,14 @@ namespace SNACC
 		void skip(size_t skipBytes);
 		char PeekByte() const;
 		char GetByte() const;
-		unsigned char GetUByte() const { return (unsigned char)GetByte(); }
+		unsigned char GetUByte() const
+		{
+			return (unsigned char)GetByte();
+		}
 		//	unsigned long GetSeg(char* seg, long segLen) const;
 		void GetSeg(char* seg, long segLen) const;
-		void GetUSeg(unsigned char* seg, long segLen) const {
+		void GetUSeg(unsigned char* seg, long segLen) const
+		{
 			GetSeg((char*)seg, segLen);
 		}
 		char* GetSeg(long segLen) const;
@@ -109,8 +110,14 @@ namespace SNACC
 		void UnGetBytes(long lBytesToPutBack) const;
 
 		void GrabAny(AsnBuf& anyBuf, SNACC::AsnLen& bytesDecoded) const;
-		const Deck& deck() const { return m_deck; }
-		const Card& card() const { return **m_card; }
+		const Deck& deck() const
+		{
+			return m_deck;
+		}
+		const Card& card() const
+		{
+			return **m_card;
+		}
 		unsigned long length() const;
 
 		void insert(const AsnBuf& that);
@@ -136,27 +143,27 @@ namespace SNACC
 	class SNACCDLL_API AsnBufBits
 	{
 	private:
-		std::streambuf* m_pbuf;				// Stream buffer containing the bits
-		bool			m_isInternalBuf;	// Indicates if streambuf is internal
-		bool  bAlign;
-		unsigned char   m_ucWriteCharBuf[2];
-		int             m_iWriteBitPos;
-		unsigned char   m_ucReadCharBuf[2];	// Read character buffer
-		int             m_iReadBitPos;		// Number of bits read from char buffer
-		unsigned long   m_ulNumBits;		// Number of bits in the streambuf?
-		unsigned long   m_ulBitsLeft;		// Number of bits in the streambuf
+		std::streambuf* m_pbuf; // Stream buffer containing the bits
+		bool m_isInternalBuf;	// Indicates if streambuf is internal
+		bool bAlign;
+		unsigned char m_ucWriteCharBuf[2];
+		int m_iWriteBitPos;
+		unsigned char m_ucReadCharBuf[2]; // Read character buffer
+		int m_iReadBitPos;				  // Number of bits read from char buffer
+		unsigned long m_ulNumBits;		  // Number of bits in the streambuf?
+		unsigned long m_ulBitsLeft;		  // Number of bits in the streambuf
 
 	public:
 		AsnBufBits(std::streambuf* pbuf, bool bAligned = false)
 		{
-			m_pbuf = pbuf;   // APPLICATION relinquishes memory.
+			m_pbuf = pbuf; // APPLICATION relinquishes memory.
 			m_isInternalBuf = false;
 			bAlign = bAligned;
 			Clear();
 		}
 		AsnBufBits(bool bAligned = false)
 		{
-			//m_pbuf = new std::strstreambuf;
+			// m_pbuf = new std::strstreambuf;
 			m_pbuf = new std::stringbuf;
 			m_isInternalBuf = true;
 			bAlign = bAligned;
@@ -172,11 +179,16 @@ namespace SNACC
 			m_ulBitsLeft = 0;
 		}
 
-		~AsnBufBits() { if (m_isInternalBuf && m_pbuf) delete m_pbuf; }
+		~AsnBufBits()
+		{
+			if (m_isInternalBuf && m_pbuf)
+				delete m_pbuf;
+		}
 
-
-		bool IsAligned() { return bAlign; }
-
+		bool IsAligned()
+		{
+			return bAlign;
+		}
 
 		/*
 			AsnBufBits & operator=(const AsnBufBits &buf)
@@ -204,21 +216,22 @@ namespace SNACC
 		bool GetBit();
 		unsigned char GetByte();
 
-		unsigned long  length() { return m_ulBitsLeft; }
-		int 		   OctetAlignWrite();
-		int 		   OctetAlignRead();
+		unsigned long length()
+		{
+			return m_ulBitsLeft;
+		}
+		int OctetAlignWrite();
+		int OctetAlignRead();
 
-		void          hexDump(std::ostream& os);
-		void          AppendTo(AsnBufBits& bufBitsOut);
+		void hexDump(std::ostream& os);
+		void AppendTo(AsnBufBits& bufBitsOut);
 
 		AsnBufBits(const AsnBufBits& buf);
 		AsnBufBits& operator=(const AsnBufBits& buf);
 
 	private:
-		unsigned char ReadByte();	// Reads next byte from the stream
-
+		unsigned char ReadByte(); // Reads next byte from the stream
 	};
-
 
 	// Class for handling memory based encodings.  It
 	// writes into the stream in reverse.
@@ -233,31 +246,36 @@ namespace SNACC
 		explicit AsnRvsBuf(long segSize = _SEG_SIZE);
 		virtual ~AsnRvsBuf();
 
-		const char* str() { return m_pStart; }
-		int         pcount() { return (int)((m_buf + m_segSize) - m_pStart); }
+		const char* str()
+		{
+			return m_pStart;
+		}
+		int pcount()
+		{
+			return (int)((m_buf + m_segSize) - m_pStart);
+		}
 
-		long max_size() const { return m_segSize; }
+		long max_size() const
+		{
+			return m_segSize;
+		}
 
 		friend class AsnBuf;
 
 	protected:
-		virtual int_type        underflow();
-		virtual int_type        overflow(int c = EOF);
+		virtual int_type underflow();
+		virtual int_type overflow(int c = EOF);
 		virtual std::streamsize xsputn(const char* s, std::streamsize n);
-		virtual std::streambuf::pos_type        seekoff(std::streambuf::off_type off, std::ios_base::seekdir way,
-			std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
-		virtual std::streambuf::pos_type        seekpos(std::streambuf::pos_type sp,
-			std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
+		virtual std::streambuf::pos_type seekoff(std::streambuf::off_type off, std::ios_base::seekdir way, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
+		virtual std::streambuf::pos_type seekpos(std::streambuf::pos_type sp, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
 
 	private:
-
 		char* m_buf;
 		char* m_pStart;
 		char* m_pReadLoc;
-		long  m_segSize;
+		long m_segSize;
 		bool m_bDeleteable;
 	};
-
 
 	// Used to store the location of a large object
 	// (OCTET STRING or ANY) within an AsnBuf card that
@@ -270,22 +288,30 @@ namespace SNACC
 		explicit AsnFileSeg(AsnFileSeg* afs, unsigned long segLen);
 		AsnFileSeg(const AsnFileSeg& o);
 		~AsnFileSeg();
-		unsigned long size() { return m_segSize; }
+		unsigned long size()
+		{
+			return m_segSize;
+		}
 
 	protected:
-		virtual int_type        underflow();
-		virtual int_type        uflow();
+		virtual int_type underflow();
+		virtual int_type uflow();
 
-		virtual int_type        overflow(int c = EOF) { return EOF; }
+		virtual int_type overflow(int c = EOF)
+		{
+			return EOF;
+		}
 		virtual std::streamsize xsgetn(char* s, std::streamsize n);
-		virtual std::streamsize xsputn(const char* s, std::streamsize n) { return overflow(); }
-		virtual pos_type        seekoff(off_type off, std::ios_base::seekdir way,
-			std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
-		virtual pos_type        seekpos(pos_type sp,
-			std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
+		virtual std::streamsize xsputn(const char* s, std::streamsize n)
+		{
+			return overflow();
+		}
+		virtual pos_type seekoff(off_type off, std::ios_base::seekdir way, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
+		virtual pos_type seekpos(pos_type sp, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
+
 	private:
-		long            m_offset;
-		long            m_segSize;
+		long m_offset;
+		long m_segSize;
 		char* m_filename;
 		std::filebuf* m_fb;
 	};
@@ -299,7 +325,13 @@ namespace SNACC
 	// Deck contains a streambuf * and a bool flag that indicates
 	// whether or not the streambuf can be deleted.
 	//
-	enum AsnBufType { FILE_TYPE = 0, RVS_BUF_TYPE, IN_MEM_TYPE, EXT_MEM_TYPE };
+	enum AsnBufType
+	{
+		FILE_TYPE = 0,
+		RVS_BUF_TYPE,
+		IN_MEM_TYPE,
+		EXT_MEM_TYPE
+	};
 
 	class Card : public std::pair<std::streambuf*, AsnBufType>
 	{
@@ -372,36 +404,75 @@ namespace SNACC
 				delete first;
 		}
 
-		int		BitPosW() { return m_iBitPosW; }
-		int      SetBitPosW(int newBitPos) { m_iBitPosW = newBitPos; return m_iBitPosW; }
+		int BitPosW()
+		{
+			return m_iBitPosW;
+		}
+		int SetBitPosW(int newBitPos)
+		{
+			m_iBitPosW = newBitPos;
+			return m_iBitPosW;
+		}
 
-		int		BitPosR() { return m_iBitPosR; }
-		int		SetBitPosR(int newBitPos) { m_iBitPosR = newBitPos; return m_iBitPosR; }
+		int BitPosR()
+		{
+			return m_iBitPosR;
+		}
+		int SetBitPosR(int newBitPos)
+		{
+			m_iBitPosR = newBitPos;
+			return m_iBitPosR;
+		}
 
-		char     cDataW() { return m_cDataW; }
-		char     cDataW(char chr) { m_cDataW = chr; return m_cDataW; }
+		char cDataW()
+		{
+			return m_cDataW;
+		}
+		char cDataW(char chr)
+		{
+			m_cDataW = chr;
+			return m_cDataW;
+		}
 
-		char     cDataR() { return m_cDataR; }
-		char     cDataR(char chr) { m_cDataR = chr; return m_cDataR; }
+		char cDataR()
+		{
+			return m_cDataR;
+		}
+		char cDataR(char chr)
+		{
+			m_cDataR = chr;
+			return m_cDataR;
+		}
 
-		long size();    // number of bytes stored in card
-		long length();  // number of bytes not read from card
+		long size();   // number of bytes stored in card
+		long length(); // number of bytes not read from card
 
 #ifdef _DEBUG
 		const char* bufTypeStr(); // return a string discribing the bufType
 #endif
 
-		void resetType(AsnBufType type) { second = type; }
-		std::streambuf* rdbuf() { return first; }
-		const std::streambuf* rdbuf() const { return first; }
-		enum AsnBufType bufType() const { return second; }
+		void resetType(AsnBufType type)
+		{
+			second = type;
+		}
+		std::streambuf* rdbuf()
+		{
+			return first;
+		}
+		const std::streambuf* rdbuf() const
+		{
+			return first;
+		}
+		enum AsnBufType bufType() const
+		{
+			return second;
+		}
 
 	private:
 		int m_iBitPosW;
 		int m_iBitPosR;
 		char m_cDataW;
 		char m_cDataR;
-
 	};
 
 } // end namespace SNACC
@@ -409,7 +480,5 @@ namespace SNACC
 SNACCDLL_API void sortSet(std::list<SNACC::AsnBuf>& bufList);
 
 SNACCDLL_API std::ostream& operator<<(std::ostream& os, const SNACC::AsnBuf& b);
-
-
 
 #endif // _ASN_BUF_H

@@ -50,17 +50,17 @@ char* GetCaps PROTO((char* str));
 
 char* GetCapsAndDigits PROTO((char* str));
 
-void  Str2UCase PROTO((char* str, size_t len));
+void Str2UCase PROTO((char* str, size_t len));
 
-void  Str2LCase PROTO((char* str, size_t len));
+void Str2LCase PROTO((char* str, size_t len));
 
-void  Dash2Underscore PROTO((char* str, size_t len));
+void Dash2Underscore PROTO((char* str, size_t len));
 
-void  AppendDigit PROTO((char* str, size_t bufferSize, int digit));
+void AppendDigit PROTO((char* str, size_t bufferSize, int digit));
 
-void  MakeCStrUnique PROTO((DefinedObj* nameList, char* str, size_t bufferSize, int maxDigits, int startingDigit));
+void MakeCStrUnique PROTO((DefinedObj * nameList, char* str, size_t bufferSize, int maxDigits, int startingDigit));
 
-void  MakeCxxStrUnique PROTO((DefinedObj* nameList, char* str, size_t bufferSize, int maxDigits, int startingDigit));
+void MakeCxxStrUnique PROTO((DefinedObj * nameList, char* str, size_t bufferSize, int maxDigits, int startingDigit));
 
 char* str_replace(const char* string, const char* substr, const char* replacement);
 

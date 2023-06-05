@@ -19,62 +19,47 @@
 #define _asn_tag_h_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #if SIZEOF_INT == 4
-#  define UL		unsigned int
+#define UL unsigned int
 #else
-#  if SIZEOF_LONG == 4
-#    define UL		unsigned long
-#  else
-#    if SIZEOF_SHORT == 4
-#      define UL	unsigned short
-#    endif
-#  endif
+#if SIZEOF_LONG == 4
+#define UL unsigned long
+#else
+#if SIZEOF_SHORT == 4
+#define UL unsigned short
+#endif
+#endif
 #endif
 #ifndef UL
 #error "can't find integer type which is 4 bytes in size"
 #endif
-	typedef UL	AsnTag;
+	typedef UL AsnTag;
 
 	/* Tag Id's byte length */
-#define TB	sizeof (AsnTag)
+#define TB sizeof(AsnTag)
 
-/*
- * The MAKE_TAG_ID macro generates the TAG_ID rep for the
- * the given class/form/code (rep'd in long integer form)
- * if the class/form/code are constants the compiler (should)
- * calculate the tag completely --> zero runtime overhead.
- * This is good for efficiently comparing tags in switch statements
- * (decoding) etc.  because run-time bit fiddling (eliminated) minimized
- */
+	/*
+	 * The MAKE_TAG_ID macro generates the TAG_ID rep for the
+	 * the given class/form/code (rep'd in long integer form)
+	 * if the class/form/code are constants the compiler (should)
+	 * calculate the tag completely --> zero runtime overhead.
+	 * This is good for efficiently comparing tags in switch statements
+	 * (decoding) etc.  because run-time bit fiddling (eliminated) minimized
+	 */
 
-#define MAKE_TAG_ID( cl, fm, cd)\
-	((((UL)(cl)) << ((TB -1) * 8)) | (((UL)(fm)) << ((TB -1) * 8)) | (MAKE_TAG_ID_CODE (((UL)(cd)))))
+#define MAKE_TAG_ID(cl, fm, cd) ((((UL)(cl)) << ((TB - 1) * 8)) | (((UL)(fm)) << ((TB - 1) * 8)) | (MAKE_TAG_ID_CODE(((UL)(cd)))))
 
+#define MAKE_TAG_ID_CODE(cd) ((cd < 31) ? (MAKE_TAG_ID_CODE1(cd)) : ((cd < 128) ? (MAKE_TAG_ID_CODE2(cd)) : ((cd < 16384) ? (MAKE_TAG_ID_CODE3(cd)) : (MAKE_TAG_ID_CODE4(cd)))))
 
-#define MAKE_TAG_ID_CODE(cd)\
-( (cd < 31) ?  (MAKE_TAG_ID_CODE1 (cd)):\
-      ((cd < 128)?  (MAKE_TAG_ID_CODE2 (cd)):\
-         ((cd < 16384)?  (MAKE_TAG_ID_CODE3 (cd)):\
-           (MAKE_TAG_ID_CODE4 (cd)))))
+#define MAKE_TAG_ID_CODE1(cd) (cd << ((TB - 1) * 8))
+#define MAKE_TAG_ID_CODE2(cd) ((31 << ((TB - 1) * 8)) | (cd << ((TB - 2) * 8)))
+#define MAKE_TAG_ID_CODE3(cd) ((31 << ((TB - 1) * 8)) | ((cd & 0x3f80) << 9) | (0x0080 << ((TB - 2) * 8)) | ((cd & 0x007F) << ((TB - 3) * 8)))
 
-#define MAKE_TAG_ID_CODE1(cd)  (cd << ((TB -1) * 8))
-#define MAKE_TAG_ID_CODE2(cd)  ((31 << ((TB -1) * 8)) | (cd << ((TB-2) * 8)))
-#define MAKE_TAG_ID_CODE3(cd)  ((31 << ((TB -1) * 8))\
-                                | ((cd & 0x3f80) << 9)\
-                                | ( 0x0080 << ((TB-2) * 8))\
-                                | ((cd & 0x007F) << ((TB-3)* 8)))
-
-#define MAKE_TAG_ID_CODE4(cd)  ((31 << ((TB -1) * 8))\
-                                | ((cd & 0x1fc000) << 2)\
-                                | ( 0x0080 << ((TB-2) * 8))\
-                                | ((cd & 0x3f80) << 1)\
-                                | ( 0x0080 << ((TB-3) * 8))\
-                                | ((cd & 0x007F) << ((TB-4)*8)))
-
-
+#define MAKE_TAG_ID_CODE4(cd) ((31 << ((TB - 1) * 8)) | ((cd & 0x1fc000) << 2) | (0x0080 << ((TB - 2) * 8)) | ((cd & 0x3f80) << 1) | (0x0080 << ((TB - 3) * 8)) | ((cd & 0x007F) << ((TB - 4) * 8)))
 
 	typedef enum
 	{
@@ -93,7 +78,6 @@ extern "C" {
 		PRIM = 0,
 		CONS = (1 << 5)
 	} BER_FORM;
-
 
 	typedef enum
 	{
@@ -126,30 +110,26 @@ extern "C" {
 		BMPSTRING_TAG_CODE = 30
 	} BER_UNIV_CODE;
 
-#define TT61STRING_TAG_CODE	TELETEXSTRING_TAG_CODE
-#define ISO646STRING_TAG_CODE	VISIBLESTRING_TAG_CODE
-
+#define TT61STRING_TAG_CODE TELETEXSTRING_TAG_CODE
+#define ISO646STRING_TAG_CODE VISIBLESTRING_TAG_CODE
 
 	/*
 	 * the TAG_ID_[CLASS/FORM/CODE] macros are not
 	 * super fast - try not to use during encoding/decoding
 	 */
-#define TAG_ID_CLASS( tid)	((tid & (0xC0 << ((TB-1) *8))) >> ((TB -1) * 8))
-#define TAG_ID_FORM( tid)	((tid & (0x20 << ((TB-1) *8))) >> ((TB -1) * 8))
+#define TAG_ID_CLASS(tid) ((tid & (0xC0 << ((TB - 1) * 8))) >> ((TB - 1) * 8))
+#define TAG_ID_FORM(tid) ((tid & (0x20 << ((TB - 1) * 8))) >> ((TB - 1) * 8))
 
-	 /*
-	  * TAG_IS_CONS evaluates to true if the given AsnTag type
-	  * tag has the constructed bit set.
-	  */
-#define TAG_IS_CONS( tag)	((tag) & (CONS << ((TB-1) *8)))
-#define CONSIFY( tag)		(tag | (CONS << ((TB-1) *8)))
-#define DECONSIFY( tag)		(tag &  ~(CONS << ((TB-1) *8)))
+	/*
+	 * TAG_IS_CONS evaluates to true if the given AsnTag type
+	 * tag has the constructed bit set.
+	 */
+#define TAG_IS_CONS(tag) ((tag) & (CONS << ((TB - 1) * 8)))
+#define CONSIFY(tag) (tag | (CONS << ((TB - 1) * 8)))
+#define DECONSIFY(tag) (tag & ~(CONS << ((TB - 1) * 8)))
 
-
-	  /* not a valid tag - usually the first EOC octet */
-#define EOC_TAG_ID		0
-
-
+	/* not a valid tag - usually the first EOC octet */
+#define EOC_TAG_ID 0
 
 /*
  * tag encoders.  given constant values for class form &
@@ -170,47 +150,44 @@ extern "C" {
  *          Use {}'s to enclose any ASN.1 related routine that you are
  *          treating as a single statement in your code.
  */
-#define BEncTag1( b, class, form, code)\
-    1;\
-    BufPutByteRvs (b, (class) | (form) | (code));
+#define BEncTag1(b, class, form, code)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	1;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	BufPutByteRvs(b, (class) | (form) | (code));
 
-#define BEncTag2( b, class, form, code)\
-    2;\
-    BufPutByteRvs (b, code);\
-    BufPutByteRvs (b, (class) | (form) | 31);
+#define BEncTag2(b, class, form, code)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	2;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	BufPutByteRvs(b, code);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+	BufPutByteRvs(b, (class) | (form) | 31);
 
-#define BEncTag3( b, class, form, code)\
-    3;\
-    BufPutByteRvs (b, (code) & 0x7F);\
-    BufPutByteRvs (b, 0x80 | ((code) >> 7));\
-    BufPutByteRvs (b, (class) | (form) | 31);
+#define BEncTag3(b, class, form, code)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	3;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	BufPutByteRvs(b, (code)&0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+	BufPutByteRvs(b, 0x80 | ((code) >> 7));                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+	BufPutByteRvs(b, (class) | (form) | 31);
 
-#define BEncTag4( b, class, form, code)\
-    4;\
-    BufPutByteRvs (b, (code) & 0x7F);\
-    BufPutByteRvs (b, 0x80 | ((code) >> 7));\
-    BufPutByteRvs (b, 0x80 | ((code) >> 14));\
-    BufPutByteRvs (b, (class) | (form) | 31);
+#define BEncTag4(b, class, form, code)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	4;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	BufPutByteRvs(b, (code)&0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+	BufPutByteRvs(b, 0x80 | ((code) >> 7));                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+	BufPutByteRvs(b, 0x80 | ((code) >> 14));                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+	BufPutByteRvs(b, (class) | (form) | 31);
 
-#define BEncTag5( b, class, form, code)\
-    5;\
-    BufPutByteRvs (b, (code) & 0x7F);\
-    BufPutByteRvs (b, 0x80 | ((code) >> 7));\
-    BufPutByteRvs (b, 0x80 | ((code) >> 14));\
-    BufPutByteRvs (b, 0x80 | ((code) >> 21));\
-    BufPutByteRvs (b, (class) | (form) | 31);
+#define BEncTag5(b, class, form, code)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	5;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	BufPutByteRvs(b, (code)&0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+	BufPutByteRvs(b, 0x80 | ((code) >> 7));                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+	BufPutByteRvs(b, 0x80 | ((code) >> 14));                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+	BufPutByteRvs(b, 0x80 | ((code) >> 21));                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+	BufPutByteRvs(b, (class) | (form) | 31);
 
+	/* the following are protos for routines ins asn_tag.c */
 
- /* the following are protos for routines ins asn_tag.c */
-
-
-	AsnTag BDecTag PROTO((GenBuf* b, AsnLen* bytesDecoded, ENV_TYPE env));
+	AsnTag BDecTag PROTO((GenBuf * b, AsnLen* bytesDecoded, ENV_TYPE env));
 #if TTBL
-	AsnTag PeekTag PROTO((GenBuf* b, ENV_TYPE env));
+	AsnTag PeekTag PROTO((GenBuf * b, ENV_TYPE env));
 #endif
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 #endif /* conditional include */
-

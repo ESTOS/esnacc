@@ -17,24 +17,24 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-   /* As a special exception, you may create a larger work that contains
-	  part or all of the Bison parser skeleton and distribute that work
-	  under terms of your choice, so long as that work isn't itself a
-	  parser generator using the skeleton or a modified version thereof
-	  as a parser skeleton.  Alternatively, if you modify or redistribute
-	  the parser skeleton itself, you may (at your option) remove this
-	  special exception, which will cause the skeleton and the resulting
-	  Bison output files to be licensed under the GNU General Public
-	  License without this special exception.
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
 
-	  This special exception was added by the Free Software Foundation in
-	  version 2.2 of Bison.  */
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
 
 #ifndef YY_YY_CORE_PARSE_ASN1_H_INCLUDED
-# define YY_YY_CORE_PARSE_ASN1_H_INCLUDED
-	  /* Enabling traces.  */
+#define YY_YY_CORE_PARSE_ASN1_H_INCLUDED
+/* Enabling traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 1
+#define YYDEBUG 1
 #endif
 #if YYDEBUG
 extern int yydebug;
@@ -42,10 +42,11 @@ extern int yydebug;
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-	  know about them.  */
-enum yytokentype {
+#define YYTOKENTYPE
+/* Put the tokens into the symbol table, so that GDB and other debuggers
+   know about them.  */
+enum yytokentype
+{
 	BSTRING_SYM = 258,
 	HSTRING_SYM = 259,
 	CSTRING_SYM = 260,
@@ -246,15 +247,14 @@ enum yytokentype {
 };
 #endif
 
-
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+#if !defined YYSTYPE && !defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
 {
 	/* Line 2058 of yacc.c  */
 #line 183 "core\\parse-asn1.y"
 
-	int              intVal;
-	unsigned int     uintVal;
+	int intVal;
+	unsigned int uintVal;
 	char* charPtr;
 	Type* typePtr;
 	NamedType* namedTypePtr;
@@ -290,16 +290,15 @@ typedef union YYSTYPE
 	SnaccDirective* directivePtr;
 	SnaccDirectiveEnum directiveEnum;
 	enum BasicTypeChoiceId basicTypeChoiceIdEnum;
-	CTypeId			cTypeIdEnum;
-	AsnBool			boolVal;
-
+	CTypeId cTypeIdEnum;
+	AsnBool boolVal;
 
 	/* Line 2058 of yacc.c  */
 #line 299 "core\\parse-asn1.h"
 } YYSTYPE;
-# define YYSTYPE_IS_TRIVIAL 1
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
-# define YYSTYPE_IS_DECLARED 1
+#define YYSTYPE_IS_TRIVIAL 1
+#define yystype YYSTYPE /* obsolescent; will be withdrawn */
+#define YYSTYPE_IS_DECLARED 1
 #endif
 
 extern YYSTYPE yylval;

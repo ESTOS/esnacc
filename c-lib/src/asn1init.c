@@ -4,17 +4,15 @@
 
 void FreeHashTable(Table* pTable);
 
-
 void ASN1init()
 {
-	ExpBufInit(1024);	/* Should this be higher? */
+	ExpBufInit(1024); /* Should this be higher? */
 
 	/* decoding buffer init - use mem within buffer rather than allocating all
 	 * the time... I will initially alloc 4K since the certs are generally in
 	 * the 3k - 4k range
 	 */
-	InitNibbleMem(4096, 512);	/* intially alloc 4096, inc by 512 as required */
-
+	InitNibbleMem(4096, 512); /* intially alloc 4096, inc by 512 as required */
 }
 
 void ASN1Terminate()

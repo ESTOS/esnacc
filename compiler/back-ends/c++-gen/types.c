@@ -87,20 +87,19 @@ static DefinedObj* definedNamesG;
 
 /* unexported prototypes */
 
-void FillCxxTypeDefInfo PROTO((CxxRules* r, Module* m, TypeDef* td));
+void FillCxxTypeDefInfo PROTO((CxxRules * r, Module* m, TypeDef* td));
 
-static void FillCxxFieldNames PROTO((CxxRules* r, NamedTypeList* firstSibling));
+static void FillCxxFieldNames PROTO((CxxRules * r, NamedTypeList* firstSibling));
 
-static void FillCxxTypeRefInfo PROTO((CxxRules* r, Module* m, TypeDef* head, Type* parent, Type* t));
+static void FillCxxTypeRefInfo PROTO((CxxRules * r, Module* m, TypeDef* head, Type* parent, Type* t));
 
-static void FillCxxStructElmts PROTO((CxxRules* r, Module* m, TypeDef* head, Type* parent, NamedTypeList* t));
+static void FillCxxStructElmts PROTO((CxxRules * r, Module* m, TypeDef* head, Type* parent, NamedTypeList* t));
 
-static void FillCxxChoiceElmts PROTO((CxxRules* r, Module* m, TypeDef* head, Type* parent, NamedTypeList* first));
+static void FillCxxChoiceElmts PROTO((CxxRules * r, Module* m, TypeDef* head, Type* parent, NamedTypeList* first));
 
-static int IsCxxPtr PROTO((CxxRules* r, TypeDef* td, Type* parent, Type* t));
+static int IsCxxPtr PROTO((CxxRules * r, TypeDef* td, Type* parent, Type* t));
 
-void FillCxxTDIDefaults PROTO((CxxRules* r, CxxTDI* ctdi, TypeDef* td));
-
+void FillCxxTDIDefaults PROTO((CxxRules * r, CxxTDI* ctdi, TypeDef* td));
 
 /*
  *  allocates and fills all the cxxTypeInfos
@@ -120,7 +119,7 @@ void FillCxxTypeInfo(CxxRules* r, ModuleList* modList)
 	FOR_EACH_LIST_ELMT(m, modList)
 	{
 		FOR_EACH_LIST_ELMT(td, m->typeDefs)
-			FillCxxTypeDefInfo(r, m, td);
+		FillCxxTypeDefInfo(r, m, td);
 	}
 
 	/*
@@ -131,7 +130,7 @@ void FillCxxTypeInfo(CxxRules* r, ModuleList* modList)
 	FOR_EACH_LIST_ELMT(m, modList)
 	{
 		FOR_EACH_LIST_ELMT(td, m->typeDefs)
-			FillCxxTypeRefInfo(r, m, td, NULL, td->type);
+		FillCxxTypeRefInfo(r, m, td, NULL, td->type);
 	}
 
 	/*
@@ -144,22 +143,17 @@ void FillCxxTypeInfo(CxxRules* r, ModuleList* modList)
 	 *  are assumed to share the same name space
 	 */
 
-	 /* done with checking for name conflicts */
+	/* done with checking for name conflicts */
 	FreeDefinedObjs(&definedNamesG);
 
-}  /* FillCxxTypeInfo */
-
+} /* FillCxxTypeInfo */
 
 /*
  *  allocates and fills structure holding C type definition information
  *  fo the given ASN.1 type definition.  Does not fill CTRI for contained
  *  types etc.
  */
-void
-FillCxxTypeDefInfo PARAMS((r, m, td),
-	CxxRules* r _AND_
-	Module* m _AND_
-	TypeDef* td)
+void FillCxxTypeDefInfo PARAMS((r, m, td), CxxRules* r _AND_ Module* m _AND_ TypeDef* td)
 {
 	char* tmpName;
 	CxxTDI* cxxtdi;
@@ -170,7 +164,6 @@ FillCxxTypeDefInfo PARAMS((r, m, td),
 	if (td->cxxTypeDefInfo != NULL)
 		return;
 
-
 	cxxtdi = MT(CxxTDI);
 	td->cxxTypeDefInfo = cxxtdi;
 
@@ -178,14 +171,12 @@ FillCxxTypeDefInfo PARAMS((r, m, td),
 
 	FillCxxTDIDefaults(r, cxxtdi, td);
 
-
 	/*
 	 * if defined by a ref to another type definition fill in that type
 	 * def's CxxTDI so can inherit (actully completly replace default
 	 * attributes) from it
 	 */
-	if ((td->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-		(td->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+	if ((td->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (td->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 	{
 		/*
 		 * Fill in CxxTDI for defining type if nec.
@@ -200,7 +191,6 @@ FillCxxTypeDefInfo PARAMS((r, m, td),
 		cxxtdi->className = tmpName; /* restore className */
 	}
 
-
 	/*
 	 * check for any "--snacc" attributes that overide the current
 	 * cxxtdi fields
@@ -208,16 +198,9 @@ FillCxxTypeDefInfo PARAMS((r, m, td),
 	ParseTypeDefAttribs (cxxtdi, td->attrList);
 	*/
 
-}  /* FillCxxTypeDefInfo */
+} /* FillCxxTypeDefInfo */
 
-
-static void
-FillCxxTypeRefInfo PARAMS((r, m, head, parent, t),
-	CxxRules* r _AND_
-	Module* m _AND_
-	TypeDef* head _AND_
-	Type* parent _AND_
-	Type* t)
+static void FillCxxTypeRefInfo PARAMS((r, m, head, parent, t), CxxRules* r _AND_ Module* m _AND_ TypeDef* head _AND_ Type* parent _AND_ Type* t)
 {
 	CxxTRI* cxxtri;
 	CxxTDI* tmpCxxtdi;
@@ -225,7 +208,7 @@ FillCxxTypeRefInfo PARAMS((r, m, head, parent, t),
 	CNamedElmt* cne;
 	CNamedElmt** cneHndl;
 	char* elmtName;
-	size_t      len;
+	size_t len;
 	enum BasicTypeChoiceId basicTypeId;
 
 	/*
@@ -246,26 +229,21 @@ FillCxxTypeRefInfo PARAMS((r, m, head, parent, t),
 	/* get base type def info from the conversion table in the rules */
 	cxxtri->isEnc = tmpCxxtdi->isEnc;
 
-	//ste use OCTETCONTAINING as OCTET STRING -- (basicTypeId == BASICTYPE_OCTETCONTAINING) ||
+	// ste use OCTETCONTAINING as OCTET STRING -- (basicTypeId == BASICTYPE_OCTETCONTAINING) ||
 	if (basicTypeId == BASICTYPE_BITCONTAINING)
 	{
-		//Check for Containing Binary
-		cxxtri->className =
-			r->typeConvTbl[t->basicType->a.stringContaining->basicType->choiceId].className;
+		// Check for Containing Binary
+		cxxtri->className = r->typeConvTbl[t->basicType->a.stringContaining->basicType->choiceId].className;
 	}
 	else
 		cxxtri->className = tmpCxxtdi->className;
 	cxxtri->optTestRoutineName = tmpCxxtdi->optTestRoutineName;
 
-
 	/*
 	 * convert named elmts to C++ names.
 	 * check for name conflict with other defined Types/Names/Values
 	 */
-	if (((basicTypeId == BASICTYPE_INTEGER) ||
-		(basicTypeId == BASICTYPE_ENUMERATED) ||
-		(basicTypeId == BASICTYPE_BITSTRING)) &&
-		!(LIST_EMPTY(t->basicType->a.integer)))
+	if (((basicTypeId == BASICTYPE_INTEGER) || (basicTypeId == BASICTYPE_ENUMERATED) || (basicTypeId == BASICTYPE_BITSTRING)) && !(LIST_EMPTY(t->basicType->a.integer)))
 	{
 		cxxtri->namedElmts = AsnListNew(sizeof(void*));
 		FOR_EACH_LIST_ELMT(namedElmt, t->basicType->a.integer)
@@ -302,77 +280,76 @@ FillCxxTypeRefInfo PARAMS((r, m, head, parent, t),
 	/* fill in rest of type info depending on the type */
 	switch (basicTypeId)
 	{
-	case BASICTYPE_BOOLEAN:  /* library types */
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_BITSTRING:
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-	case BASICTYPE_NULL:
-	case BASICTYPE_OID:
-	case BASICTYPE_RELATIVE_OID:
-	case BASICTYPE_REAL:
-	case BASICTYPE_ENUMERATED:
-		/* don't need to do anything else */
-		break;
+		case BASICTYPE_BOOLEAN: /* library types */
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_BITSTRING:
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_NULL:
+		case BASICTYPE_OID:
+		case BASICTYPE_RELATIVE_OID:
+		case BASICTYPE_REAL:
+		case BASICTYPE_ENUMERATED:
+			/* don't need to do anything else */
+			break;
 
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			/* fill in component type */
+			FillCxxTypeRefInfo(r, m, head, t, t->basicType->a.setOf);
+			break;
 
-	case BASICTYPE_SEQUENCEOF:  /* list types */
-	case BASICTYPE_SETOF:
-		/* fill in component type */
-		FillCxxTypeRefInfo(r, m, head, t, t->basicType->a.setOf);
-		break;
+		case BASICTYPE_IMPORTTYPEREF: /* type references */
+		case BASICTYPE_LOCALTYPEREF:
+			/*
+			 * grab class name from link (link is the def of the
+			 * the ref'd type)
+			 */
+			if (t->basicType->a.localTypeRef->link != NULL)
+			{
+				/* inherit attributes from referenced type */
+				tmpCxxtdi = t->basicType->a.localTypeRef->link->cxxTypeDefInfo;
+				cxxtri->className = tmpCxxtdi->className;
+				cxxtri->isEnc = tmpCxxtdi->isEnc;
+				cxxtri->optTestRoutineName = tmpCxxtdi->optTestRoutineName;
+			}
 
-	case BASICTYPE_IMPORTTYPEREF:  /* type references */
-	case BASICTYPE_LOCALTYPEREF:
-		/*
-		 * grab class name from link (link is the def of the
-		 * the ref'd type)
-		 */
-		if (t->basicType->a.localTypeRef->link != NULL)
-		{
-			/* inherit attributes from referenced type */
-			tmpCxxtdi = t->basicType->a.localTypeRef->link->cxxTypeDefInfo;
-			cxxtri->className = tmpCxxtdi->className;
-			cxxtri->isEnc = tmpCxxtdi->isEnc;
-			cxxtri->optTestRoutineName = tmpCxxtdi->optTestRoutineName;
-		}
+			break;
 
-		break;
+		case BASICTYPE_ANYDEFINEDBY: /* ANY types */
+			break;					 /* these are handled now */
 
-	case BASICTYPE_ANYDEFINEDBY:  /* ANY types */
-		break;  /* these are handled now */
+		case BASICTYPE_ANY:
+			/* Enhanced ANY processing always on */
+			break;
 
-	case BASICTYPE_ANY:
-		/* Enhanced ANY processing always on */
-		break;
+		case BASICTYPE_CHOICE:
+			/*
+			 * must fill field names BEFORE filling choice elmts
+			 * (allows better naming for choice ids)
+			 */
+			FillCxxFieldNames(r, t->basicType->a.choice);
+			FillCxxChoiceElmts(r, m, head, t, t->basicType->a.choice);
+			break;
 
-	case BASICTYPE_CHOICE:
-		/*
-		 * must fill field names BEFORE filling choice elmts
-		 * (allows better naming for choice ids)
-		 */
-		FillCxxFieldNames(r, t->basicType->a.choice);
-		FillCxxChoiceElmts(r, m, head, t, t->basicType->a.choice);
-		break;
+		case BASICTYPE_SET:
+		case BASICTYPE_SEQUENCE:
+			FillCxxStructElmts(r, m, head, t, t->basicType->a.set);
+			FillCxxFieldNames(r, t->basicType->a.set);
+			break;
 
-	case BASICTYPE_SET:
-	case BASICTYPE_SEQUENCE:
-		FillCxxStructElmts(r, m, head, t, t->basicType->a.set);
-		FillCxxFieldNames(r, t->basicType->a.set);
-		break;
+		case BASICTYPE_COMPONENTSOF:
+		case BASICTYPE_SELECTION:
+			fprintf(errFileG, "Compiler error - COMPONENTS OF or SELECTION type slipped through normalizing phase.\n");
+			break;
 
-	case BASICTYPE_COMPONENTSOF:
-	case BASICTYPE_SELECTION:
-		fprintf(errFileG, "Compiler error - COMPONENTS OF or SELECTION type slipped through normalizing phase.\n");
-		break;
-
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_MACRODEF:
-	case BASICTYPE_MACROTYPE:
-		/* do nothing */
-		break;
-	default:
-		break;
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_MACRODEF:
+		case BASICTYPE_MACROTYPE:
+			/* do nothing */
+			break;
+		default:
+			break;
 	}
 
 	/*
@@ -381,22 +358,12 @@ FillCxxTypeRefInfo PARAMS((r, m, head, parent, t),
 	 */
 	cxxtri->isPtr = (unsigned char)IsCxxPtr(r, head, parent, t);
 
-
 	/* let user overide any defaults with the --snacc attributes */
 	/* undefined for C++ ParseTypeRefAttribs (ctri, t->attrList); */
 
+} /* FillCxxTypeRefInfo */
 
-}  /* FillCxxTypeRefInfo */
-
-
-
-static void
-FillCxxStructElmts PARAMS((r, m, head, parent, elmts),
-	CxxRules* r _AND_
-	Module* m _AND_
-	TypeDef* head _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts)
+static void FillCxxStructElmts PARAMS((r, m, head, parent, elmts), CxxRules* r _AND_ Module* m _AND_ TypeDef* head _AND_ Type* parent _AND_ NamedTypeList* elmts)
 {
 	NamedType* et;
 
@@ -405,32 +372,24 @@ FillCxxStructElmts PARAMS((r, m, head, parent, elmts),
 		FillCxxTypeRefInfo(r, m, head, parent, et->type);
 	}
 
-}  /* FillCxxStructElmts */
-
-
+} /* FillCxxStructElmts */
 
 /*
  *  Figures out non-conflicting enum names for the
  *  choice id's
  */
-static void
-FillCxxChoiceElmts PARAMS((r, m, head, parent, elmts),
-	CxxRules* r _AND_
-	Module* m _AND_
-	TypeDef* head _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts)
+static void FillCxxChoiceElmts PARAMS((r, m, head, parent, elmts), CxxRules* r _AND_ Module* m _AND_ TypeDef* head _AND_ Type* parent _AND_ NamedTypeList* elmts)
 {
 	NamedType* et;
 	int idCount = 0;
 	CxxTRI* cxxtri;
-	size_t   len;
+	size_t len;
 
 	/*
 	 * fill in type info for elmt types first
 	 */
 	FOR_EACH_LIST_ELMT(et, elmts)
-		FillCxxTypeRefInfo(r, m, head, parent, et->type);
+	FillCxxTypeRefInfo(r, m, head, parent, et->type);
 
 	/*
 	 * set choiceId Symbol & value
@@ -464,21 +423,16 @@ FillCxxChoiceElmts PARAMS((r, m, head, parent, elmts),
 
 		if (r->capitalizeNamedElmts)
 			Str2UCase(cxxtri->choiceIdSymbol, len);
-
 	}
 
-}  /* FillCxxChoiceElmts */
-
+} /* FillCxxChoiceElmts */
 
 /*
  * takes a list of "sibling" (eg same level in a structure)
  * ElmtTypes and fills sets up the c field names in
  * the CxxTRI struct
  */
-static void
-FillCxxFieldNames PARAMS((r, elmts),
-	CxxRules* r _AND_
-	NamedTypeList* elmts)
+static void FillCxxFieldNames PARAMS((r, elmts), CxxRules* r _AND_ NamedTypeList* elmts)
 {
 	NamedType* et;
 	CxxTRI* cxxtri;
@@ -525,7 +479,6 @@ FillCxxFieldNames PARAMS((r, elmts),
 		}
 	}
 
-
 	FOR_EACH_LIST_ELMT(et, elmts)
 	{
 		cxxtri = et->type->cxxTypeRefInfo;
@@ -536,8 +489,7 @@ FillCxxFieldNames PARAMS((r, elmts),
 		if (cxxtri->fieldName == NULL)
 		{
 			size_t size = 0;
-			if ((et->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-				(et->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+			if ((et->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (et->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 			{
 				/*
 				 * take ref'd type name as field name
@@ -566,7 +518,6 @@ FillCxxFieldNames PARAMS((r, elmts),
 					cFieldName[0] = (char)tolower(cFieldName[0]);
 			}
 
-
 			/*
 			 * try to use just the type name (with lower case first char).
 			 * if that is already used in this type or a C++ keyword,
@@ -579,19 +530,13 @@ FillCxxFieldNames PARAMS((r, elmts),
 		}
 	}
 	FreeDefinedObjs(&fieldNames);
-}  /* FillCxxFieldNames */
-
+} /* FillCxxFieldNames */
 
 /*
  * returns true if this c type for this type should be
  * be ref'd as a ptr
  */
-static int
-IsCxxPtr PARAMS((r, td, parent, t),
-	CxxRules* r _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	Type* t)
+static int IsCxxPtr PARAMS((r, td, parent, t), CxxRules* r _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* t)
 {
 	CxxTDI* cxxtdi;
 	int retVal = FALSE;
@@ -600,11 +545,8 @@ IsCxxPtr PARAMS((r, td, parent, t),
 	 * inherit ptr attriubutes from ref'd type if any
 	 * otherwise grab lib c type def from the CxxRules
 	 */
-	if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-		(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
-	{
+	if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 		cxxtdi = t->basicType->a.localTypeRef->link->cxxTypeDefInfo;
-	}
 	else
 		cxxtdi = &r->typeConvTbl[GetBuiltinType(t)];
 
@@ -612,37 +554,23 @@ IsCxxPtr PARAMS((r, td, parent, t),
 	if ((parent == NULL) && (cxxtdi->isPtrForTypeDef))
 		retVal = TRUE;
 
-	else if ((parent != NULL) &&
-		((parent->basicType->choiceId == BASICTYPE_SET) ||
-			(parent->basicType->choiceId == BASICTYPE_SEQUENCE)) &&
-		(cxxtdi->isPtrInSetAndSeq))
+	else if ((parent != NULL) && ((parent->basicType->choiceId == BASICTYPE_SET) || (parent->basicType->choiceId == BASICTYPE_SEQUENCE)) && (cxxtdi->isPtrInSetAndSeq))
 		retVal = TRUE;
 
-	else if ((parent != NULL) &&
-		((parent->basicType->choiceId == BASICTYPE_SETOF) ||
-			(parent->basicType->choiceId == BASICTYPE_SEQUENCEOF)) &&
-		(cxxtdi->isPtrInList))
+	else if ((parent != NULL) && ((parent->basicType->choiceId == BASICTYPE_SETOF) || (parent->basicType->choiceId == BASICTYPE_SEQUENCEOF)) && (cxxtdi->isPtrInList))
 		retVal = TRUE;
 
-	else if ((parent != NULL) &&
-		(parent->basicType->choiceId == BASICTYPE_CHOICE) &&
-		(cxxtdi->isPtrInChoice))
+	else if ((parent != NULL) && (parent->basicType->choiceId == BASICTYPE_CHOICE) && (cxxtdi->isPtrInChoice))
 		retVal = TRUE;
 
 	else if (((t->optional) || (t->defaultVal != NULL)) && (cxxtdi->isPtrForOpt))
 		retVal = TRUE;
 
 	return retVal;
-}  /* IsCxxPtr */
-
-
+} /* IsCxxPtr */
 
 /* fill given cxxtdi with defaults from table for given typedef */
-void
-FillCxxTDIDefaults PARAMS((r, cxxtdi, td),
-	CxxRules* r _AND_
-	CxxTDI* cxxtdi _AND_
-	TypeDef* td)
+void FillCxxTDIDefaults PARAMS((r, cxxtdi, td), CxxRules* r _AND_ CxxTDI* cxxtdi _AND_ TypeDef* td)
 {
 	CxxTDI* tblCxxtdi;
 	int typeIndex;

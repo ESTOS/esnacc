@@ -7,7 +7,7 @@
 #include "gen-code.h"
 
 #include "../../../c-lib/include/print.h"
-#include "../tag-util.h"  /* get GetTags/FreeTags/CountTags/TagByteLen */
+#include "../tag-util.h" /* get GetTags/FreeTags/CountTags/TagByteLen */
 #include "../str-util.h"
 
 #if META
@@ -24,58 +24,38 @@ int GetROSECSDetails(ValueDef* vd, char** ppszArgument, char** ppszResult, char*
 			if (vd->value->type->basicType->a.macroType->choiceId == MACROTYPE_ROSOPERATION)
 			{
 				if (vd->value->type->basicType->a.macroType->a.rosOperation->arguments &&
-					((vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF &&
-						vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->a.localTypeRef->typeName) ||
-						(vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF &&
-							vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->a.importTypeRef->typeName)
-						))
+					((vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF && vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->a.localTypeRef->typeName) || (vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->a.importTypeRef->typeName)))
 				{
-					//there is an argument
-					if (vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF &&
-						vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->a.localTypeRef->typeName)
-					{
+					// there is an argument
+					if (vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF && vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->a.localTypeRef->typeName)
 						*ppszArgument = vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->a.localTypeRef->typeName;
-					}
-					else if (vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF &&
-						vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->a.importTypeRef->typeName)
-					{
+					else if (vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->a.importTypeRef->typeName)
 						*ppszArgument = vd->value->type->basicType->a.macroType->a.rosOperation->arguments->type->basicType->a.importTypeRef->typeName;
-					}
-
 
 					*ppszResult = NULL;
 					*ppszError = NULL;
 
 					if (vd->value->type->basicType->a.macroType->a.rosOperation->result)
 					{
-						if (vd->value->type->basicType->a.macroType->a.rosOperation->result->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF &&
-							vd->value->type->basicType->a.macroType->a.rosOperation->result->type->basicType->a.localTypeRef->typeName)
-						{
+						if (vd->value->type->basicType->a.macroType->a.rosOperation->result->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF && vd->value->type->basicType->a.macroType->a.rosOperation->result->type->basicType->a.localTypeRef->typeName)
 							*ppszResult = vd->value->type->basicType->a.macroType->a.rosOperation->result->type->basicType->a.localTypeRef->typeName;
-						}
-						else if (vd->value->type->basicType->a.macroType->a.rosOperation->result->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF &&
-							vd->value->type->basicType->a.macroType->a.rosOperation->result->type->basicType->a.importTypeRef->typeName)
-						{
+						else if (vd->value->type->basicType->a.macroType->a.rosOperation->result->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && vd->value->type->basicType->a.macroType->a.rosOperation->result->type->basicType->a.importTypeRef->typeName)
 							*ppszResult = vd->value->type->basicType->a.macroType->a.rosOperation->result->type->basicType->a.importTypeRef->typeName;
-						}
 					}
 
-					if (vd->value->type->basicType->a.macroType->a.rosOperation->errors &&
-						vd->value->type->basicType->a.macroType->a.rosOperation->errors->count)
+					if (vd->value->type->basicType->a.macroType->a.rosOperation->errors && vd->value->type->basicType->a.macroType->a.rosOperation->errors->count)
 					{
 						TypeOrValue* first = (TypeOrValue*)FIRST_LIST_ELMT(vd->value->type->basicType->a.macroType->a.rosOperation->errors);
 						if (first->choiceId == TYPEORVALUE_TYPE)
 						{
-							if (first->a.type->basicType->choiceId == BASICTYPE_LOCALTYPEREF &&
-								first->a.type->basicType->a.localTypeRef->typeName)
+							if (first->a.type->basicType->choiceId == BASICTYPE_LOCALTYPEREF && first->a.type->basicType->a.localTypeRef->typeName)
 							{
-								//local defined
+								// local defined
 								*ppszError = first->a.type->basicType->a.localTypeRef->typeName;
 							}
-							else if (first->a.type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF &&
-								first->a.type->basicType->a.importTypeRef->typeName)
+							else if (first->a.type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && first->a.type->basicType->a.importTypeRef->typeName)
 							{
-								//imported
+								// imported
 								*ppszError = first->a.type->basicType->a.importTypeRef->typeName;
 							}
 						}
@@ -88,7 +68,6 @@ int GetROSECSDetails(ValueDef* vd, char** ppszArgument, char** ppszResult, char*
 	return bRetval;
 }
 
-
 static void PrintCSValueDefsName(FILE* f, ValueDef* v)
 {
 	char* cName;
@@ -100,21 +79,18 @@ static void PrintCSValueDefsName(FILE* f, ValueDef* v)
 void PrintROSECSOperationDefines(FILE* hdr, ValueDef* v)
 {
 	/* just do ints */
-	if (v->value->basicValue->choiceId != BASICVALUE_INTEGER) {
+	if (v->value->basicValue->choiceId != BASICVALUE_INTEGER)
 		return;
-	}
 
-	if (v->value->type->basicType->choiceId != BASICTYPE_MACROTYPE) {
+	if (v->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
 		return;
-	}
 
-	if (v->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION) {
+	if (v->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
 		return;
-	}
 
 	/*
-	* put instantiation in hdr file
-	*/
+	 * put instantiation in hdr file
+	 */
 	fprintf(hdr, "\t\t\tpublic const int OPID_");
 	PrintCSValueDefsName(hdr, v);
 	fprintf(hdr, " = %d;\n", v->value->basicValue->a.integer);
@@ -123,9 +99,7 @@ void PrintROSECSOperationDefines(FILE* hdr, ValueDef* v)
 /*
  * prints PrintROSEOnInvokeCS
  */
-static void PrintROSEOnInvokeCS(FILE* src,
-	int bEvents,
-	ValueDef* vd)
+static void PrintROSEOnInvokeCS(FILE* src, int bEvents, ValueDef* vd)
 {
 	char* pszArgument = NULL;
 	char* pszResult = NULL;
@@ -137,31 +111,23 @@ static void PrintROSEOnInvokeCS(FILE* src,
 	{
 		if (pszResult && !bEvents)
 		{
-			//there is a result -> it is a Funktion
-			//Header
+			// there is a result -> it is a Funktion
+			// Header
 			if (pszError)
-			{
-				fprintf(src, "\tpublic virtual InvokeResult OnInvoke_%s(%s argument, %s result, %s error) { return InvokeResult.returnReject; }\n", vd->definedName,
-					pszArgument, pszResult, pszError);
-			}
+				fprintf(src, "\tpublic virtual InvokeResult OnInvoke_%s(%s argument, %s result, %s error) { return InvokeResult.returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
 			else
-			{
-				fprintf(src, "\tpublic virtual InvokeResult OnInvoke_%s(%s argument, %s result) { return InvokeResult.returnReject; }\n", vd->definedName,
-					pszArgument, pszResult);
-			}
+				fprintf(src, "\tpublic virtual InvokeResult OnInvoke_%s(%s argument, %s result) { return InvokeResult.returnReject; }\n", vd->definedName, pszArgument, pszResult);
 		}
 		else if (!pszResult && bEvents)
 		{
-			//there is no result -> it is an Event
-			//Header
-			//fprintf(src, "\tpublic virtual void OnEvent_%s(%s argument) { }\n", vd->definedName, szArgument);
+			// there is no result -> it is an Event
+			// Header
+			// fprintf(src, "\tpublic virtual void OnEvent_%s(%s argument) { }\n", vd->definedName, szArgument);
 			fprintf(src, "\tpublic delegate void %s(object sender, %s argument);\n", vd->definedName, pszArgument);
 
 			source = vd->definedName;
 			for (i = 0; i < 3; i++)
-			{
 				source++;
-			}
 
 			fprintf(src, "\tpublic event %s %s;\n", vd->definedName, source);
 			fprintf(src, "\tprivate void OnEvent_%s(%s argument)\n", vd->definedName, pszArgument);
@@ -183,12 +149,9 @@ static void PrintROSEOnInvokeCS(FILE* src,
 			fprintf(src, "\t\t\t}\n");
 			fprintf(src, "\t\t}\n");
 			fprintf(src, "\t}\n\n");
-
-
 		}
 	}
 } /* PrintROSEOnInvokeCS */
-
 
 /*
  * prints PrintROSEOnInvokeswitchCase
@@ -201,24 +164,23 @@ static void PrintROSEOnInvokeswitchCaseCS(FILE* src, int bEvents, ValueDef* vd)
 
 	if (GetROSECSDetails(vd, &pszArgument, &pszResult, &pszError))
 	{
-		//there is an argument
+		// there is an argument
 		if (pszResult && !bEvents)
 		{
-			//there is a result -> it is a Funktion
-			//Source here
+			// there is a result -> it is a Funktion
+			// Source here
 
 			fprintf(src, "\t\t\tcase OPID_%s:\n", vd->definedName);
 			fprintf(src, "\t\t\t\t{\n");
 			fprintf(src, "\t\t\t\t\t%s argument = new %s();\n", pszArgument, pszArgument);
 			fprintf(src, "\t\t\t\t\t%s result = new %s();\n", pszResult, pszResult);
-			if (pszError) {
+			if (pszError)
 				fprintf(src, "\t\t\t\t\t%s error = new %s();\n", pszError, pszError);
-			}
 
 			fprintf(src, "\t\t\t\t\targument.Decode(decodeBuffer);\n");
 			fprintf(src, "\t\t\t\t\tDateTime dtStart = DateTime.UtcNow;\n");
 			fprintf(src, "\t\t\t\t\tif (m_Log.IsDebugEnabled) { m_Log.Debug(\"%s InvokeID:\" + invoke.invokeID.mValue.ToString()); }\n", vd->definedName);
-			//fprintf(src, "\t\t\t\t\tm_Log.Debug(\"%s\",invoke, argument);\n", vd->definedName);
+			// fprintf(src, "\t\t\t\t\tm_Log.Debug(\"%s\",invoke, argument);\n", vd->definedName);
 			if (pszError)
 			{
 				fprintf(src, "\t\t\t\t\tInvokeResult invokeResult = OnInvoke_%s (argument, result, error);\n", vd->definedName);
@@ -236,14 +198,14 @@ static void PrintROSEOnInvokeswitchCaseCS(FILE* src, int bEvents, ValueDef* vd)
 		}
 		else if (!pszResult && bEvents)
 		{
-			//there is no result -> it is an Event
-			//Source here
+			// there is no result -> it is an Event
+			// Source here
 			fprintf(src, "\t\t\tcase OPID_%s:\n", vd->definedName);
 			fprintf(src, "\t\t\t\t{\n");
 			fprintf(src, "\t\t\t\t\t%s argument = new %s();\n", pszArgument, pszArgument);
 			fprintf(src, "\t\t\t\t\tDateTime dtStart = DateTime.UtcNow;\n");
 			fprintf(src, "\t\t\t\t\tif (m_Log.IsDebugEnabled) { m_Log.Debug(\"%s InvokeID:\" + invoke.invokeID.mValue.ToString()); }\n", vd->definedName);
-			//fprintf(src, "\t\t\t\t\tm_Log.Debug(\"%s InvokeID:\" + invoke.invokeID.mValue.ToString());\n", vd->definedName);
+			// fprintf(src, "\t\t\t\t\tm_Log.Debug(\"%s InvokeID:\" + invoke.invokeID.mValue.ToString());\n", vd->definedName);
 			fprintf(src, "\t\t\t\t\targument.Decode(decodeBuffer);\n");
 			fprintf(src, "\t\t\t\t\tOnEvent_%s(argument);\n", vd->definedName);
 			fprintf(src, "\t\t\t\t\tDateTime dtEnd = DateTime.UtcNow;\n");
@@ -267,41 +229,37 @@ static void PrintROSEInvokeCS(FILE* hdr, FILE* src, Module* m, int bEvents, Valu
 	{
 		if (pszResult && !bEvents)
 		{
-			//there is a result -> it is a Funktion
-			//Are there errors inside?
+			// there is a result -> it is a Funktion
+			// Are there errors inside?
 			if (pszError)
 			{
 
-				//Source
-				fprintf(src, "\t\tpublic long Invoke_%s(%s argument, %s result, %s error, int iTimeout)\n", vd->definedName,
-					pszArgument, pszResult, pszError);
+				// Source
+				fprintf(src, "\t\tpublic long Invoke_%s(%s argument, %s result, %s error, int iTimeout)\n", vd->definedName, pszArgument, pszResult, pszError);
 				fprintf(src, "\t\t{\n");
 				fprintf(src, "\t\t\treturn AsnInvoke(argument, result, error, iTimeout, OPID_%s);\n", vd->definedName);
 				fprintf(src, "\t\t}\n");
 			}
 			else
 			{
-				//no special errors
-				//Source
-				fprintf(src, "\t\tpublic long Event_%s(%s argument, %s result)\n", vd->definedName,
-					pszArgument, pszResult);
+				// no special errors
+				// Source
+				fprintf(src, "\t\tpublic long Event_%s(%s argument, %s result)\n", vd->definedName, pszArgument, pszResult);
 				fprintf(src, "\t\t{\n");
 				fprintf(src, "\t\t\treturn AsnEvent(argument,  OPID_%s);\n", vd->definedName);
 				fprintf(src, "\t\t}\n");
 				fprintf(src, "\n");
 			}
-
 		}
 		else if (!pszResult && bEvents)
 		{
-			//there is no result -> it is an Event
-			//Header
+			// there is no result -> it is an Event
+			// Header
 			/*fprintf(hdr, "\tlong Event_%s(%s* argument);\n", vd->definedName,
 								pszArgument);*/
 
-								//Source
-			fprintf(src, "\t\tpublic long Event_%s(%s argument)\n", vd->definedName,
-				pszArgument);
+			// Source
+			fprintf(src, "\t\tpublic long Event_%s(%s argument)\n", vd->definedName, pszArgument);
 			fprintf(src, "\t\t{\n");
 
 			fprintf(src, "\t\t\treturn AsnEvent(argument, OPID_%s);\n", vd->definedName);
@@ -311,7 +269,6 @@ static void PrintROSEInvokeCS(FILE* hdr, FILE* src, Module* m, int bEvents, Valu
 		}
 	}
 } /* PrintROSEInvoke */
-
 
 void PrintROSECSCode(FILE* src, ModuleList* mods, Module* m)
 {
@@ -330,7 +287,7 @@ void PrintROSECSCode(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "using ENetCLRLib;\n");
 	fprintf(src, "using NLog;\n");
 
-	fprintf(src, "\n");    //RWC; PRINT before possible "namespace" designations.
+	fprintf(src, "\n"); // RWC; PRINT before possible "namespace" designations.
 	fprintf(src, "\n");
 
 	/* 7-09-2001 Pierce Leonberger
@@ -362,12 +319,10 @@ void PrintROSECSCode(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\tpublic abstract partial class ENetROSEInterfaceROSE : SnaccROSEBase");
 	fprintf(src, "\t{\n\n");
 
-
-
-	//print Operation defines
+	// print Operation defines
 
 	fprintf(src, "\t\t\t//------------------------------------------------------------------------------\n");
-	//fprintf (src, "\t\t\tprivate static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(); \n\n");
+	// fprintf (src, "\t\t\tprivate static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(); \n\n");
 	fprintf(src, "\t\t\t// Operation defines\n\n");
 	fprintf(src, "\t\t\t#region Operation defines\n");
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
@@ -375,16 +330,14 @@ void PrintROSECSCode(FILE* src, ModuleList* mods, Module* m)
 		PrintROSECSOperationDefines(src, vd);
 	}
 
-
 	fprintf(src, "\n");
 	fprintf(src, "\t\t\t#endregion\n");
 	fprintf(src, "//------------------------------------------------------------------------------\n");
 
-
-	//fprintf (src, "//------------------------------------------------------------------------------\n");
+	// fprintf (src, "//------------------------------------------------------------------------------\n");
 	fprintf(src, "// class declarations:\n\n");
 
-	//PrintCxxAnyCode (src, src, r, mods, m);
+	// PrintCxxAnyCode (src, src, r, mods, m);
 	fprintf(src, "\t\tpublic long OnInvoke%s(InvokePDU invoke)\n", m->ROSEClassName);
 	fprintf(src, "\t\t{\n");
 	fprintf(src, "\t\t\tlong lRoseResult = ROSE_REJECT_UNKNOWNOPERATION; // Event Default\n");
@@ -398,17 +351,13 @@ void PrintROSECSCode(FILE* src, ModuleList* mods, Module* m)
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-		{
 			PrintROSEOnInvokeswitchCaseCS(src, 0, vd);
-		}
 	}
 
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-		{
 			PrintROSEOnInvokeswitchCaseCS(src, 1, vd);
-		}
 	}
 
 	fprintf(src, "\t\t\t}\n");
@@ -419,51 +368,42 @@ void PrintROSECSCode(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\n");
 	fprintf(src, "\t//Invoke Messages\n");
 	fprintf(src, "\t#region Invoke Messages\n");
-	//Now generate the invoke messages
+	// Now generate the invoke messages
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-		{
 			PrintROSEInvokeCS(src, src, m, 0, vd);
-		}
 	}
 	fprintf(src, "\t#endregion\n");
 
 	fprintf(src, "\t//Event Messages\n");
-	//Now generate the invoke messages
+	// Now generate the invoke messages
 	fprintf(src, "\t#region Event Messages\n");
 
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-		{
 			PrintROSEInvokeCS(src, src, m, 1, vd);
-		}
 	}
 	fprintf(src, "\t#endregion\n");
 
-
 	fprintf(src, "\t//Invoke Handler Messages\n");
 	fprintf(src, "\t#region Invoke Handler Messages\n");
-	//Now generate the invoke handler messages
+	// Now generate the invoke handler messages
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-		{
 			PrintROSEOnInvokeCS(src, 0, vd);
-		}
 	}
 	fprintf(src, "\t#endregion\n");
 
 	fprintf(src, "\t//Event Handler Messages\n");
 	fprintf(src, "\t#region Event Handler Messages\n");
-	//Now generate the Event handler messages
+	// Now generate the Event handler messages
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-		{
 			PrintROSEOnInvokeCS(src, 1, vd);
-		}
 	}
 	fprintf(src, "\t#endregion\n");
 	fprintf(src, "\n");

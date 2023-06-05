@@ -65,13 +65,10 @@
 #include "../include/asn-tag.h"
 #include "../include/asn-bool.h"
 
- /*
-  * encodes universal TAG LENGTH and Contents of and ASN.1 BOOLEAN
-  */
-AsnLen
-BEncAsnBool PARAMS((b, data),
-	GenBuf* b _AND_
-	AsnBool* data)
+/*
+ * encodes universal TAG LENGTH and Contents of and ASN.1 BOOLEAN
+ */
+AsnLen BEncAsnBool PARAMS((b, data), GenBuf* b _AND_ AsnBool* data)
 {
 	AsnLen len;
 
@@ -79,17 +76,12 @@ BEncAsnBool PARAMS((b, data),
 	len += BEncDefLen(b, len);
 	len += BEncTag1(b, UNIV, PRIM, BOOLEAN_TAG_CODE);
 	return len;
-}  /* BEncAsnBool */
+} /* BEncAsnBool */
 
 /*
  * decodes universal TAG LENGTH and Contents of and ASN.1 BOOLEAN
  */
-void
-BDecAsnBool PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnBool* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnBool PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ AsnBool* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnTag tag;
 	AsnLen elmtLen;
@@ -103,32 +95,22 @@ BDecAsnBool PARAMS((b, result, bytesDecoded, env),
 	elmtLen = BDecLen(b, bytesDecoded, env);
 	BDecAsnBoolContent(b, tag, elmtLen, result, bytesDecoded, env);
 
-}  /* BDecAsnBool */
+} /* BDecAsnBool */
 
 /*
  * Encodes just the content of the given BOOLEAN value to the given buffer.
  */
-AsnLen
-BEncAsnBoolContent PARAMS((b, data),
-	GenBuf* b _AND_
-	AsnBool* data)
+AsnLen BEncAsnBoolContent PARAMS((b, data), GenBuf* b _AND_ AsnBool* data)
 {
 	BufPutByteRvs(b, (unsigned char)(*data ? 0xFF : 0));
 	return 1;
-}  /* BEncAsnBoolContent */
+} /* BEncAsnBoolContent */
 
 /*
  * Decodes just the content of an ASN.1 BOOLEAN from the given buffer.
  * longjmps if there is a buffer reading problem
  */
-void
-BDecAsnBoolContent PARAMS((b, tagId, len, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnTag tagId _AND_
-	AsnLen len _AND_
-	AsnBool* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnBoolContent PARAMS((b, tagId, len, result, bytesDecoded, env), GenBuf* b _AND_ AsnTag tagId _AND_ AsnLen len _AND_ AsnBool* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	if (len != 1)
 	{
@@ -144,17 +126,13 @@ BDecAsnBoolContent PARAMS((b, tagId, len, result, bytesDecoded, env),
 		Asn1Error("BDecAsnBoolContent: ERROR - decoded past end of data\n");
 		longjmp(env, -6);
 	}
-}  /* BDecAsnBoolContent */
+} /* BDecAsnBoolContent */
 
 /*
  * Prints the given BOOLEAN to the given FILE * in ASN.1 Value notation.
  * Does not use the indent.
  */
-void
-PrintAsnBool PARAMS((f, v, indent),
-	FILE* f _AND_
-	AsnBool* v _AND_
-	unsigned int indent)
+void PrintAsnBool PARAMS((f, v, indent), FILE* f _AND_ AsnBool* v _AND_ unsigned int indent)
 {
 	if (*v)
 		fprintf(f, "TRUE");
@@ -165,5 +143,3 @@ PrintAsnBool PARAMS((f, v, indent),
 void FreeAsnBool PARAMS((b), AsnBool* b)
 {
 }
-
-

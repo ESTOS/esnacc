@@ -52,20 +52,12 @@
 #include "rules.h"
 #include "../../core/lib-types.h"
 
-
 static int anyEnumValG = 0;
 
-void PrintIDLAnyEnum PROTO((FILE* idl, Module* m, IDLRules* r));
-void PrintIDLAnyHashInitRoutine PROTO((FILE* idl, ModuleList* mods,
-	Module* m, IDLRules* r));
+void PrintIDLAnyEnum PROTO((FILE * idl, Module* m, IDLRules* r));
+void PrintIDLAnyHashInitRoutine PROTO((FILE * idl, ModuleList* mods, Module* m, IDLRules* r));
 
-
-void
-PrintIDLAnyCode PARAMS((idl, r, mods, m),
-	FILE* idl _AND_
-	IDLRules* r _AND_
-	ModuleList* mods _AND_
-	Module* m)
+void PrintIDLAnyCode PARAMS((idl, r, mods, m), FILE* idl _AND_ IDLRules* r _AND_ ModuleList* mods _AND_ Module* m)
 {
 
 	if (!m->hasAnys)
@@ -75,15 +67,9 @@ PrintIDLAnyCode PARAMS((idl, r, mods, m),
 #if 0
 	PrintIDLAnyHashInitRoutine(idl, mods, m, r);
 #endif
-}  /* PrintAnyCode */
+} /* PrintAnyCode */
 
-
-
-void
-PrintIDLAnyEnum PARAMS((idl, m, r),
-	FILE* idl _AND_
-	Module* m _AND_
-	IDLRules* r)
+void PrintIDLAnyEnum PARAMS((idl, m, r), FILE* idl _AND_ Module* m _AND_ IDLRules* r)
 {
 	TypeDef* td;
 	AnyRef* ar;
@@ -134,8 +120,7 @@ PrintIDLAnyEnum PARAMS((idl, m, r),
 
 	fprintf(idl, "\n} %sAnyId;\n\n\n", modName);
 	Free(modName);
-}  /* PrintAnyEnum */
-
+} /* PrintAnyEnum */
 
 #if 0
 void

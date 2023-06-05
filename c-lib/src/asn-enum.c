@@ -48,13 +48,10 @@
 #include "../include/asn-int.h"
 #include "../include/asn-enum.h"
 
- /*
-  * encodes universal TAG LENGTH and Contents of and ASN.1 ENUMERATED
-  */
-AsnLen
-BEncAsnEnum PARAMS((b, data),
-	GenBuf* b _AND_
-	AsnEnum* data)
+/*
+ * encodes universal TAG LENGTH and Contents of and ASN.1 ENUMERATED
+ */
+AsnLen BEncAsnEnum PARAMS((b, data), GenBuf* b _AND_ AsnEnum* data)
 {
 	AsnLen len;
 
@@ -62,17 +59,12 @@ BEncAsnEnum PARAMS((b, data),
 	len += BEncDefLen(b, len);
 	len += BEncTag1(b, UNIV, PRIM, ENUM_TAG_CODE);
 	return len;
-}  /* BEncAsnEnum */
+} /* BEncAsnEnum */
 
 /*
  * decodes universal TAG LENGTH and Contents of and ASN.1 ENUMERATED
  */
-void
-BDecAsnEnum PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnEnum* result _AND_
-	AsnLen* bytesDecoded _AND_
-	jmp_buf env)
+void BDecAsnEnum PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ AsnEnum* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	AsnTag tag;
 	AsnLen elmtLen;
@@ -86,4 +78,4 @@ BDecAsnEnum PARAMS((b, result, bytesDecoded, env),
 	elmtLen = BDecLen(b, bytesDecoded, env);
 	BDecAsnEnumContent(b, tag, elmtLen, result, bytesDecoded, env);
 
-}  /* BDecAsnEnum */
+} /* BDecAsnEnum */

@@ -88,20 +88,14 @@
 #include "define.h"
 #include "snacc-util.h"
 
-
-extern FILE* errFileG;		// Defined in snacc.c
-
+extern FILE* errFileG; // Defined in snacc.c
 
 /*
  * Allocates and initializes a type and it's basicType info
  * used extensively by asn1.yacc
  * (was a macro)
  */
-void
-SetupType PARAMS((t, typeId, lineNum),
-	Type** t _AND_
-	enum BasicTypeChoiceId typeId _AND_
-	unsigned long lineNum)
+void SetupType PARAMS((t, typeId, lineNum), Type** t _AND_ enum BasicTypeChoiceId typeId _AND_ unsigned long lineNum)
 {
 	Tag** tmpPtr;
 
@@ -119,16 +113,11 @@ SetupType PARAMS((t, typeId, lineNum),
 	}
 } /* SetupType */
 
-
 /*
  * Allocates and initializes a type and it's basicType to MACROTYPE
  * and sets the MACROTYPE type to the given macrotype
  */
-void
-SetupMacroType PARAMS((t, macroTypeId, lineNum),
-	Type** t _AND_
-	enum MacroTypeChoiceId macroTypeId _AND_
-	unsigned long lineNum)
+void SetupMacroType PARAMS((t, macroTypeId, lineNum), Type** t _AND_ enum MacroTypeChoiceId macroTypeId _AND_ unsigned long lineNum)
 {
 
 	(*t) = MT(Type);
@@ -140,22 +129,16 @@ SetupMacroType PARAMS((t, macroTypeId, lineNum),
 	(*t)->basicType->a.macroType->choiceId = macroTypeId;
 } /* SetupMacroType */
 
-
 /*
  * similar to SetupType but for values instead
  */
-void
-SetupValue PARAMS((v, valId, lineNum),
-	Value** v _AND_
-	enum BasicValueChoiceId valId _AND_
-	unsigned long lineNum)
+void SetupValue PARAMS((v, valId, lineNum), Value** v _AND_ enum BasicValueChoiceId valId _AND_ unsigned long lineNum)
 {
 	*v = (Value*)Malloc(sizeof(Value));
 	(*v)->basicValue = (BasicValue*)Malloc(sizeof(BasicValue));
 	(*v)->basicValue->choiceId = valId;
 	(*v)->lineNo = lineNum;
 } /* SetupValue */
-
 
 /*
  * adds elmt with given name to module m's import list from
@@ -165,17 +148,11 @@ SetupValue PARAMS((v, valId, lineNum),
  * by the ASN.1 modname.typ-or-val-name reference format
  * The passed in strings (name, refdModuleName) are copied.
  */
-void
-AddPrivateImportElmt PARAMS((m, name, refdModuleName, lineNo),
-	Module* m _AND_
-	char* name _AND_
-	char* refdModuleName _AND_
-	long  lineNo)
+void AddPrivateImportElmt PARAMS((m, name, refdModuleName, lineNo), Module* m _AND_ char* name _AND_ char* refdModuleName _AND_ long lineNo)
 {
 	ImportElmt* newElmt;
 	ImportElmt* ie;
 	ImportModule* impMod;
-
 
 	/* see if module m already imports something from "refdModule" */
 	if ((impMod = LookupImportModule(m, refdModuleName)) == NULL)
@@ -195,7 +172,7 @@ AddPrivateImportElmt PARAMS((m, name, refdModuleName, lineNo),
 		APPEND(newElmt, impMod->importElmts);
 		APPEND(impMod, m->imports);
 	}
-	else  /* module "refdModule is already imported from */
+	else /* module "refdModule is already imported from */
 	{
 		ie = LookupImportElmtInImportElmtList(impMod->importElmts, name);
 
@@ -210,8 +187,7 @@ AddPrivateImportElmt PARAMS((m, name, refdModuleName, lineNo),
 		else if (!ie->privateScope)
 		{
 			PrintErrLoc(m->asn1SrcFileName, (long)lineNo);
-			fprintf(errFileG, "WARNING - \"%s.%s\" type/value reference refers to a type/value already in the import list that does not have private scope.\n",
-				refdModuleName, name);
+			fprintf(errFileG, "WARNING - \"%s.%s\" type/value reference refers to a type/value already in the import list that does not have private scope.\n", refdModuleName, name);
 		}
 	}
 } /* AddPrivateImportElmt */
@@ -227,11 +203,7 @@ AddPrivateImportElmt PARAMS((m, name, refdModuleName, lineNo),
  *   returns NULL if the named import name was not found
  *
  */
-ImportElmt*
-LookupImportElmtInModule PARAMS((m, name, foundImportModule),
-	Module* m _AND_
-	char* name _AND_
-	ImportModule** foundImportModule)
+ImportElmt* LookupImportElmtInModule PARAMS((m, name, foundImportModule), Module* m _AND_ char* name _AND_ ImportModule** foundImportModule)
 {
 	ImportModule* importMod;
 	ImportElmt* importElmt;
@@ -257,17 +229,13 @@ LookupImportElmtInModule PARAMS((m, name, foundImportModule),
 	SET_CURR_LIST_NODE(m->imports, tmp); /* restore orig loc */
 	return retVal;
 
-}  /* LookupImportElmtInModule */
-
+} /* LookupImportElmtInModule */
 
 /*
  * given a list of import elmts, returns ptr to the elmt with
  * the matching name. NULL if not found
  */
-ImportElmt*
-LookupImportElmtInImportElmtList PARAMS((impElmtList, name),
-	ImportElmtList* impElmtList _AND_
-	char* name)
+ImportElmt* LookupImportElmtInImportElmtList PARAMS((impElmtList, name), ImportElmtList* impElmtList _AND_ char* name)
 
 {
 	ImportElmt* impElmt;
@@ -291,10 +259,7 @@ LookupImportElmtInImportElmtList PARAMS((impElmtList, name),
 	SET_CURR_LIST_NODE(impElmtList, tmp);
 	return retVal;
 
-}  /* LookupImportElmtInImportElmtList */
-
-
-
+} /* LookupImportElmtInImportElmtList */
 
 /*
  *   looks for an import list that imports from "importModuleName"
@@ -303,10 +268,7 @@ LookupImportElmtInImportElmtList PARAMS((impElmtList, name),
  *   returns a ptr to the ImportList if found
  *   returns NULL if not found
  */
-ImportModule*
-LookupImportModule PARAMS((m, importModuleName),
-	Module* m _AND_
-	char* importModuleName)
+ImportModule* LookupImportModule PARAMS((m, importModuleName), Module* m _AND_ char* importModuleName)
 {
 	ImportModule* importModule;
 	ImportModule* retVal;
@@ -329,10 +291,7 @@ LookupImportModule PARAMS((m, importModuleName),
 	SET_CURR_LIST_NODE(m->imports, tmp);
 	return retVal;
 
-}  /* LookupImportModule */
-
-
-
+} /* LookupImportModule */
 
 /*
  *  Looks for the type with name matching typeName (null terminated char*)
@@ -341,10 +300,7 @@ LookupImportModule PARAMS((m, importModuleName),
  *  RETURNS: ptr to the TypeDef with the matching typeName (if any)
  *           NULL if no match was made
  */
-TypeDef*
-LookupType PARAMS((typeDefList, typeName),
-	TypeDefList* typeDefList _AND_
-	char* typeName)
+TypeDef* LookupType PARAMS((typeDefList, typeName), TypeDefList* typeDefList _AND_ char* typeName)
 {
 	TypeDef* td;
 	TypeDef* retVal;
@@ -376,10 +332,7 @@ LookupType PARAMS((typeDefList, typeName),
 
 	return retVal;
 
-}  /* LookupType */
-
-
-
+} /* LookupType */
 
 /*	Deepak: 04/Feb/2003
  *  Looks for the type with name matching typeName (null terminated char*)
@@ -388,10 +341,7 @@ LookupType PARAMS((typeDefList, typeName),
  *  RETURNS: ptr to the NamedType with the matching typeName (if any)
  *           NULL if no match was made
  */
-NamedType*
-LookupObjectClassFieldType PARAMS((namedTypeList, typeName),
-	NamedTypeList* namedTypeList _AND_
-	char* typeName)
+NamedType* LookupObjectClassFieldType PARAMS((namedTypeList, typeName), NamedTypeList* namedTypeList _AND_ char* typeName)
 {
 	NamedType* nt;
 	NamedType* retVal;
@@ -423,10 +373,7 @@ LookupObjectClassFieldType PARAMS((namedTypeList, typeName),
 
 	return retVal;
 
-}  /* LookupObjectClassFieldType */
-
-
-
+} /* LookupObjectClassFieldType */
 
 /*	Deepak: 05/Mar/2003
  *  Looks for the type with name matching typeName according to With Syntax (null terminated char*)
@@ -435,11 +382,7 @@ LookupObjectClassFieldType PARAMS((namedTypeList, typeName),
  *  RETURNS: ptr to the WithSyntax with the matching typeName (if any)
  *           NULL if no match was made
  */
-WithSyntax*
-LookupObjectClassFieldTypeWithSyntax PARAMS((withSyntaxList, typeName, bError),
-	WithSyntaxList* withSyntaxList _AND_
-	char* typeName _AND_
-	char* bError)
+WithSyntax* LookupObjectClassFieldTypeWithSyntax PARAMS((withSyntaxList, typeName, bError), WithSyntaxList* withSyntaxList _AND_ char* typeName _AND_ char* bError)
 {
 	WithSyntax* ws;
 	WithSyntax* retVal;
@@ -478,8 +421,7 @@ LookupObjectClassFieldTypeWithSyntax PARAMS((withSyntaxList, typeName, bError),
 
 	return retVal;
 
-}  /* LookupObjectClassFieldTypeWithSyntax */
-
+} /* LookupObjectClassFieldTypeWithSyntax */
 
 /*	Deepak: 05/Mar/2003
  *  Looks for the object with name matching objectName (null terminated char*)
@@ -488,10 +430,7 @@ LookupObjectClassFieldTypeWithSyntax PARAMS((withSyntaxList, typeName, bError),
  *  RETURNS: ptr to the ObjectAssignment with the matching objectName (if any)
  *           NULL if no match was made
  */
-ObjectAssignment*
-LookupObjectClassObjectAssignment PARAMS((objAssignmentList, objName),
-	ObjectAssignmentList* objAssignmentList _AND_
-	char* objName)
+ObjectAssignment* LookupObjectClassObjectAssignment PARAMS((objAssignmentList, objName), ObjectAssignmentList* objAssignmentList _AND_ char* objName)
 {
 	ObjectAssignment* oa;
 	ObjectAssignment* retVal;
@@ -523,8 +462,7 @@ LookupObjectClassObjectAssignment PARAMS((objAssignmentList, objName),
 
 	return retVal;
 
-}  /* LookupObjectClassObjectAssignment */
-
+} /* LookupObjectClassObjectAssignment */
 
 /*	Deepak: 11/Mar/2003
  *  Looks for the ObjectSet with name matching objectName (null terminated char*)
@@ -533,10 +471,7 @@ LookupObjectClassObjectAssignment PARAMS((objAssignmentList, objName),
  *  RETURNS: ptr to the ObjectSetAssignment with the matching objectName (if any)
  *           NULL if no match was made
  */
-ObjectSetAssignment*
-LookupObjectClassObjectSetAssignment PARAMS((objSetAssignmentList, objSetName),
-	ObjectSetAssignmentList* objSetAssignmentList _AND_
-	char* objSetName)
+ObjectSetAssignment* LookupObjectClassObjectSetAssignment PARAMS((objSetAssignmentList, objSetName), ObjectSetAssignmentList* objSetAssignmentList _AND_ char* objSetName)
 {
 	ObjectSetAssignment* osa;
 	ObjectSetAssignment* retVal;
@@ -568,9 +503,7 @@ LookupObjectClassObjectSetAssignment PARAMS((objSetAssignmentList, objSetName),
 
 	return retVal;
 
-}  /* LookupObjectClassObjectSetAssignment */
-
-
+} /* LookupObjectClassObjectSetAssignment */
 
 /*
  * Returns ptr to module that has matching name or OID
@@ -578,11 +511,7 @@ LookupObjectClassObjectSetAssignment PARAMS((objSetAssignmentList, objSetName),
  *
  * returns NULL if no match was found
  */
-Module*
-LookupModule PARAMS((moduleList, modName, oid),
-	ModuleList* moduleList _AND_
-	char* modName _AND_
-	OID* oid)
+Module* LookupModule PARAMS((moduleList, modName, oid), ModuleList* moduleList _AND_ char* modName _AND_ OID* oid)
 {
 	Module* currMod;
 	Module* retVal;
@@ -609,8 +538,7 @@ LookupModule PARAMS((moduleList, modName, oid),
 			break; /* exit for loop */
 		}
 
-		else if ((modName != NULL) &&
-			(strcmp(modName, currMod->modId->name) == 0))
+		else if ((modName != NULL) && (strcmp(modName, currMod->modId->name) == 0))
 		{
 			retVal = currMod;
 			break; /* exit for loop */
@@ -620,10 +548,7 @@ LookupModule PARAMS((moduleList, modName, oid),
 	SET_CURR_LIST_NODE(moduleList, tmp);
 	return retVal;
 
-}  /* LookupModule */
-
-
-
+} /* LookupModule */
 
 /*
  * Given a constructed type, it returns the component of that
@@ -640,9 +565,7 @@ NamedType* LookupFieldInType(Type* tRef, const char* fieldName)
 
 	t = ParanoidGetType(tRef); /* skip any references etc */
 
-	if ((t->basicType->choiceId != BASICTYPE_SET) &&
-		(t->basicType->choiceId != BASICTYPE_SEQUENCE) &&
-		(t->basicType->choiceId != BASICTYPE_CHOICE))
+	if ((t->basicType->choiceId != BASICTYPE_SET) && (t->basicType->choiceId != BASICTYPE_SEQUENCE) && (t->basicType->choiceId != BASICTYPE_CHOICE))
 	{
 #ifdef DEBUG
 		fprintf(errFileG, "LookupFieldInType: ERROR - attempt to look for field in a non SET/SEQ/CHOICE type\n");
@@ -671,8 +594,6 @@ NamedType* LookupFieldInType(Type* tRef, const char* fieldName)
 
 } /* LookupFieldInType */
 
-
-
 /*
  *  Goes through typerefs (if any) to get to actual
  *  ASN1 type. Returns the found "defining" type.
@@ -692,21 +613,20 @@ Type* ResolveImportedType(Type* type)
 	{
 		switch (t->basicType->choiceId)
 		{
-		case BASICTYPE_LOCALTYPEREF:
-		case BASICTYPE_IMPORTTYPEREF:
-			td = t->basicType->a.localTypeRef->link;
-			if (td == NULL)
-				return type;
-			else
-				t = td->type;
-			break;
+			case BASICTYPE_LOCALTYPEREF:
+			case BASICTYPE_IMPORTTYPEREF:
+				td = t->basicType->a.localTypeRef->link;
+				if (td == NULL)
+					return type;
+				else
+					t = td->type;
+				break;
 
-		default:
-			return t;
+			default:
+				return t;
 		}
 	}
-}  /* GetType */
-
+} /* GetType */
 
 /*
  * like GetType ie, skips type references to return the defining type.
@@ -730,28 +650,27 @@ Type* ParanoidGetType(Type* type)
 	{
 		switch (t->basicType->choiceId)
 		{
-		case BASICTYPE_LOCALTYPEREF:
-		case BASICTYPE_IMPORTTYPEREF:
-			td = t->basicType->a.localTypeRef->link;
-			if ((td == NULL) || (ObjIsDefined(l, td->type, ObjPtrCmp)))
-			{
-				return type;
-			}
-			else
-			{
-				t = td->type;
-				DefineObj(&l, t);
-			}
-			break;
+			case BASICTYPE_LOCALTYPEREF:
+			case BASICTYPE_IMPORTTYPEREF:
+				td = t->basicType->a.localTypeRef->link;
+				if ((td == NULL) || (ObjIsDefined(l, td->type, ObjPtrCmp)))
+				{
+					return type;
+				}
+				else
+				{
+					t = td->type;
+					DefineObj(&l, t);
+				}
+				break;
 
-		default:
-			FreeDefinedObjs(&l);
-			return t;
+			default:
+				FreeDefinedObjs(&l);
+				return t;
 		}
 	}
 
-}  /* ParnoidGetType */
-
+} /* ParnoidGetType */
 
 /*
  *  Goes through typerefs (if any) to get to actual
@@ -769,8 +688,7 @@ enum BasicTypeChoiceId GetBuiltinType(Type* t)
 	else
 		return -1;
 
-}  /* GetBuiltinType */
-
+} /* GetBuiltinType */
 
 /*  Paranoid version of GetBuiltinType
  *  goes through typerefs (if any) to get to actual
@@ -778,8 +696,7 @@ enum BasicTypeChoiceId GetBuiltinType(Type* t)
  *  set of, choice, any, etc.
  *  Returns the typeId of that type, otherwise -1.
  */
-enum BasicTypeChoiceId
-	ParanoidGetBuiltinType(Type* t)
+enum BasicTypeChoiceId ParanoidGetBuiltinType(Type* t)
 {
 	Type* definingType;
 
@@ -789,9 +706,7 @@ enum BasicTypeChoiceId
 	else
 		return -1;
 
-}  /* GetBuiltinType */
-
-
+} /* GetBuiltinType */
 
 /*
  * Goes through typerefs (if any) to get to
@@ -800,9 +715,7 @@ enum BasicTypeChoiceId
  * LOCAL/IMPORT REFS to these types).
  * Returns NULL if there are no associated Named Elmts
  */
-NamedNumberList*
-GetNamedElmts PARAMS((t),
-	Type* t)
+NamedNumberList* GetNamedElmts PARAMS((t), Type* t)
 {
 	Type* definingType;
 
@@ -816,22 +729,21 @@ GetNamedElmts PARAMS((t),
 
 	switch (definingType->basicType->choiceId)
 	{
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_BITSTRING:
-		return definingType->basicType->a.integer;
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_BITSTRING:
+			return definingType->basicType->a.integer;
 
-		/*
-		 * for non-named elmt types
-		 * just return NULL
-		 */
-	default:
-		return NULL;
+			/*
+			 * for non-named elmt types
+			 * just return NULL
+			 */
+		default:
+			return NULL;
 	}
 
 	/* not reached */
-}  /* GetNamedElmts */
-
+} /* GetNamedElmts */
 
 /*
  * [Same as GetNamedElmts except goes through CHOICEs as well &
@@ -849,15 +761,13 @@ GetNamedElmts PARAMS((t),
  * you are responsible  for freeing this list.  Do not free the list
  * elmts - they are part of the types.
  */
-NamedNumberList*
-GetAllNamedElmts PARAMS((t),
-	Type* t)
+NamedNumberList* GetAllNamedElmts PARAMS((t), Type* t)
 {
 	Type* definingType;
 	NamedType* nt;
 	NamedNumberList* retVal;
 	NamedNumberList* ntElmtList;
-	ValueDef* nn;  /* named number is a valuedef */
+	ValueDef* nn; /* named number is a valuedef */
 	ValueDef** nnHndl;
 
 	retVal = AsnListNew(sizeof(void*));
@@ -870,40 +780,38 @@ GetAllNamedElmts PARAMS((t),
 	if (definingType == NULL)
 		return retVal;
 
-
 	switch (definingType->basicType->choiceId)
 	{
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_BITSTRING:
-		/*
-		 * add the named elmts (if any) to the new list
-		 */
-		FOR_EACH_LIST_ELMT(nn, definingType->basicType->a.integer)
-		{
-			nnHndl = (ValueDef**)AsnListAppend(retVal);
-			*nnHndl = nn;
-		}
-		break;
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_BITSTRING:
+			/*
+			 * add the named elmts (if any) to the new list
+			 */
+			FOR_EACH_LIST_ELMT(nn, definingType->basicType->a.integer)
+			{
+				nnHndl = (ValueDef**)AsnListAppend(retVal);
+				*nnHndl = nn;
+			}
+			break;
 
-		/*
-		 * for choices must group all named elmts from choice components
-		 * and return in a list.
-		 */
-	case BASICTYPE_CHOICE:
-		FOR_EACH_LIST_ELMT(nt, definingType->basicType->a.choice)
-		{
-			ntElmtList = GetAllNamedElmts(nt->type);
-			retVal = AsnListConcat(retVal, ntElmtList);
-			Free(ntElmtList); /* zap now unused list head */
-		}
-		break;
-	default:
-		break;
+			/*
+			 * for choices must group all named elmts from choice components
+			 * and return in a list.
+			 */
+		case BASICTYPE_CHOICE:
+			FOR_EACH_LIST_ELMT(nt, definingType->basicType->a.choice)
+			{
+				ntElmtList = GetAllNamedElmts(nt->type);
+				retVal = AsnListConcat(retVal, ntElmtList);
+				Free(ntElmtList); /* zap now unused list head */
+			}
+			break;
+		default:
+			break;
 	}
 	return retVal;
-}  /* GetAllNamedElmts */
-
+} /* GetAllNamedElmts */
 
 /*
  * Recursively does pseudo breadth first search from the given ancestor
@@ -911,31 +819,19 @@ GetAllNamedElmts PARAMS((t),
  * of the child if found, NULL otherwise.  This routine does not follow
  * type references.
  */
-Type*
-GetParentS PARAMS((ancestor, child),
-	Type* ancestor _AND_
-	Type* child)
+Type* GetParentS PARAMS((ancestor, child), Type* ancestor _AND_ Type* child)
 {
 	NamedType* e;
 	Type* parent;
 	void* tmp;
 
-	if ((ancestor->basicType->choiceId != BASICTYPE_SET) &&
-		(ancestor->basicType->choiceId != BASICTYPE_SEQUENCE) &&
-		(ancestor->basicType->choiceId != BASICTYPE_CHOICE) &&
-		(ancestor->basicType->choiceId != BASICTYPE_SETOF) &&
-		(ancestor->basicType->choiceId != BASICTYPE_SEQUENCEOF) &&
-		(ancestor->basicType->choiceId != BASICTYPE_OCTETCONTAINING) &&
-		(ancestor->basicType->choiceId != BASICTYPE_BITCONTAINING))
-	{
+	if ((ancestor->basicType->choiceId != BASICTYPE_SET) && (ancestor->basicType->choiceId != BASICTYPE_SEQUENCE) && (ancestor->basicType->choiceId != BASICTYPE_CHOICE) && (ancestor->basicType->choiceId != BASICTYPE_SETOF) && (ancestor->basicType->choiceId != BASICTYPE_SEQUENCEOF) && (ancestor->basicType->choiceId != BASICTYPE_OCTETCONTAINING) && (ancestor->basicType->choiceId != BASICTYPE_BITCONTAINING))
 		return NULL;
-	}
 
 	if (ancestor->basicType->a.set == NULL)
 		return NULL;
 
-	if ((ancestor->basicType->choiceId == BASICTYPE_SETOF) ||
-		(ancestor->basicType->choiceId == BASICTYPE_SEQUENCEOF))
+	if ((ancestor->basicType->choiceId == BASICTYPE_SETOF) || (ancestor->basicType->choiceId == BASICTYPE_SEQUENCEOF))
 	{
 		if (child == ancestor->basicType->a.setOf)
 			return ancestor;
@@ -949,9 +845,7 @@ GetParentS PARAMS((ancestor, child),
 	 */
 	FOR_EACH_LIST_ELMT(e, ancestor->basicType->a.set)
 	{
-		if (((e->type->basicType->choiceId == BASICTYPE_OCTETCONTAINING) ||
-			(e->type->basicType->choiceId == BASICTYPE_BITCONTAINING)) &&
-			(child == e->type->basicType->a.stringContaining))
+		if (((e->type->basicType->choiceId == BASICTYPE_OCTETCONTAINING) || (e->type->basicType->choiceId == BASICTYPE_BITCONTAINING)) && (child == e->type->basicType->a.stringContaining))
 		{
 			SET_CURR_LIST_NODE(ancestor->basicType->a.set, tmp);
 			return ancestor;
@@ -962,7 +856,6 @@ GetParentS PARAMS((ancestor, child),
 			return ancestor;
 		}
 	}
-
 
 	/*
 	 * look through grandchildren if not in children
@@ -978,9 +871,7 @@ GetParentS PARAMS((ancestor, child),
 
 	SET_CURR_LIST_NODE(ancestor->basicType->a.set, tmp);
 	return NULL;
-}  /* GetParent */
-
-
+} /* GetParent */
 
 /*
  *  Looks for the value with the given valueName (null term char*) in the
@@ -989,10 +880,7 @@ GetParentS PARAMS((ancestor, child),
  *           NULL if no match was made
  */
 
-ValueDef*
-LookupValue PARAMS((valueList, valueName),
-	ValueDefList* valueList _AND_
-	char* valueName)
+ValueDef* LookupValue PARAMS((valueList, valueName), ValueDefList* valueList _AND_ char* valueName)
 {
 	ValueDef* v;
 	ValueDef* retVal;
@@ -1023,7 +911,7 @@ LookupValue PARAMS((valueList, valueName),
 	SET_CURR_LIST_NODE(valueList, tmp);
 	return retVal;
 
-}  /* LookupValue */
+} /* LookupValue */
 
 BasicValue* GetLastNamedNumberValue(NamedNumberList* valueList)
 {
@@ -1049,17 +937,13 @@ BasicValue* GetLastNamedNumberValue(NamedNumberList* valueList)
 
 	SET_CURR_LIST_NODE(valueList, tmp);
 	return retVal;
-}  /* LookupValue */
-
-
+} /* LookupValue */
 
 /*
  *  Goes through valuerefs (if any) to get to actual
  *  ASN1 value.  Analogous to GetType.
  */
-Value*
-GetValue PARAMS((v),
-	Value* v)
+Value* GetValue PARAMS((v), Value* v)
 {
 	ValueDef* vd;
 
@@ -1067,32 +951,28 @@ GetValue PARAMS((v),
 	{
 		switch (v->basicValue->choiceId)
 		{
-		case BASICVALUE_LOCALVALUEREF:
-		case BASICVALUE_IMPORTVALUEREF:
-			vd = v->basicValue->a.localValueRef->link;
-			if (vd == NULL)
-				v = NULL;
-			else
-				v = vd->value;
-			break;
+			case BASICVALUE_LOCALVALUEREF:
+			case BASICVALUE_IMPORTVALUEREF:
+				vd = v->basicValue->a.localValueRef->link;
+				if (vd == NULL)
+					v = NULL;
+				else
+					v = vd->value;
+				break;
 
-		default:
-			return v;
+			default:
+				return v;
 		}
 	}
 	fprintf(errFileG, "GetValue: ERROR - cannot get value for unlinked local/import value refs\n");
 	return NULL;
 
-}  /* GetValue */
-
+} /* GetValue */
 
 /*
  * Returns TRUE if oid1 and oid2 are identical otherwise FALSE
  */
-int
-CompareOids PARAMS((oid1, oid2),
-	OID* oid1 _AND_
-	OID* oid2)
+int CompareOids PARAMS((oid1, oid2), OID* oid1 _AND_ OID* oid2)
 {
 	if ((oid1 == NULL) && (oid2 == NULL))
 		return FALSE;
@@ -1103,9 +983,7 @@ CompareOids PARAMS((oid1, oid2),
 		 *  fail if value refs have not been resolved or
 		 *   no match between arcnums
 		 */
-		if ((oid1->arcNum == NULL_OID_ARCNUM) ||
-			(oid2->arcNum == NULL_OID_ARCNUM) ||
-			(oid1->arcNum != oid2->arcNum))
+		if ((oid1->arcNum == NULL_OID_ARCNUM) || (oid2->arcNum == NULL_OID_ARCNUM) || (oid1->arcNum != oid2->arcNum))
 			return FALSE;
 
 		/*
@@ -1120,23 +998,16 @@ CompareOids PARAMS((oid1, oid2),
 	else
 		return FALSE;
 
-}  /*  CompareOids */
-
+} /*  CompareOids */
 
 /*
  *  Returns TRUE if the given type is INTEGER, ENUMERATED or
  *  BIT STRING and it has named elements
  *  ie Foo ::= INTEGER { one (1), two (2) } would return TRUE
  */
-int
-HasNamedElmts PARAMS((t),
-	Type* t)
+int HasNamedElmts PARAMS((t), Type* t)
 {
-	return ((t->basicType->choiceId == BASICTYPE_INTEGER) ||
-		(t->basicType->choiceId == BASICTYPE_ENUMERATED) ||
-		(t->basicType->choiceId == BASICTYPE_BITSTRING)) &&
-		(t->basicType->a.integer != NULL) &&
-		!LIST_EMPTY(t->basicType->a.integer);
+	return ((t->basicType->choiceId == BASICTYPE_INTEGER) || (t->basicType->choiceId == BASICTYPE_ENUMERATED) || (t->basicType->choiceId == BASICTYPE_BITSTRING)) && (t->basicType->a.integer != NULL) && !LIST_EMPTY(t->basicType->a.integer);
 } /* HasNamedElmts */
 
 /*
@@ -1144,37 +1015,25 @@ HasNamedElmts PARAMS((t),
  *  BIT STRING and it has named elements
  *  ie Foo ::= INTEGER { one (1), two (2) } would return 2
  */
-int
-GetNumNamedElmts PARAMS((t),
-	Type* t)
+int GetNumNamedElmts PARAMS((t), Type* t)
 {
-	if (((t->basicType->choiceId == BASICTYPE_INTEGER) ||
-		(t->basicType->choiceId == BASICTYPE_ENUMERATED) ||
-		(t->basicType->choiceId == BASICTYPE_BITSTRING)) &&
-		(t->basicType->a.integer != NULL))
-	{
+	if (((t->basicType->choiceId == BASICTYPE_INTEGER) || (t->basicType->choiceId == BASICTYPE_ENUMERATED) || (t->basicType->choiceId == BASICTYPE_BITSTRING)) && (t->basicType->a.integer != NULL))
 		return t->basicType->a.integer->count;
-	}
 	else
 		return 0;
 } /* GetNumNamedElmts */
-
 
 /*
  * Returns true if the given tag lists are the same
  * (assumes value refs have be resolved)
  */
-int
-TagsAreIdentical PARAMS((t1, t2),
-	TagList* t1 _AND_
-	TagList* t2)
+int TagsAreIdentical PARAMS((t1, t2), TagList* t1 _AND_ TagList* t2)
 {
 	Tag* tag1;
 	Tag* tag2;
 
 	/* both lists are empty */
-	if (((t1 == NULL) || LIST_EMPTY(t1)) &&
-		((t2 == NULL) || LIST_EMPTY(t2)))
+	if (((t1 == NULL) || LIST_EMPTY(t1)) && ((t2 == NULL) || LIST_EMPTY(t2)))
 		return TRUE;
 
 	else if ((t1 == NULL) || (t2 == NULL))
@@ -1197,15 +1056,11 @@ TagsAreIdentical PARAMS((t1, t2),
 
 } /* TagsAreIdentical */
 
-
-
 /*
  * Returns TRUE if the tag currently on the given type has the default
  * tag specified in the type tbl. otherwise returns FALSE.
  */
-int
-HasDefaultTag PARAMS((t),
-	Type* t)
+int HasDefaultTag PARAMS((t), Type* t)
 {
 	Tag* firstTag = NULL;
 	int dfltCode;
@@ -1216,20 +1071,15 @@ HasDefaultTag PARAMS((t),
 	if ((t->tags != NULL) && !LIST_EMPTY(t->tags))
 		firstTag = (Tag*)FIRST_LIST_ELMT(t->tags);
 
-	return ((firstTag != NULL) && (LIST_COUNT(t->tags) == 1) &&
-		(firstTag->tclass == dfltClass) && (firstTag->code == dfltCode)) ||
-		((firstTag == NULL) && (dfltCode == NO_TAG_CODE));
+	return ((firstTag != NULL) && (LIST_COUNT(t->tags) == 1) && (firstTag->tclass == dfltClass) && (firstTag->code == dfltCode)) || ((firstTag == NULL) && (dfltCode == NO_TAG_CODE));
 
 } /* HasDefaultTag */
-
 
 /*
  * Returns TRUE if t is a primitive type or if it is
  * defined by a reference to a primitive type
  */
-int
-IsPrimitiveByDefOrRef PARAMS((t),
-	Type* t)
+int IsPrimitiveByDefOrRef PARAMS((t), Type* t)
 {
 	Type* definingType;
 
@@ -1239,8 +1089,7 @@ IsPrimitiveByDefOrRef PARAMS((t),
 		return FALSE; /* bad error handling */
 
 	return IsPrimitiveByDef(definingType);
-}  /* IsPrimitiveByDefOrRef */
-
+} /* IsPrimitiveByDefOrRef */
 
 /*
  * Returns TRUE if the given type is a primitive type. Does NOT
@@ -1257,75 +1106,71 @@ IsPrimitiveByDefOrRef PARAMS((t),
  *	NumericString, PrintableString, IA5String, BMPString,
  *	UniversalString, UTF8String, and TeletexString (T61String)
  */
-int
-IsPrimitiveByDef PARAMS((t),
-	Type* t)
+int IsPrimitiveByDef PARAMS((t), Type* t)
 {
 	switch (t->basicType->choiceId)
 	{
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_IMPORTTYPEREF:
-	case BASICTYPE_SEQUENCET:	// Deepak: 29/Nov/2002 
-	case BASICTYPE_OBJECTCLASS:	// Deepak: 05/Feb/2003
-	case BASICTYPE_OBJECTCLASSFIELDTYPE:	// Deepak: 05/Feb/2003
-	case BASICTYPE_SEQUENCE:
-	case BASICTYPE_SET:
-	case BASICTYPE_CHOICE:
-	case BASICTYPE_SEQUENCEOF:
-	case BASICTYPE_SETOF:
-	case BASICTYPE_COMPONENTSOF:
-	case BASICTYPE_ANYDEFINEDBY:
-	case BASICTYPE_ANY:
-		return FALSE;
-		break;
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
+		case BASICTYPE_SEQUENCET:			 // Deepak: 29/Nov/2002
+		case BASICTYPE_OBJECTCLASS:			 // Deepak: 05/Feb/2003
+		case BASICTYPE_OBJECTCLASSFIELDTYPE: // Deepak: 05/Feb/2003
+		case BASICTYPE_SEQUENCE:
+		case BASICTYPE_SET:
+		case BASICTYPE_CHOICE:
+		case BASICTYPE_SEQUENCEOF:
+		case BASICTYPE_SETOF:
+		case BASICTYPE_COMPONENTSOF:
+		case BASICTYPE_ANYDEFINEDBY:
+		case BASICTYPE_ANY:
+			return FALSE;
+			break;
 
+		case BASICTYPE_SELECTION:
+			if (t->basicType->a.selection->link != NULL)
+				return IsPrimitiveByDef(t->basicType->a.selection->link->type);
+			break;
 
-	case BASICTYPE_SELECTION:
-		if (t->basicType->a.selection->link != NULL)
-			return IsPrimitiveByDef(t->basicType->a.selection->link->type);
-		break;
+		case BASICTYPE_BOOLEAN:
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_BITSTRING:
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_NULL:
+		case BASICTYPE_OID:
+		case BASICTYPE_RELATIVE_OID:
+		case BASICTYPE_REAL:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_NUMERIC_STR:
+		case BASICTYPE_PRINTABLE_STR:
+		case BASICTYPE_IA5_STR:
+		case BASICTYPE_BMP_STR:
+		case BASICTYPE_UNIVERSAL_STR:
+		case BASICTYPE_UTF8_STR:
+		case BASICTYPE_T61_STR:
+		case BASICTYPE_GENERALIZEDTIME:
+		case BASICTYPE_UTCTIME:
+		case BASICTYPE_OBJECTDESCRIPTOR:
+		case BASICTYPE_VISIBLE_STR:
+		case BASICTYPE_GRAPHIC_STR:
+		case BASICTYPE_VIDEOTEX_STR:
+		case BASICTYPE_GENERAL_STR:
 
-	case BASICTYPE_BOOLEAN:
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_BITSTRING:
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-	case BASICTYPE_NULL:
-	case BASICTYPE_OID:
-	case BASICTYPE_RELATIVE_OID:
-	case BASICTYPE_REAL:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_NUMERIC_STR:
-	case BASICTYPE_PRINTABLE_STR:
-	case BASICTYPE_IA5_STR:
-	case BASICTYPE_BMP_STR:
-	case BASICTYPE_UNIVERSAL_STR:
-	case BASICTYPE_UTF8_STR:
-	case BASICTYPE_T61_STR:
-	case BASICTYPE_GENERALIZEDTIME:
-	case BASICTYPE_UTCTIME:
-	case BASICTYPE_OBJECTDESCRIPTOR:
-	case BASICTYPE_VISIBLE_STR:
-	case BASICTYPE_GRAPHIC_STR:
-	case BASICTYPE_VIDEOTEX_STR:
-	case BASICTYPE_GENERAL_STR:
+			return TRUE;
+			break;
 
-		return TRUE;
-		break;
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_MACROTYPE:
+		case BASICTYPE_MACRODEF:
+		case BASICTYPE_EXTERNAL:
+			return FALSE;
+			break;
 
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_MACROTYPE:
-	case BASICTYPE_MACRODEF:
-	case BASICTYPE_EXTERNAL:
-		return FALSE;
-		break;
-
-	default:
-		fprintf(errFileG, "IsPrimitiveByDef: ERROR - unknown type id ?!");
+		default:
+			fprintf(errFileG, "IsPrimitiveByDef: ERROR - unknown type id ?!");
 	}
 	return FALSE;
-}  /* IsPrimitiveByDef */
-
+} /* IsPrimitiveByDef */
 
 /*
  * Returns TRUE if the given type is a local type reference or an
@@ -1336,18 +1181,13 @@ IsPrimitiveByDef PARAMS((t),
  * Bar ::= INTEGER       --> isTypeRef returns FALSE for INTEGER
  * Foo ::= Bar           --> isTypeRef returns TRUE for Bar
  */
-int
-IsTypeRef PARAMS((t),
-	Type* t)
+int IsTypeRef PARAMS((t), Type* t)
 {
-	if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-		(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+	if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 		return TRUE;
 	else
 		return FALSE;
-}  /* IsTypeRef */
-
-
+} /* IsTypeRef */
 
 /*
  * Returns TRUE if the given type is defined
@@ -1365,9 +1205,7 @@ IsTypeRef PARAMS((t),
  * useful types are considered as type references and hence
  * return FALSE.
  */
-int
-IsDefinedByLibraryType PARAMS((t),
-	Type* t)
+int IsDefinedByLibraryType PARAMS((t), Type* t)
 {
 	int retVal;
 
@@ -1384,18 +1222,17 @@ IsDefinedByLibraryType PARAMS((t),
 	else
 		switch (t->basicType->choiceId)
 		{
-		case BASICTYPE_ANYDEFINEDBY:
-		case BASICTYPE_ANY:
-			retVal = TRUE;
-			break;
+			case BASICTYPE_ANYDEFINEDBY:
+			case BASICTYPE_ANY:
+				retVal = TRUE;
+				break;
 
-		default:
-			retVal = FALSE;
+			default:
+				retVal = FALSE;
 		}
 	return retVal;
 
 } /* IsDefinedByLibraryType*/
-
 
 /*
  * Returns FALSE if type t is
@@ -1411,9 +1248,7 @@ IsDefinedByLibraryType PARAMS((t),
  *     INTEGER { one (1), two (2) } --> TRUE (lib type with named elmts)
  *     Bar2 --> FALSE (simple type ref)
  */
-int
-IsNewType PARAMS((t),
-	Type* t)
+int IsNewType PARAMS((t), Type* t)
 {
 	/*
 	 * Type = [re-tagging] DefiningType [namedelmts]
@@ -1430,7 +1265,6 @@ IsNewType PARAMS((t),
 
 } /* IsNewType */
 
-
 /*
  * Returns TRUE if elmts including curr list elmt
  * onward are all optional otherwise returns FALSE.
@@ -1438,9 +1272,7 @@ IsNewType PARAMS((t),
  * if the list is null or the curr elmt is null
  * then returns TRUE
  */
-int
-IsTailOptional PARAMS((e),
-	NamedTypeList* e)
+int IsTailOptional PARAMS((e), NamedTypeList* e)
 {
 	NamedType* elmt;
 	void* tmp;
@@ -1466,8 +1298,6 @@ IsTailOptional PARAMS((e),
 	return retVal;
 } /* IsTailOptional */
 
-
-
 /*
  * Returns TRUE if all elmts after but not including the curr list elmt
  * are optional otherwise returns FALSE.
@@ -1476,9 +1306,7 @@ IsTailOptional PARAMS((e),
  * then returns TRUE. if there are no elmts after the curr elmt
  * returns TRUE.
  */
-int
-NextIsTailOptional PARAMS((e),
-	NamedTypeList* e)
+int NextIsTailOptional PARAMS((e), NamedTypeList* e)
 {
 	NamedType* elmt;
 	void* tmp;
@@ -1511,14 +1339,11 @@ NextIsTailOptional PARAMS((e),
 	return retVal;
 } /* NextIsTailOptional */
 
-
 /*
  * Returns TRUE if all elmts of the curr list are optional
  * or have default values.  Useful with SET and SEQ elements.
  */
-int
-AllElmtsOptional PARAMS((e),
-	NamedTypeList* e)
+int AllElmtsOptional PARAMS((e), NamedTypeList* e)
 {
 	NamedType* elmt;
 	void* tmp;
@@ -1543,19 +1368,13 @@ AllElmtsOptional PARAMS((e),
 	return retVal;
 } /* AllElmtsOptional */
 
-
-
-
-
 /*
  * Follows single levely of type ref or library type and returns a
  * handle to its AnyRefList.  Typically used in do_macros.c to
  * add a hash key for the type that t is or refs.  Need to get
  * to the type def of type t to give the AnyRefListHndl.
  */
-AnyRefList**
-GetAnyRefListHndl PARAMS((t),
-	Type* t)
+AnyRefList** GetAnyRefListHndl PARAMS((t), Type* t)
 {
 	TypeDef* td;
 
@@ -1573,7 +1392,6 @@ GetAnyRefListHndl PARAMS((t),
 	}
 } /* GetAnyRefListHndl */
 
-
 /*
  * Given a subtype list s (possibly empty *s == NULL) it tacks on
  * the newSubtype in a appropriate fashion, possible chaning *s.
@@ -1587,11 +1405,7 @@ GetAnyRefListHndl PARAMS((t),
  *
  * op is meaningless if s is empty
  */
-void
-AppendSubtype PARAMS((s, newSubtype, op),
-	Subtype** s _AND_
-	Subtype* newSubtype _AND_
-	enum SubtypeChoiceId op)
+void AppendSubtype PARAMS((s, newSubtype, op), Subtype** s _AND_ Subtype* newSubtype _AND_ enum SubtypeChoiceId op)
 {
 	void** tmpPtr;
 	Subtype* sPtr;
@@ -1603,17 +1417,17 @@ AppendSubtype PARAMS((s, newSubtype, op),
 	{
 		if ((*s)->choiceId == SUBTYPE_AND)
 		{
-			tmpPtr = (void**)AsnListAppend((*s)->a. and);
+			tmpPtr = (void**)AsnListAppend((*s)->a.and);
 			*tmpPtr = (void*)newSubtype;
 		}
 		else
 		{
 			sPtr = (Subtype*)Malloc(sizeof(Subtype));
 			sPtr->choiceId = SUBTYPE_AND;
-			sPtr->a. and = NEWLIST();
-			tmpPtr = (void**)AsnListAppend(sPtr->a. and);
+			sPtr->a.and = NEWLIST();
+			tmpPtr = (void**)AsnListAppend(sPtr->a.and);
 			*tmpPtr = (void*)*s;
-			tmpPtr = (void**)AsnListAppend(sPtr->a. and);
+			tmpPtr = (void**)AsnListAppend(sPtr->a.and);
 			*tmpPtr = (void*)newSubtype;
 			*s = sPtr;
 		}
@@ -1622,17 +1436,17 @@ AppendSubtype PARAMS((s, newSubtype, op),
 	{
 		if ((*s)->choiceId == SUBTYPE_OR)
 		{
-			tmpPtr = (void**)AsnListAppend((*s)->a. or );
+			tmpPtr = (void**)AsnListAppend((*s)->a.or);
 			*tmpPtr = (void*)newSubtype;
 		}
 		else
 		{
 			sPtr = (Subtype*)Malloc(sizeof(Subtype));
 			sPtr->choiceId = SUBTYPE_OR;
-			sPtr->a. or = NEWLIST();
-			tmpPtr = (void**)AsnListAppend(sPtr->a. or );
+			sPtr->a.or = NEWLIST();
+			tmpPtr = (void**)AsnListAppend(sPtr->a.or);
 			*tmpPtr = (void*)*s;
-			tmpPtr = (void**)AsnListAppend(sPtr->a. or );
+			tmpPtr = (void**)AsnListAppend(sPtr->a.or);
 			*tmpPtr = (void*)newSubtype;
 			*s = sPtr;
 		}
@@ -1641,7 +1455,4 @@ AppendSubtype PARAMS((s, newSubtype, op),
 		/* NOT not supported here */
 		fprintf(errFileG, "AppendSubtype - unknown operation\n");
 
-}  /* AppendSubtype */
-
-
-
+} /* AppendSubtype */

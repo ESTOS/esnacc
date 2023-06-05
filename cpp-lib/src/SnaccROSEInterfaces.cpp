@@ -20,7 +20,6 @@ long SnaccROSESender::HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pI
 
 				if (GetLogLevel(true))
 					PrintAsnType(false, result, pInvokeMsg);
-
 			}
 			catch (SnaccException&)
 			{

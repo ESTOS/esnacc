@@ -23,18 +23,18 @@ SnaccInvokeContext::~SnaccInvokeContext()
 		delete pInvokeAuth;
 	if (pRejectAuth)
 		delete pRejectAuth;
-	if (pCustom) {
+	if (pCustom)
+	{
 		// If you set data in pCustom ensure that it is deleted (freeed) before the object runs out of scope...
 		assert(0);
 	}
 }
 
-
 std::map<std::string, int> SnaccRoseOperationLookup::m_mapOpToID;
 std::map<int, std::string> SnaccRoseOperationLookup::m_mapIDToOp;
 std::map<int, int> SnaccRoseOperationLookup::m_mapIDToInterface;
 
-//check if at least one Operation has been registerd
+// check if at least one Operation has been registerd
 bool SnaccRoseOperationLookup::Initialized()
 {
 	return m_mapOpToID.empty() ? false : true;
@@ -50,7 +50,7 @@ void SnaccRoseOperationLookup::CleanUp()
 void SnaccRoseOperationLookup::RegisterOperation(int iOpID, const char* szOpName, int iInterfaceID)
 {
 #ifdef _DEBUG
-	//Prüfung, ob eine ASN1 operationID doppelt vergeben wurde
+	// Prüfung, ob eine ASN1 operationID doppelt vergeben wurde
 	assert(LookUpName(iOpID) == "unknown");
 #endif
 
@@ -108,9 +108,7 @@ void SnaccROSEPendingOperation::CompleteOperation(long lRoseResult, SNACC::ROSEM
 {
 	m_lRoseResult = lRoseResult;
 	if (pAnswerMessage)
-	{
 		m_pAnswerMessage = pAnswerMessage;
-	}
 	m_CompletedEvent.signal();
 }
 
@@ -161,9 +159,7 @@ void SnaccROSEBase::RemovePendingOperation(int invokeID)
 	SnaccROSEPendingOperationMap::iterator it;
 	it = m_PendingOperations.find(invokeID);
 	if (it != m_PendingOperations.end())
-	{
 		m_PendingOperations.erase(it);
-	}
 }
 
 bool SnaccROSEBase::CompletePendingOperation(int invokeID, SNACC::ROSEMessage* pMessage)
@@ -174,7 +170,7 @@ bool SnaccROSEBase::CompletePendingOperation(int invokeID, SNACC::ROSEMessage* p
 	it = m_PendingOperations.find(invokeID);
 	if (it != m_PendingOperations.end())
 	{
-		//found...
+		// found...
 		it->second->CompleteOperation(ROSE_NOERROR, pMessage);
 		return true;
 	}
@@ -196,109 +192,107 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 	{
 		switch (m_eTransportEncoding)
 		{
-		case SnaccTransportEncoding::BER:
-		{
-			AsnBuf buffer((const char*)lpBytes, lSize);
-			ROSEMessage* pmessage = new ROSEMessage;
-			AsnLen bytesDecoded = 0;
-			try
-			{
-				pmessage->BDec(buffer, bytesDecoded);
-			}
-			catch (SnaccException& e)
-			{
-				std::string strError;
-				strError = "SnaccException SnaccROSEBase::OnBinaryDataBlockResult: ";
-				strError += e.what();
-				PrintToErrorLog(strError);
-
-				if (pmessage->choiceId == ROSEMessage::invokeCid &&
-					pmessage->invoke)
+			case SnaccTransportEncoding::BER:
 				{
-					ROSEReject reject;
-					if ((AsnIntType)pmessage->invoke->invokeID)
+					AsnBuf buffer((const char*)lpBytes, lSize);
+					ROSEMessage* pmessage = new ROSEMessage;
+					AsnLen bytesDecoded = 0;
+					try
 					{
-						reject.invokedID.choiceId = ROSERejectChoice::invokedIDCid;
-						reject.invokedID.invokedID = new AsnInt(pmessage->invoke->invokeID);
+						pmessage->BDec(buffer, bytesDecoded);
+					}
+					catch (SnaccException& e)
+					{
+						std::string strError;
+						strError = "SnaccException SnaccROSEBase::OnBinaryDataBlockResult: ";
+						strError += e.what();
+						PrintToErrorLog(strError);
+
+						if (pmessage->choiceId == ROSEMessage::invokeCid && pmessage->invoke)
+						{
+							ROSEReject reject;
+							if ((AsnIntType)pmessage->invoke->invokeID)
+							{
+								reject.invokedID.choiceId = ROSERejectChoice::invokedIDCid;
+								reject.invokedID.invokedID = new AsnInt(pmessage->invoke->invokeID);
+							}
+							else
+							{
+								reject.invokedID.choiceId = ROSERejectChoice::invokednullCid;
+								reject.invokedID.invokednull = new AsnNull;
+							}
+
+							SendReject(&reject);
+						}
+						delete pmessage;
+						return true;
+					}
+					// pmessage will be deleted inside
+					bReturn = OnROSEMessage(pmessage, false);
+					break;
+				}
+			case SnaccTransportEncoding::JSON:
+			case SnaccTransportEncoding::JSON_NO_HEADING:
+				{
+					int iHeaderLen = GetJsonHeaderLen(lpBytes, lSize);
+					EJson::Value value;
+					EJson::Reader reader;
+					if (reader.parse((const char*)lpBytes + iHeaderLen, (const char*)lpBytes + lSize, value))
+					{
+						bool bSuccess = false;
+						ROSEMessage* pmessage = new ROSEMessage;
+						try
+						{
+							bSuccess = pmessage->JDec(value);
+							if (!bSuccess)
+								throw InvalidTagException("ROSEMessage", "decode failed: ROSEMessage", STACK_ENTRY);
+						}
+						catch (SnaccException& e)
+						{
+							std::string strError;
+							strError = "JDec Exception: ";
+							strError += e.what();
+							PrintToErrorLog(strError);
+
+							if (pmessage->choiceId == ROSEMessage::invokeCid && pmessage->invoke)
+							{
+								ROSEReject reject;
+								if ((AsnIntType)pmessage->invoke->invokeID)
+								{
+									reject.invokedID.choiceId = ROSERejectChoice::invokedIDCid;
+									reject.invokedID.invokedID = new AsnInt(pmessage->invoke->invokeID);
+								}
+								else
+								{
+									reject.invokedID.choiceId = ROSERejectChoice::invokednullCid;
+									reject.invokedID.invokednull = new AsnNull;
+								}
+								reject.reject = new RejectProblem;
+								reject.reject->choiceId = RejectProblem::invokeProblemCid;
+								reject.reject->invokeProblem = new InvokeProblem;
+								*reject.reject->invokeProblem = InvokeProblem::mistypedArgument;
+								reject.details = UTF8String::CreateNewFromASCII(strError.c_str());
+								SendReject(&reject);
+							}
+							delete pmessage;
+							return true;
+						}
+						// pmessage will be deleted inside
+						bReturn = OnROSEMessage(pmessage, false);
 					}
 					else
 					{
-						reject.invokedID.choiceId = ROSERejectChoice::invokednullCid;
-						reject.invokedID.invokednull = new AsnNull;
+						// Error invalid json
+						std::string strError;
+						strError = "SnaccROSEBase::OnBinaryDataBlockResult: Invalid JSON: ";
+						strError += reader.getFormattedErrorMessages();
+						PrintToErrorLog(strError);
 					}
-
-					SendReject(&reject);
+					break;
 				}
-				delete pmessage;
-				return true;
-			}
-			//pmessage will be deleted inside
-			bReturn = OnROSEMessage(pmessage, false);
-			break;
-		}
-		case SnaccTransportEncoding::JSON:
-		case SnaccTransportEncoding::JSON_NO_HEADING:
-		{
-			int iHeaderLen = GetJsonHeaderLen(lpBytes, lSize);
-			EJson::Value value;
-			EJson::Reader reader;
-			if (reader.parse((const char*)lpBytes + iHeaderLen, (const char*)lpBytes + lSize, value))
-			{
-				bool bSuccess = false;
-				ROSEMessage* pmessage = new ROSEMessage;
-				try
-				{
-					bSuccess = pmessage->JDec(value);
-					if (!bSuccess)
-						throw InvalidTagException("ROSEMessage", "decode failed: ROSEMessage", STACK_ENTRY);
-				}
-				catch (SnaccException& e)
-				{
-					std::string strError;
-					strError = "JDec Exception: ";
-					strError += e.what();
-					PrintToErrorLog(strError);
-
-					if (pmessage->choiceId == ROSEMessage::invokeCid &&
-						pmessage->invoke)
-					{
-						ROSEReject reject;
-						if ((AsnIntType)pmessage->invoke->invokeID)
-						{
-							reject.invokedID.choiceId = ROSERejectChoice::invokedIDCid;
-							reject.invokedID.invokedID = new AsnInt(pmessage->invoke->invokeID);
-						}
-						else
-						{
-							reject.invokedID.choiceId = ROSERejectChoice::invokednullCid;
-							reject.invokedID.invokednull = new AsnNull;
-						}
-						reject.reject = new RejectProblem;
-						reject.reject->choiceId = RejectProblem::invokeProblemCid;
-						reject.reject->invokeProblem = new InvokeProblem;
-						*reject.reject->invokeProblem = InvokeProblem::mistypedArgument;
-						reject.details = UTF8String::CreateNewFromASCII(strError.c_str());
-						SendReject(&reject);
-					}
-					delete pmessage;
-					return true;
-				}
-				//pmessage will be deleted inside
-				bReturn = OnROSEMessage(pmessage, false);
-			}
-			else
-			{
-				//Error invalid json
-				std::string strError;
-				strError = "SnaccROSEBase::OnBinaryDataBlockResult: Invalid JSON: ";
-				strError += reader.getFormattedErrorMessages();
-				PrintToErrorLog(strError);
-			}
-			break;
-		}
-		default:
-			throw std::runtime_error("invalid m_eTransportEncoding");
-			break;
+			default:
+				throw std::runtime_error("invalid m_eTransportEncoding");
+				break;
 		}
 	}
 	catch (SnaccException& e)
@@ -309,7 +303,7 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 		PrintToErrorLog(strError);
 	}
 	// Kein catch all, verschleppt nur die Fehler.
-	//catch (...)
+	// catch (...)
 	//{
 	//	std::string strError;
 	//	strError = "Exception SnaccROSEBase::OnBinaryDataBlockResult: general";
@@ -325,12 +319,10 @@ int SnaccROSEBase::GetJsonHeaderLen(const char* lpBytes, unsigned long iLength)
 	{
 		iLen++;
 		for (unsigned int i = 1; i < 10; i++)
-		{
 			if ((iLength >= iLen) && lpBytes[i] >= '0' && lpBytes[i] <= '9')
 				iLen++;
 			else
 				break;
-		}
 	}
 	return iLen;
 }
@@ -362,8 +354,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 				PrintToErrorLog(strError);
 				OnRoseDecodeError(lpBytes, lSize, e.what());
 
-				if (pmessage->choiceId == ROSEMessage::invokeCid &&
-					pmessage->invoke)
+				if (pmessage->choiceId == ROSEMessage::invokeCid && pmessage->invoke)
 				{
 					ROSEReject reject;
 					if ((AsnIntType)pmessage->invoke->invokeID)
@@ -381,13 +372,14 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 				delete pmessage;
 				return;
 			}
-			//pmessage will be deleted inside
+			// pmessage will be deleted inside
 			OnROSEMessage(pmessage, true);
 		}
 		else if (byFirst == 'J' || byFirst == '{' || byFirst == '[')
 		{
 			int iHeaderLen = 0;
-			if (byFirst == 'J') {
+			if (byFirst == 'J')
+			{
 				m_eTransportEncoding = SnaccTransportEncoding::JSON;
 				iHeaderLen = GetJsonHeaderLen(lpBytes, lSize);
 			}
@@ -414,8 +406,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 					PrintToErrorLog(strError);
 					OnRoseDecodeError(lpBytes, lSize, e.what());
 
-					if (pmessage->choiceId == ROSEMessage::invokeCid &&
-						pmessage->invoke)
+					if (pmessage->choiceId == ROSEMessage::invokeCid && pmessage->invoke)
 					{
 						ROSEReject reject;
 						if ((AsnIntType)pmessage->invoke->invokeID)
@@ -438,12 +429,12 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 					delete pmessage;
 					return;
 				}
-				//pmessage will be deleted inside
+				// pmessage will be deleted inside
 				OnROSEMessage(pmessage, true);
 			}
 			else
 			{
-				//Error invalid json
+				// Error invalid json
 				std::string strError;
 				strError = "SnaccROSEBase::OnBinaryDataBlock: Invalid JSON: ";
 				strError += reader.getFormattedErrorMessages();
@@ -480,7 +471,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 		}
 		else
 		{
-			//unknown Encoding
+			// unknown Encoding
 			std::string strError;
 			strError = "SnaccROSEBase::OnBinaryDataBlock: Unknown Encoding: ";
 
@@ -512,7 +503,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 		OnRoseDecodeError(lpBytes, lSize, e.what());
 	}
 	// Kein catch all, verschleppt nur die Fehler.
-	//catch (...)
+	// catch (...)
 	//{
 	//	std::string strError;
 	//	strError = "Exception SnaccROSEBase::OnBinaryDataBlock: general";
@@ -525,71 +516,69 @@ bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllIn
 	bool bProcessed = false;
 	switch (pmessage->choiceId)
 	{
-	case ROSEMessage::invokeCid:
-		if (pmessage->invoke)
-		{
-			if (bAllowAllInvokes || m_mapMultithreadInvokeIDs.find(pmessage->invoke->operationID) != m_mapMultithreadInvokeIDs.end())
+		case ROSEMessage::invokeCid:
+			if (pmessage->invoke)
 			{
-				if (pmessage->invoke->operationID != 0 || pmessage->invoke->operationName != nullptr)
+				if (bAllowAllInvokes || m_mapMultithreadInvokeIDs.find(pmessage->invoke->operationID) != m_mapMultithreadInvokeIDs.end())
 				{
-					OnInvokeMessage(pmessage->invoke);
+					if (pmessage->invoke->operationID != 0 || pmessage->invoke->operationName != nullptr)
+						OnInvokeMessage(pmessage->invoke);
+					// else
+					//{
+					//   wird am Ende der Methode gemacht
+					//	delete pmessage;
+					// }
+					bProcessed = true;
 				}
-				//else
-				//{
-				//  wird am Ende der Methode gemacht
-				//	delete pmessage;
-				//}
-				bProcessed = true;
 			}
-		}
-		break;
-	case ROSEMessage::resultCid:
-		if (pmessage->result)
-		{
-			OnResultMessage(pmessage->result);
-			// nichts abfangen wenn an der Stelle pmessage->result->result == nullptr ist, da durch die fehlende invokeID das auch schon
-			// berücksichtigt ist
-			CompletePendingOperation(pmessage->result->invokeID, pmessage);
-			return true;
-		}
-		break;
-	case ROSEMessage::errorCid:
-		if (pmessage->error)
-		{
-			OnErrorMessage(pmessage->error);
-			// nichts abfangen wenn an der Stelle pmessage->error->error == nullptr ist, da durch die fehlende invokeID das auch schon
-			// berücksichtigt ist
-			CompletePendingOperation(pmessage->error->invokedID, pmessage);
-			return true;
-		}
-		break;
-	case ROSEMessage::rejectCid:
-		if (pmessage->reject)
-		{
-			OnRejectMessage(pmessage->reject);
-			if (pmessage->reject->invokedID.choiceId == ROSERejectChoice::invokedIDCid)
+			break;
+		case ROSEMessage::resultCid:
+			if (pmessage->result)
 			{
-				// Prüfung! bei REJECT ist die InvokeID ein Choice und damit ist die ID selbst ein Pointer!
-				// und der kann nullptr werden.
-				if (pmessage->reject->invokedID.invokedID != nullptr)
+				OnResultMessage(pmessage->result);
+				// nichts abfangen wenn an der Stelle pmessage->result->result == nullptr ist, da durch die fehlende invokeID das auch schon
+				// berücksichtigt ist
+				CompletePendingOperation(pmessage->result->invokeID, pmessage);
+				return true;
+			}
+			break;
+		case ROSEMessage::errorCid:
+			if (pmessage->error)
+			{
+				OnErrorMessage(pmessage->error);
+				// nichts abfangen wenn an der Stelle pmessage->error->error == nullptr ist, da durch die fehlende invokeID das auch schon
+				// berücksichtigt ist
+				CompletePendingOperation(pmessage->error->invokedID, pmessage);
+				return true;
+			}
+			break;
+		case ROSEMessage::rejectCid:
+			if (pmessage->reject)
+			{
+				OnRejectMessage(pmessage->reject);
+				if (pmessage->reject->invokedID.choiceId == ROSERejectChoice::invokedIDCid)
 				{
-					CompletePendingOperation(*pmessage->reject->invokedID.invokedID, pmessage);
+					// Prüfung! bei REJECT ist die InvokeID ein Choice und damit ist die ID selbst ein Pointer!
+					// und der kann nullptr werden.
+					if (pmessage->reject->invokedID.invokedID != nullptr)
+					{
+						CompletePendingOperation(*pmessage->reject->invokedID.invokedID, pmessage);
+					}
+					else
+					{
+						// Kann passieren, wenn man z.B. a1 00 00 als BER Encoded Paket schickt
+						delete pmessage;
+					}
 				}
 				else
 				{
-					// Kann passieren, wenn man z.B. a1 00 00 als BER Encoded Paket schickt
 					delete pmessage;
 				}
+				return true;
 			}
-			else
-			{
-				delete pmessage;
-			}
-			return true;
-		}
-		break;
-	default:
-		break;
+			break;
+		default:
+			break;
 	}
 	delete pmessage;
 	return bProcessed;
@@ -610,9 +599,7 @@ long SnaccROSEBase::SendReject(SNACC::ROSEReject* preject)
 			{
 				str << ", Problem ";
 				if (preject->reject->invokeProblem)
-				{
 					preject->reject->invokeProblem->Print(str);
-				}
 			}
 			str << std::endl;
 		}
@@ -629,7 +616,7 @@ long SnaccROSEBase::SendReject(SNACC::ROSEReject* preject)
 	rejectMsg.choiceId = ROSEMessage::rejectCid;
 	rejectMsg.reject = preject;
 
-	//encode now.
+	// encode now.
 	if (m_eTransportEncoding == SnaccTransportEncoding::BER)
 	{
 		AsnBuf OutBuf;
@@ -656,7 +643,7 @@ long SnaccROSEBase::SendReject(SNACC::ROSEReject* preject)
 		throw std::runtime_error("invalid m_eTransportEncoding");
 	}
 
-	//prevent delete of preject...
+	// prevent delete of preject...
 	rejectMsg.reject = 0;
 
 	return lRoseResult;
@@ -664,8 +651,8 @@ long SnaccROSEBase::SendReject(SNACC::ROSEReject* preject)
 
 std::string SnaccROSEBase::GetJsonAsnPrefix(std::string& strJson)
 {
-	//Calc prefix z.B. (J1234567)
-	char szPrefix[10] = { 0 };
+	// Calc prefix z.B. (J1234567)
+	char szPrefix[10] = {0};
 #if _WIN32
 #if _MSC_VER < 1900
 	sprintf_s(szPrefix, 10, "J%07d", strJson.length());
@@ -683,7 +670,7 @@ long SnaccROSEBase::SendRejectInvoke(int invokeID, SNACC::InvokeProblem problem,
 {
 	if (invokeID == 99999)
 	{
-		//Events do not get an answer
+		// Events do not get an answer
 		return 0;
 	}
 	ROSEReject reject;
@@ -698,14 +685,10 @@ long SnaccROSEBase::SendRejectInvoke(int invokeID, SNACC::InvokeProblem problem,
 	*reject.reject->invokeProblem = problem;
 
 	if (pAuthHeader)
-	{
 		reject.authentication = (SNACC::ROSEAuthResult*)pAuthHeader->Clone();
-	}
 
 	if ((m_eTransportEncoding == SnaccTransportEncoding::JSON || m_eTransportEncoding == SnaccTransportEncoding::JSON_NO_HEADING) && szError != NULL)
-	{
 		reject.details = UTF8String::CreateNewFromUTF8(szError);
-	}
 	return SendReject(&reject);
 }
 
@@ -723,15 +706,13 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEInvoke* pinvoke)
 	try
 	{
 		if (pinvoke->operationName && pinvoke->operationID == 0)
-		{
 			pinvoke->operationID = SnaccRoseOperationLookup::LookUpID(pinvoke->operationName->getASCII().c_str());
-		}
 
 		lRoseResult = OnInvoke(pinvoke, &invokeContext);
 	}
 	catch (SnaccException& ex)
 	{
-		//decode of invoke detail failed.
+		// decode of invoke detail failed.
 		lRoseResult = ROSE_REJECT_MISTYPEDARGUMENT;
 
 		strError = ex.what();
@@ -742,11 +723,11 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEInvoke* pinvoke)
 		PrintToLog(outStr);
 	}
 
-	//if the Result is ROSE_NOERROR, then the Result has been sent.
-	//if the result is ROSE_REJECT_ASYNCOPERATION, the result will be sent async
+	// if the Result is ROSE_NOERROR, then the Result has been sent.
+	// if the result is ROSE_REJECT_ASYNCOPERATION, the result will be sent async
 	if (lRoseResult != ROSE_NOERROR && lRoseResult != ROSE_REJECT_ASYNCOPERATION)
 	{
-		//Send reject
+		// Send reject
 		if (lRoseResult == ROSE_REJECT_UNKNOWNOPERATION)
 			SendRejectInvoke(pinvoke->invokeID, InvokeProblem::unrecognisedOperation, "unrecognisedOperation", pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);
 		else if (lRoseResult == ROSE_REJECT_MISTYPEDARGUMENT)
@@ -774,11 +755,9 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEInvoke* pinvoke)
 	if (bNotifyRunningOutOfScope)
 		OnInvokeContextRunsOutOfScope(&invokeContext);
 
-	//prevent autodelete
+	// prevent autodelete
 	invokeContext.pInvokeAuth = NULL;
 	invokeContext.pInvoke = NULL;
-
-
 }
 
 void SnaccROSEBase::OnResultMessage(SNACC::ROSEResult* presult)
@@ -812,7 +791,7 @@ long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* pC
 	InvokeMsg.choiceId = ROSEMessage::invokeCid;
 	InvokeMsg.invoke = pinvoke;
 
-	//encode now.
+	// encode now.
 	if (m_eTransportEncoding == SnaccTransportEncoding::BER)
 	{
 		AsnBuf OutBuf;
@@ -840,7 +819,7 @@ long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* pC
 		throw std::runtime_error("invalid m_eTransportEncoding");
 	}
 
-	//prevent autodelete of pinvoke
+	// prevent autodelete of pinvoke
 	InvokeMsg.invoke = NULL;
 
 	return lRoseResult;
@@ -872,7 +851,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** p
 	InvokeMsg.choiceId = ROSEMessage::invokeCid;
 	InvokeMsg.invoke = pinvoke;
 
-	//encode now.
+	// encode now.
 
 	SnaccROSEPendingOperation* pendingOP = new SnaccROSEPendingOperation;
 	pendingOP->m_lInvokeID = pinvoke->invokeID;
@@ -906,7 +885,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** p
 
 	if (lRoseResult == 0)
 	{
-		//Wait for Answer...
+		// Wait for Answer...
 		if (iTimeout == -1)
 			iTimeout = m_lMaxInvokeWait;
 
@@ -917,81 +896,81 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** p
 				lRoseResult = pendingOP->m_lRoseResult;
 				if (pendingOP->m_pAnswerMessage)
 				{
-					//decode result
+					// decode result
 					switch (pendingOP->m_pAnswerMessage->choiceId)
 					{
-					case ROSEMessage::resultCid:
-					{
-						lRoseResult = ROSE_NOERROR;
-						if (pendingOP->m_pAnswerMessage->result && ppresult)
-						{
-							//übergeben des Results an den caller,
-							//der muss das dann deallokieren.
-							*ppresult = pendingOP->m_pAnswerMessage->result;
-							pendingOP->m_pAnswerMessage->result = NULL;
-						}
-					}
-					break;
-					case ROSEMessage::errorCid:
-					{
-						lRoseResult = ROSE_ERROR_VALUE;
-						if (pendingOP->m_pAnswerMessage->error && pperror)
-						{
-							//übergeben des Errors an den caller,
-							//der muss das dann deallokieren.
-							*pperror = pendingOP->m_pAnswerMessage->error;
-							pendingOP->m_pAnswerMessage->error = NULL;
-						}
-					}
-					break;
-					case ROSEMessage::rejectCid:
-					{
-						lRoseResult = ROSE_REJECT_UNKNOWN;
-						if (pendingOP->m_pAnswerMessage->reject && pendingOP->m_pAnswerMessage->reject->reject)
-						{
-							if (pendingOP->m_pAnswerMessage->reject->reject->choiceId == RejectProblem::invokeProblemCid)
+						case ROSEMessage::resultCid:
 							{
-								if (*pendingOP->m_pAnswerMessage->reject->reject->invokeProblem == InvokeProblem::unrecognisedOperation)
-									lRoseResult = ROSE_REJECT_UNKNOWNOPERATION;
-								else if (*pendingOP->m_pAnswerMessage->reject->reject->invokeProblem == InvokeProblem::mistypedArgument)
-									lRoseResult = ROSE_REJECT_MISTYPEDARGUMENT;
-								else if (*pendingOP->m_pAnswerMessage->reject->reject->invokeProblem == InvokeProblem::resourceLimitation)
-									lRoseResult = ROSE_REJECT_FUNCTIONMISSING;
-								else if (*pendingOP->m_pAnswerMessage->reject->reject->invokeProblem == InvokeProblem::authenticationIncomplete)
+								lRoseResult = ROSE_NOERROR;
+								if (pendingOP->m_pAnswerMessage->result && ppresult)
 								{
-									lRoseResult = ROSE_REJECT_AUTHENTICATIONINCOMPLETE;
-									if (pCtx)
-									{
-										if (pendingOP->m_pAnswerMessage->reject->authentication)
-											pCtx->pRejectAuth = (SNACC::ROSEAuthResult*)pendingOP->m_pAnswerMessage->reject->authentication->Clone();
-										pCtx->lRejectResult = ROSE_REJECT_AUTHENTICATIONINCOMPLETE;
-									}
+									// übergeben des Results an den caller,
+									// der muss das dann deallokieren.
+									*ppresult = pendingOP->m_pAnswerMessage->result;
+									pendingOP->m_pAnswerMessage->result = NULL;
 								}
-								else if (*pendingOP->m_pAnswerMessage->reject->reject->invokeProblem == InvokeProblem::authenticationFailed)
+							}
+							break;
+						case ROSEMessage::errorCid:
+							{
+								lRoseResult = ROSE_ERROR_VALUE;
+								if (pendingOP->m_pAnswerMessage->error && pperror)
 								{
-									lRoseResult = ROSE_REJECT_AUTHENTICATIONFAILED;
-									if (pCtx)
+									// übergeben des Errors an den caller,
+									// der muss das dann deallokieren.
+									*pperror = pendingOP->m_pAnswerMessage->error;
+									pendingOP->m_pAnswerMessage->error = NULL;
+								}
+							}
+							break;
+						case ROSEMessage::rejectCid:
+							{
+								lRoseResult = ROSE_REJECT_UNKNOWN;
+								if (pendingOP->m_pAnswerMessage->reject && pendingOP->m_pAnswerMessage->reject->reject)
+								{
+									if (pendingOP->m_pAnswerMessage->reject->reject->choiceId == RejectProblem::invokeProblemCid)
 									{
-										if (pendingOP->m_pAnswerMessage->reject->authentication)
-											pCtx->pRejectAuth = (SNACC::ROSEAuthResult*)pendingOP->m_pAnswerMessage->reject->authentication->Clone();
-										pCtx->lRejectResult = ROSE_REJECT_AUTHENTICATIONFAILED;
+										if (*pendingOP->m_pAnswerMessage->reject->reject->invokeProblem == InvokeProblem::unrecognisedOperation)
+											lRoseResult = ROSE_REJECT_UNKNOWNOPERATION;
+										else if (*pendingOP->m_pAnswerMessage->reject->reject->invokeProblem == InvokeProblem::mistypedArgument)
+											lRoseResult = ROSE_REJECT_MISTYPEDARGUMENT;
+										else if (*pendingOP->m_pAnswerMessage->reject->reject->invokeProblem == InvokeProblem::resourceLimitation)
+											lRoseResult = ROSE_REJECT_FUNCTIONMISSING;
+										else if (*pendingOP->m_pAnswerMessage->reject->reject->invokeProblem == InvokeProblem::authenticationIncomplete)
+										{
+											lRoseResult = ROSE_REJECT_AUTHENTICATIONINCOMPLETE;
+											if (pCtx)
+											{
+												if (pendingOP->m_pAnswerMessage->reject->authentication)
+													pCtx->pRejectAuth = (SNACC::ROSEAuthResult*)pendingOP->m_pAnswerMessage->reject->authentication->Clone();
+												pCtx->lRejectResult = ROSE_REJECT_AUTHENTICATIONINCOMPLETE;
+											}
+										}
+										else if (*pendingOP->m_pAnswerMessage->reject->reject->invokeProblem == InvokeProblem::authenticationFailed)
+										{
+											lRoseResult = ROSE_REJECT_AUTHENTICATIONFAILED;
+											if (pCtx)
+											{
+												if (pendingOP->m_pAnswerMessage->reject->authentication)
+													pCtx->pRejectAuth = (SNACC::ROSEAuthResult*)pendingOP->m_pAnswerMessage->reject->authentication->Clone();
+												pCtx->lRejectResult = ROSE_REJECT_AUTHENTICATIONFAILED;
+											}
+										}
 									}
 								}
 							}
-						}
-					}
-					break;
-					default:
-					{
-						lRoseResult = ROSE_RE_INVALID_ANSWER;
-					}
-					break;
+							break;
+						default:
+							{
+								lRoseResult = ROSE_RE_INVALID_ANSWER;
+							}
+							break;
 					}
 				}
 			}
 			else
 			{
-				//not completed
+				// not completed
 				lRoseResult = ROSE_TE_TIMEOUT;
 			}
 		}
@@ -1007,7 +986,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** p
 	RemovePendingOperation(pendingOP->m_lInvokeID);
 	delete pendingOP;
 
-	//prevent autodelete of pinvoke
+	// prevent autodelete of pinvoke
 	InvokeMsg.invoke = NULL;
 
 	return lRoseResult;
@@ -1021,7 +1000,7 @@ long SnaccROSEBase::SendResult(SNACC::ROSEResult* presult)
 	ResultMsg.choiceId = ROSEMessage::resultCid;
 	ResultMsg.result = presult;
 
-	//encode now.
+	// encode now.
 	if (m_eTransportEncoding == SnaccTransportEncoding::BER)
 	{
 		AsnBuf OutBuf;
@@ -1048,7 +1027,7 @@ long SnaccROSEBase::SendResult(SNACC::ROSEResult* presult)
 		throw std::runtime_error("invalid m_eTransportEncoding");
 	}
 
-	//prevent delete of presult...
+	// prevent delete of presult...
 	ResultMsg.result = 0;
 
 	return lRoseResult;
@@ -1068,7 +1047,7 @@ long SnaccROSEBase::SendResult(int invokeID, SNACC::AsnType* value, const wchar_
 
 	lRoseResult = SendResult(&result);
 
-	//prevent delete of value...
+	// prevent delete of value...
 	result.result->result.value = 0;
 
 	return lRoseResult;
@@ -1082,7 +1061,7 @@ long SnaccROSEBase::SendError(SNACC::ROSEError* perror)
 	ResultMsg.choiceId = ROSEMessage::errorCid;
 	ResultMsg.error = perror;
 
-	//encode now.
+	// encode now.
 	if (m_eTransportEncoding == SnaccTransportEncoding::BER)
 	{
 		AsnBuf OutBuf;
@@ -1109,7 +1088,7 @@ long SnaccROSEBase::SendError(SNACC::ROSEError* perror)
 		throw std::runtime_error("invalid m_eTransportEncoding");
 	}
 
-	//prevent delete of perror...
+	// prevent delete of perror...
 	ResultMsg.error = 0;
 
 	return lRoseResult;
@@ -1127,10 +1106,9 @@ long SnaccROSEBase::SendError(int invokeID, SNACC::AsnType* value, const wchar_t
 	if (szSessionID)
 		error.sessionID = new UTF8String(szSessionID);
 
-
 	lRoseResult = SendError(&error);
 
-	//prevent delete of value...
+	// prevent delete of value...
 	error.error->value = 0;
 
 	return lRoseResult;
@@ -1141,7 +1119,6 @@ void SnaccROSEBase::AddInvokeHeaderLog(std::stringstream& strOut, SNACC::ROSEInv
 	strOut << "InvokeMsg.invokeID = " << (int)pInvoke->invokeID << std::endl;
 	strOut << "InvokeMsg.operationID = " << (int)pInvoke->operationID << std::endl;
 	strOut << "InvokeMsg.operationName = " << SnaccRoseOperationLookup::LookUpName((int)pInvoke->operationID) << std::endl;
-
 }
 
 void SnaccROSEBase::SetMultithreadInvokeIds(std::map<int, int> mapIds)
@@ -1163,9 +1140,7 @@ void SnaccROSEBase::SetSnaccROSETransport(ISnaccROSETransport* pTransport)
 
 bool SnaccROSEBase::SetTransportEncoding(const SnaccTransportEncoding transportEncoding)
 {
-	if (transportEncoding == SnaccTransportEncoding::BER ||
-		transportEncoding == SnaccTransportEncoding::JSON ||
-		transportEncoding == SnaccTransportEncoding::JSON_NO_HEADING)
+	if (transportEncoding == SnaccTransportEncoding::BER || transportEncoding == SnaccTransportEncoding::JSON || transportEncoding == SnaccTransportEncoding::JSON_NO_HEADING)
 	{
 		m_eTransportEncoding = transportEncoding;
 		return true;

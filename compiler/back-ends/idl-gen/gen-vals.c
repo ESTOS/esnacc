@@ -42,27 +42,17 @@
 #include "../str-util.h"
 #include "rules.h"
 
+/* non-exported routines' prototypes */
+static void PrintIDLIntValue PROTO((FILE * f, IDLRules* r, AsnInt v));
+static void PrintIDLOidValue PROTO((FILE * f, IDLRules* r, AsnOid* v));
+static void PrintIDLValuesClass PROTO((FILE * f, IDLRules* r, Value* v));
+static void PrintIDLValueDefsName PROTO((FILE * f, IDLRules* r, ValueDef* v));
+static void PrintIDLValueInstatiation PROTO((FILE * f, IDLRules* r, Value* v));
 
- /* non-exported routines' prototypes */
-static void PrintIDLIntValue PROTO((FILE* f, IDLRules* r, AsnInt v));
-static void PrintIDLOidValue PROTO((FILE* f, IDLRules* r, AsnOid* v));
-static void PrintIDLValuesClass PROTO((FILE* f, IDLRules* r, Value* v));
-static void PrintIDLValueDefsName PROTO((FILE* f, IDLRules* r, ValueDef* v));
-static void PrintIDLValueInstatiation PROTO((FILE* f, IDLRules* r, Value* v));
-
-
-
-
-void
-PrintIDLValueDef PARAMS((idl, r, v),
-	FILE* idl _AND_
-	IDLRules* r _AND_
-	ValueDef* v)
+void PrintIDLValueDef PARAMS((idl, r, v), FILE* idl _AND_ IDLRules* r _AND_ ValueDef* v)
 {
 	/* just do oid's, ints and bools for now */
-	if ((v->value->basicValue->choiceId != BASICVALUE_OID) &&
-		(v->value->basicValue->choiceId != BASICVALUE_INTEGER) &&
-		(v->value->basicValue->choiceId != BASICVALUE_BOOLEAN))
+	if ((v->value->basicValue->choiceId != BASICVALUE_OID) && (v->value->basicValue->choiceId != BASICVALUE_INTEGER) && (v->value->basicValue->choiceId != BASICVALUE_BOOLEAN))
 		return;
 
 	/*
@@ -76,14 +66,9 @@ PrintIDLValueDef PARAMS((idl, r, v),
 	PrintIDLValueInstatiation(idl, r, v->value);
 	fprintf(idl, ";\n\n");
 
-}  /* PrintIDLValueDef */
+} /* PrintIDLValueDef */
 
-
-static void
-PrintIDLValueDefsName PARAMS((f, r, v),
-	FILE* f _AND_
-	IDLRules* r _AND_
-	ValueDef* v)
+static void PrintIDLValueDefsName PARAMS((f, r, v), FILE* f _AND_ IDLRules* r _AND_ ValueDef* v)
 {
 	char* cName;
 	cName = Asn1ValueName2CValueName(v->definedName);
@@ -91,64 +76,53 @@ PrintIDLValueDefsName PARAMS((f, r, v),
 	Free(cName);
 }
 
-void
-PrintIDLValuesClass PARAMS((f, r, v),
-	FILE* f _AND_
-	IDLRules* r _AND_
-	Value* v)
+void PrintIDLValuesClass PARAMS((f, r, v), FILE* f _AND_ IDLRules* r _AND_ Value* v)
 {
 	/* needs work - just do ints bools and oid's for now */
 	switch (v->basicValue->choiceId)
 	{
-	case BASICVALUE_OID:
-		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_OID].typeName);
-		break;
+		case BASICVALUE_OID:
+			fprintf(f, "%s", r->typeConvTbl[BASICTYPE_OID].typeName);
+			break;
 
-	case BASICVALUE_RELATIVE_OID:
-		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_RELATIVE_OID].typeName);
-		break;
+		case BASICVALUE_RELATIVE_OID:
+			fprintf(f, "%s", r->typeConvTbl[BASICTYPE_RELATIVE_OID].typeName);
+			break;
 
-	case BASICVALUE_INTEGER:
-		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_INTEGER].typeName);
-		break;
+		case BASICVALUE_INTEGER:
+			fprintf(f, "%s", r->typeConvTbl[BASICTYPE_INTEGER].typeName);
+			break;
 
-	case BASICVALUE_BOOLEAN:
-		fprintf(f, "%s", r->typeConvTbl[BASICTYPE_BOOLEAN].typeName);
-		break;
+		case BASICVALUE_BOOLEAN:
+			fprintf(f, "%s", r->typeConvTbl[BASICTYPE_BOOLEAN].typeName);
+			break;
 
-	default:
-		break;
+		default:
+			break;
 	}
 }
 
-
-void
-PrintIDLValueInstatiation PARAMS((f, r, v),
-	FILE* f _AND_
-	IDLRules* r _AND_
-	Value* v)
+void PrintIDLValueInstatiation PARAMS((f, r, v), FILE* f _AND_ IDLRules* r _AND_ Value* v)
 {
 	/* needs work - just do oids, ints and bools for now */
 	switch (v->basicValue->choiceId)
 	{
-	case BASICVALUE_OID:
-		PrintIDLOidValue(f, r, v->basicValue->a.oid);
-		break;
+		case BASICVALUE_OID:
+			PrintIDLOidValue(f, r, v->basicValue->a.oid);
+			break;
 
-	case BASICVALUE_INTEGER:
-		PrintIDLIntValue(f, r, v->basicValue->a.integer);
-		break;
+		case BASICVALUE_INTEGER:
+			PrintIDLIntValue(f, r, v->basicValue->a.integer);
+			break;
 
-	case BASICVALUE_BOOLEAN:
-		fprintf(f, v->basicValue->a.boolean ? "TRUE" : "FALSE");
-		break;
+		case BASICVALUE_BOOLEAN:
+			fprintf(f, v->basicValue->a.boolean ? "TRUE" : "FALSE");
+			break;
 
-	default:
-		break;
+		default:
+			break;
 	}
 }
-
-
 
 /*
  * given an AOID, c++ AOID constructors params are produced.
@@ -159,11 +133,7 @@ PrintIDLValueInstatiation PARAMS((f, r, v),
  *   (0,1,2)
  * is produced.
  */
-void
-PrintIDLOidValue PARAMS((f, r, v),
-	FILE* f _AND_
-	IDLRules* r _AND_
-	AsnOid* v)
+void PrintIDLOidValue PARAMS((f, r, v), FILE* f _AND_ IDLRules* r _AND_ AsnOid* v)
 {
 	unsigned short int firstArcNum;
 	unsigned long int arcNum;
@@ -183,7 +153,7 @@ PrintIDLOidValue PARAMS((f, r, v),
 
 	fprintf(f, "%u, %u", firstArcNum, (int)(arcNum - (firstArcNum * 40)));
 
-	for (; i < (int)v->octetLen; )
+	for (; i < (int)v->octetLen;)
 	{
 		for (arcNum = 0; (i < (int)v->octetLen) && (v->octs[i] & 0x80); i++)
 			arcNum = (arcNum << 7) + (v->octs[i] & 0x7f);
@@ -196,13 +166,7 @@ PrintIDLOidValue PARAMS((f, r, v),
 	fprintf(f, ")");
 } /* PrintIDLOidValue */
 
-
-
-void
-PrintIDLIntValue PARAMS((f, r, v),
-	FILE* f _AND_
-	IDLRules* r _AND_
-	AsnInt v)
+void PrintIDLIntValue PARAMS((f, r, v), FILE* f _AND_ IDLRules* r _AND_ AsnInt v)
 {
 	fprintf(f, "%d", v);
 } /* PrintIDLIntValue */

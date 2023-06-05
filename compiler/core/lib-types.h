@@ -41,10 +41,10 @@
 typedef struct LibType
 {
 	enum BasicTypeChoiceId typeId;
-	BER_UNIV_CODE          univTagCode;
-	BER_FORM               tagForm;
-	AnyRefList* anyRefs;  /* these may be filled in do_macros.c*/
-}  LibType;
+	BER_UNIV_CODE univTagCode;
+	BER_FORM tagForm;
+	AnyRefList* anyRefs; /* these may be filled in do_macros.c*/
+} LibType;
 
 #ifndef NO_EXTN_LIBTYPE
 extern LibType* libTypesG;
@@ -52,11 +52,11 @@ extern LibType libBERTypesG[];
 extern LibType libDERTypesG[];
 #endif
 
-#define LIBTYPE_GET_UNIV_TAG_CODE( tId)		(libTypesG[tId].univTagCode)
-#define LIBTYPE_GET_TAG_FORM( tId)		(libTypesG[tId].tagForm)
-#define LIBTYPE_GET_ANY_REFS( tId)		(libTypesG[tId].anyRefs)
-#define LIBTYPE_GET_ANY_REFS_HNDL( tId)		(&libTypesG[tId].anyRefs)
-#define LIBTYPE_GET_ANY_REFS( tId)		(libTypesG[tId].anyRefs)
+#define LIBTYPE_GET_UNIV_TAG_CODE(tId) (libTypesG[tId].univTagCode)
+#define LIBTYPE_GET_TAG_FORM(tId) (libTypesG[tId].tagForm)
+#define LIBTYPE_GET_ANY_REFS(tId) (libTypesG[tId].anyRefs)
+#define LIBTYPE_GET_ANY_REFS_HNDL(tId) (&libTypesG[tId].anyRefs)
+#define LIBTYPE_GET_ANY_REFS(tId) (libTypesG[tId].anyRefs)
 #define SET_BER_LIBTYPE() (libTypesG = libBERTypesG)
 #define SET_DER_LIBTYPE() (libTypesG = libDERTypesG)
 

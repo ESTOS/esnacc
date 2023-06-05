@@ -51,12 +51,11 @@
  *
  */
 
-
 #include "../include/asn-config.h"
 #include "../include/asn-der.h"
 #include <memory.h>
 
- // Simple Compare
+// Simple Compare
 int EncodedElmtCmp(const void* a1, const void* b1)
 {
 	int len = 0;
@@ -80,5 +79,4 @@ int EncodedElmtCmp(const void* a1, const void* b1)
 	BufResetInReadMode(b->b);
 
 	return cmp;
-
 }

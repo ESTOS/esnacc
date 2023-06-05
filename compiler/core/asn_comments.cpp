@@ -2,7 +2,8 @@
 #include "asn_commentparser.h"
 #include "asn-stringconvert.h"
 
-extern "C" {
+extern "C"
+{
 
 	int ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type)
 	{
@@ -29,7 +30,6 @@ extern "C" {
 		}
 		return NULL;
 	}
-
 
 	const char* GetNextModuleLogFileFilter(const char* szModuleName)
 	{
@@ -86,7 +86,8 @@ extern "C" {
 		if (it != gComments.mapModules.end())
 		{
 			EModuleComment& comment = it->second;
-			if (!comment.m_bConvertedToAscii) {
+			if (!comment.m_bConvertedToAscii)
+			{
 				comment.strTypeName_ASCII = AsnStringConvert::UTF8ToAscii(comment.strTypeName_UTF8.c_str());
 				comment.strShort_ASCII = AsnStringConvert::UTF8ToAscii(comment.strShort_UTF8.c_str());
 				comment.strLong_ASCII = AsnStringConvert::UTF8ToAscii(comment.strLong_UTF8.c_str());
@@ -144,7 +145,8 @@ extern "C" {
 		if (it != gComments.mapOperations.end())
 		{
 			EOperationComment& comment = it->second;
-			if (!comment.m_bConvertedToAscii) {
+			if (!comment.m_bConvertedToAscii)
+			{
 				comment.strTypeName_ASCII = AsnStringConvert::UTF8ToAscii(comment.strTypeName_UTF8.c_str());
 				comment.strShort_ASCII = AsnStringConvert::UTF8ToAscii(comment.strShort_UTF8.c_str());
 				comment.strLong_ASCII = AsnStringConvert::UTF8ToAscii(comment.strLong_UTF8.c_str());
@@ -164,7 +166,7 @@ extern "C" {
 		return 0;
 	}
 
-	//Get Comments for Sequence or other types
+	// Get Comments for Sequence or other types
 	int GetSequenceComment_UTF8(const char* szModuleName, const char* szTypeName, asnsequencecomment* pcomment)
 	{
 		if (!szModuleName || !szTypeName)
@@ -203,7 +205,8 @@ extern "C" {
 		if (it != gComments.mapSequences.end())
 		{
 			ESequenceComment& comment = it->second;
-			if (!comment.m_bConvertedToAscii) {
+			if (!comment.m_bConvertedToAscii)
+			{
 				comment.strTypeName_ASCII = AsnStringConvert::UTF8ToAscii(comment.strTypeName_UTF8.c_str());
 				comment.strShort_ASCII = AsnStringConvert::UTF8ToAscii(comment.strShort_UTF8.c_str());
 				comment.strLong_ASCII = AsnStringConvert::UTF8ToAscii(comment.strLong_UTF8.c_str());
@@ -223,7 +226,7 @@ extern "C" {
 		return 0;
 	}
 
-	//Get Comments for member of sequence
+	// Get Comments for member of sequence
 	int GetMemberComment_UTF8(const char* szModuleName, const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment)
 	{
 		if (!szModuleName || !szTypeName || !szMemberName)
@@ -269,7 +272,8 @@ extern "C" {
 			if (it2 != it->second.mapMembers.end())
 			{
 				EStructMemberComment& comment = it2->second;
-				if (!comment.m_bConvertedToAscii) {
+				if (!comment.m_bConvertedToAscii)
+				{
 					comment.strShort_ASCII = AsnStringConvert::UTF8ToAscii(comment.strShort_UTF8.c_str());
 					comment.strLinkedType_ASCII = AsnStringConvert::UTF8ToAscii(comment.strLinkedType_UTF8.c_str());
 					comment.m_bConvertedToAscii = true;
@@ -285,4 +289,3 @@ extern "C" {
 		return 0;
 	}
 }
-

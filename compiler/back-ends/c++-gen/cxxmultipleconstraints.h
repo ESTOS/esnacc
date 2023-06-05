@@ -1,7 +1,6 @@
 #ifndef _cxxmultipleconstraints_h_
 #define _cxxmultipleconstraints_h_
 
-
 #include "../../../c-lib/include/asn-incl.h"
 #include "../../core/asn1module.h"
 #include "snacc.h"
@@ -10,30 +9,30 @@
 #include "../../core/snacc-util.h"
 #include "../str-util.h"
 
-typedef struct SizeConstraint {
+typedef struct SizeConstraint
+{
 	long lowerBound;
 	long upperBound;
-	int  upperBoundExists;
-}SizeConstraint;
+	int upperBoundExists;
+} SizeConstraint;
 
 typedef SizeConstraint ValueRange;
 
-typedef struct PermittedAlphabet {
+typedef struct PermittedAlphabet
+{
 	unsigned char* ucApha;
-}PermittedAlphabet;
+} PermittedAlphabet;
 
-char* PrintCxxPermittedAlphabetHandler PROTO((AsnListNode* currAlpha, unsigned char* cPermittedAlphabet, int* iAlphasize));
+char* PrintCxxPermittedAlphabetHandler PROTO((AsnListNode * currAlpha, unsigned char* cPermittedAlphabet, int* iAlphasize));
 
-int SizeConstraint_LISTS PROTO((FILE* hdr, FILE* src, SizeConstraint* scList, int iSCPresent, AsnListNode* curr, Subtype* currS_type));
+int SizeConstraint_LISTS PROTO((FILE * hdr, FILE* src, SizeConstraint* scList, int iSCPresent, AsnListNode* curr, Subtype* currS_type));
 
-int PrintCxxMultiConstraintOrHandler PROTO((FILE* hdr, FILE* src, char* definedName, NamedType* e, int i));
+int PrintCxxMultiConstraintOrHandler PROTO((FILE * hdr, FILE* src, char* definedName, NamedType* e, int i));
 
-int ValueRange_LISTS PROTO((FILE* hdr, FILE* src, ValueRange* vrList, int iVRPresent, AsnListNode* curr, Subtype* currS_type));
+int ValueRange_LISTS PROTO((FILE * hdr, FILE* src, ValueRange* vrList, int iVRPresent, AsnListNode* curr, Subtype* currS_type));
 
-int BasicTypeString_LISTS PROTO((FILE* hdr, FILE* src, SizeConstraint* scList, int iSCPresent, AsnListNode* curr, Subtype* currS_type));
+int BasicTypeString_LISTS PROTO((FILE * hdr, FILE* src, SizeConstraint* scList, int iSCPresent, AsnListNode* curr, Subtype* currS_type));
 
-char* FindPermittedAlpha PROTO((AsnListNode* curr, unsigned char* cPermittedAlphabet, int* iAlphasize));
+char* FindPermittedAlpha PROTO((AsnListNode * curr, unsigned char* cPermittedAlphabet, int* iAlphasize));
 
 #endif
-
-

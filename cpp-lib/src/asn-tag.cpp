@@ -16,34 +16,23 @@
 
 // $Header: /develop30/common/esnacc1.7/SNACC/c++-lib/src/asn-tag.cpp,v 1.1.1.1 2005/04/14 14:59:42 \ste Exp $
 
-
 #include "../include/asn-incl.h"
 
 using namespace SNACC;
-
 
 /*returns the number of bytes that are in the encoded tag passed in*/
 long SNACC::BytesInTag(AsnTag tag)
 {
 	if ((tag & 0x00FFFFFF) == 0)
-	{
 		return 1;
-	}
 	else if ((tag & 0x0000FFFF) == 0)
-	{
 		return 2;
-	}
 
 	else if ((tag & 0x000000FF) == 0)
-	{
 		return 3;
-	}
 	else
-	{
 		return 4;
-	}
 }
-
 
 /*
  * Decode a BER Tag from the given buffer.  Error is
@@ -78,7 +67,6 @@ AsnTag SNACC::BDecTag(const AsnBuf& b, AsnLen& bytesDecoded)
 
 	return tagId;
 } /* BDecTag */
-
 
 /*
  * Function:  PDecTag()
@@ -117,7 +105,7 @@ AsnTag SNACC::PDecTag(AsnBufBits& bufBits, AsnLen& bitsDecoded)
 } // end of PDecTag()
 
 //
-//RWC;  This routine returns the number of bits encoded.
+// RWC;  This routine returns the number of bits encoded.
 AsnLen SNACC::PEncTag(AsnBufBits& b, unsigned char ucClass, unsigned char form, long code, long lByteCount)
 {
 	unsigned char ucChar;
@@ -139,7 +127,7 @@ AsnLen SNACC::PEncTag(AsnBufBits& b, unsigned char ucClass, unsigned char form, 
 
 		if (lByteCount == 2)
 			b.PutBits((unsigned char*)&code, 8);
-		else        // MUST be 3, 4, or 5
+		else // MUST be 3, 4, or 5
 		{
 
 			if (lByteCount >= 5)
@@ -160,9 +148,9 @@ AsnLen SNACC::PEncTag(AsnBufBits& b, unsigned char ucClass, unsigned char form, 
 			ucChar = (unsigned char)(code & 0x7F);
 			b.PutBits(&ucChar, 8);
 
-		}      // END IF 2
+		} // END IF 2
 
-	}          // END IF 1
+	} // END IF 1
 
-	return(lByteCount * 8);
-}   /* PEncTag */
+	return (lByteCount * 8);
+} /* PEncTag */

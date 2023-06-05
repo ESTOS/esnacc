@@ -16,16 +16,12 @@
 #include "rules.h"
 #include "../../core/snacc-util.h"
 
+// void PrintCxxSetOfSizeValRangeConstraints PROTO((FILE* hdr, FILE* src, TypeDef* td));
 
+// void PrintCxxSetOfSizeSingleValConstraints PROTO((FILE* hdr, FILE* src, TypeDef* td));
 
-//void PrintCxxSetOfSizeValRangeConstraints PROTO((FILE* hdr, FILE* src, TypeDef* td));
+void PrintTypeDefDefault PROTO((FILE * hdr, FILE* src, TypeDef* td));
 
-//void PrintCxxSetOfSizeSingleValConstraints PROTO((FILE* hdr, FILE* src, TypeDef* td));
-
-void PrintTypeDefDefault PROTO((FILE* hdr, FILE* src, TypeDef* td));
-
-void PrintCxxSetOfSizeConstraint(FILE* hdr, SubtypeValue* sizeConstraint,
-	Module* m, Type* type);
-
+void PrintCxxSetOfSizeConstraint(FILE* hdr, SubtypeValue* sizeConstraint, Module* m, Type* type);
 
 #endif

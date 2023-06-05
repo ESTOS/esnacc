@@ -7,7 +7,7 @@
 #include "gen-java-code.h"
 
 #include "../../../c-lib/include/print.h"
-#include "../tag-util.h"  /* get GetTags/FreeTags/CountTags/TagByteLen */
+#include "../tag-util.h" /* get GetTags/FreeTags/CountTags/TagByteLen */
 #include "../str-util.h"
 #include "../structure-util.h"
 #include <ctype.h>
@@ -31,7 +31,7 @@ static FILE* getJavaFilePointer(char* pPrefix)
 
 #ifdef _WIN32
 	fopen_s(&p, fileName, "wt");
-#else // _WIN32
+#else  // _WIN32
 	p = fopen(fileName, "wt");
 #endif // _WIN32
 	free(fileName);
@@ -50,73 +50,77 @@ static char* getJavaClassName(char* prefix, char* suffix)
 	return className;
 }
 
-static void PrintJavaNativeType(FILE* hdr, Type* type) {
-	switch (type->basicType->choiceId) {
-	case BASICTYPE_BOOLEAN:
-		fprintf(hdr, "Boolean");
-		break;
-	case BASICTYPE_BITSTRING:
-	case BASICTYPE_INTEGER:
-		fprintf(hdr, "Integer");
-		break;
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-		fprintf(hdr, "String");
-		break;
-	case BASICTYPE_ENUMERATED:
-		fprintf(hdr, "%s", type->typeName); //FIXME
-		break;
-	case BASICTYPE_REAL:
-		fprintf(hdr, "Double");
-		break;
-	case BASICTYPE_UTF8_STR:
-		fprintf(hdr, "String");
-		break;
-	case BASICTYPE_UTCTIME:
-		fprintf(hdr, "Date");
-		break;
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_NULL:
-		fprintf(hdr, "Object");
-		break;
-	default:
-		break;
-		//assert(0 == 1);
+static void PrintJavaNativeType(FILE* hdr, Type* type)
+{
+	switch (type->basicType->choiceId)
+	{
+		case BASICTYPE_BOOLEAN:
+			fprintf(hdr, "Boolean");
+			break;
+		case BASICTYPE_BITSTRING:
+		case BASICTYPE_INTEGER:
+			fprintf(hdr, "Integer");
+			break;
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(hdr, "String");
+			break;
+		case BASICTYPE_ENUMERATED:
+			fprintf(hdr, "%s", type->typeName); // FIXME
+			break;
+		case BASICTYPE_REAL:
+			fprintf(hdr, "Double");
+			break;
+		case BASICTYPE_UTF8_STR:
+			fprintf(hdr, "String");
+			break;
+		case BASICTYPE_UTCTIME:
+			fprintf(hdr, "Date");
+			break;
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_NULL:
+			fprintf(hdr, "Object");
+			break;
+		default:
+			break;
+			// assert(0 == 1);
 	};
 }
 
-static void PrintJavaNativeTypeConstructor(FILE* hdr, Type* type) {
-	switch (type->basicType->choiceId) {
-	case BASICTYPE_BOOLEAN:
-		fprintf(hdr, "false"); // Boolean
-		break;
-	case BASICTYPE_BITSTRING:
-	case BASICTYPE_INTEGER:
-		fprintf(hdr, "0");		// Integer
-		break;
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-		fprintf(hdr, "\"\""); // String
-		break;
-	case BASICTYPE_ENUMERATED:
-		fprintf(hdr, "%s.values()[0]", type->typeName); //FIXME
-		break;
-	case BASICTYPE_REAL:
-		fprintf(hdr, "0.0"); // Double
-		break;
-	case BASICTYPE_UTF8_STR:
-		fprintf(hdr, "\"\""); // String
-		break;
-	case BASICTYPE_UTCTIME:
-		fprintf(hdr, "new Date()");
-		break;
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_NULL:
-		fprintf(hdr, "new Object()");
-		break;
-	default:
-		break;
-		//assert(0 == 1);
+static void PrintJavaNativeTypeConstructor(FILE* hdr, Type* type)
+{
+	switch (type->basicType->choiceId)
+	{
+		case BASICTYPE_BOOLEAN:
+			fprintf(hdr, "false"); // Boolean
+			break;
+		case BASICTYPE_BITSTRING:
+		case BASICTYPE_INTEGER:
+			fprintf(hdr, "0"); // Integer
+			break;
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(hdr, "\"\""); // String
+			break;
+		case BASICTYPE_ENUMERATED:
+			fprintf(hdr, "%s.values()[0]", type->typeName); // FIXME
+			break;
+		case BASICTYPE_REAL:
+			fprintf(hdr, "0.0"); // Double
+			break;
+		case BASICTYPE_UTF8_STR:
+			fprintf(hdr, "\"\""); // String
+			break;
+		case BASICTYPE_UTCTIME:
+			fprintf(hdr, "new Date()");
+			break;
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_NULL:
+			fprintf(hdr, "new Object()");
+			break;
+		default:
+			break;
+			// assert(0 == 1);
 	};
 }
 
@@ -124,86 +128,95 @@ static void PrintJavaTypeConstructor(FILE* hdr, Type* t)
 {
 	/*if(t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_SEQUENCEOF) {
 		//PrintJavaArrayType(hdr, t->basicType->a.localTypeRef->link->type->basicType->a.sequence,t->basicType->a.localTypeRef->link);
-	} else */if (t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED) {
-		fprintf(hdr, "%s.values()[0]", t->cxxTypeRefInfo->className); //FIXME
+	} else */
+	if (t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED)
+	{
+		fprintf(hdr, "%s.values()[0]", t->cxxTypeRefInfo->className); // FIXME
 	}
-	else {
-		switch (t->basicType->choiceId) {
-		case BASICTYPE_BOOLEAN:
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
-		case BASICTYPE_ENUMERATED:
-		case BASICTYPE_REAL:
-		case BASICTYPE_UTF8_STR:
-		case BASICTYPE_UTCTIME:
-		case BASICTYPE_UNKNOWN:
-		case BASICTYPE_NULL:
-			PrintJavaNativeTypeConstructor(hdr, t);
-			break;
-		case BASICTYPE_SEQUENCEOF:
-			fprintf(hdr, "new ArrayList<%s>()", t->cxxTypeRefInfo->className);
-			break;
-		default:
-			fprintf(hdr, "new %s()", t->cxxTypeRefInfo->className);
-			break;
+	else
+	{
+		switch (t->basicType->choiceId)
+		{
+			case BASICTYPE_BOOLEAN:
+			case BASICTYPE_INTEGER:
+			case BASICTYPE_OCTETSTRING:
+			case BASICTYPE_OCTETCONTAINING:
+			case BASICTYPE_ENUMERATED:
+			case BASICTYPE_REAL:
+			case BASICTYPE_UTF8_STR:
+			case BASICTYPE_UTCTIME:
+			case BASICTYPE_UNKNOWN:
+			case BASICTYPE_NULL:
+				PrintJavaNativeTypeConstructor(hdr, t);
+				break;
+			case BASICTYPE_SEQUENCEOF:
+				fprintf(hdr, "new ArrayList<%s>()", t->cxxTypeRefInfo->className);
+				break;
+			default:
+				fprintf(hdr, "new %s()", t->cxxTypeRefInfo->className);
+				break;
 		}
 	}
 }
 
-
-static void PrintJavaArrayType(FILE* hdr, Type* t, TypeDef* innerType) {
+static void PrintJavaArrayType(FILE* hdr, Type* t, TypeDef* innerType)
+{
 
 	fprintf(hdr, "ArrayList<");
 	PrintJavaType(hdr, t);
 	fprintf(hdr, ">");
 
-	switch (innerType->type->basicType->choiceId) {
-	case BASICTYPE_BOOLEAN:
-	case BASICTYPE_BITSTRING:
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_ENUMERATED:
-	case BASICTYPE_REAL:
-		// primitive types, predefined in the lib
-		break;
-	case BASICTYPE_OCTETSTRING:
-	case BASICTYPE_OCTETCONTAINING:
-	case BASICTYPE_UTF8_STR:
-	case BASICTYPE_UTCTIME:
-		// class types, predefined in the lib
-		break;
-	default:
-		PrintJavaTypeDefCode(innerType);
+	switch (innerType->type->basicType->choiceId)
+	{
+		case BASICTYPE_BOOLEAN:
+		case BASICTYPE_BITSTRING:
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_REAL:
+			// primitive types, predefined in the lib
+			break;
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_UTF8_STR:
+		case BASICTYPE_UTCTIME:
+			// class types, predefined in the lib
+			break;
+		default:
+			PrintJavaTypeDefCode(innerType);
 	}
 }
 static void PrintJavaType(FILE* hdr, Type* t)
 {
 	/*if(t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_SEQUENCEOF) {
 		//PrintJavaArrayType(hdr, t->basicType->a.localTypeRef->link->type->basicType->a.sequence,t->basicType->a.localTypeRef->link);
-	} else */if (t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED) {
+	} else */
+	if (t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED)
+	{
 		fprintf(hdr, "%s", t->cxxTypeRefInfo->className);
 	}
-	else {
-		switch (t->basicType->choiceId) {
-		case BASICTYPE_BOOLEAN:
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
-		case BASICTYPE_ENUMERATED:
-		case BASICTYPE_REAL:
-		case BASICTYPE_UTF8_STR:
-		case BASICTYPE_UTCTIME:
-		case BASICTYPE_UNKNOWN:
-		case BASICTYPE_NULL:
-			PrintJavaNativeType(hdr, t);
-			break;
-		case BASICTYPE_SEQUENCEOF:
-			PrintJavaArrayType(hdr, t, (TypeDef*)t->cxxTypeRefInfo);
-			//fprintf (hdr, "[%s]", t->cxxTypeRefInfo->className);
-			break;
-		default:
-			fprintf(hdr, "%s", t->cxxTypeRefInfo->className);
-			break;
+	else
+	{
+		switch (t->basicType->choiceId)
+		{
+			case BASICTYPE_BOOLEAN:
+			case BASICTYPE_INTEGER:
+			case BASICTYPE_OCTETSTRING:
+			case BASICTYPE_OCTETCONTAINING:
+			case BASICTYPE_ENUMERATED:
+			case BASICTYPE_REAL:
+			case BASICTYPE_UTF8_STR:
+			case BASICTYPE_UTCTIME:
+			case BASICTYPE_UNKNOWN:
+			case BASICTYPE_NULL:
+				PrintJavaNativeType(hdr, t);
+				break;
+			case BASICTYPE_SEQUENCEOF:
+				PrintJavaArrayType(hdr, t, (TypeDef*)t->cxxTypeRefInfo);
+				// fprintf (hdr, "[%s]", t->cxxTypeRefInfo->className);
+				break;
+			default:
+				fprintf(hdr, "%s", t->cxxTypeRefInfo->className);
+				break;
 		}
 	}
 }
@@ -233,7 +246,6 @@ static void PrintSeqJavaDataObjectClass(TypeDef* td)
 		fprintf(src, "> values){\n\n");
 		fprintf(src, "		super(values);\n");
 		fprintf(src, "	}\n");
-
 	}
 	else
 	{
@@ -250,40 +262,35 @@ static void PrintSeqJavaDataObjectClass(TypeDef* td)
 		FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
 		{
 
-			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION) {
+			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+			{
 
 				fprintf(src, "	private ");
 				PrintJavaType(src, e->type);
 				fprintf(src, " %s=", e->fieldName);
-				if (e->type->optional || e->type->basicType->choiceId == BASICTYPE_NULL) {
+				if (e->type->optional || e->type->basicType->choiceId == BASICTYPE_NULL)
 					fprintf(src, "null");
-				}
-				else {
+				else
 					PrintJavaTypeConstructor(src, e->type);
-				}
 				fprintf(src, ";\n");
-
 			}
 		}
 
 		FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
 		{
-			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION) {
+			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+			{
 
 				int isNullable = 0;
-				if (e->type->optional || td->type->basicType->choiceId == BASICTYPE_CHOICE || td->type->basicType->choiceId == BASICTYPE_NULL) {
+				if (e->type->optional || td->type->basicType->choiceId == BASICTYPE_CHOICE || td->type->basicType->choiceId == BASICTYPE_NULL)
 					isNullable = 1;
-
-				}
 
 				tmpName = getJavaClassName(e->fieldName, "");
 				fprintf(src, "\n	");
-				if (isNullable == 1) {
+				if (isNullable == 1)
 					fprintf(src, "@Nullable");
-				}
-				else {
+				else
 					fprintf(src, "@Nonnull");
-				}
 				fprintf(src, " public ");
 				PrintJavaType(src, e->type);
 				fprintf(src, " get%s(){\n", tmpName);
@@ -291,18 +298,15 @@ static void PrintSeqJavaDataObjectClass(TypeDef* td)
 				fprintf(src, "	}\n");
 
 				fprintf(src, "	public void set%s(", tmpName);
-				if (isNullable == 1) {
+				if (isNullable == 1)
 					fprintf(src, "@Nullable ");
-				}
-				else {
+				else
 					fprintf(src, "@Nonnull ");
-				}
 				PrintJavaType(src, e->type);
 				fprintf(src, " %s){\n", e->fieldName);
 				fprintf(src, "		this.%s=%s;\n", e->fieldName, e->fieldName);
 				fprintf(src, "	}\n");
 				free(tmpName);
-
 			}
 		}
 	}
@@ -356,9 +360,9 @@ static void PrintJavaChoiceDefCode(TypeDef* td)
 	fprintf(src, "}\n");
 	fclose(src);
 	free(name);
-
 }
-static void PrintJavaSimpleRefDef(TypeDef* td) {
+static void PrintJavaSimpleRefDef(TypeDef* td)
+{
 
 	char* name = getJavaClassName(td->definedName, "");
 	FILE* src = getJavaFilePointer(name);
@@ -377,12 +381,9 @@ static char* captalize(char* string)
 	size_t index;
 
 	for (index = 0; index < strlen(string); index++)
-	{
 		upper[index] = (char)toupper(string[index]);
-	}
 
 	return upper;
-
 }
 static void PrintJavaEnumDefCode(TypeDef* td)
 {
@@ -393,7 +394,8 @@ static void PrintJavaEnumDefCode(TypeDef* td)
 	fprintf(src, "package com.estos.asn;\n\n");
 	fprintf(src, "public enum %s{\n	", name);
 
-	if (HasNamedElmts(td->type) != 0) {
+	if (HasNamedElmts(td->type) != 0)
+	{
 		int count = 0;
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
@@ -414,10 +416,10 @@ static void PrintJavaEnumDefCode(TypeDef* td)
 	fprintf(src, "}\n\n");
 	free(name);
 	fclose(src);
-
 }
 
-static void PrintJavaSimpleDef(TypeDef* td) {
+static void PrintJavaSimpleDef(TypeDef* td)
+{
 
 	char* name = getJavaClassName(td->definedName, "");
 
@@ -426,29 +428,23 @@ static void PrintJavaSimpleDef(TypeDef* td) {
 	fprintf(src, "import javax.annotation.Generated;\n\n");
 	fprintf(src, "@Generated(\"estosSNACC\")\n");
 	fprintf(src, "public class %s extends SimpleJavaType<", name);
-	if (strcmp("AsnSystemTime", name) == 0) {
+	if (strcmp("AsnSystemTime", name) == 0)
 		fprintf(src, "String");
-	}
-	else {
+	else
 		PrintJavaNativeType(src, td->type);
-	}
 	fprintf(src, ">{\n\n");
 	fprintf(src, "	public %s(){\n		super(", name);
-	if (strcmp("AsnSystemTime", name) == 0) {
+	if (strcmp("AsnSystemTime", name) == 0)
 		fprintf(src, "new String()");
-	}
-	else {
+	else
 		PrintJavaNativeTypeConstructor(src, td->type);
-	}
 
 	fprintf(src, ");\n	}\n\n");
 	fprintf(src, "	public %s(", name);
-	if (strcmp("AsnSystemTime", name) == 0) {
+	if (strcmp("AsnSystemTime", name) == 0)
 		fprintf(src, "String");
-	}
-	else {
+	else
 		PrintJavaNativeType(src, td->type);
-	}
 	fprintf(src, " value){\n");
 	fprintf(src, "		super(value);\n");
 	fprintf(src, "	}");
@@ -461,70 +457,70 @@ static void PrintJavaTypeDefCode(TypeDef* td)
 {
 	switch (td->type->basicType->choiceId)
 	{
-	case BASICTYPE_BOOLEAN:  /* library type */
-	case BASICTYPE_REAL:  /* library type */
-	case BASICTYPE_OCTETSTRING:  /* library type */
-	case BASICTYPE_OCTETCONTAINING:
-	case BASICTYPE_NULL:  /* library type */
-	case BASICTYPE_EXTERNAL:		/* library type */
-	case BASICTYPE_OID:  /* library type */
-	case BASICTYPE_RELATIVE_OID:
-	case BASICTYPE_INTEGER:  /* library type */
-	case BASICTYPE_BITSTRING:  /* library type */
-	case BASICTYPE_NUMERIC_STR:  /* 22 */
-	case BASICTYPE_PRINTABLE_STR: /* 23 */
-	case BASICTYPE_UNIVERSAL_STR: /* 24 */
-	case BASICTYPE_IA5_STR:      /* 25 */
-	case BASICTYPE_BMP_STR:      /* 26 */
-	case BASICTYPE_UTF8_STR:     /* 27 */
-	case BASICTYPE_UTCTIME:      /* 28 tag 23 */
-	case BASICTYPE_GENERALIZEDTIME: /* 29 tag 24 */
-	case BASICTYPE_GRAPHIC_STR:     /* 30 tag 25 */
-	case BASICTYPE_VISIBLE_STR:     /* 31 tag 26  aka ISO646String */
-	case BASICTYPE_GENERAL_STR:     /* 32 tag 27 */
-	case BASICTYPE_OBJECTDESCRIPTOR:	/* 33 tag 7 */
-	case BASICTYPE_VIDEOTEX_STR:	/* 34 tag 21 */
-	case BASICTYPE_T61_STR:			/* 35 tag 20 */
-		PrintJavaSimpleDef(td);
-		break;
-	case BASICTYPE_SEQUENCEOF:  /* list types */
-	case BASICTYPE_SETOF:
-		PrintSeqJavaDataObjectClass(td);
-		break;
-	case BASICTYPE_IMPORTTYPEREF:  /* type references */
-	case BASICTYPE_LOCALTYPEREF:
-		/*
-		* if this type has been re-tagged then
-		* must create new class instead of using a typedef
-		*/
-		PrintJavaSimpleRefDef(td);
-		break;
-	case BASICTYPE_ANYDEFINEDBY:  /* ANY types */
-	case BASICTYPE_ANY:
-		//PrintCxxAnyDefCode (src, hdr, mods, m, r, td, NULL, td->type);
-		break;
-	case BASICTYPE_CHOICE:
-		PrintJavaChoiceDefCode(td);
-		break;
-	case BASICTYPE_ENUMERATED:  /* library type */
-		PrintJavaEnumDefCode(td);
-		break;
-	case BASICTYPE_SET:
-		//PrintCxxSetDefCode (src, hdr, mods, m, r, td, NULL, td->type, novolatilefuncs);
-		break;
-	case BASICTYPE_SEQUENCE:
-		PrintSeqJavaDataObjectClass(td);
-		break;
-	case BASICTYPE_COMPONENTSOF:
-	case BASICTYPE_SELECTION:
-	case BASICTYPE_UNKNOWN:
-	case BASICTYPE_MACRODEF:
-	case BASICTYPE_MACROTYPE:
-		/* do nothing */
-		break;
-	default:
-		/* TBD: print error? */
-		break;
+		case BASICTYPE_BOOLEAN:		/* library type */
+		case BASICTYPE_REAL:		/* library type */
+		case BASICTYPE_OCTETSTRING: /* library type */
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_NULL:	 /* library type */
+		case BASICTYPE_EXTERNAL: /* library type */
+		case BASICTYPE_OID:		 /* library type */
+		case BASICTYPE_RELATIVE_OID:
+		case BASICTYPE_INTEGER:			 /* library type */
+		case BASICTYPE_BITSTRING:		 /* library type */
+		case BASICTYPE_NUMERIC_STR:		 /* 22 */
+		case BASICTYPE_PRINTABLE_STR:	 /* 23 */
+		case BASICTYPE_UNIVERSAL_STR:	 /* 24 */
+		case BASICTYPE_IA5_STR:			 /* 25 */
+		case BASICTYPE_BMP_STR:			 /* 26 */
+		case BASICTYPE_UTF8_STR:		 /* 27 */
+		case BASICTYPE_UTCTIME:			 /* 28 tag 23 */
+		case BASICTYPE_GENERALIZEDTIME:	 /* 29 tag 24 */
+		case BASICTYPE_GRAPHIC_STR:		 /* 30 tag 25 */
+		case BASICTYPE_VISIBLE_STR:		 /* 31 tag 26  aka ISO646String */
+		case BASICTYPE_GENERAL_STR:		 /* 32 tag 27 */
+		case BASICTYPE_OBJECTDESCRIPTOR: /* 33 tag 7 */
+		case BASICTYPE_VIDEOTEX_STR:	 /* 34 tag 21 */
+		case BASICTYPE_T61_STR:			 /* 35 tag 20 */
+			PrintJavaSimpleDef(td);
+			break;
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			PrintSeqJavaDataObjectClass(td);
+			break;
+		case BASICTYPE_IMPORTTYPEREF: /* type references */
+		case BASICTYPE_LOCALTYPEREF:
+			/*
+			 * if this type has been re-tagged then
+			 * must create new class instead of using a typedef
+			 */
+			PrintJavaSimpleRefDef(td);
+			break;
+		case BASICTYPE_ANYDEFINEDBY: /* ANY types */
+		case BASICTYPE_ANY:
+			// PrintCxxAnyDefCode (src, hdr, mods, m, r, td, NULL, td->type);
+			break;
+		case BASICTYPE_CHOICE:
+			PrintJavaChoiceDefCode(td);
+			break;
+		case BASICTYPE_ENUMERATED: /* library type */
+			PrintJavaEnumDefCode(td);
+			break;
+		case BASICTYPE_SET:
+			// PrintCxxSetDefCode (src, hdr, mods, m, r, td, NULL, td->type, novolatilefuncs);
+			break;
+		case BASICTYPE_SEQUENCE:
+			PrintSeqJavaDataObjectClass(td);
+			break;
+		case BASICTYPE_COMPONENTSOF:
+		case BASICTYPE_SELECTION:
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_MACRODEF:
+		case BASICTYPE_MACROTYPE:
+			/* do nothing */
+			break;
+		default:
+			/* TBD: print error? */
+			break;
 	}
 } /* PrintCxxTypeDefCode */
 
@@ -550,62 +546,50 @@ static void PrintJavaOperationClass(Module* m, ValueDef* vd)
 	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
 	{
 		// vars
-		//fprintf(src, "  public class var name    : String { get { return \"%s\" } }\n", vd->definedName);
-		//fprintf(src, "  public var operationName : String { get { return %s.name } }\n", vd->definedName);
+		// fprintf(src, "  public class var name    : String { get { return \"%s\" } }\n", vd->definedName);
+		// fprintf(src, "  public var operationName : String { get { return %s.name } }\n", vd->definedName);
 
 		fprintf(src, "import javax.annotation.Generated;\n\n");
 		fprintf(src, "@Generated(\"estosSNACC\")\n");
 
 		fprintf(src, "public final class %s extends AbstractAsnOperation<", name);
 
-		if (pszArgument) {
+		if (pszArgument)
 			fprintf(src, "%s,", pszArgument);
-		}
-		else {
+		else
 			fprintf(src, "Void,");
-		}
 
-		if (pszResult) {
+		if (pszResult)
 			fprintf(src, "%s,", pszResult);
-		}
-		else {
+		else
 			fprintf(src, "Void,");
-		}
 
-		if (pszError) {
+		if (pszError)
 			fprintf(src, "%s>", pszError);
-		}
-		else {
+		else
 			fprintf(src, "Void>");
-		}
 		fprintf(src, "{\n\n");
 
 		fprintf(src, "	public Class<?> getAsnArgumentType(){\n		return ");
-		//Class Type definititon
-		if (pszArgument) {
+		// Class Type definititon
+		if (pszArgument)
 			fprintf(src, "%s", pszArgument);
-		}
-		else {
+		else
 			fprintf(src, "Void");
-		}
 		fprintf(src, ".class;\n	}\n\n");
 
 		fprintf(src, "	public Class<?> getAsnResultType(){\n		return ");
-		if (pszResult) {
+		if (pszResult)
 			fprintf(src, "%s", pszResult);
-		}
-		else {
+		else
 			fprintf(src, "Void");
-		}
 		fprintf(src, ".class;\n	}\n\n");
 
 		fprintf(src, "	public Class<?> getAsnErrorType(){\n		return ");
-		if (pszError) {
+		if (pszError)
 			fprintf(src, "%s", pszError);
-		}
-		else {
+		else
 			fprintf(src, "Void");
-		}
 		fprintf(src, ".class;\n	}\n\n");
 
 		fprintf(src, "}\n");
@@ -696,9 +680,8 @@ static void PrintSimpleJavaType()
 	fclose(src);
 }
 
-
-
-void PrintJAVACode(ModuleList* mods, Module* m) {
+void PrintJAVACode(ModuleList* mods, Module* m)
+{
 	ValueDef* vd;
 	TypeDef* td;
 	PrintAbstractJavaOperation();
@@ -706,9 +689,7 @@ void PrintJAVACode(ModuleList* mods, Module* m) {
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-		{
 			PrintJavaOperationClass(m, vd);
-		}
 	}
 
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)

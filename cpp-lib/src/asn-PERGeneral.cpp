@@ -4,8 +4,7 @@
 
 _BEGIN_SNACC_NAMESPACE
 
-
-AsnLen PERGeneral::EncodeGeneral(AsnBufBits& b)const
+AsnLen PERGeneral::EncodeGeneral(AsnBufBits& b) const
 {
 	AsnLen len = 0;
 	unsigned long l_64kFrag = l_16k * 4;
@@ -16,8 +15,6 @@ AsnLen PERGeneral::EncodeGeneral(AsnBufBits& b)const
 	unsigned char ch = 0x00;
 	unsigned char* c = NULL;
 	long offset = 0;
-
-
 
 	if (tempLen >= l_16k)
 	{
@@ -37,7 +34,6 @@ AsnLen PERGeneral::EncodeGeneral(AsnBufBits& b)const
 				len += Interpret(b, offset);
 				offset++;
 			}
-
 		}
 
 		tempLen -= count * l_64kFrag;
@@ -57,7 +53,6 @@ AsnLen PERGeneral::EncodeGeneral(AsnBufBits& b)const
 				len += Interpret(b, offset);
 				offset++;
 			}
-
 		}
 
 		tempLen -= (l_16k * count);
@@ -73,7 +68,6 @@ AsnLen PERGeneral::EncodeGeneral(AsnBufBits& b)const
 
 			return len;
 		}
-
 	}
 
 	/*if there are less than 128 bytes of data*/
@@ -90,7 +84,6 @@ AsnLen PERGeneral::EncodeGeneral(AsnBufBits& b)const
 			len += Interpret(b, offset);
 			offset++;
 		}
-
 	}
 	else if (tempLen >= 128 && tempLen < l_16k)
 	{
@@ -101,18 +94,15 @@ AsnLen PERGeneral::EncodeGeneral(AsnBufBits& b)const
 
 		len += b.OctetAlignWrite();
 
-
 		for (y = 0; y < tempLen; y++)
 		{
 			len += Interpret(b, offset);
 			offset++;
 		}
-
 	}
 
 	return len;
 }
-
 
 void PERGeneral::DecodeGeneral(AsnBufBits& b, AsnLen& bitsDecoded)
 {
@@ -136,7 +126,6 @@ void PERGeneral::DecodeGeneral(AsnBufBits& b, AsnLen& bitsDecoded)
 
 		bitsDecoded += b.OctetAlignRead();
 
-
 		while (templen)
 		{
 			Deterpret(b, bitsDecoded, offset);
@@ -144,14 +133,12 @@ void PERGeneral::DecodeGeneral(AsnBufBits& b, AsnLen& bitsDecoded)
 			templen--;
 		}
 
-
 		bitsDecoded += b.OctetAlignRead();
 
 		free(seg);
 		seg = (unsigned char*)b.GetBits(8);
 		bitsDecoded += 8;
 	}
-
 
 	if ((seg[0] & 0xC0) == 0x80)
 	{
@@ -166,14 +153,12 @@ void PERGeneral::DecodeGeneral(AsnBufBits& b, AsnLen& bitsDecoded)
 
 		bitsDecoded += b.OctetAlignRead();
 
-
 		while (templen)
 		{
 			Deterpret(b, bitsDecoded, offset);
 			offset++;
 			templen--;
 		}
-
 	}
 	else if ((seg[0] & 0x80) == 0x00)
 	{
@@ -183,19 +168,15 @@ void PERGeneral::DecodeGeneral(AsnBufBits& b, AsnLen& bitsDecoded)
 
 		bitsDecoded += b.OctetAlignRead();
 
-
 		while (templen)
 		{
 			Deterpret(b, bitsDecoded, offset);
 			offset++;
 			templen--;
 		}
-
 	}
 
 	free(seg);
 }
 
-
 _END_SNACC_NAMESPACE
-

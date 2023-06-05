@@ -22,11 +22,13 @@ std::string rtrim(const std::string& s)
 	return (end == std::string::npos) ? "" : s.substr(0, end + 1);
 }
 
-std::string trim(const std::string& s) {
+std::string trim(const std::string& s)
+{
 	return rtrim(ltrim(s));
 }
 
-void EDeprecated::handleDeprecated(const std::string& strParsedLine) {
+void EDeprecated::handleDeprecated(const std::string& strParsedLine)
+{
 	std::string strComment = trim(strParsedLine);
 	// Check is ther a date in the value?
 	// @deprecated 1.1.2023 Some comment
@@ -34,11 +36,13 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine) {
 	if (pos == std::string::npos)
 		pos = strComment.length();
 	// Longest is 31.12.2023 (10), shortest is 1.1.2000 (8)
-	if (pos >= 8 && pos <= 10) {
+	if (pos >= 8 && pos <= 10)
+	{
 		// Okay, let´s see if this is timestamp value...
 		std::string strDate = strComment.substr(0, pos);
 		long long i64UnixTime = ConvertDateToUnixTime(strDate.c_str());
-		if (i64UnixTime > 0) {
+		if (i64UnixTime > 0)
+		{
 			i64Deprecated = i64UnixTime;
 			strComment = trim(strComment.substr(strDate.length()));
 		}
@@ -46,13 +50,15 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine) {
 	if (strComment.length())
 		strDeprecated_UTF8 = escapeJsonString(strComment);
 
-	if (i64Deprecated == 0) {
+	if (i64Deprecated == 0)
+	{
 		fprintf(stderr, "WARNING - @deprecated flag is missing a timestamp. You need to add a timestamp in order to be able to deterministically remove deprecated things from the generated code!");
 		i64Deprecated = 1;
 	}
 }
 
-void replaceAll(std::string& str, const char* szSearch, const char* szReplace) {
+void replaceAll(std::string& str, const char* szSearch, const char* szReplace)
+{
 	if (!szSearch)
 		return;
 	auto searchLen = strlen(szSearch);
@@ -60,19 +66,21 @@ void replaceAll(std::string& str, const char* szSearch, const char* szReplace) {
 		return;
 	auto replaceLen = strlen(szReplace);
 	size_t start_pos = 0;
-	while ((start_pos = str.find(szSearch, start_pos)) != std::string::npos) {
+	while ((start_pos = str.find(szSearch, start_pos)) != std::string::npos)
+	{
 		str.replace(start_pos, searchLen, szReplace);
 		start_pos += replaceLen; // In case 'to' contains 'from', like replacing 'x' with 'yx'
 	}
 }
 
-void AsciiToUTF8(const char* szAscii, std::string& strUTF8) {
-
+void AsciiToUTF8(const char* szAscii, std::string& strUTF8)
+{
 }
 
 EAsnComments gComments;
 
-extern "C" {
+extern "C"
+{
 	extern FILE* errFileG;
 }
 
@@ -82,7 +90,8 @@ std::vector<std::string> explode(std::string const& s, char delim)
 	std::vector<std::string> result;
 	std::istringstream iss(s);
 
-	for (std::string token; std::getline(iss, token, delim); ) {
+	for (std::string token; std::getline(iss, token, delim);)
+	{
 		// leere tokens auslassen, brauchen wir nicht
 		auto element = trim(token);
 		if (element.size())
@@ -92,23 +101,48 @@ std::vector<std::string> explode(std::string const& s, char delim)
 	return result;
 }
 
-std::string escapeJsonString(const std::string& input) {
+std::string escapeJsonString(const std::string& input)
+{
 	std::ostringstream ss;
-	for (auto iter = input.cbegin(); iter != input.cend(); iter++) {
-		//C++98/03:
-		//for (std::string::const_iterator iter = input.begin(); iter != input.end(); iter++) {
-		switch (*iter) {
-		case '\\': ss << "\\\\"; break;
-		case '"': ss << "\\\""; break;
-		case '/': ss << "\\/"; break;
-		case '\b': ss << "\\b"; break;
-		case '\f': ss << "\\f"; break;
-		case '\n': ss << "\\n"; break;
-		case '\r': ss << "\\r"; break;
-		case '\t': ss << "\\t"; break;
-		case '<': ss << "&lt;"; break;
-		case '>': ss << "&gt;"; break;
-		default: ss << *iter; break;
+	for (auto iter = input.cbegin(); iter != input.cend(); iter++)
+	{
+		// C++98/03:
+		// for (std::string::const_iterator iter = input.begin(); iter != input.end(); iter++) {
+		switch (*iter)
+		{
+			case '\\':
+				ss << "\\\\";
+				break;
+			case '"':
+				ss << "\\\"";
+				break;
+			case '/':
+				ss << "\\/";
+				break;
+			case '\b':
+				ss << "\\b";
+				break;
+			case '\f':
+				ss << "\\f";
+				break;
+			case '\n':
+				ss << "\\n";
+				break;
+			case '\r':
+				ss << "\\r";
+				break;
+			case '\t':
+				ss << "\\t";
+				break;
+			case '<':
+				ss << "&lt;";
+				break;
+			case '>':
+				ss << "&gt;";
+				break;
+			default:
+				ss << *iter;
+				break;
 		}
 	}
 	return ss.str();
@@ -312,7 +346,8 @@ int EAsnStackElementFile::ProcessLine(const char* szModuleName, std::string& szL
 		return 0;
 	}
 
-	if (szLine.length() >= 5) {
+	if (szLine.length() >= 5)
+	{
 		std::string strBegin = szLine.substr(szLine.length() - 5);
 		if (strBegin == "BEGIN")
 		{
@@ -346,7 +381,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 {
 	if (szLine == "END")
 	{
-		//end of module
+		// end of module
 		std::string strKey = szModuleName;
 		const auto pos = strKey.find_first_of(".");
 		if (pos != std::string::npos)
@@ -370,18 +405,16 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		return 0;
 	}
 
-
 	auto tokens = explode(szLine, ' ');
 	auto iterTokens = tokens.begin();
-	if (iterTokens != tokens.end()) {
+	if (iterTokens != tokens.end())
+	{
 		if (*iterTokens == "IMPORTS")
 		{
 			iterTokens = tokens.erase(iterTokens);
 			m_bWaitForSemiColon = true;
 			if (szLine.find(";") != std::string::npos)
-			{
 				m_bWaitForSemiColon = false;
-			}
 			return 0;
 		}
 		if (*iterTokens == "EXPORTS")
@@ -389,9 +422,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 			iterTokens = tokens.erase(iterTokens);
 			m_bWaitForSemiColon = true;
 			if (szLine.find(";") != std::string::npos)
-			{
 				m_bWaitForSemiColon = false;
-			}
 			return 0;
 		}
 	}
@@ -406,7 +437,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 	char szFirstChar = szLine[0];
 	if (szFirstChar >= 'A' && szFirstChar <= 'Z')
 	{
-		//Upper Letter Identifier
+		// Upper Letter Identifier
 		std::string strType = iterTokens != tokens.end() ? *iterTokens : "";
 		iterTokens++;
 		if (iterTokens == tokens.end() || *iterTokens != "::=")
@@ -430,7 +461,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 
 		if (strBasicType1 == "SEQUENCE" && strBasicType2 == "OF")
 		{
-			//SEQUENCE OF is usually only one line of code
+			// SEQUENCE OF is usually only one line of code
 			EAsnStackElementSequenceOf* el = new EAsnStackElementSequenceOf(m_pParser);
 			el->m_comment.strTypeName_UTF8 = strType;
 			el->m_comment.strCategory_UTF8 = m_ModuleComment.strCategory_UTF8;
@@ -439,8 +470,8 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 			szLine.clear();
 			bool bElEnd = false;
 			el->ProcessLine(szModuleName, szLine, szComment, bElEnd);
-			//we assume the element has ended
-			//m_pParser->m_stack.push_back(el);
+			// we assume the element has ended
+			// m_pParser->m_stack.push_back(el);
 			delete el;
 
 			m_CollectComments.clear();
@@ -449,10 +480,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		else if (strBasicType1 == "SEQUENCE" && (strBasicType2 == "" || strBasicType2 == "{"))
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetProperties(strBasicType2 == "{",
-				strType.c_str(),
-				&m_ModuleComment,
-				m_CollectComments);
+			el->SetProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
 
 			m_pParser->m_stack.push_back(el);
 
@@ -462,10 +490,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		else if (strBasicType1 == "ENUMERATED" && (strBasicType2 == "" || strBasicType2 == "{"))
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetProperties(strBasicType2 == "{",
-				strType.c_str(),
-				&m_ModuleComment,
-				m_CollectComments);
+			el->SetProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
 
 			m_pParser->m_stack.push_back(el);
 
@@ -475,10 +500,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		else if (strBasicType1 == "BIT" && strBasicType2 == "STRING")
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetProperties(strBasicType2 == "{",
-				strType.c_str(),
-				&m_ModuleComment,
-				m_CollectComments);
+			el->SetProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
 
 			m_pParser->m_stack.push_back(el);
 
@@ -488,10 +510,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		else if (strBasicType1 == "CHOICE" && (strBasicType2 == "" || strBasicType2 == "{"))
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetProperties(strBasicType2 == "{",
-				strType.c_str(),
-				&m_ModuleComment,
-				m_CollectComments);
+			el->SetProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
 
 			m_pParser->m_stack.push_back(el);
 
@@ -500,7 +519,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		}
 		else
 		{
-			//alias typedef
+			// alias typedef
 			ESequenceComment comment;
 			comment.strTypeName_UTF8 = strType;
 			comment.strCategory_UTF8 = m_ModuleComment.strCategory_UTF8;
@@ -520,9 +539,10 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 	}
 	else if (szFirstChar >= 'a' && szFirstChar <= 'z')
 	{
-		//Lower Letter Identifier
+		// Lower Letter Identifier
 		std::string strType = iterTokens != tokens.end() ? *iterTokens : "";
-		if (iterTokens != tokens.end()) iterTokens++;
+		if (iterTokens != tokens.end())
+			iterTokens++;
 
 		if (iterTokens != tokens.end() && *iterTokens == "OPERATION")
 		{
@@ -543,7 +563,6 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 	}
 
 	return 0;
-
 }
 
 void EAsnStackElementSequence::SetProperties(bool bOpenBracket, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments)
@@ -565,7 +584,8 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 			return 0;
 
 		size_t iPos = szLine.find("{");
-		if (iPos != std::string::npos) {
+		if (iPos != std::string::npos)
+		{
 			bOpenBracketFound = true;
 			szLine = trim(szLine.substr(iPos + 1, szLine.size() - iPos - 1));
 		}
@@ -581,13 +601,14 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 
 	auto tokens = explode(szLine, ' ');
 	auto iter = tokens.begin();
-	if (iter != tokens.end()) {
+	if (iter != tokens.end())
+	{
 		std::string strMember = *iter;
 		iter++;
 		if (strMember[0] >= 'a' && strMember[0] <= 'z')
 		{
-			//Member found
-			//in an ENUMERATED, the Member ends with (
+			// Member found
+			// in an ENUMERATED, the Member ends with (
 			size_t ii = strMember.find('(');
 			if (ii != std::string::npos)
 				strMember = rtrim(strMember.substr(0, ii));
@@ -616,7 +637,7 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 			if (strBasicType1 == "SEQUENCE" && strBasicType2 == "OF")
 			{
 				std::string strType = m_comment.strTypeName_UTF8 + "List";
-				//SEQUENCE OF is usually only one line of code
+				// SEQUENCE OF is usually only one line of code
 				EAsnStackElementSequenceOf* el = new EAsnStackElementSequenceOf(m_pParser);
 				el->m_comment.strTypeName_UTF8 = strType;
 				el->m_comment.strCategory_UTF8 = m_comment.strCategory_UTF8;
@@ -631,10 +652,7 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 			{
 				std::string strType = m_comment.strTypeName_UTF8 + "Seq";
 				EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-				el->SetProperties(strBasicType2 == "{",
-					strType.c_str(),
-					m_pmodcomment,
-					m_CollectComments);
+				el->SetProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
 
 				m_pParser->m_stack.push_back(el);
 
@@ -645,10 +663,7 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 			{
 				std::string strType = m_comment.strTypeName_UTF8 + "Enum";
 				EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-				el->SetProperties(strBasicType2 == "{",
-					strType.c_str(),
-					m_pmodcomment,
-					m_CollectComments);
+				el->SetProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
 
 				m_pParser->m_stack.push_back(el);
 
@@ -659,10 +674,7 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 			{
 				std::string strType = m_comment.strTypeName_UTF8 + "Choice";
 				EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-				el->SetProperties(strBasicType2 == "{",
-					strType.c_str(),
-					m_pmodcomment,
-					m_CollectComments);
+				el->SetProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
 
 				m_pParser->m_stack.push_back(el);
 
@@ -676,10 +688,10 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 		}
 	}
 
-	//finally check for close...
+	// finally check for close...
 	if (szLine.find("}") != std::string::npos)
 	{
-		//sequence complete
+		// sequence complete
 		std::string strKey = szModuleName;
 		const auto pos = strKey.find_first_of(".");
 		if (pos != std::string::npos)
@@ -696,8 +708,8 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 
 int EAsnStackElementSequenceOf::ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd)
 {
-	//sequence of is complete on the next line anyway
-	//add comments before the sequence...
+	// sequence of is complete on the next line anyway
+	// add comments before the sequence...
 	convertCommentList(commentsBefore, &m_comment);
 	commentsBefore.clear();
 
@@ -742,60 +754,55 @@ int EAsnStackElementOperation::ProcessLine(const char* szModuleName, std::string
 
 EAsnComments::EAsnComments()
 {
-	//Add a sample here
+	// Add a sample here
 	EOperationComment a;
 	a.strTypeName_UTF8 = "asnKeepAlive";
 	a.strShort_UTF8 = escapeJsonString("Send a Keepalive on the Connection in a regular interval");
 	a.strLong_UTF8 = escapeJsonString("Send a Keepalive on the Connection in a regular interval\nA client is required to do this every xxx seconds.");
 	mapOperations[a.strTypeName_UTF8] = a;
-
 }
 
 int EAsnCommentParser::ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type)
 {
-	//set to beginning of file
+	// set to beginning of file
 	fseek(fp, type == UTF8WITHBOM ? 3 : 0, SEEK_SET);
 
 	m_stack.clear();
 
 	m_stack.push_back(new EAsnStackElementFile(this, szModuleName));
 
-	char szLine[5000] = { 0 };
+	char szLine[5000] = {0};
 
 	while (fgets(szLine, 5000, fp))
-	{
 		if (type == ASCII)
 			ProcessLine(szModuleName, AsnStringConvert::AsciiToUTF8(szLine).c_str());
 		else
 			ProcessLine(szModuleName, szLine);
-	}
 
-	//clear stack
+	// clear stack
 	if (m_stack.size() > 1)
-	{
 		fprintf(errFileG, "WARNING - EAsnCommentParser inconsistent file syntax\n");
-	}
 	while (!m_stack.empty())
 	{
 		delete m_stack.back();
 		m_stack.pop_back();
 	}
 
-	//reset to beginning of file
+	// reset to beginning of file
 	fseek(fp, type == UTF8WITHBOM ? 3 : 0, SEEK_SET);
 
-	return 0; //NO Error
+	return 0; // NO Error
 }
 
 int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
 {
-	int iResult = 1; //error
+	int iResult = 1; // error
 
 	std::string strLine(szLine);
 	strLine = trim(strLine);
 
 	std::string strComment;
-	//Seperate command and comment
+	// Seperate command and comment
 	size_t iPos = strLine.find("--");
 	if (iPos != std::string::npos)
 	{
@@ -804,16 +811,16 @@ int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
 
 		strLine = trim(strLine);
 
-		//Kommentare bekommen nur das erste Leerzeichen entfernt
+		// Kommentare bekommen nur das erste Leerzeichen entfernt
 		if (strComment.substr(0, 1) == " ")
 			strComment = strComment.substr(1, strComment.size() - 1);
 
-		//strComment.TrimRight();
-		//Ein existierender Kommentar ist nie ganz leer
+		// strComment.TrimRight();
+		// Ein existierender Kommentar ist nie ganz leer
 		if (strComment.empty())
 			strComment = " ";
 
-		//Ein Kommentar der mit ~ beginnt wird ignoriert
+		// Ein Kommentar der mit ~ beginnt wird ignoriert
 		if (strComment.substr(0, 1) == "~")
 			strComment.clear();
 	}
@@ -828,8 +835,6 @@ int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
 		m_stack.pop_back();
 		delete el;
 	}
-
-
 
 	return iResult;
 }

@@ -9,7 +9,8 @@
 #pragma comment(lib, "Dbghelp.lib")
 #endif
 
-enum class SNACCDeprecatedNotifyCallDirection {
+enum class SNACCDeprecatedNotifyCallDirection
+{
 	in = 0,
 	out = 1
 };
@@ -20,7 +21,8 @@ enum class SNACCDeprecatedNotifyCallDirection {
  * The asn1 files allow to flag objects or methods as deprecated
  * If that is the case the compiler adds callbacks in case such an object is created or such a method is called
  */
-class SNACCDeprecatedNotify {
+class SNACCDeprecatedNotify
+{
 public:
 	/**
 	 * A deprecated object has been created
@@ -42,9 +44,9 @@ public:
 	virtual void DeprecatedASN1Method(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const std::list<std::string>& callStack, const SnaccInvokeContext* pContext = NULL) = 0;
 };
 
-class SNACCDeprecated {
+class SNACCDeprecated
+{
 public:
-
 	/**
 	 * Sets the callback
 	 *

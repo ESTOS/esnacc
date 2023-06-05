@@ -6,24 +6,21 @@
 /*  Their respective prototypes are in:                   */
 /*       'cxxconstraints.h' in the pwd                    */
 
-
 #include "cxxconstraints.h"
 #include <string.h>
 
 /* Prints the default instantiation for a typedefined object */
 void PrintTypeDefDefault(FILE* hdr, FILE* src, TypeDef* td)
 {
-	//ste 4.11.14
-	//AsnSystemTime hat nun eigene Implementierung in der snacclib wegen JSON Encoding als String und BER Encoding Real
+	// ste 4.11.14
+	// AsnSystemTime hat nun eigene Implementierung in der snacclib wegen JSON Encoding als String und BER Encoding Real
 	if (strcmp(td->cxxTypeDefInfo->className, "AsnSystemTime") == 0)
 		return;
 
 	fprintf(hdr, "typedef %s %s;\n", td->type->cxxTypeRefInfo->className, td->cxxTypeDefInfo->className);
 }
 
-
-void PrintCxxSetOfSizeConstraint(FILE* hdr, SubtypeValue* sizeConstraint,
-	Module* m, Type* type)
+void PrintCxxSetOfSizeConstraint(FILE* hdr, SubtypeValue* sizeConstraint, Module* m, Type* type)
 {
 	long lBound = 0;
 	long uBound = 0;
@@ -32,61 +29,60 @@ void PrintCxxSetOfSizeConstraint(FILE* hdr, SubtypeValue* sizeConstraint,
 
 	switch (sizeConstraint->choiceId)
 	{
-	case SUBTYPEVALUE_SINGLEVALUE:
-		pValue = GetValue(sizeConstraint->a.singleValue);
-		if (pValue->basicValue->choiceId == BASICVALUE_INTEGER)
-			lBound = pValue->basicValue->a.integer;
-		else
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - unsupported value in size constraint\n");
-			return;
-		}
-		break;
+		case SUBTYPEVALUE_SINGLEVALUE:
+			pValue = GetValue(sizeConstraint->a.singleValue);
+			if (pValue->basicValue->choiceId == BASICVALUE_INTEGER)
+				lBound = pValue->basicValue->a.integer;
+			else
+			{
+				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+				fprintf(errFileG, "ERROR - unsupported value in size constraint\n");
+				return;
+			}
+			break;
 
-	case SUBTYPEVALUE_VALUERANGE:
-		// Get the lower end value
-		pValue = GetValue(sizeConstraint->a.valueRange->lowerEndValue->endValue);
-		if (pValue->basicValue->choiceId == BASICVALUE_INTEGER)
-		{
-			lBound = pValue->basicValue->a.integer;
-			if (!sizeConstraint->a.valueRange->lowerEndValue->valueInclusive)
-				++lBound;
-		}
-		else
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - unsupported value in size constraint\n");
-			return;
-		}
+		case SUBTYPEVALUE_VALUERANGE:
+			// Get the lower end value
+			pValue = GetValue(sizeConstraint->a.valueRange->lowerEndValue->endValue);
+			if (pValue->basicValue->choiceId == BASICVALUE_INTEGER)
+			{
+				lBound = pValue->basicValue->a.integer;
+				if (!sizeConstraint->a.valueRange->lowerEndValue->valueInclusive)
+					++lBound;
+			}
+			else
+			{
+				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+				fprintf(errFileG, "ERROR - unsupported value in size constraint\n");
+				return;
+			}
 
-		// Get the upper end value
-		pValue = GetValue(sizeConstraint->a.valueRange->upperEndValue->endValue);
-		if (pValue->basicValue->choiceId == BASICVALUE_INTEGER)
-		{
-			uBound = pValue->basicValue->a.integer;
-			if (!sizeConstraint->a.valueRange->upperEndValue->valueInclusive)
-				--uBound;
-			ubExists = 1;
-		}
-		else if ((pValue->basicValue->choiceId == BASICVALUE_SPECIALINTEGER) &&
-			(pValue->basicValue->a.specialInteger == MAX_INT))
-		{
-			uBound = 0;
-			ubExists = 2;
-		}
-		else
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - unsupported value in size constraint\n");
-			return;
-		}
-		break;
+			// Get the upper end value
+			pValue = GetValue(sizeConstraint->a.valueRange->upperEndValue->endValue);
+			if (pValue->basicValue->choiceId == BASICVALUE_INTEGER)
+			{
+				uBound = pValue->basicValue->a.integer;
+				if (!sizeConstraint->a.valueRange->upperEndValue->valueInclusive)
+					--uBound;
+				ubExists = 1;
+			}
+			else if ((pValue->basicValue->choiceId == BASICVALUE_SPECIALINTEGER) && (pValue->basicValue->a.specialInteger == MAX_INT))
+			{
+				uBound = 0;
+				ubExists = 2;
+			}
+			else
+			{
+				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+				fprintf(errFileG, "ERROR - unsupported value in size constraint\n");
+				return;
+			}
+			break;
 
-	default:
-		PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-		fprintf(errFileG, "ERROR - unsupported size constraint\n");
-		return;
+		default:
+			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+			fprintf(errFileG, "ERROR - unsupported size constraint\n");
+			return;
 	}
 
 	// Check that the size constraint is valid
@@ -99,37 +95,27 @@ void PrintCxxSetOfSizeConstraint(FILE* hdr, SubtypeValue* sizeConstraint,
 
 	// Print the size constraints
 	fprintf(hdr, "\tSizeConstraint* SizeConstraints() const {\n");
-	fprintf(hdr, "\t\tstatic SizeConstraint s = { %ld, %ld, %d }; return &s; }\n",
-		lBound, uBound, ubExists);
+	fprintf(hdr, "\t\tstatic SizeConstraint s = { %ld, %ld, %d }; return &s; }\n", lBound, uBound, ubExists);
 }
-
-
 
 /* Function generates the checkconstraints function for */
 /*    a setOf or seqOf with size constraints set        */
-void PrintCxxSetOfSizeValRangeConstraints PARAMS((hdr, src, td),
-	FILE* hdr _AND_
-	FILE* src _AND_
-	TypeDef* td)
+void PrintCxxSetOfSizeValRangeConstraints PARAMS((hdr, src, td), FILE* hdr _AND_ FILE* src _AND_ TypeDef* td)
 {
 	Subtype* s_type;
 	long lboundLower = 0;
 	long lboundUpper = 0;
 	int ubExists = 2;
 
-	s_type = (Subtype*)td->type->subtypes->a.single->a.sizeConstraint->a. or ->last->data;
+	s_type = (Subtype*)td->type->subtypes->a.single->a.sizeConstraint->a.or->last->data;
 
 	if (s_type->a.single->a.valueRange->lowerEndValue->endValue->basicValue->choiceId == BASICVALUE_INTEGER)
 	{
 		if (s_type->a.single->a.valueRange->lowerEndValue->valueInclusive)
-		{
 
 			lboundLower = s_type->a.single->a.valueRange->lowerEndValue->endValue->basicValue->a.integer;
-		}
 		else
-		{
 			lboundLower = s_type->a.single->a.valueRange->lowerEndValue->endValue->basicValue->a.integer + 1;
-		}
 
 		if (s_type->a.single->a.valueRange->upperEndValue->endValue->basicValue->choiceId == BASICVALUE_INTEGER)
 		{
@@ -147,22 +133,18 @@ void PrintCxxSetOfSizeValRangeConstraints PARAMS((hdr, src, td),
 	}
 
 	if (lboundUpper > 65536)
-	{
 		ubExists = 2;
-	}
 
 	if (ubExists == 2)
-	{
 		lboundUpper = 0;
-	}
 
 	if (lboundLower >= 0 && ((lboundUpper >= 0 && (lboundUpper >= lboundLower)) || ubExists == 2))
 	{
 		fprintf(hdr, "     SizeConstraint* SizeConstraints()const{\n");
 		fprintf(hdr, "         static SizeConstraint s = {%ld, %ld, %d}; SizeConstraint * ps = &s; return ps;}\n", lboundLower, lboundUpper, ubExists);
 
-		//fprintf (hdr, "     SizeConstraint* SizeConstraints(){\n");
-		//fprintf (hdr, "         static SizeConstraint s = {%d, %d, %d}; SizeConstraint * ps = &s; return ps;}\n", lboundLower, lboundUpper, ubExists);
+		// fprintf (hdr, "     SizeConstraint* SizeConstraints(){\n");
+		// fprintf (hdr, "         static SizeConstraint s = {%d, %d, %d}; SizeConstraint * ps = &s; return ps;}\n", lboundLower, lboundUpper, ubExists);
 
 		/*
 		fprintf (hdr, "     AsnLen PEnc(AsnBufBits &b)const;\n");
@@ -176,60 +158,54 @@ void PrintCxxSetOfSizeValRangeConstraints PARAMS((hdr, src, td),
 		fprintf (src, "{\n");
 		fprintf (src, "}\n");
 */
-/*
-fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
-fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
+		/*
+		fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
+		fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
 
-fprintf (src, "  std::string * pTmpError;\n");
-if(ubExists == 1)
-{
-	fprintf (src, "  char* ptr = checkSOfValRange(%d, %d);\n\n", lboundLower, lboundUpper);
-}
-else
-{
-	fprintf (src, "  char* ptr = checkSOfValRange(%d, 65535/\*TBD-fix check to check for unconstrainted UB*//*);\n\n", lboundLower);*/
-	/*        }
-
-			fprintf (src, "  if(ptr)\n   {\n");
-			fprintf (src, "     if(pConstraintFails!=NULL)\n     {\n");
-			fprintf (src, "       pTmpError=pConstraintFails->Append();\n");
-			fprintf (src, "       *pTmpError += ptr;\n");
-			fprintf (src, "       *pTmpError += \"In function call:  %s::checkConstraints(...)\\n\";\n", td->cxxTypeDefInfo->className);
-			fprintf (src, "     }\n");
-			fprintf (src, "   }\n   else\n   {\n");
-
-			fprintf (src, "     return checkListConstraints(pConstraintFails);\n");
-			fprintf (src, "   }\n\n");
-			fprintf (src, "   return checkListConstraints(pConstraintFails);\n");
-			fprintf(src, "\n}\n");
+		fprintf (src, "  std::string * pTmpError;\n");
+		if(ubExists == 1)
+		{
+			fprintf (src, "  char* ptr = checkSOfValRange(%d, %d);\n\n", lboundLower, lboundUpper);
 		}
 		else
 		{
+			fprintf (src, "  char* ptr = checkSOfValRange(%d, 65535/\*TBD-fix check to check for unconstrainted UB*//*);\n\n", lboundLower);*/
+		/*        }
 
-			fprintf(hdr, "      int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
-			fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
-			fprintf(src, "   return checkListConstraints(pConstraintFails);\n");
+				fprintf (src, "  if(ptr)\n   {\n");
+				fprintf (src, "     if(pConstraintFails!=NULL)\n     {\n");
+				fprintf (src, "       pTmpError=pConstraintFails->Append();\n");
+				fprintf (src, "       *pTmpError += ptr;\n");
+				fprintf (src, "       *pTmpError += \"In function call:  %s::checkConstraints(...)\\n\";\n", td->cxxTypeDefInfo->className);
+				fprintf (src, "     }\n");
+				fprintf (src, "   }\n   else\n   {\n");
 
-			fprintf(src, "}\n\n");
-			*/
+				fprintf (src, "     return checkListConstraints(pConstraintFails);\n");
+				fprintf (src, "   }\n\n");
+				fprintf (src, "   return checkListConstraints(pConstraintFails);\n");
+				fprintf(src, "\n}\n");
+			}
+			else
+			{
+
+				fprintf(hdr, "      int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
+				fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
+				fprintf(src, "   return checkListConstraints(pConstraintFails);\n");
+
+				fprintf(src, "}\n\n");
+				*/
 	}
-
 }
 
-void PrintCxxSetOfSizeSingleValConstraints PARAMS((hdr, src, td),
-	FILE* hdr _AND_
-	FILE* src _AND_
-	TypeDef* td)
+void PrintCxxSetOfSizeSingleValConstraints PARAMS((hdr, src, td), FILE* hdr _AND_ FILE* src _AND_ TypeDef* td)
 {
 	Subtype* s_type;
 	long lbound = 0;
 
-	s_type = (Subtype*)td->type->subtypes->a.single->a.sizeConstraint->a. or ->last->data;
+	s_type = (Subtype*)td->type->subtypes->a.single->a.sizeConstraint->a.or->last->data;
 
 	if (s_type->a.single->a.singleValue->basicValue->choiceId == BASICVALUE_INTEGER)
-	{
 		lbound = s_type->a.single->a.singleValue->basicValue->a.integer;
-	}
 
 	if (lbound >= 0)
 	{
@@ -272,26 +248,26 @@ void PrintCxxSetOfSizeSingleValConstraints PARAMS((hdr, src, td),
 		  fprintf (src, "     }\n");
 		  fprintf (src, "}\n");
   */
-  /*
-  fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
-  fprintf(src, "int %s::checkConstraints(ConstraintFailList*pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
+		/*
+		fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
+		fprintf(src, "int %s::checkConstraints(ConstraintFailList*pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
 
 
-  fprintf (src, "  std::string * pTmpError;\n");
-  fprintf (src, "  char* ptr = checkSOfSingleVal(%d);\n\n", lbound);
-  fprintf (src, "  if(ptr)\n   {\n");
-  fprintf (src, "     if(pConstraintFails!=NULL)\n     {\n");
-  fprintf (src, "       pTmpError=pConstraintFails->Append();\n");
-  fprintf (src, "       *pTmpError += ptr;\n");
-  fprintf (src, "       *pTmpError += \"In function call:  %s...)\\n\";\n", td->cxxTypeDefInfo->className);
-  fprintf (src, "     }\n");
-  fprintf (src, "   }\n   else\n   {\n");
+		fprintf (src, "  std::string * pTmpError;\n");
+		fprintf (src, "  char* ptr = checkSOfSingleVal(%d);\n\n", lbound);
+		fprintf (src, "  if(ptr)\n   {\n");
+		fprintf (src, "     if(pConstraintFails!=NULL)\n     {\n");
+		fprintf (src, "       pTmpError=pConstraintFails->Append();\n");
+		fprintf (src, "       *pTmpError += ptr;\n");
+		fprintf (src, "       *pTmpError += \"In function call:  %s...)\\n\";\n", td->cxxTypeDefInfo->className);
+		fprintf (src, "     }\n");
+		fprintf (src, "   }\n   else\n   {\n");
 
-  fprintf (src, "     return checkListConstraints(pConstraintFails);\n");
-  fprintf (src, "   }\n\n");
-  fprintf (src, "   return checkListConstraints(pConstraintFails);\n");
-  fprintf(src, "\n}\n");
-  */
+		fprintf (src, "     return checkListConstraints(pConstraintFails);\n");
+		fprintf (src, "   }\n\n");
+		fprintf (src, "   return checkListConstraints(pConstraintFails);\n");
+		fprintf(src, "\n}\n");
+		*/
 	}
 	else
 	{
@@ -303,5 +279,4 @@ void PrintCxxSetOfSizeSingleValConstraints PARAMS((hdr, src, td),
 		fprintf(src, "}\n\n");
 		*/
 	}
-
 }

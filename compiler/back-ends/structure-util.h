@@ -5,7 +5,6 @@
 #include "../core/asn1module.h"
 #include "str-util.h"
 
-
 bool IsROSEValueDef(Module* mod, ValueDef* vd);
 // Resolves the argument, result and error value for a ROSE operation
 // if specified also resolves the types of these references
@@ -44,7 +43,7 @@ Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod);
 // -- @deprecated 01.01.2023 Superseeded by XYZ
 
 // You may now call the compiler with:
-// -nodeprecated 
+// -nodeprecated
 // which will remove all deprecated flagg elements
 // IsDeprecatedFlagged... returns false, IsDeprecatedNoOutput... returns true
 
@@ -55,7 +54,6 @@ Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod);
 // -nodeprecated:31.12.2022
 // which will not remove the element but will annotate that the element has been flagged deprecated
 // IsDeprecatedFlagged... returns true, IsDeprecatedNoOutput... returns false
-
 
 // Returns true when an element is flagged as deprecated (and is not set as no output)
 bool IsDeprecatedFlaggedModule(Module* mod);
@@ -68,6 +66,5 @@ bool IsDeprecatedNoOutputModule(Module* mod);
 bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szElement);
 bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName);
 bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName);
-
 
 #endif

@@ -33,8 +33,4 @@
 #define DDecPrintableStringContent DDecAsnOctsContent
 #define DDecTeletexStringContent DDecAsnOctsContent
 
-
-
-
 #endif /* conditional include */
-

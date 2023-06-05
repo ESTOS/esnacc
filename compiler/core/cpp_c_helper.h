@@ -2,7 +2,8 @@
 #define CPP_HELPER_C_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 	typedef struct SASN1File

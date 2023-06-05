@@ -71,37 +71,26 @@ static DefinedObj* definedNamesG;
  *  assure uniqueness. (actually 4 name spaces in C - see pg 227 KR 2nd Ed)
  */
 
+/* unexported prototypes */
 
- /* unexported prototypes */
-
-static void FillCTypeDefInfo PROTO((CRules* r, Module* m, TypeDef* td));
-static void FillCFieldNames PROTO((CRules* r, NamedTypeList* firstSibling));
-static void FillCTypeRefInfo PROTO((CRules* r, Module* m, TypeDef* head,
-	Type* t, CTypeId parentTypeId));
-static void FillCStructElmts PROTO((CRules* r, Module* m, TypeDef* head,
-	NamedTypeList* t));
-static void FillCChoiceElmts PROTO((CRules* r, Module* m, TypeDef* head,
-	NamedTypeList* first));
-static int IsCPtr PROTO((CRules* r, TypeDef* td, Type* t,
-	CTypeId parentTypeId));
+static void FillCTypeDefInfo PROTO((CRules * r, Module* m, TypeDef* td));
+static void FillCFieldNames PROTO((CRules * r, NamedTypeList* firstSibling));
+static void FillCTypeRefInfo PROTO((CRules * r, Module* m, TypeDef* head, Type* t, CTypeId parentTypeId));
+static void FillCStructElmts PROTO((CRules * r, Module* m, TypeDef* head, NamedTypeList* t));
+static void FillCChoiceElmts PROTO((CRules * r, Module* m, TypeDef* head, NamedTypeList* first));
+static int IsCPtr PROTO((CRules * r, TypeDef* td, Type* t, CTypeId parentTypeId));
 const char* GetDirectiveName(SnaccDirectiveEnum dirType);
 
-static void ParseTypeDefAttribs PROTO((CTDI* ctdi,
-	SnaccDirectiveList* attrList));
-static void ParseTypeRefAttribs PROTO((CTRI* ctri,
-	SnaccDirectiveList* attrList));
-static void FillCTDIDefaults PROTO((CRules* r, CTDI* ctdi, TypeDef* td));
-
+static void ParseTypeDefAttribs PROTO((CTDI * ctdi, SnaccDirectiveList* attrList));
+static void ParseTypeRefAttribs PROTO((CTRI * ctri, SnaccDirectiveList* attrList));
+static void FillCTDIDefaults PROTO((CRules * r, CTDI* ctdi, TypeDef* td));
 
 /*
  *  allocates and fills all the "cTypeDefInfo" for each type def
  *  and "cTypeRefInfo" for each type in the given modules.
  *  Also does the useful types module if it is not null.
  */
-void
-FillCTypeInfo PARAMS((r, modList),
-	CRules* r _AND_
-	ModuleList* modList)
+void FillCTypeInfo PARAMS((r, modList), CRules* r _AND_ ModuleList* modList)
 {
 	TypeDef* td;
 	Module* m;
@@ -115,9 +104,8 @@ FillCTypeInfo PARAMS((r, modList),
 	FOR_EACH_LIST_ELMT(m, modList)
 	{
 		FOR_EACH_LIST_ELMT(td, m->typeDefs)
-			FillCTypeDefInfo(r, m, td);
+		FillCTypeDefInfo(r, m, td);
 	}
-
 
 	/*
 	 * now that type def info is filled in
@@ -127,7 +115,7 @@ FillCTypeInfo PARAMS((r, modList),
 	FOR_EACH_LIST_ELMT(m, modList)
 	{
 		FOR_EACH_LIST_ELMT(td, m->typeDefs)
-			FillCTypeRefInfo(r, m, td, td->type, C_TYPEDEF);
+		FillCTypeRefInfo(r, m, td, td->type, C_TYPEDEF);
 	}
 
 	/*
@@ -142,19 +130,14 @@ FillCTypeInfo PARAMS((r, modList),
 
 	FreeDefinedObjs(&definedNamesG);
 
-}  /* FillCTypeInfo */
-
+} /* FillCTypeInfo */
 
 /*
  *  allocates and fills structure holding C type definition information
  *  fo the given ASN.1 type definition.  Does not fill CTRI for contained
  *  types etc.
  */
-void
-FillCTypeDefInfo PARAMS((r, m, td),
-	CRules* r _AND_
-	Module* m _AND_
-	TypeDef* td)
+void FillCTypeDefInfo PARAMS((r, m, td), CRules* r _AND_ Module* m _AND_ TypeDef* td)
 {
 	size_t len;
 	char* tmpName;
@@ -173,14 +156,12 @@ FillCTypeDefInfo PARAMS((r, m, td),
 
 	FillCTDIDefaults(r, ctdi, td);
 
-
 	/*
 	 * if defined by a ref to another type definition fill in that type
 	 * def's CTDI so can inherit (actully completly replace default
 	 * attributes) from it
 	 */
-	if ((td->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-		(td->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+	if ((td->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (td->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 	{
 		/*
 		 * Fill in CTDI for defining type if nec.
@@ -192,7 +173,6 @@ FillCTypeDefInfo PARAMS((r, m, td),
 		memcpy(ctdi, td->type->basicType->a.localTypeRef->link->cTypeDefInfo, sizeof(CTDI));
 	}
 
-
 	/*
 	 * Zap default names for routines/type with NULL so
 	 * can determine if the --snacc attributes specified any
@@ -203,7 +183,6 @@ FillCTypeDefInfo PARAMS((r, m, td),
 	ctdi->decodeRoutineName = NULL;
 	ctdi->freeRoutineName = NULL;
 
-
 	/*
 	 * check for any "--snacc" attributes that overide the current
 	 * ctdi fields
@@ -211,11 +190,9 @@ FillCTypeDefInfo PARAMS((r, m, td),
 	ParseTypeDefAttribs(ctdi, td->attrList);
 
 	/* If BigInt's used, then reset the default type def attributes */
-/*    if (ctdi->asn1TypeId == BASICTYPE_BIGINT) {
-	  td->type->basicType->choiceId = BASICTYPE_BIGINT;
-	} */
-
-
+	/*    if (ctdi->asn1TypeId == BASICTYPE_BIGINT) {
+		  td->type->basicType->choiceId = BASICTYPE_BIGINT;
+		} */
 
 	/*
 	 * generate c typename for this  type def if not given by
@@ -237,7 +214,6 @@ FillCTypeDefInfo PARAMS((r, m, td),
 		MakeCStrUnique(definedNamesG, ctdi->cTypeName, size, r->maxDigitsToAppend, 1);
 		DefineObj(&definedNamesG, ctdi->cTypeName);
 	}
-
 
 	/*
 	 * make names for encoder,decoder, print and free routines
@@ -274,16 +250,9 @@ FillCTypeDefInfo PARAMS((r, m, td),
 		strcpy_s(ctdi->freeRoutineName, size, r->freeRoutineBaseName);
 		strcat_s(ctdi->freeRoutineName, size, ctdi->cTypeName);
 	}
-}  /* FillCTypeDefInfo */
+} /* FillCTypeDefInfo */
 
-
-static void
-FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
-	CRules* r _AND_
-	Module* m _AND_
-	TypeDef* head _AND_
-	Type* t _AND_
-	CTypeId parentTypeId)
+static void FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId), CRules* r _AND_ Module* m _AND_ TypeDef* head _AND_ Type* t _AND_ CTypeId parentTypeId)
 {
 	CTRI* ctri;
 	CTDI* tmpCtdi;
@@ -338,7 +307,7 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 	 * check for name conflict with other defined Types/Names/Values
 	 */
 	if ((basicTypeId == BASICTYPE_INTEGER || basicTypeId == BASICTYPE_ENUMERATED || basicTypeId == BASICTYPE_BITSTRING) && !(LIST_EMPTY(t->basicType->a.integer)))
-		/*    if ((basicTypeId == BASICTYPE_INTEGER || basicTypeId == BASICTYPE_ENUMERATED || basicTypeId == BASICTYPE_BITSTRING) && !(LIST_EMPTY (t->basicType->a.integer))) */
+	/*    if ((basicTypeId == BASICTYPE_INTEGER || basicTypeId == BASICTYPE_ENUMERATED || basicTypeId == BASICTYPE_BITSTRING) && !(LIST_EMPTY (t->basicType->a.integer))) */
 	{
 		ctri->cNamedElmts = AsnListNew(sizeof(void*));
 		FOR_EACH_LIST_ELMT(namedElmt, t->basicType->a.integer)
@@ -397,10 +366,10 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 		}
 		 */
 
-		 /*
-		  * grab type name from link (link is the def of the
-		  * the ref'd type)
-		  */
+		/*
+		 * grab type name from link (link is the def of the
+		 * the ref'd type)
+		 */
 		if (t->basicType->a.localTypeRef->link != NULL)
 		{
 			/* inherit attributes from referenced type */
@@ -412,15 +381,13 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 			ctri->freeRoutineName = tmpCtdi->freeRoutineName;
 			ctri->isEncDec = tmpCtdi->isEncDec;
 			ctri->optTestRoutineName = tmpCtdi->optTestRoutineName;
-
 		}
 		else
 		{
 			/*
 			 * guess type and routine names
 			 */
-			fprintf(errFileG, "Assuming C Type and Routine names for unresolved type ref \"%s\"\n",
-				t->basicType->a.localTypeRef->typeName);
+			fprintf(errFileG, "Assuming C Type and Routine names for unresolved type ref \"%s\"\n", t->basicType->a.localTypeRef->typeName);
 
 			ctri->cTypeName = Asn1TypeName2CTypeName(t->basicType->a.localTypeRef->typeName);
 
@@ -444,7 +411,6 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 			strcpy_s(ctri->freeRoutineName, size4, r->freeRoutineBaseName);
 			strcat_s(ctri->freeRoutineName, size4, ctri->cTypeName);
 		}
-
 	}
 	// Deepak: 05/Feb/2003
 #ifdef DEEPAK
@@ -457,23 +423,22 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 		if (t->basicType->a.localTypeRef->namedTypeLink != NULL)
 		{
 			/* inherit attributes from referenced type */
-		  /*  tmpCtdi=  t->basicType->a.localTypeRef->namedTypeLink->type->cTypeRefInfo;
-			ctri->cTypeName = tmpCtdi->cTypeName;
-			ctri->printRoutineName  = tmpCtdi->printRoutineName;
-			ctri->encodeRoutineName = tmpCtdi->encodeRoutineName;
-			ctri->decodeRoutineName = tmpCtdi->decodeRoutineName;
-			ctri->freeRoutineName = tmpCtdi->freeRoutineName;
-			ctri->isEncDec = tmpCtdi->isEncDec;
-			ctri->optTestRoutineName = tmpCtdi->optTestRoutineName;
-		  */
+			/*  tmpCtdi=  t->basicType->a.localTypeRef->namedTypeLink->type->cTypeRefInfo;
+			  ctri->cTypeName = tmpCtdi->cTypeName;
+			  ctri->printRoutineName  = tmpCtdi->printRoutineName;
+			  ctri->encodeRoutineName = tmpCtdi->encodeRoutineName;
+			  ctri->decodeRoutineName = tmpCtdi->decodeRoutineName;
+			  ctri->freeRoutineName = tmpCtdi->freeRoutineName;
+			  ctri->isEncDec = tmpCtdi->isEncDec;
+			  ctri->optTestRoutineName = tmpCtdi->optTestRoutineName;
+			*/
 		}
 		else
 		{
 			/*
 			 * guess type and routine names
 			 */
-			fprintf(errFileG, "Assuming C Type and Routine names for unresolved type ref \"%s\"\n",
-				t->basicType->a.localTypeRef->typeName);
+			fprintf(errFileG, "Assuming C Type and Routine names for unresolved type ref \"%s\"\n", t->basicType->a.localTypeRef->typeName);
 
 			ctri->cTypeName = Asn1TypeName2CTypeName(t->basicType->a.localTypeRef->typeName);
 
@@ -493,19 +458,18 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 			strcpy(ctri->freeRoutineName, r->freeRoutineBaseName);
 			strcat(ctri->freeRoutineName, ctri->cTypeName);
 		}
-
 	}
-#endif	// DEEPAK
+#endif // DEEPAK
 	else if (r->typeConvTbl[basicTypeId].cTypeId == C_OBJECTCLASS)
-	{	// Deepak: 11/Mar/2003
-		//FillCTypeRefInfo (r, m, head, t->basicType->a.objectclass->classdef, C_LIST);
+	{ // Deepak: 11/Mar/2003
+		// FillCTypeRefInfo (r, m, head, t->basicType->a.objectclass->classdef, C_LIST);
 		size_t size = strlen(head->cTypeDefInfo->cTypeName) + 1;
 		unionName = Malloc(size);
 		strcpy_s(unionName, size, head->cTypeDefInfo->cTypeName);
 		ctri->cTypeName = unionName;
 
-		FillCStructElmts(r, m, head, t->basicType->a.objectclass->classdef);		// Deepak: All the elements in this structure are filled here.
-		FillCFieldNames(r, t->basicType->a.objectclass->classdef);	// Deepak: All the identifiers are stored over here.
+		FillCStructElmts(r, m, head, t->basicType->a.objectclass->classdef); // Deepak: All the elements in this structure are filled here.
+		FillCFieldNames(r, t->basicType->a.objectclass->classdef);			 // Deepak: All the identifiers are stored over here.
 	}
 	else if (r->typeConvTbl[basicTypeId].cTypeId == C_LIST)
 	{
@@ -527,11 +491,11 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 		 * refs in nomalize.c)
 		 */
 
-		 /*
-		  * make union name (tag) from enclosing typedefs name plus "Choice"
-		  * put in the cTypeName part. (the typeDef name is already unique
-		  * but make sure union tag/name does not conflict with other types)
-		  */
+		/*
+		 * make union name (tag) from enclosing typedefs name plus "Choice"
+		 * put in the cTypeName part. (the typeDef name is already unique
+		 * but make sure union tag/name does not conflict with other types)
+		 */
 		len = strlen(head->cTypeDefInfo->cTypeName);
 		size_t size1 = len + strlen(r->choiceUnionDefSuffix) + r->maxDigitsToAppend + 1;
 		unionName = (char*)Malloc(size1);
@@ -549,7 +513,7 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 		DefineObj(&definedNamesG, ctri->choiceIdEnumName);
 
 		ctri->choiceIdEnumFieldName = r->choiceIdFieldName; /* "choiceId" */
-		ctri->cFieldName = r->choiceUnionFieldName;         /* "a" */
+		ctri->cFieldName = r->choiceUnionFieldName;			/* "a" */
 
 		/*
 		 * must fill field names BEFORE filling choice elmts
@@ -557,7 +521,6 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 		 */
 		FillCFieldNames(r, t->basicType->a.choice);
 		FillCChoiceElmts(r, m, head, t->basicType->a.choice);
-
 	}
 
 	else if (r->typeConvTbl[basicTypeId].cTypeId == C_STRUCT)
@@ -566,28 +529,28 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 		 * SETs and SEQUENCEs
 		 */
 
-		 /*
-		  * make struct name (tag) (the typeDef name is already unique)
-		  * the same as the enclosing typeDef
-		  */
+		/*
+		 * make struct name (tag) (the typeDef name is already unique)
+		 * the same as the enclosing typeDef
+		 */
 		size_t size = strlen(head->cTypeDefInfo->cTypeName) + 1;
 		unionName = Malloc(size);
 		strcpy_s(unionName, size, head->cTypeDefInfo->cTypeName);
 		ctri->cTypeName = unionName;
 
-		FillCStructElmts(r, m, head, t->basicType->a.set);		// Deepak: All the elements in this structure are filled here.
-		FillCFieldNames(r, t->basicType->a.set);	// Deepak: All the identifiers are stored over here.
+		FillCStructElmts(r, m, head, t->basicType->a.set); // Deepak: All the elements in this structure are filled here.
+		FillCFieldNames(r, t->basicType->a.set);		   // Deepak: All the identifiers are stored over here.
 	}
 	else if (r->typeConvTbl[basicTypeId].cTypeId == C_MACROTYPE)
-	{		// Deepak: 17/Apr/2003
+	{ // Deepak: 17/Apr/2003
 		/*
 		 * Macro Types
 		 */
 
-		 /*
-		  * make struct name (tag) (the typeDef name is already unique)
-		  * the same as the enclosing typeDef
-		  */
+		/*
+		 * make struct name (tag) (the typeDef name is already unique)
+		 * the same as the enclosing typeDef
+		 */
 		size_t size = strlen(head->cTypeDefInfo->cTypeName) + 1;
 		unionName = Malloc(size);
 		strcpy_s(unionName, size, head->cTypeDefInfo->cTypeName);
@@ -595,17 +558,17 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 
 		switch (t->basicType->a.macroType->choiceId)
 		{
-		case MACROTYPE_ASNABSTRACTOPERATION:
-		case MACROTYPE_ROSOPERATION:
+			case MACROTYPE_ASNABSTRACTOPERATION:
+			case MACROTYPE_ROSOPERATION:
 
-			if (t->basicType->a.macroType->a.rosOperation->arguments != NULL)
-				FillCTypeRefInfo(r, m, head, t->basicType->a.macroType->a.rosOperation->arguments->type, C_MACROTYPE);
+				if (t->basicType->a.macroType->a.rosOperation->arguments != NULL)
+					FillCTypeRefInfo(r, m, head, t->basicType->a.macroType->a.rosOperation->arguments->type, C_MACROTYPE);
 
-			if (t->basicType->a.macroType->a.rosOperation->result != NULL)
-				FillCTypeRefInfo(r, m, head, t->basicType->a.macroType->a.rosOperation->result->type, C_MACROTYPE);
-			break;
-		default:
-			break;
+				if (t->basicType->a.macroType->a.rosOperation->result != NULL)
+					FillCTypeRefInfo(r, m, head, t->basicType->a.macroType->a.rosOperation->result->type, C_MACROTYPE);
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -613,49 +576,34 @@ FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId),
 	 * figure out whether this is a ptr based on the enclosing
 	 * type (if any) and optionality/default
 	 */
-	ctri->isPtr = (unsigned char)IsCPtr(r, head, t, parentTypeId);		// ????? check for C_MACROTYPE
+	ctri->isPtr = (unsigned char)IsCPtr(r, head, t, parentTypeId); // ????? check for C_MACROTYPE
 
 	/* let user overide any defaults with the --snacc attributes */
 	ParseTypeRefAttribs(ctri, t->attrList);
 
 	/* Check for bigint conversion */
-  /*  if (strcmp(ctri->cTypeName, "AsnBigInt") == 0) {
-	  t->basicType->choiceId = BASICTYPE_BIGINT;
-	} */
+	/*  if (strcmp(ctri->cTypeName, "AsnBigInt") == 0) {
+		t->basicType->choiceId = BASICTYPE_BIGINT;
+	  } */
 
+} /* FillCTypeRefInfo */
 
-}  /* FillCTypeRefInfo */
-
-
-
-static void
-FillCStructElmts PARAMS((r, m, head, elmts),
-	CRules* r _AND_
-	Module* m _AND_
-	TypeDef* head _AND_
-	NamedTypeList* elmts)
+static void FillCStructElmts PARAMS((r, m, head, elmts), CRules* r _AND_ Module* m _AND_ TypeDef* head _AND_ NamedTypeList* elmts)
 {
 	NamedType* et;
 
-	FOR_EACH_LIST_ELMT(et, elmts)		// Take struct elements one by one.
+	FOR_EACH_LIST_ELMT(et, elmts) // Take struct elements one by one.
 	{
 		FillCTypeRefInfo(r, m, head, et->type, C_STRUCT);
 	}
 
-}  /* FillCStructElmts */
-
-
+} /* FillCStructElmts */
 
 /*
  *  Figures out non-conflicting enum names for the
  *  choice id's
  */
-static void
-FillCChoiceElmts PARAMS((r, m, head, elmts),
-	CRules* r _AND_
-	Module* m _AND_
-	TypeDef* head _AND_
-	NamedTypeList* elmts)
+static void FillCChoiceElmts PARAMS((r, m, head, elmts), CRules* r _AND_ Module* m _AND_ TypeDef* head _AND_ NamedTypeList* elmts)
 {
 	NamedType* et;
 	int idCount = 0;
@@ -668,7 +616,7 @@ FillCChoiceElmts PARAMS((r, m, head, elmts),
 	 * fill in type info for elmt types first
 	 */
 	FOR_EACH_LIST_ELMT(et, elmts)
-		FillCTypeRefInfo(r, m, head, et->type, C_CHOICE);
+	FillCTypeRefInfo(r, m, head, et->type, C_CHOICE);
 
 	/*
 	 * set choiceId Symbol & value
@@ -710,18 +658,14 @@ FillCChoiceElmts PARAMS((r, m, head, elmts),
 		DefineObj(&definedNamesG, ctri->choiceIdSymbol);
 	}
 
-}  /* FillCChoiceElmts */
-
+} /* FillCChoiceElmts */
 
 /*
  * takes a list of "sibling" (eg same level in a structure)
  * ElmtTypes and fills sets up the c field names in
  * the CTypeRefInfo struct
  */
-static void
-FillCFieldNames PARAMS((r, elmts),
-	CRules* r _AND_
-	NamedTypeList* elmts)
+static void FillCFieldNames PARAMS((r, elmts), CRules* r _AND_ NamedTypeList* elmts)
 {
 	NamedType* et;
 	CTRI* ctri;
@@ -753,7 +697,6 @@ FillCFieldNames PARAMS((r, elmts),
 		}
 	}
 
-
 	FOR_EACH_LIST_ELMT(et, elmts)
 	{
 		ctri = et->type->cTypeRefInfo;
@@ -764,8 +707,7 @@ FillCFieldNames PARAMS((r, elmts),
 		if (ctri->cFieldName == NULL)
 		{
 			size_t size = 0;
-			if ((et->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-				(et->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+			if ((et->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (et->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 			{
 				/*
 				 * take ref'd type name as field name
@@ -794,7 +736,6 @@ FillCFieldNames PARAMS((r, elmts),
 					cFieldName[0] = (char)tolower(cFieldName[0]);
 			}
 
-
 			MakeCStrUnique(fieldNames, cFieldName, size, r->maxDigitsToAppend, 1);
 
 			DefineObj(&fieldNames, cFieldName);
@@ -802,20 +743,13 @@ FillCFieldNames PARAMS((r, elmts),
 		}
 	}
 	FreeDefinedObjs(&fieldNames);
-}  /* FillCFieldNames */
-
-
+} /* FillCFieldNames */
 
 /*
  * returns true if this c type for this type should be
  * be ref'd as a ptr
  */
-static int
-IsCPtr PARAMS((r, td, t, parentCTypeId),
-	CRules* r _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	CTypeId parentCTypeId)
+static int IsCPtr PARAMS((r, td, t, parentCTypeId), CRules* r _AND_ TypeDef* td _AND_ Type* t _AND_ CTypeId parentCTypeId)
 {
 	CTDI* ctdi;
 	int retVal = FALSE;
@@ -824,11 +758,8 @@ IsCPtr PARAMS((r, td, t, parentCTypeId),
 	 * inherit ptr attriubutes from ref'd type if any
 	 * otherwise grab lib c type def from the CRules
 	 */
-	if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-		(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
-	{
+	if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 		ctdi = t->basicType->a.localTypeRef->link->cTypeDefInfo;
-	}
 	else
 		ctdi = &r->typeConvTbl[GetBuiltinType(t)];
 
@@ -848,22 +779,16 @@ IsCPtr PARAMS((r, td, t, parentCTypeId),
 	else if (((t->optional) || (t->defaultVal != NULL)) && (ctdi->isPtrForOpt))
 		retVal = TRUE;
 	return retVal;
-}  /* IsCPtr */
+} /* IsCPtr */
 
-
-
-#define BAD_VALUE(attrValue, attrType)\
-    fprintf (errFileG, "Warning: ignoring attribute with improper value (%s/%s)\n",\
-		attrType, attrValue)
+#define BAD_VALUE(attrValue, attrType) fprintf(errFileG, "Warning: ignoring attribute with improper value (%s/%s)\n", attrType, attrValue)
 
 /*
  * attrList is a list of strings that hold attribute value
  * pairs.  A list is used in case the attr/value pairs are
  * given in multiple ASN.1 comments around the type.
  */
-void ParseTypeDefAttribs PARAMS((ctdi, attrList),
-	CTDI* ctdi _AND_
-	SnaccDirectiveList* attrList)
+void ParseTypeDefAttribs PARAMS((ctdi, attrList), CTDI* ctdi _AND_ SnaccDirectiveList* attrList)
 {
 	SnaccDirective* pDirective;
 
@@ -874,99 +799,95 @@ void ParseTypeDefAttribs PARAMS((ctdi, attrList),
 	{
 		switch (pDirective->type)
 		{
-		case ASN1_TypeID:
-			ctdi->asn1TypeId = pDirective->value.asnTypeVal;
-			break;
+			case ASN1_TypeID:
+				ctdi->asn1TypeId = pDirective->value.asnTypeVal;
+				break;
 
-		case C_TypeID:
-			ctdi->cTypeId = pDirective->value.cTypeVal;
-			break;
+			case C_TypeID:
+				ctdi->cTypeId = pDirective->value.cTypeVal;
+				break;
 
-		case C_TypeName:
-			ctdi->cTypeName = pDirective->value.stringVal;
-			break;
+			case C_TypeName:
+				ctdi->cTypeName = pDirective->value.stringVal;
+				break;
 
-		case IsPDU:
-			ctdi->isPdu = pDirective->value.boolVal;
-			break;
+			case IsPDU:
+				ctdi->isPdu = pDirective->value.boolVal;
+				break;
 
-		case IsPtrForTypeDef:
-			ctdi->isPtrForTypeDef = pDirective->value.boolVal;
-			break;
+			case IsPtrForTypeDef:
+				ctdi->isPtrForTypeDef = pDirective->value.boolVal;
+				break;
 
-		case IsPtrForTypeRef:
-			ctdi->isPtrForTypeRef = pDirective->value.boolVal;
-			break;
+			case IsPtrForTypeRef:
+				ctdi->isPtrForTypeRef = pDirective->value.boolVal;
+				break;
 
-		case IsPtrInChoice:
-			ctdi->isPtrInChoice = pDirective->value.boolVal;
-			break;
+			case IsPtrInChoice:
+				ctdi->isPtrInChoice = pDirective->value.boolVal;
+				break;
 
-		case IsPtrForOpt:
-			ctdi->isPtrForOpt = pDirective->value.boolVal;
-			break;
+			case IsPtrForOpt:
+				ctdi->isPtrForOpt = pDirective->value.boolVal;
+				break;
 
-		case OptionalTestRoutineName:
-			ctdi->optTestRoutineName = pDirective->value.stringVal;
-			break;
+			case OptionalTestRoutineName:
+				ctdi->optTestRoutineName = pDirective->value.stringVal;
+				break;
 
-		case DefaultFieldName:
-			ctdi->defaultFieldName = pDirective->value.stringVal;
-			break;
+			case DefaultFieldName:
+				ctdi->defaultFieldName = pDirective->value.stringVal;
+				break;
 
-		case PrintRoutineName:
-			ctdi->printRoutineName = pDirective->value.stringVal;
-			break;
+			case PrintRoutineName:
+				ctdi->printRoutineName = pDirective->value.stringVal;
+				break;
 
-		case EncodeRoutineName:
-			ctdi->encodeRoutineName = pDirective->value.stringVal;
-			break;
+			case EncodeRoutineName:
+				ctdi->encodeRoutineName = pDirective->value.stringVal;
+				break;
 
-		case DecodeRoutineName:
-			ctdi->decodeRoutineName = pDirective->value.stringVal;
-			break;
+			case DecodeRoutineName:
+				ctdi->decodeRoutineName = pDirective->value.stringVal;
+				break;
 
-		case FreeRoutineName:
-			ctdi->freeRoutineName = pDirective->value.stringVal;
-			break;
+			case FreeRoutineName:
+				ctdi->freeRoutineName = pDirective->value.stringVal;
+				break;
 
-		case IsEncDec:
-			ctdi->isEncDec = pDirective->value.boolVal;
-			break;
+			case IsEncDec:
+				ctdi->isEncDec = pDirective->value.boolVal;
+				break;
 
-		case GenTypeDef:
-			ctdi->genTypeDef = pDirective->value.boolVal;
-			break;
+			case GenTypeDef:
+				ctdi->genTypeDef = pDirective->value.boolVal;
+				break;
 
-		case GenPrintRoutine:
-			ctdi->genPrintRoutine = pDirective->value.boolVal;
-			break;
+			case GenPrintRoutine:
+				ctdi->genPrintRoutine = pDirective->value.boolVal;
+				break;
 
-		case GenEncodeRoutine:
-			ctdi->genEncodeRoutine = pDirective->value.boolVal;
-			break;
+			case GenEncodeRoutine:
+				ctdi->genEncodeRoutine = pDirective->value.boolVal;
+				break;
 
-		case GenDecodeRoutine:
-			ctdi->genDecodeRoutine = pDirective->value.boolVal;
-			break;
+			case GenDecodeRoutine:
+				ctdi->genDecodeRoutine = pDirective->value.boolVal;
+				break;
 
-		case GenFreeRoutine:
-			ctdi->genFreeRoutine = pDirective->value.boolVal;
-			break;
+			case GenFreeRoutine:
+				ctdi->genFreeRoutine = pDirective->value.boolVal;
+				break;
 
-		default:
-			fprintf(errFileG, "Warning: ignoring unrecognized type def attribute '%s'\n",
-				GetDirectiveName(pDirective->type));
+			default:
+				fprintf(errFileG, "Warning: ignoring unrecognized type def attribute '%s'\n", GetDirectiveName(pDirective->type));
 		}
 
 	} /* end for */
 
 } /* ParseTypeDefAttribs */
 
-
-void ParseTypeRefAttribs PARAMS((ctri, attrList),
-	CTRI* ctri _AND_
-	SnaccDirectiveList* attrList)
+void ParseTypeRefAttribs PARAMS((ctri, attrList), CTRI* ctri _AND_ SnaccDirectiveList* attrList)
 {
 	SnaccDirective* pDirective;
 
@@ -977,89 +898,83 @@ void ParseTypeRefAttribs PARAMS((ctri, attrList),
 	{
 		switch (pDirective->type)
 		{
-		case C_TypeID:
-			ctri->cTypeId = pDirective->value.cTypeVal;
-			break;
+			case C_TypeID:
+				ctri->cTypeId = pDirective->value.cTypeVal;
+				break;
 
-		case C_TypeName:
-			ctri->cTypeName = pDirective->value.stringVal;
-			break;
+			case C_TypeName:
+				ctri->cTypeName = pDirective->value.stringVal;
+				break;
 
-		case C_FieldName:
-			ctri->cFieldName = pDirective->value.stringVal;
-			break;
+			case C_FieldName:
+				ctri->cFieldName = pDirective->value.stringVal;
+				break;
 
-		case IsPtr:
-			ctri->isPtr = pDirective->value.boolVal;
-			break;
+			case IsPtr:
+				ctri->isPtr = pDirective->value.boolVal;
+				break;
 
-		case ChoiceIdValue:
-			ctri->choiceIdValue = pDirective->value.integerVal;
-			break;
+			case ChoiceIdValue:
+				ctri->choiceIdValue = pDirective->value.integerVal;
+				break;
 
-		case ChoiceIdSymbol:
-			ctri->choiceIdSymbol = pDirective->value.stringVal;
-			break;
+			case ChoiceIdSymbol:
+				ctri->choiceIdSymbol = pDirective->value.stringVal;
+				break;
 
-		case ChoiceIdEnumName:
-			ctri->choiceIdEnumName = pDirective->value.stringVal;
-			break;
+			case ChoiceIdEnumName:
+				ctri->choiceIdEnumName = pDirective->value.stringVal;
+				break;
 
-		case ChoiceIdEnumFieldName:
-			ctri->choiceIdEnumFieldName = pDirective->value.stringVal;
-			break;
+			case ChoiceIdEnumFieldName:
+				ctri->choiceIdEnumFieldName = pDirective->value.stringVal;
+				break;
 
-		case OptionalTestRoutineName:
-			ctri->optTestRoutineName = pDirective->value.stringVal;
-			break;
+			case OptionalTestRoutineName:
+				ctri->optTestRoutineName = pDirective->value.stringVal;
+				break;
 
-		case PrintRoutineName:
-			ctri->printRoutineName = pDirective->value.stringVal;
-			break;
+			case PrintRoutineName:
+				ctri->printRoutineName = pDirective->value.stringVal;
+				break;
 
-		case EncodeRoutineName:
-			ctri->encodeRoutineName = pDirective->value.stringVal;
-			break;
+			case EncodeRoutineName:
+				ctri->encodeRoutineName = pDirective->value.stringVal;
+				break;
 
-		case DecodeRoutineName:
-			ctri->decodeRoutineName = pDirective->value.stringVal;
-			break;
+			case DecodeRoutineName:
+				ctri->decodeRoutineName = pDirective->value.stringVal;
+				break;
 
-		case FreeRoutineName:
-			ctri->freeRoutineName = pDirective->value.stringVal;
-			break;
+			case FreeRoutineName:
+				ctri->freeRoutineName = pDirective->value.stringVal;
+				break;
 
-		case IsEncDec:
-			ctri->isEncDec = pDirective->value.boolVal;
-			break;
+			case IsEncDec:
+				ctri->isEncDec = pDirective->value.boolVal;
+				break;
 
-		case IsBigInt:
-			if (pDirective->value.boolVal)
-			{
-				ctri->cTypeName = "AsnBigInt";
-				ctri->printRoutineName = "PrintAsnBigInt";
-				ctri->encodeRoutineName = "EncAsnBigInt";
-				ctri->decodeRoutineName = "DecAsnBigInt";
-				ctri->freeRoutineName = "FreeAsnBigInt";
-			}
-			break;
+			case IsBigInt:
+				if (pDirective->value.boolVal)
+				{
+					ctri->cTypeName = "AsnBigInt";
+					ctri->printRoutineName = "PrintAsnBigInt";
+					ctri->encodeRoutineName = "EncAsnBigInt";
+					ctri->decodeRoutineName = "DecAsnBigInt";
+					ctri->freeRoutineName = "FreeAsnBigInt";
+				}
+				break;
 
-		default:
-			fprintf(errFileG, "Warning: ignoring unrecognized type def attribute '%s'\n",
-				GetDirectiveName(pDirective->type));
+			default:
+				fprintf(errFileG, "Warning: ignoring unrecognized type def attribute '%s'\n", GetDirectiveName(pDirective->type));
 		}
 
 	} /* end of for loop */
 
 } /* ParseTypeRefAttribs */
 
-
 /* fill given ctdi with defaults from table for given typedef */
-void
-FillCTDIDefaults PARAMS((r, ctdi, td),
-	CRules* r _AND_
-	CTDI* ctdi _AND_
-	TypeDef* td)
+void FillCTDIDefaults PARAMS((r, ctdi, td), CRules* r _AND_ CTDI* ctdi _AND_ TypeDef* td)
 {
 	CTDI* tblCtdi;
 	int typeIndex;
@@ -1072,68 +987,67 @@ FillCTDIDefaults PARAMS((r, ctdi, td),
 	tblCtdi = &r->typeConvTbl[typeIndex];
 
 	memcpy(ctdi, tblCtdi, sizeof(CTDI));
-
 }
 
 const char* GetDirectiveName(SnaccDirectiveEnum dirType)
 {
 	switch (dirType)
 	{
-	case ASN1_TypeID:
-		return "asn1TypeId";
-	case C_TypeID:
-		return "cTypeId";
-	case C_TypeName:
-		return "cTypeName";
-	case C_FieldName:
-		return "cFieldName";
-	case IsPDU:
-		return "isPdu";
-	case IsPtr:
-		return "isPtr";
-	case IsPtrForTypeDef:
-		return "isPtrForTypeDef";
-	case IsPtrForTypeRef:
-		return "isPtrForTypeRef";
-	case IsPtrInChoice:
-		return "isPtrInChoice";
-	case IsPtrForOpt:
-		return "isPtrForOpt";
-	case OptionalTestRoutineName:
-		return "optTestRoutineName";
-	case DefaultFieldName:
-		return "defaultFieldName";
-	case PrintRoutineName:
-		return "printRoutineName";
-	case EncodeRoutineName:
-		return "encodeRoutineName";
-	case DecodeRoutineName:
-		return "decodeRoutineName";
-	case FreeRoutineName:
-		return "freeRoutineName";
-	case IsEncDec:
-		return "isEncDec";
-	case GenTypeDef:
-		return "genTypeDef";
-	case GenPrintRoutine:
-		return "genPrintRoutine";
-	case GenEncodeRoutine:
-		return "genEncodeRoutine";
-	case GenDecodeRoutine:
-		return "genDecodeRoutine";
-	case GenFreeRoutine:
-		return "genFreeRoutine";
-	case ChoiceIdSymbol:
-		return "choiceIdSymbol";
-	case ChoiceIdValue:
-		return "choiceIdValue";
-	case ChoiceIdEnumName:
-		return "choiceIdEnumName";
-	case ChoiceIdEnumFieldName:
-		return "choiceIdEnumFieldName";
-	case IsBigInt:
-		return "isBigInt";
-	default:
-		return "<unknown>";
+		case ASN1_TypeID:
+			return "asn1TypeId";
+		case C_TypeID:
+			return "cTypeId";
+		case C_TypeName:
+			return "cTypeName";
+		case C_FieldName:
+			return "cFieldName";
+		case IsPDU:
+			return "isPdu";
+		case IsPtr:
+			return "isPtr";
+		case IsPtrForTypeDef:
+			return "isPtrForTypeDef";
+		case IsPtrForTypeRef:
+			return "isPtrForTypeRef";
+		case IsPtrInChoice:
+			return "isPtrInChoice";
+		case IsPtrForOpt:
+			return "isPtrForOpt";
+		case OptionalTestRoutineName:
+			return "optTestRoutineName";
+		case DefaultFieldName:
+			return "defaultFieldName";
+		case PrintRoutineName:
+			return "printRoutineName";
+		case EncodeRoutineName:
+			return "encodeRoutineName";
+		case DecodeRoutineName:
+			return "decodeRoutineName";
+		case FreeRoutineName:
+			return "freeRoutineName";
+		case IsEncDec:
+			return "isEncDec";
+		case GenTypeDef:
+			return "genTypeDef";
+		case GenPrintRoutine:
+			return "genPrintRoutine";
+		case GenEncodeRoutine:
+			return "genEncodeRoutine";
+		case GenDecodeRoutine:
+			return "genDecodeRoutine";
+		case GenFreeRoutine:
+			return "genFreeRoutine";
+		case ChoiceIdSymbol:
+			return "choiceIdSymbol";
+		case ChoiceIdValue:
+			return "choiceIdValue";
+		case ChoiceIdEnumName:
+			return "choiceIdEnumName";
+		case ChoiceIdEnumFieldName:
+			return "choiceIdEnumFieldName";
+		case IsBigInt:
+			return "isBigInt";
+		default:
+			return "<unknown>";
 	}
 }

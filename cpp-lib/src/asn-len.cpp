@@ -118,33 +118,22 @@ _BEGIN_SNACC_NAMESPACE
 long BytesInLen(AsnLen len)
 {
 	if (len < 128)
-	{
 		return 1;
-	}
 	else if (len < 256)
-	{
 		return 2;
-	}
 	else if (len < 65536)
-	{
 		return 3;
-	}
 	else if (len < 16777126)
-	{
 		return 4;
-	}
 	else
-	{
 		return 5;
-	}
 }
 
 /*
  * Encodes the given length to the given buffer.
  * returns the number of octets written to the buffer.
  */
-AsnLen
-BEncDefLen(AsnBuf& b, AsnLen len)
+AsnLen BEncDefLen(AsnBuf& b, AsnLen len)
 {
 	/*
 	 * unrolled for efficiency
@@ -192,24 +181,23 @@ BEncDefLen(AsnBuf& b, AsnLen len)
  * by the number of octets of the encoded length.  Flags an
  * error if the length is too large or a read error occurs
  */
-AsnLen
-BDecLen(const AsnBuf& b, AsnLen& bytesDecoded)
+AsnLen BDecLen(const AsnBuf& b, AsnLen& bytesDecoded)
 {
 	FUNC("BDecLen()");
-	AsnLen  len;
-	unsigned char  byte;
-	unsigned long  lenBytes;
+	AsnLen len;
+	unsigned char byte;
+	unsigned long lenBytes;
 
 	byte = b.GetUByte();
 
 	bytesDecoded++;
-	if (byte < 128)   /* short length */
+	if (byte < 128) /* short length */
 		return byte;
 
-	else if (byte == (unsigned char)0x080)  /* indef len indicator */
+	else if (byte == (unsigned char)0x080) /* indef len indicator */
 		return INDEFINITE_LEN;
 
-	else  /* long len form */
+	else /* long len form */
 	{
 		/*
 		 * strip high bit to get # bytes left in len
@@ -217,55 +205,46 @@ BDecLen(const AsnBuf& b, AsnLen& bytesDecoded)
 		lenBytes = byte & (unsigned char)0x7f;
 
 		if (lenBytes > sizeof(long))
-		{
 			throw BoundsException("length overflow", STACK_ENTRY);
-		}
 
 		bytesDecoded += lenBytes;
 
 		for (len = 0; lenBytes > 0; lenBytes--)
-			len = (len << 8) | (unsigned long int) b.GetUByte();
+			len = (len << 8) | (unsigned long int)b.GetUByte();
 
 		return len;
 	}
 	/* not reached */
 }
 
-
 /*
  * Encodes an End of Contents (EOC) to the given buffer.
  * Returns the encoded length.
  */
-AsnLen
-BEncEoc(AsnBuf& b)
+AsnLen BEncEoc(AsnBuf& b)
 {
 
 	b.PutByteRvs(0);
 	b.PutByteRvs(0);
 	return 2;
-}  /* BEncEoc */
+} /* BEncEoc */
 
 /*
  * Decodes an EOC from the given buffer.  Flags an error if the
  * octets are non-zero or if read error occured.
  */
-void
-BDecEoc(const AsnBuf& b, AsnLen& bytesDecoded)
+void BDecEoc(const AsnBuf& b, AsnLen& bytesDecoded)
 {
 	FUNC("BDecEoc()");
 	if ((b.GetUByte() != 0) || (b.GetUByte() != 0))
-	{
 		throw EXCEPT("non zero byte in EOC or end of data reached", DECODE_ERROR);
-	}
 	bytesDecoded += 2;
-}  /* BDecEoc */
-
+} /* BDecEoc */
 
 /* PER encoding of the length determinant for lengths */
 /* zero to 127 inclusive                              */
 /* Length will encode in one byte  with bit 8 = 0     */
-AsnLen
-PEncDefLenTo127(AsnBufBits& b, int len)
+AsnLen PEncDefLenTo127(AsnBufBits& b, int len)
 {
 	unsigned char cLen = (unsigned char)len;
 	b.PutBits(&cLen, 8);
@@ -277,8 +256,7 @@ PEncDefLenTo127(AsnBufBits& b, int len)
 /* Length will encode in one byte, bit 7 and 8 = 1    */
 /* lower bits (1-4) are multiplied by 16k to give     */
 /* length determinant                                 */
-AsnLen
-PEncLen_16kFragment(AsnBufBits& b, int len)
+AsnLen PEncLen_16kFragment(AsnBufBits& b, int len)
 {
 	AsnLen l = 8;
 	unsigned char cLen = 0xC0;
@@ -292,8 +270,7 @@ PEncLen_16kFragment(AsnBufBits& b, int len)
 
 /* PER encoding of the length determinant for lengths */
 /* between 127 and 16k non-inclusive                  */
-AsnLen
-PEncLen_1to16k(AsnBufBits& b, int len)
+AsnLen PEncLen_1to16k(AsnBufBits& b, int len)
 {
 	AsnLen l = 16;
 	int templen = len;
@@ -315,6 +292,5 @@ PEncLen_1to16k(AsnBufBits& b, int len)
 
 	return l;
 }
-
 
 _END_SNACC_NAMESPACE

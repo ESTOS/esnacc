@@ -36,7 +36,8 @@
 
 #ifndef _str_stk_h
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 	typedef struct StrStkElmt
@@ -49,12 +50,11 @@ extern "C" {
 	{
 		StrStkElmt* stk; /* ptr to array of SSElmts with 'size' elmts */
 		unsigned long initialNumElmts;
-		unsigned long numElmts;  /* total # of elements in str stk */
-		unsigned long growElmts; /* # elmts to increase size by when nec */
+		unsigned long numElmts;		/* total # of elements in str stk */
+		unsigned long growElmts;	/* # elmts to increase size by when nec */
 		unsigned long nextFreeElmt; /* index of next free element */
 		unsigned long totalByteLen; /* octet len of string stored in stk */
 	} StrStk;
-
 
 	extern StrStk strStkG;
 
@@ -62,51 +62,49 @@ extern "C" {
 	 * initializes stk (Allocates if nec.)
 	 * once stk is enlarged, it doesn't shrink
 	 */
-#define RESET_STR_STK()\
-{\
-    strStkG.nextFreeElmt = 0;\
-    strStkG.totalByteLen = 0;\
-    if (strStkG.stk == NULL){\
-       strStkG.stk = (StrStkElmt*) malloc ((strStkG.initialNumElmts) *sizeof (StrStkElmt));\
-       strStkG.numElmts = strStkG.initialNumElmts;}\
-}
+#define RESET_STR_STK()                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		strStkG.nextFreeElmt = 0;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+		strStkG.totalByteLen = 0;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+		if (strStkG.stk == NULL)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+		{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+			strStkG.stk = (StrStkElmt*)malloc((strStkG.initialNumElmts) * sizeof(StrStkElmt));                                                                                                                                                                                                                                                                                                                                                                                                                     \
+			strStkG.numElmts = strStkG.initialNumElmts;                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+		}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+	}
 
+	/*
+	 * add a char*,len pair to top of stack.
+	 * grows stack if necessary using realloc (!)
+	 */
+#define PUSH_STR(strPtr, strsLen, env)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		if (strStkG.nextFreeElmt >= strStkG.numElmts)                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+			strStkG.stk = (StrStkElmt*)realloc(strStkG.stk, (strStkG.numElmts + strStkG.growElmts) * sizeof(StrStkElmt));                                                                                                                                                                                                                                                                                                                                                                                          \
+			strStkG.numElmts += strStkG.growElmts;                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+		}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+		strStkG.totalByteLen += strsLen;                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+		strStkG.stk[strStkG.nextFreeElmt].str = strPtr;                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+		strStkG.stk[strStkG.nextFreeElmt].len = strsLen;                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+		strStkG.nextFreeElmt++;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+	}
 
-	 /*
-	  * add a char*,len pair to top of stack.
-	  * grows stack if necessary using realloc (!)
-	  */
-#define PUSH_STR(strPtr, strsLen, env)\
-{\
-    if (strStkG.nextFreeElmt >= strStkG.numElmts)\
-    {\
-       strStkG.stk = (StrStkElmt*) realloc (strStkG.stk, (strStkG.numElmts + strStkG.growElmts) *sizeof (StrStkElmt));\
-       strStkG.numElmts += strStkG.growElmts;\
-    }\
-    strStkG.totalByteLen += strsLen;\
-    strStkG.stk[strStkG.nextFreeElmt].str = strPtr;\
-    strStkG.stk[strStkG.nextFreeElmt].len = strsLen;\
-    strStkG.nextFreeElmt++;\
-}
-
-
-	  /*
-	   * Set up size values for the stack that is used for merging constructed
-	   * octet or bit string into single strings.
-	   * ****  Call this before decoding anything. *****
-	   * Note: you don't have to call this if the default values
-	   * for initialStkSizeG and stkGrowSizeG are acceptable
-	   */
-#define SetupConsBitsOctsStringStk (initialNumberOfElmts, numberOfElmtsToGrowBy)\
-{\
-    strStkG.initialNumElmts = initialNumberOfElmts; \
-    strStkG.growElmts = numberOfElmtsToGrowBy;\
-}
-
+	/*
+	 * Set up size values for the stack that is used for merging constructed
+	 * octet or bit string into single strings.
+	 * ****  Call this before decoding anything. *****
+	 * Note: you don't have to call this if the default values
+	 * for initialStkSizeG and stkGrowSizeG are acceptable
+	 */
+#define SetupConsBitsOctsStringStk                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+	(initialNumberOfElmts, numberOfElmtsToGrowBy)                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		strStkG.initialNumElmts = initialNumberOfElmts;                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+		strStkG.growElmts = numberOfElmtsToGrowBy;                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+	}
 
 #ifdef __cplusplus
 }
 #endif /* extern "C" */
 #endif /* _str_stk__h */
-
-

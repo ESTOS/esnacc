@@ -116,13 +116,11 @@
 #include "snacc-util.h"
 #include "define.h"
 
-
 typedef struct DefinedTag
 {
 	Tag* tag;
 	struct DefinedTag* next;
 } DefinedTag;
-
 
 typedef struct DefinedName
 {
@@ -130,12 +128,10 @@ typedef struct DefinedName
 	struct DefinedName* next;
 } DefinedName;
 
-
 static NamedType* badNamedType;
 // static DefinedName *fieldNames = NULL;
 
-
-int	 CountTags(Type* t);
+int CountTags(Type* t);
 enum BasicTypeChoiceId ParanoidGetBuiltinType(Type* t);
 
 void ErrChkTypeDef(Module* m, TypeDef* td);
@@ -152,14 +148,10 @@ void ChkNamedBits(Module* m, Type* t, NamedNumberList* n);
 void ChkSeqTags(Module* m, TypeDef* td, Type* t);
 char* DetermineCode(Tag* tag, int* ptagLen, int bJustIntegerFlag);
 
-
-extern FILE* errFileG;		/* Pointer to file for reporting errors */
-
-
+extern FILE* errFileG; /* Pointer to file for reporting errors */
 
 /* return TRUE if the Tag *t1 and t2 are the same in class and code */
-int
-TagObjCmp(void* vt1, void* vt2)
+int TagObjCmp(void* vt1, void* vt2)
 {
 	Tag* t1 = vt1;
 	Tag* t2 = vt2;
@@ -169,8 +161,8 @@ TagObjCmp(void* vt1, void* vt2)
 		iResult = (t1->tclass == t2->tclass && t1->code == t2->code);
 	}
 	else
-	{           // RWC;THEN we need to check further, may be indirectly referenced.
-				// THIS logic assumes similar types, only Integer value returned...
+	{ // RWC;THEN we need to check further, may be indirectly referenced.
+	  // THIS logic assumes similar types, only Integer value returned...
 		char* p1 = DetermineCode(t1, NULL, 1);
 		if (p1)
 		{
@@ -181,19 +173,16 @@ TagObjCmp(void* vt1, void* vt2)
 				if (strcmp(p1Tmp, p2) == 0)
 					iResult = 1;
 			free(p1Tmp);
-		}       // END IF p1
+		} // END IF p1
 	}
-	return(iResult);
+	return (iResult);
 }
-
 
 /*
  * Checks for errors listed above.
  * sets module status to MOD_ERROR if any errors occured
  */
-void
-ErrChkModule PARAMS((m),
-	Module* m)
+void ErrChkModule PARAMS((m), Module* m)
 {
 	TypeDef* td;
 	ValueDef* vd = NULL;
@@ -212,8 +201,7 @@ ErrChkModule PARAMS((m),
 		if (ObjIsDefined(typeNames, td->definedName, StrObjCmp))
 		{
 			PrintErrLoc(m->asn1SrcFileName, (long)td->type->lineNo);
-			fprintf(errFileG, "ERROR - type \"%s\" is multiply defined.\n",
-				td->definedName);
+			fprintf(errFileG, "ERROR - type \"%s\" is multiply defined.\n", td->definedName);
 			m->status = MOD_ERROR;
 		}
 		else
@@ -233,8 +221,7 @@ ErrChkModule PARAMS((m),
 				if (ObjIsDefined(typeNames, impElmt->name, StrObjCmp))
 				{
 					PrintErrLoc(m->asn1SrcFileName, (long)impElmt->lineNo);
-					fprintf(errFileG, "ERROR - type \"%s\" is multiply defined.\n",
-						impElmt->name);
+					fprintf(errFileG, "ERROR - type \"%s\" is multiply defined.\n", impElmt->name);
 					m->status = MOD_ERROR;
 				}
 				else
@@ -243,7 +230,6 @@ ErrChkModule PARAMS((m),
 		}
 	}
 	FreeDefinedObjs(&typeNames);
-
 
 	/*
 	 *  go through each value for types
@@ -255,8 +241,7 @@ ErrChkModule PARAMS((m),
 		if (ObjIsDefined(valueNames, vd->definedName, StrObjCmp))
 		{
 			PrintErrLoc(m->asn1SrcFileName, (long)vd->value->lineNo);
-			fprintf(errFileG, "ERROR - value \"%s\" is multiply defined.\n",
-				vd->definedName);
+			fprintf(errFileG, "ERROR - value \"%s\" is multiply defined.\n", vd->definedName);
 			m->status = MOD_ERROR;
 		}
 		else
@@ -275,8 +260,7 @@ ErrChkModule PARAMS((m),
 				if (ObjIsDefined(valueNames, impElmt->name, StrObjCmp))
 				{
 					PrintErrLoc(m->asn1SrcFileName, (long)impElmt->lineNo);
-					fprintf(errFileG, "ERROR - value \"%s\" is multiply defined.\n",
-						vd->definedName);
+					fprintf(errFileG, "ERROR - value \"%s\" is multiply defined.\n", vd->definedName);
 					m->status = MOD_ERROR;
 				}
 				else
@@ -285,17 +269,11 @@ ErrChkModule PARAMS((m),
 		}
 	}
 
-
 	FreeDefinedObjs(&valueNames);
 
-}   /* ErrChkModule */
+} /* ErrChkModule */
 
-
-
-void
-ErrChkTypeDef PARAMS((m, td),
-	Module* m _AND_
-	TypeDef* td)
+void ErrChkTypeDef PARAMS((m, td), Module* m _AND_ TypeDef* td)
 {
 	if (td == NULL)
 		return;
@@ -304,15 +282,7 @@ ErrChkTypeDef PARAMS((m, td),
 
 } /* ErrChkTypeDef */
 
-
-
-void
-ErrChkType PARAMS((m, td, parent, nt, t),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedType* nt _AND_
-	Type* t)
+void ErrChkType PARAMS((m, td, parent, nt, t), Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedType* nt _AND_ Type* t)
 {
 	if (t == NULL)
 		return;
@@ -321,14 +291,7 @@ ErrChkType PARAMS((m, td, parent, nt, t),
 
 } /* ErrChkType */
 
-
-
-void
-ErrChkElmtTypes PARAMS((m, td, parent, e),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* e)
+void ErrChkElmtTypes PARAMS((m, td, parent, e), Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* e)
 {
 	NamedType* nt;
 
@@ -338,26 +301,15 @@ ErrChkElmtTypes PARAMS((m, td, parent, e),
 	 * (goes 'through' un-named elements that are CHOICEs)
 	 */
 	if (td->type == parent)
-	{
 		ChkFieldNames(m, td, parent, e);
-	}
-
 
 	FOR_EACH_LIST_ELMT(nt, e)
 	{
 		ErrChkType(m, td, parent, nt, nt->type);
 	}
-}  /* ErrChkElmtTypes */
+} /* ErrChkElmtTypes */
 
-
-
-void
-ErrChkBasicType PARAMS((m, td, parent, tnt, type),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedType* tnt _AND_
-	Type* type)
+void ErrChkBasicType PARAMS((m, td, parent, tnt, type), Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedType* tnt _AND_ Type* type)
 {
 	NamedType* nt = NULL;
 	Type* refdType;
@@ -368,28 +320,164 @@ ErrChkBasicType PARAMS((m, td, parent, tnt, type),
 
 	switch (type->basicType->choiceId)
 	{
-	case BASICTYPE_LOCALTYPEREF:
-	case BASICTYPE_IMPORTTYPEREF:
-		/*
-		 * make sure that untagged CHOICE and ANY types
-		 * are not implicitly tagged
-		 */
-		refdTypeId = ParanoidGetBuiltinType(type);
-		if ((type->implicit) &&
-			((refdTypeId == BASICTYPE_CHOICE) ||
-				(refdTypeId == BASICTYPE_ANY) ||
-				(refdTypeId == BASICTYPE_ANYDEFINEDBY)) &&
-			(CountTags(type->basicType->a.localTypeRef->link->type) == 0))
-		{
-			m->status = MOD_ERROR;
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - IMPLICITLY tagged CHOICE, ANY or ANY DEFINED BY type.\n");
-		}
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
+			/*
+			 * make sure that untagged CHOICE and ANY types
+			 * are not implicitly tagged
+			 */
+			refdTypeId = ParanoidGetBuiltinType(type);
+			if ((type->implicit) && ((refdTypeId == BASICTYPE_CHOICE) || (refdTypeId == BASICTYPE_ANY) || (refdTypeId == BASICTYPE_ANYDEFINEDBY)) && (CountTags(type->basicType->a.localTypeRef->link->type) == 0))
+			{
+				m->status = MOD_ERROR;
+				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+				fprintf(errFileG, "ERROR - IMPLICITLY tagged CHOICE, ANY or ANY DEFINED BY type.\n");
+			}
 
-		if ((parent != NULL) &&
-			((refdTypeId == BASICTYPE_ANY) ||
-				(refdTypeId == BASICTYPE_ANYDEFINEDBY)))
-		{
+			if ((parent != NULL) && ((refdTypeId == BASICTYPE_ANY) || (refdTypeId == BASICTYPE_ANYDEFINEDBY)))
+			{
+
+				/*
+				 * give a warning.  It is stupid to have an ANY DEFINED
+				 * BY type in a SET since they are not ordered and hence
+				 * the ANY DEFINED BY type may need to be decoded before
+				 * its identifer which is very difficult
+				 */
+				if ((refdTypeId == BASICTYPE_ANYDEFINEDBY) && (parent->basicType->choiceId == BASICTYPE_SET))
+				{
+					PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+					fprintf(errFileG, "WARNING - ANY DEFINED BY in a SET needs to be decoded before its identifier. This is not guaranteed since SETs are not ordered.  Use a SEQUENCE instead, if possible.\n");
+				}
+
+				/*
+				 * give a warning.  It is stupid to have an ANY DEFINED
+				 * BY type in a SEQUENCE before its identifier.
+				 * The ANY DEFINED BY type will need to be decoded before
+				 * its identifer which is very difficult.
+				 * tnt is the NamedType holding "type"
+				 */
+				if ((refdTypeId == BASICTYPE_ANYDEFINEDBY) && (tnt != NULL) && (parent->basicType->choiceId == BASICTYPE_SEQUENCE) && (GetAsnListElmtIndex(tnt, parent->basicType->a.sequence) < GetAsnListElmtIndex(type->basicType->a.anyDefinedBy->link, parent->basicType->a.sequence)))
+				{
+					PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+					fprintf(errFileG, "WARNING - ANY DEFINED BY in SEQUENCE should appear before its identifier since the identifier must be decoded before the ANY DEFINED BY type.\n");
+				}
+
+				if (parent->basicType->choiceId == BASICTYPE_SEQUENCE)
+					nt = LAST_LIST_ELMT(parent->basicType->a.sequence);
+
+				/*
+				 * untagged, optional ANYs are strange and will cause faulty
+				 * decoding code to be generated unless they are the last
+				 * elmt in a SEQUENCE.
+				 * (if they are the last elmt it is easy to check
+				 *  for the presence of the ANY if definite lengths are used)
+				 * (must peek ahead for EOC otherwise)
+				 */
+				if (!((parent->basicType->choiceId == BASICTYPE_SEQUENCE) && (type == nt->type)) && (type->optional) && (CountTags(type) == 0))
+				{
+					PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+					fprintf(errFileG, "WARNING - untagged optional ANY encountered, the produced code will be wrong.\n");
+				}
+			}
+
+			break;
+
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_ENUMERATED:
+			ChkNamedNumbers(m, type, type->basicType->a.integer);
+			break;
+
+		case BASICTYPE_BITSTRING:
+			ChkNamedBits(m, type, type->basicType->a.bitString);
+			break;
+
+		case BASICTYPE_SEQUENCEOF:
+		case BASICTYPE_SETOF:
+			ErrChkType(m, td, type, NULL, type->basicType->a.setOf);
+			break;
+
+		case BASICTYPE_SEQUENCE:
+			ErrChkElmtTypes(m, td, type, type->basicType->a.sequence);
+
+			/*
+			 * check that tags on one or more consecutive optional elmts
+			 * and following (if any) non-optional elmt are distinct
+			 */
+			ChkSeqTags(m, td, type);
+			break;
+
+		case BASICTYPE_OBJECTCLASS: // Deepak: 14/Mar/2003
+			ErrChkElmtTypes(m, td, type, type->basicType->a.objectclass->classdef);
+
+			/*
+			 * check that tags on one or more consecutive optional elmts
+			 * and following (if any) non-optional elmt are distinct
+			 */
+			ChkSeqTags(m, td, type); // Deepak: ????? chk for Class Tags???
+			break;
+
+		case BASICTYPE_CHOICE:
+			/* CHOICE elements must have distinct tags */
+			if (!HasDistinctTags(type->basicType->a.choice))
+			{
+				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+				fprintf(errFileG, "ERROR - tag conflict among the CHOICE elements.\n");
+				m->status = MOD_ERROR;
+			}
+
+			/*
+			 * untagged choices cannot be implicitily tagged
+			 * (this would make it impossible/difficult to figure out which
+			 * elmt of the choice was present when decoding)
+			 */
+			if (((type->tags == NULL) || LIST_EMPTY(type->tags)) && (type->implicit))
+			{
+				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+				fprintf(errFileG, "ERROR - IMPLICITLy tagged CHOICE type.\n");
+				m->status = MOD_ERROR;
+			}
+
+			/* Check out each of the components */
+			ErrChkElmtTypes(m, td, type, type->basicType->a.choice);
+
+			break;
+
+		case BASICTYPE_ANYDEFINEDBY:
+			/* for ANY DEFINED BY make sure id field is int or oid */
+			refdType = ResolveImportedType(type->basicType->a.anyDefinedBy->link->type);
+			if ((refdType->basicType->choiceId != BASICTYPE_INTEGER) && (refdType->basicType->choiceId != BASICTYPE_ENUMERATED) && (refdType->basicType->choiceId != BASICTYPE_OID) && (refdType->basicType->choiceId != BASICTYPE_RELATIVE_OID))
+			{
+				if (refdType->basicType->choiceId == BASICTYPE_CHOICE)
+				{
+					NamedType* nt2;
+
+					FOR_EACH_LIST_ELMT(nt2, refdType->basicType->a.choice)
+					{
+						enum BasicTypeChoiceId choiceId = nt2->type->basicType->choiceId;
+
+						if (choiceId != BASICTYPE_INTEGER && choiceId != BASICTYPE_ENUMERATED && choiceId != BASICTYPE_OID && choiceId != BASICTYPE_RELATIVE_OID)
+						{
+							PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+							fprintf(errFileG, "ERROR - Field referenced by ANY DEFINED BY type must be of INTEGER or OBJECT IDENTIFIER type.\n");
+							m->status = MOD_ERROR;
+						}
+					}
+				}
+				else
+				{
+
+					PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+					fprintf(errFileG, "ERROR - Field referenced by ANY DEFINED BY type must be of INTEGER or OBJECT IDENTIFIER type.\n");
+					m->status = MOD_ERROR;
+				}
+			}
+			/* make sure id field is not optional */
+			if (type->basicType->a.anyDefinedBy->link->type->optional)
+			{
+				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+				fprintf(errFileG, "ERROR - Field referenced by ANY DEFINED BY cannot be optional.\n");
+				m->status = MOD_ERROR;
+			}
 
 			/*
 			 * give a warning.  It is stupid to have an ANY DEFINED
@@ -397,8 +485,7 @@ ErrChkBasicType PARAMS((m, td, parent, tnt, type),
 			 * the ANY DEFINED BY type may need to be decoded before
 			 * its identifer which is very difficult
 			 */
-			if ((refdTypeId == BASICTYPE_ANYDEFINEDBY) &&
-				(parent->basicType->choiceId == BASICTYPE_SET))
+			if ((parent != NULL) && (parent->basicType->choiceId == BASICTYPE_SET))
 			{
 				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
 				fprintf(errFileG, "WARNING - ANY DEFINED BY in a SET needs to be decoded before its identifier. This is not guaranteed since SETs are not ordered.  Use a SEQUENCE instead, if possible.\n");
@@ -411,266 +498,83 @@ ErrChkBasicType PARAMS((m, td, parent, tnt, type),
 			 * its identifer which is very difficult.
 			 * tnt is the NamedType holding "type"
 			 */
-			if ((refdTypeId == BASICTYPE_ANYDEFINEDBY) && (tnt != NULL) &&
-				(parent->basicType->choiceId == BASICTYPE_SEQUENCE) &&
-				(GetAsnListElmtIndex(tnt, parent->basicType->a.sequence) <
-					GetAsnListElmtIndex(type->basicType->a.anyDefinedBy->link, parent->basicType->a.sequence)))
+			if ((parent != NULL) && (tnt != NULL) && (parent->basicType->choiceId == BASICTYPE_SEQUENCE) && (GetAsnListElmtIndex(tnt, parent->basicType->a.sequence) < GetAsnListElmtIndex(type->basicType->a.anyDefinedBy->link, parent->basicType->a.sequence)))
 			{
 				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
 				fprintf(errFileG, "WARNING - ANY DEFINED BY in SEQUENCE should appear before its identifier since the identifier must be decoded before the ANY DEFINED BY type.\n");
 			}
 
+			/* fall through - arrrrrg! */
 
-			if (parent->basicType->choiceId == BASICTYPE_SEQUENCE)
-				nt = LAST_LIST_ELMT(parent->basicType->a.sequence);
-
-			/*
-			 * untagged, optional ANYs are strange and will cause faulty
-			 * decoding code to be generated unless they are the last
-			 * elmt in a SEQUENCE.
-			 * (if they are the last elmt it is easy to check
-			 *  for the presence of the ANY if definite lengths are used)
-			 * (must peek ahead for EOC otherwise)
-			 */
-			if (!((parent->basicType->choiceId == BASICTYPE_SEQUENCE) &&
-				(type == nt->type)) &&
-				(type->optional) && (CountTags(type) == 0))
+		case BASICTYPE_ANY:
+			/* ANY cannot be implicitily tagged */
+			if (((type->tags == NULL) || LIST_EMPTY(type->tags)) && (type->implicit))
 			{
 				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-				fprintf(errFileG, "WARNING - untagged optional ANY encountered, the produced code will be wrong.\n");
-			}
-		}
-
-		break;
-
-
-	case BASICTYPE_INTEGER:
-	case BASICTYPE_ENUMERATED:
-		ChkNamedNumbers(m, type, type->basicType->a.integer);
-		break;
-
-	case BASICTYPE_BITSTRING:
-		ChkNamedBits(m, type, type->basicType->a.bitString);
-		break;
-
-
-	case BASICTYPE_SEQUENCEOF:
-	case BASICTYPE_SETOF:
-		ErrChkType(m, td, type, NULL, type->basicType->a.setOf);
-		break;
-
-	case BASICTYPE_SEQUENCE:
-		ErrChkElmtTypes(m, td, type, type->basicType->a.sequence);
-
-		/*
-		 * check that tags on one or more consecutive optional elmts
-		 * and following (if any) non-optional elmt are distinct
-		 */
-		ChkSeqTags(m, td, type);
-		break;
-
-	case BASICTYPE_OBJECTCLASS:		// Deepak: 14/Mar/2003
-		ErrChkElmtTypes(m, td, type, type->basicType->a.objectclass->classdef);
-
-		/*
-		 * check that tags on one or more consecutive optional elmts
-		 * and following (if any) non-optional elmt are distinct
-		 */
-		ChkSeqTags(m, td, type);	// Deepak: ????? chk for Class Tags???
-		break;
-
-	case BASICTYPE_CHOICE:
-		/* CHOICE elements must have distinct tags */
-		if (!HasDistinctTags(type->basicType->a.choice))
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - tag conflict among the CHOICE elements.\n");
-			m->status = MOD_ERROR;
-		}
-
-		/*
-		 * untagged choices cannot be implicitily tagged
-		 * (this would make it impossible/difficult to figure out which
-		 * elmt of the choice was present when decoding)
-		 */
-		if (((type->tags == NULL) || LIST_EMPTY(type->tags)) &&
-			(type->implicit))
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - IMPLICITLy tagged CHOICE type.\n");
-			m->status = MOD_ERROR;
-		}
-
-		/* Check out each of the components */
-		ErrChkElmtTypes(m, td, type, type->basicType->a.choice);
-
-
-		break;
-
-	case BASICTYPE_ANYDEFINEDBY:
-		/* for ANY DEFINED BY make sure id field is int or oid */
-		refdType = ResolveImportedType(type->basicType->a.anyDefinedBy->link->type);
-		if ((refdType->basicType->choiceId != BASICTYPE_INTEGER) &&
-			(refdType->basicType->choiceId != BASICTYPE_ENUMERATED) &&
-			(refdType->basicType->choiceId != BASICTYPE_OID) &&
-			(refdType->basicType->choiceId != BASICTYPE_RELATIVE_OID))
-		{
-			if (refdType->basicType->choiceId == BASICTYPE_CHOICE)
-			{
-				NamedType* nt2;
-
-				FOR_EACH_LIST_ELMT(nt2, refdType->basicType->a.choice)
-				{
-					enum BasicTypeChoiceId choiceId = nt2->type->basicType->choiceId;
-
-					if (choiceId != BASICTYPE_INTEGER &&
-						choiceId != BASICTYPE_ENUMERATED &&
-						choiceId != BASICTYPE_OID &&
-						choiceId != BASICTYPE_RELATIVE_OID)
-					{
-						PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-						fprintf(errFileG, "ERROR - Field referenced by ANY DEFINED BY type must be of INTEGER or OBJECT IDENTIFIER type.\n");
-						m->status = MOD_ERROR;
-					}
-				}
-			}
-			else
-			{
-
-				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-				fprintf(errFileG, "ERROR - Field referenced by ANY DEFINED BY type must be of INTEGER or OBJECT IDENTIFIER type.\n");
+				fprintf(errFileG, "ERROR - IMPLICITLy tagged ANY type.\n");
 				m->status = MOD_ERROR;
 			}
-		}
-		/* make sure id field is not optional */
-		if (type->basicType->a.anyDefinedBy->link->type->optional)
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - Field referenced by ANY DEFINED BY cannot be optional.\n");
-			m->status = MOD_ERROR;
-		}
 
-		/*
-		 * give a warning.  It is stupid to have an ANY DEFINED
-		 * BY type in a SET since they are not ordered and hence
-		 * the ANY DEFINED BY type may need to be decoded before
-		 * its identifer which is very difficult
-		 */
-		if ((parent != NULL) &&
-			(parent->basicType->choiceId == BASICTYPE_SET))
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "WARNING - ANY DEFINED BY in a SET needs to be decoded before its identifier. This is not guaranteed since SETs are not ordered.  Use a SEQUENCE instead, if possible.\n");
-		}
-
-		/*
-		 * give a warning.  It is stupid to have an ANY DEFINED
-		 * BY type in a SEQUENCE before its identifier.
-		 * The ANY DEFINED BY type will need to be decoded before
-		 * its identifer which is very difficult.
-		 * tnt is the NamedType holding "type"
-		 */
-		if ((parent != NULL) && (tnt != NULL) &&
-			(parent->basicType->choiceId == BASICTYPE_SEQUENCE) &&
-			(GetAsnListElmtIndex(tnt, parent->basicType->a.sequence) <
-				GetAsnListElmtIndex(type->basicType->a.anyDefinedBy->link, parent->basicType->a.sequence)))
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "WARNING - ANY DEFINED BY in SEQUENCE should appear before its identifier since the identifier must be decoded before the ANY DEFINED BY type.\n");
-		}
-
-
-		/* fall through - arrrrrg! */
-
-
-	case BASICTYPE_ANY:
-		/* ANY cannot be implicitily tagged */
-		if (((type->tags == NULL) || LIST_EMPTY(type->tags)) &&
-			(type->implicit))
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - IMPLICITLy tagged ANY type.\n");
-			m->status = MOD_ERROR;
-		}
-
-
-		if (parent != NULL)
-		{
-			if (parent->basicType->choiceId == BASICTYPE_SEQUENCE)
-				nt = LAST_LIST_ELMT(parent->basicType->a.sequence);
-
-			/*
-			 * untagged, optional ANYs are strange and will cause faulty
-			 * decoding code to be generated unless they are the last
-			 * elmt in a SEQUENCE
-			 */
-			if (!((parent->basicType->choiceId == BASICTYPE_SEQUENCE) &&
-				(type == nt->type)) &&
-				(type->optional) && (CountTags(type) == 0))
+			if (parent != NULL)
 			{
-				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-				fprintf(errFileG, "WARNING - untagged optional ANY encountered, the produced code will be wrong.\n");
+				if (parent->basicType->choiceId == BASICTYPE_SEQUENCE)
+					nt = LAST_LIST_ELMT(parent->basicType->a.sequence);
+
+				/*
+				 * untagged, optional ANYs are strange and will cause faulty
+				 * decoding code to be generated unless they are the last
+				 * elmt in a SEQUENCE
+				 */
+				if (!((parent->basicType->choiceId == BASICTYPE_SEQUENCE) && (type == nt->type)) && (type->optional) && (CountTags(type) == 0))
+				{
+					PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+					fprintf(errFileG, "WARNING - untagged optional ANY encountered, the produced code will be wrong.\n");
+				}
+
+				/*
+				 *  if parent is SET or CHOICE then ANY or ANY DEFINED BY
+				 *  should be tagged to help determine its presence
+				 *
+				 * NOTE: there are also probs with untagged ANYs in SEQs
+				 * where the ANY is preceeded by optional elmts
+				 * (err msg written in produced code)
+				 */
+				if (((parent->basicType->choiceId == BASICTYPE_SET) || (parent->basicType->choiceId == BASICTYPE_CHOICE)) && (CountTags(type) == 0))
+				{
+					PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+					fprintf(errFileG, "WARNING - untagged ANY in a SET or CHOICE, the produced code will be wrong.\n");
+				}
 			}
 
-			/*
-			 *  if parent is SET or CHOICE then ANY or ANY DEFINED BY
-			 *  should be tagged to help determine its presence
-			 *
-			 * NOTE: there are also probs with untagged ANYs in SEQs
-			 * where the ANY is preceeded by optional elmts
-			 * (err msg written in produced code)
-			 */
-			if (((parent->basicType->choiceId == BASICTYPE_SET) ||
-				(parent->basicType->choiceId == BASICTYPE_CHOICE)) &&
-				(CountTags(type) == 0))
+			break;
+
+		case BASICTYPE_SET:
+			/* SET elements must have distinct tags */
+			if (!HasDistinctTags(type->basicType->a.set))
 			{
 				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-				fprintf(errFileG, "WARNING - untagged ANY in a SET or CHOICE, the produced code will be wrong.\n");
+				fprintf(errFileG, "ERROR - tag conflict among the SET elements.\n");
+				m->status = MOD_ERROR;
 			}
-		}
 
+			/* Check out each of the components */
+			ErrChkElmtTypes(m, td, type, type->basicType->a.set);
+			break;
 
-		break;
-
-
-
-	case BASICTYPE_SET:
-		/* SET elements must have distinct tags */
-		if (!HasDistinctTags(type->basicType->a.set))
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - tag conflict among the SET elements.\n");
-			m->status = MOD_ERROR;
-		}
-
-		/* Check out each of the components */
-		ErrChkElmtTypes(m, td, type, type->basicType->a.set);
-		break;
-
-
-	default:
-		/* the rest do not need checking */
-		break;
+		default:
+			/* the rest do not need checking */
+			break;
 	}
-}  /* ErrChkBasicType */
+} /* ErrChkBasicType */
 
-
-void
-ErrChkValueDef PARAMS((m, vd),
-	Module* m _AND_
-	ValueDef* vd)
+void ErrChkValueDef PARAMS((m, vd), Module* m _AND_ ValueDef* vd)
 {
 	ErrChkValue(m, vd, vd->value);
 }
 
-void
-ErrChkValue PARAMS((m, vd, v),
-	Module* m _AND_
-	ValueDef* vd _AND_
-	Value* v)
+void ErrChkValue PARAMS((m, vd, v), Module* m _AND_ ValueDef* vd _AND_ Value* v)
 {
 }
-
 
 /*
  * returns non-zero if the first tags on the elements
@@ -681,9 +585,7 @@ ErrChkValue PARAMS((m, vd, v),
  *             and return FALSE. if finished adding tags
  *             and no duplicates occurred then return TRUE;
  */
-int
-HasDistinctTags PARAMS((elmts),
-	NamedTypeList* elmts)
+int HasDistinctTags PARAMS((elmts), NamedTypeList* elmts)
 {
 	DefinedObj* tL;
 	NamedType* e;
@@ -703,16 +605,12 @@ HasDistinctTags PARAMS((elmts),
 	return TRUE;
 } /* HasDistinctTags */
 
-
 /*
  * puts first tag of the given type into the defined tags list
  * returns FALSE if the tag was already in the defined tags list.
  * return TRUE otherwise
  */
-int
-AddFirstTag PARAMS((definedTags, t),
-	DefinedObj** definedTags _AND_
-	Type* t)
+int AddFirstTag PARAMS((definedTags, t), DefinedObj** definedTags _AND_ Type* t)
 {
 	Tag* tag;
 	TagList* tl;
@@ -731,8 +629,7 @@ AddFirstTag PARAMS((definedTags, t),
 		 * get first tag from tag list local to this type if any
 		 */
 
-		if ((tl != NULL) && (CURR_LIST_NODE(tl) != NULL) &&
-			(CURR_LIST_ELMT(tl) != NULL))
+		if ((tl != NULL) && (CURR_LIST_NODE(tl) != NULL) && (CURR_LIST_ELMT(tl) != NULL))
 		{
 			tag = (Tag*)CURR_LIST_ELMT(tl);
 
@@ -749,12 +646,10 @@ AddFirstTag PARAMS((definedTags, t),
 		 * follow tags of referenced types if no tags on this type
 		 */
 
-		if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-			(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
+		if ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))
 		{
 			if (!implicitRef)
 				implicitRef = t->implicit;
-
 
 			if (t->basicType->a.localTypeRef->link == NULL)
 			{
@@ -774,7 +669,6 @@ AddFirstTag PARAMS((definedTags, t),
 					implicitRef = FALSE;
 				}
 			}
-
 		}
 
 		/*
@@ -786,10 +680,7 @@ AddFirstTag PARAMS((definedTags, t),
 			 * add top level tags from each choice elmt
 			 */
 			if (implicitRef)
-			{
 				fprintf(errFileG, "ERROR - IMPLICITLY Tagged CHOICE\n");
-			}
-
 
 			FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
 			{
@@ -802,13 +693,9 @@ AddFirstTag PARAMS((definedTags, t),
 
 		else /* could be ANY type - assume correct tagging */
 			return TRUE;
-
 	}
 	return TRUE;
-}  /* AddFirstTag */
-
-
-
+} /* AddFirstTag */
 
 /*
  *  Prints Errors if the field names of the elements are
@@ -816,14 +703,7 @@ AddFirstTag PARAMS((definedTags, t),
  *  currently an endless recursion problem here
  *  for recursive types involving CHOICEs - Fixed MS
  */
-void
-ChkFieldNamesRec PARAMS((m, td, parent, elmts, fieldNames, followedTypeRefs),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts _AND_
-	DefinedObj** fieldNames _AND_
-	DefinedObj** followedTypeRefs)
+void ChkFieldNamesRec PARAMS((m, td, parent, elmts, fieldNames, followedTypeRefs), Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* elmts _AND_ DefinedObj** fieldNames _AND_ DefinedObj** followedTypeRefs)
 {
 	NamedType* e;
 	const Type* definingType;
@@ -838,14 +718,12 @@ ChkFieldNamesRec PARAMS((m, td, parent, elmts, fieldNames, followedTypeRefs),
 				if (parent->basicType->a.choice == elmts)
 				{
 					PrintErrLoc(m->asn1SrcFileName, (long)e->type->lineNo);
-					fprintf(errFileG, "WARNING - field name \"%s\" is used more than once in same value notation scope.\n",
-						e->fieldName);
+					fprintf(errFileG, "WARNING - field name \"%s\" is used more than once in same value notation scope.\n", e->fieldName);
 				}
 				else
 				{
 					PrintErrLoc(m->asn1SrcFileName, (long)parent->lineNo);
-					fprintf(errFileG, "WARNING - field name \"%s\" in embedded CHOICE conflicts with field name in type \"%s\".",
-						e->fieldName, td->definedName);
+					fprintf(errFileG, "WARNING - field name \"%s\" in embedded CHOICE conflicts with field name in type \"%s\".", e->fieldName, td->definedName);
 					fprintf(errFileG, " This may lead to ambiguous value notation.\n");
 				}
 				/* m->status = MOD_ERROR; */
@@ -859,9 +737,7 @@ ChkFieldNamesRec PARAMS((m, td, parent, elmts, fieldNames, followedTypeRefs),
 		 * if it has no field name (this case is a reference to
 		 * a CHOICE) (fieldName is NULL)
 		 */
-		else if (((e->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-			(e->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)) &&
-			(definingType->basicType->choiceId == BASICTYPE_CHOICE))
+		else if (((e->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (e->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)) && (definingType->basicType->choiceId == BASICTYPE_CHOICE))
 		{
 			/* stop if this is a recursive ref we have already checked */
 			if (!ObjIsDefined(*followedTypeRefs, e->type->basicType->a.localTypeRef->typeName, StrObjCmp))
@@ -880,25 +756,17 @@ ChkFieldNamesRec PARAMS((m, td, parent, elmts, fieldNames, followedTypeRefs),
 		else if (e->type->basicType->choiceId == BASICTYPE_CHOICE)
 		{
 			ChkFieldNamesRec(m, td, e->type, /* pass in field type for line */
-				definingType->basicType->a.choice, fieldNames, followedTypeRefs);
+							 definingType->basicType->a.choice, fieldNames, followedTypeRefs);
 		}
-
 	}
-}  /* ChkFieldNamesRec */
-
-
+} /* ChkFieldNamesRec */
 
 /*
  * wrapper for ChkFieldNamesRec
  * Checks that the field names of an aggregate type (CHOICE/SET/SEQ)
  * are distinct.  Violations are printed to errFileG.
  */
-void
-ChkFieldNames PARAMS((m, td, parent, elmts),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* elmts)
+void ChkFieldNames PARAMS((m, td, parent, elmts), Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* elmts)
 {
 	DefinedObj* fieldNames;
 	DefinedObj* followedTypeRefs;
@@ -919,8 +787,6 @@ ChkFieldNames PARAMS((m, td, parent, elmts),
 
 } /* ChkFieldNames */
 
-
-
 /*
  * make sure that the identifiers of the named numbers are unique
  * among themselves.
@@ -928,17 +794,12 @@ ChkFieldNames PARAMS((m, td, parent, elmts),
  * also check that the values of the named numbers are unique
  * among themselves.
  */
-void
-ChkNamedNumbers PARAMS((m, t, n),
-	Module* m _AND_
-	Type* t _AND_
-	NamedNumberList* n)
+void ChkNamedNumbers PARAMS((m, t, n), Module* m _AND_ Type* t _AND_ NamedNumberList* n)
 {
 	DefinedObj* ids;
 	DefinedObj* nums;
 	ValueDef* nn;
 	Value* baseVal;
-
 
 	if (n == NULL)
 		return;
@@ -950,8 +811,7 @@ ChkNamedNumbers PARAMS((m, t, n),
 		if (ObjIsDefined(ids, nn->definedName, StrObjCmp))
 		{
 			PrintErrLoc(m->asn1SrcFileName, (long)t->lineNo);
-			fprintf(errFileG, "ERROR - named numbers (%s) must have unique identifiers.\n",
-				nn->definedName);
+			fprintf(errFileG, "ERROR - named numbers (%s) must have unique identifiers.\n", nn->definedName);
 		}
 		else
 			DefineObj(&ids, nn->definedName);
@@ -960,36 +820,27 @@ ChkNamedNumbers PARAMS((m, t, n),
 		if (baseVal->basicValue->choiceId != BASICVALUE_INTEGER)
 		{
 			PrintErrLoc(m->asn1SrcFileName, (long)t->lineNo);
-			fprintf(errFileG, "ERROR - value format problem (%s)- named numbers must be integers.\n",
-				nn->definedName);
+			fprintf(errFileG, "ERROR - value format problem (%s)- named numbers must be integers.\n", nn->definedName);
 		}
 		else if (ObjIsDefined(nums, &baseVal->basicValue->a.integer, IntObjCmp))
 		{
 			PrintErrLoc(m->asn1SrcFileName, (long)t->lineNo);
-			fprintf(errFileG, "ERROR - named numbers (%s) must have unique values.\n",
-				nn->definedName);
+			fprintf(errFileG, "ERROR - named numbers (%s) must have unique values.\n", nn->definedName);
 		}
 		else
 			DefineObj(&nums, &baseVal->basicValue->a.integer);
-
 	}
 
 	FreeDefinedObjs(&ids);
 	FreeDefinedObjs(&nums);
 
-}  /* ChkNamedNumbers */
-
-
+} /* ChkNamedNumbers */
 
 /*
  * The same as ChkNamedNumbers except that the elmt values must be
  * > 0 (needed for BIT STRINGs)
  */
-void
-ChkNamedBits PARAMS((m, t, n),
-	Module* m _AND_
-	Type* t _AND_
-	NamedNumberList* n)
+void ChkNamedBits PARAMS((m, t, n), Module* m _AND_ Type* t _AND_ NamedNumberList* n)
 {
 	ValueDef* vd;
 	Value* baseVal;
@@ -999,28 +850,20 @@ ChkNamedBits PARAMS((m, t, n),
 	FOR_EACH_LIST_ELMT(vd, n)
 	{
 		baseVal = GetValue(vd->value);
-		if ((baseVal->basicValue->choiceId == BASICVALUE_INTEGER) &&
-			(baseVal->basicValue->a.integer < 0))
+		if ((baseVal->basicValue->choiceId == BASICVALUE_INTEGER) && (baseVal->basicValue->a.integer < 0))
 		{
 			PrintErrLoc(m->asn1SrcFileName, (long)t->lineNo);
-			fprintf(errFileG, "ERROR - named bits (%s) must have positive values.\n",
-				vd->definedName);
+			fprintf(errFileG, "ERROR - named bits (%s) must have positive values.\n", vd->definedName);
 		}
 	}
 
 } /* ChkNamedBits */
 
-
-
 /*
  * check that tags on one or more consecutive optional elmts
  * and following (if any) non-optional elmt are distinct
  */
-void
-ChkSeqTags PARAMS((m, td, t),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* t)
+void ChkSeqTags PARAMS((m, td, t), Module* m _AND_ TypeDef* td _AND_ Type* t)
 {
 	DefinedObj* dO;
 	NamedType* e;
@@ -1041,7 +884,7 @@ ChkSeqTags PARAMS((m, td, t),
 				m->status = MOD_ERROR;
 			}
 		}
-		else if (dO != NULL)   /* first non-opt after opt elmts */
+		else if (dO != NULL) /* first non-opt after opt elmts */
 		{
 			if (!AddFirstTag(&dO, e->type))
 			{
@@ -1054,4 +897,4 @@ ChkSeqTags PARAMS((m, td, t),
 		}
 	}
 	FreeDefinedObjs(&dO);
-}  /* ChkSeqTags */
+} /* ChkSeqTags */

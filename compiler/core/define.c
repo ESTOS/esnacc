@@ -55,15 +55,11 @@
 #include "../../c-lib/include/asn-incl.h"
 #include "define.h"
 
- /* Function Prototypes */
-int CompareOids PROTO((OID* oid1, OID* oid2));
-
+/* Function Prototypes */
+int CompareOids PROTO((OID * oid1, OID* oid2));
 
 /* cmp routine for a null terminated string object type */
-int
-StrObjCmp PARAMS((s1, s2),
-	void* s1 _AND_
-	void* s2)
+int StrObjCmp PARAMS((s1, s2), void* s1 _AND_ void* s2)
 {
 	if ((s1 == NULL) || (s2 == NULL))
 		return FALSE;
@@ -75,10 +71,7 @@ StrObjCmp PARAMS((s1, s2),
 }
 
 /* cmp routine for a integer object type */
-int
-IntObjCmp PARAMS((s1, s2),
-	void* s1 _AND_
-	void* s2)
+int IntObjCmp PARAMS((s1, s2), void* s1 _AND_ void* s2)
 {
 	if (*((int*)s1) == *((int*)s2))
 		return TRUE;
@@ -86,21 +79,14 @@ IntObjCmp PARAMS((s1, s2),
 		return FALSE;
 }
 
-
 /* cmp routine for a OID object type */
-int
-OidObjCmp PARAMS((o1, o2),
-	void* o1 _AND_
-	void* o2)
+int OidObjCmp PARAMS((o1, o2), void* o1 _AND_ void* o2)
 {
 	return CompareOids((OID*)o1, (OID*)o2);
 }
 
 /* special cmp routine - compares the pointers themselves */
-int
-ObjPtrCmp PARAMS((s1, s2),
-	void* s1 _AND_
-	void* s2)
+int ObjPtrCmp PARAMS((s1, s2), void* s1 _AND_ void* s2)
 {
 	if (s1 == s2)
 		return TRUE;
@@ -108,9 +94,7 @@ ObjPtrCmp PARAMS((s1, s2),
 		return FALSE;
 }
 
-
-DefinedObj*
-NewObjList()
+DefinedObj* NewObjList()
 {
 	return NULL;
 }
@@ -120,10 +104,7 @@ NewObjList()
  * does not check for duplicates - you should do that
  * before calling this - if you care.
  */
-void
-DefineObj PARAMS((objListHndl, obj),
-	DefinedObj** objListHndl _AND_
-	void* obj)
+void DefineObj PARAMS((objListHndl, obj), DefinedObj** objListHndl _AND_ void* obj)
 {
 	DefinedObj* now = NULL;
 
@@ -134,8 +115,7 @@ DefineObj PARAMS((objListHndl, obj),
 	now->next = *objListHndl;
 	*objListHndl = now;
 
-}  /* DefineObj */
-
+} /* DefineObj */
 
 /*
  * removes the first identical object from the list
@@ -143,11 +123,7 @@ DefineObj PARAMS((objListHndl, obj),
  *   this only removes the first for efficiency reasons - all
  *   current usage of the DefineObj stuff does not allow duplicates.
  */
-void
-UndefineObj PARAMS((objListHndl, obj, cmpRoutine),
-	DefinedObj** objListHndl _AND_
-	void* obj _AND_
-	CmpObjsRoutine cmpRoutine)
+void UndefineObj PARAMS((objListHndl, obj, cmpRoutine), DefinedObj** objListHndl _AND_ void* obj _AND_ CmpObjsRoutine cmpRoutine)
 {
 	DefinedObj* objListPtr;
 	DefinedObj** prevHndl;
@@ -156,7 +132,6 @@ UndefineObj PARAMS((objListHndl, obj, cmpRoutine),
 
 	prevHndl = objListHndl;
 	for (; objListPtr != NULL; objListPtr = *prevHndl)
-	{
 		if (cmpRoutine(objListPtr->obj, obj))
 		{
 			/* found object, now remove it */
@@ -165,10 +140,8 @@ UndefineObj PARAMS((objListHndl, obj, cmpRoutine),
 		}
 		else
 			prevHndl = &objListPtr->next;
-	}
 
-}  /* UndefineObj */
-
+} /* UndefineObj */
 
 /*
  * given an object list, an object and an object comparison routine,
@@ -176,30 +149,25 @@ UndefineObj PARAMS((objListHndl, obj, cmpRoutine),
  * the object list.  The comparison routine should take two objects and
  * return non-zero if the objects are equivalent
  */
-int
-ObjIsDefined(DefinedObj* objListPtr, void* obj, CmpObjsRoutine cmpRoutine)
+int ObjIsDefined(DefinedObj* objListPtr, void* obj, CmpObjsRoutine cmpRoutine)
 {
 	for (; objListPtr != NULL; objListPtr = objListPtr->next)
-	{
 		if (cmpRoutine(objListPtr->obj, obj))
 			return TRUE;
-	}
 	return FALSE;
 
-}  /* ObjIsDefined */
+} /* ObjIsDefined */
 
 /*
  * Frees the list holding the defined objects.
  * Does not free the objects.
  */
-void
-FreeDefinedObjs PARAMS((objListHndl),
-	DefinedObj** objListHndl)
+void FreeDefinedObjs PARAMS((objListHndl), DefinedObj** objListHndl)
 {
 	DefinedObj* dO;
 	DefinedObj* tmpDO;
 
-	for (dO = *objListHndl; dO != NULL; )
+	for (dO = *objListHndl; dO != NULL;)
 	{
 		tmpDO = dO->next;
 		Free(dO);
@@ -207,22 +175,18 @@ FreeDefinedObjs PARAMS((objListHndl),
 	}
 	*objListHndl = NULL;
 
-}  /* FreeDefinedObjs */
-
-
+} /* FreeDefinedObjs */
 
 /*
  * Frees the list holding the defined objects.
  * Does free the objects.
  */
-void
-FreeDefinedObjsAndContent PARAMS((objListHndl),
-	DefinedObj** objListHndl)
+void FreeDefinedObjsAndContent PARAMS((objListHndl), DefinedObj** objListHndl)
 {
 	DefinedObj* dO;
 	DefinedObj* tmpDO;
 
-	for (dO = *objListHndl; dO != NULL; )
+	for (dO = *objListHndl; dO != NULL;)
 	{
 		tmpDO = dO->next;
 		Free(dO->obj);
@@ -231,4 +195,4 @@ FreeDefinedObjsAndContent PARAMS((objListHndl),
 	}
 	*objListHndl = NULL;
 
-}  /* FreeDefinedObjs */
+} /* FreeDefinedObjs */

@@ -21,11 +21,12 @@
 #include "gen-buf.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-
-	typedef struct EncodedElmt {
+	typedef struct EncodedElmt
+	{
 		GenBuf* b;
 		unsigned long len;
 	} EncodedElmt;
@@ -35,5 +36,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif  /* _asn_der_h */
-
+#endif /* _asn_der_h */

@@ -13,9 +13,7 @@
 #include "../include/asn-incl.h"
 #include "../include/asn-useful.h"
 
-AsnLen BEncVideotexString PARAMS((b, v),
-	GenBuf* b _AND_
-	VideotexString* v)
+AsnLen BEncVideotexString PARAMS((b, v), GenBuf* b _AND_ VideotexString* v)
 {
 	AsnLen l = 0;
 	l = BEncVideotexStringContent(b, v);
@@ -24,29 +22,21 @@ AsnLen BEncVideotexString PARAMS((b, v),
 	return l;
 } /* BEncVideotexString */
 
-void BDecVideotexString PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	VideotexString* result _AND_
-	AsnLen* bytesDecoded _AND_
-	ENV_TYPE env)
+void BDecVideotexString PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ VideotexString* result _AND_ AsnLen* bytesDecoded _AND_ ENV_TYPE env)
 {
 	AsnTag tag;
 	AsnLen elmtLen1;
 
-	if (((tag = BDecTag(b, bytesDecoded, env)) !=
-		MAKE_TAG_ID(UNIV, PRIM, VIDEOTEXSTRING_TAG_CODE)) &&
-		(tag != MAKE_TAG_ID(UNIV, CONS, VIDEOTEXSTRING_TAG_CODE)))
+	if (((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, VIDEOTEXSTRING_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, VIDEOTEXSTRING_TAG_CODE)))
 	{
 		Asn1Error("BDecVideotexString: ERROR - wrong tag\n");
 		longjmp(env, 50);
 	}
 	elmtLen1 = BDecLen(b, bytesDecoded, env);
 	BDecVideotexStringContent(b, tag, elmtLen1, result, bytesDecoded, env);
-}  /* BDecVideotexString */
+} /* BDecVideotexString */
 
-AsnLen BEncGraphicString PARAMS((b, v),
-	GenBuf* b _AND_
-	GraphicString* v)
+AsnLen BEncGraphicString PARAMS((b, v), GenBuf* b _AND_ GraphicString* v)
 {
 	AsnLen l = 0;
 	l = BEncGraphicStringContent(b, v);
@@ -55,25 +45,19 @@ AsnLen BEncGraphicString PARAMS((b, v),
 	return l;
 } /* BEncGraphicString */
 
-void BDecGraphicString PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	GraphicString* result _AND_
-	AsnLen* bytesDecoded _AND_
-	ENV_TYPE env)
+void BDecGraphicString PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ GraphicString* result _AND_ AsnLen* bytesDecoded _AND_ ENV_TYPE env)
 {
 	AsnTag tag;
 	AsnLen elmtLen1;
 
-	if (((tag = BDecTag(b, bytesDecoded, env)) !=
-		MAKE_TAG_ID(UNIV, PRIM, GRAPHICSTRING_TAG_CODE)) &&
-		(tag != MAKE_TAG_ID(UNIV, CONS, GRAPHICSTRING_TAG_CODE)))
+	if (((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, GRAPHICSTRING_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, GRAPHICSTRING_TAG_CODE)))
 	{
 		Asn1Error("BDecGraphicString: ERROR - wrong tag\n");
 		longjmp(env, 49);
 	}
 	elmtLen1 = BDecLen(b, bytesDecoded, env);
 	BDecGraphicStringContent(b, tag, elmtLen1, result, bytesDecoded, env);
-}  /* BDecGraphicString */
+} /* BDecGraphicString */
 
 /*
 AsnLen BEncVisibleString PARAMS ((b, v),
@@ -108,9 +92,7 @@ MAKE_TAG_ID (UNIV, PRIM, VISIBLESTRING_TAG_CODE))&&
 	BDecVisibleStringContent (b, tag, elmtLen1, result, bytesDecoded, env);
 }*/  /* BDecVisibleString */
 
-AsnLen BEncISO646String PARAMS((b, v),
-	GenBuf* b _AND_
-	ISO646String* v)
+AsnLen BEncISO646String PARAMS((b, v), GenBuf* b _AND_ ISO646String* v)
 {
 	AsnLen l = 0;
 	l = BEncISO646StringContent(b, v);
@@ -119,29 +101,21 @@ AsnLen BEncISO646String PARAMS((b, v),
 	return l;
 } /* BEncISO646String */
 
-void BDecISO646String PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	ISO646String* result _AND_
-	AsnLen* bytesDecoded _AND_
-	ENV_TYPE env)
+void BDecISO646String PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ ISO646String* result _AND_ AsnLen* bytesDecoded _AND_ ENV_TYPE env)
 {
 	AsnTag tag;
 	AsnLen elmtLen1;
 
-	if (((tag = BDecTag(b, bytesDecoded, env)) !=
-		MAKE_TAG_ID(UNIV, PRIM, VISIBLESTRING_TAG_CODE)) &&
-		(tag != MAKE_TAG_ID(UNIV, CONS, VISIBLESTRING_TAG_CODE)))
+	if (((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, VISIBLESTRING_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, VISIBLESTRING_TAG_CODE)))
 	{
 		Asn1Error("BDecISO646String: ERROR - wrong tag\n");
 		longjmp(env, 47);
 	}
 	elmtLen1 = BDecLen(b, bytesDecoded, env);
 	BDecISO646StringContent(b, tag, elmtLen1, result, bytesDecoded, env);
-}  /* BDecISO646String */
+} /* BDecISO646String */
 
-AsnLen BEncGeneralString PARAMS((b, v),
-	GenBuf* b _AND_
-	GeneralString* v)
+AsnLen BEncGeneralString PARAMS((b, v), GenBuf* b _AND_ GeneralString* v)
 {
 	AsnLen l = 0;
 	l = BEncGeneralStringContent(b, v);
@@ -150,29 +124,21 @@ AsnLen BEncGeneralString PARAMS((b, v),
 	return l;
 } /* BEncGeneralString */
 
-void BDecGeneralString PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	GeneralString* result _AND_
-	AsnLen* bytesDecoded _AND_
-	ENV_TYPE env)
+void BDecGeneralString PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ GeneralString* result _AND_ AsnLen* bytesDecoded _AND_ ENV_TYPE env)
 {
 	AsnTag tag;
 	AsnLen elmtLen1;
 
-	if (((tag = BDecTag(b, bytesDecoded, env)) !=
-		MAKE_TAG_ID(UNIV, PRIM, GENERALSTRING_TAG_CODE)) &&
-		(tag != MAKE_TAG_ID(UNIV, CONS, GENERALSTRING_TAG_CODE)))
+	if (((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, GENERALSTRING_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, GENERALSTRING_TAG_CODE)))
 	{
 		Asn1Error("BDecGeneralString: ERROR - wrong tag\n");
 		longjmp(env, 46);
 	}
 	elmtLen1 = BDecLen(b, bytesDecoded, env);
 	BDecGeneralStringContent(b, tag, elmtLen1, result, bytesDecoded, env);
-}  /* BDecGeneralString */
+} /* BDecGeneralString */
 
-AsnLen BEncUTCTime PARAMS((b, v),
-	GenBuf* b _AND_
-	UTCTime* v)
+AsnLen BEncUTCTime PARAMS((b, v), GenBuf* b _AND_ UTCTime* v)
 {
 	AsnLen l = 0;
 	l = BEncUTCTimeContent(b, v);
@@ -181,29 +147,21 @@ AsnLen BEncUTCTime PARAMS((b, v),
 	return l;
 } /* BEncUTCTime */
 
-void BDecUTCTime PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	UTCTime* result _AND_
-	AsnLen* bytesDecoded _AND_
-	ENV_TYPE env)
+void BDecUTCTime PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ UTCTime* result _AND_ AsnLen* bytesDecoded _AND_ ENV_TYPE env)
 {
 	AsnTag tag;
 	AsnLen elmtLen1;
 
-	if (((tag = BDecTag(b, bytesDecoded, env)) !=
-		MAKE_TAG_ID(UNIV, PRIM, UTCTIME_TAG_CODE)) &&
-		(tag != MAKE_TAG_ID(UNIV, CONS, UTCTIME_TAG_CODE)))
+	if (((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, UTCTIME_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, UTCTIME_TAG_CODE)))
 	{
 		Asn1Error("BDecUTCTime: ERROR - wrong tag\n");
 		longjmp(env, 45);
 	}
 	elmtLen1 = BDecLen(b, bytesDecoded, env);
 	BDecUTCTimeContent(b, tag, elmtLen1, result, bytesDecoded, env);
-}  /* BDecUTCTime */
+} /* BDecUTCTime */
 
-AsnLen BEncGeneralizedTime PARAMS((b, v),
-	GenBuf* b _AND_
-	GeneralizedTime* v)
+AsnLen BEncGeneralizedTime PARAMS((b, v), GenBuf* b _AND_ GeneralizedTime* v)
 {
 	AsnLen l = 0;
 	l = BEncGeneralizedTimeContent(b, v);
@@ -212,30 +170,21 @@ AsnLen BEncGeneralizedTime PARAMS((b, v),
 	return l;
 } /* BEncGeneralizedTime */
 
-void BDecGeneralizedTime PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	GeneralizedTime* result _AND_
-	AsnLen* bytesDecoded _AND_
-	ENV_TYPE env)
+void BDecGeneralizedTime PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ GeneralizedTime* result _AND_ AsnLen* bytesDecoded _AND_ ENV_TYPE env)
 {
 	AsnTag tag;
 	AsnLen elmtLen1;
 
-	if (((tag = BDecTag(b, bytesDecoded, env)) !=
-		MAKE_TAG_ID(UNIV, PRIM, GENERALIZEDTIME_TAG_CODE)) &&
-		(tag != MAKE_TAG_ID(UNIV, CONS, GENERALIZEDTIME_TAG_CODE)))
+	if (((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, PRIM, GENERALIZEDTIME_TAG_CODE)) && (tag != MAKE_TAG_ID(UNIV, CONS, GENERALIZEDTIME_TAG_CODE)))
 	{
 		Asn1Error("BDecGeneralizedTime: ERROR - wrong tag\n");
 		longjmp(env, 44);
 	}
 	elmtLen1 = BDecLen(b, bytesDecoded, env);
 	BDecGeneralizedTimeContent(b, tag, elmtLen1, result, bytesDecoded, env);
-}  /* BDecGeneralizedTime */
+} /* BDecGeneralizedTime */
 
-AsnLen
-BEncEXTERNALChoiceContent PARAMS((b, v),
-	GenBuf* b _AND_
-	EXTERNALChoice* v)
+AsnLen BEncEXTERNALChoiceContent PARAMS((b, v), GenBuf* b _AND_ EXTERNALChoice* v)
 {
 	AsnLen totalLen = 0;
 	AsnLen itemLen;
@@ -244,49 +193,41 @@ BEncEXTERNALChoiceContent PARAMS((b, v),
 
 	switch (v->choiceId)
 	{
-	case EXTERNALCHOICE_SINGLE_ASN1_TYPE:
-		BEncEocIfNec(b);
-		itemLen = BEncAsnOctsContent(b, (v->a.single_ASN1_type));
-		itemLen += BEncDefLen(b, itemLen);
-		itemLen += BEncTag1(b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
-		itemLen += BEncConsLen(b, itemLen);
-		itemLen += BEncTag1(b, CNTX, CONS, 0);
+		case EXTERNALCHOICE_SINGLE_ASN1_TYPE:
+			BEncEocIfNec(b);
+			itemLen = BEncAsnOctsContent(b, (v->a.single_ASN1_type));
+			itemLen += BEncDefLen(b, itemLen);
+			itemLen += BEncTag1(b, UNIV, PRIM, OCTETSTRING_TAG_CODE);
+			itemLen += BEncConsLen(b, itemLen);
+			itemLen += BEncTag1(b, CNTX, CONS, 0);
 
-		totalLen += itemLen;
+			totalLen += itemLen;
 
-		break;
+			break;
 
-	case EXTERNALCHOICE_OCTET_ALIGNED:
-		itemLen = BEncAsnOctsContent(b, (v->a.octet_aligned));
-		itemLen += BEncDefLen(b, itemLen);
-		itemLen += BEncTag1(b, CNTX, PRIM, BOOLEAN_TAG_CODE);
+		case EXTERNALCHOICE_OCTET_ALIGNED:
+			itemLen = BEncAsnOctsContent(b, (v->a.octet_aligned));
+			itemLen += BEncDefLen(b, itemLen);
+			itemLen += BEncTag1(b, CNTX, PRIM, BOOLEAN_TAG_CODE);
 
-		totalLen += itemLen;
+			totalLen += itemLen;
 
-		break;
+			break;
 
-	case EXTERNALCHOICE_ARBITRARY:
-		itemLen = BEncAsnBitsContent(b, (v->a.arbitrary));
-		itemLen += BEncDefLen(b, itemLen);
-		itemLen += BEncTag1(b, CNTX, PRIM, INTEGER_TAG_CODE);
+		case EXTERNALCHOICE_ARBITRARY:
+			itemLen = BEncAsnBitsContent(b, (v->a.arbitrary));
+			itemLen += BEncDefLen(b, itemLen);
+			itemLen += BEncTag1(b, CNTX, PRIM, INTEGER_TAG_CODE);
 
-		totalLen += itemLen;
+			totalLen += itemLen;
 
-		break;
-
+			break;
 	}
 	return totalLen;
 
-}  /* BEncEXTERNALChoiceContent */
+} /* BEncEXTERNALChoiceContent */
 
-void
-BDecEXTERNALChoiceContent PARAMS((b, tagId0, elmtLen0, v, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnTag tagId0 _AND_
-	AsnLen elmtLen0 _AND_
-	EXTERNALChoice* v _AND_
-	AsnLen* bytesDecoded _AND_
-	ENV_TYPE env)
+void BDecEXTERNALChoiceContent PARAMS((b, tagId0, elmtLen0, v, bytesDecoded, env), GenBuf* b _AND_ AsnTag tagId0 _AND_ AsnLen elmtLen0 _AND_ EXTERNALChoice* v _AND_ AsnLen* bytesDecoded _AND_ ENV_TYPE env)
 {
 	/*    int seqDone = FALSE; */
 	AsnLen totalElmtsLen1 = 0;
@@ -297,113 +238,98 @@ BDecEXTERNALChoiceContent PARAMS((b, tagId0, elmtLen0, v, bytesDecoded, env),
 	/*    AsnLen elmtLen2; */
 	/*    AsnTag tagId2; */
 
-
 	switch (tagId0)
 	{
-	case MAKE_TAG_ID(CNTX, CONS, 0):
-		tagId1 = BDecTag(b, &totalElmtsLen1, env);
-		if ((tagId1 != MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE)) &&
-			(tagId1 != MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE)))
-		{
-			Asn1Error("Unexpected Tag\n");
-			longjmp(env, 43);
-		}
+		case MAKE_TAG_ID(CNTX, CONS, 0):
+			tagId1 = BDecTag(b, &totalElmtsLen1, env);
+			if ((tagId1 != MAKE_TAG_ID(UNIV, PRIM, OCTETSTRING_TAG_CODE)) && (tagId1 != MAKE_TAG_ID(UNIV, CONS, OCTETSTRING_TAG_CODE)))
+			{
+				Asn1Error("Unexpected Tag\n");
+				longjmp(env, 43);
+			}
 
-		elmtLen1 = BDecLen(b, &totalElmtsLen1, env);
-		(v->choiceId) = EXTERNALCHOICE_SINGLE_ASN1_TYPE;
-		(v->a.single_ASN1_type) = (AsnOcts*)Asn1Alloc(sizeof(AsnOcts));
-		CheckAsn1Alloc((v->a.single_ASN1_type), env);
-		BDecAsnOctsContent(b, tagId1, elmtLen1, (v->a.single_ASN1_type), &totalElmtsLen1, env);
-		if (elmtLen0 == INDEFINITE_LEN)
-			BDecEoc(b, &totalElmtsLen1, env);
-		break;
+			elmtLen1 = BDecLen(b, &totalElmtsLen1, env);
+			(v->choiceId) = EXTERNALCHOICE_SINGLE_ASN1_TYPE;
+			(v->a.single_ASN1_type) = (AsnOcts*)Asn1Alloc(sizeof(AsnOcts));
+			CheckAsn1Alloc((v->a.single_ASN1_type), env);
+			BDecAsnOctsContent(b, tagId1, elmtLen1, (v->a.single_ASN1_type), &totalElmtsLen1, env);
+			if (elmtLen0 == INDEFINITE_LEN)
+				BDecEoc(b, &totalElmtsLen1, env);
+			break;
 
-	case MAKE_TAG_ID(CNTX, PRIM, 1):
-	case MAKE_TAG_ID(CNTX, CONS, 1):
-		(v->choiceId) = EXTERNALCHOICE_OCTET_ALIGNED;
-		(v->a.octet_aligned) = (AsnOcts*)Asn1Alloc(sizeof(AsnOcts));
-		CheckAsn1Alloc((v->a.octet_aligned), env);
-		BDecAsnOctsContent(b, tagId0, elmtLen0, (v->a.octet_aligned), &totalElmtsLen1, env);
-		break;
+		case MAKE_TAG_ID(CNTX, PRIM, 1):
+		case MAKE_TAG_ID(CNTX, CONS, 1):
+			(v->choiceId) = EXTERNALCHOICE_OCTET_ALIGNED;
+			(v->a.octet_aligned) = (AsnOcts*)Asn1Alloc(sizeof(AsnOcts));
+			CheckAsn1Alloc((v->a.octet_aligned), env);
+			BDecAsnOctsContent(b, tagId0, elmtLen0, (v->a.octet_aligned), &totalElmtsLen1, env);
+			break;
 
-	case MAKE_TAG_ID(CNTX, PRIM, 2):
-	case MAKE_TAG_ID(CNTX, CONS, 2):
-		(v->choiceId) = EXTERNALCHOICE_ARBITRARY;
-		(v->a.arbitrary) = (AsnBits*)Asn1Alloc(sizeof(AsnBits));
-		CheckAsn1Alloc((v->a.arbitrary), env);
-		BDecAsnBitsContent(b, tagId0, elmtLen0, (v->a.arbitrary), &totalElmtsLen1, env);
-		break;
+		case MAKE_TAG_ID(CNTX, PRIM, 2):
+		case MAKE_TAG_ID(CNTX, CONS, 2):
+			(v->choiceId) = EXTERNALCHOICE_ARBITRARY;
+			(v->a.arbitrary) = (AsnBits*)Asn1Alloc(sizeof(AsnBits));
+			CheckAsn1Alloc((v->a.arbitrary), env);
+			BDecAsnBitsContent(b, tagId0, elmtLen0, (v->a.arbitrary), &totalElmtsLen1, env);
+			break;
 
-	default:
-		Asn1Error("ERROR - unexpected tag in CHOICE\n");
-		longjmp(env, 42);
-		break;
+		default:
+			Asn1Error("ERROR - unexpected tag in CHOICE\n");
+			longjmp(env, 42);
+			break;
 	} /* end switch */
 	(*bytesDecoded) += totalElmtsLen1;
-}  /* BDecEXTERNALChoiceContent */
+} /* BDecEXTERNALChoiceContent */
 
-void
-PrintEXTERNALChoice PARAMS((f, v, indent),
-	FILE* f _AND_
-	EXTERNALChoice* v _AND_
-	unsigned int indent)
+void PrintEXTERNALChoice PARAMS((f, v, indent), FILE* f _AND_ EXTERNALChoice* v _AND_ unsigned int indent)
 {
 	switch (v->choiceId)
 	{
-	case EXTERNALCHOICE_SINGLE_ASN1_TYPE:
-		fprintf(f, "single-ASN1-type ");
-		PrintAsnOcts(f, (v->a.single_ASN1_type), (unsigned short)indent);
-		break;
+		case EXTERNALCHOICE_SINGLE_ASN1_TYPE:
+			fprintf(f, "single-ASN1-type ");
+			PrintAsnOcts(f, (v->a.single_ASN1_type), (unsigned short)indent);
+			break;
 
-	case EXTERNALCHOICE_OCTET_ALIGNED:
-		fprintf(f, "octet-aligned ");
-		PrintAsnOcts(f, (v->a.octet_aligned), (unsigned short)indent);
-		break;
+		case EXTERNALCHOICE_OCTET_ALIGNED:
+			fprintf(f, "octet-aligned ");
+			PrintAsnOcts(f, (v->a.octet_aligned), (unsigned short)indent);
+			break;
 
-	case EXTERNALCHOICE_ARBITRARY:
-		fprintf(f, "arbitrary ");
-		PrintAsnBits(f, (v->a.arbitrary), (unsigned short)indent);
-		break;
-
+		case EXTERNALCHOICE_ARBITRARY:
+			fprintf(f, "arbitrary ");
+			PrintAsnBits(f, (v->a.arbitrary), (unsigned short)indent);
+			break;
 	}
-}  /* PrintEXTERNALChoice */
+} /* PrintEXTERNALChoice */
 
-void
-FreeEXTERNALChoice PARAMS((v),
-	EXTERNALChoice* v)
+void FreeEXTERNALChoice PARAMS((v), EXTERNALChoice* v)
 {
 
 	if (v == NULL)
 		return;
 	switch (v->choiceId)
 	{
-	case EXTERNALCHOICE_SINGLE_ASN1_TYPE:
-		FreeAsnOcts((v->a.single_ASN1_type));
-		Asn1Free((v->a.single_ASN1_type));
+		case EXTERNALCHOICE_SINGLE_ASN1_TYPE:
+			FreeAsnOcts((v->a.single_ASN1_type));
+			Asn1Free((v->a.single_ASN1_type));
 
-		break;
+			break;
 
-	case EXTERNALCHOICE_OCTET_ALIGNED:
-		FreeAsnOcts((v->a.octet_aligned));
-		Asn1Free((v->a.octet_aligned));
+		case EXTERNALCHOICE_OCTET_ALIGNED:
+			FreeAsnOcts((v->a.octet_aligned));
+			Asn1Free((v->a.octet_aligned));
 
-		break;
+			break;
 
-	case EXTERNALCHOICE_ARBITRARY:
-		FreeAsnBits((v->a.arbitrary));
-		Asn1Free((v->a.arbitrary));
+		case EXTERNALCHOICE_ARBITRARY:
+			FreeAsnBits((v->a.arbitrary));
+			Asn1Free((v->a.arbitrary));
 
-		break;
-
+			break;
 	}
-}  /* FreeEXTERNALChoice */
+} /* FreeEXTERNALChoice */
 
-
-
-
-AsnLen BEncEXTERNAL PARAMS((b, v),
-	GenBuf* b _AND_
-	EXTERNAL* v)
+AsnLen BEncEXTERNAL PARAMS((b, v), GenBuf* b _AND_ EXTERNAL* v)
 {
 	AsnLen l = 0;
 	BEncEocIfNec(b);
@@ -413,29 +339,21 @@ AsnLen BEncEXTERNAL PARAMS((b, v),
 	return l;
 } /* BEncEXTERNAL */
 
-void BDecEXTERNAL PARAMS((b, result, bytesDecoded, env),
-	GenBuf* b _AND_
-	EXTERNAL* result _AND_
-	AsnLen* bytesDecoded _AND_
-	ENV_TYPE env)
+void BDecEXTERNAL PARAMS((b, result, bytesDecoded, env), GenBuf* b _AND_ EXTERNAL* result _AND_ AsnLen* bytesDecoded _AND_ ENV_TYPE env)
 {
 	AsnTag tag;
 	AsnLen elmtLen1;
 
-	if (((tag = BDecTag(b, bytesDecoded, env)) !=
-		MAKE_TAG_ID(UNIV, CONS, EXTERNAL_TAG_CODE)))
+	if (((tag = BDecTag(b, bytesDecoded, env)) != MAKE_TAG_ID(UNIV, CONS, EXTERNAL_TAG_CODE)))
 	{
 		Asn1Error("BDecEXTERNAL: ERROR - wrong tag\n");
 		longjmp(env, 41);
 	}
 	elmtLen1 = BDecLen(b, bytesDecoded, env);
 	BDecEXTERNALContent(b, tag, elmtLen1, result, bytesDecoded, env);
-}  /* BDecEXTERNAL */
+} /* BDecEXTERNAL */
 
-AsnLen
-BEncEXTERNALContent PARAMS((b, v),
-	GenBuf* b _AND_
-	EXTERNAL* v)
+AsnLen BEncEXTERNALContent PARAMS((b, v), GenBuf* b _AND_ EXTERNAL* v)
 {
 	AsnLen totalLen = 0;
 	AsnLen itemLen;
@@ -476,16 +394,9 @@ BEncEXTERNALContent PARAMS((b, v),
 
 	return totalLen;
 
-}  /* BEncEXTERNALContent */
+} /* BEncEXTERNALContent */
 
-void
-BDecEXTERNALContent PARAMS((b, tagId0, elmtLen0, v, bytesDecoded, env),
-	GenBuf* b _AND_
-	AsnTag tagId0 _AND_
-	AsnLen elmtLen0 _AND_
-	EXTERNAL* v _AND_
-	AsnLen* bytesDecoded _AND_
-	ENV_TYPE env)
+void BDecEXTERNALContent PARAMS((b, tagId0, elmtLen0, v, bytesDecoded, env), GenBuf* b _AND_ AsnTag tagId0 _AND_ AsnLen elmtLen0 _AND_ EXTERNAL* v _AND_ AsnLen* bytesDecoded _AND_ ENV_TYPE env)
 {
 	int seqDone = FALSE;
 	AsnLen totalElmtsLen1 = 0;
@@ -496,7 +407,6 @@ BDecEXTERNALContent PARAMS((b, tagId0, elmtLen0, v, bytesDecoded, env),
 	/*    AsnLen elmtLen2; */
 	/*    AsnTag tagId2; */
 
-
 	tagId1 = BDecTag(b, &totalElmtsLen1, env);
 
 	if (tagId1 == MAKE_TAG_ID(UNIV, PRIM, OID_TAG_CODE))
@@ -505,7 +415,6 @@ BDecEXTERNALContent PARAMS((b, tagId0, elmtLen0, v, bytesDecoded, env),
 		BDecAsnOidContent(b, tagId1, elmtLen1, (&v->direct_reference), &totalElmtsLen1, env);
 		tagId1 = BDecTag(b, &totalElmtsLen1, env);
 	}
-
 
 	if (tagId1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
 	{
@@ -516,21 +425,14 @@ BDecEXTERNALContent PARAMS((b, tagId0, elmtLen0, v, bytesDecoded, env),
 		tagId1 = BDecTag(b, &totalElmtsLen1, env);
 	}
 
-
-	if (((tagId1 == MAKE_TAG_ID(UNIV, PRIM, OD_TAG_CODE)) ||
-		(tagId1 == MAKE_TAG_ID(UNIV, CONS, OD_TAG_CODE))))
+	if (((tagId1 == MAKE_TAG_ID(UNIV, PRIM, OD_TAG_CODE)) || (tagId1 == MAKE_TAG_ID(UNIV, CONS, OD_TAG_CODE))))
 	{
 		elmtLen1 = BDecLen(b, &totalElmtsLen1, env);
 		BDecObjectDescriptorContent(b, tagId1, elmtLen1, (&v->data_value_descriptor), &totalElmtsLen1, env);
 		tagId1 = BDecTag(b, &totalElmtsLen1, env);
 	}
 
-
-	if (((tagId1 == MAKE_TAG_ID(CNTX, CONS, 0)) ||
-		(tagId1 == MAKE_TAG_ID(CNTX, PRIM, 1)) ||
-		(tagId1 == MAKE_TAG_ID(CNTX, CONS, 1)) ||
-		(tagId1 == MAKE_TAG_ID(CNTX, PRIM, 2)) ||
-		(tagId1 == MAKE_TAG_ID(CNTX, CONS, 2))))
+	if (((tagId1 == MAKE_TAG_ID(CNTX, CONS, 0)) || (tagId1 == MAKE_TAG_ID(CNTX, PRIM, 1)) || (tagId1 == MAKE_TAG_ID(CNTX, CONS, 1)) || (tagId1 == MAKE_TAG_ID(CNTX, PRIM, 2)) || (tagId1 == MAKE_TAG_ID(CNTX, CONS, 2))))
 	{
 		elmtLen1 = BDecLen(b, &totalElmtsLen1, env);
 		(v->encoding) = (EXTERNALChoice*)Asn1Alloc(sizeof(EXTERNALChoice));
@@ -545,17 +447,12 @@ BDecEXTERNALContent PARAMS((b, tagId0, elmtLen0, v, bytesDecoded, env),
 	else
 		longjmp(env, 39);
 
-
 	if (!seqDone)
 		longjmp(env, 38);
 	(*bytesDecoded) += totalElmtsLen1;
-}  /* BDecEXTERNALContent */
+} /* BDecEXTERNALContent */
 
-void
-PrintEXTERNAL PARAMS((f, v, indent),
-	FILE* f _AND_
-	EXTERNAL* v _AND_
-	unsigned int indent)
+void PrintEXTERNAL PARAMS((f, v, indent), FILE* f _AND_ EXTERNAL* v _AND_ unsigned int indent)
 {
 	if (v == NULL)
 		return;
@@ -589,19 +486,15 @@ PrintEXTERNAL PARAMS((f, v, indent),
 	fprintf(f, "\n");
 	Indent(f, indent);
 	fprintf(f, "}");
-}  /* PrintEXTERNAL */
+} /* PrintEXTERNAL */
 
-void
-FreeEXTERNAL PARAMS((v),
-	EXTERNAL* v)
+void FreeEXTERNAL PARAMS((v), EXTERNAL* v)
 {
 
 	if (v == NULL)
 		return;
 	if (ASNOID_PRESENT((&v->direct_reference)))
-	{
 		FreeAsnOid((&v->direct_reference));
-	}
 
 	if (NOT_NULL((v->indirect_reference)))
 	{
@@ -610,15 +503,9 @@ FreeEXTERNAL PARAMS((v),
 	}
 
 	if (ASNOCTS_PRESENT((&v->data_value_descriptor)))
-	{
 		FreeObjectDescriptor((&v->data_value_descriptor));
-	}
 
 	FreeEXTERNALChoice((v->encoding));
 	Asn1Free((v->encoding));
 
-}  /* FreeEXTERNAL */
-
-
-
-
+} /* FreeEXTERNAL */

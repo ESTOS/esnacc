@@ -108,19 +108,17 @@
  *
  */
 
-
 #include <string.h>
 #include "../../c-lib/include/asn-incl.h"
 #include "asn1module.h"
 #include "lib-types.h"
 #include "snacc-util.h"
 
-
 #define LIST_ELMT_SUFFIX "ListElmt"
 #define CHOICE_SUFFIX "Choice"
 #define SET_SUFFIX "Set"
 #define SEQ_SUFFIX "Seq"
-#define OBJECTCLASS_SUFFIX "Class"		// Deepak: 12/Mar/2003
+#define OBJECTCLASS_SUFFIX "Class" // Deepak: 12/Mar/2003
 #define SETOF_SUFFIX "SetOf"
 #define SEQOF_SUFFIX "SeqOf"
 #define INT_SUFFIX "Int"
@@ -128,40 +126,34 @@
 #define BITS_SUFFIX "Bits"
 #define ANY_SUFFIX "Any"
 
-
 void AppendDigit PROTO((char* str, size_t bufferSize, int digit));
-int  CountTags PROTO((Type* t));
+int CountTags PROTO((Type * t));
 
+long oidRecursionCountG = 0;
 
-long  oidRecursionCountG = 0;
-
-
-void NormalizeTypeDef PROTO((Module* m, TypeDef* td));
-void NormalizeType PROTO((Module* m, TypeDef* td, Type* parent, NamedTypeList* e, Type* t));
-void NormalizeElmtTypes PROTO((Module* m, TypeDef* td, Type* parent, NamedTypeList* e));
-void NormalizeBasicType PROTO((Module* m, TypeDef* td, Type* parent, NamedTypeList* e, Type* type, BasicType* bt));
-void NormalizeValue PROTO((Module* m, ValueDef* vd, Value* v, int quiet));
-TypeDef* AddListElmtTypeDef PROTO((Module* m, TypeDef* td, Type* t, BasicType* bt));
-TypeDef* AddConsTypeDef PROTO((Module* m, TypeDef* td, Type* t, BasicType* bt, const char* suffix));
-TypeDef* AddConsObjectAssignment PROTO((Module* m, ObjectAssignment* oa, Type* t, BasicType* bt, const char* suffix));
-void NormalizeValueDef PROTO((Module* m, ValueDef* vd));
-int  FlattenLinkedOid PROTO((OID* o, const char* asn1FileName, AsnInt lineNo, int quiet));
+void NormalizeTypeDef PROTO((Module * m, TypeDef* td));
+void NormalizeType PROTO((Module * m, TypeDef* td, Type* parent, NamedTypeList* e, Type* t));
+void NormalizeElmtTypes PROTO((Module * m, TypeDef* td, Type* parent, NamedTypeList* e));
+void NormalizeBasicType PROTO((Module * m, TypeDef* td, Type* parent, NamedTypeList* e, Type* type, BasicType* bt));
+void NormalizeValue PROTO((Module * m, ValueDef* vd, Value* v, int quiet));
+TypeDef* AddListElmtTypeDef PROTO((Module * m, TypeDef* td, Type* t, BasicType* bt));
+TypeDef* AddConsTypeDef PROTO((Module * m, TypeDef* td, Type* t, BasicType* bt, const char* suffix));
+TypeDef* AddConsObjectAssignment PROTO((Module * m, ObjectAssignment* oa, Type* t, BasicType* bt, const char* suffix));
+void NormalizeValueDef PROTO((Module * m, ValueDef* vd));
+int FlattenLinkedOid PROTO((OID * o, const char* asn1FileName, AsnInt lineNo, int quiet));
 
 // Deepak: 14/Mar/2003
-void NormalizeObjectAssignment PROTO((Module* m, ObjectAssignment* oa));
+void NormalizeObjectAssignment PROTO((Module * m, ObjectAssignment* oa));
 // Deepak: 15/Mar/2003
-void NormalizeObjectAssignmentFields PROTO((Module* m, ObjectAssignment* oa, ObjectAssignmentField* oafList));
+void NormalizeObjectAssignmentFields PROTO((Module * m, ObjectAssignment* oa, ObjectAssignmentField* oafList));
 // Deepak: 15/Mar/2003
-void NormalizeObjectAssignmentFieldBasicType PROTO((Module* m, ObjectAssignment* oa, ObjectAssignmentField* oafList, TypeOrValue* tOrV));
-
+void NormalizeObjectAssignmentFieldBasicType PROTO((Module * m, ObjectAssignment* oa, ObjectAssignmentField* oafList, TypeOrValue* tOrV));
 
 /*
  * looks through the given module and performs the operations
  * mentioned above
  */
-void
-NormalizeModule PARAMS((m),
-	Module* m)
+void NormalizeModule PARAMS((m), Module* m)
 {
 	TypeDef* td;
 	ValueDef* vd;
@@ -191,11 +183,10 @@ NormalizeModule PARAMS((m),
 		NormalizeObjectAssignment(m, oa);
 	}
 
-}   /* NormalizeModule */
+} /* NormalizeModule */
 
-void NormalizeObjectAssignment PARAMS((m, oa),		// Deepak: 14/Mar/2003
-	Module* m _AND_
-	ObjectAssignment* oa)
+void NormalizeObjectAssignment PARAMS((m, oa), // Deepak: 14/Mar/2003
+									  Module* m _AND_ ObjectAssignment* oa)
 {
 	ObjectAssignmentField* oaf;
 
@@ -204,13 +195,13 @@ void NormalizeObjectAssignment PARAMS((m, oa),		// Deepak: 14/Mar/2003
 
 	FOR_EACH_LIST_ELMT(oaf, oa->objectAssignmentField)
 	{
-		if (oaf->bPresent && oaf->typeOrValue->choiceId == 0)	// type
+		if (oaf->bPresent && oaf->typeOrValue->choiceId == 0) // type
 		{
 			NormalizeObjectAssignmentFields(m, oa, oaf);
 		}
 		else
-		{	// value
-			// don't precess values here.
+		{ // value
+		  // don't precess values here.
 		}
 	}
 
@@ -236,78 +227,66 @@ void NormalizeObjectAssignment PARAMS((m, oa),		// Deepak: 14/Mar/2003
 	*/
 } /* NormalizeObjectAssignment */
 
-
-void NormalizeObjectAssignmentFields PARAMS((m, oa, oaf),		// Deepak: 15/Mar/2003
-	Module* m _AND_
-	ObjectAssignment* oa _AND_
-	ObjectAssignmentField* oaf)
+void NormalizeObjectAssignmentFields PARAMS((m, oa, oaf), // Deepak: 15/Mar/2003
+											Module* m _AND_ ObjectAssignment* oa _AND_ ObjectAssignmentField* oaf)
 {
 	//	FOR_EACH_LIST_ELMT (oaf, oafList)
 	{
 		NormalizeObjectAssignmentFieldBasicType(m, oa, oaf, oaf->typeOrValue);
 	}
-}	/* NormalizeObjectAssignmentFields */
-
-
+} /* NormalizeObjectAssignmentFields */
 
 //////////////// BEWARE: PRONE TO ERRORS //////////////		// Deepak: ?????
-void NormalizeObjectAssignmentFieldBasicType PARAMS((m, oa, oaf, tOrV),		// Deepak: 15/Mar/2003
-	Module* m _AND_
-	ObjectAssignment* oa _AND_
-	ObjectAssignmentField* oaf _AND_
-	TypeOrValue* tOrV)
+void NormalizeObjectAssignmentFieldBasicType PARAMS((m, oa, oaf, tOrV), // Deepak: 15/Mar/2003
+													Module* m _AND_ ObjectAssignment* oa _AND_ ObjectAssignmentField* oaf _AND_ TypeOrValue* tOrV)
 {
 	TypeDef* newDef;
 
 	switch (tOrV->a.type->basicType->choiceId)
-		//if(oaf->typeOrValue->a.type != type)
+	// if(oaf->typeOrValue->a.type != type)
 	{
-	case BASICTYPE_SEQUENCE:
-		newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, SEQ_SUFFIX);
-		NormalizeType(m, newDef, NULL, NULL, newDef->type);
-		break;
+		case BASICTYPE_SEQUENCE:
+			newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, SEQ_SUFFIX);
+			NormalizeType(m, newDef, NULL, NULL, newDef->type);
+			break;
 
-	case BASICTYPE_CHOICE:
-		newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, CHOICE_SUFFIX);
-		NormalizeType(m, newDef, NULL, NULL, newDef->type);
-		break;
+		case BASICTYPE_CHOICE:
+			newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, CHOICE_SUFFIX);
+			NormalizeType(m, newDef, NULL, NULL, newDef->type);
+			break;
 
-	case BASICTYPE_SETOF:
-		newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, SETOF_SUFFIX);
-		NormalizeType(m, newDef, NULL, NULL, newDef->type);
-		break;
+		case BASICTYPE_SETOF:
+			newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, SETOF_SUFFIX);
+			NormalizeType(m, newDef, NULL, NULL, newDef->type);
+			break;
 
-	case BASICTYPE_SEQUENCEOF:
-		newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, SEQOF_SUFFIX);
-		NormalizeType(m, newDef, NULL, NULL, newDef->type);
-		break;
+		case BASICTYPE_SEQUENCEOF:
+			newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, SEQOF_SUFFIX);
+			NormalizeType(m, newDef, NULL, NULL, newDef->type);
+			break;
 
-	case BASICTYPE_SET:
-		newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, SET_SUFFIX);
-		NormalizeType(m, newDef, NULL, NULL, newDef->type);
-		break;
+		case BASICTYPE_SET:
+			newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, SET_SUFFIX);
+			NormalizeType(m, newDef, NULL, NULL, newDef->type);
+			break;
 
-	case BASICTYPE_INTEGER:
-		newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, INT_SUFFIX);
-		break;
+		case BASICTYPE_INTEGER:
+			newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, INT_SUFFIX);
+			break;
 
-	case BASICTYPE_ENUMERATED:
-		newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, ENUM_SUFFIX);
-		break;
+		case BASICTYPE_ENUMERATED:
+			newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, ENUM_SUFFIX);
+			break;
 
-	case BASICTYPE_BITSTRING:
-		newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, BITS_SUFFIX);
-		break;
-	default:
-		break;
+		case BASICTYPE_BITSTRING:
+			newDef = AddConsObjectAssignment(m, oa, tOrV->a.type, tOrV->a.type->basicType, BITS_SUFFIX);
+			break;
+		default:
+			break;
 	}
-}	/* NormalizeObjectAssignmentFieldBasicType */
+} /* NormalizeObjectAssignmentFieldBasicType */
 
-
-void
-NormalizeTypeDef PARAMS((m, td),
-	Module* m _AND_
-	TypeDef* td)
+void NormalizeTypeDef PARAMS((m, td), Module* m _AND_ TypeDef* td)
 {
 	if (td == NULL)
 		return;
@@ -316,14 +295,7 @@ NormalizeTypeDef PARAMS((m, td),
 
 } /* NormalizeTypeDef */
 
-
-void
-NormalizeType PARAMS((m, td, parent, e, t),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* e _AND_
-	Type* t)
+void NormalizeType PARAMS((m, td, parent, e, t), Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* e _AND_ Type* t)
 {
 	Tag* lastTag;
 
@@ -353,25 +325,13 @@ NormalizeType PARAMS((m, td, parent, e, t),
 		 *     ANY DEFINED BY (just need to check that it has
 		 *     tags since all other types have tags)
 		 */
-		if (((lastTag != NULL) && !(lastTag->_explicit)) &&
-			((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) ||
-				(t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)) &&
-			(CountTags(t->basicType->a.localTypeRef->link->type) != 0))
-		{
+		if (((lastTag != NULL) && !(lastTag->_explicit)) && ((t->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)) && (CountTags(t->basicType->a.localTypeRef->link->type) != 0))
 			t->implicit = TRUE;
-		}
 	}
 
 } /* NormalizeType */
 
-
-
-void
-NormalizeElmtTypes PARAMS((m, td, parent, e),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* e)
+void NormalizeElmtTypes PARAMS((m, td, parent, e), Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* e)
 {
 	NamedType* nt;
 
@@ -379,21 +339,13 @@ NormalizeElmtTypes PARAMS((m, td, parent, e),
 	{
 		NormalizeType(m, td, parent, e, nt->type);
 	}
-}  /* NormalizeElmtTypes */
-
+} /* NormalizeElmtTypes */
 
 /*
  * this is where most of the action happens
  * assumes that "e"'s curr ptr is namedtype that holds "type"
  */
-void
-NormalizeBasicType PARAMS((m, td, parent, e, type, bt),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* parent _AND_
-	NamedTypeList* e _AND_
-	Type* type _AND_
-	BasicType* bt)
+void NormalizeBasicType PARAMS((m, td, parent, e, type, bt), Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ NamedTypeList* e _AND_ Type* type _AND_ BasicType* bt)
 {
 	int i, numElmtsAdded;
 	NamedType** newElmtHndl;
@@ -413,293 +365,260 @@ NormalizeBasicType PARAMS((m, td, parent, e, type, bt),
 	switch (bt->choiceId)
 	{
 
-	case BASICTYPE_COMPONENTSOF:
-		/*
-		 * copy elmts of COMPONENTS OF type into this type
-		 */
-		if (parent == NULL)
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - COMPONENTS OF must be a SET or SEQUENCE element\n");
-			m->status = MOD_ERROR;
-			return;
-		}
-
-		compType = ParanoidGetType(bt->a.componentsOf);
-		parentType = ParanoidGetType(parent);
-
-		/* COMPONENTS OF must be nested in a SET or SEQUENCE type */
-		if ((parentType->basicType->choiceId != BASICTYPE_SET) &&
-			(parentType->basicType->choiceId != BASICTYPE_SEQUENCE))
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - COMPONENTS OF must be a SET or SEQUENCE element\n");
-			m->status = MOD_ERROR;
-			return;
-		}
-
-		/* COMPONENTS OF in a SET must ref a SET and vice versa for SEQ */
-		if (((parentType->basicType->choiceId == BASICTYPE_SET) &&
-			(compType->basicType->choiceId != BASICTYPE_SET)) ||
-			((parentType->basicType->choiceId == BASICTYPE_SEQUENCE) &&
-				(compType->basicType->choiceId != BASICTYPE_SEQUENCE)))
-		{
-			PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
-			fprintf(errFileG, "ERROR - COMPONENTS OF in a SET must reference a SET type and  COMPONENTS OF in SEQUENCE must reference a SEQUENCE type\n");
-			type->basicType = compType->basicType;
-			m->status = MOD_ERROR;
-			return;
-		}
-
-		/*
-		 * replace "COMPONENTS OF" with elmts from ref'd set
-		 */
-		elmts = compType->basicType->a.set;
-
-		if (elmts == NULL)
-			break;
-
-		/*
-		 * add new list elmts that  point to elmts
-		 * of type ref'd by COMPONENTS OF
-		 */
-		FOR_EACH_LIST_ELMT(nt, elmts)
-		{
-			newElmtHndl = (NamedType**)AsnListAdd(e);
-			*newElmtHndl = nt;
-		}
-
-		/*
-		 * Set e list's curr  ptr to first of of the
-		 * newly added components.
-		 * Do this so NormalizeElmtTypes will do the
-		 * newly added ones as well
-		 */
-		numElmtsAdded = AsnListCount(elmts);
-		for (i = 0; i < numElmtsAdded; i++)
-			AsnListPrev(e);
-
-		/* remove the componets of ref since elmts copied in */
-		AsnListRemove(e);
-
-		break;
-
-
-	case BASICTYPE_SELECTION:
-		/*
-		 * first normalize the CHOICE that is selected from
-		 * - this will be done twice to the CHOICE but nothing
-		 * bad should happen.  The main reason for 'normalizing'
-		 * the CHOICE first is to strip tags from the choice elmts
-		 * if IMPLICIT-TAGS is set.
-		 * NOTE: this call assumes that import/local type refs
-		 * both use the 'TypeRef' struct and that a selection references
-		 * a CHOICE by name (not definition)
-		 */
-		NormalizeType(m, type->basicType->a.selection->typeRef->basicType->a.localTypeRef->link, NULL, NULL, type->basicType->a.selection->typeRef->basicType->a.localTypeRef->link->type);
-
-		/*
-		 * use SELECTION field name if this is an elmt type with no
-		 * field name.
-		 */
-		if ((e != NULL) &&
-			(((NamedType*)e->curr->data)->fieldName == NULL))
-			((NamedType*)e->curr->data)->fieldName =
-			type->basicType->a.selection->link->fieldName;
-
-		/*
-		 * replace SELECTION type with refd type.
-		 * must append the named CHOICE field's tags to
-		 * any existing tags on this SELECTION type.
-		 */
-		tmpBasicType = type->basicType->a.selection->link->type->basicType;
-		tags = type->basicType->a.selection->link->type->tags;
-
-
-		FOR_EACH_LIST_ELMT(tag, tags)
-		{
-			if (!(((m->tagDefault == IMPLICIT_TAGS) || (type->implicit)) &&
-				(tag == (Tag*)FIRST_LIST_ELMT(tags))))
+		case BASICTYPE_COMPONENTSOF:
+			/*
+			 * copy elmts of COMPONENTS OF type into this type
+			 */
+			if (parent == NULL)
 			{
-				tagHndl = (Tag**)AsnListAppend(type->tags);
-				*tagHndl = tag;
+				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+				fprintf(errFileG, "ERROR - COMPONENTS OF must be a SET or SEQUENCE element\n");
+				m->status = MOD_ERROR;
+				return;
 			}
-			type->implicit = FALSE;
-		}
 
-		if (type->basicType->a.selection->link->type->implicit)
-			type->implicit = TRUE;
+			compType = ParanoidGetType(bt->a.componentsOf);
+			parentType = ParanoidGetType(parent);
 
-		Free(type->basicType->a.selection->fieldName);
-		Free(type->basicType->a.selection->typeRef->basicType);
-		Free(type->basicType->a.selection->typeRef);
-		type->basicType = tmpBasicType;
+			/* COMPONENTS OF must be nested in a SET or SEQUENCE type */
+			if ((parentType->basicType->choiceId != BASICTYPE_SET) && (parentType->basicType->choiceId != BASICTYPE_SEQUENCE))
+			{
+				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+				fprintf(errFileG, "ERROR - COMPONENTS OF must be a SET or SEQUENCE element\n");
+				m->status = MOD_ERROR;
+				return;
+			}
 
-		break;
+			/* COMPONENTS OF in a SET must ref a SET and vice versa for SEQ */
+			if (((parentType->basicType->choiceId == BASICTYPE_SET) && (compType->basicType->choiceId != BASICTYPE_SET)) || ((parentType->basicType->choiceId == BASICTYPE_SEQUENCE) && (compType->basicType->choiceId != BASICTYPE_SEQUENCE)))
+			{
+				PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
+				fprintf(errFileG, "ERROR - COMPONENTS OF in a SET must reference a SET type and  COMPONENTS OF in SEQUENCE must reference a SEQUENCE type\n");
+				type->basicType = compType->basicType;
+				m->status = MOD_ERROR;
+				return;
+			}
 
+			/*
+			 * replace "COMPONENTS OF" with elmts from ref'd set
+			 */
+			elmts = compType->basicType->a.set;
 
+			if (elmts == NULL)
+				break;
 
-	case BASICTYPE_SEQUENCEOF:
-	case BASICTYPE_SETOF:
-		/* convert def inside other type into a ref */
-		if (td->type != type)
-		{
-			if (bt->choiceId == BASICTYPE_SETOF)
-				newDef = AddConsTypeDef(m, td, type, bt, SETOF_SUFFIX);
+			/*
+			 * add new list elmts that  point to elmts
+			 * of type ref'd by COMPONENTS OF
+			 */
+			FOR_EACH_LIST_ELMT(nt, elmts)
+			{
+				newElmtHndl = (NamedType**)AsnListAdd(e);
+				*newElmtHndl = nt;
+			}
+
+			/*
+			 * Set e list's curr  ptr to first of of the
+			 * newly added components.
+			 * Do this so NormalizeElmtTypes will do the
+			 * newly added ones as well
+			 */
+			numElmtsAdded = AsnListCount(elmts);
+			for (i = 0; i < numElmtsAdded; i++)
+				AsnListPrev(e);
+
+			/* remove the componets of ref since elmts copied in */
+			AsnListRemove(e);
+
+			break;
+
+		case BASICTYPE_SELECTION:
+			/*
+			 * first normalize the CHOICE that is selected from
+			 * - this will be done twice to the CHOICE but nothing
+			 * bad should happen.  The main reason for 'normalizing'
+			 * the CHOICE first is to strip tags from the choice elmts
+			 * if IMPLICIT-TAGS is set.
+			 * NOTE: this call assumes that import/local type refs
+			 * both use the 'TypeRef' struct and that a selection references
+			 * a CHOICE by name (not definition)
+			 */
+			NormalizeType(m, type->basicType->a.selection->typeRef->basicType->a.localTypeRef->link, NULL, NULL, type->basicType->a.selection->typeRef->basicType->a.localTypeRef->link->type);
+
+			/*
+			 * use SELECTION field name if this is an elmt type with no
+			 * field name.
+			 */
+			if ((e != NULL) && (((NamedType*)e->curr->data)->fieldName == NULL))
+				((NamedType*)e->curr->data)->fieldName = type->basicType->a.selection->link->fieldName;
+
+			/*
+			 * replace SELECTION type with refd type.
+			 * must append the named CHOICE field's tags to
+			 * any existing tags on this SELECTION type.
+			 */
+			tmpBasicType = type->basicType->a.selection->link->type->basicType;
+			tags = type->basicType->a.selection->link->type->tags;
+
+			FOR_EACH_LIST_ELMT(tag, tags)
+			{
+				if (!(((m->tagDefault == IMPLICIT_TAGS) || (type->implicit)) && (tag == (Tag*)FIRST_LIST_ELMT(tags))))
+				{
+					tagHndl = (Tag**)AsnListAppend(type->tags);
+					*tagHndl = tag;
+				}
+				type->implicit = FALSE;
+			}
+
+			if (type->basicType->a.selection->link->type->implicit)
+				type->implicit = TRUE;
+
+			Free(type->basicType->a.selection->fieldName);
+			Free(type->basicType->a.selection->typeRef->basicType);
+			Free(type->basicType->a.selection->typeRef);
+			type->basicType = tmpBasicType;
+
+			break;
+
+		case BASICTYPE_SEQUENCEOF:
+		case BASICTYPE_SETOF:
+			/* convert def inside other type into a ref */
+			if (td->type != type)
+			{
+				if (bt->choiceId == BASICTYPE_SETOF)
+					newDef = AddConsTypeDef(m, td, type, bt, SETOF_SUFFIX);
+				else
+					newDef = AddConsTypeDef(m, td, type, bt, SEQOF_SUFFIX);
+
+				NormalizeType(m, newDef, NULL, NULL, newDef->type);
+			}
 			else
-				newDef = AddConsTypeDef(m, td, type, bt, SEQOF_SUFFIX);
-
-			NormalizeType(m, newDef, NULL, NULL, newDef->type);
-		}
-		else
-			NormalizeType(m, td, type, NULL, type->basicType->a.setOf);
-		break;
-
-		/*  NOT NEEDED ANY MORE
-		 * convert typdef after SET OF/SEQ OF to type REFS
-		switch (bt->a.setOf->basicType->choiceId)
-		{
-			case BASICTYPE_SEQUENCE:
-			case BASICTYPE_SET:
-			case BASICTYPE_CHOICE:
-			case BASICTYPE_SEQUENCEOF:
-			case BASICTYPE_SETOF:
-			case BASICTYPE_COMPONENTSOF:
-				newDef = AddListElmtTypeDef (m, td, type, bt);
-				NormalizeType (m, newDef, NULL, NULL, newDef->type);
+				NormalizeType(m, td, type, NULL, type->basicType->a.setOf);
 			break;
 
-			default:
-				NormalizeType (m, td, NULL, NULL, bt->a.setOf);
+			/*  NOT NEEDED ANY MORE
+			 * convert typdef after SET OF/SEQ OF to type REFS
+			switch (bt->a.setOf->basicType->choiceId)
+			{
+				case BASICTYPE_SEQUENCE:
+				case BASICTYPE_SET:
+				case BASICTYPE_CHOICE:
+				case BASICTYPE_SEQUENCEOF:
+				case BASICTYPE_SETOF:
+				case BASICTYPE_COMPONENTSOF:
+					newDef = AddListElmtTypeDef (m, td, type, bt);
+					NormalizeType (m, newDef, NULL, NULL, newDef->type);
+				break;
+
+				default:
+					NormalizeType (m, td, NULL, NULL, bt->a.setOf);
+				break;
+			}
+			*/
 			break;
-		}
-		*/
-		break;
 
+		case BASICTYPE_CHOICE:
+			/*
+			 * change CHOICE defs embedded in other types
+			 * into type refs
+			 */
+			if (td->type != type)
+			{
+				newDef = AddConsTypeDef(m, td, type, bt, CHOICE_SUFFIX);
+				NormalizeType(m, newDef, NULL, NULL, newDef->type);
+			}
+			else
+				NormalizeElmtTypes(m, td, type, bt->a.set);
 
-	case BASICTYPE_CHOICE:
-		/*
-		 * change CHOICE defs embedded in other types
-		 * into type refs
-		 */
-		if (td->type != type)
-		{
-			newDef = AddConsTypeDef(m, td, type, bt, CHOICE_SUFFIX);
-			NormalizeType(m, newDef, NULL, NULL, newDef->type);
-		}
-		else
-			NormalizeElmtTypes(m, td, type, bt->a.set);
+			break;
 
-		break;
+		case BASICTYPE_SEQUENCE:
+			/*
+			 * change SEQ defs embedded in other types
+			 * into type refs
+			 */
+			if (td->type != type)
+			{
+				newDef = AddConsTypeDef(m, td, type, bt, SEQ_SUFFIX);
+				NormalizeType(m, newDef, NULL, NULL, newDef->type);
+			}
+			else
+				NormalizeElmtTypes(m, td, type, bt->a.sequence);
+			break;
 
+		case BASICTYPE_OBJECTCLASS: // Deepak: 12/Mar/2003
+			/*
+			 * change SEQ defs embedded in other types
+			 * into type refs	???
+			 */
+			if (td->type != type)
+			{
+				newDef = AddConsTypeDef(m, td, type, bt, OBJECTCLASS_SUFFIX);
+				NormalizeType(m, newDef, NULL, NULL, newDef->type);
+			}
+			else
+				NormalizeElmtTypes(m, td, type, bt->a.objectclass->classdef);
+			break;
 
-	case BASICTYPE_SEQUENCE:
-		/*
-		 * change SEQ defs embedded in other types
-		 * into type refs
-		 */
-		if (td->type != type)
-		{
-			newDef = AddConsTypeDef(m, td, type, bt, SEQ_SUFFIX);
-			NormalizeType(m, newDef, NULL, NULL, newDef->type);
-		}
-		else
-			NormalizeElmtTypes(m, td, type, bt->a.sequence);
-		break;
+		case BASICTYPE_SET:
+			/*
+			 * change SET defs embedded in other types
+			 * into type refs
+			 */
+			if (td->type != type)
+			{
+				newDef = AddConsTypeDef(m, td, type, bt, SET_SUFFIX);
+				NormalizeType(m, newDef, NULL, NULL, newDef->type);
+			}
+			else
+				NormalizeElmtTypes(m, td, type, bt->a.set);
+			break;
 
+		case BASICTYPE_INTEGER:
+			/* if they have named elements convert this def into a ref */
+			if ((td->type != type) && (bt->a.integer != NULL) && (!LIST_EMPTY(bt->a.integer)))
+				newDef = AddConsTypeDef(m, td, type, bt, INT_SUFFIX);
+			break;
 
-	case BASICTYPE_OBJECTCLASS:		// Deepak: 12/Mar/2003
-		/*
-		 * change SEQ defs embedded in other types
-		 * into type refs	???
-		 */
-		if (td->type != type)
-		{
-			newDef = AddConsTypeDef(m, td, type, bt, OBJECTCLASS_SUFFIX);
-			NormalizeType(m, newDef, NULL, NULL, newDef->type);
-		}
-		else
-			NormalizeElmtTypes(m, td, type, bt->a.objectclass->classdef);
-		break;
+		case BASICTYPE_ENUMERATED:
+			/* if they have named elements convert this def into a ref */
+			if ((td->type != type) && (bt->a.enumerated != NULL) && (!LIST_EMPTY(bt->a.enumerated)))
+				newDef = AddConsTypeDef(m, td, type, bt, ENUM_SUFFIX);
+			break;
 
+		case BASICTYPE_BITSTRING:
+			/* if they have named elements convert this def into a ref */
+			if ((td->type != type) && (bt->a.bitString != NULL) && (!LIST_EMPTY(bt->a.bitString)))
+				newDef = AddConsTypeDef(m, td, type, bt, BITS_SUFFIX);
+			break;
+			/* REN -- 1/12/98 -- m->hasAnys should not be set here since it will be set
+			in the module where the ANYs are actually defined (with the OBJECT-TYPE
+			macro).
+					case BASICTYPE_ANY:
+					case BASICTYPE_ANYDEFINEDBY:
+						m->hasAnys = TRUE;
+			end REN */
+			/*  NO LONGER DONE
+			 * change ANY defs embedded in other types
+			 * into type refs
 
-	case BASICTYPE_SET:
-		/*
-		 * change SET defs embedded in other types
-		 * into type refs
-		 */
-		if (td->type != type)
-		{
-			newDef = AddConsTypeDef(m, td, type, bt, SET_SUFFIX);
-			NormalizeType(m, newDef, NULL, NULL, newDef->type);
-		}
-		else
-			NormalizeElmtTypes(m, td, type, bt->a.set);
-		break;
+			if (td->type != type)
+				newDef = AddConsTypeDef (m, td, type, bt, ANY_SUFFIX);
+			 */
+			break;
 
-
-	case BASICTYPE_INTEGER:
-		/* if they have named elements convert this def into a ref */
-		if ((td->type != type) && (bt->a.integer != NULL) &&
-			(!LIST_EMPTY(bt->a.integer)))
-		{
-			newDef = AddConsTypeDef(m, td, type, bt, INT_SUFFIX);
-		}
-		break;
-
-	case BASICTYPE_ENUMERATED:
-		/* if they have named elements convert this def into a ref */
-		if ((td->type != type) && (bt->a.enumerated != NULL) &&
-			(!LIST_EMPTY(bt->a.enumerated)))
-		{
-			newDef = AddConsTypeDef(m, td, type, bt, ENUM_SUFFIX);
-		}
-		break;
-
-	case BASICTYPE_BITSTRING:
-		/* if they have named elements convert this def into a ref */
-		if ((td->type != type) && (bt->a.bitString != NULL) &&
-			(!LIST_EMPTY(bt->a.bitString)))
-		{
-			newDef = AddConsTypeDef(m, td, type, bt, BITS_SUFFIX);
-		}
-		break;
-		/* REN -- 1/12/98 -- m->hasAnys should not be set here since it will be set
-		in the module where the ANYs are actually defined (with the OBJECT-TYPE
-		macro).
-				case BASICTYPE_ANY:
-				case BASICTYPE_ANYDEFINEDBY:
-					m->hasAnys = TRUE;
-		end REN */
-		/*  NO LONGER DONE
-		 * change ANY defs embedded in other types
-		 * into type refs
-
-		if (td->type != type)
-			newDef = AddConsTypeDef (m, td, type, bt, ANY_SUFFIX);
-		 */
-		break;
-
-	default:
-		/* the rest are not processed */
-		break;
+		default:
+			/* the rest are not processed */
+			break;
 	}
-}  /* NormalizeBasicType */
-
-
-
+} /* NormalizeBasicType */
 
 /*
  * given a set of/seq of type t within typedef td, change the
  * set of /seq of elmt type def  into a type ref and
  * add a type def for the elmt at the top level.
  */
-TypeDef*
-AddListElmtTypeDef PARAMS((m, td, t, bt),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	BasicType* bt)
+TypeDef* AddListElmtTypeDef PARAMS((m, td, t, bt), Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ BasicType* bt)
 {
 	TypeDef* newDef;
 	TypeDef** typeDefHndl;
@@ -738,8 +657,6 @@ AddListElmtTypeDef PARAMS((m, td, t, bt),
 	typeDefHndl = (TypeDef**)AsnListPrepend(m->typeDefs);
 	*typeDefHndl = newDef;
 
-
-
 	/*
 	 * replace SET OF/SEQ OF body with type ref
 	 */
@@ -751,28 +668,18 @@ AddListElmtTypeDef PARAMS((m, td, t, bt),
 	bt->a.setOf->basicType->choiceId = BASICTYPE_LOCALTYPEREF;
 	bt->a.setOf->basicType->a.localTypeRef = (TypeRef*)Malloc(sizeof(TypeRef));
 	bt->a.setOf->basicType->a.localTypeRef->link = newDef;
-	bt->a.setOf->basicType->a.localTypeRef->typeName =
-		newDef->definedName;
+	bt->a.setOf->basicType->a.localTypeRef->typeName = newDef->definedName;
 	bt->a.setOf->basicType->a.localTypeRef->moduleName = NULL;
-
 
 	return newDef;
 
 } /* AddListElmtTypeDefs */
 
-
-
 /*
  * given a CHOICE/SET/SEQ/etc type t within typedef td, make t into a ref
  * to a new  top level typdef of the CHOICE/SET/SEQ
  */
-TypeDef*
-AddConsTypeDef PARAMS((m, td, t, bt, suffix),
-	Module* m _AND_
-	TypeDef* td _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	const char* suffix)
+TypeDef* AddConsTypeDef PARAMS((m, td, t, bt, suffix), Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ BasicType* bt _AND_ const char* suffix)
 {
 	TypeDef* newDef;
 	TypeDef** typeDefHndl;
@@ -831,22 +738,18 @@ AddConsTypeDef PARAMS((m, td, t, bt, suffix),
 	 */
 
 	newDef->type->tags = (TagList*)AsnListNew(sizeof(void*));
-	if (LIBTYPE_GET_UNIV_TAG_CODE((newDef->type->basicType->choiceId))
-		!= NO_TAG_CODE)
+	if (LIBTYPE_GET_UNIV_TAG_CODE((newDef->type->basicType->choiceId)) != NO_TAG_CODE)
 	{
 		tmpPtr = (Tag**)AsnListAppend(newDef->type->tags);
 		*tmpPtr = (Tag*)Malloc(sizeof(Tag));
 		(*tmpPtr)->tclass = UNIV;
 		(*tmpPtr)->code = LIBTYPE_GET_UNIV_TAG_CODE((newDef->type->basicType->choiceId));
 
-
 		/* adjust tags of new ref to new def */
 		if ((t->tags != NULL) && (!LIST_EMPTY(t->tags)))
 		{
 			lastTag = (Tag*)LAST_LIST_ELMT(t->tags);
-			if ((lastTag->tclass == UNIV) &&
-				(lastTag->code ==
-					LIBTYPE_GET_UNIV_TAG_CODE((newDef->type->basicType->choiceId))))
+			if ((lastTag->tclass == UNIV) && (lastTag->code == LIBTYPE_GET_UNIV_TAG_CODE((newDef->type->basicType->choiceId))))
 			{
 				/* zap it since same as default universal tag */
 				SET_CURR_LIST_NODE(t->tags, LAST_LIST_NODE(t->tags));
@@ -858,7 +761,6 @@ AddConsTypeDef PARAMS((m, td, t, bt, suffix),
 				t->implicit = TRUE; /* this will probably already be true */
 			}
 		}
-
 	}
 	/*
 	 * replace embeded CHOICE/SET/SEQ def with ref to newly defined type
@@ -867,27 +769,20 @@ AddConsTypeDef PARAMS((m, td, t, bt, suffix),
 	t->basicType->choiceId = BASICTYPE_LOCALTYPEREF;
 	t->basicType->a.localTypeRef = (TypeRef*)Malloc(sizeof(TypeRef));
 	t->basicType->a.localTypeRef->link = newDef;
-	t->basicType->a.localTypeRef->typeName =
-		newDef->definedName;
+	t->basicType->a.localTypeRef->typeName = newDef->definedName;
 	t->basicType->a.localTypeRef->moduleName = NULL;
-
 
 	return newDef;
 
 } /* AddConsTypeDef */
 
-
 /*
  * given a CHOICE/SET/SEQ/etc type t within ObjectAssignment oa, make t into a ref
  * to a new  top level typdef of the CHOICE/SET/SEQ
  */
-TypeDef*	// Deepak: 14/Mar/2003
-AddConsObjectAssignment PARAMS((m, oa, t, bt, suffix),
-	Module* m _AND_
-	ObjectAssignment* oa _AND_
-	Type* t _AND_
-	BasicType* bt _AND_
-	const char* suffix)
+TypeDef* // Deepak: 14/Mar/2003
+	AddConsObjectAssignment
+	PARAMS((m, oa, t, bt, suffix), Module* m _AND_ ObjectAssignment* oa _AND_ Type* t _AND_ BasicType* bt _AND_ const char* suffix)
 {
 	TypeDef* newDef;
 	TypeDef** typeDefHndl;
@@ -945,70 +840,59 @@ AddConsObjectAssignment PARAMS((m, oa, t, bt, suffix),
 	 *        new def.
 	 */
 
-	 ////// could not understand it, so leave it now. Deepak: ?????  /////
+	////// could not understand it, so leave it now. Deepak: ?????  /////
 
-   /*	newDef->type->tags = (TagList*)AsnListNew (sizeof (void*));
-	   if (LIBTYPE_GET_UNIV_TAG_CODE ((newDef->type->basicType->choiceId))
-		   != NO_TAG_CODE)
-	   {
-			tmpPtr = (Tag**)AsnListAppend (newDef->type->tags);
-			*tmpPtr = (Tag*)Malloc (sizeof (Tag));
-			(*tmpPtr)->tclass = UNIV;
-			(*tmpPtr)->code = LIBTYPE_GET_UNIV_TAG_CODE ((newDef->type->basicType->choiceId));
+	/*	newDef->type->tags = (TagList*)AsnListNew (sizeof (void*));
+		if (LIBTYPE_GET_UNIV_TAG_CODE ((newDef->type->basicType->choiceId))
+			!= NO_TAG_CODE)
+		{
+			 tmpPtr = (Tag**)AsnListAppend (newDef->type->tags);
+			 *tmpPtr = (Tag*)Malloc (sizeof (Tag));
+			 (*tmpPtr)->tclass = UNIV;
+			 (*tmpPtr)->code = LIBTYPE_GET_UNIV_TAG_CODE ((newDef->type->basicType->choiceId));
 
 
-		   // adjust tags of new ref to new def //
-		   if ((t->tags != NULL) && (!LIST_EMPTY (t->tags)))
-		   {
-			   lastTag = (Tag*)LAST_LIST_ELMT (t->tags);
-			   if ((lastTag->tclass == UNIV) &&
-				   (lastTag->code ==
-					LIBTYPE_GET_UNIV_TAG_CODE ((newDef->type->basicType->choiceId))))
-			   {
-				   // zap it since same as default universal tag //
-				   SET_CURR_LIST_NODE (t->tags, LAST_LIST_NODE (t->tags));
-				   AsnListRemove (t->tags);
-				   t->implicit = FALSE;
-			   }
-			   else
-			   {
-				   t->implicit = TRUE; // this will probably already be true //
-			   }
-		   }
+			// adjust tags of new ref to new def //
+			if ((t->tags != NULL) && (!LIST_EMPTY (t->tags)))
+			{
+				lastTag = (Tag*)LAST_LIST_ELMT (t->tags);
+				if ((lastTag->tclass == UNIV) &&
+					(lastTag->code ==
+					 LIBTYPE_GET_UNIV_TAG_CODE ((newDef->type->basicType->choiceId))))
+				{
+					// zap it since same as default universal tag //
+					SET_CURR_LIST_NODE (t->tags, LAST_LIST_NODE (t->tags));
+					AsnListRemove (t->tags);
+					t->implicit = FALSE;
+				}
+				else
+				{
+					t->implicit = TRUE; // this will probably already be true //
+				}
+			}
 
-		}
-   */
-   /*
-	* replace embeded CHOICE/SET/SEQ def with ref to newly defined type
+		 }
 	*/
+	/*
+	 * replace embeded CHOICE/SET/SEQ def with ref to newly defined type
+	 */
 	t->basicType = (BasicType*)Malloc(sizeof(BasicType));
 	t->basicType->choiceId = BASICTYPE_LOCALTYPEREF;
 	t->basicType->a.localTypeRef = (TypeRef*)Malloc(sizeof(TypeRef));
 	t->basicType->a.localTypeRef->link = newDef;
-	t->basicType->a.localTypeRef->typeName =
-		newDef->definedName;
+	t->basicType->a.localTypeRef->typeName = newDef->definedName;
 	t->basicType->a.localTypeRef->moduleName = NULL;
-
 
 	return newDef;
 
 } /* AddConsObjectAssignment */
 
-
-void
-NormalizeValueDef PARAMS((m, vd),
-	Module* m _AND_
-	ValueDef* vd)
+void NormalizeValueDef PARAMS((m, vd), Module* m _AND_ ValueDef* vd)
 {
 	NormalizeValue(m, vd, vd->value, FALSE);
 }
 
-void
-NormalizeValue PARAMS((m, vd, v, quiet),
-	Module* m _AND_
-	ValueDef* vd _AND_
-	Value* v _AND_
-	int quiet)
+void NormalizeValue PARAMS((m, vd, v, quiet), Module* m _AND_ ValueDef* vd _AND_ Value* v _AND_ int quiet)
 {
 	AsnOid* eoid;
 	OID* o;
@@ -1023,9 +907,8 @@ NormalizeValue PARAMS((m, vd, v, quiet),
 		if (!FlattenLinkedOid(v->basicValue->a.linkedOid, m->asn1SrcFileName, v->lineNo, quiet))
 			return;
 		eLen = EncodedOidLen(v->basicValue->a.linkedOid);
-		if (eLen == 0) {
+		if (eLen == 0)
 			return;
-		}
 
 		eoid = MT(AsnOid);
 		eoid->octetLen = eLen;
@@ -1033,7 +916,7 @@ NormalizeValue PARAMS((m, vd, v, quiet),
 		BuildEncodedOid(v->basicValue->a.linkedOid, eoid);
 
 		/* free linked  oid */
-		for (o = v->basicValue->a.linkedOid; o != NULL; )
+		for (o = v->basicValue->a.linkedOid; o != NULL;)
 		{
 			tmp = o->next;
 			Free(o);
@@ -1044,7 +927,6 @@ NormalizeValue PARAMS((m, vd, v, quiet),
 	}
 }
 
-
 /*
  * replaces value refs with the value's number if poss
  * returns TRUE if successfully done.
@@ -1054,12 +936,7 @@ NormalizeValue PARAMS((m, vd, v, quiet),
  *  which prevents cascading errors by other oid's that
  *  reference a bad oid.
  */
-int
-FlattenLinkedOid PARAMS((o, asn1FileName, lineNo, quiet),
-	OID* o _AND_
-	const char* asn1FileName _AND_
-	AsnInt lineNo _AND_
-	int quiet)
+int FlattenLinkedOid PARAMS((o, asn1FileName, lineNo, quiet), OID* o _AND_ const char* asn1FileName _AND_ AsnInt lineNo _AND_ int quiet)
 {
 	OID* firstElmt;
 	OID* refdOid;
@@ -1110,8 +987,7 @@ FlattenLinkedOid PARAMS((o, asn1FileName, lineNo, quiet),
 			oidRecursionCountG--;
 
 			nextOid = &refdOid;
-			for (tmpOid = val->basicValue->a.linkedOid;
-				tmpOid != NULL; tmpOid = tmpOid->next)
+			for (tmpOid = val->basicValue->a.linkedOid; tmpOid != NULL; tmpOid = tmpOid->next)
 			{
 				*nextOid = (OID*)Malloc(sizeof(OID));
 				(*nextOid)->arcNum = tmpOid->arcNum;

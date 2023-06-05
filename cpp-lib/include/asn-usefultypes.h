@@ -12,7 +12,7 @@ public:
 		arbitraryCid = 2
 	};
 
-	enum ChoiceIdEnum	choiceId;
+	enum ChoiceIdEnum choiceId;
 	union
 	{
 		void* NoChoice;
@@ -21,30 +21,41 @@ public:
 		AsnBits* arbitrary;
 	};
 
-
-	EXTERNALChoice() { Init(); }
+	EXTERNALChoice()
+	{
+		Init();
+	}
 	EXTERNALChoice(const EXTERNALChoice& that);
+
 public:
 	void Init(void);
-	virtual ~EXTERNALChoice() { Clear(); }
+	virtual ~EXTERNALChoice()
+	{
+		Clear();
+	}
 
 	void Clear();
 
-	AsnType* Clone() const { return new EXTERNALChoice(*this); }
-	const char* typeName() const { return "EXTERNALChoice"; }
+	AsnType* Clone() const
+	{
+		return new EXTERNALChoice(*this);
+	}
+	const char* typeName() const
+	{
+		return "EXTERNALChoice";
+	}
 
 	EXTERNALChoice& operator=(const EXTERNALChoice& that);
-	AsnLen		BEncContent(AsnBuf& b) const;
-	void			BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded/*, s env*/);
-	AsnLen		BEnc(AsnBuf& b) const;
-	void			BDec(const AsnBuf& b, AsnLen& bytesDecoded/*, s env*/);
+	AsnLen BEncContent(AsnBuf& b) const;
+	void BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded /*, s env*/);
+	AsnLen BEnc(AsnBuf& b) const;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded /*, s env*/);
 
-	AsnLen	    PEnc(AsnBufBits& b) const;
+	AsnLen PEnc(AsnBufBits& b) const;
 
-	void			Print(std::ostream& os, unsigned short indent = 0) const;
-	void			PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 };
-
 
 class SNACCDLL_API EXTERNAL : public AsnType
 {
@@ -54,26 +65,39 @@ public:
 	ObjectDescriptor* data_value_descriptor;
 	EXTERNALChoice* encoding;
 
-	EXTERNAL() { Init(); }
+	EXTERNAL()
+	{
+		Init();
+	}
 	void Init(void);
-	virtual ~EXTERNAL() { Clear(); }
+	virtual ~EXTERNAL()
+	{
+		Clear();
+	}
 	void Clear();
 	EXTERNAL(const EXTERNAL& that);
+
 public:
-	AsnType* Clone() const { return new EXTERNAL(*this); }
-	const char* typeName() const { return "EXTERNAL"; }
+	AsnType* Clone() const
+	{
+		return new EXTERNAL(*this);
+	}
+	const char* typeName() const
+	{
+		return "EXTERNAL";
+	}
 
 	EXTERNAL& operator=(const EXTERNAL& that);
-	AsnLen		BEncContent(AsnBuf& b) const;
-	void	   BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded/*, s env*/);
+	AsnLen BEncContent(AsnBuf& b) const;
+	void BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded /*, s env*/);
 
-	AsnLen		BEnc(AsnBuf& b) const;
-	void		BDec(const AsnBuf& b, AsnLen& bytesDecoded/*, s env*/);
+	AsnLen BEnc(AsnBuf& b) const;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded /*, s env*/);
 
-	AsnLen    PEnc(AsnBufBits& b) const;
+	AsnLen PEnc(AsnBufBits& b) const;
 
-	void		Print(std::ostream& os, unsigned short indent = 0) const;
-	void		PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 };
 
 _END_SNACC_NAMESPACE

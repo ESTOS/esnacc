@@ -61,9 +61,8 @@
 typedef struct ArcNameMapElmt
 {
 	const char* arcName;
-	int   arcNum;
+	int arcNum;
 } ArcNameMapElmt;
-
 
 /*
  * these are the CCITT and ISO pre-defined arc names for the
@@ -73,22 +72,20 @@ typedef struct ArcNameMapElmt
  * NOTE: the last entry must have a NULL string and a
  *       -1 arcnumber to indicate the end of the array.
  */
-ArcNameMapElmt oidArcNameMapG[14] =
-{ {"itu-t", 0},
-  {"iso", 1},
-  {"joint-iso-itu-t", 2},
-  {"standard", 0},
-  {"registration-authority", 1},
-  {"member-body", 2},
-  {"identified-organization", 3},
-  {"recommendation", 0},
-  {"question", 1},
-  {"administration", 2},
-  {"network-operator", 3},
-  {"ccitt", 0},		/* synonym for itu-t */
-  {"joint-iso-ccitt", 2},       /* synonym for joint-iso-itu-t */
-  {NULL,-1} };
-
+ArcNameMapElmt oidArcNameMapG[14] = {{"itu-t", 0},
+									 {"iso", 1},
+									 {"joint-iso-itu-t", 2},
+									 {"standard", 0},
+									 {"registration-authority", 1},
+									 {"member-body", 2},
+									 {"identified-organization", 3},
+									 {"recommendation", 0},
+									 {"question", 1},
+									 {"administration", 2},
+									 {"network-operator", 3},
+									 {"ccitt", 0},			 /* synonym for itu-t */
+									 {"joint-iso-ccitt", 2}, /* synonym for joint-iso-itu-t */
+									 {NULL, -1}};
 
 /*
  * returns the arcnum (>0) of the given name if it
@@ -97,20 +94,14 @@ ArcNameMapElmt oidArcNameMapG[14] =
  *
  * name must be null terminated.
  */
-int
-OidArcNameToNum PARAMS((name),
-	char* name)
+int OidArcNameToNum PARAMS((name), char* name)
 {
 	int i;
 	for (i = 0; oidArcNameMapG[i].arcName != NULL; i++)
-	{
 		if (strcmp(name, oidArcNameMapG[i].arcName) == 0)
 			return oidArcNameMapG[i].arcNum;
-	}
 	return -1;
 } /* OidArcNameToNum */
-
-
 
 /*
  * Takes and OBJECT IDENTIFER in the linked format
@@ -118,9 +109,7 @@ OidArcNameToNum PARAMS((name),
  * that are needed to hold the encoded version of that
  * OBJECT IDENTIFIER.
  */
-unsigned long
-EncodedOidLen PARAMS((oid),
-	OID* oid)
+unsigned long EncodedOidLen PARAMS((oid), OID* oid)
 {
 	unsigned long totalLen;
 	unsigned long headArcNum;
@@ -151,8 +140,7 @@ EncodedOidLen PARAMS((oid),
 
 	return totalLen;
 
-}  /* EncodedOidLen */
-
+} /* EncodedOidLen */
 
 /*
  * Given an oid arc number list and a pre-allocated ENC_OID
@@ -160,16 +148,13 @@ EncodedOidLen PARAMS((oid),
  * fills the ENC_OID with a BER encoded version
  * of the oid.
  */
-void
-BuildEncodedOid PARAMS((oid, result),
-	OID* oid _AND_
-	AsnOid* result)
+void BuildEncodedOid PARAMS((oid, result), OID* oid _AND_ AsnOid* result)
 {
 	unsigned long len;
 	unsigned long headArcNum;
 	unsigned long tmpArcNum;
 	char* buf;
-	int           i;
+	int i;
 	OID* tmpOid;
 
 	buf = result->octs;
@@ -207,7 +192,6 @@ BuildEncodedOid PARAMS((oid, result),
 	 */
 	*(buf++) = (char)(0x7f & headArcNum);
 
-
 	/*
 	 * write following arc nums, if any
 	 */
@@ -219,7 +203,6 @@ BuildEncodedOid PARAMS((oid, result),
 		tmpArcNum = tmpOid->arcNum;
 		for (len = 0; (tmpArcNum >>= 7) != 0; len++)
 			;
-
 
 		/*
 		 * write more signifcant bytes (if any)
@@ -236,15 +219,11 @@ BuildEncodedOid PARAMS((oid, result),
 
 } /* BuildEncodedOid */
 
-
 /*
  * Given an ENC_OID, this routine converts it into a
  * linked oid (OID).
  */
-void
-UnbuildEncodedOid PARAMS((eoid, result),
-	AsnOid* eoid _AND_
-	OID** result)
+void UnbuildEncodedOid PARAMS((eoid, result), AsnOid* eoid _AND_ OID** result)
 {
 	OID** nextOid;
 	OID* headOid;
@@ -271,7 +250,7 @@ UnbuildEncodedOid PARAMS((eoid, result),
 	headOid->next->arcNum = secondArcNum;
 	nextOid = &headOid->next->next;
 
-	for (; i < (int)(eoid->octetLen); )
+	for (; i < (int)(eoid->octetLen);)
 	{
 		for (arcNum = 0; (i < (int)(eoid->octetLen)) && (eoid->octs[i] & 0x80); i++)
 			arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
