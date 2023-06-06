@@ -7,5 +7,6 @@
 		"**/*.vs": true
 	},
 	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "xaver.clang-format",
 	"C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }

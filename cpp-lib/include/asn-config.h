@@ -174,8 +174,7 @@
 #endif // SNACCDLL_API
 
 #ifndef NO_NAMESPACE
-#define _BEGIN_SNACC_NAMESPACE namespace SNACC\
-{
+#define _BEGIN_SNACC_NAMESPACE namespace SNACC {
 #define _END_SNACC_NAMESPACE }
 #else
 #define _BEGIN_SNACC_NAMESPACE
