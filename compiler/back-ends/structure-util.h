@@ -14,7 +14,7 @@ bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszR
 BasicType* ResolveBasicTypeReferences(BasicType* type, const char** szName);
 // Resolveds a type reference one level down (if imported or local type ref)
 Type* ResolveTypeReferencesOneLevel(Type* type, char** szName);
-// Resolveds a type reference all levels down (until it´s no longer imported or local type ref)
+// Resolveds a type reference all levels down (until it's no longer imported or local type ref)
 Type* ResolveTypeReferencesToRoot(Type* type, char** szName);
 // Wenn es sich um ein localtyperef oder importedtyperef handelt wandert es so lange nach oben bis es kein imported oder localtyperef mehr ist
 Type* GetRootType(Type* type, const char** szName);
@@ -37,7 +37,7 @@ Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, M
 Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod);
 
 // An element may be flagged deprecated with a timestamp or without
-// It´s important to mention that when the compiler is running it can remove elements from the output which are flagged as deprecated
+// It's important to mention that when the compiler is running it can remove elements from the output which are flagged as deprecated
 // This allows to remove elements e.g. on the client side but not on the server side.
 // A method is flagged like this:
 // -- @deprecated 01.01.2023 Superseeded by XYZ

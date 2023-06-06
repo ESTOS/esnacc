@@ -315,7 +315,7 @@ protected:
 
 	/*
 	 * This callback is called before the invokeContext runs out of scope.
-	 * It´s only called if the implementer implemented OnInvokeContextCreated and returned true there
+	 * It's only called if the implementer implemented OnInvokeContextCreated and returned true there
 	 *
 	 * @param pInvokeContext - the context that is about to get deleted
 	 */

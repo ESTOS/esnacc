@@ -1,4 +1,4 @@
-SNACC-ROSE {joint-iso-itu-t remote-operations(4) informationObjects(5) version1(0) }
+ï»¿SNACC-ROSE {joint-iso-itu-t remote-operations(4) informationObjects(5) version1(0) }
 
 DEFINITIONS ::= BEGIN
 
@@ -19,12 +19,12 @@ ROSEAuthList ::= SEQUENCE OF ROSEAuth
 
 ROSEAuthRequest ::= SEQUENCE {
 	auth ROSEAuth,
-	context  UTF8String OPTIONAL  -- Auth Context für mehrstufige aushandlung muss von Client beim zweiten aufruf wieder mitgeliefert werden
+	context  UTF8String OPTIONAL  -- Auth context for multi-level negotiation must be supplied again by the client on the second call
 }
 
 ROSEAuthResult ::= SEQUENCE {
 	authList ROSEAuthList,
-	context  UTF8String OPTIONAL  -- Auth Context für mehrstufige aushandlung muss von Client beim zweiten aufruf wieder mitgeliefert werden
+	context  UTF8String OPTIONAL  -- Auth context for multi-level negotiation must be supplied again by the client on the second call
 }
 
 ROSEInvoke		::=	SEQUENCE {

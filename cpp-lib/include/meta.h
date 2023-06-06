@@ -6,7 +6,7 @@
 // no message
 //
 // Revision 1.1  2004/12/07 12:51:02  \ste
-// LDAP Server eingefügt
+// LDAP Server added
 //
 // Revision 1.3  2004/02/09 20:38:19  nicholar
 // Updated AsnOid and AsnRelativeOid classes

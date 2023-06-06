@@ -1,7 +1,7 @@
 /*
  * file: compiler/core/meta.c
  *
- * Copyright ¨ 1994 1995 Robert Joop <rj@rainbow.in-berlin.de>
+ * Copyright 1994 1995 Robert Joop <rj@rainbow.in-berlin.de>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
