@@ -6,5 +6,6 @@
 		"**/*.pdb": true,
 		"**/*.vs": true
 	},
+	"editor.formatOnSave": true,
 	"C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
