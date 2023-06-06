@@ -211,7 +211,7 @@ void Print_JSON_DecoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 				szType = "string";
 				break;
 			case BASICTYPE_ASNSYSTEMTIME:
-				// Verwenden wir für AsnSystemTime intern
+				// Used internally for AsnSystemTime
 				szElement = "addDateParam(elem)";
 				szType = "Date";
 				bInstanceOfCompare = true;

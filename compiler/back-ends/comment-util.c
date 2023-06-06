@@ -108,14 +108,14 @@ bool printComment(FILE* src, const char* szPrefix, const char* szString, const c
 				free(szBuffer2);
 
 				iFirst = 0;
-				// Ist noch Text vorhanden?
+				// Is there any text left?
 				if (strlen(posEnd))
 				{
-					// Das \n überspringen
+					// Skip the \n
 					posBegin = posEnd + 2;
-					// Gibt es noch ein \n ?
+					// Is there another \n ?
 					posEnd = strstr(posBegin, "\\n");
-					// Wenn nicht, gibt es noch Text, dann nehmen wir den
+					// If not, there's still text, then we'll take that
 					if (posEnd == NULL && strlen(posBegin))
 						posEnd = posBegin + strlen(posBegin);
 				}

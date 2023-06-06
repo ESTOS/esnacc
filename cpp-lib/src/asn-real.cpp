@@ -17,7 +17,7 @@
 
 // $Log: asn-real.cpp,v $
 // Revision 1.3  2005/10/19 12:32:50  \stm
-// Verbesserungen für 2005 Compiler
+// Improvements for 2005 compilers
 //
 // Revision 1.2  2005/08/18 11:24:49  \ste
 // fixed real encoding and decoding

@@ -2868,7 +2868,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 			}
 			else if (!e->type->extensionAddition)
 			{
-				fprintf(src, "\tif (elmtLen0 == 0)\n"); // Wenn die Länge 0 ist, gibts nix zum Auslesen -> fertig
+				fprintf(src, "\tif (elmtLen0 == 0)\n"); // If the length is 0 there is nothing to read -> done
 				fprintf(src, "\t\treturn;\n");
 				fprintf(src, "\ttag1 = BDecTag(_b, seqBytesDecoded);\n\n");
 			}

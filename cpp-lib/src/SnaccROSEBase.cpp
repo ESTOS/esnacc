@@ -50,7 +50,7 @@ void SnaccRoseOperationLookup::CleanUp()
 void SnaccRoseOperationLookup::RegisterOperation(int iOpID, const char* szOpName, int iInterfaceID)
 {
 #ifdef _DEBUG
-	// Prüfung, ob eine ASN1 operationID doppelt vergeben wurde
+	// Checking whether an ASN1 operationID was assigned twice
 	assert(LookUpName(iOpID) == "unknown");
 #endif
 
@@ -536,8 +536,7 @@ bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllIn
 			if (pmessage->result)
 			{
 				OnResultMessage(pmessage->result);
-				// nichts abfangen wenn an der Stelle pmessage->result->result == nullptr ist, da durch die fehlende invokeID das auch schon
-				// berücksichtigt ist
+				// do not intercept anything if pmessage->result->result == nullptr is in place, because the missing invokeID already takes this into account
 				CompletePendingOperation(pmessage->result->invokeID, pmessage);
 				return true;
 			}
@@ -546,8 +545,7 @@ bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllIn
 			if (pmessage->error)
 			{
 				OnErrorMessage(pmessage->error);
-				// nichts abfangen wenn an der Stelle pmessage->error->error == nullptr ist, da durch die fehlende invokeID das auch schon
-				// berücksichtigt ist
+				// do not intercept anything if pmessage->error->error == nullptr is in place, because the missing invokeID already takes this into account
 				CompletePendingOperation(pmessage->error->invokedID, pmessage);
 				return true;
 			}
@@ -558,15 +556,14 @@ bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllIn
 				OnRejectMessage(pmessage->reject);
 				if (pmessage->reject->invokedID.choiceId == ROSERejectChoice::invokedIDCid)
 				{
-					// Prüfung! bei REJECT ist die InvokeID ein Choice und damit ist die ID selbst ein Pointer!
-					// und der kann nullptr werden.
+					// Test! with REJECT the InvokeID is a choice and therefore the ID itself is a pointer! and it can become nullptr.
 					if (pmessage->reject->invokedID.invokedID != nullptr)
 					{
 						CompletePendingOperation(*pmessage->reject->invokedID.invokedID, pmessage);
 					}
 					else
 					{
-						// Kann passieren, wenn man z.B. a1 00 00 als BER Encoded Paket schickt
+						// Can happen if you send e.g. a1 00 00 as a BER Encoded packet
 						delete pmessage;
 					}
 				}
@@ -904,8 +901,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** p
 								lRoseResult = ROSE_NOERROR;
 								if (pendingOP->m_pAnswerMessage->result && ppresult)
 								{
-									// übergeben des Results an den caller,
-									// der muss das dann deallokieren.
+									// the result is passed to the caller, who then has to deallocate it.
 									*ppresult = pendingOP->m_pAnswerMessage->result;
 									pendingOP->m_pAnswerMessage->result = NULL;
 								}
@@ -916,8 +912,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** p
 								lRoseResult = ROSE_ERROR_VALUE;
 								if (pendingOP->m_pAnswerMessage->error && pperror)
 								{
-									// übergeben des Errors an den caller,
-									// der muss das dann deallokieren.
+									// pass the error to the caller, who then has to deallocate it.
 									*pperror = pendingOP->m_pAnswerMessage->error;
 									pendingOP->m_pAnswerMessage->error = NULL;
 								}

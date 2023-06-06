@@ -28,7 +28,7 @@
 // no message
 //
 // Revision 1.1  2004/12/07 12:51:02  \ste
-// LDAP Server eingefügt
+// LDAP Server added
 //
 // Revision 1.22  2002/11/07 16:28:50  leonberp
 // latest runtime library changes

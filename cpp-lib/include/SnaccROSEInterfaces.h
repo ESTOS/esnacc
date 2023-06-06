@@ -79,7 +79,7 @@ const long ROSE_ERROR_VALUE = 0x00001000;
 class SnaccROSEBase;
 class SnaccInvokeContext;
 
-/*! SnaccROSESender ist das Interface, über das abgehende Invokes und Events gesendet werden können
+/*! SnaccROSESender is the interface that is used to dispatch inbound invokes and events
  */
 class SnaccROSESender
 {
@@ -101,10 +101,9 @@ public:
 		ppresult or pperror will be filled on return
 		caller must delete returned result!
 		returns NO_ERROR for Result
-		iTimeout: Wartezeit für das Result.
-		iTimeout : -1 default Wartezeit m_lMaxInvokeWait
-		iTimeout : 0 keine Wartezeit
-		iTimeout : 1 ... Wartezeit in Millisekunden
+		iTimeout: timeout for the result in msec
+		iTimeout : -1 default timeout m_lMaxInvokeWait
+		iTimeout : 0 no timeout
 		*/
 	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** ppresult, SNACC::ROSEError** pperror, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) = 0;
 
@@ -117,7 +116,7 @@ public:
 	/* Send a Error Message. */
 	virtual long SendError(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0) = 0;
 
-	/*! Helper Funktion zur Behandlung des Result nach einem SendInvoke */
+	/*! Helper Function to handle the result after a SendInvoke */
 	long HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEResult* pResultMsg, SNACC::ROSEError* pErrorMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt);
 };
 

@@ -1913,8 +1913,7 @@ void GenTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues
 						}
 						szBuffer[iPos] = 0;
 
-						// Bei SizeInBytes berücksichtigen, dass das null-Byte im baseName auch reserviert ist, strlen() das aber nicht mitzählt
-						// wenn jetzt beide Strings gleich lang sind fällts auf die Nase :)
+						// Take into account that the length in bytes does not contain the terminating 0 byte
 						strcpy_s(baseName, strlen(baseName) + 1, szBuffer);
 
 						interfaces[iCountInterfaces] = baseName;
@@ -2663,11 +2662,11 @@ bool isSupportedType(enum BasicTypeChoiceId choiceId)
 		case BASICTYPE_EXTENSION:
 		case BASICTYPE_NULL:
 		case BASICTYPE_ANY:
-			// Diese Typen unterstützen wir
+			// We support these tags
 			return true;
 		case BASICTYPE_LOCALTYPEREF:
 		case BASICTYPE_IMPORTTYPEREF:
-			// Jeder import sollte VOR dem Aufruf dieser Methode aufgelöst werden
+			// Each import should be resolved BEFORE calling this method
 			assert(FALSE);
 			return false;
 		default:
