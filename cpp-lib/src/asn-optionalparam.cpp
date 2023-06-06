@@ -31,11 +31,11 @@ New JSON Format:
 */
 
 // Implementation from asn-listset.h
-void AsnOptionalParameters::JEnc(EJson::Value& b) const
+void AsnOptionalParameters::JEnc(SJson::Value& b) const
 {
 	/*
-	b = EJson::Value(EJson::arrayValue);
-	EJson::Value tmp;
+	b = SJson::Value(SJson::arrayValue);
+	SJson::Value tmp;
 
 	for (AsnOptionalParameters::const_reverse_iterator i = rbegin(); i != rend(); ++i)
 	{
@@ -43,8 +43,8 @@ void AsnOptionalParameters::JEnc(EJson::Value& b) const
 		b.append(tmp);
 	}
 	*/
-	b = EJson::Value(EJson::objectValue);
-	EJson::Value tmp;
+	b = SJson::Value(SJson::objectValue);
+	SJson::Value tmp;
 
 	for (AsnOptionalParameters::const_reverse_iterator i = rbegin(); i != rend(); ++i)
 	{
@@ -55,14 +55,14 @@ void AsnOptionalParameters::JEnc(EJson::Value& b) const
 	}
 }
 
-bool AsnOptionalParameters::JDec(const EJson::Value& b)
+bool AsnOptionalParameters::JDec(const SJson::Value& b)
 {
 	Clear();
 
 	// original Implementation (like BER)
 	if (b.isArray())
 	{
-		EJson::Value::const_iterator it = b.begin();
+		SJson::Value::const_iterator it = b.begin();
 		while (it != b.end())
 		{
 			if (append()->JDec(*it) == false)
@@ -74,8 +74,8 @@ bool AsnOptionalParameters::JDec(const EJson::Value& b)
 	}
 	else if (b.isObject())
 	{
-		EJson::Value::Members members = b.getMemberNames();
-		for (EJson::Value::Members::iterator it = members.begin(); it != members.end(); it++)
+		SJson::Value::Members members = b.getMemberNames();
+		for (SJson::Value::Members::iterator it = members.begin(); it != members.end(); it++)
 		{
 			SNACC::AsnOptionalParam param;
 			param.key.setUTF8(it->c_str());
@@ -202,11 +202,11 @@ AsnLen AsnOptionalParam::BEnc(AsnBuf& _b) const
 	return l;
 }
 
-void AsnOptionalParam::JEnc(EJson::Value& b) const
+void AsnOptionalParam::JEnc(SJson::Value& b) const
 {
-	b = EJson::Value(EJson::objectValue);
+	b = SJson::Value(SJson::objectValue);
 
-	EJson::Value tmp;
+	SJson::Value tmp;
 
 	key.JEnc(tmp);
 	b["key"] = tmp;
@@ -227,13 +227,13 @@ void AsnOptionalParam::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	BDecContent(_b, tag, elmtLen1, bytesDecoded);
 }
 
-bool AsnOptionalParam::JDec(const EJson::Value& b)
+bool AsnOptionalParam::JDec(const SJson::Value& b)
 {
 	Clear();
 	if (!b.isObject())
 		return false;
 
-	EJson::Value tmp;
+	SJson::Value tmp;
 	if (b.isMember("key"))
 	{
 		if (!key.JDec(b["key"]))
@@ -423,13 +423,13 @@ AsnLen AsnOptionalParamChoice::BEnc(AsnBuf& _b) const
 	return l;
 }
 
-void AsnOptionalParamChoice::JEnc(EJson::Value& b) const
+void AsnOptionalParamChoice::JEnc(SJson::Value& b) const
 {
 	FUNC("AsnOptionalParamChoice::JEnc()");
 	/*
-	b = EJson::Value(EJson::objectValue);
+	b = SJson::Value(SJson::objectValue);
 
-	EJson::Value tmp;
+	SJson::Value tmp;
 
 	switch (choiceId)
 	{
@@ -460,8 +460,8 @@ void AsnOptionalParamChoice::JEnc(EJson::Value& b) const
 
 		case binarydataCid:
 			{
-				b = EJson::Value(EJson::objectValue);
-				EJson::Value tmp;
+				b = SJson::Value(SJson::objectValue);
+				SJson::Value tmp;
 				binarydata->JEnc(tmp);
 				b["binarydata"] = tmp;
 				break;
@@ -489,13 +489,13 @@ void AsnOptionalParamChoice::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
 	BDecContent(_b, tag, elmtLen, bytesDecoded);
 }
 
-bool AsnOptionalParamChoice::JDec(const EJson::Value& b)
+bool AsnOptionalParamChoice::JDec(const SJson::Value& b)
 {
 	FUNC("AsnOptionalParamChoice::JDec()");
 	Clear();
 	if (b.isObject())
 	{
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("stringdata"))
 		{
 			choiceId = stringdataCid;
@@ -523,7 +523,7 @@ bool AsnOptionalParamChoice::JDec(const EJson::Value& b)
 		else
 			throw InvalidTagException(typeName(), "no valid choice member", STACK_ENTRY);
 	}
-	else if (b.isConvertibleTo(EJson::intValue))
+	else if (b.isConvertibleTo(SJson::intValue))
 	{
 		choiceId = integerdataCid;
 		delete integerdata;

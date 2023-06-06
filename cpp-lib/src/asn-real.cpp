@@ -17,7 +17,7 @@
 
 // $Log: asn-real.cpp,v $
 // Revision 1.3  2005/10/19 12:32:50  \stm
-// Verbesserungen für 2005 Compiler
+// Improvements for 2005 compilers
 //
 // Revision 1.2  2005/08/18 11:24:49  \ste
 // fixed real encoding and decoding
@@ -910,15 +910,15 @@ void AsnReal::BDecContent(const AsnBuf& b, AsnTag /* tagId */, AsnLen elmtLen, A
 	}
 } /* AsnInt::BDecContent */
 
-void AsnReal::JEnc(EJson::Value& b) const
+void AsnReal::JEnc(SJson::Value& b) const
 {
-	b = EJson::Value(value);
+	b = SJson::Value(value);
 }
 
-bool AsnReal::JDec(const EJson::Value& b)
+bool AsnReal::JDec(const SJson::Value& b)
 {
 	value = 0;
-	if (b.isConvertibleTo(EJson::realValue))
+	if (b.isConvertibleTo(SJson::realValue))
 	{
 		value = b.asDouble();
 		return true;

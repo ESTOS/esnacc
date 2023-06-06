@@ -136,7 +136,7 @@ static void PrintJsonDocType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td
 			case BASICTYPE_IMPORTTYPEREF:
 			case BASICTYPE_LOCALTYPEREF:
 				if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
-					fprintf(hdr, "string"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im TS als String übermittelt.
+					fprintf(hdr, "string"); // AsnSystemTime is defined as REAL in the Asn1 file, but is transmitted as a string in the TS.
 
 				else if (strcmp(t->cxxTypeRefInfo->className, "AsnContactID") == 0)
 					fprintf(hdr, "string");
@@ -168,7 +168,7 @@ static void PrintJsonDocBitstringDefCode(FILE* src, ModuleList* mods, Module* m,
 			// fprintf(src, "\n");
 			fprintf(src, "\t\t\t\t{\n");
 			fprintf(src, "\t\t\t\t\t\"name\" : \"%s\",\n", n->name);
-			// fprintf(src, "\t\t\t\t\t\"typeName\" : \"number\",\n"); bitstring enthält nur namen, text und zahl(=value)
+			// fprintf(src, "\t\t\t\t\t\"typeName\" : \"number\",\n"); bitstring contains only names, text and numbers(=value)
 			asnmembercomment comment;
 			if (GetMemberComment_UTF8(m->moduleName, td->definedName, n->name, &comment))
 			{

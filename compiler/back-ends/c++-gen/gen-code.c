@@ -2126,14 +2126,14 @@ void PrintChoiceDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 	CxxTRI* cxxtri;
 	char* varName;
 
-	// void JEnc (EJson::Value &b) const;
+	// void JEnc (SJson::Value &b) const;
 
-	fprintf(hdr, "\tvoid JEnc(EJson::Value& b) const;\n");
-	fprintf(src, "void %s::JEnc(EJson::Value& b) const\n", td->cxxTypeDefInfo->className);
+	fprintf(hdr, "\tvoid JEnc(SJson::Value& b) const;\n");
+	fprintf(src, "void %s::JEnc(SJson::Value& b) const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	/* print local vars */
-	fprintf(src, "\tb = EJson::Value(EJson::objectValue);\n\n");
-	fprintf(src, "\tEJson::Value tmp;\n\n");
+	fprintf(src, "\tb = SJson::Value(SJson::objectValue);\n\n");
+	fprintf(src, "\tSJson::Value tmp;\n\n");
 
 	/* print local vars */
 
@@ -2178,14 +2178,14 @@ void PrintChoiceDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 	CxxTRI* cxxtri;
 	int iCounter = 0;
 
-	fprintf(hdr, "\tbool JDec(const EJson::Value& b);\n");
-	fprintf(src, "bool %s::JDec(const EJson::Value& b)", td->cxxTypeDefInfo->className);
+	fprintf(hdr, "\tbool JDec(const SJson::Value& b);\n");
+	fprintf(src, "bool %s::JDec(const SJson::Value& b)", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	fprintf(src, "\tClear();\n");
 
 	fprintf(src, "\tif (!b.isObject())\n");
 	fprintf(src, "\t\treturn false;\n\n");
-	fprintf(src, "\tEJson::Value tmp;\n");
+	fprintf(src, "\tSJson::Value tmp;\n");
 
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
 	{
@@ -2868,7 +2868,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 			}
 			else if (!e->type->extensionAddition)
 			{
-				fprintf(src, "\tif (elmtLen0 == 0)\n"); // Wenn die Länge 0 ist, gibts nix zum Auslesen -> fertig
+				fprintf(src, "\tif (elmtLen0 == 0)\n"); // If the length is 0 there is nothing to read -> done
 				fprintf(src, "\t\treturn;\n");
 				fprintf(src, "\ttag1 = BDecTag(_b, seqBytesDecoded);\n\n");
 			}
@@ -3347,11 +3347,11 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	fprintf(hdr, "\tvoid JEnc(EJson::Value& b) const;\n");
-	fprintf(src, "void %s::JEnc(EJson::Value& b) const\n", td->cxxTypeDefInfo->className);
+	fprintf(hdr, "\tvoid JEnc(SJson::Value& b) const;\n");
+	fprintf(src, "void %s::JEnc(SJson::Value& b) const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
-	fprintf(src, "\tb = EJson::Value(EJson::objectValue);\n\n");
-	fprintf(src, "\tEJson::Value tmp;\n\n");
+	fprintf(src, "\tb = SJson::Value(SJson::objectValue);\n\n");
+	fprintf(src, "\tSJson::Value tmp;\n\n");
 
 	NamedType* e;
 	bool bFirst = true;
@@ -3455,13 +3455,13 @@ void PrintSeqDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	////bool JDec (const AsnJSONBuf &b);
-	fprintf(hdr, "\tbool JDec(const EJson::Value& b);\n");
-	fprintf(src, "bool %s::JDec(const EJson::Value& b)", td->cxxTypeDefInfo->className);
+	fprintf(hdr, "\tbool JDec(const SJson::Value& b);\n");
+	fprintf(src, "bool %s::JDec(const SJson::Value& b)", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	fprintf(src, "\tClear();\n\n");
 	fprintf(src, "\tif (!b.isObject())\n");
 	fprintf(src, "\t\treturn false;\n\n");
-	fprintf(src, "\tEJson::Value tmp;\n");
+	fprintf(src, "\tSJson::Value tmp;\n");
 
 	NamedType* e;
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)

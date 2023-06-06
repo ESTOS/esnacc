@@ -207,7 +207,7 @@ void PrintTSType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* pare
 			fprintf(hdr, ": null");
 			break;
 		case BASICTYPE_UTCTIME:
-			fprintf(hdr, ": Date"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im TS als String übermittelt.
+			fprintf(hdr, ": Date"); // AsnSystemTime is defined as REAL in the Asn1 file, but is transmitted as a string in the TS.
 			break;
 		case BASICTYPE_IMPORTTYPEREF:
 			{
@@ -410,7 +410,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	fprintf(src, "\t\tObject.assign(this, that);\n");
 	fprintf(src, "\t}\n\n");
 
-	// und eine static initEmpty() Methode um bei bedarf doch ein leeres Objekt erzeugen zu können
+	// and a static initEmpty() method to be able to create an empty object if necessary
 	fprintf(src, "\tpublic static initEmpty(): %s {\n", szConverted);
 	fprintf(src, "\t\treturn new %s(", szConverted);
 	if (iMandatoryFields)
@@ -437,7 +437,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 
 	fprintf(src, "\tpublic static type = \"%s\";\n\n", szConverted);
 
-	// Diese Methode liefert das Schema für den asn1ts Validator
+	// This method provides the schema for the asn1ts validator
 	fprintf(src, "\tpublic static getASN1Schema(params?: asn1ts.ConstructedParams): asn1ts.Sequence {\n");
 	fprintf(src, "\t\treturn new asn1ts.Sequence({\n");
 	fprintf(src, "\t\t\tname: \"%s\",\n", szConverted);

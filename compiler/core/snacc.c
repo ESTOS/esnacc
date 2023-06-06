@@ -243,7 +243,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "  -noprivate   do not generate code that is marked as private\n");
 	fprintf(fp, "  -nodeprecated   do not generate code that is marked as deprecated (any date)\n");
 	fprintf(fp, "  -nodeprecated:[Day.Month.Year]  do not generate code that has been marked deprecated prior to this date\n");
-	fprintf(fp, "  -ValidationLevel:[0-2]   validate the asn1 against predefined rules\n");
+	fprintf(fp, "  -ValidationLevel [0-2]   validate the asn1 against predefined rules\n");
 	fprintf(fp, "   0 no validation\n");
 	fprintf(fp, "   1 Validates that operationIDs are not used twice\n");
 	fprintf(fp, "   2 Validates that the result is an AsnRequestError and argument, result, and error are SEQUENCES and thus extensible (@deprecated modules are excluded from that check)\n");
@@ -416,7 +416,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					break;
 
 				case 'R':
-					if (strcmp(argument, "-RCS") == 0)
+					if (strcmp(argument + 1, "RCS") == 0)
 					{
 						/* asn --added */
 						genCxxCode = FALSE;
@@ -424,7 +424,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						genROSEDecoders = TRUE;
 						currArg++;
 					}
-					else if (strcmp(argument, "-RJ") == 0)
+					else if (strcmp(argument + 1, "RJ") == 0)
 					{
 						/* stm --added */
 						genCxxCode = FALSE;
@@ -432,17 +432,17 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						genROSEDecoders = TRUE;
 						currArg++;
 					}
-					else if (strcmp(argument, "-RTS_SERVER") == 0)
+					else if (strcmp(argument + 1, "RTS_SERVER") == 0)
 					{
 						genTSRoseStubs |= 0x01;
 						currArg++;
 					}
-					else if (strcmp(argument, "-RTS_CLIENT_NODE") == 0)
+					else if (strcmp(argument + 1, "RTS_CLIENT_NODE") == 0)
 					{
 						genTSRoseStubs |= 0x02;
 						currArg++;
 					}
-					else if (strcmp(argument, "-RTS_CLIENT_BROWSER") == 0)
+					else if (strcmp(argument + 1, "RTS_CLIENT_BROWSER") == 0)
 					{
 						genTSRoseStubs |= 0x04;
 						currArg++;
@@ -455,7 +455,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					}
 					break;
 				case 's':
-					if (strcmp(argument, "-stdafx") == 0)
+					if (strcmp(argument + 1, "stdafx") == 0)
 					{
 						/* ste --added */
 						genCodeCPPPrintStdAfxInclude = 1;
@@ -468,7 +468,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					break;
 #if IDL
 				case 'i':
-					if (!strcmp(argument + 1, "idl"))
+					if (strcmp(argument + 1, "idl") == 0)
 					{
 						genIDLCode = TRUE;
 						currArg++;
@@ -479,7 +479,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 #endif
 
 				case 't':
-					if (!strcmp(argument + 1, "tcl"))
+					if (strcmp(argument + 1, "tcl") == 0)
 					{
 #if TCL
 						meta_pdus = parse_type_list(argv[++currArg]);
@@ -520,14 +520,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					currArg++;
 					break;
 				case 'C': /* produce C++ code */
-					if (strcmp(argument, "-Ch") == 0)
+					if (strcmp(argument + 1, "Ch") == 0)
 					{
 						currArg++;
 						szCppHeaderIncludePath = argv[currArg];
 						if (szCppHeaderIncludePath == 0 || strlen(szCppHeaderIncludePath) == 0)
 							goto error;
 					}
-					else if (strcmp(argument, "-C") == 0)
+					else if (strcmp(argument + 1, "C") == 0)
 						genCxxCode = TRUE;
 					else
 						goto error;
@@ -538,9 +538,9 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					currArg++;
 					break;
 				case 'J': /* produce Javascript Objects */
-					if (strcmp(argument, "-JD") == 0)
+					if (strcmp(argument + 1, "JD") == 0)
 						genJsonDocCode = TRUE;
-					else if (strcmp(argument, "-JT") == 0)
+					else if (strcmp(argument + 1, "JT") == 0)
 						genTSCode = TRUE;
 					else
 						genJSCode = TRUE;
@@ -555,22 +555,22 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					currArg++;
 					break;
 				case 'n':
-					if (!strcmp(argument + 1, "nons"))
+					if (strcmp(argument + 1, "nons") == 0)
 					{
 						currArg++;
 						gNO_NAMESPACE = 1;
 					}
-					else if (!strcmp(argument + 1, "ns"))
+					else if (strcmp(argument + 1, "ns") == 0)
 					{
 						gAlternateNamespaceString = &argument[4];
 						currArg += 2;
 					}
-					else if (!strcmp(argument + 1, "noprivate"))
+					else if (strcmp(argument + 1, "noprivate") == 0)
 					{
 						gPrivateSymbols = 0;
 						currArg++;
 					}
-					else if (!strncmp(argument + 1, "nodeprecated", 12))
+					else if (strncmp(argument + 1, "nodeprecated", 12) == 0)
 					{
 						// Shortest time would be -nodeprecated:1.1.2000 = + 9 charachters
 						size_t len = strlen(argument + 1) - 12;
@@ -598,7 +598,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						}
 						currArg++;
 					}
-					else if (!strcmp(argument + 1, "novolat"))
+					else if (strcmp(argument + 1, "novolat") == 0)
 					{
 						novolatilefuncs = TRUE;
 						currArg++;
@@ -607,7 +607,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						goto error;
 					break;
 				case 'c':
-					if (strcmp(argument, "-comments") == 0)
+					if (strcmp(argument + 1, "comments") == 0)
 						giWriteComments = TRUE;
 					else
 						genCCode = TRUE;
@@ -686,14 +686,10 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						currArg++;
 						break;
 					}
-					else if (strncmp(argument, "-ValidationLevel", 16) == 0)
+					else if (strcmp(argument + 1, "ValidationLevel") == 0)
 					{
-						if (strlen(argument) < 18)
-						{
-							Usage(argv[0], stderr);
-							return 1;
-						}
-						giValidationLevel = atoi(argument + 17);
+						currArg++;
+						giValidationLevel = atoi(argv[currArg]);
 						currArg++;
 						break;
 					}
@@ -740,7 +736,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						break;
 					}
 #if META
-					else if (!strcmp(argument + 1, "meta"))
+					else if (strcmp(argument + 1, "meta") == 0)
 					{
 						meta_pdus = parse_type_list(argv[++currArg]);
 						if (!genMetaCode)
@@ -749,14 +745,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						currArg++;
 						break;
 					}
-					else if (!strcmp(argument + 1, "mA"))
+					else if (strcmp(argument + 1, "mA") == 0)
 					{
 						genMetaCode = META_asn1_names;
 						genCxxCode = TRUE;
 						currArg++;
 						break;
 					}
-					else if (!strcmp(argument + 1, "mC"))
+					else if (strcmp(argument + 1, "mC") == 0)
 					{
 						genMetaCode = META_backend_names;
 						genCxxCode = TRUE;
@@ -1917,8 +1913,7 @@ void GenTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues
 						}
 						szBuffer[iPos] = 0;
 
-						// Bei SizeInBytes berücksichtigen, dass das null-Byte im baseName auch reserviert ist, strlen() das aber nicht mitzählt
-						// wenn jetzt beide Strings gleich lang sind fällts auf die Nase :)
+						// Take into account that the length in bytes does not contain the terminating 0 byte
 						strcpy_s(baseName, strlen(baseName) + 1, szBuffer);
 
 						interfaces[iCountInterfaces] = baseName;
@@ -2667,11 +2662,11 @@ bool isSupportedType(enum BasicTypeChoiceId choiceId)
 		case BASICTYPE_EXTENSION:
 		case BASICTYPE_NULL:
 		case BASICTYPE_ANY:
-			// Diese Typen unterstützen wir
+			// We support these tags
 			return true;
 		case BASICTYPE_LOCALTYPEREF:
 		case BASICTYPE_IMPORTTYPEREF:
-			// Jeder import sollte VOR dem Aufruf dieser Methode aufgelöst werden
+			// Each import should be resolved BEFORE calling this method
 			assert(FALSE);
 			return false;
 		default:

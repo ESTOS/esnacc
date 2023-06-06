@@ -1,4 +1,0 @@
-# json cpp comes from https://github.com/open-source-parsers/jsoncpp and should not receive any formatting
-
-DisableFormat: true
-SortIncludes: false

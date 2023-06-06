@@ -34,8 +34,8 @@ public:
 	virtual void BDec(const SNACC::AsnBuf& b, SNACC::AsnLen& bytesDecoded) = 0;
 	virtual void BDecContent(const SNACC::AsnBuf& b, SNACC::AsnTag tagId, SNACC::AsnLen elmtLen, SNACC::AsnLen& bytesDecoded);
 
-	virtual void JEnc(EJson::Value& b) const;
-	virtual bool JDec(const EJson::Value& b);
+	virtual void JEnc(SJson::Value& b) const;
+	virtual bool JDec(const SJson::Value& b);
 
 	const char* typeName() const = 0;
 	virtual int checkConstraints(SNACC::ConstraintFailList* pConstraintFails) const;
@@ -301,10 +301,10 @@ template <class T> void AsnList<T>::BDecContent(const SNACC::AsnBuf& b, SNACC::A
 	bytesDecoded += localBytesDecoded;
 } // AsnList<T>::BDecContent()
 
-template <class T> void AsnList<T>::JEnc(EJson::Value& b) const
+template <class T> void AsnList<T>::JEnc(SJson::Value& b) const
 {
-	b = EJson::Value(EJson::arrayValue);
-	EJson::Value tmp;
+	b = SJson::Value(SJson::arrayValue);
+	SJson::Value tmp;
 
 	for (typename AsnList<T>::const_iterator i = __super::begin(); i != __super::end(); ++i)
 	{
@@ -313,13 +313,13 @@ template <class T> void AsnList<T>::JEnc(EJson::Value& b) const
 	}
 }
 
-template <class T> bool AsnList<T>::JDec(const EJson::Value& b)
+template <class T> bool AsnList<T>::JDec(const SJson::Value& b)
 {
 	Clear();
 
 	if (b.isArray())
 	{
-		EJson::Value::const_iterator it = b.begin();
+		SJson::Value::const_iterator it = b.begin();
 		while (it != b.end())
 		{
 			if (append()->JDec(*it) == false)
@@ -615,8 +615,8 @@ namespace SNACC
 		{
 			return new AsnOptionalParameters(*this);
 		}
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 	};
 
 } // namespace SNACC

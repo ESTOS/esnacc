@@ -43,7 +43,7 @@ bool AsnRelativeOid::operator==(const char* o) const
 	if (m_lpszOidString == NULL)
 		createDottedOidStr();
 
-	if (strcmp(m_lpszOidString, o) == 0)
+	if (m_lpszOidString && strcmp(m_lpszOidString, o) == 0)
 		return true;
 	else
 		return false;
@@ -155,9 +155,11 @@ void AsnRelativeOid::Set(const char* szOidCopy)
 	if (pTempArray == NULL)
 		throw SNACC_MEMORY_EXCEPT((long)intArray.size() * sizeof(long), "pTempArray");
 
+#pragma warning(disable : 6386)
 	// Copy the arc numbers into the temporary array
 	for (unsigned int i = 0; i < intArray.size(); ++i)
 		pTempArray[i] = intArray[i];
+#pragma warning(default : 6386)
 
 	Set(pTempArray, (unsigned long)intArray.size());
 	delete[] pTempArray;
@@ -285,17 +287,17 @@ void AsnRelativeOid::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	BDecContent(b, tagId, elmtLen, bytesDecoded);
 }
 
-void AsnRelativeOid::JEnc(EJson::Value& b) const
+void AsnRelativeOid::JEnc(SJson::Value& b) const
 {
 	std::string str;
 	if (oid && octetLen)
 		str = std::string(oid, octetLen);
-	b = EJson::Value(str);
+	b = SJson::Value(str);
 }
 
-bool AsnRelativeOid::JDec(const EJson::Value& b)
+bool AsnRelativeOid::JDec(const SJson::Value& b)
 {
-	if (b.isConvertibleTo(EJson::stringValue))
+	if (b.isConvertibleTo(SJson::stringValue))
 	{
 		Set(b.asString().c_str());
 		return true;
@@ -515,14 +517,14 @@ void AsnRelativeOid::createDottedOidStr() const
 					firstNum = 2;
 				arcNum -= firstNum * 40;
 
-				sprintf_s(tempArcStr, 40, "%ld.%ld", firstNum, arcNum);
+				sprintf_s(tempArcStr, 40, "%lu.%lu", firstNum, arcNum);
 			}
 			else
-				sprintf_s(tempArcStr, 40, "%ld", arcNum);
+				sprintf_s(tempArcStr, 40, "%lu", arcNum);
 			isFirst = false;
 		}
 		else
-			sprintf_s(tempArcStr, 40, ".%ld", arcNum);
+			sprintf_s(tempArcStr, 40, ".%lu", arcNum);
 
 		// Append the temporary arc string to the temporary std::string
 		tempBuf.append(tempArcStr);

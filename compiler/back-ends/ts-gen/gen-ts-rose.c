@@ -715,7 +715,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 
 				if (pszError && strcmp(pszError, "AsnRequestError") != 0)
 				{
-					// Custom error, also müssen wir den Converter bekannt machen
+					// Custom error, so we need to advertise the converter
 					if (errorMod == m)
 						fprintf(src, ", Converter.%s_Converter", pszError);
 					else

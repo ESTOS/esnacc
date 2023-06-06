@@ -38,7 +38,7 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine)
 	// Longest is 31.12.2023 (10), shortest is 1.1.2000 (8)
 	if (pos >= 8 && pos <= 10)
 	{
-		// Okay, let´s see if this is timestamp value...
+		// Okay, let's see if this is timestamp value...
 		std::string strDate = strComment.substr(0, pos);
 		long long i64UnixTime = ConvertDateToUnixTime(strDate.c_str());
 		if (i64UnixTime > 0)

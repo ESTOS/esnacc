@@ -103,20 +103,22 @@ You may use the following cmake commandline variables to parameterize the output
 
 1. Open Visual Studio Code using the esnacc.code-workspace file in the code folder
 2. If not already done, install the suggested extension
-    * The extensions are advertised with the extensions.json in the .vscode sub folder
-    * C/C++
-    * C/C++ Extension Pack (brings along the C/C++ Themes)
-    * Cmake Tools
+  * The extensions are advertised with the extensions.json in the .vscode sub folder
+  * C/C++
+  * C/C++ Extension Pack (brings along the C/C++ Themes)
+  * Cmake Tools
+  * CodeLLDB
+  * Clang-Format
 3. Visual Studio Code will now ask you to specify the top cmake config file which is located in the code folder CMakeLists.txt
-	* In case visual studio is not asking you use <Ctrl>+<Shift>+<P> **Cmake: Configure** -> ${workspaceFolder}././CmakeLists.txt
+  * In case visual studio is not asking you use <Ctrl>+<Shift>+<P> **Cmake: Configure** -> ${workspaceFolder}././CmakeLists.txt
 4. In the bottom bar of the IDE from the left to the right you will find the settings how and what to compile / debug
-    * Check the tooltip on what option the different entry is supposed to configure as the text will be environment specific different
-	1. Element - Info about errors and warnings
-	2. Element - **Click to select the build variant** -> **Cmake: [Debug]: Ready**
+  * Check the tooltip on what option the different entry is supposed to configure as the text will be environment specific different
+  1. Element - Info about errors and warnings
+  2. Element - **Click to select the build variant** -> **Cmake: [Debug]: Ready**
   3. Element - **Click to change the active kit** -> **Clang xx.x.x** not clang-clang-cl
-	4. Element - **Build selected target** -> builds the option on the right
-	5. Element - **Select the default build target** -> **[esnacc]**
-	* Click the build button to build the compiler
+  4. Element - **Build selected target** -> builds the option on the right
+  5. Element - **Select the default build target** -> **[esnacc]**
+  * Click the build button to build the compiler
 
 ## macOS
 1. Make sure all development tools are installed (XCode + commandline tools)

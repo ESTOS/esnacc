@@ -4,6 +4,7 @@
         "ms-vscode.cpptools-extension-pack",
         "ms-vscode.cpptools-themes",
         "ms-vscode.cmake-tools",
-        "vadimcn.vscode-lldb"
+        "vadimcn.vscode-lldb",
+		"xaver.clang-format"
     ]
 }

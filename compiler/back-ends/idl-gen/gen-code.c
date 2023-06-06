@@ -9,7 +9,7 @@
  * Copyright (C) 1991, 1992 Michael Sample
  *           and the University of British Columbia
  *
- * Copyright © 1995 Robert Joop
+ * Copyright 1995 Robert Joop
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

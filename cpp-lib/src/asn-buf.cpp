@@ -660,7 +660,7 @@ bool AsnBuf::operator==(const AsnBuf& b) const
 			ch2 = EOF;
 		}
 
-		if ((ch1 == EOF) && (ch1 == EOF))
+		if ((ch1 == EOF) && (ch2 == EOF))
 			break;
 
 		if (ch1 != ch2)

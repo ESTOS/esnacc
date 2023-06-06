@@ -9,7 +9,7 @@
 
 #include "asn-config.h"
 #include "asn-buf.h"
-#include "../ejsoncpp/include/json.h"
+#include "../jsoncpp/include/json.h"
 
 #ifdef _WIN32
 #include <string>
@@ -298,10 +298,10 @@ public:
 	virtual void BDec(const AsnBuf& b, AsnLen& bytesDecoded) = 0;
 	virtual AsnLen BEnc(AsnBuf& b) const = 0;
 
-	virtual void JEnc(EJson::Value& b) const
+	virtual void JEnc(SJson::Value& b) const
 	{
 	}
-	virtual bool JDec(const EJson::Value& b)
+	virtual bool JDec(const SJson::Value& b)
 	{
 		return true;
 	}
@@ -380,8 +380,8 @@ public:
 	AsnLen BEnc(AsnBuf& b) const;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	AsnLen PEnc(AsnBufBits& b) const;
 	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
@@ -438,8 +438,8 @@ public:
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	AsnLen PEnc(AsnBufBits& b) const;
 	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
@@ -548,8 +548,8 @@ public:
 	AsnLen BEnc(AsnBuf& b) const;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	AsnLen PEnc(AsnBufBits& b) const;
 	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
@@ -638,8 +638,8 @@ public:
 		return AsnOcts::operator!=(o);
 	};
 
-	virtual void JEnc(EJson::Value& b) const;
-	virtual bool JDec(const EJson::Value& b);
+	virtual void JEnc(SJson::Value& b) const;
+	virtual bool JDec(const SJson::Value& b);
 };
 
 // ########################################################################
@@ -749,8 +749,8 @@ public:
 	AsnLen BEnc(AsnBuf& b) const;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	AsnLen EncodeGeneral(AsnBufBits& b) const;
 	void DecodeGeneral(AsnBufBits& b, AsnLen& bitsDecoded);
@@ -882,8 +882,8 @@ public:
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	virtual AsnLen PEnc(AsnBufBits& b) const;
 	AsnLen PEncSemiConstrained(AsnBufBits& b, long lowerBound) const;
@@ -985,8 +985,8 @@ public:
 	AsnLen BEnc(AsnBuf& b) const;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	AsnLen PEnc(AsnBufBits& b) const;
 	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
@@ -1047,8 +1047,8 @@ public:
 		return "AsnSystemTime";
 	}
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	void Print(std::ostream& os, unsigned short indent = 0) const;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
@@ -1127,8 +1127,8 @@ public:
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	AsnLen PEnc(AsnBufBits& b) const;
 	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
@@ -1256,7 +1256,7 @@ public:
 	mutable AnyInfo* ai;	  // points to entry in hash tbl for this type
 	AsnType* value;
 	AsnBuf* anyBuf;		   // used if ai == null
-	EJson::Value* jsonBuf; // used if Json encoding
+	SJson::Value* jsonBuf; // used if Json encoding
 
 	AsnAny()
 	{
@@ -1305,8 +1305,8 @@ public:
 	AsnLen BEnc(AsnBuf& b) const;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	void BDecContent(const AsnBuf& b, AsnTag tag, AsnLen len, AsnLen& bytesDecoded);
 
@@ -1370,8 +1370,8 @@ public:
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	AsnLen PEnc(AsnBufBits& b) const;
 	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
@@ -1824,8 +1824,8 @@ public:
 	virtual AsnLen BEncContent(AsnBuf& b) const = 0;
 	virtual void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded) = 0;
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	AsnLen PEnc(AsnBufBits& b) const;
 	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
@@ -2013,8 +2013,8 @@ public:
 		return UTF8STRING_TAG_CODE;
 	}
 
-	void JEnc(EJson::Value& b) const;
-	bool JDec(const EJson::Value& b);
+	void JEnc(SJson::Value& b) const;
+	bool JDec(const SJson::Value& b);
 
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -2242,9 +2242,9 @@ public:
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded /*, s env*/);
 	AsnLen BEnc(AsnBuf& _b) const;
-	void JEnc(EJson::Value& b) const;
+	void JEnc(SJson::Value& b) const;
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-	bool JDec(const EJson::Value& b);
+	bool JDec(const SJson::Value& b);
 
 	void Print(std::ostream& os, unsigned short indent = 0) const;
 };
@@ -2283,9 +2283,9 @@ public:
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 
 	AsnLen BEnc(AsnBuf& _b) const;
-	void JEnc(EJson::Value& b) const;
+	void JEnc(SJson::Value& b) const;
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-	bool JDec(const EJson::Value& b);
+	bool JDec(const SJson::Value& b);
 
 	void Print(std::ostream& os, unsigned short indent = 0) const;
 };

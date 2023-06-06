@@ -7,7 +7,7 @@
  * no message
  *
  * Revision 1.1  2004/12/07 12:51:02  \ste
- * LDAP Server eingefügt
+ * LDAP Server added
  *
  * Revision 1.1.1.1  2000/08/21 20:36:12  leonberp
  * First CVS Version of SNACC.

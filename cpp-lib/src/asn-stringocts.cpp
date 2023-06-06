@@ -3,15 +3,15 @@
 
 _BEGIN_SNACC_NAMESPACE
 
-void AsnStringOcts::JEnc(EJson::Value& b) const
+void AsnStringOcts::JEnc(SJson::Value& b) const
 {
-	b = EJson::Value(m_str.c_str());
+	b = SJson::Value(m_str.c_str());
 }
 
-bool AsnStringOcts::JDec(const EJson::Value& b)
+bool AsnStringOcts::JDec(const SJson::Value& b)
 {
 	clear();
-	if (b.isConvertibleTo(EJson::stringValue))
+	if (b.isConvertibleTo(SJson::stringValue))
 	{
 		m_str = b.asString();
 		return true;

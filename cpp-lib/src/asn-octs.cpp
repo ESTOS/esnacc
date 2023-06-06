@@ -397,11 +397,11 @@ void AsnOcts::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen&
 
 } /* AsnOcts::BDecContent */
 
-void AsnOcts::JEnc(EJson::Value& b) const
+void AsnOcts::JEnc(SJson::Value& b) const
 {
 	if (m_str.size() == 0)
 	{
-		b = EJson::Value("");
+		b = SJson::Value("");
 	}
 	else
 	{
@@ -439,20 +439,20 @@ void AsnOcts::JEnc(EJson::Value& b) const
 
 			/* we want to print the encoded data, so null-terminate it: */
 			*c = 0;
-			b = EJson::Value(output);
+			b = SJson::Value(output);
 			free(output);
 		}
 		else
 		{
-			b = EJson::Value("");
+			b = SJson::Value("");
 		}
 	}
 }
 
-bool AsnOcts::JDec(const EJson::Value& b)
+bool AsnOcts::JDec(const SJson::Value& b)
 {
 	clear();
-	if (b.isConvertibleTo(EJson::stringValue))
+	if (b.isConvertibleTo(SJson::stringValue))
 	{
 		std::string str = b.asString();
 
@@ -610,7 +610,7 @@ void AsnOcts::DecodeWithSizeConstraint(AsnBufBits& b, AsnLen& bitsDecoded)
 		free(seg);
 	}
 
-	free(pStr);
+	delete[] pStr;
 }
 
 long AsnOcts::FindSizeConstraintBounds(int& iSCLowerBound, int& iSCUpperBound) const

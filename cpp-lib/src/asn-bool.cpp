@@ -138,9 +138,9 @@ char* AsnBool::checkBoolSingleVal(const bool m_SingleVal) const
 	else
 	{
 #ifdef _WIN32
-		sprintf_s(cTmperr, 200, "_______\nBOOLEAN--SingleValue Constraints:\n_______\nError: --Values must match--\nValue: %d is not equal to the Constraint Single Value:  %d \n", ltemp, m_SingleVal);
+		sprintf_s(cTmperr, 200, "_______\nBOOLEAN--SingleValue Constraints:\n_______\nError: --Values must match--\nValue: %u is not equal to the Constraint Single Value: %u \n", ltemp, m_SingleVal);
 #else
-		snprintf(cTmperr, 200, "_______\nBOOLEAN--SingleValue Constraints:\n_______\nError: --Values must match--\nValue: %d is not equal to the Constraint Single Value:  %d \n", ltemp, m_SingleVal);
+		snprintf(cTmperr, 200, "_______\nBOOLEAN--SingleValue Constraints:\n_______\nError: --Values must match--\nValue: %u is not equal to the Constraint Single Value: %u \n", ltemp, m_SingleVal);
 #endif
 		pError = _strdup(cTmperr);
 		return pError;
@@ -179,14 +179,14 @@ int AsnBool::TclSetVal(Tcl_Interp* interp, const char* valstr)
 #endif /* TCL */
 #endif /* META */
 
-void AsnBool::JEnc(EJson::Value& b) const
+void AsnBool::JEnc(SJson::Value& b) const
 {
-	b = EJson::Value(operator bool());
+	b = SJson::Value(operator bool());
 }
 
-bool AsnBool::JDec(const EJson::Value& b)
+bool AsnBool::JDec(const SJson::Value& b)
 {
-	if (b.isConvertibleTo(EJson::booleanValue))
+	if (b.isConvertibleTo(SJson::booleanValue))
 	{
 		operator=(b.asBool());
 		return true;

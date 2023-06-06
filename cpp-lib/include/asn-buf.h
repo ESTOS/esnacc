@@ -28,7 +28,7 @@
 
 #endif // _WIN32
 
-#include "../ejsoncpp/include/json.h"
+#include "../jsoncpp/include/json.h"
 
 #ifndef SNACCDLL_API
 #ifdef _WIN32

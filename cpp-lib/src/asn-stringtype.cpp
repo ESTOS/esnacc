@@ -272,7 +272,7 @@ void AsnString::DecodeWithSizeConstraint(AsnBufBits& b, AsnLen& bitsDecoded)
 		count++;
 	}
 
-	free(pStr);
+	delete[] pStr;
 }
 
 AsnLen AsnString::Interpret(AsnBufBits& b, long offset) const
@@ -418,12 +418,12 @@ void AsnString::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	BDecContent(b, tag, elmtLen1, bytesDecoded);
 }
 
-void AsnString::JEnc(EJson::Value& b) const
+void AsnString::JEnc(SJson::Value& b) const
 {
-	b = EJson::Value(c_str());
+	b = SJson::Value(c_str());
 }
 
-bool AsnString::JDec(const EJson::Value& b)
+bool AsnString::JDec(const SJson::Value& b)
 {
 	clear();
 	if (b.isString())
@@ -667,15 +667,15 @@ void WideAsnString::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	BDecContent(b, tag, elmtLen1, bytesDecoded);
 }
 
-void WideAsnString::JEnc(EJson::Value& b) const
+void WideAsnString::JEnc(SJson::Value& b) const
 {
-	b = EJson::Value(c_str());
+	b = SJson::Value(c_str());
 }
 
-bool WideAsnString::JDec(const EJson::Value& b)
+bool WideAsnString::JDec(const SJson::Value& b)
 {
 	clear();
-	if (b.isConvertibleTo(EJson::stringValue))
+	if (b.isConvertibleTo(SJson::stringValue))
 	{
 		setUTF8(b.asString().c_str());
 		return true;
@@ -1357,14 +1357,14 @@ UTF8String* UTF8String::CreateNewFromASCII(const std::string& strAscii)
 	return new UTF8String(AsnStringConvert::AsciiToUTF16(strAscii.c_str()));
 }
 
-void UTF8String::JEnc(EJson::Value& b) const
+void UTF8String::JEnc(SJson::Value& b) const
 {
 	std::string utf8;
 	getUTF8(utf8);
-	b = EJson::Value(utf8);
+	b = SJson::Value(utf8);
 }
 
-bool UTF8String::JDec(const EJson::Value& b)
+bool UTF8String::JDec(const SJson::Value& b)
 {
 	clear();
 	if (b.isString())

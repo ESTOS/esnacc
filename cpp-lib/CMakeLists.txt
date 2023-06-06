@@ -3,7 +3,7 @@
 
 add_compile_definitions("SNACCDLL_NONE")
 
-file(GLOB src_files src/*.cpp src/tkAppInit.c ejsoncpp/*.cpp)
+file(GLOB src_files src/*.cpp src/tkAppInit.c jsoncpp/*.cpp)
 
 add_library(cpp-lib STATIC ${src_files})
 

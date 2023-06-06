@@ -236,7 +236,7 @@ AsnLen BEncEoc(AsnBuf& b)
 void BDecEoc(const AsnBuf& b, AsnLen& bytesDecoded)
 {
 	FUNC("BDecEoc()");
-	if ((b.GetUByte() != 0) || (b.GetUByte() != 0))
+	if (b.GetUByte() != 0)
 		throw EXCEPT("non zero byte in EOC or end of data reached", DECODE_ERROR);
 	bytesDecoded += 2;
 } /* BDecEoc */

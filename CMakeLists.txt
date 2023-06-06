@@ -1,6 +1,6 @@
 # Sets the Environmen for the compiler and the c-lib (possible c++-lib too)
 cmake_minimum_required(VERSION 3.0)
-project(esnacc_cmake) #  LANGUAGES CXX) - würde alle files als C++ interpretieren
+project(esnacc_cmake) #  LANGUAGES CXX) - would interpret all files as C++
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_DEBUG_POSTFIX "d")
