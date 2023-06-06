@@ -4,9 +4,9 @@
 // See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
 
 #if !defined(JSON_IS_AMALGAMATION)
-#include <json/assertions.h>
-#include <json/value.h>
-#include <json/writer.h>
+#include "include/assertions.h"
+#include "include/value.h"
+#include "include/writer.h"
 #endif // if !defined(JSON_IS_AMALGAMATION)
 #include <algorithm>
 #include <cassert>
@@ -47,7 +47,7 @@ int JSON_API msvc_pre1900_c99_snprintf(char* outBuf, size_t size,
 
 #define JSON_ASSERT_UNREACHABLE assert(false)
 
-namespace Json {
+namespace SJson {
 template <typename T>
 static std::unique_ptr<T> cloneUnique(const std::unique_ptr<T>& p) {
   std::unique_ptr<T> r;
@@ -124,7 +124,9 @@ static inline char* duplicateStringValue(const char* value, size_t length) {
                       "Failed to allocate string value buffer");
   }
   memcpy(newString, value, length);
+#pragma warning(disable : 6386)
   newString[length] = 0;
+#pragma warning(default : 6386)
   return newString;
 }
 
@@ -183,7 +185,7 @@ static inline void releasePrefixedStringValue(char* value) { free(value); }
 static inline void releaseStringValue(char* value, unsigned) { free(value); }
 #endif // JSONCPP_USING_SECURE_MEMORY
 
-} // namespace Json
+} // namespace SJson
 
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
@@ -197,7 +199,7 @@ static inline void releaseStringValue(char* value, unsigned) { free(value); }
 #include "json_valueiterator.inl"
 #endif // if !defined(JSON_IS_AMALGAMATION)
 
-namespace Json {
+namespace SJson {
 
 #if JSON_USE_EXCEPTION
 Exception::Exception(String msg) : msg_(std::move(msg)) {}
@@ -1437,7 +1439,7 @@ String Value::toStyledString() const {
   StreamWriterBuilder builder;
 
   String out = this->hasComment(commentBefore) ? "\n" : "";
-  out += Json::writeString(builder, *this);
+  out += SJson::writeString(builder, *this);
   out += '\n';
 
   return out;
@@ -1631,4 +1633,4 @@ Value& Path::make(Value& root) const {
   return *node;
 }
 
-} // namespace Json
+} // namespace SJson

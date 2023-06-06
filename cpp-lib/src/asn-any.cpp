@@ -447,7 +447,7 @@ void AsnAny::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 	}	  // END IF ai != NULL
 } // END AsnAny::PDec(...)
 
-void AsnAny::JEnc(EJson::Value& b) const
+void AsnAny::JEnc(SJson::Value& b) const
 {
 	if (value != NULL)
 	{
@@ -464,11 +464,11 @@ void AsnAny::JEnc(EJson::Value& b) const
 		std::string data;
 		anyBuf->ResetMode();
 		anyBuf->GetSeg(data);
-		b = EJson::Value(data);
+		b = SJson::Value(data);
 	}
 }
 
-bool AsnAny::JDec(const EJson::Value& b)
+bool AsnAny::JDec(const SJson::Value& b)
 {
 	FUNC("AsnAny::JDec");
 
@@ -477,7 +477,7 @@ bool AsnAny::JDec(const EJson::Value& b)
 	{
 		if (jsonBuf)
 			delete jsonBuf;
-		jsonBuf = new EJson::Value;
+		jsonBuf = new SJson::Value;
 		*jsonBuf = b;
 		return true;
 	}
@@ -632,7 +632,7 @@ AsnAny& AsnAny::operator=(const AsnAny& o)
 	}
 	else if (o.jsonBuf != NULL)
 	{
-		jsonBuf = new EJson::Value(*(o.jsonBuf));
+		jsonBuf = new SJson::Value(*(o.jsonBuf));
 	}
 	return *this;
 }

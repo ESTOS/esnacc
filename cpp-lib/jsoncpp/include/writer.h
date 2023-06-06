@@ -22,7 +22,7 @@
 
 #pragma pack(push, 8)
 
-namespace Json {
+namespace SJson {
 
 class Value;
 
@@ -30,7 +30,7 @@ class Value;
  *
  * Usage:
  *  \code
- *  using namespace Json;
+ *  using namespace SJson;
  *  void writeToStdout(StreamWriter::Factory const& factory, Value const& value)
  * { std::unique_ptr<StreamWriter> const writer( factory.newStreamWriter());
  *    writer->write(value, &std::cout);
@@ -75,7 +75,7 @@ String JSON_API writeString(StreamWriter::Factory const& factory,
 
 * Usage:
 *   \code
-*   using namespace Json;
+*   using namespace SJson;
 *   Value value = ...;
 *   StreamWriterBuilder builder;
 *   builder["commentStyle"] = "None";
@@ -118,7 +118,7 @@ public:
    *  JSON Value.
    *  \sa setDefaults()
    */
-  Json::Value settings_;
+  SJson::Value settings_;
 
   StreamWriterBuilder();
   ~StreamWriterBuilder() override;
@@ -131,7 +131,7 @@ public:
   /** \return true if 'settings' are legal and consistent;
    *   otherwise, indicate bad settings via 'invalid'.
    */
-  bool validate(Json::Value* invalid) const;
+  bool validate(SJson::Value* invalid) const;
   /** A simple way to update a specific setting.
    */
   Value& operator[](const String& key);
@@ -141,7 +141,7 @@ public:
    * \remark Defaults:
    * \snippet src/lib_json/json_writer.cpp StreamWriterBuilderDefaults
    */
-  static void setDefaults(Json::Value* settings);
+  static void setDefaults(SJson::Value* settings);
 };
 
 /** \brief Abstract class for writers.
@@ -167,8 +167,7 @@ public:
 #pragma warning(push)
 #pragma warning(disable : 4996) // Deriving from deprecated class
 #endif
-class JSON_API FastWriter
-    : public Writer {
+class JSON_API FastWriter : public Writer {
 public:
   FastWriter();
   ~FastWriter() override = default;
@@ -227,8 +226,7 @@ private:
 #pragma warning(push)
 #pragma warning(disable : 4996) // Deriving from deprecated class
 #endif
-class JSON_API
-    StyledWriter : public Writer {
+class JSON_API StyledWriter : public Writer {
 public:
   StyledWriter();
   ~StyledWriter() override = default;
@@ -296,8 +294,7 @@ private:
 #pragma warning(push)
 #pragma warning(disable : 4996) // Deriving from deprecated class
 #endif
-class JSON_API
-    StyledStreamWriter {
+class JSON_API StyledStreamWriter {
 public:
   /**
    * \param indentation Each level will be indented by this amount extra.
@@ -358,7 +355,7 @@ String JSON_API valueToQuotedString(const char* value);
 /// \see Json::operator>>()
 JSON_API OStream& operator<<(OStream&, const Value& root);
 
-} // namespace Json
+} // namespace SJson
 
 #pragma pack(pop)
 

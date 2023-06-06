@@ -114,12 +114,12 @@ void AsnNull::BDecContent(const AsnBuf& /*b*/, AsnTag /*tagId*/, AsnLen elmtLen,
 		throw BoundsException("AsnNull has non-zero length", STACK_ENTRY);
 } /* AsnNull::BDecContent */
 
-void AsnNull::JEnc(EJson::Value& b) const
+void AsnNull::JEnc(SJson::Value& b) const
 {
-	b = EJson::Value((int)0);
+	b = SJson::Value((int)0);
 }
 
-bool AsnNull::JDec(const EJson::Value& b)
+bool AsnNull::JDec(const SJson::Value& b)
 {
 	return true;
 }

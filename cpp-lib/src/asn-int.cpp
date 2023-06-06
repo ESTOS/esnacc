@@ -776,6 +776,9 @@ void AsnInt::getPadded(unsigned char*& bigIntDataOut, size_t& bigIntLen, const s
 			prepend = (long)padToSize - (long)bigIntLen;
 
 			tmpInt = (unsigned char*)calloc(1, bigIntLen + prepend);
+			if (!tmpInt)
+				throw EXCEPT("Out of memory", MEMORY_ERROR);
+
 			memset(tmpInt, 0, prepend);
 			memcpy(&tmpInt[prepend], bigIntData, bigIntLen);
 
@@ -1471,20 +1474,20 @@ AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBo
 	return len;
 }
 
-void AsnInt::JEnc(EJson::Value& b) const
+void AsnInt::JEnc(SJson::Value& b) const
 {
-	b = EJson::Value(GetLongLong());
+	b = SJson::Value(GetLongLong());
 }
 
-bool AsnInt::JDec(const EJson::Value& b)
+bool AsnInt::JDec(const SJson::Value& b)
 {
 	Clear();
-	if (b.isInt64() || b.isConvertibleTo(EJson::intValue))
+	if (b.isInt64() || b.isConvertibleTo(SJson::intValue))
 	{
 		Set(b.asInt64());
 		return true;
 	}
-	else if (b.isConvertibleTo(EJson::stringValue))
+	else if (b.isConvertibleTo(SJson::stringValue))
 	{
 		// Compatibility - if string contains a parseable int, then take it.
 #if !_WIN32 || _MSC_VER >= 1800

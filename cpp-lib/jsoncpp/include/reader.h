@@ -25,7 +25,7 @@
 
 #pragma pack(push, 8)
 
-namespace Json {
+namespace SJson {
 
 /** \brief Unserialize a <a HREF="http://www.json.org">JSON</a> document into a
  * Value.
@@ -50,12 +50,12 @@ public:
   };
 
   /** \brief Constructs a Reader allowing all features for parsing.
-    * \deprecated Use CharReader and CharReaderBuilder.
+   * \deprecated Use CharReader and CharReaderBuilder.
    */
   Reader();
 
   /** \brief Constructs a Reader allowing the specified feature set for parsing.
-    * \deprecated Use CharReader and CharReaderBuilder.
+   * \deprecated Use CharReader and CharReaderBuilder.
    */
   Reader(const Features& features);
 
@@ -277,7 +277,7 @@ public:
  *
  * Usage:
  *   \code
- *   using namespace Json;
+ *   using namespace SJson;
  *   CharReaderBuilder builder;
  *   builder["collectComments"] = false;
  *   Value value;
@@ -331,7 +331,7 @@ public:
    * write and read them just like any JSON Value.
    * \sa setDefaults()
    */
-  Json::Value settings_;
+  SJson::Value settings_;
 
   CharReaderBuilder();
   ~CharReaderBuilder() override;
@@ -341,7 +341,7 @@ public:
   /** \return true if 'settings' are legal and consistent;
    *   otherwise, indicate bad settings via 'invalid'.
    */
-  bool validate(Json::Value* invalid) const;
+  bool validate(SJson::Value* invalid) const;
 
   /** A simple way to update a specific setting.
    */
@@ -352,13 +352,13 @@ public:
    * \remark Defaults:
    * \snippet src/lib_json/json_reader.cpp CharReaderBuilderDefaults
    */
-  static void setDefaults(Json::Value* settings);
+  static void setDefaults(SJson::Value* settings);
   /** Same as old Features::strictMode().
    * \pre 'settings' != NULL (but Json::null is fine)
    * \remark Defaults:
    * \snippet src/lib_json/json_reader.cpp CharReaderBuilderStrictMode
    */
-  static void strictMode(Json::Value* settings);
+  static void strictMode(SJson::Value* settings);
 };
 
 /** Consume entire stream and use its begin/end.
@@ -394,7 +394,7 @@ bool JSON_API parseFromStream(CharReader::Factory const&, IStream&, Value* root,
  */
 JSON_API IStream& operator>>(IStream&, Value&);
 
-} // namespace Json
+} // namespace SJson
 
 #pragma pack(pop)
 

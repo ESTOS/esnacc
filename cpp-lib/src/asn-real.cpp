@@ -910,15 +910,15 @@ void AsnReal::BDecContent(const AsnBuf& b, AsnTag /* tagId */, AsnLen elmtLen, A
 	}
 } /* AsnInt::BDecContent */
 
-void AsnReal::JEnc(EJson::Value& b) const
+void AsnReal::JEnc(SJson::Value& b) const
 {
-	b = EJson::Value(value);
+	b = SJson::Value(value);
 }
 
-bool AsnReal::JDec(const EJson::Value& b)
+bool AsnReal::JDec(const SJson::Value& b)
 {
 	value = 0;
-	if (b.isConvertibleTo(EJson::realValue))
+	if (b.isConvertibleTo(SJson::realValue))
 	{
 		value = b.asDouble();
 		return true;

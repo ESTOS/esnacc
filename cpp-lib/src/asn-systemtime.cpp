@@ -65,9 +65,9 @@ std::string DateToISO8601(DATE dt)
 	if (VariantTimeToSystemTimeWithMilliseconds(dt, sysTime))
 	{
 		if (sysTime.wMilliseconds == 0)
-			sprintf_s(szDateTime, 40, "%04d-%02d-%02dT%02d:%02d:%02dZ", sysTime.wYear, sysTime.wMonth, sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
+			sprintf_s(szDateTime, 40, "%04u-%02u-%02uT%02u:%02u:%02uZ", sysTime.wYear, sysTime.wMonth, sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
 		else
-			sprintf_s(szDateTime, 40, "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ", sysTime.wYear, sysTime.wMonth, sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds);
+			sprintf_s(szDateTime, 40, "%04u-%02u-%02uT%02u:%02u:%02u.%03uZ", sysTime.wYear, sysTime.wMonth, sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds);
 	}
 	return szDateTime;
 }
@@ -103,9 +103,9 @@ double ISO8601ToDATE(const char* szDateTime)
 	{
 		// 2012-04-23T18:25:43Z
 #if _MSC_VER < 1900
-		sscanf(szDateTime, "%04d-%02d-%02dT%02d:%02d:%02dZ", &sysTime.wYear, &sysTime.wMonth, &sysTime.wDay, &sysTime.wHour, &sysTime.wMinute, &sysTime.wSecond);
+		sscanf(szDateTime, "%04u-%02u-%02uT%02u:%02u:%02uZ", &sysTime.wYear, &sysTime.wMonth, &sysTime.wDay, &sysTime.wHour, &sysTime.wMinute, &sysTime.wSecond);
 #else
-		sscanf_s(szDateTime, "%04hd-%02hd-%02hdT%02hd:%02hd:%02hdZ", &sysTime.wYear, &sysTime.wMonth, &sysTime.wDay, &sysTime.wHour, &sysTime.wMinute, &sysTime.wSecond);
+		sscanf_s(szDateTime, "%04hu-%02hu-%02huT%02hu:%02hu:%02huZ", &sysTime.wYear, &sysTime.wMonth, &sysTime.wDay, &sysTime.wHour, &sysTime.wMinute, &sysTime.wSecond);
 #endif
 	}
 	else if (iLen > 20)
@@ -115,9 +115,9 @@ double ISO8601ToDATE(const char* szDateTime)
 		// 2012-04-23T18:25:43.5Z
 		float fSecs = 0.0f;
 #if _MSC_VER < 1900
-		sscanf(szDateTime, "%04d-%02d-%02dT%02d:%02d:%fZ", &sysTime.wYear, &sysTime.wMonth, &sysTime.wDay, &sysTime.wHour, &sysTime.wMinute, &fSecs);
+		sscanf(szDateTime, "%04u-%02u-%02uT%02u:%02u:%fZ", &sysTime.wYear, &sysTime.wMonth, &sysTime.wDay, &sysTime.wHour, &sysTime.wMinute, &fSecs);
 #else
-		sscanf_s(szDateTime, "%04hd-%02hd-%02hdT%02hd:%02hd:%fZ", &sysTime.wYear, &sysTime.wMonth, &sysTime.wDay, &sysTime.wHour, &sysTime.wMinute, &fSecs);
+		sscanf_s(szDateTime, "%04hu-%02hu-%02huT%02hu:%02hu:%fZ", &sysTime.wYear, &sysTime.wMonth, &sysTime.wDay, &sysTime.wHour, &sysTime.wMinute, &fSecs);
 #endif
 		float fSecsPart = 0.0f;
 		float fFracts = modff(fSecs, &fSecsPart);
@@ -146,21 +146,21 @@ void AsnSystemTime::set_time_t(time_t tim)
 	value = dbltmp + 25569;
 }
 
-void AsnSystemTime::JEnc(EJson::Value& b) const
+void AsnSystemTime::JEnc(SJson::Value& b) const
 {
 	// ISO 8601
 	// 2012-04-23T18:25:43.511Z
 #ifdef _WIN32
-	b = EJson::Value(DateToISO8601(value));
+	b = SJson::Value(DateToISO8601(value));
 #else
-	b = EJson::Value(value);
+	b = SJson::Value(value);
 #endif
 }
 
-bool AsnSystemTime::JDec(const EJson::Value& b)
+bool AsnSystemTime::JDec(const SJson::Value& b)
 {
 	value = 0;
-	if (b.isConvertibleTo(EJson::realValue))
+	if (b.isConvertibleTo(SJson::realValue))
 	{
 		value = b.asDouble();
 		return true;

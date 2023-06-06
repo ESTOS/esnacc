@@ -351,7 +351,7 @@ void AsnBits::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen&
 
 } /* AsnBits::BDecContent */
 
-void AsnBits::JEnc(EJson::Value& b) const
+void AsnBits::JEnc(SJson::Value& b) const
 {
 	// Convert to string form
 	std::string str;
@@ -360,13 +360,13 @@ void AsnBits::JEnc(EJson::Value& b) const
 			str += "1";
 		else
 			str += "0";
-	b = EJson::Value(str.c_str());
+	b = SJson::Value(str.c_str());
 }
 
-bool AsnBits::JDec(const EJson::Value& b)
+bool AsnBits::JDec(const SJson::Value& b)
 {
 	clear();
-	if (b.isConvertibleTo(EJson::stringValue))
+	if (b.isConvertibleTo(SJson::stringValue))
 	{
 		std::string str = b.asString();
 		// Set num bits
@@ -779,8 +779,8 @@ void AsnBits::DecodeWithSizeConstraint(AsnBufBits& b, AsnLen& bitsDecoded)
 	seg = b.GetBits(decodeSize);
 	memcpy(bits, seg, ((decodeSize + 7) / 8));
 	bitsDecoded += decodeSize;
-	free(seg);
-	free(pStr);
+	delete[] seg;
+	delete[] pStr;
 }
 
 AsnLen AsnBits::PEnc(AsnBufBits& b) const

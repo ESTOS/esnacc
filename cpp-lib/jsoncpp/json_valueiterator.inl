@@ -5,7 +5,7 @@
 
 // included by json_value.cpp
 
-namespace Json {
+namespace SJson {
 
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
@@ -122,8 +122,8 @@ ValueConstIterator::ValueConstIterator(
 ValueConstIterator::ValueConstIterator(ValueIterator const& other)
     : ValueIteratorBase(other) {}
 
-ValueConstIterator& ValueConstIterator::
-operator=(const ValueIteratorBase& other) {
+ValueConstIterator&
+ValueConstIterator::operator=(const ValueIteratorBase& other) {
   copy(other);
   return *this;
 }
@@ -153,4 +153,4 @@ ValueIterator& ValueIterator::operator=(const SelfType& other) {
   return *this;
 }
 
-} // namespace Json
+} // namespace SJson

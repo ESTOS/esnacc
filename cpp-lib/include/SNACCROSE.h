@@ -128,8 +128,8 @@ namespace SNACC
 		void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 		AsnLen BEnc(AsnBuf& _b) const;
 		void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 		void Print(std::ostream& os, unsigned short indent = 0) const;
 		void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
@@ -167,8 +167,8 @@ namespace SNACC
 		void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 		AsnLen BEnc(AsnBuf& _b) const;
 		void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 		void Print(std::ostream& os, unsigned short indent = 0) const;
 		void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
@@ -197,8 +197,8 @@ namespace SNACC
 		void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 		AsnLen BEnc(AsnBuf& _b) const;
 		void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 		void Print(std::ostream& os, unsigned short indent = 0) const;
 		void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
@@ -227,8 +227,8 @@ namespace SNACC
 		void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 		AsnLen BEnc(AsnBuf& _b) const;
 		void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 		void Print(std::ostream& os, unsigned short indent = 0) const;
 		void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
@@ -266,8 +266,8 @@ namespace SNACC
 		void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 		AsnLen BEnc(AsnBuf& _b) const;
 		void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 		void Print(std::ostream& os, unsigned short indent = 0) const;
 		void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
@@ -296,8 +296,8 @@ namespace SNACC
 		void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 		AsnLen BEnc(AsnBuf& _b) const;
 		void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 		void Print(std::ostream& os, unsigned short indent = 0) const;
 		void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
@@ -326,8 +326,8 @@ namespace SNACC
 		void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 		AsnLen BEnc(AsnBuf& _b) const;
 		void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 		void Print(std::ostream& os, unsigned short indent = 0) const;
 		void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
@@ -361,8 +361,8 @@ namespace SNACC
 		void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 		AsnLen BEnc(AsnBuf& _b) const;
 		void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 		void Print(std::ostream& os, unsigned short indent = 0) const;
 		void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
@@ -392,8 +392,8 @@ namespace SNACC
 		void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 		AsnLen BEnc(AsnBuf& _b) const;
 		void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 		void Print(std::ostream& os, unsigned short indent = 0) const;
 		void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
@@ -435,8 +435,8 @@ namespace SNACC
 		void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 		AsnLen BEnc(AsnBuf& _b) const;
 		void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 		void Print(std::ostream& os, unsigned short indent = 0) const;
 		void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
@@ -468,8 +468,8 @@ namespace SNACC
 		void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 		AsnLen BEnc(AsnBuf& _b) const;
 		void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-		void JEnc(EJson::Value& b) const;
-		bool JDec(const EJson::Value& b);
+		void JEnc(SJson::Value& b) const;
+		bool JDec(const SJson::Value& b);
 		void Print(std::ostream& os, unsigned short indent = 0) const;
 		void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 

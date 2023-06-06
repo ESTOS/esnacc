@@ -235,8 +235,8 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 			case SnaccTransportEncoding::JSON_NO_HEADING:
 				{
 					int iHeaderLen = GetJsonHeaderLen(lpBytes, lSize);
-					EJson::Value value;
-					EJson::Reader reader;
+					SJson::Value value;
+					SJson::Reader reader;
 					if (reader.parse((const char*)lpBytes + iHeaderLen, (const char*)lpBytes + lSize, value))
 					{
 						bool bSuccess = false;
@@ -386,8 +386,8 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 			else
 				m_eTransportEncoding = SnaccTransportEncoding::JSON_NO_HEADING;
 
-			EJson::Value value;
-			EJson::Reader reader;
+			SJson::Value value;
+			SJson::Reader reader;
 			if (reader.parse((const char*)lpBytes + iHeaderLen, (const char*)lpBytes + lSize, value))
 			{
 				bool bSuccess = false;
@@ -630,8 +630,8 @@ long SnaccROSEBase::SendReject(SNACC::ROSEReject* preject)
 	}
 	else if (m_eTransportEncoding == SnaccTransportEncoding::JSON || m_eTransportEncoding == SnaccTransportEncoding::JSON_NO_HEADING)
 	{
-		EJson::FastWriter writer;
-		EJson::Value value;
+		SJson::FastWriter writer;
+		SJson::Value value;
 		rejectMsg.JEnc(value);
 		std::string strData = writer.write(value);
 		if (m_eTransportEncoding == SnaccTransportEncoding::JSON)
@@ -806,8 +806,8 @@ long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* pC
 	else if (m_eTransportEncoding == SnaccTransportEncoding::JSON || m_eTransportEncoding == SnaccTransportEncoding::JSON_NO_HEADING)
 	{
 		InvokeMsg.invoke->operationName = UTF8String::CreateNewFromASCII(SnaccRoseOperationLookup::LookUpName((int)InvokeMsg.invoke->operationID));
-		EJson::FastWriter writer;
-		EJson::Value value;
+		SJson::FastWriter writer;
+		SJson::Value value;
 		InvokeMsg.JEnc(value);
 		std::string strData = writer.write(value);
 		if (m_eTransportEncoding == SnaccTransportEncoding::JSON)
@@ -829,8 +829,8 @@ void SnaccROSEBase::PrintAsnType(bool bOutbound, SNACC::AsnType* pType, SNACC::R
 {
 	if (GetLogLevel(true))
 	{
-		EJson::StyledStreamWriter writer;
-		EJson::Value value;
+		SJson::StyledStreamWriter writer;
+		SJson::Value value;
 		pType->JEnc(value);
 
 		std::stringstream strOut;
@@ -870,8 +870,8 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** p
 	else if (m_eTransportEncoding == SnaccTransportEncoding::JSON || m_eTransportEncoding == SnaccTransportEncoding::JSON_NO_HEADING)
 	{
 		InvokeMsg.invoke->operationName = UTF8String::CreateNewFromASCII(SnaccRoseOperationLookup::LookUpName((int)InvokeMsg.invoke->operationID));
-		EJson::FastWriter writer;
-		EJson::Value value;
+		SJson::FastWriter writer;
+		SJson::Value value;
 		InvokeMsg.JEnc(value);
 		std::string strData = writer.write(value);
 		if (m_eTransportEncoding == SnaccTransportEncoding::JSON)
@@ -1014,8 +1014,8 @@ long SnaccROSEBase::SendResult(SNACC::ROSEResult* presult)
 	}
 	else if (m_eTransportEncoding == SnaccTransportEncoding::JSON || m_eTransportEncoding == SnaccTransportEncoding::JSON_NO_HEADING)
 	{
-		EJson::FastWriter writer;
-		EJson::Value value;
+		SJson::FastWriter writer;
+		SJson::Value value;
 		ResultMsg.JEnc(value);
 		std::string strData = writer.write(value);
 		if (m_eTransportEncoding == SnaccTransportEncoding::JSON)
@@ -1075,8 +1075,8 @@ long SnaccROSEBase::SendError(SNACC::ROSEError* perror)
 	}
 	else if (m_eTransportEncoding == SnaccTransportEncoding::JSON || m_eTransportEncoding == SnaccTransportEncoding::JSON_NO_HEADING)
 	{
-		EJson::FastWriter writer;
-		EJson::Value value;
+		SJson::FastWriter writer;
+		SJson::Value value;
 		ResultMsg.JEnc(value);
 		std::string strData = writer.write(value);
 		if (m_eTransportEncoding == SnaccTransportEncoding::JSON)

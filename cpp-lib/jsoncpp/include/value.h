@@ -57,7 +57,7 @@
 
 /** \brief JSON (JavaScript Object Notation).
  */
-namespace Json {
+namespace SJson {
 
 #if JSON_USE_EXCEPTION
 /** Base class for all exceptions we throw.
@@ -197,15 +197,15 @@ public:
   using Members = std::vector<String>;
   using iterator = ValueIterator;
   using const_iterator = ValueConstIterator;
-  using UInt = Json::UInt;
-  using Int = Json::Int;
+  using UInt = SJson::UInt;
+  using Int = SJson::Int;
 #if defined(JSON_HAS_INT64)
-  using UInt64 = Json::UInt64;
-  using Int64 = Json::Int64;
+  using UInt64 = SJson::UInt64;
+  using Int64 = SJson::Int64;
 #endif // defined(JSON_HAS_INT64)
-  using LargestInt = Json::LargestInt;
-  using LargestUInt = Json::LargestUInt;
-  using ArrayIndex = Json::ArrayIndex;
+  using LargestInt = SJson::LargestInt;
+  using LargestUInt = SJson::LargestUInt;
+  using ArrayIndex = SJson::ArrayIndex;
 
   // Required for boost integration, e. g. BOOST_TEST
   using value_type = std::string;
@@ -924,7 +924,7 @@ public:
 
 inline void swap(Value& a, Value& b) { a.swap(b); }
 
-} // namespace Json
+} // namespace SJson
 
 #pragma pack(pop)
 

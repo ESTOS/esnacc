@@ -7,7 +7,7 @@
 #define LIB_JSONCPP_JSON_TOOL_H_INCLUDED
 
 #if !defined(JSON_IS_AMALGAMATION)
-#include <json/config.h>
+#include "include/config.h"
 #endif
 
 // Also support old flag NO_LOCALE_SUPPORT
@@ -25,7 +25,7 @@
  * It is an internal header that must not be exposed.
  */
 
-namespace Json {
+namespace SJson {
 static inline char getDecimalPoint() {
 #ifdef JSONCPP_NO_LOCALE_SUPPORT
   return '\0';
@@ -133,6 +133,6 @@ Iter fixZerosInTheEnd(Iter begin, Iter end, unsigned int precision) {
   return end;
 }
 
-} // namespace Json
+} // namespace SJson
 
 #endif // LIB_JSONCPP_JSON_TOOL_H_INCLUDED

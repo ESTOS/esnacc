@@ -210,11 +210,11 @@ namespace SNACC
 	}
 
 	// [PrintChoiceDefCodeJsonEnc]
-	void ROSERejectChoice::JEnc(EJson::Value& b) const
+	void ROSERejectChoice::JEnc(SJson::Value& b) const
 	{
-		b = EJson::Value(EJson::objectValue);
+		b = SJson::Value(SJson::objectValue);
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 
 		switch (choiceId)
 		{
@@ -232,13 +232,13 @@ namespace SNACC
 	}
 
 	// [PrintChoiceDefCodeJsonDec]
-	bool ROSERejectChoice::JDec(const EJson::Value& b)
+	bool ROSERejectChoice::JDec(const SJson::Value& b)
 	{
 		Clear();
 		if (!b.isObject())
 			return false;
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("invokedID"))
 		{
 			choiceId = invokedIDCid;
@@ -457,11 +457,11 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonEnc]
-	void ROSEResultSeq::JEnc(EJson::Value& b) const
+	void ROSEResultSeq::JEnc(SJson::Value& b) const
 	{
-		b = EJson::Value(EJson::objectValue);
+		b = SJson::Value(SJson::objectValue);
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 
 		resultValue.JEnc(tmp);
 		b["resultValue"] = tmp;
@@ -471,14 +471,14 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonDec]
-	bool ROSEResultSeq::JDec(const EJson::Value& b)
+	bool ROSEResultSeq::JDec(const SJson::Value& b)
 	{
 		Clear();
 
 		if (!b.isObject())
 			return false;
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("resultValue"))
 		{
 			if (!resultValue.JDec(b["resultValue"]))
@@ -701,11 +701,11 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonEnc]
-	void ROSEAuth::JEnc(EJson::Value& b) const
+	void ROSEAuth::JEnc(SJson::Value& b) const
 	{
-		b = EJson::Value(EJson::objectValue);
+		b = SJson::Value(SJson::objectValue);
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 
 		method.JEnc(tmp);
 		b["method"] = tmp;
@@ -715,14 +715,14 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonDec]
-	bool ROSEAuth::JDec(const EJson::Value& b)
+	bool ROSEAuth::JDec(const SJson::Value& b)
 	{
 		Clear();
 
 		if (!b.isObject())
 			return false;
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("method"))
 		{
 			if (!method.JDec(b["method"]))
@@ -1037,11 +1037,11 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonEnc]
-	void ROSEError::JEnc(EJson::Value& b) const
+	void ROSEError::JEnc(SJson::Value& b) const
 	{
-		b = EJson::Value(EJson::objectValue);
+		b = SJson::Value(SJson::objectValue);
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 
 		if (NOT_NULL(sessionID))
 		{
@@ -1063,14 +1063,14 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonDec]
-	bool ROSEError::JDec(const EJson::Value& b)
+	bool ROSEError::JDec(const SJson::Value& b)
 	{
 		Clear();
 
 		if (!b.isObject())
 			return false;
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("sessionID"))
 		{
 			delete sessionID;
@@ -1377,11 +1377,11 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonEnc]
-	void ROSEAuthRequest::JEnc(EJson::Value& b) const
+	void ROSEAuthRequest::JEnc(SJson::Value& b) const
 	{
-		b = EJson::Value(EJson::objectValue);
+		b = SJson::Value(SJson::objectValue);
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 
 		auth.JEnc(tmp);
 		b["auth"] = tmp;
@@ -1394,14 +1394,14 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonDec]
-	bool ROSEAuthRequest::JDec(const EJson::Value& b)
+	bool ROSEAuthRequest::JDec(const SJson::Value& b)
 	{
 		Clear();
 
 		if (!b.isObject())
 			return false;
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("auth"))
 		{
 			if (!auth.JDec(b["auth"]))
@@ -1661,11 +1661,11 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonEnc]
-	void ROSEAuthResult::JEnc(EJson::Value& b) const
+	void ROSEAuthResult::JEnc(SJson::Value& b) const
 	{
-		b = EJson::Value(EJson::objectValue);
+		b = SJson::Value(SJson::objectValue);
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 
 		authList.JEnc(tmp);
 		b["authList"] = tmp;
@@ -1678,14 +1678,14 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonDec]
-	bool ROSEAuthResult::JDec(const EJson::Value& b)
+	bool ROSEAuthResult::JDec(const SJson::Value& b)
 	{
 		Clear();
 
 		if (!b.isObject())
 			return false;
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("authList"))
 		{
 			if (!authList.JDec(b["authList"]))
@@ -2131,11 +2131,11 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonEnc]
-	void ROSEInvoke::JEnc(EJson::Value& b) const
+	void ROSEInvoke::JEnc(SJson::Value& b) const
 	{
-		b = EJson::Value(EJson::objectValue);
+		b = SJson::Value(SJson::objectValue);
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 
 		if (NOT_NULL(sessionID))
 		{
@@ -2175,14 +2175,14 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonDec]
-	bool ROSEInvoke::JDec(const EJson::Value& b)
+	bool ROSEInvoke::JDec(const SJson::Value& b)
 	{
 		Clear();
 
 		if (!b.isObject())
 			return false;
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("sessionID"))
 		{
 			delete sessionID;
@@ -2580,11 +2580,11 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonEnc]
-	void ROSEResult::JEnc(EJson::Value& b) const
+	void ROSEResult::JEnc(SJson::Value& b) const
 	{
-		b = EJson::Value(EJson::objectValue);
+		b = SJson::Value(SJson::objectValue);
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 
 		if (NOT_NULL(sessionID))
 		{
@@ -2603,14 +2603,14 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonDec]
-	bool ROSEResult::JDec(const EJson::Value& b)
+	bool ROSEResult::JDec(const SJson::Value& b)
 	{
 		Clear();
 
 		if (!b.isObject())
 			return false;
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("sessionID"))
 		{
 			delete sessionID;
@@ -2898,11 +2898,11 @@ namespace SNACC
 	}
 
 	// [PrintChoiceDefCodeJsonEnc]
-	void RejectProblem::JEnc(EJson::Value& b) const
+	void RejectProblem::JEnc(SJson::Value& b) const
 	{
-		b = EJson::Value(EJson::objectValue);
+		b = SJson::Value(SJson::objectValue);
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 
 		switch (choiceId)
 		{
@@ -2928,13 +2928,13 @@ namespace SNACC
 	}
 
 	// [PrintChoiceDefCodeJsonDec]
-	bool RejectProblem::JDec(const EJson::Value& b)
+	bool RejectProblem::JDec(const SJson::Value& b)
 	{
 		Clear();
 		if (!b.isObject())
 			return false;
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("generalProblem"))
 		{
 			choiceId = generalProblemCid;
@@ -3392,11 +3392,11 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonEnc]
-	void ROSEReject::JEnc(EJson::Value& b) const
+	void ROSEReject::JEnc(SJson::Value& b) const
 	{
-		b = EJson::Value(EJson::objectValue);
+		b = SJson::Value(SJson::objectValue);
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 
 		if (NOT_NULL(sessionID))
 		{
@@ -3427,14 +3427,14 @@ namespace SNACC
 	}
 
 	// [PrintSeqDefCodeJsonDec]
-	bool ROSEReject::JDec(const EJson::Value& b)
+	bool ROSEReject::JDec(const SJson::Value& b)
 	{
 		Clear();
 
 		if (!b.isObject())
 			return false;
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("sessionID"))
 		{
 			delete sessionID;
@@ -3760,11 +3760,11 @@ namespace SNACC
 	}
 
 	// [PrintChoiceDefCodeJsonEnc]
-	void ROSEMessage::JEnc(EJson::Value& b) const
+	void ROSEMessage::JEnc(SJson::Value& b) const
 	{
-		b = EJson::Value(EJson::objectValue);
+		b = SJson::Value(SJson::objectValue);
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 
 		switch (choiceId)
 		{
@@ -3790,13 +3790,13 @@ namespace SNACC
 	}
 
 	// [PrintChoiceDefCodeJsonDec]
-	bool ROSEMessage::JDec(const EJson::Value& b)
+	bool ROSEMessage::JDec(const SJson::Value& b)
 	{
 		Clear();
 		if (!b.isObject())
 			return false;
 
-		EJson::Value tmp;
+		SJson::Value tmp;
 		if (b.isMember("invoke"))
 		{
 			choiceId = invokeCid;

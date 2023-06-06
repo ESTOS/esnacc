@@ -4,8 +4,8 @@
 // See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
 
 #if !defined(JSON_IS_AMALGAMATION)
+#include "include/writer.h"
 #include "json_tool.h"
-#include <json/writer.h>
 #endif // if !defined(JSON_IS_AMALGAMATION)
 #include <algorithm>
 #include <cassert>
@@ -83,7 +83,7 @@
 #pragma warning(disable : 4996)
 #endif
 
-namespace Json {
+namespace SJson {
 
 #if __cplusplus >= 201103L || (defined(_CPPLIB_VER) && _CPPLIB_VER >= 520)
 using StreamWriterPtr = std::unique_ptr<StreamWriter>;
@@ -132,8 +132,9 @@ String valueToString(double value, bool useSpecialFloats,
   if (!isfinite(value)) {
     static const char* const reps[2][3] = {{"NaN", "-Infinity", "Infinity"},
                                            {"null", "-1e+9999", "1e+9999"}};
-    return reps[useSpecialFloats ? 0 : 1]
-               [isnan(value) ? 0 : (value < 0) ? 1 : 2];
+    return reps[useSpecialFloats ? 0 : 1][isnan(value)  ? 0
+                                          : (value < 0) ? 1
+                                                        : 2];
   }
 
   String buffer(size_t(36), '\0');
@@ -1202,7 +1203,7 @@ StreamWriter* StreamWriterBuilder::newStreamWriter() const {
                                      precisionType);
 }
 
-bool StreamWriterBuilder::validate(Json::Value* invalid) const {
+bool StreamWriterBuilder::validate(SJson::Value* invalid) const {
   static const auto& valid_keys = *new std::set<String>{
       "indentation",
       "commentStyle",
@@ -1229,7 +1230,7 @@ Value& StreamWriterBuilder::operator[](const String& key) {
   return settings_[key];
 }
 // static
-void StreamWriterBuilder::setDefaults(Json::Value* settings) {
+void StreamWriterBuilder::setDefaults(SJson::Value* settings) {
   //! [StreamWriterBuilderDefaults]
   (*settings)["commentStyle"] = "All";
   (*settings)["indentation"] = "\t";
@@ -1256,4 +1257,4 @@ OStream& operator<<(OStream& sout, Value const& root) {
   return sout;
 }
 
-} // namespace Json
+} // namespace SJson
