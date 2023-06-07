@@ -73,11 +73,11 @@ typedef struct _CallStack
 class SNACCDLL_API SnaccException : public std::exception
 {
 public:
-	SnaccException(long errorCode = SNACC_OK) throw();
-	SnaccException(const char* file, long line_number, const char* function = NULL, const char* whatStr = NULL, long errorCode = DEFAULT_ERROR_CODE) throw();
-	virtual const char* what() const throw();
-	void push(const char* file, long line_number, const char* function = NULL) throw();
-	virtual ~SnaccException() throw();
+	SnaccException(long errorCode = SNACC_OK) noexcept;
+	SnaccException(const char* file, long line_number, const char* function = NULL, const char* whatStr = NULL, long errorCode = DEFAULT_ERROR_CODE) noexcept;
+	virtual const char* what() const noexcept override;
+	void push(const char* file, long line_number, const char* function = NULL) noexcept;
+	virtual ~SnaccException() noexcept;
 
 	virtual void getCallStack(std::ostream& os) const;
 	const CallStack* getCallStack(void) const
@@ -104,10 +104,10 @@ class SNACCDLL_API InvalidTagException : public SnaccException
 {
 public:
 	// InvalidTag Exception is thrown by BER Decoder when unknown tag detected
-	InvalidTagException(const char* type, long tagId, const char* file, long line_number, const char* function) throw();
+	InvalidTagException(const char* type, long tagId, const char* file, long line_number, const char* function) noexcept;
 	// InvalidTag Exception is thrown by JSON Decoder when mandatory element is missing
-	InvalidTagException(const char* type, const char* elementName, const char* file, long line_number, const char* function) throw();
-	virtual const char* what(void) const throw();
+	InvalidTagException(const char* type, const char* elementName, const char* file, long line_number, const char* function) noexcept;
+	virtual const char* what(void) const noexcept override;
 
 private:
 	char wrongTagInfo[128];
@@ -123,9 +123,9 @@ public:
 		READ,
 		WRITE
 	};
-	FileException(const char* fileName, enum FileErrType errType, const char* file, long line_number, const char* function) throw();
+	FileException(const char* fileName, enum FileErrType errType, const char* file, long line_number, const char* function) noexcept;
 
-	virtual const char* what(void) const throw();
+	virtual const char* what(void) const noexcept override;
 
 private:
 	char whatStr[512];
@@ -134,8 +134,8 @@ private:
 class SNACCDLL_API MemoryException : public SnaccException
 {
 public:
-	MemoryException(long memorySize, const char* variable, const char* file, long line_number, const char* function) throw();
-	const char* what() const throw();
+	MemoryException(long memorySize, const char* variable, const char* file, long line_number, const char* function) noexcept;
+	const char* what() const noexcept override;
 
 private:
 	char memoryInfo[128];
@@ -144,42 +144,42 @@ private:
 class SNACCDLL_API BoundsException : public SnaccException
 {
 public:
-	BoundsException(const char* whatStr, const char* file, long line_number, const char* function) throw()
+	BoundsException(const char* whatStr, const char* file, long line_number, const char* function) noexcept
 		: SnaccException(file, line_number, function, whatStr, BOUNDS_ERROR){};
 };
 
 class SNACCDLL_API DecodeException : public SnaccException
 {
 public:
-	DecodeException(const char* file, long line_number, const char* function) throw()
+	DecodeException(const char* file, long line_number, const char* function) noexcept
 		: SnaccException(file, line_number, function, "Decode past end of data", DECODE_ERROR){};
 };
 
 class SNACCDLL_API ParameterException : public SnaccException
 {
 public:
-	ParameterException(const char* whatStr, const char* file, long line_number, const char* function) throw()
+	ParameterException(const char* whatStr, const char* file, long line_number, const char* function) noexcept
 		: SnaccException(file, line_number, function, whatStr, PARAMETER_ERROR){};
 };
 
 class SNACCDLL_API OidException : public SnaccException
 {
 public:
-	OidException(const char* whatStr, const char* file, long line_number, const char* function) throw()
+	OidException(const char* whatStr, const char* file, long line_number, const char* function) noexcept
 		: SnaccException(file, line_number, function, whatStr, OID_ERROR){};
 };
 
 class SNACCDLL_API BufferException : public SnaccException
 {
 public:
-	BufferException(const char* whatStr, const char* file, long line_number, const char* function) throw()
+	BufferException(const char* whatStr, const char* file, long line_number, const char* function) noexcept
 		: SnaccException(file, line_number, function, whatStr, BUFFER_ERROR){};
 };
 
 class SNACCDLL_API ConstraintException : public SnaccException
 {
 public:
-	ConstraintException(const char* whatStr, const char* file, long line_number, const char* function) throw()
+	ConstraintException(const char* whatStr, const char* file, long line_number, const char* function) noexcept
 		: SnaccException(file, line_number, function, whatStr, CONSTRAINT_ERROR){};
 };
 

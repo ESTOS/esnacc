@@ -40,6 +40,10 @@
    define necessary library symbols; they are noted "INFRINGES ON
    USER NAME SPACE" below.  */
 
+#if defined(_MSC_VER)
+#pragma warning(disable : 28182)
+#endif
+
 /* Identify Bison output.  */
 #define YYBISON 1
 
@@ -6499,3 +6503,7 @@ void FreeApplTags()
 	}
 	applTagsG = NULL;
 } /* FreeApplTags */
+
+#if defined(_MSC_VER)
+#pragma warning(default : 28182)
+#endif

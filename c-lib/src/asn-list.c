@@ -446,7 +446,8 @@ long GetAsnListElmtIndex PARAMS((elmt, list), void* elmt _AND_ AsnList* list)
 			index++;
 	}
 
-	SET_CURR_LIST_NODE(list, tmp);
+	if (list)
+		SET_CURR_LIST_NODE(list, tmp);
 	return -1;
 
 } /* GetAsnListElmtIndex */

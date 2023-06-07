@@ -53,6 +53,7 @@ int base64_decode_block(const char* code_in, const int length_in, char* plaintex
 	{
 		while (1)
 		{
+			[[fallthrough]];
 			case step_a:
 				do
 				{
@@ -65,6 +66,7 @@ int base64_decode_block(const char* code_in, const int length_in, char* plaintex
 					fragment = (char)base64_decode_value(*codechar++);
 				} while (fragment < 0);
 				*plainchar = (fragment & 0x03f) << 2;
+				[[fallthrough]];
 			case step_b:
 				do
 				{
@@ -78,6 +80,7 @@ int base64_decode_block(const char* code_in, const int length_in, char* plaintex
 				} while (fragment < 0);
 				*plainchar++ |= (fragment & 0x030) >> 4;
 				*plainchar = (fragment & 0x00f) << 4;
+				[[fallthrough]];
 			case step_c:
 				do
 				{
@@ -91,6 +94,7 @@ int base64_decode_block(const char* code_in, const int length_in, char* plaintex
 				} while (fragment < 0);
 				*plainchar++ |= (fragment & 0x03c) >> 2;
 				*plainchar = (fragment & 0x003) << 6;
+				[[fallthrough]];
 			case step_d:
 				do
 				{
@@ -163,6 +167,7 @@ int base64_encode_block(const char* plaintext_in, int length_in, char* code_out,
 	{
 		while (1)
 		{
+			[[fallthrough]];
 			case step_A:
 				if (plainchar == plaintextend)
 				{
@@ -174,6 +179,7 @@ int base64_encode_block(const char* plaintext_in, int length_in, char* code_out,
 				result = (fragment & 0x0fc) >> 2;
 				*codechar++ = base64_encode_value(result);
 				result = (fragment & 0x003) << 4;
+				[[fallthrough]];
 			case step_B:
 				if (plainchar == plaintextend)
 				{
@@ -185,6 +191,7 @@ int base64_encode_block(const char* plaintext_in, int length_in, char* code_out,
 				result |= (fragment & 0x0f0) >> 4;
 				*codechar++ = base64_encode_value(result);
 				result = (fragment & 0x00f) << 2;
+				[[fallthrough]];
 			case step_C:
 				if (plainchar == plaintextend)
 				{

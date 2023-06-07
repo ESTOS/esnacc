@@ -298,8 +298,20 @@ void UnbuildEncodedOid PARAMS((eoid, result), AsnOid* eoid _AND_ OID** result)
 	secondArcNum = arcNum - (firstArcNum * 40);
 
 	headOid = (OID*)malloc(sizeof(OID));
+	if (!headOid)
+	{
+		snacc_exit("Out of memory 1");
+		return;
+	}
+
 	headOid->arcNum = firstArcNum;
 	headOid->next = (OID*)malloc(sizeof(OID));
+	if (!headOid->next)
+	{
+		snacc_exit("Out of memory 2");
+		return;
+	}
+
 	headOid->next->arcNum = secondArcNum;
 	nextOid = &headOid->next->next;
 
@@ -311,9 +323,18 @@ void UnbuildEncodedOid PARAMS((eoid, result), AsnOid* eoid _AND_ OID** result)
 		arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
 		i++;
 		*nextOid = (OID*)malloc(sizeof(OID));
+		if (!(*nextOid))
+		{
+			snacc_exit("Out of memory");
+			return;
+		}
 		(*nextOid)->arcNum = arcNum;
 		(*nextOid)->next = NULL;
-		nextOid = &(*nextOid)->next;
+
+		snacc_exit("The existing code here leads to a null pointer dereferenciation which needs to get fixed. Needs test code to solve it so we just exit here on purpose.");
+		return;
+
+		// nextOid = &(*nextOid)->next;
 	}
 
 	*result = headOid;

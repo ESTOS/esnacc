@@ -210,6 +210,7 @@ bool Reader::readValue() {
       currentValue().setOffsetLimit(current_ - begin_);
       break;
     } // Else, fall through...
+    [[fallthrough]];
   default:
     currentValue().setOffsetStart(token.start_ - begin_);
     currentValue().setOffsetLimit(token.end_ - begin_);
@@ -551,11 +552,17 @@ bool Reader::decodeNumber(Token& token, Value& decoded) {
   bool isNegative = *current == '-';
   if (isNegative)
     ++current;
-  // TODO: Help the compiler do the div and mod at compile time or get rid of
-  // them.
+// TODO: Help the compiler do the div and mod at compile time or get rid of
+// them.
+#if defined(_MSC_VER)
+#pragma warning(disable : 26450)
+#endif
   Value::LargestUInt maxIntegerValue =
       isNegative ? Value::LargestUInt(Value::maxLargestInt) + 1
                  : Value::maxLargestUInt;
+#if defined(_MSC_VER)
+#pragma warning(default : 26450)
+#endif
   Value::LargestUInt threshold = maxIntegerValue / 10;
   Value::LargestUInt value = 0;
   while (current < token.end_) {
@@ -884,8 +891,8 @@ public:
   using Char = char;
   using Location = const Char*;
   struct StructuredError {
-    ptrdiff_t offset_start;
-    ptrdiff_t offset_limit;
+    ptrdiff_t offset_start = 0;
+    ptrdiff_t offset_limit = 0;
     String message;
   };
 
@@ -921,16 +928,16 @@ private:
 
   class Token {
   public:
-    TokenType type_;
-    Location start_;
-    Location end_;
+    TokenType type_ = TokenType::tokenEndOfStream;
+    Location start_ = 0;
+    Location end_ = 0;
   };
 
   class ErrorInfo {
   public:
     Token token_;
     String message_;
-    Location extra_;
+    Location extra_ = 0;
   };
 
   using Errors = std::deque<ErrorInfo>;
@@ -1123,6 +1130,7 @@ bool OurReader::readValue() {
       currentValue().setOffsetLimit(current_ - begin_);
       break;
     } // else, fall through ...
+    [[fallthrough]];
   default:
     currentValue().setOffsetStart(token.start_ - begin_);
     currentValue().setOffsetLimit(token.end_ - begin_);

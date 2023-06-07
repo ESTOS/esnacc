@@ -61,7 +61,8 @@ void threadLock()
 #ifdef _WIN32
 
 	gMutex = CreateMutex(NULL, false, "Win32_Mutex");
-	WaitForSingleObject(gMutex, INFINITE);
+	if (gMutex)
+		WaitForSingleObject(gMutex, INFINITE);
 
 #else // _WIN32
 

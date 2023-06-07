@@ -68,7 +68,7 @@ static void PrintCElmtDecodeCode PROTO((FILE * src, TypeDef* td, Type* parent, T
 
 void PrintCDecoder PARAMS((src, hdr, r, m, td, longJmpVal), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ long* longJmpVal)
 {
-	int i;
+	int i = 0;
 	enum BasicTypeChoiceId typeId;
 	int elmtLevel;
 	CTDI* ctdi;
@@ -121,6 +121,12 @@ void PrintCDecoder PARAMS((src, hdr, r, m, td, longJmpVal), FILE* src _AND_ FILE
 
 		/* print extra locals for redundant lengths */
 		tags = GetTags(td->type, &stoleChoiceTags);
+		if (!tags)
+		{
+			snacc_exit("Invalid parameter, tags == NULL");
+			return;
+		}
+
 		for (i = 1; !stoleChoiceTags && (i <= LIST_COUNT(tags)); i++)
 			fprintf(src, "    %s elmtLen%d;\n", lenTypeNameG, i);
 
@@ -386,6 +392,12 @@ static int RecCountVariableLevels PARAMS((t), Type* t)
 			if (typeCount > maxLevels)
 				maxLevels = typeCount;
 		}
+		if (!t->basicType->a.set)
+		{
+			snacc_exit("Invalid parameter, t->basicType->a.set == NULL");
+			return 0;
+		}
+
 		SET_CURR_LIST_NODE(t->basicType->a.set, tmp);
 		return maxLevels + tagCount;
 	}
@@ -433,6 +445,11 @@ static int CountVariableLevels PARAMS((t), Type* t)
 
 			if (typeCount > maxLevels)
 				maxLevels = typeCount;
+		}
+		if (!t->basicType->a.set)
+		{
+			snacc_exit("Invalid parameter, t->basicType->a.set == NULL");
+			return 0;
 		}
 		SET_CURR_LIST_NODE(t->basicType->a.set, tmp);
 		return maxLevels;

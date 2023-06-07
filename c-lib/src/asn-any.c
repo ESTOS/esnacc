@@ -246,6 +246,10 @@ void InstallAnyByInt PARAMS((anyId, intId, size, Encode, Decode, Free, Print), i
 	Hash h;
 
 	a = (AnyInfo*)malloc(sizeof(AnyInfo));
+	if (!a) {
+		snacc_exit("Out of memory");
+		return;
+	}
 	a->anyId = anyId;
 	a->oid.octs = NULL;
 	a->oid.octetLen = 0;
@@ -274,6 +278,11 @@ void InstallAnyByOid PARAMS((anyId, oid, size, Encode, Decode, Free, Print), int
 	Hash h;
 
 	a = (AnyInfo*)malloc(sizeof(AnyInfo));
+	if (!a) {
+		snacc_exit("Out of memory");
+		return;
+	}
+
 	a->anyId = anyId;
 	a->oid.octs = oid->octs;
 	a->oid.octetLen = oid->octetLen;

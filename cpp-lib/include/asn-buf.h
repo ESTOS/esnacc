@@ -63,7 +63,7 @@ namespace SNACC
 	struct SNACCDLL_API AsnBufLoc
 	{
 		Deck::iterator m_card;
-		long m_offset;
+		long m_offset = 0;
 	};
 
 	class SNACCDLL_API AsnBuf
@@ -263,11 +263,11 @@ namespace SNACC
 		friend class AsnBuf;
 
 	protected:
-		virtual int_type underflow();
-		virtual int_type overflow(int c = EOF);
-		virtual std::streamsize xsputn(const char* s, std::streamsize n);
-		virtual std::streambuf::pos_type seekoff(std::streambuf::off_type off, std::ios_base::seekdir way, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
-		virtual std::streambuf::pos_type seekpos(std::streambuf::pos_type sp, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
+		virtual int_type underflow() override;
+		virtual int_type overflow(int c = EOF) override;
+		virtual std::streamsize xsputn(const char* s, std::streamsize n) override;
+		virtual std::streambuf::pos_type seekoff(std::streambuf::off_type off, std::ios_base::seekdir way, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out) override;
+		virtual std::streambuf::pos_type seekpos(std::streambuf::pos_type sp, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out) override;
 
 	private:
 		char* m_buf;
@@ -294,20 +294,20 @@ namespace SNACC
 		}
 
 	protected:
-		virtual int_type underflow();
-		virtual int_type uflow();
+		virtual int_type underflow() override;
+		virtual int_type uflow() override;
 
-		virtual int_type overflow(int c = EOF)
+		virtual int_type overflow(int c = EOF) override
 		{
 			return EOF;
 		}
-		virtual std::streamsize xsgetn(char* s, std::streamsize n);
-		virtual std::streamsize xsputn(const char* s, std::streamsize n)
+		virtual std::streamsize xsgetn(char* s, std::streamsize n) override;
+		virtual std::streamsize xsputn(const char* s, std::streamsize n) override
 		{
 			return overflow();
 		}
-		virtual pos_type seekoff(off_type off, std::ios_base::seekdir way, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
-		virtual pos_type seekpos(pos_type sp, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out);
+		virtual pos_type seekoff(off_type off, std::ios_base::seekdir way, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out) override;
+		virtual pos_type seekpos(pos_type sp, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out) override;
 
 	private:
 		long m_offset;

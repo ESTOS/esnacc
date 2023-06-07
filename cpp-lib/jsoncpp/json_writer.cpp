@@ -95,7 +95,13 @@ String valueToString(LargestInt value) {
   UIntToStringBuffer buffer;
   char* current = buffer + sizeof(buffer);
   if (value == Value::minLargestInt) {
+#if defined(_MSC_VER)
+#pragma warning(disable : 26450)
+#endif
     uintToString(LargestUInt(Value::maxLargestInt) + 1, current);
+#if defined(_MSC_VER)
+#pragma warning(default : 26450)
+#endif
     *--current = '-';
   } else if (value < 0) {
     uintToString(LargestUInt(-value), current);

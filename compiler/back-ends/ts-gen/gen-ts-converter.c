@@ -559,6 +559,11 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 				{
 					size_t size = strlen(e->fieldName) + 1;
 					char* pBuffer = malloc(size);
+					if (!pBuffer)
+					{
+						snacc_exit("Out of memory");
+						return;
+					}
 					pBuffer[0] = 0;
 					strcpy_s(pBuffer, size, e->fieldName);
 					_strlwr_s(pBuffer, size);

@@ -14,14 +14,14 @@ namespace SNACC
 
 using namespace SNACC;
 
-SnaccException::SnaccException(long errorCode) throw()
+SnaccException::SnaccException(long errorCode) noexcept
 {
 	m_errorCode = errorCode;
 	stackPos = -1;
 	memset(&stack[0], 0, sizeof(CallStack) * STACK_DEPTH);
 }
 
-SnaccException::SnaccException(const char* file, long line_number, const char* function, const char* whatStrIn, long errorCode) throw()
+SnaccException::SnaccException(const char* file, long line_number, const char* function, const char* whatStrIn, long errorCode) noexcept
 {
 
 	memset(&stack[0], 0, sizeof(CallStack) * STACK_DEPTH);
@@ -43,7 +43,7 @@ SnaccException::SnaccException(const char* file, long line_number, const char* f
 	stack[0].function = function;
 }
 
-SnaccException::~SnaccException() throw()
+SnaccException::~SnaccException() noexcept
 {
 	m_errorCode = DEFAULT_ERROR_CODE;
 	stackPos = -1;
@@ -67,18 +67,18 @@ SnaccException& SnaccException::operator=(const SnaccException& o)
 	return *this;
 }
 
-void SnaccException::push(const char* file, long line_number, const char* function) throw()
+void SnaccException::push(const char* file, long line_number, const char* function) noexcept
 {
 	if (stackPos < STACK_DEPTH)
 	{
-		stackPos++;
 		stack[stackPos].file = file;
 		stack[stackPos].line_number = line_number;
 		stack[stackPos].function = function;
+		stackPos++;
 	}
 }
 
-const char* SnaccException::what() const throw()
+const char* SnaccException::what() const noexcept
 {
 	return m_whatStr.c_str();
 }
@@ -108,7 +108,7 @@ void SnaccException::getCallStack(std::ostream& os) const
 	}
 }
 
-FileException::FileException(const char* filename, enum FileErrType errType, const char* file, long line_number, const char* function) throw()
+FileException::FileException(const char* filename, enum FileErrType errType, const char* file, long line_number, const char* function) noexcept
 	: SnaccException(file, line_number, function, NULL, FILE_IO_ERROR)
 {
 	switch (errType)
@@ -129,12 +129,12 @@ FileException::FileException(const char* filename, enum FileErrType errType, con
 	strcat_s(whatStr, 512, filename);
 }
 
-const char* FileException::what() const throw()
+const char* FileException::what() const noexcept
 {
 	return &whatStr[0];
 }
 
-MemoryException::MemoryException(long memorySize, const char* variable, const char* file, long line_number, const char* function) throw()
+MemoryException::MemoryException(long memorySize, const char* variable, const char* file, long line_number, const char* function) noexcept
 	: SnaccException(file, line_number, function, "MemoryException", MEMORY_ERROR)
 {
 	sprintf_s(memoryInfo, 128, "Error allocating %ld bytes for ", memorySize);
@@ -146,12 +146,12 @@ MemoryException::MemoryException(long memorySize, const char* variable, const ch
 	memoryInfo[memUsed + len2copy] = '\0';
 }
 
-const char* MemoryException::what() const throw()
+const char* MemoryException::what() const noexcept
 {
 	return &memoryInfo[0];
 }
 
-InvalidTagException::InvalidTagException(const char* type, long tagId, const char* file, long line_number, const char* function) throw()
+InvalidTagException::InvalidTagException(const char* type, long tagId, const char* file, long line_number, const char* function) noexcept
 	: SnaccException(file, line_number, function, "InvalidTagException", INVALID_TAG)
 {
 	sprintf_s(wrongTagInfo, 128, "Tag [%ld] is invalid for type ", tagId);
@@ -163,7 +163,7 @@ InvalidTagException::InvalidTagException(const char* type, long tagId, const cha
 	wrongTagInfo[memUsed + len2copy] = '\0';
 }
 
-InvalidTagException::InvalidTagException(const char* type, const char* elementName, const char* file, long line_number, const char* function) throw()
+InvalidTagException::InvalidTagException(const char* type, const char* elementName, const char* file, long line_number, const char* function) noexcept
 	: SnaccException(file, line_number, function, "InvalidTagException", INVALID_TAG)
 {
 	sprintf_s(wrongTagInfo, 128, "Json Error [%s] in ", elementName);
@@ -175,7 +175,7 @@ InvalidTagException::InvalidTagException(const char* type, const char* elementNa
 	wrongTagInfo[memUsed + len2copy] = '\0';
 }
 
-const char* InvalidTagException::what() const throw()
+const char* InvalidTagException::what() const noexcept
 {
 	return &wrongTagInfo[0];
 }

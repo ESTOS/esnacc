@@ -26,6 +26,11 @@ static FILE* getJavaFilePointer(char* pPrefix)
 	FILE* p = NULL;
 	size_t size = strlen(pPrefix) + 6;
 	char* fileName = malloc(size); // strlen + .java + /0
+	if (!fileName)
+	{
+		snacc_exit("Out of memory");
+		return NULL;
+	}
 
 	sprintf_s(fileName, size, "%s.java", pPrefix);
 
@@ -43,6 +48,11 @@ static char* getJavaClassName(char* prefix, char* suffix)
 {
 	size_t size = strlen(prefix) + strlen(suffix) + 1;
 	char* className = malloc(size); // strlen + /0
+	if (!className)
+	{
+		snacc_exit("Out of memory");
+		return NULL;
+	}
 
 	sprintf_s(className, size, "%s%s", prefix, suffix);
 	className[0] = (char)toupper(className[0]);
@@ -378,6 +388,11 @@ static void PrintJavaSimpleRefDef(TypeDef* td)
 static char* captalize(char* string)
 {
 	char* upper = calloc(sizeof(char), strlen(string) + 1);
+	if (!upper)
+	{
+		snacc_exit("Out of memory");
+		return NULL;
+	}
 	size_t index;
 
 	for (index = 0; index < strlen(string); index++)

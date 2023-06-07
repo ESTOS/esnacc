@@ -644,7 +644,11 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					{
 						strcpy_s(gszOutputPath, 100, argv[currArg + 1]);
 						getDirectoryWithDelimiterFromPath(gszOutputPath, 100);
-						_mkdir(gszOutputPath);
+						if (!_mkdir(gszOutputPath))
+						{
+							snacc_exit("Failed to create directory %s", gszOutputPath);
+							return;
+						}
 						currArg++;
 					}
 					currArg++;
@@ -1782,6 +1786,9 @@ int sortstring(const void* str1, const void* str2)
  * modules, and some code generation flags, generates Swift code and
  * writes it to files derived from each modules name.
  */
+#if defined(_MSC_VER)
+#pragma warning(disable : 6262)
+#endif
 void GenTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genJSONEncDec, int genTSROSEStubs, int genPrinters, int genPrintersXML, int genFree, int novolatilefuncs, int genROSEDecoders)
 {
 	Module* currMod;
@@ -2151,6 +2158,9 @@ void GenTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues
 		}
 	}
 } /* GenTSCode */
+#if defined(_MSC_VER)
+#pragma warning(default : 6262)
+#endif
 
 /*
  * Given the list of parsed, linked, normalized, error-checked and sorted
@@ -2306,11 +2316,16 @@ void GenIDLCode PARAMS((allMods, longJmpVal, genTypes, genValues, genPrinters, g
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
 		char *in, *out;
-
+#if defined(_MSC_VER)
+#pragma warning(disable : 6011)
+#endif
 		out = currMod->idlname = (char*)malloc(strlen(in = currMod->modId->name) + 1);
 		do
 			*out++ = (char)(*in == '-' ? '_' : *in);
 		while (*in++);
+#if defined(_MSC_VER)
+#pragma warning(default : 6011)
+#endif
 
 		if (ObjIsDefined(fNames, currMod->idlFileName, StrObjCmp))
 		{
@@ -2404,6 +2419,11 @@ void EnsureNoDuplicateMethodIDs(ModuleList* allMods)
 
 	const int MALLOC_SIZE = 50000;
 	int* ids = malloc(MALLOC_SIZE);
+	if (!ids)
+	{
+		snacc_exit("Out of memory");
+		return;
+	}
 	memset(ids, 0x00, MALLOC_SIZE);
 	int counter = 0;
 	int nWeHaveErrors = 0;

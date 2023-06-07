@@ -15,7 +15,7 @@ public:
 	// true if this is an imported file
 	// Imported files are held to resolve dependencies in the files the snacc compiler is actually handling.
 	// These files generate no output, they are just there to resolve dependencies in the ones beeing parsed
-	bool m_bIsImportedFile;
+	bool m_bIsImportedFile = false;
 };
 
 // The list of files we are processing, the key is the filename

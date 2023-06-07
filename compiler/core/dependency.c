@@ -576,6 +576,11 @@ void BuildWeightedLocalRefList PARAMS((t, refList), Type* t _AND_ TypeDefList* r
  */
 long GetElmtIndex PARAMS((td, tdl), TypeDef* td _AND_ TypeDefList* tdl)
 {
+	if (!tdl)
+	{
+		snacc_exit("Invalid parameter, tdl == NULL");
+		return 0;
+	}
 	void* tmp;
 	TypeDef* tmpTd;
 	long index;

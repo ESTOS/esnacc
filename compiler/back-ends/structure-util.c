@@ -310,6 +310,12 @@ BasicType* ResolveArrayRootType(BasicType* type, const char** szName)
 
 char* GetImportFileName(char* Impname, ModuleList* mods)
 {
+	if (!mods)
+	{
+		snacc_exit("Invalid function argument mods = NULL");
+		return NULL;
+	}
+
 	AsnListNode* stored = mods->curr;
 	Module* currMod;
 	char* fileName = NULL;
@@ -331,6 +337,12 @@ char* GetImportFileName(char* Impname, ModuleList* mods)
 
 Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, Module* mod)
 {
+	if (!mods)
+	{
+		snacc_exit("Invalid argument, mods is NULL");
+		return NULL;
+	}
+
 	AsnListNode* stored = mods->curr;
 	Module* returnMod = NULL;
 	{
@@ -340,6 +352,11 @@ Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, M
 		{
 			bool bFound = false;
 			ImportElmtList* ElemList = impMod->importElmts;
+			if (!ElemList)
+			{
+				snacc_exit("Invalid argument, importElemtns is NULL");
+				return NULL;
+			}
 			AsnListNode* elemStore = ElemList->curr;
 			ImportElmt* impElem;
 			FOR_EACH_LIST_ELMT(impElem, ElemList)
@@ -365,6 +382,11 @@ Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, M
 				break;
 			}
 		}
+		if (!mod->imports)
+		{
+			snacc_exit("Invalid parameter, imports is NULL");
+			return NULL;
+		}
 		mod->imports->curr = storeImport;
 	}
 
@@ -379,6 +401,11 @@ Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, M
 				returnMod = mod;
 				break;
 			}
+		}
+		if (!mod->typeDefs)
+		{
+			snacc_exit("Invalid parameter, typeDefs is NULL");
+			return NULL;
 		}
 		mod->typeDefs->curr = storeTypeDef;
 		if (!returnMod)
@@ -395,6 +422,12 @@ Module* GetImportModuleRefByClassName(const char* className, ModuleList* mods, M
 
 Module* GetModuleForImportModule(ModuleList* mods, ImportModule* impMod)
 {
+	if (!mods)
+	{
+		snacc_exit("Invalid argument, mods is NULL");
+		return NULL;
+	}
+
 	Module* module = NULL;
 	AsnListNode* saved = mods->curr;
 	Module* currMod;
@@ -511,6 +544,11 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 						bReturn = true;
 						break;
 					}
+				}
+				if (!td->type->basicType->a.sequence)
+				{
+					snacc_exit("Invalid parameter, td->type->basicType->a.sequence is NULL");
+					return false;
 				}
 				td->type->basicType->a.sequence->curr = curr;
 				return bReturn;

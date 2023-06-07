@@ -44,8 +44,8 @@ public:
    * that this is bytes, not codepoints.
    */
   struct StructuredError {
-    ptrdiff_t offset_start;
-    ptrdiff_t offset_limit;
+    ptrdiff_t offset_start = 0;
+    ptrdiff_t offset_limit = 0;
     String message;
   };
 
@@ -174,16 +174,16 @@ private:
 
   class Token {
   public:
-    TokenType type_;
-    Location start_;
-    Location end_;
+    TokenType type_ = TokenType::tokenEndOfStream;
+    Location start_ = 0;
+    Location end_ = 0;
   };
 
   class ErrorInfo {
   public:
     Token token_;
     String message_;
-    Location extra_;
+    Location extra_ = 0;
   };
 
   using Errors = std::deque<ErrorInfo>;

@@ -36,11 +36,11 @@ public:
 
 	void Clear();
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new EXTERNALChoice(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "EXTERNALChoice";
 	}
@@ -48,12 +48,12 @@ public:
 	EXTERNALChoice& operator=(const EXTERNALChoice& that);
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded /*, s env*/);
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded /*, s env*/);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded /*, s env*/) override;
 
-	AsnLen PEnc(AsnBufBits& b) const;
+	AsnLen PEnc(AsnBufBits& b) const override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 };
 
@@ -78,11 +78,11 @@ public:
 	EXTERNAL(const EXTERNAL& that);
 
 public:
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new EXTERNAL(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "EXTERNAL";
 	}
@@ -91,12 +91,12 @@ public:
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded /*, s env*/);
 
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded /*, s env*/);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded /*, s env*/) override;
 
-	AsnLen PEnc(AsnBufBits& b) const;
+	AsnLen PEnc(AsnBufBits& b) const override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 };
 

@@ -1575,7 +1575,7 @@ void PrintMtsasExtensionsMacroType PARAMS((f, head, t, bt, exts), FILE* f _AND_ 
 	fprintf(f, "{\n");
 
 	indentG += indentStepG;
-	if ((exts->extensions == NULL) && (!LIST_EMPTY(exts->extensions)))
+	if (exts->extensions && (!LIST_EMPTY(exts->extensions)))
 		last = (Value*)LAST_LIST_ELMT(exts->extensions);
 	FOR_EACH_LIST_ELMT(v, exts->extensions)
 	{

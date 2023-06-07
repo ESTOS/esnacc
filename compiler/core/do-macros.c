@@ -475,10 +475,16 @@ void ProcessAsnAbstractBindMacroType PARAMS((m, td, t, bt, bind, v), Module* m _
 
 void ProcessSnmpObjectTypeMacroType PARAMS((m, td, t, bt, ot, v), Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ BasicType* bt _AND_ SnmpObjectTypeMacroType* ot _AND_ ValueDef* v)
 {
+	if (!ot)
+	{
+		snacc_exit("Invalid parameter, ot == NULL");
+		return;
+	}
+
 	char anyId[256];
 	AnyRefList** arlHndl;
 
-	if ((ot != NULL) && (ot->syntax != NULL))
+	if (ot->syntax != NULL)
 		DefineType(m, td, ot->syntax, v->definedName);
 
 	/*

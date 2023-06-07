@@ -90,10 +90,16 @@ std::streamsize AsnFileSeg::xsgetn(char* s, std::streamsize n)
 
 	// if the file segment contains the number of bytes requested
 	// then grab it.
+#if defined(_MSC_VER)
+#pragma warning(disable : 26451)
+#endif
 	if (n <= (m_segSize - (currPos - m_offset)))
 		return m_fb->sgetn(s, n);
 	else
 		return EOF;
+#if defined(_MSC_VER)
+#pragma warning(default : 26451)
+#endif
 }
 
 std::streambuf::pos_type AsnFileSeg::seekoff(off_type off, std::ios_base::seekdir way, std::ios_base::openmode which)

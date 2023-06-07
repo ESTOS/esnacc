@@ -370,7 +370,7 @@ static void FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId), CRules* r _AN
 		 * grab type name from link (link is the def of the
 		 * the ref'd type)
 		 */
-		if (t->basicType->a.localTypeRef->link != NULL)
+		if (t->basicType->a.localTypeRef && t->basicType->a.localTypeRef->link)
 		{
 			/* inherit attributes from referenced type */
 			tmpCtdi = t->basicType->a.localTypeRef->link->cTypeDefInfo;
@@ -382,7 +382,7 @@ static void FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId), CRules* r _AN
 			ctri->isEncDec = tmpCtdi->isEncDec;
 			ctri->optTestRoutineName = tmpCtdi->optTestRoutineName;
 		}
-		else
+		else if (t->basicType->a.localTypeRef)
 		{
 			/*
 			 * guess type and routine names
@@ -467,6 +467,12 @@ static void FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId), CRules* r _AN
 		unionName = Malloc(size);
 		strcpy_s(unionName, size, head->cTypeDefInfo->cTypeName);
 		ctri->cTypeName = unionName;
+
+		if (!t->basicType->a.objectclass)
+		{
+			snacc_exit("Invalid parameter, t->basicType->a.objectclass == NULL");
+			return;
+		}
 
 		FillCStructElmts(r, m, head, t->basicType->a.objectclass->classdef); // Deepak: All the elements in this structure are filled here.
 		FillCFieldNames(r, t->basicType->a.objectclass->classdef);			 // Deepak: All the identifiers are stored over here.
@@ -556,6 +562,11 @@ static void FillCTypeRefInfo PARAMS((r, m, head, t, parentTypeId), CRules* r _AN
 		strcpy_s(unionName, size, head->cTypeDefInfo->cTypeName);
 		ctri->cTypeName = unionName;
 
+		if (!t->basicType->a.macroType)
+		{
+			snacc_exit("Invalid parameter, t->basicType->a.macroType == NULL");
+			return;
+		}
 		switch (t->basicType->a.macroType->choiceId)
 		{
 			case MACROTYPE_ASNABSTRACTOPERATION:
@@ -689,7 +700,7 @@ static void FillCFieldNames PARAMS((r, elmts), CRules* r _AND_ NamedTypeList* el
 			ctri = MT(CTRI);
 			et->type->cTypeRefInfo = ctri;
 		}
-		if (et->fieldName != NULL)
+		if (et->fieldName != NULL && ctri)
 		{
 			asn1FieldName = et->fieldName;
 			ctri->cFieldName = Asn1FieldName2CFieldName(asn1FieldName);
@@ -704,7 +715,7 @@ static void FillCFieldNames PARAMS((r, elmts), CRules* r _AND_ NamedTypeList* el
 		/*
 		 * generate field names for those without them
 		 */
-		if (ctri->cFieldName == NULL)
+		if (ctri && ctri->cFieldName == NULL)
 		{
 			size_t size = 0;
 			if ((et->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF) || (et->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF))

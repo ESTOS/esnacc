@@ -27,10 +27,25 @@ void InitNibbleMem PARAMS((initialSize, incrementSize), unsigned long initialSiz
 	NibbleMem* nm;
 
 	nm = (NibbleMem*)malloc(sizeof(NibbleMem));
+	if (!nm)
+	{
+		snacc_exit("Out of memory 1");
+		return;
+	}
 	nm->incrementSize = incrementSize;
 
 	nm->currNibbleBuf = nm->firstNibbleBuf = (NibbleBuf*)malloc(sizeof(NibbleBuf));
+	if (!nm->firstNibbleBuf)
+	{
+		snacc_exit("Out of memory 2");
+		return;
+	}
 	nm->firstNibbleBuf->curr = nm->firstNibbleBuf->start = (char*)malloc(initialSize);
+	if (!nm->firstNibbleBuf->start)
+	{
+		snacc_exit("Out of memory 3");
+		return;
+	}
 	nm->firstNibbleBuf->end = nm->firstNibbleBuf->start + initialSize;
 	nm->firstNibbleBuf->next = NULL;
 	memset(nm->currNibbleBuf->start, 0, initialSize);
@@ -55,8 +70,18 @@ void ServiceNibbleFault PARAMS((size), unsigned long size)
 		newBufSize = nm->incrementSize;
 
 	nm->currNibbleBuf->next = (NibbleBuf*)malloc(sizeof(NibbleBuf));
+	if (!nm->currNibbleBuf->next)
+	{
+		snacc_exit("Out of memory 1");
+		return;
+	}
 	nm->currNibbleBuf = nm->currNibbleBuf->next;
 	nm->currNibbleBuf->curr = nm->currNibbleBuf->start = (char*)malloc(newBufSize);
+	if (!nm->currNibbleBuf->start)
+	{
+		snacc_exit("Out of memory 2");
+		return;
+	}
 	nm->currNibbleBuf->end = nm->currNibbleBuf->start + newBufSize;
 	nm->currNibbleBuf->next = NULL;
 	memset(nm->currNibbleBuf->start, 0, newBufSize);

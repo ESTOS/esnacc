@@ -247,8 +247,9 @@ size_t ExpBufCopyAny PARAMS((b, value, *bytesDecoded, env),
 
 	if (b == 0)
 	{
-		ExpBufSetWriteError(*b, TRUE);
+		snacc_exit("The existing code here leads to a null pointer dereferenciation which needs to get fixed. Needs test code to solve it so we just exit here on purpose.");
 		return 0;
+		// ExpBufSetWriteError(*b, TRUE);
 	}
 
 	// Put the ExpBuf into a GenBuf so we can use BDecTag & BDecLen
@@ -266,15 +267,15 @@ size_t ExpBufCopyAny PARAMS((b, value, *bytesDecoded, env),
 	}
 
 	/* and now decode the contents */
-	data = (AsnOcts*)value;						/* allocated by the any routine */
-	data->octetLen = elmtLen1 + totalElmtsLen1; /* tag+len+data lengths */
+	data = (AsnOcts*)value;											/* allocated by the any routine */
+	data->octetLen = (unsigned long long)elmtLen1 + totalElmtsLen1; /* tag+len+data lengths */
 	data->octs = (char*)Asn1Alloc(data->octetLen + 1);
 	CheckAsn1Alloc(data->octs, env);
 
 	/* use normal buffer reading to copy the any */
 	/*RWC;RESET current pointer to be sure to get tag/length AND data.*/
 	(*b)->curr = loc;
-	ExpBufCopy(&data->octs[0 /*RWC;totalElmtsLen1*/], b, totalElmtsLen1 + elmtLen1);
+	ExpBufCopy(&data->octs[0 /*RWC;totalElmtsLen1*/], b, (unsigned long long)totalElmtsLen1 + elmtLen1);
 
 	if (ExpBufReadError(b))
 	{

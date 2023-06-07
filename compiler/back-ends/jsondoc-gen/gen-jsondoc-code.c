@@ -718,6 +718,11 @@ void PrintJsonDocImports(FILE* src, ModuleList* mods, Module* m)
 				fprintf(src, "\n");
 				fprintf(src, "\t\t\t],\n");
 
+				if (!impMod->moduleRef)
+				{
+					snacc_exit("Invalid parameter, == NULL");
+					return;
+				}
 				fprintf(src, "\t\t\t\"module\" : \"%s\"", impMod->moduleRef->moduleName);
 
 				fprintf(src, "\n");

@@ -150,6 +150,12 @@ std::string escapeJsonString(const std::string& input)
 
 void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType)
 {
+	if (!pType)
+	{
+		fprintf(stderr, "\nFatal error in convertCommentList\n");
+		fprintf(stderr, "Invalid parameter, pType == NULL\n");
+		exit(200);
+	}
 	bool bInLong = true;
 	bool bInBrief = false;
 	int nEmptyLines = 0;
@@ -242,6 +248,8 @@ void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType
 			}
 		}
 	}
+	if (!pType)
+		return;
 	if (!pType->strLong_UTF8.empty())
 		pType->strLong_UTF8 += escapeJsonString("\n");
 	if (!pType->strShort_UTF8.empty())
