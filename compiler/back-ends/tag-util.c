@@ -188,6 +188,11 @@ TagList* GetTags PARAMS((t, stoleChoiceTags), Type* t _AND_ int* stoleChoiceTags
 					FOR_EACH_LIST_ELMT(tag, tl)
 					{
 						tagCopy = (Tag*)Malloc(sizeof(Tag));
+						if (!tagCopy)
+						{
+							snacc_exit("Out of memory 1");
+							return NULL;
+						}
 						memcpy(tagCopy, tag, sizeof(Tag));
 						tagHndl = (Tag**)AsnListAppend(retVal);
 						*tagHndl = tagCopy;
@@ -195,8 +200,23 @@ TagList* GetTags PARAMS((t, stoleChoiceTags), Type* t _AND_ int* stoleChoiceTags
 				}
 				else
 				{
+					if (!tl->first)
+					{
+						snacc_exit("Invalid parameter, tl->first == NULL");
+						return NULL;
+					}
 					tag = (Tag*)FIRST_LIST_ELMT(tl);
+					if (!tag)
+					{
+						snacc_exit("Invalid parameter, tag == NULL");
+						return NULL;
+					}
 					tagCopy = (Tag*)Malloc(sizeof(Tag));
+					if (!tagCopy)
+					{
+						snacc_exit("Out of memory 2");
+						return NULL;
+					}
 					memcpy(tagCopy, tag, sizeof(Tag));
 					tagHndl = (Tag**)AsnListAppend(retVal);
 					*tagHndl = tagCopy;
@@ -228,6 +248,12 @@ TagList* GetTags PARAMS((t, stoleChoiceTags), Type* t _AND_ int* stoleChoiceTags
 
 void FreeTags PARAMS((tl), TagList* tl)
 {
+	if (!tl)
+	{
+		snacc_exit("Invalid argument, tl == NULL");
+		return;
+	}
+
 	Tag* tag;
 	AsnListNode* listNode;
 	AsnListNode* ln;
@@ -594,7 +620,7 @@ char* DetermineCode(Tag* tag, int* ptagLen, int bJustIntegerFlag)
 				printf("Tag value type NOT RECOGNIZED; COULD NOT RESOLVE tag integer!\n");
 			}
 		}
-		else if (tag->valueRef->basicValue->choiceId == BASICVALUE_IMPORTVALUEREF && tag->valueRef->basicValue->a.importValueRef && tag->valueRef->basicValue->a.importValueRef->link && tag->valueRef->basicValue->a.importValueRef->link->value && tag->valueRef->basicValue->a.importValueRef->link->value->basicValue && tag->valueRef->basicValue->a.importValueRef->link->value->basicValue->choiceId == BASICVALUE_INTEGER)
+		else if (tag->valueRef->basicValue && tag->valueRef->basicValue->choiceId == BASICVALUE_IMPORTVALUEREF && tag->valueRef->basicValue->a.importValueRef && tag->valueRef->basicValue->a.importValueRef->link && tag->valueRef->basicValue->a.importValueRef->link->value && tag->valueRef->basicValue->a.importValueRef->link->value->basicValue && tag->valueRef->basicValue->a.importValueRef->link->value->basicValue->choiceId == BASICVALUE_INTEGER)
 		{
 			iValue = tag->valueRef->basicValue->a.importValueRef->link->value->basicValue->a.integer;
 		} // END IF Integer/Import

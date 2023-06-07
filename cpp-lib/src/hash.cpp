@@ -65,28 +65,42 @@ Hash MakeHash(const char* str, size_t len)
 	{
 		int loop;
 		loop = ((int)len + 8 - 1) >> 3;
+
+#if defined(_MSC_VER)
+#pragma warning(disable : 26819)
+#endif
 		switch (len & (8 - 1))
 		{
 			case 0: /* very strange! - switch labels in do loop */
 				do
 				{
 					HASHC;
+					[[fallthrough]];
 					case 7:
 						HASHC;
+						[[fallthrough]];
 					case 6:
 						HASHC;
+						[[fallthrough]];
 					case 5:
 						HASHC;
+						[[fallthrough]];
 					case 4:
 						HASHC;
+						[[fallthrough]];
 					case 3:
 						HASHC;
+						[[fallthrough]];
 					case 2:
 						HASHC;
+						[[fallthrough]];
 					case 1:
 						HASHC;
 				} while (--loop);
 		}
+#if defined(_MSC_VER)
+#pragma warning(default : 26819)
+#endif
 	}
 	return n;
 }

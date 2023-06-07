@@ -159,7 +159,7 @@ void PrintCxxSetOfSizeValRangeConstraints PARAMS((hdr, src, td), FILE* hdr _AND_
 		fprintf (src, "}\n");
 */
 		/*
-		fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
+		fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails) const override;\n");
 		fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
 
 		fprintf (src, "  std::string * pTmpError;\n");
@@ -188,7 +188,7 @@ void PrintCxxSetOfSizeValRangeConstraints PARAMS((hdr, src, td), FILE* hdr _AND_
 			else
 			{
 
-				fprintf(hdr, "      int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
+				fprintf(hdr, "      int checkConstraints(ConstraintFailList* pConstraintFails) const override;\n");
 				fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
 				fprintf(src, "   return checkListConstraints(pConstraintFails);\n");
 
@@ -249,7 +249,7 @@ void PrintCxxSetOfSizeSingleValConstraints PARAMS((hdr, src, td), FILE* hdr _AND
 		  fprintf (src, "}\n");
   */
 		/*
-		fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
+		fprintf(hdr, "   virtual int checkConstraints(ConstraintFailList* pConstraintFails) const override;\n");
 		fprintf(src, "int %s::checkConstraints(ConstraintFailList*pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
 
 
@@ -272,7 +272,7 @@ void PrintCxxSetOfSizeSingleValConstraints PARAMS((hdr, src, td), FILE* hdr _AND
 	else
 	{
 		/*
-		fprintf(hdr, "      int checkConstraints(ConstraintFailList* pConstraintFails)const;\n");
+		fprintf(hdr, "      int checkConstraints(ConstraintFailList* pConstraintFails) const override;\n");
 		fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails)const\n{\n", td->cxxTypeDefInfo->className);
 		fprintf(src, "   return checkListConstraints(pConstraintFails);\n");
 

@@ -595,6 +595,11 @@ void PrintJSImports(FILE* src, ModuleList* mods, Module* m)
 				{
 					if (strcmp(impElmt->name, "AsnOptionalParameters") == 0 || strcmp(impElmt->name, "UTF8StringList") == 0 || strcmp(impElmt->name, "SEQInteger") == 0 || strcmp(impElmt->name, "AsnContactIDs") == 0 || strcmp(impElmt->name, "AsnSystemTime") == 0)
 						continue;
+					else if (!impMod->moduleRef)
+					{
+						snacc_exit("Invalid parameter, impMod->moduleRef == NULL");
+						return;
+					}
 					else
 						fprintf(src, "var %s = require('./%s').%s;\n", impElmt->name, impMod->moduleRef->jsFileName, impElmt->name);
 				}

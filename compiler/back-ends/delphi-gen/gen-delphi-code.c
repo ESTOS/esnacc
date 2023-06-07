@@ -1206,7 +1206,7 @@ void PrintDelphiImports(FILE* src, ModuleList* mods, Module* m)
 						break;
 					}
 				}
-				if (importRequired)
+				if (importRequired && impMod->moduleRef)
 				{
 					fprintf(src, ",\n");
 					fprintf(src, "  // Imports from %s\n", impMod->modId->name);

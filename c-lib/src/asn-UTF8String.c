@@ -94,10 +94,16 @@ static bool IsValidUTF8String(UTF8String* octs)
 		for (j = 0; (j < MAX_UTF8_OCTS_PER_CHAR) && ((gUTF8Masks[j].mask & octs->octs[i]) != gUTF8Masks[j].value); j++)
 			;
 
+#if defined(_MSC_VER)
+#pragma warning(disable : 26451)
+#endif
 		/* Return false if the first octet was invalid or if the number of
 		subsequent octets exceeds the UTF8String length */
 		if ((j == MAX_UTF8_OCTS_PER_CHAR) || ((i + j) >= octs->octetLen))
 			return false;
+#if defined(_MSC_VER)
+#pragma warning(default : 26451)
+#endif
 
 		/* Skip over first octet */
 		i++;
@@ -154,12 +160,18 @@ int CvtUTF8towchar(char* utf8Str, wchar_t** outStr)
 
 		/* Return an error if the first octet was invalid or if the number of
 		subsequent octets exceeds the UTF-8 string length */
+#if defined(_MSC_VER)
+#pragma warning(disable : 26451)
+#endif
 		if ((j == MAX_UTF8_OCTS_PER_CHAR) || ((i + j) >= len))
 		{
 			free(*outStr);
 			*outStr = NULL;
 			return -3;
 		}
+#if defined(_MSC_VER)
+#pragma warning(default : 26451)
+#endif
 
 		/* Return an error if the size of the wchar_t doesn't support the
 		size of this UTF-8 character */
@@ -193,9 +205,17 @@ int CvtUTF8towchar(char* utf8Str, wchar_t** outStr)
 	/* Reallocate the wchar string memory to its correct size */
 	if (x < len)
 	{
+#if defined(_MSC_VER)
+#pragma warning(disable : 6308)
+#pragma warning(disable : 26451)
+#endif
 		*outStr = (wchar_t*)realloc(*outStr, (x + 1) * sizeof(wchar_t));
 		if (*outStr == NULL)
 			return -2;
+#if defined(_MSC_VER)
+#pragma warning(default : 26451)
+#pragma warning(default : 6308)
+#endif
 	}
 
 	return 0;

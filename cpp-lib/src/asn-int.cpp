@@ -464,7 +464,6 @@ AsnInt::AsnInt(AsnIntType val)
 		m_len = 1;
 		m_bytes = new unsigned char[1];
 		*m_bytes = 0;
-		m_value = 0;
 	}
 	else
 	{

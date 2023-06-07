@@ -359,8 +359,13 @@ char* str_replace(const char* string, const char* substr, const char* replacemen
 		memset(newstr + oldstr_len - substr_len + replacement_len, 0, 1);
 
 		free(oldstr);
-
+#if defined(_MSC_VER)
+#pragma warning(disable : 6001)
+#endif
 		tok = strstr(newstr, substr);
+#if defined(_MSC_VER)
+#pragma warning(default : 6001)
+#endif
 	}
 
 	return newstr;
@@ -619,6 +624,11 @@ char* GetPropertyAccessString(const char* szName)
 	size_t iLen = strlen(szName) + 4 + 1;
 
 	char* szReturn = malloc(iLen);
+	if (!szReturn) {
+		snacc_exit("Out of memory");
+		return NULL;
+	}
+
 	memset(szReturn, 0x00, iLen);
 	if (iNeedsAdoption)
 		strcat_s(szReturn, iLen, "[\"");
@@ -655,6 +665,10 @@ char* GetPropertyName(const char* szName)
 	size_t iLen = strlen(szName) + 2 + 1;
 
 	char* szReturn = malloc(iLen);
+	if (!szReturn) {
+		snacc_exit("Out of memory");
+		return NULL;
+	}
 	memset(szReturn, 0x00, iLen);
 	if (iNeedsAdoption)
 		strcat_s(szReturn, iLen, "\"");

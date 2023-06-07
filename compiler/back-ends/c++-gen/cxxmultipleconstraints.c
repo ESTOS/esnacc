@@ -545,7 +545,7 @@ int PrintCxxMultiConstraintOrHandler PARAMS((hdr, src, definedName, e, i), FILE*
 				int iSort1 = 0;
 				int iSort2 = 0;
 				unsigned char cSort = 0x00;
-				int j = 0;
+				size_t j = 0;
 				Subtype* s_type;
 				Subtype* currS_type = NULL;
 				Subtype* andS_type = NULL;

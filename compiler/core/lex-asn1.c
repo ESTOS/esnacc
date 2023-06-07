@@ -2,6 +2,11 @@
 
 #line 4 "core/lex-asn1.c"
 
+#if defined(_MSC_VER)
+#pragma warning(disable : 6011)
+#pragma warning(disable : 26451)
+#endif
+
 #ifdef _WIN32
 #define YY_NO_UNISTD_H
 #include <io.h>
@@ -3301,7 +3306,10 @@ static void yyensure_buffer_stack(void)
 		num_to_alloc = 1;
 		(yy_buffer_stack) = (struct yy_buffer_state**)yyalloc(num_to_alloc * sizeof(struct yy_buffer_state*));
 		if (!(yy_buffer_stack))
+		{
 			YY_FATAL_ERROR("out of dynamic memory in yyensure_buffer_stack()");
+			return;
+		}
 
 		memset((yy_buffer_stack), 0, num_to_alloc * sizeof(struct yy_buffer_state*));
 
@@ -3319,7 +3327,10 @@ static void yyensure_buffer_stack(void)
 		num_to_alloc = (yy_buffer_stack_max) + grow_size;
 		(yy_buffer_stack) = (struct yy_buffer_state**)yyrealloc((yy_buffer_stack), num_to_alloc * sizeof(struct yy_buffer_state*));
 		if (!(yy_buffer_stack))
+		{
 			YY_FATAL_ERROR("out of dynamic memory in yyensure_buffer_stack()");
+			return;
+		}
 
 		/* zero only the new slots.*/
 		memset((yy_buffer_stack) + (yy_buffer_stack_max), 0, grow_size * sizeof(struct yy_buffer_state*));
@@ -3708,3 +3719,8 @@ int LexBeginInitialContext()
  *
  * for a list of changes relative to the 1.1 distribution, please refer to the ChangeLog.
  */
+
+#if defined(_MSC_VER)
+#pragma warning(default : 6011)
+#pragma warning(default : 26451)
+#endif

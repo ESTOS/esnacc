@@ -260,7 +260,7 @@ void ErrChkModule PARAMS((m), Module* m)
 				if (ObjIsDefined(valueNames, impElmt->name, StrObjCmp))
 				{
 					PrintErrLoc(m->asn1SrcFileName, (long)impElmt->lineNo);
-					fprintf(errFileG, "ERROR - value \"%s\" is multiply defined.\n", vd->definedName);
+					fprintf(errFileG, "ERROR - value \"%s\" is multiply defined.\n", impElmt->name);
 					m->status = MOD_ERROR;
 				}
 				else
@@ -373,7 +373,7 @@ void ErrChkBasicType PARAMS((m, td, parent, tnt, type), Module* m _AND_ TypeDef*
 				 *  for the presence of the ANY if definite lengths are used)
 				 * (must peek ahead for EOC otherwise)
 				 */
-				if (!((parent->basicType->choiceId == BASICTYPE_SEQUENCE) && (type == nt->type)) && (type->optional) && (CountTags(type) == 0))
+				if (nt && !((parent->basicType->choiceId == BASICTYPE_SEQUENCE) && (type == nt->type)) && (type->optional) && (CountTags(type) == 0))
 				{
 					PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
 					fprintf(errFileG, "WARNING - untagged optional ANY encountered, the produced code will be wrong.\n");

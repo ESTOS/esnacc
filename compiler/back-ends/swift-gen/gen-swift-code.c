@@ -84,15 +84,20 @@ void PrintSwiftDefaultValue(FILE* src, ModuleList* mods, Module* m, TypeDef* td,
 		{
 			if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
 				choiceId = BASICTYPE_UTCTIME;
-			else if (choiceId == BASICTYPE_IMPORTTYPEREF)
+			else if (choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link)
 			{
 				if (IsSimpleType(t->basicType->a.importTypeRef->link->type->basicType->choiceId))
 					choiceId = t->basicType->a.importTypeRef->link->type->basicType->choiceId;
 			}
-			else if (choiceId == BASICTYPE_LOCALTYPEREF)
+			else if (choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link)
 			{
 				if (IsSimpleType(t->basicType->a.localTypeRef->link->type->basicType->choiceId))
 					choiceId = t->basicType->a.localTypeRef->link->type->basicType->choiceId;
+			}
+			else
+			{
+				snacc_exit("Invalid parameter, choiceID is %i but the associated link is NULL", choiceId);
+				return;
 			}
 		}
 
@@ -120,6 +125,11 @@ void PrintSwiftDefaultValue(FILE* src, ModuleList* mods, Module* m, TypeDef* td,
 				break;
 			case BASICTYPE_IMPORTTYPEREF:
 				{
+					if (!t->basicType->a.importTypeRef->link)
+					{
+						snacc_exit("Invalid parameter, BASICTYPE_IMPORTTYPEREF but the associated link is NULL");
+						return;
+					}
 					char* szConverted = FixName(t->basicType->a.importTypeRef->link->definedName);
 					fprintf(src, "%s()", szConverted);
 					free(szConverted);
@@ -127,6 +137,11 @@ void PrintSwiftDefaultValue(FILE* src, ModuleList* mods, Module* m, TypeDef* td,
 				}
 			case BASICTYPE_LOCALTYPEREF:
 				{
+					if (!t->basicType->a.localTypeRef->link)
+					{
+						snacc_exit("Invalid parameter, BASICTYPE_IMPORTTYPEREF but the associated link is NULL");
+						return;
+					}
 					char* szConverted = FixName(t->basicType->a.localTypeRef->link->definedName);
 					fprintf(src, "%s()", szConverted);
 					free(szConverted);

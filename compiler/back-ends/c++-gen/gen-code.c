@@ -444,7 +444,7 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 
 void PrintCheckConstraints(FILE* hdr, FILE* src, Module* m, Type* t, TypeDef* td)
 {
-	fprintf(hdr, "\tint checkConstraints(ConstraintFailList* pConstraintFails) const;\n");
+	fprintf(hdr, "\tint checkConstraints(ConstraintFailList* pConstraintFails) const override;\n");
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails) const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
@@ -486,7 +486,7 @@ void PrintTypeName(FILE* hdr, FILE* src, char* className, int exportMember)
 	fprintf(hdr, "\t");
 	if (bVDAGlobalDLLExport != NULL && exportMember == 1)
 		fprintf(hdr, "%s ", bVDAGlobalDLLExport);
-	fprintf(hdr, "const char* typeName() const;\n");
+	fprintf(hdr, "const char* typeName() const override;\n");
 
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "const char* %s::typeName() const\n", className);
@@ -500,9 +500,9 @@ void PrintCheckListConstraints(FILE* hdr, FILE* src, char* className, int export
 	fprintf(hdr, "\t");
 	if (bVDAGlobalDLLExport != NULL && exportMember == 1)
 		fprintf(hdr, "%s ", bVDAGlobalDLLExport);
-	fprintf(hdr, "virtual int checkConstraints(ConstraintFailList* pConstraintFails) const;\n");
+	fprintf(hdr, "virtual int checkConstraints(ConstraintFailList* pConstraintFails) const override;\n");
 
-	fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails) const\n", className);
+	fprintf(src, "int %s::checkConstraints(ConstraintFailList* pConstraintFails) const override\n", className);
 	fprintf(src, "{\n");
 	fprintf(src, "\treturn checkListConstraints(pConstraintFails);\n");
 	fprintf(src, "}\n");
@@ -597,7 +597,7 @@ static void PrintCxxType(FILE* hdr, ModuleList* mods, Module* m, CxxRules* r, Ty
 static void PrintClone(FILE* hdr, FILE* src, TypeDef* td)
 {
 	//    fprintf(hdr, "  AsnType		*Clone() const;\n\n", td->cxxTypeDefInfo->className);
-	fprintf(hdr, " \t%s* Clone() const;\n", td->cxxTypeDefInfo->className);
+	fprintf(hdr, " \t%s* Clone() const override;\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "%s* %s::Clone() const\n", td->cxxTypeDefInfo->className, td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
@@ -2035,7 +2035,7 @@ void PrintChoiceDefCodeBerEnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 	Tag* tag;
 	int tagLen = 0;
 
-	fprintf(hdr, "\t%s B%s(%s &_b) const;\n", lenTypeNameG, r->encodeBaseName, bufTypeNameG);
+	fprintf(hdr, "\t%s B%s(%s &_b) const override;\n", lenTypeNameG, r->encodeBaseName, bufTypeNameG);
 	fprintf(src, "%s %s::B%s(%s &_b) const\n", lenTypeNameG, td->cxxTypeDefInfo->className, r->encodeBaseName, bufTypeNameG);
 	fprintf(src, "{\n");
 	fprintf(src, "\t%s l = B%s(_b);\n", lenTypeNameG, r->encodeContentBaseName);
@@ -2073,7 +2073,7 @@ void PrintChoiceDefCodeBerDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 	int i = 0;
 	int elmtLevel = 0;
 
-	fprintf(hdr, "\tvoid B%s(const %s& _b, %s& bytesDecoded);\n", r->decodeBaseName, bufTypeNameG, lenTypeNameG);
+	fprintf(hdr, "\tvoid B%s(const %s& _b, %s& bytesDecoded) override;\n", r->decodeBaseName, bufTypeNameG, lenTypeNameG);
 	fprintf(src, "void %s::B%s(const %s& _b, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, bufTypeNameG, lenTypeNameG); //, envTypeNameG);
 	fprintf(src, "{\n");
 
@@ -2128,7 +2128,7 @@ void PrintChoiceDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 
 	// void JEnc (SJson::Value &b) const;
 
-	fprintf(hdr, "\tvoid JEnc(SJson::Value& b) const;\n");
+	fprintf(hdr, "\tvoid JEnc(SJson::Value& b) const override;\n");
 	fprintf(src, "void %s::JEnc(SJson::Value& b) const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	/* print local vars */
@@ -2178,7 +2178,7 @@ void PrintChoiceDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 	CxxTRI* cxxtri;
 	int iCounter = 0;
 
-	fprintf(hdr, "\tbool JDec(const SJson::Value& b);\n");
+	fprintf(hdr, "\tbool JDec(const SJson::Value& b) override;\n");
 	fprintf(src, "bool %s::JDec(const SJson::Value& b)", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	fprintf(src, "\tClear();\n");
@@ -2258,7 +2258,7 @@ void PrintChoiceDefCodePEREnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 	fprintf(src, "};\n\n");
 
 	// RWC;fprintf(hdr, "  AsnLen		PEnc(AsnBufBits &_b, bool bAlign = false) const {AsnLen len; len = 1;return len;};\n");
-	fprintf(hdr, "  %s		P%s (AsnBufBits &_b) const;\n", lenTypeNameG, r->encodeBaseName);
+	fprintf(hdr, "  %s		P%s (AsnBufBits &_b) const override;\n", lenTypeNameG, r->encodeBaseName);
 	fprintf(src, "%s %s::P%s (AsnBufBits &_b) const\n", lenTypeNameG, td->cxxTypeDefInfo->className, r->encodeBaseName);
 	fprintf(src, "{\n");
 	fprintf(src, "    %s l=0;\n", lenTypeNameG);
@@ -2355,7 +2355,7 @@ void PrintChoiceDefCodePERDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 	int* pElementTag;
 	int ii;
 
-	fprintf(hdr, "  void			P%s (AsnBufBits &_b, %s &bitsDecoded);\n", r->decodeBaseName, lenTypeNameG);
+	fprintf(hdr, "  void			P%s (AsnBufBits &_b, %s &bitsDecoded) override;\n", r->decodeBaseName, lenTypeNameG);
 	fprintf(src, "void %s::P%s (AsnBufBits &_b, %s &bitsDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, lenTypeNameG); //, envTypeNameG);
 	fprintf(src, "{\n");
 	fprintf(src, "\tClear();\n");
@@ -2542,7 +2542,7 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 	/* ostream printing routine */
 	if (printPrintersG)
 	{
-		fprintf(hdr, "\tvoid Print(std::ostream& os, unsigned short indent = 0) const;\n");
+		fprintf(hdr, "\tvoid Print(std::ostream& os, unsigned short indent = 0) const override;\n");
 		fprintf(src, "void %s::Print(std::ostream& os, unsigned short indent) const\n", td->cxxTypeDefInfo->className);
 		fprintf(src, "{\n");
 		fprintf(src, "\tswitch (choiceId)\n");
@@ -3264,7 +3264,7 @@ void PrintSeqDefCodeBerEnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Type*
 	Tag* tag;
 	int tagLen;
 
-	fprintf(hdr, "\t%s B%s(%s& _b) const;\n", lenTypeNameG, r->encodeBaseName, bufTypeNameG);
+	fprintf(hdr, "\t%s B%s(%s& _b) const override;\n", lenTypeNameG, r->encodeBaseName, bufTypeNameG);
 	fprintf(src, "%s %s::B%s(%s& _b) const\n", lenTypeNameG, td->cxxTypeDefInfo->className, r->encodeBaseName, bufTypeNameG);
 	fprintf(src, "{\n");
 	fprintf(src, "\t%s l=0;\n", lenTypeNameG);
@@ -3304,7 +3304,7 @@ void PrintSeqDefCodeBerDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Type*
 	Tag* tag;
 	int elmtLevel = 0;
 
-	fprintf(hdr, "\tvoid B%s(const %s& _b, %s& bytesDecoded);\n", r->decodeBaseName, bufTypeNameG, lenTypeNameG);								  //, envTypeNameG);
+	fprintf(hdr, "\tvoid B%s(const %s& _b, %s& bytesDecoded) override;\n", r->decodeBaseName, bufTypeNameG, lenTypeNameG);						  //, envTypeNameG);
 	fprintf(src, "void %s::B%s(const %s& _b, %s& bytesDecoded)\n", td->cxxTypeDefInfo->className, r->decodeBaseName, bufTypeNameG, lenTypeNameG); //, envTypeNameG);
 	fprintf(src, "{\n");
 	fprintf(src, "\t%s tag;\n", tagTypeNameG);
@@ -3347,7 +3347,7 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	fprintf(hdr, "\tvoid JEnc(SJson::Value& b) const;\n");
+	fprintf(hdr, "\tvoid JEnc(SJson::Value& b) const override;\n");
 	fprintf(src, "void %s::JEnc(SJson::Value& b) const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	fprintf(src, "\tb = SJson::Value(SJson::objectValue);\n\n");
@@ -3455,7 +3455,7 @@ void PrintSeqDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	////bool JDec (const AsnJSONBuf &b);
-	fprintf(hdr, "\tbool JDec(const SJson::Value& b);\n");
+	fprintf(hdr, "\tbool JDec(const SJson::Value& b) override;\n");
 	fprintf(src, "bool %s::JDec(const SJson::Value& b)", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	fprintf(src, "\tClear();\n\n");
@@ -5187,7 +5187,7 @@ static void PrintCxxSeqSetPrintFunction(FILE* src, FILE* hdr, MyString className
 	NamedTypeList* pElmtList = NULL;
 	NamedType* e;
 
-	fprintf(hdr, "\tvoid Print(std::ostream& os, unsigned short indent = 0) const;\n");
+	fprintf(hdr, "\tvoid Print(std::ostream& os, unsigned short indent = 0) const override;\n");
 	fprintf(src, "void %s::Print(std::ostream& os, unsigned short indent) const\n", className);
 	fprintf(src, "{\n");
 

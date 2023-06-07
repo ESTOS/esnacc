@@ -85,15 +85,20 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 		{
 			if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
 				choiceId = BASICTYPE_UTCTIME;
-			else if (choiceId == BASICTYPE_IMPORTTYPEREF)
+			else if (choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link)
 			{
 				if (IsSimpleType(t->basicType->a.importTypeRef->link->type->basicType->choiceId))
 					choiceId = t->basicType->a.importTypeRef->link->type->basicType->choiceId;
 			}
-			else if (choiceId == BASICTYPE_LOCALTYPEREF)
+			else if (choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link)
 			{
 				if (IsSimpleType(t->basicType->a.localTypeRef->link->type->basicType->choiceId))
 					choiceId = t->basicType->a.localTypeRef->link->type->basicType->choiceId;
+			}
+			else
+			{
+				snacc_exit("Invalid parameter, choiceID is %i but the associated link is NULL", choiceId);
+				return;
 			}
 		}
 
@@ -131,6 +136,11 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 							fprintf(hdr, "new %s.%s()", szNameSpace, szConverted);
 						else if (baseType == BASICTYPE_ENUMERATED)
 						{
+							if (!t->basicType->a.importTypeRef->link)
+							{
+								snacc_exit("Invalid parameter, BASICTYPE_IMPORTTYPEREF but the associated link is NULL");
+								return;
+							}
 							Type* pType = t->basicType->a.importTypeRef->link->type;
 							CNamedElmt* pFirstEnumValue = (CNamedElmt*)pType->cxxTypeRefInfo->namedElmts->first->data;
 							fprintf(hdr, "%s.%s.%s", szNameSpace, szConverted, pFirstEnumValue->name);

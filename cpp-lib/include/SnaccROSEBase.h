@@ -229,7 +229,7 @@ public:
 
 	/* Send a Result Message.
 		Override from SnaccRoseSender */
-	virtual long SendResult(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0);
+	virtual long SendResult(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0) override;
 
 	/* Send a Reject Message. */
 	long SendReject(SNACC::ROSEReject* preject);
@@ -242,25 +242,25 @@ public:
 
 	/* Send a Error Message.
 		Override from SnaccRoseSender */
-	virtual long SendError(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0);
+	virtual long SendError(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0) override;
 
 	/*! Increment invoke counter
 		Override from SnaccRoseSender*/
-	virtual long GetNextInvokeID();
+	virtual long GetNextInvokeID() override;
 
 	/* Log level 0 oder 1
 		bout=true for outgoing messages,
 		bout=false for incoming messages,
 		Override to set a different log level
 		Override from SnaccRoseSender*/
-	virtual long GetLogLevel(bool /*bOut*/)
+	virtual long GetLogLevel(bool /*bOut*/) override
 	{
 		return 0;
 	}
 
 	/* used for printing alle the messages
 		Override from SnaccRoseSender*/
-	virtual void PrintAsnType(bool bOutbound, SNACC::AsnType* pType, SNACC::ROSEInvoke* pInvoke);
+	virtual void PrintAsnType(bool bOutbound, SNACC::AsnType* pType, SNACC::ROSEInvoke* pInvoke) override;
 
 	// protected:
 	/** The following function should only be called by the generated ROSE stub */
@@ -273,11 +273,11 @@ public:
 		iTimeout : 0 no waiting time
 		Override from SnaccRoseSender
 	*/
-	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** ppresult, SNACC::ROSEError** pperror, int iTimeout = -1, SnaccInvokeContext* cxt = nullptr);
+	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** ppresult, SNACC::ROSEError** pperror, int iTimeout = -1, SnaccInvokeContext* cxt = nullptr) override;
 
 	/* Send a Event Message.
 		Override from SnaccRoseSender*/
-	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt = nullptr);
+	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt = nullptr) override;
 
 protected:
 	// ASN prefix with length prefix to build the JSON message

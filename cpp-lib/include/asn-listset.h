@@ -27,22 +27,22 @@ public:
 	}
 
 	// encode and decode routines
-	virtual SNACC::AsnLen PEnc(SNACC::AsnBufBits& b) const;
+	virtual SNACC::AsnLen PEnc(SNACC::AsnBufBits& b) const override;
 	virtual SNACC::AsnLen BEnc(SNACC::AsnBuf& b) const = 0;
 	virtual SNACC::AsnLen BEncContent(SNACC::AsnBuf& b) const;
-	virtual void PDec(SNACC::AsnBufBits& b, SNACC::AsnLen& bytesDecoded);
+	virtual void PDec(SNACC::AsnBufBits& b, SNACC::AsnLen& bytesDecoded) override;
 	virtual void BDec(const SNACC::AsnBuf& b, SNACC::AsnLen& bytesDecoded) = 0;
 	virtual void BDecContent(const SNACC::AsnBuf& b, SNACC::AsnTag tagId, SNACC::AsnLen elmtLen, SNACC::AsnLen& bytesDecoded);
 
-	virtual void JEnc(SJson::Value& b) const;
-	virtual bool JDec(const SJson::Value& b);
+	virtual void JEnc(SJson::Value& b) const override;
+	virtual bool JDec(const SJson::Value& b) override;
 
 	const char* typeName() const = 0;
-	virtual int checkConstraints(SNACC::ConstraintFailList* pConstraintFails) const;
+	virtual int checkConstraints(SNACC::ConstraintFailList* pConstraintFails) const override;
 
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
-	void Print(std::ostream& os, unsigned short indent) const;
+	void Print(std::ostream& os, unsigned short indent) const override;
 
 	//	int checkListConstraints(SNACC::ConstraintFailList* pConstraintFails) const; /*JKG--8/12/03--*/
 	char* checkSOfVRange(long m_Lower, long m_Upper) const;
@@ -54,15 +54,15 @@ public:
 	}
 	//	virtual SNACC::SizeConstraint* SizeConstraints()		{ return NULL; }
 
-	virtual void Allocate(long size)
+	virtual void Allocate(long size) override
 	{
 	}
-	virtual void Clear()
+	virtual void Clear() override
 	{
 		__super::clear();
 	}
-	virtual SNACC::AsnLen Interpret(SNACC::AsnBufBits& b, long offset) const;
-	virtual void Deterpret(SNACC::AsnBufBits& b, SNACC::AsnLen& bitsDecoded, long offset);
+	virtual SNACC::AsnLen Interpret(SNACC::AsnBufBits& b, long offset) const override;
+	virtual void Deterpret(SNACC::AsnBufBits& b, SNACC::AsnLen& bitsDecoded, long offset) override;
 
 	//	virtual long lEncLen() const							{ return size(); }
 };
@@ -377,10 +377,10 @@ template <class T> class AsnSeqOf : public AsnList<T>
 #endif
 
 public:
-	SNACC::AsnLen BEnc(SNACC::AsnBuf& b) const;
-	void BDec(const SNACC::AsnBuf& b, SNACC::AsnLen& bytesDecoded);
+	SNACC::AsnLen BEnc(SNACC::AsnBuf& b) const override;
+	void BDec(const SNACC::AsnBuf& b, SNACC::AsnLen& bytesDecoded) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	// virtual int checkConstraints(ConstraintFailList* pConstraintFails)const;
@@ -607,16 +607,16 @@ namespace SNACC
 	class AsnOptionalParameters : public AsnSeqOf<AsnOptionalParam>
 	{
 	public:
-		const char* typeName() const
+		const char* typeName() const override
 		{
 			return "AsnOptionalParameters";
 		}
-		AsnType* Clone() const
+		AsnType* Clone() const override
 		{
 			return new AsnOptionalParameters(*this);
 		}
-		void JEnc(SJson::Value& b) const;
-		bool JDec(const SJson::Value& b);
+		void JEnc(SJson::Value& b) const override;
+		bool JDec(const SJson::Value& b) override;
 	};
 
 } // namespace SNACC

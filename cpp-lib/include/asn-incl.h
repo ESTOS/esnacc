@@ -7,6 +7,11 @@
 #ifndef SNACC_ASN_INCL_H
 #define SNACC_ASN_INCL_H
 
+#if defined(_MSC_VER)
+// https://learn.microsoft.com/de-de/cpp/code-quality/c26451
+#pragma warning(disable : 26451)
+#endif
+
 #include "asn-config.h"
 #include "asn-buf.h"
 #include "../jsoncpp/include/json.h"
@@ -363,11 +368,11 @@ private:
 class SNACCDLL_API AsnNull : public AsnType
 {
 public:
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new AsnNull(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnNull";
 	}
@@ -377,16 +382,16 @@ public:
 		return 0;
 	}
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
-	AsnLen PEnc(AsnBufBits& b) const;
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
+	AsnLen PEnc(AsnBufBits& b) const override;
+	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 #if META
@@ -413,11 +418,11 @@ public:
 		value = val;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new AsnBool(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnBool";
 	}
@@ -433,18 +438,18 @@ public:
 		return *this;
 	}
 
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
-	AsnLen PEnc(AsnBufBits& b) const;
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
+	AsnLen PEnc(AsnBufBits& b) const override;
+	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 	char* checkBoolSingleVal(const bool m_SingleVal) const;
 
@@ -490,11 +495,11 @@ public:
 		return NULL;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new AsnOcts(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnOcts";
 	}
@@ -545,16 +550,16 @@ public:
 
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
-	AsnLen PEnc(AsnBufBits& b) const;
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
+	AsnLen PEnc(AsnBufBits& b) const override;
+	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL, const char* lpszType = NULL) const;
 
 protected:
@@ -600,11 +605,11 @@ public:
 	{
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new AsnStringOcts(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnStringOcts";
 	}
@@ -638,8 +643,8 @@ public:
 		return AsnOcts::operator!=(o);
 	};
 
-	virtual void JEnc(SJson::Value& b) const;
-	virtual bool JDec(const SJson::Value& b);
+	virtual void JEnc(SJson::Value& b) const override;
+	virtual bool JDec(const SJson::Value& b) override;
 };
 
 // ########################################################################
@@ -676,11 +681,11 @@ public:
 		return NULL;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new AsnBits(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnBits";
 	}
@@ -746,20 +751,20 @@ public:
 
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
 	AsnLen EncodeGeneral(AsnBufBits& b) const;
 	void DecodeGeneral(AsnBufBits& b, AsnLen& bitsDecoded);
 	AsnLen EncodeWithSizeConstraint(AsnBufBits& b) const;
 	void DecodeWithSizeConstraint(AsnBufBits& b, AsnLen& bitsDecoded);
-	AsnLen PEnc(AsnBufBits& b) const;
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
+	AsnLen PEnc(AsnBufBits& b) const override;
+	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 #if META
@@ -792,13 +797,13 @@ extern SNACCDLL_API char numToHexCharTblG[];
 class SNACCDLL_API AsnInt : public AsnType, protected PERGeneral
 {
 protected:
-	long long m_value;
-	unsigned char* m_bytes;
-	unsigned long m_len;
+	long long m_value = 0;
+	unsigned char* m_bytes = 0;
+	unsigned long m_len = 0;
 
 	void storeDERInteger(const unsigned char* pDataCopy, long dataLen, bool unsignedFlag);
 
-	void Clear()
+	void Clear() override
 	{
 		if (m_bytes)
 			delete[] m_bytes; /*RWC*/
@@ -806,7 +811,7 @@ protected:
 		m_len = 0;
 		m_value = 0;
 	}
-	long lEncLen() const
+	long lEncLen() const override
 	{
 		return length();
 	}
@@ -816,9 +821,9 @@ protected:
 	}
 	void putByte(long offset, unsigned char cByte);
 
-	virtual AsnLen Interpret(AsnBufBits& b, long offset) const;
-	virtual void Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset);
-	virtual void Allocate(long size);
+	virtual AsnLen Interpret(AsnBufBits& b, long offset) const override;
+	virtual void Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset) override;
+	virtual void Allocate(long size) override;
 
 public:
 	AsnInt(AsnIntType val = 0);
@@ -834,11 +839,11 @@ public:
 		return NULL;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new AsnInt(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnInt";
 	}
@@ -871,29 +876,30 @@ public:
 	}
 	void getPadded(unsigned char*& data, size_t& len, const size_t padToSize = 0) const;
 
-	int checkConstraints(ConstraintFailList* pConstraintFails) const;
+	int checkConstraints(ConstraintFailList* pConstraintFails) const override;
 
 	void Set(const unsigned char* str, size_t len, bool unsignedFlag = true);
 	void Set(AsnIntType i);
 	void Set(long long i);
 
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
-	virtual AsnLen PEnc(AsnBufBits& b) const;
+	virtual AsnLen PEnc(AsnBufBits& b) const override;
+	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
+
 	AsnLen PEncSemiConstrained(AsnBufBits& b, long lowerBound) const;
 	AsnLen PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBound) const;
 
 	void PDecSemiConstrained(AsnBufBits& b, long lowerBound, AsnLen& bitsDecoded);
 	void PDecFullyConstrained(AsnBufBits& b, long lowerBound, long upperBound, AsnLen& bitsDecoded);
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 #if META
@@ -918,14 +924,14 @@ public:
 	{
 	}
 
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 
-	virtual AsnType* Clone() const
+	virtual AsnType* Clone() const override
 	{
 		return new AsnEnum(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnEnum";
 	}
@@ -961,11 +967,11 @@ public:
 	{
 	}
 
-	virtual AsnType* Clone() const
+	virtual AsnType* Clone() const override
 	{
 		return new AsnReal(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnReal";
 	}
@@ -982,16 +988,16 @@ public:
 
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
-	AsnLen PEnc(AsnBufBits& b) const;
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
+	AsnLen PEnc(AsnBufBits& b) const override;
+	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 	char* checkRealSingleVal(const double m_SingleVal) const;
@@ -1038,19 +1044,19 @@ public:
 		return *this;
 	}
 
-	virtual AsnType* Clone() const
+	virtual AsnType* Clone() const override
 	{
 		return new AsnSystemTime(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnSystemTime";
 	}
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 };
 
@@ -1082,11 +1088,11 @@ public:
 	}
 	operator const char*() const;
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new AsnRelativeOid(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnRelativeOid";
 	}
@@ -1122,18 +1128,18 @@ public:
 	void Set(const AsnRelativeOid& o);
 	void Set(unsigned long arcNumArr[], unsigned long arrLength);
 
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
-	AsnLen PEnc(AsnBufBits& b) const;
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
+	AsnLen PEnc(AsnBufBits& b) const override;
+	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 #if META
@@ -1177,11 +1183,11 @@ public:
 		m_isRelative = false;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new AsnOid(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnOid";
 	}
@@ -1242,10 +1248,10 @@ int CheckForAndReturnValue(Table* table, Hash hash, void** value);
 class SNACCDLL_API AnyInfo
 {
 public:
-	int anyId;	// will be a value from the AnyId enum
-	AsnOid oid; // will be zero len/null if intId is valid
-	AsnIntType intId;
-	AsnType* typeToClone;
+	int anyId = 0; // will be a value from the AnyId enum
+	AsnOid oid;	   // will be zero len/null if intId is valid
+	AsnIntType intId = 0;
+	AsnType* typeToClone = 0;
 };
 
 class SNACCDLL_API AsnAny : public AsnType
@@ -1277,11 +1283,11 @@ public:
 
 	AsnAny& operator=(const AsnAny& o);
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new AsnAny(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnAny";
 	}
@@ -1302,25 +1308,25 @@ public:
 	void SetTypeByInt(const AsnInt& id) const;
 	void SetTypeByOid(const AsnOid& id) const;
 
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
 	void BDecContent(const AsnBuf& b, AsnTag tag, AsnLen len, AsnLen& bytesDecoded);
 
-	AsnLen PEnc(AsnBufBits& b) const;
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
+	AsnLen PEnc(AsnBufBits& b) const override;
+	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 #if TCL
-	int TclGetDesc(Tcl_DString*) const;
-	int TclGetVal(Tcl_DString*) const;
-	int TclSetVal(Tcl_Interp*, const char* val);
-	int TclUnSetVal(Tcl_Interp*, const char* member);
+	int TclGetDesc(Tcl_DString*) const override;
+	int TclGetVal(Tcl_DString*) const override;
+	int TclSetVal(Tcl_Interp*, const char* val) override;
+	int TclUnSetVal(Tcl_Interp*, const char* member) override;
 #endif /* TCL */
 };
 
@@ -1365,18 +1371,18 @@ public:
 	int cvt_LDAPtoStr(char* in_string, char** char_ptr);
 	int cvt_StrtoLDAP(wchar_t* in_string, char** char_ptr);
 
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
-	AsnLen PEnc(AsnBufBits& b) const;
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
+	AsnLen PEnc(AsnBufBits& b) const override;
+	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
 
-	int checkConstraints(ConstraintFailList* pConstraintFails) const;
+	int checkConstraints(ConstraintFailList* pConstraintFails) const override;
 	const char* checkStringTypPermittedAlpha(const char* m_Alpha, long m_AlphaSize) const;
 
 	// each string type must implement these methods
@@ -1392,11 +1398,11 @@ public:
 		return true;
 	}
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;
 
 protected:
-	void Clear()
+	void Clear() override
 	{
 		erase();
 	}
@@ -1412,13 +1418,13 @@ protected:
 	void DecodeWithSizeConstraint(AsnBufBits& b, AsnLen& bitsDecoded);
 	long FindSizeConstraintBounds(int& iSCLowerBound, int& iSCUpperBound) const;
 
-	virtual AsnLen Interpret(AsnBufBits& b, long offset) const;
-	virtual long lEncLen() const
+	virtual AsnLen Interpret(AsnBufBits& b, long offset) const override;
+	virtual long lEncLen() const override
 	{
 		return (long)length();
 	}
-	virtual void Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset);
-	virtual void Allocate(long size){};
+	virtual void Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset) override;
+	virtual void Allocate(long size) override{};
 
 private:
 	void BDecConsString(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -1447,24 +1453,24 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new NumericString(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "NumericString";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return NUMERICSTRING_TAG_CODE;
 	}
 
-	virtual const SizeConstraint* SizeConstraints(int& sizeList) const;
+	virtual const SizeConstraint* SizeConstraints(int& sizeList) const override;
 
-	const char* PermittedAlphabet(int& alphaSize) const;
+	const char* PermittedAlphabet(int& alphaSize) const override;
 
-	bool check() const; // Enforce string rules
+	bool check() const override; // Enforce string rules
 };
 
 class SNACCDLL_API PrintableString : public AsnString
@@ -1490,28 +1496,28 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new PrintableString(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "PrintableString";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return PRINTABLESTRING_TAG_CODE;
 	}
 
-	virtual const SizeConstraint* SizeConstraints(int& sizeList) const
+	virtual const SizeConstraint* SizeConstraints(int& sizeList) const override
 	{
 		sizeList = 0;
 		return NULL;
 	}
 
-	const char* PermittedAlphabet(int& sizeAlpha) const;
+	const char* PermittedAlphabet(int& sizeAlpha) const override;
 
-	bool check() const; // Enforce string rules
+	bool check() const override; // Enforce string rules
 };
 
 class SNACCDLL_API TeletexString : public AsnString
@@ -1537,15 +1543,15 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new TeletexString(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "TeletexString";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return TELETEXSTRING_TAG_CODE;
 	}
@@ -1577,15 +1583,15 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new VideotexString(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "VideotexString";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return VIDEOTEXSTRING_TAG_CODE;
 	}
@@ -1614,27 +1620,27 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new IA5String(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "IA5String";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return IA5STRING_TAG_CODE;
 	}
 
-	virtual const SizeConstraint* SizeConstraints(int& sizeList) const
+	virtual const SizeConstraint* SizeConstraints(int& sizeList) const override
 	{
 		sizeList = 0;
 		return NULL;
 	}
-	const char* PermittedAlphabet(int& sizeAlpha) const;
+	const char* PermittedAlphabet(int& sizeAlpha) const override;
 
-	bool check() const; // Enforce string rules
+	bool check() const override; // Enforce string rules
 };
 
 class SNACCDLL_API GraphicString : public AsnString
@@ -1660,15 +1666,15 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new GraphicString(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "GraphicString";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return GRAPHICSTRING_TAG_CODE;
 	}
@@ -1697,27 +1703,27 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new VisibleString(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "VisibleString";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return VISIBLESTRING_TAG_CODE;
 	}
 
-	virtual const SizeConstraint* SizeConstraints(int& sizeList) const
+	virtual const SizeConstraint* SizeConstraints(int& sizeList) const override
 	{
 		sizeList = 0;
 		return NULL;
 	}
-	const char* PermittedAlphabet(int& sizeAlpha) const;
+	const char* PermittedAlphabet(int& sizeAlpha) const override;
 
-	bool check() const; // Enforce string rules
+	bool check() const override; // Enforce string rules
 };
 
 // ISO646String -- Alternate name for VisibleString
@@ -1746,15 +1752,15 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new GeneralString(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "GeneralString";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return GENERALSTRING_TAG_CODE;
 	}
@@ -1819,21 +1825,21 @@ public:
 		return NULL;
 	}
 
-	AsnLen BEnc(AsnBuf& b) const;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded);
+	AsnLen BEnc(AsnBuf& b) const override;
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 	virtual AsnLen BEncContent(AsnBuf& b) const = 0;
 	virtual void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded) = 0;
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
-	AsnLen PEnc(AsnBufBits& b) const;
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded);
+	AsnLen PEnc(AsnBufBits& b) const override;
+	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle) const;
 
-	int checkConstraints(ConstraintFailList* pConstraintFails) const;
+	int checkConstraints(ConstraintFailList* pConstraintFails) const override;
 	const char* checkStringTypPermittedAlpha(const char* m_Alpha, long m_AlphaSize) const;
 
 	virtual bool check() const
@@ -1850,7 +1856,7 @@ private:
 	wchar_t* getWideChar(long offset) const;
 
 protected:
-	void Clear()
+	void Clear() override
 	{
 		erase();
 	}
@@ -1858,14 +1864,14 @@ protected:
 	{
 		append(seg, 1);
 	}
-	long lEncLen() const
+	long lEncLen() const override
 	{
 		return (long)length();
 	}
-	virtual AsnLen Interpret(AsnBufBits& b, long offset) const;
+	virtual AsnLen Interpret(AsnBufBits& b, long offset) const override;
 
-	virtual void Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset);
-	virtual void Allocate(long size){};
+	virtual void Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset) override;
+	virtual void Allocate(long size) override{};
 
 	AsnLen CombineConsString(const AsnBuf& b, AsnLen elmtLen, std::string& encStr);
 };
@@ -1903,21 +1909,21 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new BMPString(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "BMPString";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return BMPSTRING_TAG_CODE;
 	}
 
-	AsnLen BEncContent(AsnBuf& b) const;
-	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
+	AsnLen BEncContent(AsnBuf& b) const override;
+	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded) override;
 };
 
 class SNACCDLL_API UniversalString : public WideAsnString
@@ -1953,21 +1959,21 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new UniversalString(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "UniversalString";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return UNIVERSALSTRING_TAG_CODE;
 	}
 
-	AsnLen BEncContent(AsnBuf& b) const;
-	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
+	AsnLen BEncContent(AsnBuf& b) const override;
+	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded) override;
 
 	/*void   PDecConstent(const AsnBuf&b, AsnTag tagId, AsnLen elmtLen,
 	 *	AsnLen &bytesDecoded);
@@ -2000,24 +2006,24 @@ public:
 	// Create the WideAsnString from an ASCII string
 	static UTF8String* CreateNewFromASCII(const std::string& strAscii);
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new UTF8String(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "UTF8String";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return UTF8STRING_TAG_CODE;
 	}
 
-	void JEnc(SJson::Value& b) const;
-	bool JDec(const SJson::Value& b);
+	void JEnc(SJson::Value& b) const override;
+	bool JDec(const SJson::Value& b) override;
 
-	AsnLen BEncContent(AsnBuf& b) const;
-	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
+	AsnLen BEncContent(AsnBuf& b) const override;
+	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded) override;
 };
 
 // ########################################################################
@@ -2047,17 +2053,17 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new UTCTime(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "UTCTime";
 	}
 
 	// ASN.1 tag for the character string
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return UTCTIME_TAG_CODE;
 	}
@@ -2086,15 +2092,15 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new GeneralizedTime(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "GeneralizedTime";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return GENERALIZEDTIME_TAG_CODE;
 	}
@@ -2124,15 +2130,15 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new ObjectDescriptor(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "ObjectDescriptor";
 	}
-	BER_UNIV_CODE tagCode() const
+	BER_UNIV_CODE tagCode() const override
 	{
 		return OD_TAG_CODE;
 	}
@@ -2161,11 +2167,11 @@ public:
 	{
 	}
 
-	AsnType* Clone() const
+	AsnType* Clone() const override
 	{
 		return new AsnExtension(*this);
 	}
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnExtension";
 	}
@@ -2175,21 +2181,21 @@ public:
 		extList = ext.extList;
 	}
 
-	int checkConstraints(ConstraintFailList*) const
+	int checkConstraints(ConstraintFailList*) const override
 	{
 		return 0;
 	}
 
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded)
+	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override
 	{
 	}
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded)
+	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override
 	{
 	}
-	AsnLen BEnc(AsnBuf& b) const;
-	AsnLen PEnc(AsnBufBits& b) const;
+	AsnLen BEnc(AsnBuf& b) const override;
+	AsnLen PEnc(AsnBufBits& b) const override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const
 	{
 	}
@@ -2221,13 +2227,13 @@ public:
 	AsnOptionalParamChoice(const AsnOptionalParamChoice& that);
 
 public:
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnOptionalParamChoice";
 	}
 	void Init(void);
 
-	virtual int checkConstraints(ConstraintFailList* pConstraintFails) const;
+	virtual int checkConstraints(ConstraintFailList* pConstraintFails) const override;
 
 	virtual ~AsnOptionalParamChoice()
 	{
@@ -2236,17 +2242,17 @@ public:
 
 	void Clear();
 
-	AsnType* Clone() const;
+	AsnType* Clone() const override;
 
 	AsnOptionalParamChoice& operator=(const AsnOptionalParamChoice& that);
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded /*, s env*/);
-	AsnLen BEnc(AsnBuf& _b) const;
-	void JEnc(SJson::Value& b) const;
-	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-	bool JDec(const SJson::Value& b);
+	AsnLen BEnc(AsnBuf& _b) const override;
+	void JEnc(SJson::Value& b) const override;
+	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded) override;
+	bool JDec(const SJson::Value& b) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 };
 
 // ste 4.11.14 AsnOptionalParam Eigene Implementierung wegen unterschied Json / BER
@@ -2267,27 +2273,27 @@ public:
 	}
 	void Clear();
 
-	int checkConstraints(ConstraintFailList* pConstraintFails) const;
+	int checkConstraints(ConstraintFailList* pConstraintFails) const override;
 
 	AsnOptionalParam(const AsnOptionalParam& that);
 
 public:
-	const char* typeName() const
+	const char* typeName() const override
 	{
 		return "AsnOptionalParam";
 	}
-	AsnType* Clone() const;
+	AsnType* Clone() const override;
 
 	AsnOptionalParam& operator=(const AsnOptionalParam& that);
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	AsnLen BEnc(AsnBuf& _b) const;
-	void JEnc(SJson::Value& b) const;
-	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded);
-	bool JDec(const SJson::Value& b);
+	AsnLen BEnc(AsnBuf& _b) const override;
+	void JEnc(SJson::Value& b) const override;
+	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded) override;
+	bool JDec(const SJson::Value& b) override;
 
-	void Print(std::ostream& os, unsigned short indent = 0) const;
+	void Print(std::ostream& os, unsigned short indent = 0) const override;
 };
 
 void SNACCDLL_API threadLock();

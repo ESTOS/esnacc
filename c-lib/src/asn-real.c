@@ -95,7 +95,6 @@
 #include <math.h>
 #include <assert.h>
 
-double pow PROTO((double base, double exp));
 #ifdef _WIN32
 /* Get rid of frexp warning on windows */
 // extern double frexp( double x, int *expptr );
@@ -559,6 +558,10 @@ void InitAsnInfinity()
  * or the existence of the IEEE library routines.  Uses old style
  * UNIX frexp etc.
  */
+#if defined(_MSC_VER)
+#pragma warning(disable : 6297)
+#pragma warning(disable : 26451)
+#endif
 AsnLen BEncAsnRealContent PARAMS((b, value), GenBuf* b _AND_ AsnReal* value)
 {
 	unsigned long encLen;
@@ -715,6 +718,10 @@ AsnLen BEncAsnRealContent PARAMS((b, value), GenBuf* b _AND_ AsnReal* value)
 	return encLen;
 
 } /*  BEncAsnRealContent */
+#if defined(_MSC_VER)
+#pragma warning(default : 6297)
+#pragma warning(default : 26451)
+#endif
 
 #endif /* IEEE_REAL_LIB */
 #endif /* IEEE_REAL_FMT */
@@ -724,6 +731,11 @@ AsnLen BEncAsnRealContent PARAMS((b, value), GenBuf* b _AND_ AsnReal* value)
  * This only supports the binary REAL encoding.  The decimal encoding
  * is left as an exercise to the reader.
  */
+#if defined(_MSC_VER)
+#pragma warning(disable : 6297)
+#pragma warning(disable : 26451)
+#endif
+
 void BDecAsnRealContent PARAMS((b, tagId, len, result, bytesDecoded, env), GenBuf* b _AND_ AsnTag tagId _AND_ AsnLen len _AND_ AsnReal* result _AND_ AsnLen* bytesDecoded _AND_ jmp_buf env)
 {
 	unsigned char firstOctet = 0;
@@ -845,6 +857,10 @@ void BDecAsnRealContent PARAMS((b, tagId, len, result, bytesDecoded, env), GenBu
 		longjmp(env, -24);
 	}
 } /* BDecAsnRealContent */
+#if defined(_MSC_VER)
+#pragma warning(default : 6297)
+#pragma warning(default : 26451)
+#endif
 
 /*
  * Prints given REAL value to the given FILE * in ASN.1 Value Notation.

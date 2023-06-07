@@ -337,6 +337,7 @@ void // Deepak: 04/Mar/2003
 		currMod->status = MOD_ERROR;
 		PrintErrLoc(currMod->asn1SrcFileName, (long)oa->lineNo);
 		fprintf(errFileG, "ERROR - CLASS \"%s\" is referenced but not defined.\n", oa->objectClassName);
+		return;
 	}
 
 	FOR_EACH_LIST_ELMT(oaf, oa->objectAssignmentField)

@@ -160,7 +160,15 @@ static void FillOctetStringStk PARAMS((b, elmtLen0, bytesDecoded, env), GenBuf* 
 			{
 				strPtr = (char*)BufGetSeg(b, &refdLen);
 
+#if defined(_MSC_VER)
+#pragma warning(disable : 6308)
+#pragma warning(disable : 26451)
+#endif
 				PUSH_STR(strPtr, refdLen, env);
+#if defined(_MSC_VER)
+#pragma warning(default : 6308)
+#pragma warning(default : 26451)
+#endif
 				totalRefdLen += refdLen;
 				if (totalRefdLen == elmtLen1)
 					break; /* exit this while loop */
@@ -216,7 +224,7 @@ static void BDecConsAsnOcts PARAMS((b, len, result, bytesDecoded, env), GenBuf* 
 	result->octetLen = strStkG.totalByteLen;
 
 	/* alloc str for all octs pieces with extra byte for null terminator */
-	bufCurr = result->octs = (char*)Asn1Alloc(strStkG.totalByteLen + 1);
+	bufCurr = result->octs = (char*)Asn1Alloc((unsigned long long)strStkG.totalByteLen + 1);
 	CheckAsn1Alloc(result->octs, env);
 
 	/* copy octet str pieces into single blk */
@@ -251,7 +259,7 @@ void BDecAsnOctsContent PARAMS((b, tagId, len, result, bytesDecoded, env), GenBu
 			longjmp(env, -67);
 		}
 		result->octetLen = len;
-		result->octs = (char*)Asn1Alloc(len + 1);
+		result->octs = (char*)Asn1Alloc((unsigned long long)len + 1);
 		CheckAsn1Alloc(result->octs, env);
 		BufCopy(result->octs, b, len);
 

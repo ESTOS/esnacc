@@ -200,6 +200,11 @@ void UnbuildEncodedRelativeOid PARAMS((eoid, result), AsnRelativeOid* eoid _AND_
 	i++;
 
 	headOid = (RELATIVE_OID*)malloc(sizeof(RELATIVE_OID));
+	if (!headOid)
+	{
+		snacc_exit("Out of memory 1");
+		return;
+	}
 	headOid->arcNum = arcNum;
 	headOid->next = (RELATIVE_OID*)malloc(sizeof(RELATIVE_OID));
 	nextOid = &headOid->next;
@@ -212,9 +217,20 @@ void UnbuildEncodedRelativeOid PARAMS((eoid, result), AsnRelativeOid* eoid _AND_
 		arcNum = (arcNum << 7) + (eoid->octs[i] & 0x7f);
 		i++;
 		*nextOid = (RELATIVE_OID*)malloc(sizeof(RELATIVE_OID));
+		if (!*nextOid)
+		{
+			snacc_exit("Out of memory 2");
+			return;
+		}
+
 		(*nextOid)->arcNum = arcNum;
+
 		(*nextOid)->next = NULL;
-		nextOid = &(*nextOid)->next;
+
+		snacc_exit("The existing code here leads to a null pointer dereferenciation which needs to get fixed. Needs test code to solve it so we just exit here on purpose.");
+		return;
+
+		// nextOid = &(*nextOid)->next;
 	}
 
 	*result = headOid;

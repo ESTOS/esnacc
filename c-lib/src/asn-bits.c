@@ -175,7 +175,15 @@ static void FillBitStringStk PARAMS((b, elmtLen0, bytesDecoded, env), GenBuf* b 
 			{
 				strPtr = (char*)BufGetSeg(b, &refdLen);
 
+#if defined(_MSC_VER)
+#pragma warning(disable : 6308)
+#pragma warning(disable : 26451)
+#endif
 				PUSH_STR(strPtr, refdLen, env);
+#if defined(_MSC_VER)
+#pragma warning(default : 6308)
+#pragma warning(default : 26451)
+#endif
 				totalRefdLen += refdLen;
 				if (totalRefdLen == lenToRef)
 					break; /* exit this while loop */
