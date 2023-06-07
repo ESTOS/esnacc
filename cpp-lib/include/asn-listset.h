@@ -405,7 +405,7 @@ template <class T> void AsnSeqOf<T>::BDec(const SNACC::AsnBuf& b, SNACC::AsnLen&
 
 	SNACC::AsnTag tagId = SNACC::BDecTag(b, bytesDecoded);
 	if (tagId != MAKE_TAG_ID(SNACC::UNIV, SNACC::CONS, SNACC::SEQ_TAG_CODE))
-		throw SNACC::InvalidTagException(typeName(), tagId, __FILE__, __LINE__, "AsnSeqOf<T>:BDec()");
+		throw SNACC::InvalidTagException(this->typeName(), tagId, __FILE__, __LINE__, "AsnSeqOf<T>:BDec()");
 	SNACC::AsnLen elmtLen;
 	elmtLen = SNACC::BDecLen(b, bytesDecoded);
 	__super::BDecContent(b, tagId, elmtLen, bytesDecoded);
@@ -415,14 +415,14 @@ template <class T> void AsnSeqOf<T>::Print(std::ostream& os, unsigned short inde
 {
 	os << "\n";
 	SNACC::Indent(os, indent);
-	os << "{ -- " << typeName() << " SEQUENCE OF ";
+	os << "{ -- " << this->typeName() << " SEQUENCE OF ";
 	++indent;
 
 	if (__super::empty())
 		os << "is EMPTY\n";
 	else
 	{
-		os << front().typeName() << " \n";
+		os << this->front().typeName() << " \n";
 
 		for (typename AsnSeqOf<T>::const_iterator i = __super::begin(); i != __super::end(); ++i)
 		{
@@ -439,10 +439,10 @@ template <class T> void AsnSeqOf<T>::PrintXML(std::ostream& os, const char* lpsz
 	if (lpszTitle)
 	{
 		os << "<" << lpszTitle;
-		os << " typeName=\"" << typeName() << "\"";
+		os << " typeName=\"" << this->typeName() << "\"";
 	}
 	else
-		os << "<" << typeName();
+		os << "<" << this->typeName();
 
 	os << " type=\"SEQUENCE_OF\">\n";
 	AsnList<T>::PrintXML(os, lpszTitle);
@@ -450,7 +450,7 @@ template <class T> void AsnSeqOf<T>::PrintXML(std::ostream& os, const char* lpsz
 	if (lpszTitle)
 		os << "</" << lpszTitle << ">";
 	else
-		os << "</" << typeName() << ">";
+		os << "</" << this->typeName() << ">";
 }
 
 ////////////////////////
@@ -516,7 +516,7 @@ template <class T> void AsnSetOf<T>::BDec(const SNACC::AsnBuf& b, SNACC::AsnLen&
 
 	SNACC::AsnTag tagId = SNACC::BDecTag(b, bytesDecoded);
 	if (tagId != MAKE_TAG_ID(SNACC::UNIV, SNACC::CONS, SNACC::SET_TAG_CODE))
-		throw SNACC::InvalidTagException(typeName(), tagId, __FILE__, __LINE__, "AsnSetOf<T>::BDec()");
+		throw SNACC::InvalidTagException(this->typeName(), tagId, __FILE__, __LINE__, "AsnSetOf<T>::BDec()");
 
 	SNACC::AsnLen elmtLen;
 	elmtLen = SNACC::BDecLen(b, bytesDecoded);
@@ -562,14 +562,14 @@ template <class T> SNACC::AsnLen AsnSetOf<T>::PEnc(SNACC::AsnBufBits& b) const
 
 template <class T> void AsnSetOf<T>::Print(std::ostream& os, unsigned short indent) const
 {
-	os << "{ -- " << typeName() << " SET OF ";
+	os << "{ -- " << this->typeName() << " SET OF ";
 	++indent;
 
 	if (__super::empty())
 		os << "is EMPTY\n";
 	else
 	{
-		os << front().typeName() << " \n";
+		os << this->front().typeName() << " \n";
 
 		for (auto i = __super::begin(); i != __super::end(); ++i)
 		{
@@ -586,10 +586,10 @@ template <class T> void AsnSetOf<T>::PrintXML(std::ostream& os, const char* lpsz
 	if (lpszTitle)
 	{
 		os << "<" << lpszTitle;
-		os << " typeName=\"" << typeName() << "\"";
+		os << " typeName=\"" << this->typeName() << "\"";
 	}
 	else
-		os << "<" << typeName();
+		os << "<" << this->typeName();
 
 	os << " type=\"SET_OF\">";
 	AsnList<T>::PrintXML(os);
@@ -597,7 +597,7 @@ template <class T> void AsnSetOf<T>::PrintXML(std::ostream& os, const char* lpsz
 	if (lpszTitle)
 		os << "</" << lpszTitle << ">";
 	else
-		os << "</" << typeName() << ">";
+		os << "</" << this->typeName() << ">";
 }
 
 namespace SNACC
