@@ -86,7 +86,6 @@ char* bVDAGlobalDLLExport = (char*)0;
 #include "../back-ends/c++-gen/gen-code.h"
 #include "../back-ends/java-gen/gen-java-code.h"
 #include "../back-ends/cs-gen/gen-code.h"
-#include "../back-ends/swift-gen/gen-swift-code-old.h"
 #include "../back-ends/swift-gen/gen-swift-code.h"
 #include "../back-ends/js-gen/gen-js-code.h"
 #include "../back-ends/ts-gen/gen-ts-code.h"
@@ -1688,7 +1687,7 @@ void GenSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genVal
 					{
 						saveMods = allMods->curr;
 
-						PrintSwiftROSECodeOLD(srcFilePtr, allMods, currMod);
+						PrintSwiftROSECode(srcFilePtr, allMods, currMod);
 						allMods->curr = saveMods;
 
 						fclose(srcFilePtr);
@@ -1706,7 +1705,7 @@ void GenSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genVal
 		}
 		else
 		{
-			PrintSwiftOperationFactoryOLD(srcFilePtr, allMods);
+			PrintSwiftOperationFactory(srcFilePtr, allMods);
 			fclose(srcFilePtr);
 		}
 	}

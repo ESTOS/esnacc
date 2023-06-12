@@ -1186,7 +1186,7 @@ void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int
 	}
 } /* PrintSwiftCode */
 
-void PrintSwiftOperationFactory(FILE* src, ModuleList* mods, Module* m)
+void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 {
 	Module* currMod;
 	ValueDef* vd;
@@ -1222,7 +1222,7 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods, Module* m)
 					fprintf(src, "      case \"%s\":\n", vd->definedName);
 					fprintf(src, "        let operation:%s = %s()\n", vd->definedName, vd->definedName);
 
-					if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, true))
+					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, true))
 					{
 						if (pszArgument)
 						{
@@ -1297,7 +1297,7 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods, Module* m)
 					fprintf(src, "      case \"%s\":\n", vd->definedName);
 					fprintf(src, "        let operation:%s = %s()\n", vd->definedName, vd->definedName);
 
-					if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, true))
+					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, true))
 					{
 						fprintf(src, "        if(initializeWithDefaultProperties) {\n");
 						if (pszArgument)
