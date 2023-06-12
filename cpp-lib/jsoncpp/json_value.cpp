@@ -90,7 +90,7 @@ static inline bool InRange(double d, T min, U max) {
   return d >= static_cast<double>(min) && d <= static_cast<double>(max);
 }
 #else  // if !defined(JSON_USE_INT64_DOUBLE_CONVERSION)
-static inline double integerToDouble(Json::UInt64 value) {
+static inline double integerToDouble(SJson::UInt64 value) {
   return static_cast<double>(Int64(value / 2)) * 2.0 +
          static_cast<double>(Int64(value & 1));
 }
@@ -124,9 +124,13 @@ static inline char* duplicateStringValue(const char* value, size_t length) {
                       "Failed to allocate string value buffer");
   }
   memcpy(newString, value, length);
+#if defined(_MSC_VER)
 #pragma warning(disable : 6386)
+#endif
   newString[length] = 0;
+#if defined(_MSC_VER)
 #pragma warning(default : 6386)
+#endif
   return newString;
 }
 

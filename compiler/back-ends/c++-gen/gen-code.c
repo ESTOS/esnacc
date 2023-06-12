@@ -4236,17 +4236,10 @@ static void PrintCxxListClass(FILE* hdr, FILE* src, TypeDef* td, Type* lst, Modu
 	char typeNameStr[256];
 	char* className = td->cxxTypeDefInfo->className;
 	char* elementClassName = lst->basicType->a.setOf->cxxTypeRefInfo->className;
-	const char* exportStr;
 	char* pszNamespace;
 	char pcvarname[100];
 	p_e = &p_etemp;
 	p_e->type = lst->basicType->a.setOf;
-
-	// Set DLL export string
-	if (bVDAGlobalDLLExport == NULL)
-		exportStr = "";
-	else
-		exportStr = bVDAGlobalDLLExport;
 
 	if (p_e->type->subtypes != NULL)
 	{
@@ -4781,7 +4774,6 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 
 	PrintSrcIncludes(src, mods, m);
 
-	bool bHasDeprecatedElements = false;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
 		if (IsDeprecatedNoOutputSequence(m, td->definedName))
@@ -4792,7 +4784,6 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 				fprintf(src, "#include \"SNACCDeprecated.h\"\n");
 			else
 				fprintf(src, "#include <%sSNACCDeprecated.h>\n", szCppHeaderIncludePath);
-			bHasDeprecatedElements = true;
 			break;
 		}
 	}

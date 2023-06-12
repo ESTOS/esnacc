@@ -646,7 +646,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						if (!_mkdir(gszOutputPath))
 						{
 							snacc_exit("Failed to create directory %s", gszOutputPath);
-							return;
+							return 1;
 						}
 						currArg++;
 					}

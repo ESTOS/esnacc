@@ -208,7 +208,7 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 	if (!GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
 		return bAddNewLine;
 
-	if (!bInvokes && pszResult || bInvokes && !pszResult)
+	if ((!bInvokes && pszResult) || (bInvokes && !pszResult))
 		return bAddNewLine;
 
 	if (bAddNewLine)

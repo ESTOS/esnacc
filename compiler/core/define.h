@@ -57,7 +57,7 @@ int ObjPtrCmp(void* s1, void* s2);
 
 DefinedObj* NewObjList();
 
-void DefineObj(DefinedObj** l, const void* obj);
+void DefineObj(DefinedObj** l, void* obj);
 
 void UndefineObj(DefinedObj** l, void* obj, CmpObjsRoutine cmpRoutine);
 

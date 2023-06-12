@@ -155,11 +155,15 @@ void AsnRelativeOid::Set(const char* szOidCopy)
 	if (pTempArray == NULL)
 		throw SNACC_MEMORY_EXCEPT((long)intArray.size() * sizeof(long), "pTempArray");
 
+#if defined(_MSC_VER)
 #pragma warning(disable : 6386)
+#endif
 	// Copy the arc numbers into the temporary array
 	for (unsigned int i = 0; i < intArray.size(); ++i)
 		pTempArray[i] = intArray[i];
+#if defined(_MSC_VER)
 #pragma warning(default : 6386)
+#endif
 
 	Set(pTempArray, (unsigned long)intArray.size());
 	delete[] pTempArray;
