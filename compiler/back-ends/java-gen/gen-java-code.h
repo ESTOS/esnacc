@@ -3,14 +3,14 @@
 
 #include "../../../snacc.h"
 #if TIME_WITH_SYS_TIME
-#include <sys/time.h>
-#include <time.h>
+# include <sys/time.h>
+# include <time.h>
 #else
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#else
-#include <time.h>
-#endif
+# if HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
 #endif
 
 #include <string.h>
@@ -18,6 +18,6 @@
 #include "../../core/asn1module.h"
 #include "../../core/snacc-util.h"
 
-void PrintJAVACode(ModuleList* mods, Module* m);
+void PrintJAVACode(ModuleList *mods, Module *m);
 
-#endif // JAVAGENCODE_H_INCLUDED
+#endif //JAVAGENCODE_H_INCLUDED
