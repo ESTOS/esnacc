@@ -1001,6 +1001,11 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	SortAllDependencies(allMods);
 
 	/*
+	 * Creates the different names we need to write the output files
+	 */
+	CreateNames(allMods);
+
+	/*
 	 * STEP 11
 	 * Validates that the structures written are okay
 	 * Checks for certain things we do not want to see :)
@@ -1021,11 +1026,6 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 			PrintModule(stdout, currMod);
 		}
 	}
-
-	/*
-	 * Creates the different names we need to write the output files
-	 */
-	CreateNames(allMods);
 
 	/*
 	 * Step 13
@@ -2480,10 +2480,8 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 					if (!IsROSEValueDef(currMod, vd))
 						continue;
 
-					asnoperationcomment com;
-					if (GetOperationComment_UTF8(currMod->moduleName, vd->definedName, &com))
-						if (com.i64Deprecated)
-							continue;
+					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
+						continue;
 
 					char* pszArgument = NULL;
 					char* pszResult = NULL;
@@ -2493,21 +2491,42 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 					Type* errorType = NULL;
 					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
 					{
-
+						struct BasicType* argumentBasicType = NULL;
 						bool bArgumentIssue = false;
 						if (argumentType)
 						{
-							if (argumentType->basicType->choiceId != BASICTYPE_SEQUENCE && argumentType->basicType->choiceId != BASICTYPE_CHOICE)
+							argumentBasicType = ResolveBasicTypeReferences(argumentType->basicType, NULL);
+							if (!argumentBasicType)
 								bArgumentIssue = true;
+							else
+							{
+								enum BasicTypeChoiceId choiceId = argumentBasicType->choiceId;
+								if (choiceId != BASICTYPE_SEQUENCE && choiceId != BASICTYPE_CHOICE)
+									bArgumentIssue = true;
+							}
 						}
+						struct BasicType* resultBasicType = NULL;
 						bool bResultIssue = false;
 						if (resultType)
 						{
-							if (resultType->basicType->choiceId != BASICTYPE_SEQUENCE && resultType->basicType->choiceId != BASICTYPE_CHOICE)
+							resultBasicType = ResolveBasicTypeReferences(resultType->basicType, NULL);
+							if (!resultBasicType)
 								bResultIssue = true;
+							else
+							{
+								enum BasicTypeChoiceId choiceId = resultBasicType->choiceId;
+								if (choiceId != BASICTYPE_SEQUENCE && choiceId != BASICTYPE_CHOICE)
+									bResultIssue = true;
+							}
 						}
-						bool bErrorIssue = errorType && errorType->basicType->choiceId != BASICTYPE_SEQUENCE;
-						bool bWrongErrorObject = pszError && strcmp(pszError, "AsnRequestError") != 0;
+
+						bool bErrorIssue = false;
+						bool bWrongErrorObject = false;
+						if (errorType)
+						{
+							bErrorIssue = errorType->basicType->choiceId != BASICTYPE_SEQUENCE;
+							bWrongErrorObject = pszError && strcmp(pszError, "AsnRequestError") != 0;
+						}
 						if (bArgumentIssue || bResultIssue || bErrorIssue || bWrongErrorObject)
 						{
 							if (szLastErrorFile != currMod->asn1SrcFileName)
@@ -2531,26 +2550,26 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 								fprintf(stderr, "- %s is using %s as argument which is a ", vd->definedName, pszArgument);
 								PrintTypeById(stderr, argumentType->basicType->choiceId);
 								fprintf(stderr, ".\n  You must use a SEQUENCE or CHOICE here (expandability).\n");
-								nWeHaveErrors = 1;
+								nWeHaveErrors++;
 							}
 							if (bResultIssue)
 							{
 								fprintf(stderr, "- %s is using %s as result which is a ", vd->definedName, pszResult);
 								PrintTypeById(stderr, resultType->basicType->choiceId);
 								fprintf(stderr, ".\n  You must use a SEQUENCE or CHOICE here (expandability).\n");
-								nWeHaveErrors = 1;
+								nWeHaveErrors++;
 							}
 							if (bErrorIssue)
 							{
 								fprintf(stderr, "- %s is using %s as error which is a ", vd->definedName, pszError);
 								PrintTypeById(stderr, errorType->basicType->choiceId);
 								fprintf(stderr, ".\n  You must use a SEQUENCE here (expandability).\n");
-								nWeHaveErrors = 1;
+								nWeHaveErrors++;
 							}
 							if (bWrongErrorObject)
 							{
 								fprintf(stderr, "- %s is using %s as error but must use AsnRequestError.\n", vd->definedName, pszError);
-								nWeHaveErrors = 1;
+								nWeHaveErrors++;
 							}
 						}
 					}
@@ -2564,6 +2583,7 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 		fprintf(stderr, "*************************************************************\n");
 		fprintf(stderr, "* Methods may contain issues if they are flagged deprecated *\n");
 		fprintf(stderr, "*************************************************************\n\n");
+		fprintf(stderr, "- found %i errors\n", nWeHaveErrors);
 		snacc_exit_now(__FUNCTION__, "Now terminating...\n");
 	}
 }
@@ -2708,14 +2728,14 @@ bool recurseFindInvalid(Module* mod, Type* type, const char* szPath, const char*
 
 	if (szElementName)
 	{
-		if (choiceId == BASICTYPE_SEQUENCE && IsDeprecatedNoOutputSequence(mod, szElementName))
+		if ((choiceId == BASICTYPE_SEQUENCE || choiceId == BASICTYPE_BITSTRING) && IsDeprecatedFlaggedSequence(mod, szElementName))
 			return false;
 		char szNewName[TESTBUFFERSIZE] = {0};
 		strcat_s(szNewName, TESTBUFFERSIZE, "::");
 		strcat_s(szNewName, TESTBUFFERSIZE, szElementName);
 		if ((choiceId == BASICTYPE_SEQUENCE || choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF) && type->cxxTypeRefInfo->className)
 		{
-			if (IsDeprecatedNoOutputSequence(mod, type->cxxTypeRefInfo->className))
+			if (IsDeprecatedFlaggedSequence(mod, type->cxxTypeRefInfo->className))
 				return false;
 			strcat_s(szNewName, TESTBUFFERSIZE, "(");
 			strcat_s(szNewName, TESTBUFFERSIZE, type->cxxTypeRefInfo->className);
