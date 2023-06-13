@@ -23,22 +23,14 @@ static void PrintJavaTypeDefCode(TypeDef* td);
 
 static FILE* getJavaFilePointer(char* pPrefix)
 {
+	char* fileName = MakeFileName(pPrefix, ".java");
+
 	FILE* p = NULL;
-	size_t size = strlen(pPrefix) + 6;
-	char* fileName = malloc(size); // strlen + .java + /0
-	if (!fileName)
-	{
-		snacc_exit("Out of memory");
-		return NULL;
-	}
-
-	sprintf_s(fileName, size, "%s.java", pPrefix);
-
 #ifdef _WIN32
 	fopen_s(&p, fileName, "wt");
-#else  // _WIN32
+#else
 	p = fopen(fileName, "wt");
-#endif // _WIN32
+#endif
 	free(fileName);
 
 	return p;
@@ -345,7 +337,6 @@ static void PrintJavaChoiceDefCode(TypeDef* td)
 
 	FOR_EACH_LIST_ELMT(e, td->type->basicType->a.choice)
 	{
-
 		fprintf(src, "	private ");
 		PrintJavaType(src, e->type);
 		fprintf(src, " %s=", e->fieldName);
