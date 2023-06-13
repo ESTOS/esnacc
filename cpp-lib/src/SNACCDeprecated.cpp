@@ -16,7 +16,7 @@ void SNACCDeprecated::SetDeprecatedCallback(SNACCDeprecatedNotify* pCallBack)
 	m_pCallback = pCallBack;
 }
 
-void SNACCDeprecated::DeprecatedASN1Object(const __int64 i64DeprecatedSince, const char* szModuleName, const char* szObjectName)
+void SNACCDeprecated::DeprecatedASN1Object(const long long i64DeprecatedSince, const char* szModuleName, const char* szObjectName)
 {
 	if (!m_pCallback)
 		return;
@@ -26,7 +26,7 @@ void SNACCDeprecated::DeprecatedASN1Object(const __int64 i64DeprecatedSince, con
 	m_pCallback->DeprecatedASN1Object(i64DeprecatedSince, szModuleName, szObjectName, callStack);
 }
 
-void SNACCDeprecated::DeprecatedASN1Method(const __int64 i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext /* = NULL */)
+void SNACCDeprecated::DeprecatedASN1Method(const long long i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext /* = NULL */)
 {
 	if (!m_pCallback)
 		return;

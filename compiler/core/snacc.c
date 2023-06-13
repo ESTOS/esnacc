@@ -2865,9 +2865,9 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
  *
  * Returns -1 on error
  */
-__int64 ConvertDateToUnixTime(const char* szDate)
+long long ConvertDateToUnixTime(const char* szDate)
 {
-	__int64 tmResult = -1;
+	long long tmResult = -1;
 #ifdef _WIN32
 	SYSTEMTIME st;
 	memset(&st, 0x00, sizeof(SYSTEMTIME));
@@ -2884,13 +2884,12 @@ __int64 ConvertDateToUnixTime(const char* szDate)
 		ULARGE_INTEGER uli;
 		uli.LowPart = ft.dwLowDateTime;
 		uli.HighPart = ft.dwHighDateTime;
-		tmResult = (__int64)((uli.QuadPart / 10000000ULL) - 11644473600ULL);
+		tmResult = (long long)((uli.QuadPart / 10000000ULL) - 11644473600ULL);
 	}
 #else
 	struct tm tm;
 	if (strptime(szDate, "%d.%m.%Y", &tm))
-		;
-	i64Result = mktime(&tm);
+		tmResult = mktime(&tm);
 #endif
 	return tmResult;
 }
@@ -2900,7 +2899,7 @@ __int64 ConvertDateToUnixTime(const char* szDate)
  *
  * Returns a pointer to a buffer that needs to get released with Free
  */
-char* ConvertUnixTimeToReadable(const __int64 tmUnixTime)
+char* ConvertUnixTimeToReadable(const long long tmUnixTime)
 {
 	char* szBuffer = malloc(128);
 	if (!szBuffer)
@@ -2909,9 +2908,15 @@ char* ConvertUnixTimeToReadable(const __int64 tmUnixTime)
 		return NULL;
 	}
 
-	struct tm timeinfo;
-	localtime_s(&timeinfo, &tmUnixTime);
-	strftime(szBuffer, 128, "%d.%m.%Y", &timeinfo);
+	#ifdef _WIN32
+		struct tm timeinfo;
+		localtime_s(&timeinfo, &tmUnixTime);
+		strftime(szBuffer, 128, "%d.%m.%Y", &timeinfo);
+	#else
+		struct tm* timeinfo;
+		timeinfo = localtime((const time_t*)&tmUnixTime);
+		strftime(szBuffer, 128, "%d.%m.%Y", timeinfo);
+	#endif
 
 	return szBuffer;
 }

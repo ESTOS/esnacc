@@ -22,8 +22,8 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...);
 extern "C"
 {
 #endif
-	__int64 ConvertDateToUnixTime(const char* szValue);
-	char* ConvertUnixTimeToReadable(const __int64 tmUnixTime);
+	long long ConvertDateToUnixTime(const char* szValue);
+	char* ConvertUnixTimeToReadable(const long long tmUnixTime);
 #ifdef __cplusplus
 }
 #endif
