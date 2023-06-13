@@ -182,15 +182,17 @@ void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType
 		{
 			nEmptyLines = 0;
 			pType->iPrivate = 1;
-			bInLong = false;
-			bInBrief = false;
+			// We do not change the flags here, the keyword @private may lead or follow any comment
+			// bInLong = false;
+			// bInBrief = false;
 		}
 		else if (strLine.substr(0, 11) == "@deprecated")
 		{
 			nEmptyLines = 0;
 			pType->handleDeprecated(strLine.substr(11));
-			bInLong = false;
-			bInBrief = false;
+			// We do not change the flags here, the keyword @deprecated may lead or follow any comment
+			// bInLong = false;
+			// bInBrief = false;
 		}
 		else if (strLine.substr(0, 9) == "@category")
 		{

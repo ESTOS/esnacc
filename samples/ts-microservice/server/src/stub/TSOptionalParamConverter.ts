@@ -25,27 +25,24 @@ export class EAsnOptionalParameters_Converter {
 	 * Encodes an AsnOptionalParameters object to JSON string encoding in the proprietary Notation the UCServer is using
 	 *
 	 * @param obj - the optional parameters to encode
-	 * @param value - the target object to store the data into
 	 * @param errors - errors that occured while parsing
 	 * @param context - the encoding context
 	 * @param parametername - the parent parameter value name this object is held in
 	 * @returns true on success
 	 */
-	public static toJSON(obj: ENetUC_Common.AsnOptionalParameters, value: ENetUC_Common.AsnOptionalParameters & INamedType, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): boolean {
-		const bFirstCaller = context ? context.context === "" : false;
+	public static toJSON(obj: ENetUC_Common.AsnOptionalParameters, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): ENetUC_Common.AsnOptionalParameters & INamedType | undefined {
 		errors ||= new ConverterErrors();
-		const newContext = TSConverter.addContext(context, parametername, "AsnOptionalParameters");
+		const errorCount = errors.length;
+		const newContext = TSConverter.addEncodeContext(context, parametername, "AsnOptionalParameters");
 
 		if (!newContext?.bUCServerOptionalParams) {
 			debugger;
-			return false;
+			return undefined;
 		}
 
 		const result = {} as Record<string, unknown> & INamedType;
 		if (newContext?.bAddTypes)
 			result["_type"] = "IUCServerOptionalParameters";
-
-		let bSuccess = true;
 
 		for (const id in obj) {
 			if (!Object.prototype.hasOwnProperty.call(obj, id))
@@ -60,18 +57,15 @@ export class EAsnOptionalParameters_Converter {
 					result[element.key] = { binarydata: TSConverter.encode64(element.value.binarydata) };
 				else {
 					debugger;
-					bSuccess = false;
 					errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, newContext.context, `Unable to read ${id}, not integer, not string, not binary`));
 				}
 			}
 		}
 
-		value = result as unknown as ENetUC_Common.AsnOptionalParameters;
+		if (errors.validateResult(errorCount, newContext, "AsnOptionalParameters"))
+			return result as unknown as ENetUC_Common.AsnOptionalParameters;
 
-		if (bFirstCaller && errors.length)
-			errors.unshift(new ConverterError(undefined, undefined, "Errors while encoding AsnOptionalParameters"));
-
-		return bSuccess;
+		return undefined;
 	}
 
 	/**
@@ -89,7 +83,7 @@ export class EAsnOptionalParameters_Converter {
 		const bFirstCaller = context ? context.context === "" : false;
 		if (errors == null)
 			errors = new ConverterErrors();
-		const newContext = TSConverter.addContext(context, parametername, "AsnOptionalParameters");
+		const newContext = TSConverter.addDecodeContext(context, parametername, "AsnOptionalParameters");
 
 		if (dataarg == null) {
 			if (!(optional === true)) {

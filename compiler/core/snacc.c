@@ -582,7 +582,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 								return 1;
 							}
 							const char* szFollowing = argument + 14;
-							long long i64Result = ConvertDateToUnixTime(szFollowing);
+							time_t i64Result = ConvertDateToUnixTime(szFollowing);
 							if (i64Result < 0)
 							{
 								// Invalid time, could not parse the time
@@ -2865,26 +2865,26 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
  *
  * Returns -1 on error
  */
-long long ConvertDateToUnixTime(const char* szDate)
+__int64 ConvertDateToUnixTime(const char* szDate)
 {
-	long long i64Result = -1;
+	__int64 tmResult = -1;
 #ifdef _WIN32
 	SYSTEMTIME st;
 	memset(&st, 0x00, sizeof(SYSTEMTIME));
 	if (sscanf_s(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3)
 	{
 		if (st.wDay < 1 || st.wDay > 31)
-			return i64Result;
+			return tmResult;
 		if (st.wMonth < 1 || st.wMonth > 12)
-			return i64Result;
+			return tmResult;
 		if (st.wYear < 1970)
-			return i64Result;
+			return tmResult;
 		FILETIME ft;
 		SystemTimeToFileTime(&st, &ft);
 		ULARGE_INTEGER uli;
 		uli.LowPart = ft.dwLowDateTime;
 		uli.HighPart = ft.dwHighDateTime;
-		i64Result = (time_t)((uli.QuadPart / 10000000ULL) - 11644473600ULL);
+		tmResult = (__int64)((uli.QuadPart / 10000000ULL) - 11644473600ULL);
 	}
 #else
 	struct tm tm;
@@ -2892,5 +2892,26 @@ long long ConvertDateToUnixTime(const char* szDate)
 		;
 	i64Result = mktime(&tm);
 #endif
-	return i64Result;
+	return tmResult;
+}
+
+/**
+ * Converts a unix time into something readable
+ *
+ * Returns a pointer to a buffer that needs to get released with Free
+ */
+char* ConvertUnixTimeToReadable(const __int64 tmUnixTime)
+{
+	char* szBuffer = malloc(128);
+	if (!szBuffer)
+	{
+		snacc_exit("Out of memory");
+		return NULL;
+	}
+
+	struct tm timeinfo;
+	localtime_s(&timeinfo, &tmUnixTime);
+	strftime(szBuffer, 128, "%d.%m.%Y", &timeinfo);
+
+	return szBuffer;
 }

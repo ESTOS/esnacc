@@ -31,6 +31,7 @@
 #include "cxxconstraints.h"
 #include "cxxmultipleconstraints.h"
 #include "../../core/asn_comments.h"
+#include <inttypes.h>
 
 #if META
 #include "meta.h"
@@ -220,7 +221,11 @@ void PrintConstructor(FILE* hdr, FILE* src, Module* m, char* className)
 	fprintf(src, "%s::%s()\n{\n", className, className);
 
 	if (IsDeprecatedNoOutputSequence(m, className))
-		fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Object(\"%s\", \"%s\");\n", m->moduleName, className);
+	{
+		asnsequencecomment comment;
+		GetSequenceComment_UTF8(m->moduleName, className, &comment);
+		fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Object(%" PRId64 ", \"%s\", \"%s\");\n", comment.i64Deprecated, m->moduleName, className);
+	}
 
 	fprintf(src, "\tInit();\n");
 	fprintf(src, "}\n\n");
@@ -233,7 +238,11 @@ void PrintCopyConstructor(FILE* hdr, FILE* src, Module* m, char* className)
 	fprintf(src, "%s::%s(const %s &that)\n{\n", className, className, className);
 
 	if (IsDeprecatedNoOutputSequence(m, className))
-		fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Object(\"%s\", \"%s\");\n", m->moduleName, className);
+	{
+		asnsequencecomment comment;
+		GetSequenceComment_UTF8(m->moduleName, className, &comment);
+		fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Object(%" PRId64 ", \"%s\", \"%s\");\n", comment.i64Deprecated, m->moduleName, className);
+	}
 
 	fprintf(src, "\tInit();\n");
 	fprintf(src, "\t\n");
@@ -1099,7 +1108,9 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 			if (IsDeprecatedNoOutputOperation(mod, vd->definedName))
 			{
 				fprintf(src, "\t\t\t// This method has been flagged deprecated\n");
-				fprintf(src, "\t\t\tSNACCDeprecated::DeprecatedASN1Method(\"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::in%s);\n\n", mod->moduleName, vd->definedName, pszResult ? ", cxt" : "");
+				asnoperationcomment comment;
+				GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment);
+				fprintf(src, "\t\t\tSNACCDeprecated::DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::in%s);\n\n", comment.i64Deprecated, mod->moduleName, vd->definedName, pszResult ? ", cxt" : "");
 			}
 
 			if (pszResult)
@@ -1305,7 +1316,9 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 			{
 				fprintf(src, "\t// This method has been flagged deprecated\n");
-				fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Method(\"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out%s);\n\n", m->moduleName, vd->definedName, pszResult ? ", cxt" : "");
+				asnoperationcomment comment;
+				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
+				fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out%s);\n\n", comment.i64Deprecated, m->moduleName, vd->definedName, pszResult ? ", cxt" : "");
 			}
 
 			if (pszResult)

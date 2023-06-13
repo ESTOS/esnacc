@@ -26,6 +26,8 @@
 #include "../structure-util.h"
 #include "../comment-util.h"
 #include "gen-ts-combined.h"
+#include "../../core/asn_comments.h"
+#include <inttypes.h>
 #include <assert.h>
 
 void PrintTSNativeType(FILE* hdr, enum BasicTypeChoiceId basicTypeChoiseId)
@@ -416,7 +418,11 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 
 	fprintf(src, ": %s) {\n", szConverted);
 	if (IsDeprecatedFlaggedSequence(m, td->definedName))
-		fprintf(src, "\t\tTSASN1Base.deprecatedObject(moduleName, this);\n");
+	{
+		asnsequencecomment comment;
+		GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment);
+		fprintf(src, "\t\tTSASN1Base.deprecatedObject(%" PRId64 ", moduleName, this);\n", comment.i64Deprecated);
+	}
 	fprintf(src, "\t\tObject.assign(this, that);\n");
 	fprintf(src, "\t}\n\n");
 
