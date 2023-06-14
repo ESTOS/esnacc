@@ -268,7 +268,7 @@ void PrintTSEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Typ
 				continue;
 			if (!bFirst)
 				fprintf(src, ",\n");
-			printMemberComment(src, m, td, n->name, "\t", COMMENTSTYLE_JSON);
+			printMemberComment(src, m, td, n->name, "\t", COMMENTSTYLE_TYPESCRIPT);
 			char* szConverted = FixName(n->name);
 			fprintf(src, "\t%s = %d", szConverted, n->value);
 			bSomeThingAdded = true;
@@ -392,7 +392,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	char* szConverted = FixName(td->definedName);
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	printSequenceComment(src, m, td, COMMENTSTYLE_JSON);
+	printSequenceComment(src, m, td, COMMENTSTYLE_TYPESCRIPT);
 
 	/* put class spec in hdr file */
 	fprintf(src, "export class %s {\n", szConverted);
@@ -544,7 +544,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
 
-		printMemberComment(src, m, td, e->fieldName, "\t", COMMENTSTYLE_JSON);
+		printMemberComment(src, m, td, e->fieldName, "\t", COMMENTSTYLE_TYPESCRIPT);
 
 		enum BasicTypeChoiceId choiceId = e->type->basicType->choiceId;
 		if (choiceId == BASICTYPE_IMPORTTYPEREF || choiceId == BASICTYPE_LOCALTYPEREF)
@@ -814,7 +814,7 @@ void PrintTSComments(FILE* src, Module* m)
 	fprintf(src, "// prettier-ignore\n");
 	fprintf(src, ESLINT_DISABLE);
 
-	printModuleComment(src, RemovePath(m->baseFileName), COMMENTSTYLE_JSON);
+	printModuleComment(src, RemovePath(m->baseFileName), COMMENTSTYLE_TYPESCRIPT);
 }
 
 void PrintTSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printTSONEncDec, int novolatilefuncs)

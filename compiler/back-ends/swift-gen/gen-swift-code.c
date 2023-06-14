@@ -652,12 +652,14 @@ static void PrintSwiftEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 		CNamedElmt* n;
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
+			printMemberComment(src, m, td, n->name, "  ", COMMENTSTYLE_SWIFT);
 			fprintf(src, "  case %s = %d\n", n->name, n->value);
 		}
 	}
 
 	fprintf(src, "\n");
-	fprintf(src, "  static func fromJSONObject(_ jsonObject:AnyObject) -> Int? {\n");
+	fprintf(src, "  static func fromJSONObject(_ jsonObject:AnyObject) -> Int?\n");
+	fprintf(src, "  {\n");
 	fprintf(src, "    return jsonObject as? Int\n");
 	fprintf(src, "  }\n");
 	fflush(src);

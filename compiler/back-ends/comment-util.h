@@ -11,9 +11,10 @@ typedef char bool;
 
 enum COMMENTSTYLE
 {
-	COMMENTSTYLE_JSON = 0,
+	COMMENTSTYLE_TYPESCRIPT = 0,
 	COMMENTSTYLE_CPP = 1,
-	COMMENTSTYLE_SWIFT = 2
+	COMMENTSTYLE_SWIFT = 2,
+	COMMENTSTYLE_JAVA = 3
 };
 
 const char* getDeprecated(const char* szDeprecated, enum COMMENTSTYLE style);

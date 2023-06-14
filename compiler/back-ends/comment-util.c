@@ -10,7 +10,7 @@ const char* getDeprecated(const char* szDeprecated, enum COMMENTSTYLE style)
 {
 	if (szDeprecated && strlen(szDeprecated))
 		return szDeprecated;
-	else if (style == COMMENTSTYLE_JSON)
+	else if (style == COMMENTSTYLE_TYPESCRIPT)
 		return "*";
 	else
 		return (const char*)NULL;
@@ -167,7 +167,7 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 			char szPrefix[128] = {0};
 			char szSuffix[128] = {0};
 			strcat_s(szPrefix, 128, szIndent);
-			if (style == COMMENTSTYLE_CPP)
+			if (style == COMMENTSTYLE_CPP || style == COMMENTSTYLE_JAVA || style == COMMENTSTYLE_SWIFT)
 			{
 				strcat_s(szPrefix, 128, "//");
 			}
@@ -184,7 +184,10 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 			if (comment.i64Deprecated || comment.iPrivate)
 			{
 				if (bAdded)
+				{
+					bAdded = false;
 					fprintf(src, "\n");
+				}
 				if (comment.i64Deprecated)
 				{
 					const char* szComment = getDeprecated(comment.szDeprecated, style);
@@ -198,12 +201,16 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 					free(szTime);
 				}
 				if (comment.iPrivate)
-					fprintf(src, "%s @private%s", szPrefix, szSuffix);
+					fprintf(src, "%s @private%s\n", szPrefix, szSuffix);
 			}
+			else if (bAdded)
+				fprintf(src, "\n");
 
-			if (iMultiline > 1 && style != COMMENTSTYLE_CPP)
-				fprintf(src, "\n%s */", szIndent);
-			fprintf(src, "\n");
+			if (iMultiline > 1)
+			{
+				if (style == COMMENTSTYLE_TYPESCRIPT)
+					fprintf(src, "\n%s */\n", szIndent);
+			}
 		}
 	}
 }
@@ -274,7 +281,7 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 			const char* szPrefix = "";
 			if (style == COMMENTSTYLE_CPP)
 				szPrefix = "\t//";
-			else if (style == COMMENTSTYLE_SWIFT)
+			else if (style == COMMENTSTYLE_SWIFT || style == COMMENTSTYLE_JAVA)
 			{
 				fprintf(src, "/**\n");
 				szPrefix = " *";
@@ -307,9 +314,9 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 				if (comment.iPrivate)
 					fprintf(src, "%s @private\n", szPrefix);
 			}
-			if (style == COMMENTSTYLE_JSON)
+			if (style == COMMENTSTYLE_TYPESCRIPT)
 				fprintf(src, "\t */\n");
-			else if (style == COMMENTSTYLE_SWIFT)
+			else if (style == COMMENTSTYLE_SWIFT || style == COMMENTSTYLE_JAVA)
 				fprintf(src, " */\n");
 
 			return true;
@@ -321,6 +328,9 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 
 void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum COMMENTSTYLE style)
 {
+	if (style == COMMENTSTYLE_JAVA)
+		fprintf(src, "@Generated(\"estos esnacc\")\n");
+
 	if (!giWriteComments)
 		return;
 
