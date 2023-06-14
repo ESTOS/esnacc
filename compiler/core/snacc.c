@@ -1699,7 +1699,8 @@ void GenSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genVal
 
 	if (genROSEDecoders)
 	{
-		if (fopen_s(&srcFilePtr, "AsnOperationFactory.swift", "wt") != 0 || srcFilePtr == NULL)
+		char* szFileName = MakeSwiftFileName("AsnOperationFactory");
+		if (fopen_s(&srcFilePtr, szFileName, "wt") != 0 || srcFilePtr == NULL)
 		{
 			perror("fopen ROSE");
 		}
@@ -1708,6 +1709,7 @@ void GenSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genVal
 			PrintSwiftOperationFactory(srcFilePtr, allMods);
 			fclose(srcFilePtr);
 		}
+		free(szFileName);
 	}
 } /* GenSwiftCode */
 

@@ -1117,7 +1117,8 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 
 	fprintf(src, "  public final class func createOperationFromJSONObject(_ operationName:String, argument:AnyObject?, result:AnyObject?, error:AnyObject?) -> AsnOperation?\n");
 	fprintf(src, "  {\n");
-	fprintf(src, "    switch(operationName) {\n");
+	fprintf(src, "    switch(operationName)\n");
+	fprintf(src, "    {\n");
 
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
@@ -1128,6 +1129,9 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 			{
 				if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
 				{
+					if (IsDeprecatedNoOutputOperation(currMod, vd->definedName))
+						continue;
+
 					char* pszArgument = NULL;
 					char* pszResult = NULL;
 					char* pszError = NULL;
@@ -1143,21 +1147,24 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 					{
 						if (pszArgument)
 						{
-							fprintf(src, "        if let val : AnyObject = argument {\n");
-							fprintf(src, "          operation.setArgument( %s(jsonObject:val) )\n", pszArgument);
+							fprintf(src, "        if let val : AnyObject = argument\n");
+							fprintf(src, "        {\n");
+							fprintf(src, "          operation.setArgument(%s(jsonObject:val))\n", pszArgument);
 							fprintf(src, "        }\n");
 						}
 
 						if (pszResult)
 						{
-							fprintf(src, "        if let val : AnyObject = result {\n");
-							fprintf(src, "          operation.setResult( %s(jsonObject:val) )\n", pszResult);
+							fprintf(src, "        if let val : AnyObject = result\n");
+							fprintf(src, "        {\n");
+							fprintf(src, "          operation.setResult(%s(jsonObject:val))\n", pszResult);
 							fprintf(src, "        }\n");
 						}
 
 						if (pszError)
 						{
-							fprintf(src, "        if let val : AnyObject = error {\n");
+							fprintf(src, "        if let val : AnyObject = error\n");
+							fprintf(src, "        {\n");
 							fprintf(src, "          operation.setError( %s.fromJSONObject(val) )\n", pszError);
 							fprintf(src, "        }\n");
 						}
