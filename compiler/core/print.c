@@ -874,12 +874,20 @@ void PrintTypeById PARAMS((f, typeId), FILE* f _AND_ int typeId)
 			fprintf(f, "OCTET STRING");
 			break;
 
-		case BASICTYPE_OCTETCONTAINING:
-			fprintf(f, "OCTET STRING ( CONTAINING UTF8String )");
-			break;
-
 		case BASICTYPE_NULL:
 			fprintf(f, "NULL");
+			break;
+
+		case BASICTYPE_OID:
+			fprintf(f, "OID");
+			break;
+
+		case BASICTYPE_REAL:
+			fprintf(f, "REAL");
+			break;
+
+		case BASICTYPE_ENUMERATED:
+			fprintf(f, "ENUMERATED");
 			break;
 
 		case BASICTYPE_SEQUENCE:
@@ -906,6 +914,10 @@ void PrintTypeById PARAMS((f, typeId), FILE* f _AND_ int typeId)
 			fprintf(f, "SELECTION");
 			break;
 
+		case BASICTYPE_COMPONENTSOF:
+			fprintf(f, "COMPONENTSOF");
+			break;
+
 		case BASICTYPE_ANY:
 			fprintf(f, "ANY");
 			break;
@@ -914,24 +926,20 @@ void PrintTypeById PARAMS((f, typeId), FILE* f _AND_ int typeId)
 			fprintf(f, "ANY DEFINED BY");
 			break;
 
-		case BASICTYPE_OID:
-			fprintf(f, "OBJECT IDENTIFIER");
+		case BASICTYPE_LOCALTYPEREF:
+			fprintf(f, "LOCALTYPEREF");
 			break;
 
-		case BASICTYPE_RELATIVE_OID:
-			fprintf(f, "RELATIVE-OID");
+		case BASICTYPE_IMPORTTYPEREF:
+			fprintf(f, "IMPORTTYPEREF");
 			break;
 
-		case BASICTYPE_ENUMERATED:
-			fprintf(f, "ENUMERATED");
+		case BASICTYPE_MACROTYPE:
+			fprintf(f, "MACROTYPE");
 			break;
 
-		case BASICTYPE_REAL:
-			fprintf(f, "REAL");
-			break;
-
-		case BASICTYPE_COMPONENTSOF:
-			fprintf(f, "COMPONENTS OF");
+		case BASICTYPE_MACRODEF:
+			fprintf(f, "MACRODEF");
 			break;
 
 		case BASICTYPE_NUMERIC_STR:
@@ -942,6 +950,10 @@ void PrintTypeById PARAMS((f, typeId), FILE* f _AND_ int typeId)
 			fprintf(f, "PrintableString");
 			break;
 
+		case BASICTYPE_UNIVERSAL_STR:
+			fprintf(f, "UniversalString");
+			break;
+
 		case BASICTYPE_IA5_STR:
 			fprintf(f, "IA5String");
 			break;
@@ -950,16 +962,76 @@ void PrintTypeById PARAMS((f, typeId), FILE* f _AND_ int typeId)
 			fprintf(f, "BMPString");
 			break;
 
-		case BASICTYPE_UNIVERSAL_STR:
-			fprintf(f, "UniversalString");
-			break;
-
 		case BASICTYPE_UTF8_STR:
 			fprintf(f, "UTF8String");
 			break;
 
+		case BASICTYPE_UTCTIME:
+			fprintf(f, "UTCTIME");
+			break;
+
+		case BASICTYPE_GENERALIZEDTIME:
+			fprintf(f, "GENERALIZEDTIME");
+			break;
+
+		case BASICTYPE_GRAPHIC_STR:
+			fprintf(f, "GRAPHIC_STR");
+			break;
+
+		case BASICTYPE_VISIBLE_STR:
+			fprintf(f, "VISIBLE_STR");
+			break;
+
+		case BASICTYPE_GENERAL_STR:
+			fprintf(f, "GENERAL_STR");
+			break;
+
+		case BASICTYPE_OBJECTDESCRIPTOR:
+			fprintf(f, "ObjectDescriptor");
+			break;
+
+		case BASICTYPE_VIDEOTEX_STR:
+			fprintf(f, "VideoTextString");
+			break;
+
 		case BASICTYPE_T61_STR:
 			fprintf(f, "TeletexString");
+			break;
+
+		case BASICTYPE_EXTERNAL:
+			fprintf(f, "External");
+			break;
+
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(f, "OCTET STRING ( CONTAINING xxx )");
+			break;
+
+		case BASICTYPE_BITCONTAINING:
+			fprintf(f, "BIT ( CONTAINING xxx )");
+			break;
+
+		case BASICTYPE_RELATIVE_OID:
+			fprintf(f, "RELATIVE_OID");
+			break;
+
+		case BASICTYPE_EXTENSION:
+			fprintf(f, "EXTENSION");
+			break;
+
+		case BASICTYPE_SEQUENCET:
+			fprintf(f, "SEQUENCET");
+			break;
+
+		case BASICTYPE_OBJECTCLASS:
+			fprintf(f, "OBJECTCLASS");
+			break;
+
+		case BASICTYPE_OBJECTCLASSFIELDTYPE:
+			fprintf(f, "OBJECTCLASSFIELDTYPE");
+			break;
+
+		case BASICTYPE_ASNSYSTEMTIME:
+			fprintf(f, "AsnSystemTime");
 			break;
 
 		default:
