@@ -28,16 +28,16 @@ public:
 
 	// encode and decode routines
 	virtual SNACC::AsnLen PEnc(SNACC::AsnBufBits& b) const override;
-	virtual SNACC::AsnLen BEnc(SNACC::AsnBuf& b) const = 0;
+	// virtual SNACC::AsnLen BEnc(SNACC::AsnBuf& b) const = 0;
 	virtual SNACC::AsnLen BEncContent(SNACC::AsnBuf& b) const;
 	virtual void PDec(SNACC::AsnBufBits& b, SNACC::AsnLen& bytesDecoded) override;
-	virtual void BDec(const SNACC::AsnBuf& b, SNACC::AsnLen& bytesDecoded) = 0;
+	// virtual void BDec(const SNACC::AsnBuf& b, SNACC::AsnLen& bytesDecoded) = 0;
 	virtual void BDecContent(const SNACC::AsnBuf& b, SNACC::AsnTag tagId, SNACC::AsnLen elmtLen, SNACC::AsnLen& bytesDecoded);
 
 	virtual void JEnc(SJson::Value& b) const override;
 	virtual bool JDec(const SJson::Value& b) override;
 
-	const char* typeName() const = 0;
+	// const char* typeName() const = 0;
 	virtual int checkConstraints(SNACC::ConstraintFailList* pConstraintFails) const override;
 
 	void PrintXML(std::ostream& os, const char* lpszTitle = NULL) const;

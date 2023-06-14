@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <inttypes.h>
 
 void PrintTSROSEHeader(FILE* src, Module* m, const bool bInterface)
 {
@@ -208,7 +209,7 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 	if (!GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
 		return bAddNewLine;
 
-	if (!bInvokes && pszResult || bInvokes && !pszResult)
+	if ((!bInvokes && pszResult) || (bInvokes && !pszResult))
 		return bAddNewLine;
 
 	if (bAddNewLine)
@@ -490,7 +491,11 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 		{
 			fprintf(src, "\t\t\tcase OperationIDs.OPID_%s:\n", pszFunction);
 			if (bDeprecated)
-				fprintf(src, "\t\t\t\tTSASN1Base.deprecatedMethod(this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", pszFunction);
+			{
+				asnoperationcomment comment;
+				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
+				fprintf(src, "\t\t\t\tTSASN1Base.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+			}
 			fprintf(src, "\t\t\t\treturn await this.handleOnInvoke(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
 			fprintf(src, "%s.%s, ", szArgumentNS, pszArgument);
@@ -510,7 +515,11 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 		{
 			fprintf(src, "\t\t\tcase OperationIDs.OPID_%s:\n", pszFunction);
 			if (bDeprecated)
-				fprintf(src, "\t\t\t\tTSASN1Base.deprecatedMethod(this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", pszFunction);
+			{
+				asnoperationcomment comment;
+				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
+				fprintf(src, "\t\t\t\tTSASN1Base.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+			}
 			fprintf(src, "\t\t\t\treturn await this.handleOnEvent(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
 			fprintf(src, "%s.%s, ", szArgumentNS, pszArgument);
@@ -674,7 +683,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 					{
 						if (operationComment.i64Deprecated)
 						{
-							fprintf(src, "\t * @deprecated %s\n", getDeprecated(operationComment.szDeprecated, COMMENTSTYLE_JSON));
+							fprintf(src, "\t * @deprecated %s\n", getDeprecated(operationComment.szDeprecated, COMMENTSTYLE_TYPESCRIPT));
 							bDeprecated = true;
 						}
 						if (operationComment.iPrivate)
@@ -699,7 +708,11 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 					fprintf(src, " | %s.%s", szErrorNS, pszError);
 				fprintf(src, " | AsnInvokeProblem> {\n");
 				if (bDeprecated)
-					fprintf(src, "\t\tTSASN1Base.deprecatedMethod(this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", pszFunction);
+				{
+					asnoperationcomment comment;
+					GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
+					fprintf(src, "\t\tTSASN1Base.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+				}
 				fprintf(src, "\t\treturn this.handleInvoke(argument, ");
 				fprintf(src, "%s.%s, ", szResultNS, pszResult);
 				fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
@@ -729,7 +742,11 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 			{
 				fprintf(src, "\tpublic event_%s(argument: %s.%s, invokeContext?: ISendInvokeContextParams): undefined | boolean {\n", pszFunction, szArgumentNS, pszArgument);
 				if (bDeprecated)
-					fprintf(src, "\t\tTSASN1Base.deprecatedMethod(this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", pszFunction);
+				{
+					asnoperationcomment comment;
+					GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
+					fprintf(src, "\t\tTSASN1Base.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+				}
 				fprintf(src, "\t\treturn this.handleEvent(argument, ");
 				fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
 				if (argumentMod == m)
@@ -796,7 +813,7 @@ void PrintTSROSEInterfaceCode(FILE* src, ModuleList* mods, Module* m)
 void PrintTSROSEModuleComment(FILE* src, Module* m)
 {
 	fprintf(src, "\n// [%s]\n", __FUNCTION__);
-	printModuleComment(src, m->moduleName, COMMENTSTYLE_JSON);
+	printModuleComment(src, m->moduleName, COMMENTSTYLE_TYPESCRIPT);
 }
 
 bool hasEvents(Module* m)

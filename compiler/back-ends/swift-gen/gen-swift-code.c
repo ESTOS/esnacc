@@ -1,5 +1,5 @@
 /*
- *   compiler/back_ends/TS_gen/gen_js_code.c - routines for printing C++ code from type trees
+ *   compiler/back_ends/swift_gen/gen_code.c - routines for printing C++ code from type trees
  *
  *   assumes that the type tree has already been run through the
  *   c++ type generator (c++_gen/types.c).
@@ -12,162 +12,229 @@
  * Copyright (C) 1991, 1992 Michael Sample
  *           and the University of British Columbia
  *
- * 2016 ESTOS/stm
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
+ * $Header: /develop30/common/esnacc1.7/SNACC/compiler/back-ends/swift-gen/gen-code.c,v 1.15 2008/04/15 07:29:30 \ste Exp $
+ *
  */
 
 #include "gen-swift-code.h"
-#include "../str-util.h"
-#include "../structure-util.h"
+#include "../../../c-lib/include/asn-incl.h"
+#include "../../core/asn1module.h"
+#include "../../core/asn_comments.h"
 #include "../comment-util.h"
-#include "gen-swift-combined.h"
-#include <assert.h>
+#include "../structure-util.h"
+#include <inttypes.h>
 
-void PrintSwiftNativeType(FILE* src, enum BasicTypeChoiceId basicTypeChoiseId)
+// defined in normalize.c
+#define SETOF_SUFFIX "SetOf"
+#define SEQOF_SUFFIX "SeqOf"
+
+#if 0
+#define PRINTASN1POSITION                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+	fprintf(src, "\n// Asn1 File: %s:%d\n", m->baseFileName, td->type->lineNo);                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+	fflush(src);
+#else
+#define PRINTDEBUGGING fprintf(src, "// [%s]\n", __FUNCTION__);
+#define PRINTASN1POSITION
+#endif
+int EndsWith(const char* str, const char* suffix)
+{
+	if (!str || !suffix)
+		return 0;
+	size_t lenstr = strlen(str);
+	size_t lensuffix = strlen(suffix);
+	if (lensuffix > lenstr)
+		return 0;
+	return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
+}
+
+static char* kS_AsnSystemTime = "AsnSystemTime";
+static char* kS_AsnOptionalParameters = "AsnOptionalParameters";
+static char* kS_UTF8StringList = "UTF8StringList";
+static char* kS_SEQInteger = "SEQInteger";
+
+static void PrintSwiftNativeType(FILE* src, int basicTypeChoiseId)
 {
 	switch (basicTypeChoiseId)
 	{
 		case BASICTYPE_BOOLEAN:
 			fprintf(src, "Bool");
 			break;
+
+		case BASICTYPE_BITSTRING:
 		case BASICTYPE_INTEGER:
-		case BASICTYPE_REAL:
-		case BASICTYPE_ENUMERATED:
 			fprintf(src, "Int");
 			break;
+
 		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
 			fprintf(src, "Data");
 			break;
+
+		case BASICTYPE_ENUMERATED:
+			fprintf(src, "Int"); // FIXME
+			break;
+
+		case BASICTYPE_REAL:
+			fprintf(src, "Double");
+			break;
+
 		case BASICTYPE_UTF8_STR:
+		case BASICTYPE_OCTETCONTAINING:
 			fprintf(src, "NSString");
 			break;
-		case BASICTYPE_NULL:
-			fprintf(src, "object");
+
+		case BASICTYPE_UTCTIME:
+			fprintf(src, "NSDate");
 			break;
+
+		case BASICTYPE_UNKNOWN:
+		case BASICTYPE_NULL:
+			fprintf(src, "AnyObject");
+			break;
+
 		default:
-			snacc_exit("Invalid basicTypeChoiseId %d", basicTypeChoiseId);
+			snacc_exit("Unknown basicTypeChoiseId %d", basicTypeChoiseId);
+			break;
 	}
 }
 
-void PrintSwiftDefaultValue(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t)
+static void PrintSwiftDefaultValue(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t)
 {
-	if (t->optional)
 	{
-		fprintf(src, "nil");
-		return;
-	}
-
-	if (t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED)
-	{
-		CNamedElmt* n;
-		Type* enumType = t->basicType->a.localTypeRef->link->type;
-		if (HasNamedElmts(enumType) != 0)
-		{
-			FOR_EACH_LIST_ELMT_NOITERATE(n, enumType->cxxTypeRefInfo->namedElmts)
-			{
-				// fprintf(src, ", default: %s.%s", t->cxxTypeRefInfo->className, n->name);
-				fprintf(src, "%s.%s", t->cxxTypeRefInfo->className, n->name);
-				break;
-			}
-		}
-	}
-	else
-	{
-		enum BasicTypeChoiceId choiceId = t->basicType->choiceId;
-		if (choiceId == BASICTYPE_IMPORTTYPEREF || choiceId == BASICTYPE_LOCALTYPEREF)
-		{
-			if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
-				choiceId = BASICTYPE_UTCTIME;
-			else if (choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link)
-			{
-				if (IsSimpleType(t->basicType->a.importTypeRef->link->type->basicType->choiceId))
-					choiceId = t->basicType->a.importTypeRef->link->type->basicType->choiceId;
-			}
-			else if (choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link)
-			{
-				if (IsSimpleType(t->basicType->a.localTypeRef->link->type->basicType->choiceId))
-					choiceId = t->basicType->a.localTypeRef->link->type->basicType->choiceId;
-			}
-			else
-			{
-				snacc_exit("Invalid parameter, choiceID is %i but the associated link is NULL", choiceId);
-				return;
-			}
-		}
-
-		switch (choiceId)
+		switch (t->basicType->choiceId)
 		{
 			case BASICTYPE_BOOLEAN:
 				fprintf(src, "false");
 				break;
 			case BASICTYPE_INTEGER:
-			case BASICTYPE_ENUMERATED:
 				fprintf(src, "0");
 				break;
 			case BASICTYPE_OCTETSTRING:
-			case BASICTYPE_OCTETCONTAINING:
 				fprintf(src, "Data()");
 				break;
-			case BASICTYPE_UTCTIME:
-				fprintf(src, "Date()");
+			case BASICTYPE_ENUMERATED:
+				fprintf(src, "0"); // FIXME
+				break;
+			case BASICTYPE_SEQUENCEOF:
+				fprintf(src, "%sArray", t->cxxTypeRefInfo->className);
 				break;
 			case BASICTYPE_REAL:
 				fprintf(src, "0.0");
 				break;
 			case BASICTYPE_UTF8_STR:
+			case BASICTYPE_OCTETCONTAINING:
 				fprintf(src, "String() as NSString");
+				break;
+			case BASICTYPE_UTCTIME:
+				fprintf(src, "AsnSystemTime()");
 				break;
 			case BASICTYPE_IMPORTTYPEREF:
 				{
-					if (!t->basicType->a.importTypeRef->link)
+					char* className = FixName(t->basicType->a.importTypeRef->link->definedName);
+					int refBasicTypeChoiceId = t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId;
+					int typeIdOfReferencesType = t->basicType->a.importTypeRef->link->type->basicType->choiceId;
+
+					if (0 == strcmp(kS_UTF8StringList, className))
 					{
-						snacc_exit("Invalid parameter, BASICTYPE_IMPORTTYPEREF but the associated link is NULL");
-						return;
+						fprintf(src, "StringArray<NSString>()");
 					}
-					char* szConverted = FixName(t->basicType->a.importTypeRef->link->definedName);
-					fprintf(src, "%s()", szConverted);
-					free(szConverted);
+					else if (0 == strcmp(kS_SEQInteger, className))
+					{
+						fprintf(src, "IntArray()");
+					}
+					else if (typeIdOfReferencesType == BASICTYPE_SEQUENCEOF)
+					{
+						char* elementName = t->basicType->a.importTypeRef->link->type->basicType->a.sequenceOf->basicType->a.importTypeRef->typeName;
+						fprintf(src, "%sArray<%s>()", elementName, elementName);
+					}
+					else if (refBasicTypeChoiceId == BASICTYPE_ENUMERATED)
+					{
+						if (!t->basicType->a.importTypeRef->link)
+						{
+							snacc_exit("Invalid parameter, BASICTYPE_IMPORTTYPEREF but the associated link is NULL");
+							return;
+						}
+						Type* enumType = t->basicType->a.importTypeRef->link->type;
+						if (HasNamedElmts(enumType) != 0)
+						{
+							Type* pType = t->basicType->a.importTypeRef->link->type;
+							CNamedElmt* pFirstEnumValue = (CNamedElmt*)pType->cxxTypeRefInfo->namedElmts->first->data;
+							fprintf(src, "%s.%s.rawValue", t->cxxTypeRefInfo->className, pFirstEnumValue->name);
+						}
+					}
+					else
+					{
+						fprintf(src, "%s()", t->cxxTypeRefInfo->className);
+					}
+					free(className);
 					break;
 				}
 			case BASICTYPE_LOCALTYPEREF:
 				{
-					if (!t->basicType->a.localTypeRef->link)
+					char* className = FixName(t->basicType->a.localTypeRef->link->definedName);
+					int refBasicTypeChoiceId = t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId;
+					int typeIdOfReferencesType = t->basicType->a.localTypeRef->link->type->basicType->choiceId;
+
+					if (0 == strcmp(kS_UTF8StringList, className))
+						fprintf(src, "StringArray<NSString>()");
+					else if (0 == strcmp(kS_SEQInteger, className))
+						fprintf(src, "IntArray()");
+					if (typeIdOfReferencesType == BASICTYPE_SEQUENCEOF)
 					{
-						snacc_exit("Invalid parameter, BASICTYPE_IMPORTTYPEREF but the associated link is NULL");
-						return;
+						char* elementName = t->basicType->a.localTypeRef->link->type->basicType->a.sequenceOf->basicType->a.localTypeRef->typeName;
+						fprintf(src, "%sArray<%s>()", elementName, elementName);
 					}
-					char* szConverted = FixName(t->basicType->a.localTypeRef->link->definedName);
-					fprintf(src, "%s()", szConverted);
-					free(szConverted);
+					else if (refBasicTypeChoiceId == BASICTYPE_ENUMERATED)
+					{
+						if (!t->basicType->a.importTypeRef->link)
+						{
+							snacc_exit("Invalid parameter, BASICTYPE_LOCALTYPEREF but the associated link is NULL");
+							return;
+						}
+						Type* enumType = t->basicType->a.localTypeRef->link->type;
+						if (HasNamedElmts(enumType) != 0)
+						{
+							Type* pType = t->basicType->a.importTypeRef->link->type;
+							CNamedElmt* pFirstEnumValue = (CNamedElmt*)pType->cxxTypeRefInfo->namedElmts->first->data;
+							fprintf(src, "%s.%s.rawValue", t->cxxTypeRefInfo->className, pFirstEnumValue->name);
+						}
+					}
+					else
+					{
+						fprintf(src, "%s()", className);
+					}
+					free(className);
 					break;
 				}
+			case BASICTYPE_UNKNOWN:
 			case BASICTYPE_NULL:
-				fprintf(src, "null");
-				break;
-			case BASICTYPE_ANY:
-				fprintf(src, "undefined");
-				break;
-			case BASICTYPE_BITSTRING:
+				fprintf(src, "nil");
 				break;
 			default:
-				snacc_exit("Unknown choiceId %d", choiceId);
+				fprintf(src, "%s()", t->cxxTypeRefInfo->className);
+				break;
 		}
 	}
 }
 
-void PrintSwiftType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t, int iForceType)
+void PrintSwiftType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t)
 {
 	enum BasicTypeChoiceId choiceId = t->basicType->choiceId;
 	if (choiceId == BASICTYPE_IMPORTTYPEREF || choiceId == BASICTYPE_LOCALTYPEREF)
 	{
-		if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
+		if (0 == strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime"))
+		{
 			choiceId = BASICTYPE_UTCTIME;
+		}
+		else if (0 == strcmp(t->cxxTypeRefInfo->className, "AsnOptionalParameters"))
+		{
+			fprintf(src, "%s", "AsnOptionalParamArray<AsnOptionalParam>");
+			return;
+		}
 		else if (choiceId == BASICTYPE_IMPORTTYPEREF)
 		{
 			if (IsSimpleType(t->basicType->a.importTypeRef->link->type->basicType->choiceId))
@@ -187,443 +254,1001 @@ void PrintSwiftType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* p
 		case BASICTYPE_REAL:
 		case BASICTYPE_ENUMERATED:
 		case BASICTYPE_UTF8_STR:
-			if (iForceType)
-				PrintSwiftNativeType(src, choiceId);
+			PrintSwiftNativeType(src, choiceId);
 			break;
 		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
 			fprintf(src, "Data");
+			break;
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(src, "NSString");
 			break;
 		case BASICTYPE_SEQUENCEOF:
 			fprintf(src, "%s[]", t->cxxTypeRefInfo->className);
 			break;
 		case BASICTYPE_NULL:
-			fprintf(src, "null");
+			fprintf(src, "AnyObject");
 			break;
 		case BASICTYPE_UTCTIME:
-			fprintf(src, "Date"); // AsnSystemTime is defined as REAL in the Asn1 file, but is transmitted as a string in the Swift.
+			fprintf(src, "AsnSystemTime"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im TS als String übermittelt.
 			break;
 		case BASICTYPE_IMPORTTYPEREF:
 			{
-				char* szConverted = FixName(t->basicType->a.importTypeRef->link->definedName);
-				fprintf(src, "%s", szConverted);
-				free(szConverted);
+				char* className = FixName(t->basicType->a.importTypeRef->link->definedName);
+				int typeIdOfReferencesType = t->basicType->a.importTypeRef->link->type->basicType->choiceId;
+
+				if (0 == strcmp(kS_UTF8StringList, className))
+				{
+					fprintf(src, "StringArray<NSString>");
+				}
+				else if (0 == strcmp(kS_SEQInteger, className))
+				{
+					fprintf(src, "IntArray");
+				}
+				else if (typeIdOfReferencesType == BASICTYPE_SEQUENCEOF)
+				{
+					char* elementName = t->basicType->a.importTypeRef->link->type->basicType->a.sequenceOf->basicType->a.importTypeRef->typeName;
+					fprintf(src, "%sArray<%s>", elementName, elementName);
+				}
+				else
+				{
+					fprintf(src, "%s", className);
+				}
+				free(className);
 				break;
 			}
 		case BASICTYPE_LOCALTYPEREF:
 			{
-				char* szConverted = FixName(t->basicType->a.localTypeRef->link->definedName);
-				fprintf(src, "%s", szConverted);
-				free(szConverted);
+				char* className = FixName(t->basicType->a.localTypeRef->link->definedName);
+				int typeIdOfReferencesType = t->basicType->a.localTypeRef->link->type->basicType->choiceId;
+
+				if (0 == strcmp(kS_UTF8StringList, className))
+				{
+					fprintf(src, "StringArray<NSString>");
+				}
+				else if (0 == strcmp(kS_SEQInteger, className))
+				{
+					fprintf(src, "IntArray");
+				}
+				else if (typeIdOfReferencesType == BASICTYPE_SEQUENCEOF)
+				{
+					char* elementName = t->basicType->a.localTypeRef->link->type->basicType->a.sequenceOf->basicType->a.localTypeRef->typeName;
+					fprintf(src, "%sArray<%s>", elementName, elementName);
+				}
+				else
+				{
+					fprintf(src, "%s", className);
+				}
+				free(className);
 				break;
 			}
 		case BASICTYPE_ANY:
 			fprintf(src, "any");
 			break;
 		case BASICTYPE_BITSTRING:
+			fprintf(src, "%s", t->cxxTypeRefInfo->className);
 			break;
 		default:
 			snacc_exit("Unknown choiceId %d", choiceId);
 	}
-} /* PrintCxxType */
+}
 
-void PrintSwiftEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* enumerated, int novolatilefuncs)
+static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t)
 {
-	//	NamedType *e;
-	//	enum BasicTypeChoiceId tmpTypeId;
-	CNamedElmt* n;
-	PRINTCOMMENT(src, "\n// [%s]\n", __FUNCTION__);
+	NamedType* e;
+	int firstArgument = 1;
 
+	// constructors for decoding
+	fprintf(src, "  public init()\n");
+	fprintf(src, "  {\n");
+	if (IsDeprecatedFlaggedSequence(m, td->definedName))
 	{
-		char* szConverted = FixName(td->definedName);
-		fprintf(src, "public enum %s : Int {\n", szConverted);
-		free(szConverted);
+		asnsequencecomment comment;
+		if (GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment))
+			fprintf(src, "    // CALL DeprecatedASN1Object(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, td->definedName, comment.szDeprecated);
 	}
+	fprintf(src, "  }\n\n");
+
+	if (t->basicType->a.sequence->count > 1)
+	{
+		fprintf(src, "  public convenience init(");
+
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
+		{
+			char* optionalQuestionMark = "";
+
+			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+			{
+				if (e->type->optional || t->basicType->choiceId == BASICTYPE_CHOICE)
+				{
+					if (e->type->basicType->choiceId != BASICTYPE_NULL)
+						optionalQuestionMark = "?";
+				}
+
+				if (firstArgument == 1)
+					firstArgument = 0;
+				else
+					fprintf(src, ", ");
+
+				fprintf(src, "%s : ", e->fieldName);
+				PrintSwiftType(src, mods, m, td, parent, e->type);
+
+				fprintf(src, "%s", optionalQuestionMark);
+			}
+		}
+
+		fprintf(src, ")\n");
+		fprintf(src, "  {\n");
+		fprintf(src, "    self.init()\n");
+
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
+		{
+			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+				fprintf(src, "    self.%s = %s\n", e->fieldName, e->fieldName);
+		}
+		fprintf(src, "  }\n");
+	}
+
+	fprintf(src, "\n");
+	fprintf(src, "  public required init(json: String)\n");
+	fprintf(src, "  {\n");
+	fprintf(src, "    if let jsonData:Data = json.data(using: String.Encoding.utf8)\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "      do\n");
+	fprintf(src, "      {\n");
+	fprintf(src, "        let jsonObject:Any = try JSONSerialization.jsonObject(with: jsonData, options:[])\n");
+	fprintf(src, "        self.setJSONObject(jsonObject as AnyObject)\n");
+	fprintf(src, "      }\n");
+	fprintf(src, "      catch _\n");
+	fprintf(src, "      {\n");
+	fprintf(src, "      }\n");
+	fprintf(src, "    }\n");
+	fprintf(src, "  }\n");
+	fprintf(src, "\n");
+
+	fprintf(src, "  public required init(jsonObject: AnyObject)\n");
+	fprintf(src, "  {\n");
+	fprintf(src, "    self.setJSONObject(jsonObject)\n");
+	fprintf(src, "  }\n\n");
+
+	fprintf(src, "  open class func fromJSONObject(_ jsonObject:AnyObject) -> AnyObject?\n");
+	fprintf(src, "  {\n");
+	fprintf(src, "    return %s(jsonObject:jsonObject)\n", td->definedName);
+	fprintf(src, "  }\n\n");
+
+	fprintf(src, "  open func setJSONObject(_ jsonObject: AnyObject)\n");
+	fprintf(src, "  {\n");
+
+	int dictionaryhaselements = FALSE;
+
+	FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
+	{
+		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+		{
+			if (!dictionaryhaselements)
+			{
+				fprintf(src, "    if let dictionary:NSDictionary = jsonObject as? NSDictionary\n");
+				fprintf(src, "    {\n");
+				dictionaryhaselements = TRUE;
+			}
+
+			char* optionalQuestionMark = "";
+			// char* optionalExclamationMark = "";
+
+			if (e->type->optional || t->basicType->choiceId == BASICTYPE_CHOICE)
+			{
+				if (e->type->basicType->choiceId != BASICTYPE_NULL)
+				{
+					optionalQuestionMark = "?";
+					//	optionalExclamationMark = "!";
+				}
+			}
+
+			{
+				if (e->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF || e->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+				{
+
+					int typeIdOfReferencesType = e->type->basicType->a.localTypeRef->link->type->basicType->choiceId;
+
+					if (typeIdOfReferencesType == BASICTYPE_SEQUENCE || typeIdOfReferencesType == BASICTYPE_CHOICE)
+					{
+						fprintf(src, "      if let %s:AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", e->fieldName, e->fieldName);
+						fprintf(src, "      {\n");
+
+						if (strlen(optionalQuestionMark) == 0)
+						{
+							fprintf(src, "        self.%s = self.%s.merge(%s(jsonObject: %s))\n", e->fieldName, e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
+						}
+						else
+						{
+							fprintf(src, "        if self.%s != nil\n", e->fieldName);
+							fprintf(src, "        {\n");
+							fprintf(src, "          self.%s = self.%s%s.merge(%s(jsonObject: %s))\n", e->fieldName, e->fieldName, optionalQuestionMark, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
+							fprintf(src, "        }\n");
+							fprintf(src, "        else\n");
+							fprintf(src, "        {\n");
+							fprintf(src, "          self.%s = %s(jsonObject: %s)\n", e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
+							fprintf(src, "        }\n");
+						}
+					}
+					else
+					{
+						char* basicTypeName = e->type->basicType->a.localTypeRef->link->definedName;
+						char* fieldName = e->fieldName;
+
+						if (0 == strcmp(kS_AsnSystemTime, basicTypeName))
+						{
+							fprintf(src, "      if let asnTimeString:String = dictionary.object(forKey: \"%s\") as? String,\n", fieldName);
+							fprintf(src, "        let convertedDate:AsnSystemTime = AsnSystemTime(from:asnTimeString)\n");
+							fprintf(src, "      {\n");
+							fprintf(src, "        self.%s = convertedDate\n", e->fieldName);
+						}
+						else if (0 == strcmp(kS_UTF8StringList, basicTypeName))
+						{
+							fprintf(src, "      if let %s:AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
+							fprintf(src, "      {\n");
+							fprintf(src, "        self.%s = StringArray<NSString>(jsonObject: %s )\n", fieldName, fieldName);
+						}
+						else if (0 == strcmp(kS_SEQInteger, basicTypeName))
+						{
+							fprintf(src, "      if let %s:AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
+							fprintf(src, "      {\n");
+							fprintf(src, "        self.%s = IntArray(jsonObject: %s )\n", fieldName, fieldName);
+						}
+						else if (typeIdOfReferencesType == BASICTYPE_SEQUENCEOF)
+						{
+							char* elementName = e->type->basicType->a.localTypeRef->link->type->basicType->a.sequenceOf->basicType->a.localTypeRef->typeName;
+
+							fprintf(src, "      if let %s:AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
+							fprintf(src, "      {\n");
+							fprintf(src, "        self.%s = %sArray<%s>(jsonObject: %s )\n", fieldName, elementName, elementName, fieldName);
+						}
+						else if (typeIdOfReferencesType == BASICTYPE_ENUMERATED)
+						{
+							fprintf(src, "      if let %s:Int = dictionary.object(forKey: \"%s\") as? Int\n", fieldName, fieldName);
+							fprintf(src, "      {\n");
+							fprintf(src, "        self.%s = %s\n", fieldName, fieldName);
+						}
+						else
+						{
+							fprintf(src, "      if let %s:%s = dictionary.object(forKey: \"%s\") as? %s\n", e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName, e->type->basicType->a.localTypeRef->link->definedName);
+							fprintf(src, "      {\n");
+							fprintf(src, "        self.%s = %s\n", e->fieldName, e->fieldName);
+						}
+					}
+				}
+				else if (e->type->basicType->choiceId == BASICTYPE_OCTETSTRING)
+				{
+					fprintf(src, "      if let %sString:String = dictionary.object(forKey: \"%s\") as? String\n", e->fieldName, e->fieldName);
+					fprintf(src, "      {\n");
+					fprintf(src, "        if let %sData:Data = Data(base64Encoded:%sString, options: [])\n", e->fieldName, e->fieldName);
+					fprintf(src, "        {\n");
+					fprintf(src, "          self.%s = %sData\n", e->fieldName, e->fieldName);
+					fprintf(src, "        }\n");
+				}
+				else
+				{
+					fprintf(src, "      if let %s = dictionary.object(forKey: \"%s\") as", e->fieldName, e->fieldName);
+
+					if (e->type->basicType->choiceId != BASICTYPE_NULL)
+						fprintf(src, "?");
+					fprintf(src, " ");
+					PrintSwiftType(src, mods, m, td, parent, e->type);
+					if (e->type->basicType->choiceId == BASICTYPE_NULL)
+						fprintf(src, "?");
+					fprintf(src, "\n");
+					fprintf(src, "      {\n");
+					fprintf(src, "        self.%s = %s\n", e->fieldName, e->fieldName);
+				}
+			}
+			fprintf(src, "      }\n");
+		}
+	}
+	if (dictionaryhaselements)
+		fprintf(src, "    }\n");
+	fprintf(src, "  }\n\n");
+
+	// encode as Dictionay
+	fprintf(src, "  open func toJSONObject() -> AnyObject\n");
+	fprintf(src, "  {\n");
+	fprintf(src, "    let dictionary:NSMutableDictionary = NSMutableDictionary()\n");
+
+	/* write out the sequence elmts */
+	FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
+	{
+		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+		{
+			char* optionalQuestionMark = "";
+			char* optionalExclamationMark = "";
+			const char* szIndent = "    ";
+
+			if (e->type->optional || t->basicType->choiceId == BASICTYPE_CHOICE)
+			{
+				if (t->basicType->choiceId != BASICTYPE_NULL)
+				{
+					optionalQuestionMark = "?";
+					optionalExclamationMark = "!";
+				}
+				szIndent = "      ";
+				fprintf(src, "    if self.%s != nil {\n", e->fieldName);
+			}
+
+			if (0 == strcmp("contactID", e->fieldName))
+			{
+				//
+			}
+			{
+				if (e->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF || e->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+				{
+					int refBasicTypeChoiceId = e->type->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId;
+
+					if (0 == strcmp(kS_AsnSystemTime, e->type->basicType->a.localTypeRef->link->definedName))
+						fprintf(src, "%sdictionary.setValue(self.%s%s.description, forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
+					else if (0 == strcmp(kS_AsnOptionalParameters, e->type->basicType->a.localTypeRef->link->definedName))
+						fprintf(src, "%sdictionary.setValue(self.%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
+					else if (refBasicTypeChoiceId == BASICTYPE_BITSTRING || refBasicTypeChoiceId == BASICTYPE_ENUMERATED || refBasicTypeChoiceId == BASICTYPE_UTF8_STR)
+
+						fprintf(src, "%sdictionary.setValue(self.%s, forKey: \"%s\")\n", szIndent, e->fieldName, e->fieldName);
+					else if (refBasicTypeChoiceId == BASICTYPE_SEQUENCE || refBasicTypeChoiceId == BASICTYPE_CHOICE)
+						fprintf(src, "%sdictionary.setValue(self.%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalQuestionMark, e->fieldName);
+					else
+						fprintf(src, "%sdictionary.setValue(self.%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
+				}
+				else if (e->type->basicType->choiceId == BASICTYPE_OCTETSTRING)
+				{
+					fprintf(src, "%sdictionary.setValue(self.%s%s.base64EncodedString(options: []), forKey: \"%s\")\n", szIndent, e->fieldName, optionalQuestionMark, e->fieldName);
+				}
+				else
+				{
+					fprintf(src, "%sdictionary.setValue(self.%s, forKey: \"%s\")\n", szIndent, e->fieldName, e->fieldName);
+				}
+			}
+
+			if (e->type->optional || t->basicType->choiceId == BASICTYPE_CHOICE)
+				fprintf(src, "    }\n");
+		}
+	}
+	fprintf(src, "    return dictionary\n");
+	fprintf(src, "  }\n\n");
+
+	// encode as JSON
+	fprintf(src, "  open func toJSON() -> NSString?\n");
+	fprintf(src, "  {\n");
+	fprintf(src, "    let dictionary : AnyObject = self.toJSONObject()\n");
+	fprintf(src, "    if JSONSerialization.isValidJSONObject(dictionary)\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "      do\n");
+	fprintf(src, "      {\n");
+	fprintf(src, "        let json:Data = try JSONSerialization.data(withJSONObject: dictionary, options: JSONSerialization.WritingOptions.prettyPrinted)\n");
+	fprintf(src, "        let jsonString:NSString? = NSString(data: json, encoding: String.Encoding.utf8.rawValue)\n");
+	fprintf(src, "        return jsonString\n");
+	fprintf(src, "      }\n");
+	fprintf(src, "      catch _\n");
+	fprintf(src, "      {\n");
+	fprintf(src, "      }\n");
+	fprintf(src, "    }\n");
+	fprintf(src, "    return nil\n");
+	fprintf(src, "  }\n\n");
+
+	fprintf(src, "  public final func copy() -> %s\n", td->definedName);
+	fprintf(src, "  {\n");
+	fprintf(src, "    return %s(jsonObject: self.toJSONObject())\n", td->definedName);
+	fprintf(src, "  }\n\n");
+	// merge
+	fprintf(src, "  public final func merge(_ objectToMerge : %s) -> %s\n", td->definedName, td->definedName);
+	fprintf(src, "  {\n");
+	fprintf(src, "    let result = self.copy()\n");
+	fprintf(src, "    result.setJSONObject(objectToMerge.toJSONObject())\n");
+	fprintf(src, "    return result\n");
+	fprintf(src, "  }\n");
+}
+
+static void PrintSwiftEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* enumerated, int novolatilefuncs)
+{
+	fprintf(src, "public enum %s : Int\n", td->definedName);
+	fprintf(src, "{\n");
+
 	if (HasNamedElmts(td->type) != 0)
 	{
+		CNamedElmt* n;
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
-			printMemberComment(src, m, td, n->name, "\t", COMMENTSTYLE_SWIFT);
+			printMemberComment(src, m, td, n->name, "  ", COMMENTSTYLE_SWIFT);
+			fprintf(src, "  case %s = %d\n", n->name, n->value);
+		}
+	}
+
+	fprintf(src, "\n");
+	fprintf(src, "  static func fromJSONObject(_ jsonObject:AnyObject) -> Int?\n");
+	fprintf(src, "  {\n");
+	fprintf(src, "    return jsonObject as? Int\n");
+	fprintf(src, "  }\n");
+	fflush(src);
+
+	fprintf(src, "}\n\n");
+}
+
+static void PrintSwiftSimpleRefDef(FILE* src, Module* m, TypeDef* td)
+{
+	fprintf(src, "open class %s : %s\n", td->definedName, td->type->cxxTypeRefInfo->className);
+	fprintf(src, "{\n");
+	fprintf(src, "  public required init(json: String)\n");
+	fprintf(src, "  {\n");
+	fprintf(src, "    super.init(json:json)\n");
+	fprintf(src, "  }\n\n");
+	fprintf(src, "  public required init(jsonObject: AnyObject)\n");
+	fprintf(src, "  {\n");
+	fprintf(src, "    super.init(jsonObject:jsonObject)\n");
+	fprintf(src, "  }\n");
+
+	fprintf(src, "}\n\n");
+}
+
+static void PrintSwiftSimpleDef(FILE* src, ModuleList* mods, Module* m, TypeDef* td)
+{
+	if (0 == strcmp(kS_AsnSystemTime, td->definedName))
+	{
+		// is defined as custom class
+	}
+	else
+	{
+		fprintf(src, "public typealias %s = ", td->definedName);
+		// PrintSwiftType(src, NULL,m, NULL, NULL,td->type);
+		// PrintSwiftArrayType(src,td->cxxTypeDefInfo->a);
+
+		switch (td->type->basicType->choiceId)
+		{
+				// case BASICTYPE_SEQUENCEOF:	//fprintf(src,"GenericArray<%s>",td->type->basicType->a.sequenceOf->basicType->a.localTypeRef->typeName);
+				// 							// PrintSwiftArrayType(src,td->cxxTypeDefInfo->);
+				// 							break;
+
+			default:
+				PrintSwiftNativeType(src, td->cxxTypeDefInfo->asn1TypeId);
+				break;
+		}
+	}
+	fprintf(src, "\n\n");
+}
+
+static void PrintSwiftSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
+{
+	Type* innerType = td->type->basicType->a.sequenceOf;
+
+	switch (innerType->basicType->choiceId)
+	{
+		case BASICTYPE_BOOLEAN:
+		case BASICTYPE_BITSTRING:
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_REAL:
+			// primitive types, predefined in the lib
+			break;
+
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+		case BASICTYPE_UTF8_STR:
+		case BASICTYPE_UTCTIME:
+			// class types, predefined in the lib
+			break;
+		default:
+			// class types, defined in a .ASN file
+			if (strcmp("AsnOptionalParam", innerType->cxxTypeRefInfo->className) == 0)
+				break; // is defined as custom class
+
+			if (!EndsWith(td->definedName, SEQOF_SUFFIX) && !EndsWith(td->definedName, SETOF_SUFFIX) && td->type->basicType->choiceId == BASICTYPE_SEQUENCEOF && innerType->basicType->choiceId == BASICTYPE_LOCALTYPEREF)
 			{
-				char* szConverted = FixName(n->name);
-				fprintf(src, "\tcase %s = %d", szConverted, n->value);
-				free(szConverted);
+				fprintf(src, "public typealias %s = %sArray\n", td->definedName, innerType->cxxTypeRefInfo->className);
+
+				fprintf(src, "open class %sArray<T:%s> : GenericArray<%s>\n", innerType->cxxTypeRefInfo->className, innerType->cxxTypeRefInfo->className, innerType->cxxTypeRefInfo->className);
+				fprintf(src, "{\n");
+				fprintf(src, "  public override init() {\n");
+				fprintf(src, "    super.init()\n");
+				fprintf(src, "  }\n\n");
+				fprintf(src, "  public required init(jsonObject: AnyObject) {\n");
+				fprintf(src, "    super.init(jsonObject:jsonObject)\n");
+				fprintf(src, "  }\n\n");
+				fprintf(src, "  open override func convertFromJSONObject(_ jsonObject: AnyObject) -> AnyObject? {\n");
+				fprintf(src, "    return %s.fromJSONObject(jsonObject)\n", innerType->cxxTypeRefInfo->className);
+				fprintf(src, "  }\n");
+				fprintf(src, "}\n\n");
 			}
+
+			break;
+	}
+}
+
+static void PrintSwiftChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* choice, int novolatilefuncs)
+{
+	if (strcmp("AsnOptionalParamChoice", td->definedName) == 0)
+		return; // is defined as custom class
+
+	fprintf(src, "open class %s : JSONConvertable, JSONObjectConvertable\n", td->definedName);
+	fprintf(src, "{\n");
+
+	NamedType* e;
+	FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
+	{
+		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+		{
+			printMemberComment(src, m, td, e->fieldName, "  ", COMMENTSTYLE_SWIFT);
+			fprintf(src, "  public final var %s : ", e->fieldName);
+			PrintSwiftType(src, mods, m, td, choice, e->type);
+			fprintf(src, "? = nil");
 			fprintf(src, "\n");
 		}
 	}
 
-	fprintf(src, "\n\tstatic func fromJSONObject(_ jsonObject:AnyObject) -> Int? {\n");
-	fprintf(src, "\t\treturn jsonObject as? Int\n");
-	fprintf(src, "\t}\n");
-
-	/* close class definition */
-	fprintf(src, "}\n\n");
-} /* PrintSwiftEnumDefCode */
-
-void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* seq, int novolatilefuncs)
-{
-	PRINTCOMMENT(src, "\n// [%s]\n", __FUNCTION__);
-
-	bool bIsChoice = seq->basicType->choiceId == BASICTYPE_CHOICE;
-	char* szConverted = FixName(td->definedName);
-
-	printSequenceComment(src, m, td, COMMENTSTYLE_SWIFT);
-
-	/* put class spec in src file */
-	fprintf(src, "open class %s : JSONConvertable, JSONObjectConvertable {\n", szConverted);
-	// fprintf(src, "\ttype: \"%s\",\n", td->definedName);
-
-	/* Write out properties */
-	// fprintf(src, "\tprops: {\n");
-	int propertyCounter = 0;
-	NamedType* e;
-	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
-	{
-		// OptionalParams ...
-		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
-			continue;
-
-		printMemberComment(src, m, td, e->fieldName, "\t", COMMENTSTYLE_SWIFT);
-		char* szConverted2 = FixName(e->fieldName);
-		fprintf(src, "\tpublic final var %s : ", szConverted2);
-		free(szConverted2);
-
-		PrintSwiftType(src, mods, m, td, seq, e->type, 1);
-
-		if (e->type->optional || bIsChoice)
-			fprintf(src, "? = nil");
-		else
-		{
-			fprintf(src, " = ");
-			PrintSwiftDefaultValue(src, mods, m, td, seq, e->type);
-		}
-		fprintf(src, "\n");
-
-		propertyCounter++;
-	}
-
-	if (propertyCounter)
-		fprintf(src, "\n");
-
-	/*
-	int iMandatoryFields = 0;
-	// Wieviele Pflicht Elemente hat die Sequence?
-	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
-	{
-		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION || e->type->optional)
-			continue;
-		iMandatoryFields++;
-	}
-	*/
-
-	// Jetzt schreiben wir den Konstruktor mit dem einen Argumenten was unserer eigenen Klasse entspricht
-	// Damit erzwingen wir die dedizierte Angabe der pflicht Attribute beim Konstruktor aufruf
-	fprintf(src, "\t// default constructor\n");
-	fprintf(src, "\tpublic init() {\n");
-	fprintf(src, "\t}\n\n");
-
-	fprintf(src, "\t// convenience constructor\n");
-	fprintf(src, "\tpublic convenience init(");
-	propertyCounter = 0;
-	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
-	{
-		// OptionalParams ...
-		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
-			continue;
-
-		if (propertyCounter)
-			fprintf(src, ", ");
-
-		char* szConverted2 = FixName(e->fieldName);
-		fprintf(src, "%s : ", szConverted2);
-		free(szConverted2);
-
-		PrintSwiftType(src, mods, m, td, seq, e->type, 1);
-		if (e->type->optional || bIsChoice)
-			fprintf(src, "?");
-		propertyCounter++;
-	}
-	fprintf(src, ") {\n");
-	fprintf(src, "\t\tself.init()\n");
-	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
-	{
-		// OptionalParams ...
-		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
-			continue;
-
-		char* szConverted2 = FixName(e->fieldName);
-		fprintf(src, "\t\tself.%s = %s\n", szConverted2, szConverted2);
-		free(szConverted2);
-	}
-	fprintf(src, "\t}\n\n\n");
-
-	fprintf(src, "\t// JSON constructor\n");
-	fprintf(src, "\tpublic required init(json: String) {\n");
-	fprintf(src, "\t\tif let jsonData:Data = json.data(using: String.Encoding.utf8) {\n");
-	fprintf(src, "\t\t\tdo {\n");
-	fprintf(src, "\t\t\t\tlet jsonObject:Any = try JSONSerialization.jsonObject(with: jsonData, options:[])\n");
-	fprintf(src, "\t\t\t\tself.setJSONObject(jsonObject as AnyObject)\n");
-	fprintf(src, "\t\t\t} catch _ {\n");
-	fprintf(src, "\t\t\t}\n");
-	fprintf(src, "\t\t}\n");
-	fprintf(src, "\t}\n\n");
-
-	fprintf(src, "\t// Dictionary constructor\n");
-	fprintf(src, "\tpublic required init(jsonObject: AnyObject) {\n");
-	fprintf(src, "\t\tself.setJSONObject(jsonObject)\n");
-	fprintf(src, "\t}\n\n");
-
-	fprintf(src, "\t// Class generator function\n");
-	fprintf(src, "\topen class func fromJSONObject(_ jsonObject:AnyObject) -> AnyObject? {\n");
-	fprintf(src, "\t\treturn %s(jsonObject:jsonObject)\n", szConverted);
-	fprintf(src, "\t}\n\n");
-
-	fprintf(src, "\t// Set JSON Object\n");
-	fprintf(src, "\topen func setJSONObject(_ jsonObject: AnyObject) {\n");
-	fprintf(src, "\t\tif let dictionary:NSDictionary = jsonObject as? NSDictionary {\n");
-	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
-	{
-		// OptionalParams ...
-		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
-			continue;
-
-		char* szConverted2 = FixName(e->fieldName);
-		fprintf(src, "\t\t\tif let %s = dictionary.object(forKey: \"%s\") as? ", szConverted2, szConverted2);
-		PrintSwiftType(src, mods, m, td, seq, e->type, 1);
-		fprintf(src, "\n");
-		fprintf(src, "\t\t\t\tself.%s = %s\n", szConverted2, szConverted2);
-		free(szConverted2);
-	}
-	fprintf(src, "\t\t}\n");
-	fprintf(src, "\t}\n\n");
-
-	fprintf(src, "\t// Encode as Dictionary\n");
-	fprintf(src, "\topen func toJSONObject() -> AnyObject {\n");
-	fprintf(src, "\t\tlet dictionary:NSMutableDictionary = NSMutableDictionary()\n");
-	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
-	{
-		// OptionalParams ...
-		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
-			continue;
-
-		char* szConverted2 = FixName(e->fieldName);
-		if (e->type->optional || bIsChoice)
-			fprintf(src, "\t\tif(self.%s != nil)\n\t", szConverted2);
-		fprintf(src, "\t\tdictionary.setValue(self.%s, forKey: \"%s\")\n", szConverted2, szConverted2);
-		free(szConverted2);
-	}
-	fprintf(src, "\t\treturn dictionary\n");
-	fprintf(src, "\t}\n\n\n");
-
-	fprintf(src, "\topen func toJSON() -> NSString?\t{\n");
-	fprintf(src, "\t\tlet dictionary : AnyObject = self.toJSONObject()\n");
-	fprintf(src, "\t\tif JSONSerialization.isValidJSONObject(dictionary) {\n");
-	fprintf(src, "\t\t\tdo {\n");
-	fprintf(src, "\t\t\t\tlet json:Data = try JSONSerialization.data(withJSONObject: dictionary, options: JSONSerialization.WritingOptions.prettyPrinted)\n");
-	fprintf(src, "\t\t\t\tlet jsonString:NSString? = NSString(data: json, encoding: String.Encoding.utf8.rawValue)\n");
-	fprintf(src, "\t\t\t\treturn jsonString\n");
-	fprintf(src, "\t\t\t} catch _ {\n");
-	fprintf(src, "\t\t\t}\n");
-	fprintf(src, "\t\t}\n");
-	fprintf(src, "\t\treturn nil\n");
-	fprintf(src, "\t}\n\n");
-
-	fprintf(src, "\t// Copy\n");
-	fprintf(src, "\tpublic final func copy() -> %s {\n", szConverted);
-	fprintf(src, "\t\treturn %s(jsonObject: self.toJSONObject())\n", szConverted);
-	fprintf(src, "\t}\n\n");
-
-	fprintf(src, "\t// Merge\n");
-	fprintf(src, "\tpublic final func merge(_ objectToMerge : %s) -> %s {\n", szConverted, szConverted);
-	fprintf(src, "\t\tlet result = self.copy()\n");
-	fprintf(src, "\t\tresult.setJSONObject(objectToMerge.toJSONObject())\n");
-	fprintf(src, "\t\treturn result\n");
-	fprintf(src, "\t}\n");
-
-	fprintf(src, "}\n");
-
-	free(szConverted);
-} /* PrintCxxSeqDefCode */
-
-void PrintSwiftSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
-{
-	PRINTCOMMENT(src, "\n// [%s]\n", __FUNCTION__);
-
-	char* szName = FixName(td->cxxTypeDefInfo->className);
-	const char* szBaseNameArg = NULL;
-	char* szBaseName = NULL;
-
-	BasicType* pBase = GetBaseBasicType(td->type->basicType, &szBaseNameArg);
-	if (pBase->choiceId == BASICTYPE_LOCALTYPEREF || pBase->choiceId == BASICTYPE_IMPORTTYPEREF)
-		szBaseName = FixName(szBaseNameArg);
-
-	switch (pBase->choiceId)
-	{
-		case BASICTYPE_BOOLEAN:
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_OCTETCONTAINING:
-		case BASICTYPE_ENUMERATED:
-		case BASICTYPE_REAL:
-		case BASICTYPE_UTF8_STR:
-			fprintf(src, "open class %s<T:", szName);
-			PrintSwiftNativeType(src, pBase->choiceId);
-			fprintf(src, "> : GenericArray<");
-			PrintSwiftNativeType(src, pBase->choiceId);
-			fprintf(src, "> {\n");
-			break;
-		case BASICTYPE_LOCALTYPEREF:
-		case BASICTYPE_IMPORTTYPEREF:
-			fprintf(src, "open class %s<T:%s> : GenericArray<%s> {\n", szName, szBaseName, szBaseName);
-			break;
-		default:
-			snacc_exit("unsupported choice %i in [PrintSwiftListClass]", pBase->choiceId);
-	}
-	fprintf(src, "\tpublic override init() {\n");
-	fprintf(src, "\t\tsuper.init()\n");
-	fprintf(src, "\t}\n\n");
-
-	fprintf(src, "\tpublic required init(jsonObject: AnyObject) {\n");
-	fprintf(src, "\t\tsuper.init(jsonObject:jsonObject)\n");
-	fprintf(src, "\t}\n\n");
-
-	fprintf(src, "\topen override func convertFromJSONObject(_ jsonObject: AnyObject) -> AnyObject? {\n");
-	fprintf(src, "\t\treturn %s.fromJSONObject(jsonObject)\n", szBaseName);
-	fprintf(src, "\t}\n");
-
-	fprintf(src, "}\n");
-
-	if (szBaseName)
-		free(szBaseName);
-	free(szName);
-
-} /* PrintSwiftSetOfDefCode */
-
-void PrintSwiftimpleDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
-{
-	PRINTCOMMENT(src, "\n// [%s]\n", __FUNCTION__);
-
-	fprintf(src, "public typealias %s = ", td->definedName);
-	PrintSwiftNativeType(src, td->type->basicType->choiceId);
 	fprintf(src, "\n");
 
-	if (td->type->basicType->choiceId == BASICTYPE_INTEGER && td->type->basicType->a.integer->count)
+	PrintSwiftEncoderDecoder(src, mods, m, td, parent, choice);
+
+	fprintf(src, "}\n\n");
+}
+
+static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* seq, int novolatilefuncs)
+{
+	NamedType* e;
+	//	CxxTRI *cxxtri=NULL;
+	//	int inTailOptElmts;
+	//	enum BasicTypeChoiceId tmpTypeId;
+	//	int allOpt;
+
+	// DEFINE PER encode/decode tmp vars.
+	NamedType** pSeqElementNamedType = NULL;
+
+	if (strcmp("AsnOptionalParam", td->definedName) == 0)
 	{
-		fprintf(src, "\nexport enum %senum {\n", td->definedName);
-		int iAddComma = 0;
-		ValueDef* td2;
-		FOR_EACH_LIST_ELMT(td2, td->type->basicType->a.integer)
+		// is defined as custom class
+	}
+	else
+	{
+		/* put class spec in src file */
+
+		// fprintf (src, "class %s %s\n", td->cxxTypeDefInfo->className);
+		fprintf(src, "open class %s : JSONConvertable, JSONObjectConvertable\n", td->definedName);
+		fprintf(src, "{\n");
+
+		/* write out the sequence elmts */
+		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 		{
-			if (iAddComma)
-				fprintf(src, ",\n");
-			fprintf(src, "\t%s = %i", td2->definedName, td2->value->basicValue->a.integer);
-			iAddComma = 1;
+			// vars
+			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+			{
+				printMemberComment(src, m, td, e->fieldName, "  ", COMMENTSTYLE_SWIFT);
+				fprintf(src, "  public final var %s : ", e->fieldName);
+				PrintSwiftType(src, mods, m, td, seq, e->type);
+				if (e->type->optional || e->type->basicType->choiceId == BASICTYPE_NULL)
+				{
+					fprintf(src, "? = nil");
+				}
+				else
+				{
+					fprintf(src, " = ");
+					PrintSwiftDefaultValue(src, mods, m, td, seq, e->type);
+				}
+				fprintf(src, "\n");
+			}
 		}
-		fprintf(src, "\n}\n");
+
+		fprintf(src, "\n");
+
+		PrintSwiftEncoderDecoder(src, mods, m, td, parent, seq);
+
+		if (pSeqElementNamedType)
+			free(pSeqElementNamedType);
+
+		/* close class definition */
+		fprintf(src, "}\n\n");
 	}
 }
 
-void PrintSwiftTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs)
+static void PrintSwiftTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs)
 {
+	if (IsDeprecatedNoOutputSequence(m, td->definedName))
+		return;
+
+	PRINTDEBUGGING
+
+	printSequenceComment(src, m, td, COMMENTSTYLE_SWIFT);
+
 	switch (td->type->basicType->choiceId)
 	{
 		case BASICTYPE_BOOLEAN:		/* library type */
 		case BASICTYPE_REAL:		/* library type */
 		case BASICTYPE_OCTETSTRING: /* library type */
 		case BASICTYPE_OCTETCONTAINING:
-		case BASICTYPE_INTEGER:	 /* library type */
-		case BASICTYPE_UTF8_STR: /* 27 */
-			PrintSwiftimpleDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
+		case BASICTYPE_NULL:	 /* library type */
+		case BASICTYPE_EXTERNAL: /* library type */
+		case BASICTYPE_OID:		 /* library type */
+		case BASICTYPE_RELATIVE_OID:
+		case BASICTYPE_INTEGER:			 /* library type */
+		case BASICTYPE_BITSTRING:		 /* library type */
+		case BASICTYPE_NUMERIC_STR:		 /* 22 */
+		case BASICTYPE_PRINTABLE_STR:	 /* 23 */
+		case BASICTYPE_UNIVERSAL_STR:	 /* 24 */
+		case BASICTYPE_IA5_STR:			 /* 25 */
+		case BASICTYPE_BMP_STR:			 /* 26 */
+		case BASICTYPE_UTF8_STR:		 /* 27 */
+		case BASICTYPE_UTCTIME:			 /* 28 tag 23 */
+		case BASICTYPE_GENERALIZEDTIME:	 /* 29 tag 24 */
+		case BASICTYPE_GRAPHIC_STR:		 /* 30 tag 25 */
+		case BASICTYPE_VISIBLE_STR:		 /* 31 tag 26  aka ISO646String */
+		case BASICTYPE_GENERAL_STR:		 /* 32 tag 27 */
+		case BASICTYPE_OBJECTDESCRIPTOR: /* 33 tag 7 */
+		case BASICTYPE_VIDEOTEX_STR:	 /* 34 tag 21 */
+		case BASICTYPE_T61_STR:			 /* 35 tag 20 */
+			PrintSwiftSimpleDef(src, mods, m, td);
 			break;
 		case BASICTYPE_SEQUENCEOF: /* list types */
 		case BASICTYPE_SETOF:
 			PrintSwiftSetOfDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
 			break;
 		case BASICTYPE_IMPORTTYPEREF: /* type references */
-			{
-				Module* mod = GetImportModuleRefByClassName(td->type->basicType->a.importTypeRef->typeName, mods, m);
-				if (mod)
-				{
-					const char* szNameSpace = GetNameSpace(mod);
-					fprintf(src, "\nexport class %s extends %s.%s {\n", td->definedName, szNameSpace, td->type->basicType->a.importTypeRef->typeName);
-					fprintf(src, "}\n");
-				}
-			}
-			break;
 		case BASICTYPE_LOCALTYPEREF:
-			fprintf(src, "\nexport { %s as %s };\n", td->type->basicType->a.localTypeRef->typeName, td->definedName);
+			/*
+			 * if this type has been re-tagged then
+			 * must create new class instead of using a typedef
+			 */
+			PrintSwiftSimpleRefDef(src, m, td);
+			break;
+		case BASICTYPE_ANYDEFINEDBY: /* ANY types */
+		case BASICTYPE_ANY:
+			// PrintCxxAnyDefCode (src, src, mods, m, r, td, NULL, td->type);
+			break;
+		case BASICTYPE_CHOICE:
+			PrintSwiftChoiceDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
 			break;
 		case BASICTYPE_ENUMERATED: /* library type */
 			PrintSwiftEnumDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
 			break;
+		case BASICTYPE_SET:
+			// PrintCxxSetDefCode (src, src, mods, m, r, td, NULL, td->type, novolatilefuncs);
+			break;
 		case BASICTYPE_SEQUENCE:
-		case BASICTYPE_CHOICE:
 			PrintSwiftSeqDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
 			break;
-		case BASICTYPE_BITSTRING:
-			break;
-		default:
-			snacc_exit("Unknown td->type->basicType->choiceId %d", td->type->basicType->choiceId);
-	}
-} /* PrintCxxTypeDefCode */
-
-/*
- * prints PrintROSEInvoke
- */
-void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd)
-{
-} /* PrintROSEInvoke */
-
-void PrintSwiftTypeDecl(FILE* src, TypeDef* td)
-{
-	PRINTCOMMENT(src, "\n// [%s]\n", __FUNCTION__);
-
-	switch (td->type->basicType->choiceId)
-	{
 		case BASICTYPE_COMPONENTSOF:
 		case BASICTYPE_SELECTION:
 		case BASICTYPE_UNKNOWN:
 		case BASICTYPE_MACRODEF:
 		case BASICTYPE_MACROTYPE:
-			return; /* do nothing */
-
+			/* do nothing */
+			break;
 		default:
-			if (IsNewType(td->type))
-				fprintf(src, "// typedef %s\n", td->cxxTypeDefInfo->className);
+			/* TBD: print error? */
+			break;
+	}
+}
+
+/*
+ * prints PrintROSEInvoke
+ */
+static void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd)
+{
+	if (IsDeprecatedNoOutputOperation(m, vd->definedName))
+		return;
+
+	PRINTDEBUGGING
+
+	char* pszArgument = NULL;
+	char* pszResult = NULL;
+	char* pszError = NULL;
+
+	Type* argumentType = NULL;
+	Type* resultType = NULL;
+	Type* errorType = NULL;
+
+	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, true))
+	{
+		printOperationComment(src, m, vd->definedName, COMMENTSTYLE_SWIFT);
+		fprintf(src, "open class %s : AsnOperation\n", vd->definedName);
+		fprintf(src, "{\n");
+
+		fprintf(src, "  public init()\n");
+		fprintf(src, "  {\n");
+		if (IsDeprecatedFlaggedOperation(m, vd->definedName))
+		{
+			asnoperationcomment comment;
+			if (GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment))
+				fprintf(src, "    // CALL DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, vd->definedName, comment.szDeprecated);
+		}
+
+		fprintf(src, "  }\n\n");
+
+		fprintf(src, "  open class var name    : String { get { return \"%s\" } }\n", vd->definedName);
+		fprintf(src, "  open var operationName : String { get { return %s.name } }\n", vd->definedName);
+
+		if (pszArgument)
+		{
+			if (argumentType->basicType->choiceId == BASICTYPE_ENUMERATED)
+				fprintf(src, "  public final var asnArgument : Int? = nil //%s\n", pszArgument);
+			else
+				fprintf(src, "  public final var asnArgument : %s? = nil\n", pszArgument);
+		}
+
+		if (pszResult)
+		{
+			if (resultType->basicType->choiceId == BASICTYPE_ENUMERATED)
+				fprintf(src, "  public final var asnResult : Int? = nil //%s\n", pszResult);
+			else
+				fprintf(src, "  public final var asnResult : %s? = nil\n", pszResult);
+		}
+
+		if (pszError)
+		{
+			if (errorType->basicType->choiceId == BASICTYPE_ENUMERATED)
+				fprintf(src, "  public final var asnError : Int? = nil //%s\n", pszError);
+			else
+				fprintf(src, "  public final var asnError : %s? = nil\n", pszError);
+		}
+
+		fprintf(src, "\n");
+
+		// functions
+		fprintf(src, "  public final func getArgument() -> AnyObject?\n");
+		fprintf(src, "  {\n");
+		if (pszArgument)
+			fprintf(src, "    return self.asnArgument\n");
+		else
+			fprintf(src, "    return nil\n");
+		fprintf(src, "  }\n\n");
+
+		fprintf(src, "  public final func setArgument(_ argument:AnyObject?)\n");
+		fprintf(src, "  {\n");
+		if (pszArgument)
+		{
+			fprintf(src, "    self.asnArgument = argument as? ");
+			if (argumentType->basicType->choiceId == BASICTYPE_ENUMERATED)
+				fprintf(src, "%s\n", "Int");
+			else
+				fprintf(src, "%s\n", pszArgument);
+		}
+		fprintf(src, "  }\n\n");
+
+		fprintf(src, "  public final func getResult() -> AnyObject?\n");
+		fprintf(src, "  {\n");
+		if (pszResult)
+			fprintf(src, "    return self.asnResult\n");
+		else
+			fprintf(src, "    return nil\n");
+		fprintf(src, "  }\n\n");
+
+		fprintf(src, "  public final func setResult(_ result:AnyObject?)\n");
+		fprintf(src, "  {\n");
+		if (pszResult)
+		{
+			fprintf(src, "    self.asnResult = result as? ");
+			if (resultType->basicType->choiceId == BASICTYPE_ENUMERATED)
+				fprintf(src, "%s\n", "Int");
+			else
+				fprintf(src, "%s\n", pszResult);
+		}
+		fprintf(src, "  }\n\n");
+
+		fprintf(src, "  public final func getError() -> AnyObject?\n");
+		fprintf(src, "  {\n");
+		if (pszError)
+			fprintf(src, "    return self.asnError\n");
+		else
+			fprintf(src, "    return nil\n");
+		fprintf(src, "  }\n\n");
+
+		fprintf(src, "  public final func setError(_ error:AnyObject?)\n");
+		fprintf(src, "  {\n");
+		if (pszError)
+		{
+			fprintf(src, "    self.asnError = error as? ");
+			if (errorType->basicType->choiceId == BASICTYPE_ENUMERATED)
+				fprintf(src, "%s\n", "Int");
+			else
+				fprintf(src, "%s\n", pszError);
+		}
+		fprintf(src, "  }\n\n");
+
+		fprintf(src, "  public final func isEvent() -> Bool\n");
+		fprintf(src, "  {\n");
+		if (pszResult)
+			fprintf(src, "    return false\n");
+		else
+			fprintf(src, "    return true\n");
+		fprintf(src, "  }\n");
+
+		fprintf(src, "}\n\n");
 	}
 }
 
 void PrintSwiftComments(FILE* src, Module* m)
 {
-	PRINTCOMMENT(src, "\n// [%s]\n", __FUNCTION__);
+	PRINTDEBUGGING
 
 	fprintf(src, "/*\n");
-	fprintf(src, " * %s\n", RemovePath(m->swiftFileName));
+	fprintf(src, " * %s\n", m->swiftFileName);
 	fprintf(src, " * \"%s\" ASN.1 stubs.\n", m->modId->name);
 	write_snacc_header(src, " * ");
 	fprintf(src, " */\n\n");
-
-	printModuleComment(src, RemovePath(m->baseFileName), COMMENTSTYLE_SWIFT);
 }
 
-void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int PrintSwiftONEncDec, int novolatilefuncs)
+void PrintSwiftROSECode(FILE* src, ModuleList* mods, Module* m)
 {
-	PRINTCOMMENT(src, "\n// [%s]\n", __FUNCTION__);
+	PRINTDEBUGGING
 
-	// Comments
+	ValueDef* vd;
+
 	PrintSwiftComments(src, m);
 
-	// Includes
-	PrintSwiftImports(src, mods, m, false);
+	fprintf(src, "import Foundation\n\n");
+
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+			PrintSwiftROSEInvoke(src, m, 0, vd);
+	}
+}
+
+void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int novolatilefuncs)
+{
+	PRINTDEBUGGING
+
+	PrintSwiftComments(src, m);
+
+	printModuleComment(src, m->moduleName, COMMENTSTYLE_SWIFT);
+
+	fprintf(src, "import Foundation\n\n");
 
 	TypeDef* td;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
-		if (IsDeprecatedNoOutputSequence(m, td->definedName))
-			continue;
 		PrintSwiftTypeDefCode(src, mods, m, td, novolatilefuncs);
 	}
-} /* PrintSwiftCode */
+}
 
-/* EOF gen-code.c (for back-ends/TS-gen) */
+void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
+{
+	PRINTDEBUGGING
+
+	Module* currMod;
+	ValueDef* vd;
+
+	fprintf(src, "import Foundation\n\n");
+
+	fprintf(src, "public final class AsnOperationFactory\n");
+	fprintf(src, "{\n");
+
+	// fprintf(src, "  public init() {}\n");
+
+	fprintf(src, "  public final class func createOperationFromJSONObject(_ operationName:String, argument:AnyObject?, result:AnyObject?, error:AnyObject?) -> AsnOperation?\n");
+	fprintf(src, "  {\n");
+	fprintf(src, "    switch(operationName)\n");
+	fprintf(src, "    {\n");
+
+	FOR_EACH_LIST_ELMT(currMod, mods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+
+			FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
+			{
+				if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+				{
+					if (IsDeprecatedNoOutputOperation(currMod, vd->definedName))
+						continue;
+
+					char* pszArgument = NULL;
+					char* pszResult = NULL;
+					char* pszError = NULL;
+
+					Type* argumentType = NULL;
+					Type* resultType = NULL;
+					Type* errorType = NULL;
+
+					fprintf(src, "      case \"%s\":\n", vd->definedName);
+					fprintf(src, "        let operation:%s = %s()\n", vd->definedName, vd->definedName);
+
+					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, true))
+					{
+						if (pszArgument)
+						{
+							fprintf(src, "        if let val : AnyObject = argument\n");
+							fprintf(src, "        {\n");
+							fprintf(src, "          operation.setArgument(%s(jsonObject:val))\n", pszArgument);
+							fprintf(src, "        }\n");
+						}
+
+						if (pszResult)
+						{
+							fprintf(src, "        if let val : AnyObject = result\n");
+							fprintf(src, "        {\n");
+							fprintf(src, "          operation.setResult(%s(jsonObject:val))\n", pszResult);
+							fprintf(src, "        }\n");
+						}
+
+						if (pszError)
+						{
+							fprintf(src, "        if let val : AnyObject = error\n");
+							fprintf(src, "        {\n");
+							fprintf(src, "          operation.setError( %s.fromJSONObject(val) )\n", pszError);
+							fprintf(src, "        }\n");
+						}
+					}
+					fprintf(src, "        return operation\n\n");
+				}
+			}
+		}
+	}
+
+	fprintf(src, "      default:\n");
+	fprintf(src, "        return nil\n");
+	fprintf(src, "    }\n");
+	fprintf(src, "  }\n\n");
+
+	fprintf(src, "  public final class func listOperationNames() -> [String]\n");
+	fprintf(src, "  {\n");
+	fprintf(src, "    var list:Array<String> = Array<String>()\n");
+
+	FOR_EACH_LIST_ELMT(currMod, mods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+			FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
+			{
+				if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+					fprintf(src, "    list.append( \"%s\" )\n", vd->definedName);
+			}
+		}
+	}
+	fprintf(src, "    return list\n");
+	fprintf(src, "  }\n\n");
+
+	fprintf(src, "  public final class func createOperation(_ operationName:String, initializeWithDefaultProperties:Bool) -> AsnOperation?\n");
+	fprintf(src, "  {\n");
+	fprintf(src, "    switch(operationName) {\n");
+
+	FOR_EACH_LIST_ELMT(currMod, mods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+			FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
+			{
+				if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+				{
+					char* pszArgument = NULL;
+					char* pszResult = NULL;
+					char* pszError = NULL;
+
+					Type* argumentType = NULL;
+					Type* resultType = NULL;
+					Type* errorType = NULL;
+
+					fprintf(src, "      case \"%s\":\n", vd->definedName);
+					fprintf(src, "        let operation:%s = %s()\n", vd->definedName, vd->definedName);
+
+					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, true))
+					{
+						fprintf(src, "        if(initializeWithDefaultProperties) {\n");
+						if (pszArgument)
+							fprintf(src, "          operation.setArgument( %s() )\n", pszArgument);
+
+						if (pszResult)
+							fprintf(src, "          operation.setResult( %s() )\n", pszResult);
+
+						if (pszError)
+						{
+							if (errorType->basicType->choiceId == BASICTYPE_ENUMERATED)
+								fprintf(src, "          operation.setError( 0 )\n");
+							else
+								fprintf(src, "          operation.setError( %s() )\n", pszError);
+						}
+						fprintf(src, "        }\n");
+					}
+					fprintf(src, "        return operation\n\n");
+				}
+			}
+		}
+	}
+
+	fprintf(src, "      default:\n");
+	fprintf(src, "        return nil\n");
+	fprintf(src, "    }\n");
+	fprintf(src, "  }\n");
+
+	fprintf(src, "}\n");
+}

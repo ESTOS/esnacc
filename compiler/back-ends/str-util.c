@@ -624,7 +624,8 @@ char* GetPropertyAccessString(const char* szName)
 	size_t iLen = strlen(szName) + 4 + 1;
 
 	char* szReturn = malloc(iLen);
-	if (!szReturn) {
+	if (!szReturn)
+	{
 		snacc_exit("Out of memory");
 		return NULL;
 	}
@@ -665,7 +666,8 @@ char* GetPropertyName(const char* szName)
 	size_t iLen = strlen(szName) + 2 + 1;
 
 	char* szReturn = malloc(iLen);
-	if (!szReturn) {
+	if (!szReturn)
+	{
 		snacc_exit("Out of memory");
 		return NULL;
 	}

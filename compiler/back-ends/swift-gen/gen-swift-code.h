@@ -18,6 +18,10 @@
 #include "../../core/asn1module.h"
 #include "../../core/snacc-util.h"
 
+void PrintSwiftROSECode(FILE* src, ModuleList* mods, Module* m);
+
 void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int novolatilefuncs);
+
+void PrintSwiftOperationFactory(FILE* src, ModuleList* mods);
 
 #endif // GENSWIFTCODE_H

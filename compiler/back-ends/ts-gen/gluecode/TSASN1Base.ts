@@ -244,22 +244,24 @@ export interface IASN1DeprecatedCallback {
 	/**
 	 * A deprecated object has been created
 	 *
+	 * @param deprecatedSince - unix time when the object has been flagged deprecated
 	 * @param moduleName - the module in which the object is located
 	 * @param objectName - the name of the object that is about to get created
 	 * @param callStack - the call stack that shows where the object has been created
 	 */
-	deprecatedObject(moduleName: string, objectName: string, callStack: IASN1CallStackEntry[]): void;
+	deprecatedObject(deprecatedSince: number, moduleName: string, objectName: string, callStack: IASN1CallStackEntry[]): void;
 
 	/**
 	 * A deprecated method has been called
 	 *
+	 * @param deprecatedSince - unix time when the method has been flagged deprecated
 	 * @param moduleName - the module in which the object is located
 	 * @param methodName - the name of the method that has been called
 	 * @param direction - whether the call was inbound or outbound
 	 * @param invokeContext - the invokeContext that shows more details about the invoke
 	 * @param callStack - the call stack that shows where the object has been created
 	 */
-	deprecatedMethod(moduleName: string, methodName: string, direction: "IN" | "OUT", invokeContext: IReceiveInvokeContextParams | ISendInvokeContextParams | undefined, callStack: IASN1CallStackEntry[]): void;
+	deprecatedMethod(deprecatedSince: number, moduleName: string, methodName: string, direction: "IN" | "OUT", invokeContext: IReceiveInvokeContextParams | ISendInvokeContextParams | undefined, callStack: IASN1CallStackEntry[]): void;
 }
 
 /**
@@ -459,30 +461,32 @@ export abstract class TSASN1Base implements IASN1Transport {
 	/**
 	 * This method is called in case an object is created which is flagged deprecated
 	 *
+	 * @param deprecatedSince - unix time when the object has been flagged deprecated
 	 * @param moduleName - the module in which the object is located
 	 * @param obj - the object that has been created
 	 */
-	public static deprecatedObject(moduleName: string, obj: object): void {
+	public static deprecatedObject(deprecatedSince: number, moduleName: string, obj: object): void {
 		if (!TSASN1Base.deprecatedCallback)
 			return;
 		const name = obj.constructor.name;
 		const stack = this.getCallStack();
-		TSASN1Base.deprecatedCallback.deprecatedObject(moduleName, name, stack);
+		TSASN1Base.deprecatedCallback.deprecatedObject(deprecatedSince, moduleName, name, stack);
 	}
 
 	/**
 	 * This method is called in case a method is called which is flagged deprecated
 	 *
+	 * @param deprecatedSince - unix time when the method has been flagged deprecated
 	 * @param moduleName - the module in which the object is located
 	 * @param methodName - the name of the method that has been called
 	 * @param direction - whether the call was inbound or outbound
 	 * @param invokeContext - the invokeContext that shows more details about the invoke
 	 */
-	public static deprecatedMethod(moduleName: string, methodName: string, direction: "IN" | "OUT", invokeContext: IReceiveInvokeContextParams | ISendInvokeContextParams | undefined): void {
+	public static deprecatedMethod(deprecatedSince: number, moduleName: string, methodName: string, direction: "IN" | "OUT", invokeContext: IReceiveInvokeContextParams | ISendInvokeContextParams | undefined): void {
 		if (!TSASN1Base.deprecatedCallback)
 			return;
 		const stack = this.getCallStack();
-		TSASN1Base.deprecatedCallback.deprecatedMethod(moduleName, methodName, direction, invokeContext, stack);
+		TSASN1Base.deprecatedCallback.deprecatedMethod(deprecatedSince, moduleName, methodName, direction, invokeContext, stack);
 	}
 
 	/**

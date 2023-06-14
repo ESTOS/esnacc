@@ -27,21 +27,24 @@ public:
 	/**
 	 * A deprecated object has been created
 	 *
+	 * @param i64DeprecatedSince - unix time when the object has been flagged deprecated
 	 * @param szModuleName - the module in which the object is located
 	 * @param szObjectName - the name of the object that is about to get created
 	 * @param callStack - the call stack that shows where the object has been created
 	 */
-	virtual void DeprecatedASN1Object(const char* szModuleName, const char* szObjectName, const std::list<std::string>& callStack) = 0;
+	virtual void DeprecatedASN1Object(const long long i64DeprecatedSince, const char* szModuleName, const char* szObjectName, const std::list<std::string>& callStack) = 0;
 
 	/**
 	 * A deprecated method has been called
 	 *
+	 * @param i64DeprecatedSince - unix time when the method has been flagged deprecated
 	 * @param szModuleName - the module in which the object is located
 	 * @param szMethodName - the name of the method that has been called
 	 * @param direction - whether the call was inbound or outbound
 	 * @param callStack - the call stack that shows where the object has been created
+	 * @param pContext - The invoke Context that is associated with the invoke
 	 */
-	virtual void DeprecatedASN1Method(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const std::list<std::string>& callStack, const SnaccInvokeContext* pContext = NULL) = 0;
+	virtual void DeprecatedASN1Method(const long long i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const std::list<std::string>& callStack, const SnaccInvokeContext* pContext = NULL) = 0;
 };
 
 class SNACCDeprecated
@@ -57,20 +60,22 @@ public:
 	/**
 	 * This method is called in case an object is created which is flagged deprecated
 	 *
-	 * @param moduleName - the module in which the object is located
-	 * @param obj - the object that has been created
+	 * @param i64DeprecatedSince - unix time when the object has been flagged deprecated
+	 * @param szModuleName - the module in which the object is located
+	 * @param szObjectName - the name of the object that is about to get created
 	 */
-	static void DeprecatedASN1Object(const char* szModuleName, const char* szObjectName);
+	static void DeprecatedASN1Object(const long long i64DeprecatedSince, const char* szModuleName, const char* szObjectName);
 
 	/**
 	 * This method is called in case a method is called which is flagged deprecated
 	 *
-	 * @param moduleName - the module in which the object is located
-	 * @param methodName - the name of the method that has been called
+	 * @param i64DeprecatedSince - unix time when the method has been flagged deprecated
+	 * @param szModuleName - the module in which the object is located
+	 * @param szMethodName - the name of the method that has been called
 	 * @param direction - whether the call was inbound or outbound
 	 * @param pContext - the invokeContext that shows more details about the invoke
 	 */
-	static void DeprecatedASN1Method(const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext = NULL);
+	static void DeprecatedASN1Method(const long long i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext = NULL);
 
 private:
 	/**

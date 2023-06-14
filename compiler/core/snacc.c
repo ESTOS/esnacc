@@ -86,7 +86,6 @@ char* bVDAGlobalDLLExport = (char*)0;
 #include "../back-ends/c++-gen/gen-code.h"
 #include "../back-ends/java-gen/gen-java-code.h"
 #include "../back-ends/cs-gen/gen-code.h"
-#include "../back-ends/swift-gen/gen-swift-code-old.h"
 #include "../back-ends/swift-gen/gen-swift-code.h"
 #include "../back-ends/js-gen/gen-js-code.h"
 #include "../back-ends/ts-gen/gen-ts-code.h"
@@ -583,7 +582,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 								return 1;
 							}
 							const char* szFollowing = argument + 14;
-							long long i64Result = ConvertDateToUnixTime(szFollowing);
+							time_t i64Result = ConvertDateToUnixTime(szFollowing);
 							if (i64Result < 0)
 							{
 								// Invalid time, could not parse the time
@@ -647,7 +646,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						if (!_mkdir(gszOutputPath))
 						{
 							snacc_exit("Failed to create directory %s", gszOutputPath);
-							return;
+							return 1;
 						}
 						currArg++;
 					}
@@ -1001,6 +1000,11 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	SortAllDependencies(allMods);
 
 	/*
+	 * Creates the different names we need to write the output files
+	 */
+	CreateNames(allMods);
+
+	/*
 	 * STEP 11
 	 * Validates that the structures written are okay
 	 * Checks for certain things we do not want to see :)
@@ -1021,11 +1025,6 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 			PrintModule(stdout, currMod);
 		}
 	}
-
-	/*
-	 * Creates the different names we need to write the output files
-	 */
-	CreateNames(allMods);
 
 	/*
 	 * Step 13
@@ -1688,7 +1687,7 @@ void GenSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genVal
 					{
 						saveMods = allMods->curr;
 
-						PrintSwiftROSECodeOLD(srcFilePtr, allMods, currMod);
+						PrintSwiftROSECode(srcFilePtr, allMods, currMod);
 						allMods->curr = saveMods;
 
 						fclose(srcFilePtr);
@@ -1700,15 +1699,17 @@ void GenSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genVal
 
 	if (genROSEDecoders)
 	{
-		if (fopen_s(&srcFilePtr, "AsnOperationFactory.swift", "wt") != 0 || srcFilePtr == NULL)
+		char* szFileName = MakeSwiftFileName("AsnOperationFactory");
+		if (fopen_s(&srcFilePtr, szFileName, "wt") != 0 || srcFilePtr == NULL)
 		{
 			perror("fopen ROSE");
 		}
 		else
 		{
-			PrintSwiftOperationFactoryOLD(srcFilePtr, allMods);
+			PrintSwiftOperationFactory(srcFilePtr, allMods);
 			fclose(srcFilePtr);
 		}
+		free(szFileName);
 	}
 } /* GenSwiftCode */
 
@@ -2480,10 +2481,8 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 					if (!IsROSEValueDef(currMod, vd))
 						continue;
 
-					asnoperationcomment com;
-					if (GetOperationComment_UTF8(currMod->moduleName, vd->definedName, &com))
-						if (com.i64Deprecated)
-							continue;
+					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
+						continue;
 
 					char* pszArgument = NULL;
 					char* pszResult = NULL;
@@ -2493,21 +2492,42 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 					Type* errorType = NULL;
 					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
 					{
-
+						struct BasicType* argumentBasicType = NULL;
 						bool bArgumentIssue = false;
 						if (argumentType)
 						{
-							if (argumentType->basicType->choiceId != BASICTYPE_SEQUENCE && argumentType->basicType->choiceId != BASICTYPE_CHOICE)
+							argumentBasicType = ResolveBasicTypeReferences(argumentType->basicType, NULL);
+							if (!argumentBasicType)
 								bArgumentIssue = true;
+							else
+							{
+								enum BasicTypeChoiceId choiceId = argumentBasicType->choiceId;
+								if (choiceId != BASICTYPE_SEQUENCE && choiceId != BASICTYPE_CHOICE)
+									bArgumentIssue = true;
+							}
 						}
+						struct BasicType* resultBasicType = NULL;
 						bool bResultIssue = false;
 						if (resultType)
 						{
-							if (resultType->basicType->choiceId != BASICTYPE_SEQUENCE && resultType->basicType->choiceId != BASICTYPE_CHOICE)
+							resultBasicType = ResolveBasicTypeReferences(resultType->basicType, NULL);
+							if (!resultBasicType)
 								bResultIssue = true;
+							else
+							{
+								enum BasicTypeChoiceId choiceId = resultBasicType->choiceId;
+								if (choiceId != BASICTYPE_SEQUENCE && choiceId != BASICTYPE_CHOICE)
+									bResultIssue = true;
+							}
 						}
-						bool bErrorIssue = errorType && errorType->basicType->choiceId != BASICTYPE_SEQUENCE;
-						bool bWrongErrorObject = pszError && strcmp(pszError, "AsnRequestError") != 0;
+
+						bool bErrorIssue = false;
+						bool bWrongErrorObject = false;
+						if (errorType)
+						{
+							bErrorIssue = errorType->basicType->choiceId != BASICTYPE_SEQUENCE;
+							bWrongErrorObject = pszError && strcmp(pszError, "AsnRequestError") != 0;
+						}
 						if (bArgumentIssue || bResultIssue || bErrorIssue || bWrongErrorObject)
 						{
 							if (szLastErrorFile != currMod->asn1SrcFileName)
@@ -2531,26 +2551,26 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 								fprintf(stderr, "- %s is using %s as argument which is a ", vd->definedName, pszArgument);
 								PrintTypeById(stderr, argumentType->basicType->choiceId);
 								fprintf(stderr, ".\n  You must use a SEQUENCE or CHOICE here (expandability).\n");
-								nWeHaveErrors = 1;
+								nWeHaveErrors++;
 							}
 							if (bResultIssue)
 							{
 								fprintf(stderr, "- %s is using %s as result which is a ", vd->definedName, pszResult);
 								PrintTypeById(stderr, resultType->basicType->choiceId);
 								fprintf(stderr, ".\n  You must use a SEQUENCE or CHOICE here (expandability).\n");
-								nWeHaveErrors = 1;
+								nWeHaveErrors++;
 							}
 							if (bErrorIssue)
 							{
 								fprintf(stderr, "- %s is using %s as error which is a ", vd->definedName, pszError);
 								PrintTypeById(stderr, errorType->basicType->choiceId);
 								fprintf(stderr, ".\n  You must use a SEQUENCE here (expandability).\n");
-								nWeHaveErrors = 1;
+								nWeHaveErrors++;
 							}
 							if (bWrongErrorObject)
 							{
 								fprintf(stderr, "- %s is using %s as error but must use AsnRequestError.\n", vd->definedName, pszError);
-								nWeHaveErrors = 1;
+								nWeHaveErrors++;
 							}
 						}
 					}
@@ -2564,6 +2584,7 @@ void EnsureNoSequenceAndSetOfInArgumentOrResult(ModuleList* allMods)
 		fprintf(stderr, "*************************************************************\n");
 		fprintf(stderr, "* Methods may contain issues if they are flagged deprecated *\n");
 		fprintf(stderr, "*************************************************************\n\n");
+		fprintf(stderr, "- found %i errors\n", nWeHaveErrors);
 		snacc_exit_now(__FUNCTION__, "Now terminating...\n");
 	}
 }
@@ -2708,14 +2729,14 @@ bool recurseFindInvalid(Module* mod, Type* type, const char* szPath, const char*
 
 	if (szElementName)
 	{
-		if (choiceId == BASICTYPE_SEQUENCE && IsDeprecatedNoOutputSequence(mod, szElementName))
+		if ((choiceId == BASICTYPE_SEQUENCE || choiceId == BASICTYPE_BITSTRING) && IsDeprecatedFlaggedSequence(mod, szElementName))
 			return false;
 		char szNewName[TESTBUFFERSIZE] = {0};
 		strcat_s(szNewName, TESTBUFFERSIZE, "::");
 		strcat_s(szNewName, TESTBUFFERSIZE, szElementName);
 		if ((choiceId == BASICTYPE_SEQUENCE || choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF) && type->cxxTypeRefInfo->className)
 		{
-			if (IsDeprecatedNoOutputSequence(mod, type->cxxTypeRefInfo->className))
+			if (IsDeprecatedFlaggedSequence(mod, type->cxxTypeRefInfo->className))
 				return false;
 			strcat_s(szNewName, TESTBUFFERSIZE, "(");
 			strcat_s(szNewName, TESTBUFFERSIZE, type->cxxTypeRefInfo->className);
@@ -2868,30 +2889,56 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
  */
 long long ConvertDateToUnixTime(const char* szDate)
 {
-	long long i64Result = -1;
+	long long tmResult = -1;
 #ifdef _WIN32
 	SYSTEMTIME st;
 	memset(&st, 0x00, sizeof(SYSTEMTIME));
 	if (sscanf_s(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3)
 	{
 		if (st.wDay < 1 || st.wDay > 31)
-			return i64Result;
+			return tmResult;
 		if (st.wMonth < 1 || st.wMonth > 12)
-			return i64Result;
+			return tmResult;
 		if (st.wYear < 1970)
-			return i64Result;
+			return tmResult;
 		FILETIME ft;
 		SystemTimeToFileTime(&st, &ft);
 		ULARGE_INTEGER uli;
 		uli.LowPart = ft.dwLowDateTime;
 		uli.HighPart = ft.dwHighDateTime;
-		i64Result = (time_t)((uli.QuadPart / 10000000ULL) - 11644473600ULL);
+		tmResult = (long long)((uli.QuadPart / 10000000ULL) - 11644473600ULL);
 	}
 #else
 	struct tm tm;
 	if (strptime(szDate, "%d.%m.%Y", &tm))
-		;
-	i64Result = mktime(&tm);
+		tmResult = mktime(&tm);
 #endif
-	return i64Result;
+	return tmResult;
+}
+
+/**
+ * Converts a unix time into something readable
+ *
+ * Returns a pointer to a buffer that needs to get released with Free
+ */
+char* ConvertUnixTimeToReadable(const long long tmUnixTime)
+{
+	char* szBuffer = malloc(128);
+	if (!szBuffer)
+	{
+		snacc_exit("Out of memory");
+		return NULL;
+	}
+
+#ifdef _WIN32
+	struct tm timeinfo;
+	localtime_s(&timeinfo, &tmUnixTime);
+	strftime(szBuffer, 128, "%d.%m.%Y", &timeinfo);
+#else
+	struct tm* timeinfo;
+	timeinfo = localtime((const time_t*)&tmUnixTime);
+	strftime(szBuffer, 128, "%d.%m.%Y", timeinfo);
+#endif
+
+	return szBuffer;
 }
