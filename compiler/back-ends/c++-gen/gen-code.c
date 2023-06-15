@@ -4417,23 +4417,6 @@ static void PrintCxxTypeDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* 
 	}
 } /* PrintCxxTypeDefCode */
 
-int HasROSEOperations(Module* m)
-{
-	ValueDef* vd;
-	int iHasOperations = 0;
-	// check for existing operation defines....
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
-	{
-		if (IsROSEValueDef(m, vd))
-		{
-			iHasOperations = 1;
-			break;
-		}
-	}
-
-	return iHasOperations;
-}
-
 void PrintROSENamespaceOpenCode(FILE* hfile, Module* m)
 {
 	/* 7-09-2001 Pierce Leonberger

@@ -4,6 +4,23 @@
 #include <assert.h>
 #include <string.h>
 
+int HasROSEOperations(Module* m)
+{
+	ValueDef* vd;
+	int iHasOperations = 0;
+	// check for existing operation defines....
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (IsROSEValueDef(m, vd))
+		{
+			iHasOperations = 1;
+			break;
+		}
+	}
+
+	return iHasOperations;
+}
+
 bool IsDeprecatedNoOutput(const long long i64DeprecatedValue)
 {
 	if (!gi64NoDeprecatedSymbols || !i64DeprecatedValue)
