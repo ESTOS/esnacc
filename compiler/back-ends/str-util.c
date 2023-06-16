@@ -696,15 +696,15 @@ char* getFilePath(const char* filename)
 
 	if (lastSlash != NULL)
 	{
-		size_t pathLength = lastSlash - filename + 1;
-		path = malloc(pathLength);
+		size_t pathLength = lastSlash - filename;
+		path = malloc(strlen(filename) + 1);
 		if (path == NULL)
 		{
 			snacc_exit("Out of memory");
 			return path;
 		}
-		strncpy(path, filename, pathLength);
-		path[pathLength] = '\0';
+		strcpy_s(path, strlen(filename) + 1, filename);
+		path[pathLength + 1] = '\0';
 	}
 
 	return path;

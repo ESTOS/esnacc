@@ -12,7 +12,7 @@ enum EVALIDATIONCHECK
 	NO_DUPLICATE_OPERATIONIDS = 1,
 	OPERATION_ARGUMENT_RESULT_ERROR_ARE_CHOICES_OR_SEQUENCES = 2,
 	OPERATION_ERRORS_ARE_OF_SAME_TYPE = 4,
-	SEQUENCES_AND_CHOICES_ARE_EXTENDABLE = 8,
+	SEQUENCES_ARE_EXTENDABLE = 8,
 	VALIDATE_TYPE_WHITELISTE = 16
 };
 
@@ -27,8 +27,8 @@ bool ValidateArgumentResultErrorAreSequencesOrChoices(ModuleList* allMods);
 // Reports if different error objects are use
 bool ValidateErrorsAreOfSameType(ModuleList* allMods);
 
-// Reports if a sequence or choice does not contain the extension field (...) as last element
-bool ValidateSequencesAndChoicesAreExtendable(ModuleList* allMods);
+// Reports if a sequences do not contain the extension field (...) as last element
+bool ValidateSequencesAreExtendable(ModuleList* allMods);
 
 // Reports if only supported objects from the whitelist are embedded (fails if others are used)
 bool ValidateOnlySupportedObjects(ModuleList* allMods);
@@ -246,10 +246,10 @@ void ValidateASN1Data(ModuleList* allMods)
 		if (!ValidateErrorsAreOfSameType(allMods))
 			bSucceeded = false;
 	}
-	if (giValidationLevel & SEQUENCES_AND_CHOICES_ARE_EXTENDABLE)
+	if (giValidationLevel & SEQUENCES_ARE_EXTENDABLE)
 	{
-		printf("*** Validating that all sequences and choices contain ... to allow extending them... ***\n");
-		if (!ValidateSequencesAndChoicesAreExtendable(allMods))
+		printf("*** Validating that all sequences contain ... to allow extending them... ***\n");
+		if (!ValidateSequencesAreExtendable(allMods))
 			bSucceeded = false;
 	}
 	if (giValidationLevel & VALIDATE_TYPE_WHITELISTE)
@@ -520,7 +520,7 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods)
 	return nWeHaveErrors ? false : true;
 }
 
-bool ValidateSequencesAndChoicesAreExtendable(ModuleList* allMods)
+bool ValidateSequencesAreExtendable(ModuleList* allMods)
 {
 	int nWeHaveErrors = 0;
 	int iErrorCounter = 0;
@@ -548,15 +548,6 @@ bool ValidateSequencesAndChoicesAreExtendable(ModuleList* allMods)
 					else if (last->type->basicType->choiceId != BASICTYPE_EXTENSION)
 						bFailed = true;
 					szType = "SEQUENCE";
-				}
-				else if (choiceId == BASICTYPE_CHOICE)
-				{
-					NamedType* last = LAST_LIST_ELMT(type->a.choice);
-					if (!last)
-						bFailed = true;
-					else if (last->type->basicType->choiceId != BASICTYPE_EXTENSION)
-						bFailed = true;
-					szType = "CHOICE";
 				}
 				else
 					continue;

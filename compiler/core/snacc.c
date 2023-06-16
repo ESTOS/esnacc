@@ -245,7 +245,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "   1 Validates that operationIDs are not used twice\n");
 	fprintf(fp, "   2 Validates that operation arguments, results and errors are sequences or choices (only types are extendable) (@deprecated are not validated)\n");
 	fprintf(fp, "   4 Validates that errors are of the same type to generalize error handling (@deprecated are not validated)\n");
-	fprintf(fp, "   8 Validates that all sequences and choices contain ... to allow extending them (@deprecated are not validated)\n");
+	fprintf(fp, "   8 Validates that all sequences contain ... to allow extending them (@deprecated are not validated)\n");
 	fprintf(fp, "   16 Validates that only allow types from the esnacc_whiteliste.txt are used (@deprecated are not validated)\n");
 	fprintf(fp, "  -h   prints this msg\n");
 	fprintf(fp, "  -P   print the parsed ASN.1 modules to stdout from their parse trees\n");
