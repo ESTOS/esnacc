@@ -5,6 +5,7 @@
 #include "../core/asn1module.h"
 #include "str-util.h"
 
+int HasROSEOperations(Module* m);
 bool IsROSEValueDef(Module* mod, ValueDef* vd);
 // Resolves the argument, result and error value for a ROSE operation
 // if specified also resolves the types of these references
