@@ -32,6 +32,100 @@ bool ValidateSequencesAndChoicesAreExtendable(ModuleList* allMods);
 
 bool ValidateOnlySupportedObjects(ModuleList* allMods);
 
+enum BasicTypeChoiceId getType(const char* szType)
+{
+	if (strcmp(szType, "BASICTYPE_BOOLEAN") == 0)
+		return BASICTYPE_BOOLEAN;
+	else if (strcmp(szType, "BASICTYPE_INTEGER") == 0)
+		return BASICTYPE_INTEGER;
+	else if (strcmp(szType, "BASICTYPE_BITSTRING") == 0)
+		return BASICTYPE_BITSTRING;
+	else if (strcmp(szType, "BASICTYPE_OCTETSTRING") == 0)
+		return BASICTYPE_OCTETSTRING;
+	else if (strcmp(szType, "BASICTYPE_NULL") == 0)
+		return BASICTYPE_NULL;
+	else if (strcmp(szType, "BASICTYPE_OID") == 0)
+		return BASICTYPE_OID;
+	else if (strcmp(szType, "BASICTYPE_REAL") == 0)
+		return BASICTYPE_REAL;
+	else if (strcmp(szType, "BASICTYPE_ENUMERATED") == 0)
+		return BASICTYPE_ENUMERATED;
+	else if (strcmp(szType, "BASICTYPE_SEQUENCE") == 0)
+		return BASICTYPE_SEQUENCE;
+	else if (strcmp(szType, "BASICTYPE_SEQUENCEOF") == 0)
+		return BASICTYPE_SEQUENCEOF;
+	else if (strcmp(szType, "BASICTYPE_SET") == 0)
+		return BASICTYPE_SET;
+	else if (strcmp(szType, "BASICTYPE_SETOF") == 0)
+		return BASICTYPE_SETOF;
+	else if (strcmp(szType, "BASICTYPE_CHOICE") == 0)
+		return BASICTYPE_CHOICE;
+	else if (strcmp(szType, "BASICTYPE_SELECTION") == 0)
+		return BASICTYPE_SELECTION;
+	else if (strcmp(szType, "BASICTYPE_COMPONENTSOF") == 0)
+		return BASICTYPE_COMPONENTSOF;
+	else if (strcmp(szType, "BASICTYPE_ANY") == 0)
+		return BASICTYPE_ANY;
+	else if (strcmp(szType, "BASICTYPE_ANYDEFINEDBY") == 0)
+		return BASICTYPE_ANYDEFINEDBY;
+	else if (strcmp(szType, "BASICTYPE_LOCALTYPEREF") == 0)
+		return BASICTYPE_LOCALTYPEREF;
+	else if (strcmp(szType, "BASICTYPE_IMPORTTYPEREF") == 0)
+		return BASICTYPE_IMPORTTYPEREF;
+	else if (strcmp(szType, "BASICTYPE_MACROTYPE") == 0)
+		return BASICTYPE_MACROTYPE;
+	else if (strcmp(szType, "BASICTYPE_MACRODEF") == 0)
+		return BASICTYPE_MACRODEF;
+	else if (strcmp(szType, "BASICTYPE_NUMERIC_STR") == 0)
+		return BASICTYPE_NUMERIC_STR;
+	else if (strcmp(szType, "BASICTYPE_PRINTABLE_STR") == 0)
+		return BASICTYPE_PRINTABLE_STR;
+	else if (strcmp(szType, "BASICTYPE_UNIVERSAL_STR") == 0)
+		return BASICTYPE_UNIVERSAL_STR;
+	else if (strcmp(szType, "BASICTYPE_IA5_STR") == 0)
+		return BASICTYPE_IA5_STR;
+	else if (strcmp(szType, "BASICTYPE_BMP_STR") == 0)
+		return BASICTYPE_BMP_STR;
+	else if (strcmp(szType, "BASICTYPE_UTF8_STR") == 0)
+		return BASICTYPE_UTF8_STR;
+	else if (strcmp(szType, "BASICTYPE_UTCTIME") == 0)
+		return BASICTYPE_UTCTIME;
+	else if (strcmp(szType, "BASICTYPE_GENERALIZEDTIME") == 0)
+		return BASICTYPE_GENERALIZEDTIME;
+	else if (strcmp(szType, "BASICTYPE_GRAPHIC_STR") == 0)
+		return BASICTYPE_GRAPHIC_STR;
+	else if (strcmp(szType, "BASICTYPE_VISIBLE_STR") == 0)
+		return BASICTYPE_VISIBLE_STR;
+	else if (strcmp(szType, "BASICTYPE_GENERAL_STR") == 0)
+		return BASICTYPE_GENERAL_STR;
+	else if (strcmp(szType, "BASICTYPE_OBJECTDESCRIPTOR") == 0)
+		return BASICTYPE_OBJECTDESCRIPTOR;
+	else if (strcmp(szType, "BASICTYPE_VIDEOTEX_STR") == 0)
+		return BASICTYPE_VIDEOTEX_STR;
+	else if (strcmp(szType, "BASICTYPE_T61_STR") == 0)
+		return BASICTYPE_T61_STR;
+	else if (strcmp(szType, "BASICTYPE_EXTERNAL") == 0)
+		return BASICTYPE_EXTERNAL;
+	else if (strcmp(szType, "BASICTYPE_OCTETCONTAINING") == 0)
+		return BASICTYPE_OCTETCONTAINING;
+	else if (strcmp(szType, "BASICTYPE_BITCONTAINING") == 0)
+		return BASICTYPE_BITCONTAINING;
+	else if (strcmp(szType, "BASICTYPE_RELATIVE_OID") == 0)
+		return BASICTYPE_RELATIVE_OID;
+	else if (strcmp(szType, "BASICTYPE_EXTENSION") == 0)
+		return BASICTYPE_EXTENSION;
+	else if (strcmp(szType, "BASICTYPE_SEQUENCET") == 0)
+		return BASICTYPE_SEQUENCET;
+	else if (strcmp(szType, "BASICTYPE_OBJECTCLASS") == 0)
+		return BASICTYPE_OBJECTCLASS;
+	else if (strcmp(szType, "BASICTYPE_OBJECTCLASSFIELDTYPE") == 0)
+		return BASICTYPE_OBJECTCLASSFIELDTYPE;
+	else if (strcmp(szType, "BASICTYPE_ASNSYSTEMTIME") == 0)
+		return BASICTYPE_ASNSYSTEMTIME;
+	else
+		return BASICTYPE_UNKNOWN;
+}
+
 const char* getTypeName(enum BasicTypeChoiceId choiceId)
 {
 	switch (choiceId)
@@ -520,7 +614,7 @@ bool isSupportedType(enum BasicTypeChoiceId choiceId)
 }
 
 // Returns true when an invalid element was found
-bool recurseFindInvalid(Module* mod, Type* type, const char* szPath, const char* szElementName)
+bool recurseFindInvalid(Module* mod, Type* type, int* supportedTypes, const char* szPath, const char* szElementName)
 {
 #define TESTBUFFERSIZE 256
 #define BUFFERSIZE 4096
@@ -573,9 +667,9 @@ bool recurseFindInvalid(Module* mod, Type* type, const char* szPath, const char*
 	}
 
 	if (choiceId == BASICTYPE_LOCALTYPEREF)
-		bFoundInvalid = recurseFindInvalid(mod, type->basicType->a.localTypeRef->link->type, szCurrentPath, NULL);
+		bFoundInvalid = recurseFindInvalid(mod, type->basicType->a.localTypeRef->link->type, supportedTypes, szCurrentPath, NULL);
 	else if (choiceId == BASICTYPE_IMPORTTYPEREF)
-		bFoundInvalid = recurseFindInvalid(mod, type->basicType->a.importTypeRef->link->type, szCurrentPath, NULL);
+		bFoundInvalid = recurseFindInvalid(mod, type->basicType->a.importTypeRef->link->type, supportedTypes, szCurrentPath, NULL);
 	else
 	{
 		if (!isSupportedType(choiceId))
@@ -587,7 +681,7 @@ bool recurseFindInvalid(Module* mod, Type* type, const char* szPath, const char*
 		if (choiceId == BASICTYPE_SEQUENCEOF)
 		{
 			Type* subType = type->basicType->a.sequenceOf;
-			bFoundInvalid = recurseFindInvalid(mod, subType, szCurrentPath, NULL);
+			bFoundInvalid = recurseFindInvalid(mod, subType, supportedTypes, szCurrentPath, NULL);
 		}
 		else if (choiceId == BASICTYPE_SEQUENCE)
 		{
@@ -597,7 +691,7 @@ bool recurseFindInvalid(Module* mod, Type* type, const char* szPath, const char*
 			{
 				// Due to possible recursion we need to store the current position
 				AsnListNode* oldCurr = typeList->curr;
-				if (recurseFindInvalid(mod, subType->type, szCurrentPath, subType->fieldName))
+				if (recurseFindInvalid(mod, subType->type, supportedTypes, szCurrentPath, subType->fieldName))
 					bFoundInvalid = true;
 				typeList->curr = oldCurr;
 			}
@@ -606,24 +700,157 @@ bool recurseFindInvalid(Module* mod, Type* type, const char* szPath, const char*
 	return bFoundInvalid;
 }
 
+#define MAX_STR_LENGTH 100
+#define MAX_STRINGS 50
+
+void freeStrings(char** strings, int numStrings)
+{
+	int i;
+	for (i = 0; i < numStrings; i++)
+		free(strings[i]);
+	free(strings);
+}
+
+char** loadStringsFromFile(const char* filename, int* numStrings)
+{
+	FILE* file = NULL;
+
+	if (fopen_s(&file, filename, "r") != 0 || file == NULL)
+		return NULL;
+
+	char** strings = (char**)malloc(MAX_STRINGS * sizeof(char*));
+	if (strings == NULL)
+	{
+		fclose(file);
+		snacc_exit("Out of memory 1");
+		return NULL; // Error handling
+	}
+
+	int i;
+	for (i = 0; i < MAX_STRINGS; i++)
+	{
+		strings[i] = (char*)malloc(MAX_STR_LENGTH * sizeof(char));
+		if (strings[i] == NULL)
+		{
+			snacc_exit("Out of memory 2");
+			fclose(file);
+			freeStrings(strings, i);
+			return NULL;
+		}
+	}
+
+	*numStrings = 0;
+	char buffer[4096];
+	while (fgets(buffer, sizeof(buffer), file) != NULL)
+	{
+		if (buffer[0] == '/' && buffer[1] == '/')
+			continue;
+
+		// Remove trailing newline character
+		buffer[strcspn(buffer, "\n")] = '\0';
+
+		// Copy the string to the list
+		strcpy_s(strings[*numStrings], MAX_STR_LENGTH - 1, buffer);
+		strings[*numStrings][MAX_STR_LENGTH - 1] = '\0';
+
+		(*numStrings)++;
+
+		if (*numStrings >= MAX_STRINGS)
+		{
+			snacc_exit("The whitelist may contain a maximum of %i entries.", MAX_STRINGS);
+			break;
+		}
+	}
+
+	fclose(file);
+	return strings;
+}
+
 bool ValidateOnlySupportedObjects(ModuleList* allMods)
 {
 	Module* currMod;
 	int nWeHaveErrors = 0;
+	bool bConfigLoaded = false;
+	int* supportedTypes = 0;
+
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
 		if (currMod->ImportedFlag == FALSE)
 		{
+			if (!bConfigLoaded)
+			{
+				char* szFilePath = getFilePath(currMod->asn1SrcFileName);
+				{
+					const char* szWhiteListJSON = "esnaccwhitelist.txt";
+					size_t folderSize = strlen(szFilePath);
+					size_t size = folderSize + strlen(szWhiteListJSON) + 1;
+					char* szPath = realloc(szFilePath, size);
+					if (!szPath)
+					{
+						snacc_exit("Out of memory 1");
+						return true;
+					}
+					szFilePath = szPath;
+					szFilePath[folderSize] = '\0';
+					strcat_s(szFilePath, size, szWhiteListJSON);
+				}
+
+				int iCount = 0;
+				char** szWhiteList = loadStringsFromFile(szFilePath, &iCount);
+				if (!szWhiteList)
+				{
+					free(szFilePath);
+					return true;
+				}
+
+				int iSize = (iCount + 1) * sizeof(int);
+				supportedTypes = (int*)malloc(iSize);
+				if (!supportedTypes)
+				{
+					snacc_exit("Out of memory 2");
+					return false;
+				}
+				memset(supportedTypes, 0x00, iSize);
+				int i;
+				int iFound = 0;
+				for (i = 0; i < iCount; i++)
+				{
+					int iType = getType(szWhiteList[i]);
+					if (iType == BASICTYPE_UNKNOWN)
+					{
+						if (nWeHaveErrors == 0)
+							fprintf(stderr, "Errors in %s:\n", szFilePath);
+						fprintf(stderr, "Unknown type '%s'\n", szWhiteList[i]);
+						nWeHaveErrors++;
+					}
+					else
+					{
+						supportedTypes[iFound] = iType;
+						iFound++;
+					}
+				}
+				free(szFilePath);
+				freeStrings(szWhiteList, iCount);
+				if (nWeHaveErrors)
+				{
+					free(supportedTypes);
+					return false;
+				}
+			}
+
 			TypeDef* vd;
 			FOR_EACH_LIST_ELMT(vd, currMod->typeDefs)
 			{
 				char szPath[128] = {0};
 				sprintf_s(szPath, 128, "%s ", currMod->asn1SrcFileName);
-				if (recurseFindInvalid(currMod, vd->type, szPath, vd->definedName))
+				if (recurseFindInvalid(currMod, vd->type, supportedTypes, szPath, vd->definedName))
 					nWeHaveErrors++;
 			}
 		}
 	}
+
+	if (supportedTypes)
+		free(supportedTypes);
 
 	return nWeHaveErrors ? false : true;
 }

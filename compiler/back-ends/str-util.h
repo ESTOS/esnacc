@@ -95,6 +95,7 @@ char* MakeROSESwiftInterfaceFileName PROTO((const char* moduleName));
 char* FixName(const char* szName);
 char* GetPropertyName(const char* szName);
 char* GetPropertyAccessString(const char* szName);
+char* getFilePath(const char* filename);
 
 #if IDL
 char* MakeIDLFileName PROTO((const char* moduleName));

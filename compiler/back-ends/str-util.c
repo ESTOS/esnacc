@@ -683,6 +683,33 @@ char* GetPropertyName(const char* szName)
 	return szReturn;
 }
 
+char* getFilePath(const char* filename)
+{
+	char* path = NULL;
+#ifdef _WIN32
+	const char szSeperator = '\\';
+#else
+	const char szSeperator = '/';
+#endif
+
+	char* lastSlash = strrchr(filename, szSeperator);
+
+	if (lastSlash != NULL)
+	{
+		size_t pathLength = lastSlash - filename + 1;
+		path = malloc(pathLength);
+		if (path == NULL)
+		{
+			snacc_exit("Out of memory");
+			return path;
+		}
+		strncpy(path, filename, pathLength);
+		path[pathLength] = '\0';
+	}
+
+	return path;
+}
+
 #if IDL
 char* MakeIDLFileName PARAMS((refName), const char* refName)
 {
