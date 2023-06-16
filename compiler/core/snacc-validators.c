@@ -30,6 +30,7 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods);
 // Reports if a sequence or choice does not contain the extension field (...) as last element
 bool ValidateSequencesAndChoicesAreExtendable(ModuleList* allMods);
 
+// Reports if only supported objects from the whitelist are embedded (fails if others are used)
 bool ValidateOnlySupportedObjects(ModuleList* allMods);
 
 enum BasicTypeChoiceId getType(const char* szType)
@@ -253,7 +254,7 @@ void ValidateASN1Data(ModuleList* allMods)
 	}
 	if (giValidationLevel & VALIDATE_TYPE_WHITELISTE)
 	{
-		printf("*** Validating that only allow types from the esnacc_whiteliste.json are used... ***\n");
+		printf("*** Validating that only allow types from the esnacc_whitelist.txt are used... ***\n");
 		if (!ValidateOnlySupportedObjects(allMods))
 			bSucceeded = false;
 	}
@@ -618,16 +619,43 @@ bool recurseFindInvalid(Module* mod, Type* type, int* supportedTypes, const char
 {
 #define TESTBUFFERSIZE 256
 #define BUFFERSIZE 4096
+	enum BasicTypeChoiceId choiceId = type->basicType->choiceId;
+
+	if (szElementName)
+	{
+		if (choiceId == BASICTYPE_SEQUENCE && IsDeprecatedFlaggedSequence(mod, szElementName))
+			return false;
+		else if (strstr(szPath, "::") == NULL && IsDeprecatedFlaggedSequence(mod, szElementName))
+			return false;
+	}
 
 	bool bFoundInvalid = false;
 	char szCurrentPath[BUFFERSIZE] = {0};
 	strcpy_s(szCurrentPath, BUFFERSIZE, szPath);
 
-	enum BasicTypeChoiceId choiceId = type->basicType->choiceId;
+	if (choiceId != BASICTYPE_LOCALTYPEREF && choiceId != BASICTYPE_IMPORTTYPEREF)
+	{
+		int i = 0;
+		bool bFound = false;
+		while (supportedTypes[i] != 0)
+		{
+			if (supportedTypes[i] == choiceId)
+			{
+				bFound = true;
+				break;
+			}
+			i++;
+		}
+		if (!bFound)
+		{
+			fprintf(stderr, "Unsupported type %s found in %s\n", getTypeName(choiceId), szCurrentPath);
+			return true;
+		}
+	}
 
 	if (szElementName)
 	{
-		if ((choiceId == BASICTYPE_SEQUENCE || choiceId == BASICTYPE_BITSTRING) && IsDeprecatedFlaggedSequence(mod, szElementName))
+		if (choiceId == BASICTYPE_SEQUENCE && IsDeprecatedFlaggedSequence(mod, szElementName))
 			return false;
 		char szNewName[TESTBUFFERSIZE] = {0};
 		strcat_s(szNewName, TESTBUFFERSIZE, "::");
@@ -743,6 +771,8 @@ char** loadStringsFromFile(const char* filename, int* numStrings)
 	char buffer[4096];
 	while (fgets(buffer, sizeof(buffer), file) != NULL)
 	{
+		if (strlen(buffer) == 0)
+			continue;
 		if (buffer[0] == '/' && buffer[1] == '/')
 			continue;
 
@@ -781,7 +811,7 @@ bool ValidateOnlySupportedObjects(ModuleList* allMods)
 			{
 				char* szFilePath = getFilePath(currMod->asn1SrcFileName);
 				{
-					const char* szWhiteListJSON = "esnaccwhitelist.txt";
+					const char* szWhiteListJSON = "esnacc_whitelist.txt";
 					size_t folderSize = strlen(szFilePath);
 					size_t size = folderSize + strlen(szWhiteListJSON) + 1;
 					char* szPath = realloc(szFilePath, size);

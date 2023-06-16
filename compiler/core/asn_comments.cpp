@@ -236,8 +236,6 @@ extern "C"
 		strKey += "::";
 		strKey += szTypeName;
 
-		if (strKey == "ENetUC_Conference::AsnInterfaceVersions")
-			printf("");
 		auto it = gComments.mapSequences.find(strKey);
 		if (it != gComments.mapSequences.end())
 		{
