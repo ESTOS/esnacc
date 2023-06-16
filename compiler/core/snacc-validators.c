@@ -16,225 +16,21 @@ enum EVALIDATIONCHECK
 	VALIDATE_TYPE_WHITELISTE = 16
 };
 
-void ValidateNoDuplicateOperationIDs(ModuleList* allMods);
-void ValidateArgumentResultErrorAreSequencesOrChoices(ModuleList* allMods);
-void ValidateOnlySupportedObjects(ModuleList* allMods);
+// These methods return true on success (no error) or false on error
 
-void ValidateASN1Data(ModuleList* allMods)
-{
-	if (giValidationLevel & NO_DUPLICATE_OPERATIONIDS)
-	{
-		printf("- Validating that operationIDs are not used twice...\n");
-		ValidateNoDuplicateOperationIDs(allMods);
-	}
-	if (giValidationLevel & OPERATION_ARGUMENT_RESULT_ERROR_ARE_CHOICES_OR_SEQUENCES)
-	{
-		printf("- Validating that operation arguments, results and errors are sequences or choices (only types are extendable)...\n");
-		ValidateArgumentResultErrorAreSequencesOrChoices(allMods);
-	}
-	if (giValidationLevel & OPERATION_ERRORS_ARE_OF_SAME_TYPE)
-		printf("- Validating that errors are of the same type to generalize error handling...\n");
-	if (giValidationLevel & SEQUENCES_AND_CHOICES_ARE_EXTENDABLE)
-		printf("- Validating that all sequences and choices contain ... to allow extending them...\n");
-	if (giValidationLevel & VALIDATE_TYPE_WHITELISTE)
-		printf("- Validating that only allow types from the esnacc_whiteliste.json are used...\n");
-	if (giValidationLevel >= 2)
-		ValidateOnlySupportedObjects(allMods);
-}
+// Reports multi use of operation ids
+bool ValidateNoDuplicateOperationIDs(ModuleList* allMods);
 
-void ValidateNoDuplicateOperationIDs(ModuleList* allMods)
-{
-	Module* currMod;
+// Reports if arguments, results, and errors are NOT sequences or choices
+bool ValidateArgumentResultErrorAreSequencesOrChoices(ModuleList* allMods);
 
-	const int MALLOC_SIZE = 50000;
-	int* ids = malloc(MALLOC_SIZE);
-	if (!ids)
-	{
-		snacc_exit("Out of memory");
-		return;
-	}
-	memset(ids, 0x00, MALLOC_SIZE);
-	int counter = 0;
-	int nWeHaveErrors = 0;
+// Reports if different error objects are use
+bool ValidateErrorsAreOfSameType(ModuleList* allMods);
 
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (currMod->ImportedFlag == FALSE)
-		{
-			if (HasROSEOperations(currMod))
-			{
-				ValueDef* vd;
-				FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
-				{
-					if (!IsROSEValueDef(currMod, vd))
-						continue;
+// Reports if a sequence or choice does not contain the extension field (...) as last element
+bool ValidateSequencesAndChoicesAreExtendable(ModuleList* allMods);
 
-					int methodID = vd->value->basicValue->a.integer;
-					for (int iCount = 0; iCount < counter; iCount++)
-					{
-						if (ids[iCount] == methodID)
-						{
-							fprintf(stderr, "Method/Event ID %i has been used multiple times.\n", methodID);
-							nWeHaveErrors = 1;
-							break;
-						}
-					}
-
-					ids[counter] = methodID;
-					counter++;
-				}
-			}
-		}
-	}
-	if (nWeHaveErrors)
-		snacc_exit_now(__FUNCTION__, "\nYou must ensure that the method/event IDs are only used once!\nNow terminating...\n");
-
-	free(ids);
-}
-
-void ValidateArgumentResultErrorAreSequencesOrChoices(ModuleList* allMods)
-{
-	Module* currMod;
-	int nWeHaveErrors = 0;
-	const char* szLastErrorFile = NULL;
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (currMod->ImportedFlag == FALSE)
-		{
-			if (HasROSEOperations(currMod))
-			{
-				ValueDef* vd;
-				FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
-				{
-					if (!IsROSEValueDef(currMod, vd))
-						continue;
-
-					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
-						continue;
-
-					char* pszArgument = NULL;
-					char* pszResult = NULL;
-					char* pszError = NULL;
-					Type* argumentType = NULL;
-					Type* resultType = NULL;
-					Type* errorType = NULL;
-					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
-					{
-						struct BasicType* argumentBasicType = NULL;
-						bool bArgumentIssue = false;
-						if (argumentType)
-						{
-							argumentBasicType = ResolveBasicTypeReferences(argumentType->basicType, NULL);
-							if (!argumentBasicType)
-								bArgumentIssue = true;
-							else
-							{
-								enum BasicTypeChoiceId choiceId = argumentBasicType->choiceId;
-								if (choiceId != BASICTYPE_SEQUENCE && choiceId != BASICTYPE_CHOICE)
-									bArgumentIssue = true;
-							}
-						}
-						struct BasicType* resultBasicType = NULL;
-						bool bResultIssue = false;
-						if (resultType)
-						{
-							resultBasicType = ResolveBasicTypeReferences(resultType->basicType, NULL);
-							if (!resultBasicType)
-								bResultIssue = true;
-							else
-							{
-								enum BasicTypeChoiceId choiceId = resultBasicType->choiceId;
-								if (choiceId != BASICTYPE_SEQUENCE && choiceId != BASICTYPE_CHOICE)
-									bResultIssue = true;
-							}
-						}
-
-						bool bErrorIssue = false;
-						bool bWrongErrorObject = false;
-						if (errorType)
-						{
-							bErrorIssue = errorType->basicType->choiceId != BASICTYPE_SEQUENCE;
-							bWrongErrorObject = pszError && strcmp(pszError, "AsnRequestError") != 0;
-						}
-						if (bArgumentIssue || bResultIssue || bErrorIssue || bWrongErrorObject)
-						{
-							if (szLastErrorFile != currMod->asn1SrcFileName)
-							{
-								if (szLastErrorFile)
-									fprintf(stderr, "\n");
-								fprintf(stderr, "Errors in %s:\n", currMod->asn1SrcFileName);
-								szLastErrorFile = currMod->asn1SrcFileName;
-							}
-							if (bArgumentIssue)
-							{
-								fprintf(stderr, "- %s is using %s as argument which is a ", vd->definedName, pszArgument);
-								PrintTypeById(stderr, argumentType->basicType->choiceId);
-								fprintf(stderr, ".\n  You must use a SEQUENCE or CHOICE here (expandability).\n");
-								nWeHaveErrors++;
-							}
-							if (bResultIssue)
-							{
-								fprintf(stderr, "- %s is using %s as result which is a ", vd->definedName, pszResult);
-								PrintTypeById(stderr, resultType->basicType->choiceId);
-								fprintf(stderr, ".\n  You must use a SEQUENCE or CHOICE here (expandability).\n");
-								nWeHaveErrors++;
-							}
-							if (bErrorIssue)
-							{
-								fprintf(stderr, "- %s is using %s as error which is a ", vd->definedName, pszError);
-								PrintTypeById(stderr, errorType->basicType->choiceId);
-								fprintf(stderr, ".\n  You must use a SEQUENCE here (expandability).\n");
-								nWeHaveErrors++;
-							}
-							if (bWrongErrorObject)
-							{
-								fprintf(stderr, "- %s is using %s as error but must use AsnRequestError.\n", vd->definedName, pszError);
-								nWeHaveErrors++;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	if (nWeHaveErrors)
-	{
-		fprintf(stderr, "\n");
-		fprintf(stderr, "*************************************************************\n");
-		fprintf(stderr, "* Methods may contain issues if they are flagged deprecated *\n");
-		fprintf(stderr, "*************************************************************\n\n");
-		fprintf(stderr, "- found %i errors\n", nWeHaveErrors);
-		snacc_exit_now(__FUNCTION__, "Now terminating...\n");
-	}
-}
-
-bool isSupportedType(enum BasicTypeChoiceId choiceId)
-{
-	switch (choiceId)
-	{
-		case BASICTYPE_BOOLEAN:
-		case BASICTYPE_INTEGER:
-		case BASICTYPE_OCTETSTRING:
-		case BASICTYPE_ENUMERATED:
-		case BASICTYPE_SEQUENCE:
-		case BASICTYPE_SEQUENCEOF:
-		case BASICTYPE_CHOICE:
-		case BASICTYPE_REAL:
-		case BASICTYPE_UTF8_STR:
-		case BASICTYPE_EXTENSION:
-		case BASICTYPE_NULL:
-		case BASICTYPE_ANY:
-			// We support these tags
-			return true;
-		case BASICTYPE_LOCALTYPEREF:
-		case BASICTYPE_IMPORTTYPEREF:
-			// Each import should be resolved BEFORE calling this method
-			assert(FALSE);
-			return false;
-		default:
-			return false;
-	}
-}
+bool ValidateOnlySupportedObjects(ModuleList* allMods);
 
 const char* getTypeName(enum BasicTypeChoiceId choiceId)
 {
@@ -334,6 +130,395 @@ const char* getTypeName(enum BasicTypeChoiceId choiceId)
 	}
 }
 
+void ValidateASN1Data(ModuleList* allMods)
+{
+	bool bSucceeded = true;
+	if (giValidationLevel & NO_DUPLICATE_OPERATIONIDS)
+	{
+		printf("*** Validating that operationIDs are not used twice... ***\n");
+		if (!ValidateNoDuplicateOperationIDs(allMods))
+			bSucceeded = false;
+	}
+	if (giValidationLevel & OPERATION_ARGUMENT_RESULT_ERROR_ARE_CHOICES_OR_SEQUENCES)
+	{
+		printf("*** Validating that operation arguments, results and errors are sequences or choices (only types are extendable)... ***\n");
+		if (!ValidateArgumentResultErrorAreSequencesOrChoices(allMods))
+			bSucceeded = false;
+	}
+	if (giValidationLevel & OPERATION_ERRORS_ARE_OF_SAME_TYPE)
+	{
+		printf("*** Validating that errors are of the same type to generalize error handling... ***\n");
+		if (!ValidateErrorsAreOfSameType(allMods))
+			bSucceeded = false;
+	}
+	if (giValidationLevel & SEQUENCES_AND_CHOICES_ARE_EXTENDABLE)
+	{
+		printf("*** Validating that all sequences and choices contain ... to allow extending them... ***\n");
+		if (!ValidateSequencesAndChoicesAreExtendable(allMods))
+			bSucceeded = false;
+	}
+	if (giValidationLevel & VALIDATE_TYPE_WHITELISTE)
+	{
+		printf("*** Validating that only allow types from the esnacc_whiteliste.json are used... ***\n");
+		if (!ValidateOnlySupportedObjects(allMods))
+			bSucceeded = false;
+	}
+	if (!bSucceeded)
+		snacc_exit("Validation failed. Terminating...");
+}
+
+bool ValidateNoDuplicateOperationIDs(ModuleList* allMods)
+{
+	Module* currMod;
+
+	const int MALLOC_SIZE = 50000;
+	int* ids = malloc(MALLOC_SIZE);
+	if (!ids)
+	{
+		snacc_exit("Out of memory");
+		return false;
+	}
+	memset(ids, 0x00, MALLOC_SIZE);
+	int counter = 0;
+	int nWeHaveErrors = 0;
+
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+			if (HasROSEOperations(currMod))
+			{
+				ValueDef* vd;
+				FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
+				{
+					if (!IsROSEValueDef(currMod, vd))
+						continue;
+
+					int methodID = vd->value->basicValue->a.integer;
+					for (int iCount = 0; iCount < counter; iCount++)
+					{
+						if (ids[iCount] == methodID)
+						{
+							fprintf(stderr, "Method/Event ID %i has been used multiple times.\n", methodID);
+							nWeHaveErrors = 1;
+							break;
+						}
+					}
+
+					ids[counter] = methodID;
+					counter++;
+				}
+			}
+		}
+	}
+
+	free(ids);
+
+	if (nWeHaveErrors)
+		fprintf(stderr, "\n");
+
+	return nWeHaveErrors ? false : true;
+}
+
+bool ValidateArgumentResultErrorAreSequencesOrChoices(ModuleList* allMods)
+{
+	Module* currMod;
+	int nWeHaveErrors = 0;
+	const char* szLastErrorFile = NULL;
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+			if (HasROSEOperations(currMod))
+			{
+				ValueDef* vd;
+				FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
+				{
+					if (!IsROSEValueDef(currMod, vd))
+						continue;
+
+					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
+						continue;
+
+					char* pszArgument = NULL;
+					char* pszResult = NULL;
+					char* pszError = NULL;
+					Type* argumentType = NULL;
+					Type* resultType = NULL;
+					Type* errorType = NULL;
+					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
+					{
+						struct BasicType* argumentBasicType = NULL;
+						bool bArgumentIssue = false;
+						if (argumentType)
+						{
+							argumentBasicType = ResolveBasicTypeReferences(argumentType->basicType, NULL);
+							if (!argumentBasicType)
+								bArgumentIssue = true;
+							else
+							{
+								enum BasicTypeChoiceId choiceId = argumentBasicType->choiceId;
+								if (choiceId != BASICTYPE_SEQUENCE && choiceId != BASICTYPE_CHOICE)
+									bArgumentIssue = true;
+							}
+						}
+						struct BasicType* resultBasicType = NULL;
+						bool bResultIssue = false;
+						if (resultType)
+						{
+							resultBasicType = ResolveBasicTypeReferences(resultType->basicType, NULL);
+							if (!resultBasicType)
+								bResultIssue = true;
+							else
+							{
+								enum BasicTypeChoiceId choiceId = resultBasicType->choiceId;
+								if (choiceId != BASICTYPE_SEQUENCE && choiceId != BASICTYPE_CHOICE)
+									bResultIssue = true;
+							}
+						}
+						struct BasicType* errorBasicType = NULL;
+						bool bErrorIssue = false;
+						if (errorType)
+						{
+							errorBasicType = ResolveBasicTypeReferences(errorType->basicType, NULL);
+							if (!errorBasicType)
+								bErrorIssue = true;
+							else
+							{
+								enum BasicTypeChoiceId choiceId = errorBasicType->choiceId;
+								if (choiceId != BASICTYPE_SEQUENCE && choiceId != BASICTYPE_CHOICE)
+									bErrorIssue = true;
+							}
+						}
+						if (bArgumentIssue || bResultIssue || bErrorIssue)
+						{
+							if (szLastErrorFile != currMod->asn1SrcFileName)
+							{
+								if (szLastErrorFile)
+									fprintf(stderr, "\n");
+								fprintf(stderr, "Errors in %s:\n", currMod->asn1SrcFileName);
+								szLastErrorFile = currMod->asn1SrcFileName;
+							}
+							if (bArgumentIssue)
+							{
+								fprintf(stderr, "- %s is using %s as argument which is a ", vd->definedName, pszArgument);
+								PrintTypeById(stderr, argumentType->basicType->choiceId);
+								fprintf(stderr, ".\n  You must use a SEQUENCE or CHOICE here (expandability).\n");
+								nWeHaveErrors++;
+							}
+							if (bResultIssue)
+							{
+								fprintf(stderr, "- %s is using %s as result which is a ", vd->definedName, pszResult);
+								PrintTypeById(stderr, resultType->basicType->choiceId);
+								fprintf(stderr, ".\n  You must use a SEQUENCE or CHOICE here (expandability).\n");
+								nWeHaveErrors++;
+							}
+							if (bErrorIssue)
+							{
+								fprintf(stderr, "- %s is using %s as error which is a ", vd->definedName, pszResult);
+								PrintTypeById(stderr, errorType->basicType->choiceId);
+								fprintf(stderr, ".\n  You must use a SEQUENCE or CHOICE here (expandability).\n");
+								nWeHaveErrors++;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if (nWeHaveErrors)
+		fprintf(stderr, "\n");
+
+	return nWeHaveErrors ? false : true;
+}
+
+bool ValidateErrorsAreOfSameType(ModuleList* allMods)
+{
+	Module* currMod;
+	int nWeHaveErrors = 0;
+	char* szErrorTypes = NULL;
+	char* szFirstName = NULL;
+	int iFirstType = 0;
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+			if (HasROSEOperations(currMod))
+			{
+				ValueDef* vd;
+				FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
+				{
+					if (!IsROSEValueDef(currMod, vd))
+						continue;
+
+					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
+						continue;
+
+					char* pszError = NULL;
+					Type* errorType = NULL;
+					if (GetROSEDetails(currMod, vd, NULL, NULL, &pszError, NULL, NULL, &errorType, false))
+					{
+						struct BasicType* errorBasicType = NULL;
+						bool bErrorIssue = false;
+						if (errorType)
+						{
+							errorBasicType = ResolveBasicTypeReferences(errorType->basicType, NULL);
+							if (!errorBasicType)
+								bErrorIssue = true;
+							else
+							{
+								char szBuffer[512] = {0};
+								sprintf_s(szBuffer, 512, "%i:%s", errorBasicType->choiceId, pszError);
+								if (!szErrorTypes)
+								{
+									size_t stLen = strlen(szBuffer) + 1;
+									szErrorTypes = malloc(stLen);
+									if (!szErrorTypes)
+									{
+										snacc_exit("Out of memory 1");
+										return false;
+									}
+									strcpy_s(szErrorTypes, stLen, szBuffer);
+									stLen = strlen(pszError) + 1;
+									szFirstName = malloc(stLen);
+									if (!szFirstName)
+									{
+										snacc_exit("Out of memory 2");
+										return false;
+									}
+									strcpy_s(szFirstName, stLen, pszError);
+									iFirstType = errorBasicType->choiceId;
+								}
+								else if (strstr(szErrorTypes, szBuffer) == NULL)
+								{
+									if (!nWeHaveErrors)
+									{
+										fprintf(stderr, "  Different error objects found. Use the same error object for all errors to generalize error handling!\n");
+										fprintf(stderr, "  - Name: %s Type: %s\n", szFirstName, getTypeName(iFirstType));
+									}
+									fprintf(stderr, "  - Name: %s Type: %s\n", pszError, getTypeName(errorBasicType->choiceId));
+									size_t stLen = strlen(szErrorTypes) + strlen(szBuffer) + 2;
+									char* szNewErrorTypes = realloc(szErrorTypes, stLen);
+									if (!szNewErrorTypes)
+									{
+										snacc_exit("Out of memory 3");
+										return false;
+									}
+									szErrorTypes = szNewErrorTypes;
+									strcat_s(szErrorTypes, stLen, " ");
+									strcat_s(szErrorTypes, stLen, szBuffer);
+									nWeHaveErrors++;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if (nWeHaveErrors)
+		fprintf(stderr, "  -> Found %i different error objects\n\n", nWeHaveErrors + 1);
+	Free(szErrorTypes);
+	Free(szFirstName);
+
+	return nWeHaveErrors ? false : true;
+}
+
+bool ValidateSequencesAndChoicesAreExtendable(ModuleList* allMods)
+{
+	int nWeHaveErrors = 0;
+	int iErrorCounter = 0;
+	const char* szLastErrorFile = NULL;
+	Module* mod;
+	FOR_EACH_LIST_ELMT(mod, allMods)
+	{
+		if (mod->ImportedFlag == FALSE)
+		{
+			TypeDef* td;
+			FOR_EACH_LIST_ELMT(td, mod->typeDefs)
+			{
+				if (IsDeprecatedFlaggedSequence(mod, td->definedName))
+					continue;
+
+				struct BasicType* type = td->type->basicType;
+				enum BasicTypeChoiceId choiceId = type->choiceId;
+				bool bFailed = false;
+				const char* szType = 0;
+				if (choiceId == BASICTYPE_SEQUENCE)
+				{
+					NamedType* last = LAST_LIST_ELMT(type->a.sequence);
+					if (!last)
+						bFailed = true;
+					else if (last->type->basicType->choiceId != BASICTYPE_EXTENSION)
+						bFailed = true;
+					szType = "SEQUENCE";
+				}
+				else if (choiceId == BASICTYPE_CHOICE)
+				{
+					NamedType* last = LAST_LIST_ELMT(type->a.choice);
+					if (!last)
+						bFailed = true;
+					else if (last->type->basicType->choiceId != BASICTYPE_EXTENSION)
+						bFailed = true;
+					szType = "CHOICE";
+				}
+				else
+					continue;
+
+				if (!bFailed)
+					continue;
+
+				if (szLastErrorFile != mod->asn1SrcFileName)
+				{
+					if (szLastErrorFile)
+						fprintf(stderr, "  -> File contained %i error(s)\n\n", iErrorCounter);
+					iErrorCounter = 0;
+					fprintf(stderr, "Errors in %s:\n", mod->asn1SrcFileName);
+					szLastErrorFile = mod->asn1SrcFileName;
+				}
+
+				fprintf(stderr, "- %s %s does not contain ... (EXTENSION) as last element\n", szType, td->definedName);
+				nWeHaveErrors++;
+				iErrorCounter++;
+			}
+		}
+	}
+
+	if (iErrorCounter)
+		fprintf(stderr, "  -> File contained %i error(s)\n\n", iErrorCounter);
+
+	return nWeHaveErrors ? false : true;
+}
+
+bool isSupportedType(enum BasicTypeChoiceId choiceId)
+{
+	switch (choiceId)
+	{
+		case BASICTYPE_BOOLEAN:
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_ENUMERATED:
+		case BASICTYPE_SEQUENCE:
+		case BASICTYPE_SEQUENCEOF:
+		case BASICTYPE_CHOICE:
+		case BASICTYPE_REAL:
+		case BASICTYPE_UTF8_STR:
+		case BASICTYPE_EXTENSION:
+		case BASICTYPE_NULL:
+		case BASICTYPE_ANY:
+			// We support these tags
+			return true;
+		case BASICTYPE_LOCALTYPEREF:
+		case BASICTYPE_IMPORTTYPEREF:
+			// Each import should be resolved BEFORE calling this method
+			assert(FALSE);
+			return false;
+		default:
+			return false;
+	}
+}
+
 // Returns true when an invalid element was found
 bool recurseFindInvalid(Module* mod, Type* type, const char* szPath, const char* szElementName)
 {
@@ -421,7 +606,7 @@ bool recurseFindInvalid(Module* mod, Type* type, const char* szPath, const char*
 	return bFoundInvalid;
 }
 
-void ValidateOnlySupportedObjects(ModuleList* allMods)
+bool ValidateOnlySupportedObjects(ModuleList* allMods)
 {
 	Module* currMod;
 	int nWeHaveErrors = 0;
@@ -440,12 +625,5 @@ void ValidateOnlySupportedObjects(ModuleList* allMods)
 		}
 	}
 
-	if (nWeHaveErrors)
-	{
-		fprintf(stderr, "\n");
-		fprintf(stderr, "**********************************\n");
-		fprintf(stderr, "* Found not supported asn1 types *\n");
-		fprintf(stderr, "**********************************\n");
-		snacc_exit_now(__FUNCTION__, "Now terminating...\n");
-	}
+	return nWeHaveErrors ? false : true;
 }
