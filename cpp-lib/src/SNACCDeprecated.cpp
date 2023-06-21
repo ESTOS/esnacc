@@ -10,10 +10,12 @@
 #endif
 
 SNACCDeprecatedNotify* SNACCDeprecated::m_pCallback = NULL;
+bool SNACCDeprecated::m_bProvideStackTrace = false;
 
-void SNACCDeprecated::SetDeprecatedCallback(SNACCDeprecatedNotify* pCallBack)
+void SNACCDeprecated::SetDeprecatedCallback(SNACCDeprecatedNotify* pCallBack, bool bProvideStackTrace)
 {
 	m_pCallback = pCallBack;
+	m_bProvideStackTrace = bProvideStackTrace;
 }
 
 void SNACCDeprecated::DeprecatedASN1Object(const long long i64DeprecatedSince, const char* szModuleName, const char* szObjectName)
@@ -39,29 +41,41 @@ void SNACCDeprecated::DeprecatedASN1Method(const long long i64DeprecatedSince, c
 std::list<std::string> SNACCDeprecated::GetStackTrace(int remove /*= 1*/)
 {
 	std::list<std::string> stackTrace;
+
+	// If stacktraces are not requested, just leave
+	if (!m_bProvideStackTrace)
+		return stackTrace;
+
 #ifdef _WIN32
-	SymInitialize(GetCurrentProcess(), NULL, TRUE);
-	void* trace[256];
-	int size = CaptureStackBackTrace(remove, 256, trace, NULL);
-	for (int i = 0; i < size; i++)
+	HANDLE hProcess = GetCurrentProcess();
+	try
 	{
-		const int kMaxNameLength = 256;
-		DWORD_PTR frame = reinterpret_cast<DWORD_PTR>(trace[i]);
-		const int iSize = (sizeof(SYMBOL_INFO) + kMaxNameLength * sizeof(wchar_t) + sizeof(ULONG64) - 1) / sizeof(ULONG64);
-		ULONG64 buffer[iSize];
-		PSYMBOL_INFO symbol = reinterpret_cast<PSYMBOL_INFO>(&buffer[0]);
-		memset(symbol, 0x00, iSize);
-		symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-		symbol->MaxNameLen = kMaxNameLength - 1;
-		DWORD64 sym_displacement = 0;
-		if (SymFromAddr(GetCurrentProcess(), frame, &sym_displacement, symbol))
+		SymInitialize(hProcess, NULL, TRUE);
+		void* trace[256];
+		int size = CaptureStackBackTrace(remove, 256, trace, NULL);
+		for (int i = 0; i < size; i++)
 		{
-			if (strcmp(symbol->Name, "wmain") == 0)
-				break;
-			stackTrace.push_back(symbol->Name);
+			const int kMaxNameLength = 256;
+			DWORD_PTR frame = reinterpret_cast<DWORD_PTR>(trace[i]);
+			const int iSize = (sizeof(SYMBOL_INFO) + kMaxNameLength * sizeof(wchar_t) + sizeof(ULONG64) - 1) / sizeof(ULONG64);
+			ULONG64 buffer[iSize];
+			PSYMBOL_INFO symbol = reinterpret_cast<PSYMBOL_INFO>(&buffer[0]);
+			memset(symbol, 0x00, iSize);
+			symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+			symbol->MaxNameLen = kMaxNameLength - 1;
+			DWORD64 sym_displacement = 0;
+			if (SymFromAddr(hProcess, frame, &sym_displacement, symbol))
+			{
+				if (strcmp(symbol->Name, "wmain") == 0)
+					break;
+				stackTrace.push_back(symbol->Name);
+			}
 		}
 	}
-	SymCleanup(GetCurrentProcess());
+	catch (...)
+	{
+	}
+	SymCleanup(hProcess);
 #elif defined(_WIN32) || defined(WIN32)
 	void* trace[256];
 	int size = backtrace(trace, 256);
