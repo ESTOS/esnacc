@@ -5,6 +5,7 @@
 #include <string>
 #include <regex>
 
+namespace fs = std::filesystem;
 using namespace std;
 
 CASN1Files fileCache;
@@ -17,15 +18,15 @@ int CPPHelper::FindFiles(const char* szPattern, const bool bIsImportedFile)
 	// *.asn1 - a wildcard which resolves to a list of files internally (either windows or linux without global expansion in the shell set -f)
 	// a path in which we search for *asn1 files... e.g. . /folder
 
-	std::filesystem::path path;
+	fs::path path;
 	if (strlen(szPattern) == 0 || strcmp(szPattern, ".") == 0)
 	{
-		path = std::filesystem::current_path();
-		path += std::filesystem::path::preferred_separator;
+		path = fs::current_path();
+		path += fs::path::preferred_separator;
 	}
 	else
 	{
-		path = std::filesystem::absolute(szPattern);
+		path = fs::absolute(szPattern);
 		path.make_preferred();
 	}
 
@@ -46,7 +47,7 @@ int CPPHelper::FindFiles(const char* szPattern, const bool bIsImportedFile)
 		std::regex pattern(regex);
 
 		const auto& parentPath = path.parent_path();
-		for (auto& file : std::filesystem::directory_iterator(parentPath))
+		for (auto& file : fs::directory_iterator(parentPath))
 		{
 			if (!file.is_regular_file())
 				continue;
@@ -65,9 +66,9 @@ int CPPHelper::FindFiles(const char* szPattern, const bool bIsImportedFile)
 	return iCount;
 }
 
-bool CPPHelper::AddToCache(const std::filesystem::path& file, const bool bIsImportedFile)
+bool CPPHelper::AddToCache(const fs::path& file, const bool bIsImportedFile)
 {
-	if (!std::filesystem::exists(file))
+	if (!fs::exists(file))
 		return false;
 	const auto& strFileName = file.filename().string();
 	const auto iter = fileCache.find(strFileName);
@@ -155,7 +156,7 @@ std::string CPPHelper::wildcardToRegex(const std::string& wildcard)
 
 bool CPPHelper::GetDirectoryWithDelimiterFromPath(char* szPath, unsigned long ulLen)
 {
-	std::filesystem::path path = szPath;
+	fs::path path = szPath;
 
 	// Replace non platform conforming delimiters
 	path.make_preferred();
@@ -164,8 +165,8 @@ bool CPPHelper::GetDirectoryWithDelimiterFromPath(char* szPath, unsigned long ul
 	if (fullPath.empty())
 		return false;
 
-	if (fullPath.back() != std::filesystem::path::preferred_separator)
-		fullPath += std::filesystem::path::preferred_separator;
+	if (fullPath.back() != fs::path::preferred_separator)
+		fullPath += fs::path::preferred_separator;
 
 	if (fullPath.length() > ulLen)
 		return false;
@@ -181,8 +182,8 @@ bool CPPHelper::GetDirectoryWithDelimiterFromPath(char* szPath, unsigned long ul
 
 bool CPPHelper::GetWorkingDirectoryWithDelimiter(char* szPath, unsigned long ulLen)
 {
-	auto path = std::filesystem::current_path();
-	path += std::filesystem::path::preferred_separator;
+	auto path = fs::current_path();
+	path += fs::path::preferred_separator;
 	auto strPath = path.string();
 	if (strPath.length() > ulLen)
 		return false;
@@ -194,4 +195,26 @@ bool CPPHelper::GetWorkingDirectoryWithDelimiter(char* szPath, unsigned long ulL
 #endif
 
 	return true;
+}
+
+bool CPPHelper::CreateDirectories(const char* szPath)
+{
+	try
+	{
+		fs::path directoryPath = szPath;
+
+		auto last = directoryPath.generic_string().back();
+		if (last == '/' || last == '\\')
+			directoryPath = directoryPath.parent_path();
+
+		fs::file_status status = fs::status(directoryPath);
+		if (fs::exists(status))
+			return true;
+		bool bCreated = fs::create_directories(directoryPath);
+		return bCreated;
+	}
+	catch (...)
+	{
+	}
+	return false;
 }

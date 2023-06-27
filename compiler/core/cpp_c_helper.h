@@ -57,6 +57,13 @@ extern "C"
 	 */
 	bool getWorkingDirectoryWithDelimiter(char* szPath, unsigned long ulLen);
 
+	/*
+	 * Creates the directory path (directories) as specified in szPath
+	 * @param szPath - The path that shall get created
+	 * @returns true on success - also if the directory was already existing (false on error)
+	 */
+	bool createDirectories(const char* szPath);
+
 #ifdef __cplusplus
 }
 #endif
