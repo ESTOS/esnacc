@@ -523,6 +523,8 @@ static void PrintHdrComment(FILE* hdr, Module* m)
 	fprintf(hdr, "// %s - class definitions for ASN.1 module %s\n", RemovePath(m->cxxHdrFileName), m->modId->name);
 	fprintf(hdr, "//\n");
 	write_snacc_header(hdr, "// ");
+	fprintf(hdr, "//\n");
+	fprintf(hdr, "// clang-format off\n");
 	fprintf(hdr, "\n");
 	printModuleComment(hdr, m->moduleName, COMMENTSTYLE_CPP);
 }
@@ -533,6 +535,8 @@ static void PrintSrcComment(FILE* src, Module* m)
 	fprintf(src, "// %s - class member functions for ASN.1 module %s\n", RemovePath(m->cxxSrcFileName), m->modId->name);
 	fprintf(src, "//\n");
 	write_snacc_header(src, "// ");
+	fprintf(src, "//\n");
+	fprintf(src, "// clang-format off\n");
 	fprintf(src, "\n");
 }
 
