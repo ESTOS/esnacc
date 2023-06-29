@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <string>
 #include <regex>
+#include <chrono>
+#include <thread>
 
 namespace fs = std::filesystem;
 using namespace std;
@@ -199,22 +201,32 @@ bool CPPHelper::GetWorkingDirectoryWithDelimiter(char* szPath, unsigned long ulL
 
 bool CPPHelper::CreateDirectories(const char* szPath)
 {
-	try
+	for (int iCount = 1; iCount < 11; iCount++)
 	{
-		fs::path directoryPath = szPath;
+		try
+		{
+			fs::path directoryPath = szPath;
 
-		auto last = directoryPath.generic_string().back();
-		if (last == '/' || last == '\\')
-			directoryPath = directoryPath.parent_path();
+			auto last = directoryPath.generic_string().back();
+			if (last == '/' || last == '\\')
+				directoryPath = directoryPath.parent_path();
 
-		fs::file_status status = fs::status(directoryPath);
-		if (fs::exists(status))
-			return true;
-		bool bCreated = fs::create_directories(directoryPath);
-		return bCreated;
-	}
-	catch (...)
-	{
+			const char* szPrintablePath = directoryPath.generic_string().c_str();
+			fs::file_status status = fs::status(directoryPath);
+			if (fs::exists(status))
+				return true;
+			bool bCreated = fs::create_directories(directoryPath);
+			if (bCreated)
+				return true;
+			else if (iCount == 10)
+				printf("Creating folder %s finally failed after %i retires", szPrintablePath, iCount);
+			else
+				printf("Creating folder %s failed for the %i. time", szPrintablePath, iCount);
+		}
+		catch (...)
+		{
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 	return false;
 }
