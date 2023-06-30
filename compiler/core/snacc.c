@@ -645,10 +645,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						strcpy_s(gszOutputPath, 100, argv[currArg + 1]);
 						getDirectoryWithDelimiterFromPath(gszOutputPath, 100);
 						if (!createDirectories(gszOutputPath))
-						{
 							snacc_exit("Failed to create directory %s", gszOutputPath);
-							return 1;
-						}
 						currArg++;
 					}
 					currArg++;
@@ -2498,10 +2495,7 @@ char* ConvertUnixTimeToReadable(const long long tmUnixTime)
 {
 	char* szBuffer = malloc(128);
 	if (!szBuffer)
-	{
 		snacc_exit("Out of memory");
-		return NULL;
-	}
 
 #ifdef _WIN32
 	struct tm timeinfo;
