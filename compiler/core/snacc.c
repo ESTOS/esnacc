@@ -183,7 +183,7 @@ int gPrivateSymbols = 1;
 long long gi64NoDeprecatedSymbols = 0;
 
 // jan 11.1.2023 - Default level for validating the content of the asn1 files is all checks that the tool knows
-int giValidationLevel = 99999;
+int giValidationLevel = 0xffffffff;
 
 // Write comments to the target files on true (parsing is always enabled)
 int giWriteComments = 0;
@@ -247,6 +247,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "   4 Validates that errors are of the same type to generalize error handling (@deprecated are not validated)\n");
 	fprintf(fp, "   8 Validates that all sequences contain ... to allow extending them (@deprecated are not validated)\n");
 	fprintf(fp, "   16 Validates that only allow types from the esnacc_whiteliste.txt are used (@deprecated are not validated)\n");
+	fprintf(fp, "   32 Ensure that invokes are specified with argument, result and error where events only consists of an argument (@deprecated are not validated)\n");
 	fprintf(fp, "  -h   prints this msg\n");
 	fprintf(fp, "  -P   print the parsed ASN.1 modules to stdout from their parse trees\n");
 	fprintf(fp, "       (helpful debugging)\n");
