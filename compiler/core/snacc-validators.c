@@ -921,7 +921,6 @@ bool ValidateProperROSEArguments(ModuleList* allMods)
 					char* pszArgument = NULL;
 					char* pszResult = NULL;
 					char* pszError = NULL;
-					int nROSEErrors = 0;
 					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 					{
 						bool bMissingArgument = false;
