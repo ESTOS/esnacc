@@ -54,8 +54,9 @@ public:
 	 * Sets the callback
 	 *
 	 * @param pCallBack - the callback that should get notified
+	 * @param bProvideStackTrace - true to get stack traces in DeprecatedASN1Method
 	 */
-	static void SetDeprecatedCallback(SNACCDeprecatedNotify* pCallBack);
+	static void SetDeprecatedCallback(SNACCDeprecatedNotify* pCallBack, bool bProvideStackTrace);
 
 	/**
 	 * This method is called in case an object is created which is flagged deprecated
@@ -87,6 +88,7 @@ private:
 
 	// The current callback that is notified about deprecated method calls or object creations
 	static SNACCDeprecatedNotify* m_pCallback;
+	static bool m_bProvideStackTrace;
 };
 
 #endif // SNACC_DEPRECATED_H

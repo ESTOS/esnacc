@@ -12,7 +12,6 @@ export class SettingsManager implements IENetUC_Settings_ManagerROSE_Event_Handl
 
 	/**
 	 * Creates the SettingsManager object
-	 *
 	 * @param transport - the transport layer (the TSASN1Server instance that holds the hole ROSE ASN1 stuff)
 	 */
 	public constructor(transport: IASN1Transport) {
@@ -22,7 +21,6 @@ export class SettingsManager implements IENetUC_Settings_ManagerROSE_Event_Handl
 	/**
 	 * Sends settings to the server
 	 * In case a property has changed the server will dispatch events
-	 *
 	 * @param enabled - the enable state
 	 * @param username - the username
 	 */
@@ -39,6 +37,7 @@ export class SettingsManager implements IENetUC_Settings_ManagerROSE_Event_Handl
 
 	/**
 	 * Retrieve settings from the server
+	 * @returns A promise resolving to the available settings or undefined if none are available
 	 */
 	public async getSettings(): Promise<{enabled?: boolean, username?: string} | undefined> {
 		const argument = new ENetUC_Settings_Manager.AsnGetSettingsArgument();
@@ -52,7 +51,6 @@ export class SettingsManager implements IENetUC_Settings_ManagerROSE_Event_Handl
 
 	/**
 	 * Sent to the clients in the case settings have changed
-	 *
 	 * @param argument - Argument for the asnSettingsChanged event
 	 * @param invokeContext - Invokecontext from the asn.1 lib (containing invoke related data)
 	 */

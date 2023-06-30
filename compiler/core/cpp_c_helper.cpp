@@ -27,4 +27,9 @@ extern "C"
 	{
 		return CPPHelper::GetWorkingDirectoryWithDelimiter(szPath, ulLen);
 	}
+
+	bool createDirectories(const char* szPath)
+	{
+		return CPPHelper::CreateDirectories(szPath);
+	}
 }

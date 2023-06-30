@@ -9,11 +9,18 @@
 
 enum EVALIDATIONCHECK
 {
+	// Do not allow duplicated operation ids
 	NO_DUPLICATE_OPERATIONIDS = 1,
+	// Check that arguments results and error are extendable objects (not e.g. lists which are not extendable)
 	OPERATION_ARGUMENT_RESULT_ERROR_ARE_CHOICES_OR_SEQUENCES = 2,
+	// Check that all errors are the same type to ensure generalized handling
 	OPERATION_ERRORS_ARE_OF_SAME_TYPE = 4,
-	SEQUENCES_AND_CHOICES_ARE_EXTENDABLE = 8,
-	VALIDATE_TYPE_WHITELISTE = 16
+	// Check that all sequences have an extension attribute as last element (...)
+	SEQUENCES_ARE_EXTENDABLE = 8,
+	// Validate that the used Attribute types are mentioned in the esnacc_whitelist.txt (side by side with the asn1 files)
+	VALIDATE_TYPE_WHITELISTE = 16,
+	// Validate that invokes consist of an argument, result and error and events only of an error
+	VALIDATE_PROPER_INVOKE_EVENT_ARGUMENTS = 32
 };
 
 // These methods return true on success (no error) or false on error
@@ -27,11 +34,14 @@ bool ValidateArgumentResultErrorAreSequencesOrChoices(ModuleList* allMods);
 // Reports if different error objects are use
 bool ValidateErrorsAreOfSameType(ModuleList* allMods);
 
-// Reports if a sequence or choice does not contain the extension field (...) as last element
-bool ValidateSequencesAndChoicesAreExtendable(ModuleList* allMods);
+// Reports if a sequences do not contain the extension field (...) as last element
+bool ValidateSequencesAreExtendable(ModuleList* allMods);
 
 // Reports if only supported objects from the whitelist are embedded (fails if others are used)
 bool ValidateOnlySupportedObjects(ModuleList* allMods);
+
+// Validates that the ROSE arguments are properly specified (invoke with argument, result and error, event only with argument)
+bool ValidateProperROSEArguments(ModuleList* allMods);
 
 enum BasicTypeChoiceId getType(const char* szType)
 {
@@ -230,32 +240,32 @@ void ValidateASN1Data(ModuleList* allMods)
 	bool bSucceeded = true;
 	if (giValidationLevel & NO_DUPLICATE_OPERATIONIDS)
 	{
-		printf("*** Validating that operationIDs are not used twice... ***\n");
 		if (!ValidateNoDuplicateOperationIDs(allMods))
 			bSucceeded = false;
 	}
 	if (giValidationLevel & OPERATION_ARGUMENT_RESULT_ERROR_ARE_CHOICES_OR_SEQUENCES)
 	{
-		printf("*** Validating that operation arguments, results and errors are sequences or choices (only types are extendable)... ***\n");
 		if (!ValidateArgumentResultErrorAreSequencesOrChoices(allMods))
 			bSucceeded = false;
 	}
 	if (giValidationLevel & OPERATION_ERRORS_ARE_OF_SAME_TYPE)
 	{
-		printf("*** Validating that errors are of the same type to generalize error handling... ***\n");
 		if (!ValidateErrorsAreOfSameType(allMods))
 			bSucceeded = false;
 	}
-	if (giValidationLevel & SEQUENCES_AND_CHOICES_ARE_EXTENDABLE)
+	if (giValidationLevel & SEQUENCES_ARE_EXTENDABLE)
 	{
-		printf("*** Validating that all sequences and choices contain ... to allow extending them... ***\n");
-		if (!ValidateSequencesAndChoicesAreExtendable(allMods))
+		if (!ValidateSequencesAreExtendable(allMods))
 			bSucceeded = false;
 	}
 	if (giValidationLevel & VALIDATE_TYPE_WHITELISTE)
 	{
-		printf("*** Validating that only allow types from the esnacc_whitelist.txt are used... ***\n");
 		if (!ValidateOnlySupportedObjects(allMods))
+			bSucceeded = false;
+	}
+	if (giValidationLevel & VALIDATE_PROPER_INVOKE_EVENT_ARGUMENTS)
+	{
+		if (!ValidateProperROSEArguments(allMods))
 			bSucceeded = false;
 	}
 	if (!bSucceeded)
@@ -294,6 +304,8 @@ bool ValidateNoDuplicateOperationIDs(ModuleList* allMods)
 					{
 						if (ids[iCount] == methodID)
 						{
+							if (!nWeHaveErrors)
+								fprintf(stderr, "*** Validating that operationIDs are not used twice... ***\n");
 							fprintf(stderr, "Method/Event ID %i has been used multiple times.\n", methodID);
 							nWeHaveErrors = 1;
 							break;
@@ -389,6 +401,8 @@ bool ValidateArgumentResultErrorAreSequencesOrChoices(ModuleList* allMods)
 						{
 							if (szLastErrorFile != currMod->asn1SrcFileName)
 							{
+								if (!nWeHaveErrors)
+									fprintf(stderr, "*** Validating that operation arguments, results and errors are sequences or choices (only types are extendable)... ***\n");
 								if (szLastErrorFile)
 									fprintf(stderr, "\n");
 								fprintf(stderr, "Errors in %s:\n", currMod->asn1SrcFileName);
@@ -489,6 +503,7 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods)
 								{
 									if (!nWeHaveErrors)
 									{
+										fprintf(stderr, "*** Validating that errors are of the same type to generalize error handling... ***\n");
 										fprintf(stderr, "  Different error objects found. Use the same error object for all errors to generalize error handling!\n");
 										fprintf(stderr, "  - Name: %s Type: %s\n", szFirstName, getTypeName(iFirstType));
 									}
@@ -520,7 +535,7 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods)
 	return nWeHaveErrors ? false : true;
 }
 
-bool ValidateSequencesAndChoicesAreExtendable(ModuleList* allMods)
+bool ValidateSequencesAreExtendable(ModuleList* allMods)
 {
 	int nWeHaveErrors = 0;
 	int iErrorCounter = 0;
@@ -549,20 +564,14 @@ bool ValidateSequencesAndChoicesAreExtendable(ModuleList* allMods)
 						bFailed = true;
 					szType = "SEQUENCE";
 				}
-				else if (choiceId == BASICTYPE_CHOICE)
-				{
-					NamedType* last = LAST_LIST_ELMT(type->a.choice);
-					if (!last)
-						bFailed = true;
-					else if (last->type->basicType->choiceId != BASICTYPE_EXTENSION)
-						bFailed = true;
-					szType = "CHOICE";
-				}
 				else
 					continue;
 
 				if (!bFailed)
 					continue;
+
+				if (!nWeHaveErrors)
+					fprintf(stderr, "*** Validating that all sequences contain ... to allow extending them... ***\n");
 
 				if (szLastErrorFile != mod->asn1SrcFileName)
 				{
@@ -805,6 +814,7 @@ bool ValidateOnlySupportedObjects(ModuleList* allMods)
 
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
+		int nWeHaveErrorsInFile = 0;
 		if (currMod->ImportedFlag == FALSE)
 		{
 			if (!bConfigLoaded)
@@ -848,9 +858,12 @@ bool ValidateOnlySupportedObjects(ModuleList* allMods)
 					int iType = getType(szWhiteList[i]);
 					if (iType == BASICTYPE_UNKNOWN)
 					{
-						if (nWeHaveErrors == 0)
+						if (!nWeHaveErrors)
+							fprintf(stderr, "*** Validating that all sequences contain ... to allow extending them... ***\n");
+						if (!nWeHaveErrorsInFile)
 							fprintf(stderr, "Errors in %s:\n", szFilePath);
 						fprintf(stderr, "Unknown type '%s'\n", szWhiteList[i]);
+						nWeHaveErrorsInFile++;
 						nWeHaveErrors++;
 					}
 					else
@@ -881,6 +894,68 @@ bool ValidateOnlySupportedObjects(ModuleList* allMods)
 
 	if (supportedTypes)
 		free(supportedTypes);
+
+	return nWeHaveErrors ? false : true;
+}
+
+bool ValidateProperROSEArguments(ModuleList* allMods)
+{
+	Module* currMod;
+	int nWeHaveErrors = 0;
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+			if (HasROSEOperations(currMod))
+			{
+				ValueDef* vd;
+				bool bFirstInFile = true;
+				FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
+				{
+					if (!IsROSEValueDef(currMod, vd))
+						continue;
+
+					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
+						continue;
+
+					char* pszArgument = NULL;
+					char* pszResult = NULL;
+					char* pszError = NULL;
+					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
+					{
+						bool bMissingArgument = false;
+						bool bMissingError = false;
+						bool bEventHasError = false;
+						if (!pszArgument)
+							bMissingArgument = true;
+						if (pszResult && !pszError)
+							bMissingError = true;
+						if (!pszResult && pszError)
+							bEventHasError = true;
+						if (bMissingArgument || bMissingError || bEventHasError)
+						{
+							if (!nWeHaveErrors)
+								fprintf(stderr, "*** Validating that all ROSE operations have proper arguments... ***\n");
+							if (bFirstInFile)
+							{
+								bFirstInFile = false;
+								fprintf(stderr, "%s:\n", currMod->asn1SrcFileName);
+							}
+
+							fprintf(stderr, "- %s has broken ROSE arguments:\n", vd->definedName);
+							if (bMissingArgument)
+								fprintf(stderr, "  * Argument is missing\n");
+							if (bMissingError)
+								fprintf(stderr, "  * Method is an invoke but the error has not been specified (invokes must contain an error)\n");
+							if (bEventHasError)
+								fprintf(stderr, "  * Method is an event but an error has been specified (events have no error)\n");
+							nWeHaveErrors++;
+						}
+					}
+				}
+			}
+		}
+	}
 
 	return nWeHaveErrors ? false : true;
 }

@@ -31,7 +31,6 @@ export class LogContextStaticData implements ILogContextStaticData {
 	public clientConnectionID?: string;
 	/**
 	 * Constructs the LogContextData object
-	 *
 	 * @param args - Arguments the object will be initialized with, if a mandatory one is missing we prefill with default values
 	 */
 	public constructor(args?: Partial<ILogContextStaticData>) {
@@ -72,7 +71,6 @@ export class LogLocalStorage {
 
 	/**
 	 * Gets instance of LogLocalStorage to use as singleton.
-	 *
 	 * @returns - an instance of this class.
 	 */
 	public static getInstance(): LogLocalStorage {
@@ -96,7 +94,6 @@ export class LogLocalStorage {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
-	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
@@ -107,7 +104,6 @@ export class LogLocalStorage {
 
 	/**
 	 * Add data to the storage
-	 *
 	 * @param store - the data to add to the store
 	 */
 	public enterWith(store: ILogContextData): void {
@@ -116,7 +112,6 @@ export class LogLocalStorage {
 
 	/**
 	 * A callback from theLogger that adds data from the LogLocalStorage to the log request
-	 *
 	 * @param logData - the logData as provided by theLogger
 	 * @returns - enriched logData
 	 */

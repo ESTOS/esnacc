@@ -13,7 +13,6 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Event_Handler {
 
 	/**
 	 * Creates the SettingsManager object
-	 *
 	 * @param transport - the transport layer (the TSASN1Server instance that holds the hole ROSE ASN1 stuff)
 	 */
 	public constructor(transport: IASN1Transport) {
@@ -22,7 +21,6 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Event_Handler {
 
 	/**
 	 * Tells the server that it should send events to connected websocket clients
-	 *
 	 * @param count - the amount of events
 	 * @param delay - the delay between the events
 	 */
@@ -37,7 +35,6 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Event_Handler {
 
 	/**
 	 * An event that is dispatched from the server to the clients
-	 *
 	 * @param argument - Argument for the AsnFancyEventArgument method
 	 * @param invokeContext - Invokecontext from the asn.1 lib (containing invoke related data)
 	 */

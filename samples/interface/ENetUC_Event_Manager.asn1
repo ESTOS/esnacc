@@ -37,13 +37,13 @@ AsnCreateFancyEventsArgument ::= SEQUENCE
 	iEventDelay							INTEGER,
 	-- the amount of events to send
 	iEventCount							INTEGER,
-	optionalParams						AsnOptionalParameters OPTIONAL
+	...
 }
 
 -- @brief Result for the asnCreateFancyEvents method
 AsnCreateFancyEventsResult ::= SEQUENCE
 {
-	optionalParams						AsnOptionalParameters OPTIONAL
+	...
 }
 
 -- @brief Method that will create some events the server will then dispatch to the clients
@@ -65,7 +65,7 @@ AsnFancyEventArgument ::= SEQUENCE
 	iEventCounter						INTEGER,
 	-- The events that are left to get dispatched
 	iEventsLeft							INTEGER,
-	optionalParams						AsnOptionalParameters OPTIONAL
+	...
 }
 
 -- @brief An event that is dispatched from the server to the clients

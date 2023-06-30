@@ -220,7 +220,7 @@ void PrintConstructor(FILE* hdr, FILE* src, Module* m, char* className)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "%s::%s()\n{\n", className, className);
 
-	if (IsDeprecatedNoOutputSequence(m, className))
+	if (IsDeprecatedFlaggedSequence(m, className))
 	{
 		asnsequencecomment comment;
 		GetSequenceComment_UTF8(m->moduleName, className, &comment);
@@ -237,7 +237,7 @@ void PrintCopyConstructor(FILE* hdr, FILE* src, Module* m, char* className)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "%s::%s(const %s &that)\n{\n", className, className, className);
 
-	if (IsDeprecatedNoOutputSequence(m, className))
+	if (IsDeprecatedFlaggedSequence(m, className))
 	{
 		asnsequencecomment comment;
 		GetSequenceComment_UTF8(m->moduleName, className, &comment);
@@ -523,6 +523,8 @@ static void PrintHdrComment(FILE* hdr, Module* m)
 	fprintf(hdr, "// %s - class definitions for ASN.1 module %s\n", RemovePath(m->cxxHdrFileName), m->modId->name);
 	fprintf(hdr, "//\n");
 	write_snacc_header(hdr, "// ");
+	fprintf(hdr, "//\n");
+	fprintf(hdr, "// clang-format off\n");
 	fprintf(hdr, "\n");
 	printModuleComment(hdr, m->moduleName, COMMENTSTYLE_CPP);
 }
@@ -533,6 +535,8 @@ static void PrintSrcComment(FILE* src, Module* m)
 	fprintf(src, "// %s - class member functions for ASN.1 module %s\n", RemovePath(m->cxxSrcFileName), m->modId->name);
 	fprintf(src, "//\n");
 	write_snacc_header(src, "// ");
+	fprintf(src, "//\n");
+	fprintf(src, "// clang-format off\n");
 	fprintf(src, "\n");
 }
 
@@ -1105,7 +1109,7 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 			fprintf(src, "\t\t\t\tpBase->PrintAsnType(false, &argument, pinvoke);\n");
 			fprintf(src, "\n");
 
-			if (IsDeprecatedNoOutputOperation(mod, vd->definedName))
+			if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
 			{
 				fprintf(src, "\t\t\t// This method has been flagged deprecated\n");
 				asnoperationcomment comment;
@@ -1313,7 +1317,7 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			fprintf(src, "\tif(m_pSB->GetLogLevel(true))\n");
 			fprintf(src, "\t\tm_pSB->PrintAsnType(true, argument, &InvokeMsg);\n\n");
 
-			if (IsDeprecatedNoOutputOperation(m, vd->definedName))
+			if (IsDeprecatedFlaggedOperation(m, vd->definedName))
 			{
 				fprintf(src, "\t// This method has been flagged deprecated\n");
 				asnoperationcomment comment;
@@ -4772,7 +4776,7 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
-		if (IsDeprecatedNoOutputSequence(m, td->definedName))
+		if (IsDeprecatedFlaggedSequence(m, td->definedName))
 		{
 			// Special for the SNACCROSE header as it is place in the include folder
 			// The generated code for the product that is using the snacc lib is placed into a different folder and thus needs a different place to look for the includes
