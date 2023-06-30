@@ -42,6 +42,7 @@ int CountTags PROTO((Type * t));
 unsigned long int TagByteLen PROTO((unsigned long int tagCode));
 char* Class2ClassStr PROTO((int _class)); /* class defined in asn1module.h */
 char* Form2FormStr PROTO((BER_FORM form));
-char* Code2UnivCodeStr PROTO((BER_UNIV_CODE code));
+const char* Code2UnivCodeStr PROTO((BER_UNIV_CODE code));
+const char* BasicType2UnivCodeStr PROTO((enum BasicTypeChoiceId choice));
 int CmpTags PROTO((Type * a, Type* b));
-char* DetermineCode PROTO((Tag * tag, int* ptagLen, int bJustIntegerFlag));
+const char* DetermineCode PROTO((Tag * tag, int* ptagLen, int bJustIntegerFlag));

@@ -1807,7 +1807,7 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	NamedType* e;
-	char* codeStr;
+	const char* codeStr;
 	char* classStr;
 	char* formStr;
 	int i;
@@ -2814,7 +2814,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 	NamedType* e;
 	char* classStr;
 	char* formStr;
-	char* codeStr;
+	const char* codeStr;
 	int i = 0;
 	Tag* tag;
 	TagList* tags;
@@ -2915,10 +2915,75 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 		/***********************************************************************/
 		/***********************************************************************/
 		/***********************************************************************/
+
+		/**
+		 * There are two ways to encode an optional in asn1
+		 * Either just as optional, or context specific
+		 * Variant1 ::= SEQUENCE {
+		 *		param1			UTF8String,
+		 *		param2			UTF8String OPTIONAL,
+		 *		...
+		 * }
+		 * Variant2 ::= SEQUENCE {
+		 *		param1			UTF8String,
+		 *		param2			[0] UTF8String OPTIONAL,
+		 *		...
+		 * }
+		 * If we are on the first optional param we allow both variants
+		 * So an attribute which has been encoded just as optional would also be allowed to get decoded context specific or vice versa
+		 *
+		 * We allow this ONLY if:
+		 * - We only have context optionals
+		 * - We have one regular optional and context optionals that start with 1
+		 */
+		enum OPTIONALSTATE
+		{
+			OPTIONALSTATE_IMPOSSIBLE = -1,
+			OPTIONALSTATE_BEFOREFIRST = 0,
+			OPTIONALSTATE_FIRST = 1,
+			OPTIONALSTATE_AFTERFIRST = 2
+		};
+
+		enum OPTIONALSTATE parser = OPTIONALSTATE_IMPOSSIBLE;
+
+		// Check the structure if we can alternatively match an optional context specific or not
+		int iNotContextSpecificOptionals = 0;
+		int iFirstContextOptionalStartsWith = -1;
+		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
+		{
+			if (e->type->optional)
+			{
+				tags = GetTags(e->type, &stoleChoiceTags);
+				tag = (Tag*)FIRST_LIST_ELMT(tags);
+				if (!tag)
+					break;
+				if (tag->tclass == CNTX)
+				{
+					if (iFirstContextOptionalStartsWith == -1)
+						iFirstContextOptionalStartsWith = tag->code;
+				}
+				else
+					iNotContextSpecificOptionals++;
+			}
+		}
+		// We have ONE regular optional and the first optional has a higher number than 0 -> we can try to match this first optional context specific
+		if (iNotContextSpecificOptionals == 1 && iFirstContextOptionalStartsWith > 0)
+			parser = OPTIONALSTATE_BEFOREFIRST;
+		// We have NO regular optional and the first optional starts with 0 -> we can try to match this first optional as regular optional
+		else if (iNotContextSpecificOptionals == 0 && iFirstContextOptionalStartsWith == 0)
+			parser = OPTIONALSTATE_BEFOREFIRST;
+
+		if (parser == OPTIONALSTATE_BEFOREFIRST)
+			printf("Alternative matching for %s\n", td->cxxTypeDefInfo->className);
+
 		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 		{
 			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
 				continue;
+			if (e->type->optional && parser == OPTIONALSTATE_BEFOREFIRST)
+				parser = OPTIONALSTATE_FIRST;
+			else if (parser == OPTIONALSTATE_FIRST)
+				parser = OPTIONALSTATE_AFTERFIRST;
 
 			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 			{
@@ -2944,7 +3009,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 						if (tag->form == ANY_FORM)
 						{
 							fprintf(src, "tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, Form2FormStr(PRIM), codeStr);
-							fprintf(src, " || (tag1 == MAKE_TAG_ID(%s, %s, %s))", classStr, Form2FormStr(CONS), codeStr);
+							fprintf(src, " || tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, Form2FormStr(CONS), codeStr);
 						}
 						else
 							fprintf(src, "tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, formStr, codeStr);
@@ -2988,6 +3053,31 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 					}
 					else /* didn't steal nested choice's tags */
 					{
+						// We are on the first optional param.
+						// We allow a decoding context specific or just as optional
+						if (parser == OPTIONALSTATE_FIRST)
+						{
+							// Okay we can try to match this attribute in a different way
+							if (tag->tclass == CNTX)
+							{
+								// If it was context specific we match it using concrete type
+								codeStr = BasicType2UnivCodeStr(e->type->basicType->choiceId);
+								if (codeStr)
+								{
+									classStr = Class2ClassStr(UNIV);
+									fprintf(src, " || tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, Form2FormStr(PRIM), codeStr);
+									fprintf(src, " || tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, Form2FormStr(CONS), codeStr);
+								}
+							}
+							else
+							{
+								// If it was the concrete type we match it using the context type
+								classStr = Class2ClassStr(CNTX);
+								codeStr = "0";
+								fprintf(src, " || tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, Form2FormStr(PRIM), codeStr);
+								fprintf(src, " || tag1 == MAKE_TAG_ID(%s, %s, %s)", classStr, Form2FormStr(CONS), codeStr);
+							}
+						}
 						fprintf(src, ")\n");
 						fprintf(src, "\t{\n");
 						fprintf(src, "\t\telmtLen%d = BDecLen(_b, seqBytesDecoded);\n", ++elmtLevel);
@@ -3631,7 +3721,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	NamedType* e;
 	char* classStr;
 	char* formStr;
-	char* codeStr;
+	const char* codeStr;
 	int tagLen;
 	int i = 0;
 	Tag* tag;

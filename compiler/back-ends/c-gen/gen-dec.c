@@ -631,7 +631,7 @@ static void PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, total
 	enum BasicTypeChoiceId builtinType;
 	char* classStr;
 	char* formStr;
-	char* codeStr;
+	const char* codeStr;
 	int mandatoryCount = 0;
 	char tmpVarName[MAX_VAR_REF];
 	int stoleChoiceTags;
@@ -903,7 +903,7 @@ static void PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, total
 	enum BasicTypeChoiceId tmpTypeId;
 	char* classStr;
 	char* formStr;
-	char* codeStr;
+	const char* codeStr;
 	char tmpVarName[MAX_VAR_REF];
 	int stoleChoiceTags;
 	int inTailOptElmts = FALSE;
@@ -1325,7 +1325,7 @@ static void PrintCListDecoderCode PARAMS((src, td, list, elmtLevel, totalLevel, 
 	enum BasicTypeChoiceId builtinType;
 	char* classStr;
 	char* formStr;
-	char* codeStr;
+	const char* codeStr;
 	char tmpVarName[MAX_VAR_REF];
 	int stoleChoiceTags;
 	int initialTagLevel;
@@ -1498,7 +1498,7 @@ static void PrintCChoiceDecodeCode PARAMS((src, td, t, elmtLevel, totalLevel, ta
 	enum BasicTypeChoiceId builtinType;
 	char* classStr;
 	char* formStr;
-	char* codeStr;
+	const char* codeStr;
 	char tmpVarName[MAX_VAR_REF];
 	char choiceIdVarName[MAX_VAR_REF];
 	int stoleChoiceTags;
