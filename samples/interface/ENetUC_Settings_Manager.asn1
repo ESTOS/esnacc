@@ -31,7 +31,7 @@ AsnSomeSettings ::= SEQUENCE
 	bEnabled							[0] BOOLEAN OPTIONAL,
 	u8sUsername							[1] UTF8String OPTIONAL,
 	stTime								[2] AsnSystemTime OPTIONAL,
-	optionalParams						[3] AsnOptionalParameters OPTIONAL
+	...
 }
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -41,14 +41,14 @@ AsnSomeSettings ::= SEQUENCE
 -- @brief Argument for the asnGetSettings method
 AsnGetSettingsArgument ::= SEQUENCE
 {
-	optionalParams						AsnOptionalParameters OPTIONAL
+	...
 }
 
 -- @brief Result for the asnGetSettings method
 AsnGetSettingsResult ::= SEQUENCE
 {
 	settings							AsnSomeSettings,
-	optionalParams						AsnOptionalParameters OPTIONAL
+	...
 }
 
 -- @brief Method to retrieve settings from the server side
@@ -66,13 +66,13 @@ asnGetSettings OPERATION
 AsnSetSettingsArgument ::= SEQUENCE
 {
 	settings							AsnSomeSettings,
-	optionalParams						AsnOptionalParameters OPTIONAL
+	...
 }
 
 -- @brief Result for the asnSetSettings method
 AsnSetSettingsResult ::= SEQUENCE
 {
-	optionalParams						AsnOptionalParameters OPTIONAL
+	...
 }
 
 -- @brief Method to store settings on the server side
@@ -91,7 +91,7 @@ asnSetSettings OPERATION
 AsnSettingsChangedArgument ::= SEQUENCE
 {
 	settings							AsnSomeSettings,
-	optionalParams						AsnOptionalParameters OPTIONAL
+	...
 }
 
 -- @brief Sent to the clients in the case settings have changed

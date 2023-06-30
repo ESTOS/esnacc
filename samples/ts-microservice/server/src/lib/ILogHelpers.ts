@@ -24,7 +24,6 @@ type logany = any
 /**
  * This function removes rather large objects from a log object which bring no benefit to the log output
  * e.g. a websocket requires 100k json log, but has no sense to be logged, same for the timer objects
- *
  * @param obj - the object to parse
  * @param levelstoprocess - a counter that is used to only process a certain level (deepness in the object)
  * @param id - in recursion the id of the parent element we are currently handling
@@ -113,7 +112,6 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 /**
  * This function removes rather large objects from a log object which bring no benefit to the log output
  * e.g. a websocket requires 100k json log, but has no sense to be logged, same for the timer objects
- *
  * @param obj - the object to parse
  * @param levelstoprocess - a counter that is used to only process a certain level (deepness in the object)
  * @returns - the cleaned object

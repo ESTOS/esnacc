@@ -55,7 +55,6 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * Sets if we connect via REST or WebSocket
-	 *
 	 * @param transport - sets the transport mode to either REST or WEBSOCKET (with eventing)
 	 */
 	public setTransport(transport: "REST" | "WEBSOCKET"): void {
@@ -75,7 +74,6 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * The central log method for the whole stub
-	 *
 	 * @param severity - severity of the log entry (error, info, warn, debug)
 	 * @param message - The message for the log entry, do NOT add contextual data into this message, use the meta data for it
 	 * @param calling_method - name of the caller
@@ -112,7 +110,6 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * TODOC
-	 *
 	 * @param entry - the log message to set
 	 * @param css - the style to apply in case it´s needed
 	 */
@@ -133,7 +130,6 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * TODOC
-	 *
 	 * @returns - TODOC
 	 */
 	public getTime(): string {
@@ -161,7 +157,6 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * TODOC
-	 *
 	 * @param bReconnected - TODOC
 	 */
 	public async onClientConnected(bReconnected: boolean): Promise<void> {
@@ -173,7 +168,6 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * TODOC
-	 *
 	 * @param bShuttingDown - TODOC
 	 */
 	public async onClientDisconnected(bShuttingDown: boolean): Promise<void> {
@@ -185,7 +179,6 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * Template type guard method that ensures that we receive a result of type T
-	 *
 	 * @throws an ENetUC_Common.AsnRequestError object in case reject is undefined and an error occured
 	 * @param response - The result as provided by the rose stub
 	 * @param className - The classname that we expect as result
@@ -201,7 +194,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 		if (response instanceof ENetUC_Common.AsnRequestError)
 			error = response;
 		else if (response instanceof AsnInvokeProblem)
-			error = new ENetUC_Common.AsnRequestError({ iErrorDetail: response.value, u8sErrorString: response.details });
+			error = new ENetUC_Common.AsnRequestError({ iErrorDetail: response.value || -1, u8sErrorString: response.details });
 		else
 			error = new ENetUC_Common.AsnRequestError({ iErrorDetail: CustomInvokeProblemEnum.missingResponse, u8sErrorString: "unhandled result" });
 

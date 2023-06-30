@@ -10,7 +10,6 @@ import { ReceiveInvokeContext } from "../../stub/TSROSEBase";
 class RestSample implements IEModule {
 	/**
 	 * Add specific routings
-	 *
 	 * @param router - parent router
 	 */
 	public init(router: express.Router): void {
@@ -19,7 +18,6 @@ class RestSample implements IEModule {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
-	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
@@ -28,7 +26,6 @@ class RestSample implements IEModule {
 
 	/**
 	 * Takes any client request and forwards it to the asn theServer instance
-	 *
 	 * @param req - http request from client
 	 * @param res - http response to client
 	 */

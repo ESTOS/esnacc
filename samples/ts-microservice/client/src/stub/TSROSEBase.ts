@@ -322,7 +322,7 @@ export interface IASN1LogCallback {
  * Details for an invoke problem
  */
 export class AsnInvokeProblem {
-	public value: AsnInvokeProblemEnum;
+	public value?: AsnInvokeProblemEnum;
 	public details = "";
 
 	/**

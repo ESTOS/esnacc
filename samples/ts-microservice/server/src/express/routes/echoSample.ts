@@ -7,7 +7,6 @@ import { IEModule } from "../expressRouter";
 class Echo implements IEModule {
 	/**
 	 * TODOC
-	 *
 	 * @param router - TODOC
 	 */
 	public init(router: express.Router): void {
@@ -16,7 +15,6 @@ class Echo implements IEModule {
 
 	/**
 	 * TODOC
-	 *
 	 * @param req - TODOC
 	 * @param res - TODOC
 	 */
