@@ -20,7 +20,11 @@ enum EVALIDATIONCHECK
 	// Validate that the used Attribute types are mentioned in the esnacc_whitelist.txt (side by side with the asn1 files)
 	VALIDATE_TYPE_WHITELISTE = 16,
 	// Validate that invokes consist of an argument, result and error and events only of an error
-	VALIDATE_PROPER_INVOKE_EVENT_ARGUMENTS = 32
+	VALIDATE_PROPER_INVOKE_EVENT_ARGUMENTS = 32,
+	// Validate that optionals are not encoded mixed (implicit and explicit in the same object)
+	VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS = 64,
+	// Validate that optional are not encoded explicit (without number)
+	VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS = 128
 };
 
 // These methods return true on success (no error) or false on error
@@ -42,6 +46,9 @@ bool ValidateOnlySupportedObjects(ModuleList* allMods);
 
 // Validates that the ROSE arguments are properly specified (invoke with argument, result and error, event only with argument)
 bool ValidateProperROSEArguments(ModuleList* allMods);
+
+// Validates that optionals are either only encoded context specific or at least not shared (implicit and explicit)
+bool ValidateOptionals(ModuleList* allMods);
 
 enum BasicTypeChoiceId getType(const char* szType)
 {
@@ -266,6 +273,11 @@ void ValidateASN1Data(ModuleList* allMods)
 	if (giValidationLevel & VALIDATE_PROPER_INVOKE_EVENT_ARGUMENTS)
 	{
 		if (!ValidateProperROSEArguments(allMods))
+			bSucceeded = false;
+	}
+	if (giValidationLevel & (VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS | VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS))
+	{
+		if (!ValidateOptionals(allMods))
 			bSucceeded = false;
 	}
 	if (!bSucceeded)
@@ -956,6 +968,99 @@ bool ValidateProperROSEArguments(ModuleList* allMods)
 			}
 		}
 	}
+
+	return nWeHaveErrors ? false : true;
+}
+
+bool ValidateOptionals(ModuleList* allMods)
+{
+	int nWeHaveErrors = 0;
+	int iErrorCounter = 0;
+	const char* szLastErrorFile = NULL;
+	Module* mod;
+	FOR_EACH_LIST_ELMT(mod, allMods)
+	{
+		if (mod->ImportedFlag == FALSE)
+		{
+			TypeDef* td;
+			FOR_EACH_LIST_ELMT(td, mod->typeDefs)
+			{
+				if (IsDeprecatedFlaggedSequence(mod, td->definedName))
+					continue;
+
+				struct BasicType* type = td->type->basicType;
+				bool bContextSpecific_Implicit_Optional = false;
+				bool bNotContextSpecific_Explicit_Optional = false;
+				if (type->choiceId == BASICTYPE_SEQUENCE)
+				{
+					NamedTypeList* typeList = type->a.sequence;
+					NamedType* subType;
+					FOR_EACH_LIST_ELMT(subType, typeList)
+					{
+						if (subType->type->optional)
+						{
+							if (subType->type->implicit)
+							{
+								// param2		[0] UTF8String OPTIONAL,
+								bContextSpecific_Implicit_Optional = true;
+							}
+							else
+							{
+								// param2		UTF8String OPTIONAL,
+								bNotContextSpecific_Explicit_Optional = true;
+							}
+						}
+						if (bContextSpecific_Implicit_Optional && bNotContextSpecific_Explicit_Optional)
+							break;
+					}
+				}
+				else
+					continue;
+
+				int nError = 0;
+
+				// Validate that optionals are not encoded mixed (implicit and explicit in the same object)
+				if (giValidationLevel & VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS)
+				{
+					if (bNotContextSpecific_Explicit_Optional & bContextSpecific_Implicit_Optional)
+						nError |= VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS;
+				}
+
+				// Validate that optional are not encoded explicit (without number)
+				if (giValidationLevel & VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS)
+				{
+					if (bNotContextSpecific_Explicit_Optional)
+						nError |= VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS;
+				}
+
+				if (!nError)
+					continue;
+
+				if (!nWeHaveErrors)
+					fprintf(stderr, "*** Validating sequences concerning usage of optional params... ***\n");
+
+				if (szLastErrorFile != mod->asn1SrcFileName)
+				{
+					if (szLastErrorFile)
+						fprintf(stderr, "  -> File contained %i error(s)\n\n", iErrorCounter);
+					fprintf(stderr, "Errors in %s:\n", mod->asn1SrcFileName);
+					szLastErrorFile = mod->asn1SrcFileName;
+					iErrorCounter = 0;
+				}
+
+				if (nError & VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS && nError & VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS)
+					fprintf(stderr, "- %s contains explicit and implicit optionals, use only implicit (with number)\n", td->definedName);
+				else if (nError & VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS)
+					fprintf(stderr, "- %s contains explicit optionals, use only implicit (with number)\n", td->definedName);
+
+				iErrorCounter++;
+				nWeHaveErrors++;
+			}
+		}
+	}
+
+	if (iErrorCounter)
+		fprintf(stderr, "  -> File contained %i error(s)\n\n", iErrorCounter);
 
 	return nWeHaveErrors ? false : true;
 }
