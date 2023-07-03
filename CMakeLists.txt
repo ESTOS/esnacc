@@ -4,7 +4,6 @@ project(esnacc_cmake) #  LANGUAGES CXX) - would interpret all files as C++
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_DEBUG_POSTFIX "d")
-
 if(MSVC)
     # Ensures that the __cplusplus macro is set to the proper number correspoding to the cpp version beeing used (otherwise it points to CPP98)
     add_compile_options(/Zc:__cplusplus)
@@ -54,4 +53,6 @@ add_subdirectory(cpp-lib)
 
 # compiler itself
 add_subdirectory(compiler)
+
+target_compile_options(compiler PRIVATE -Wno-deprecated-declarations)
 

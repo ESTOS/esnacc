@@ -469,12 +469,14 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods)
 					if (GetROSEDetails(currMod, vd, NULL, NULL, &pszError, NULL, NULL, &errorType, false))
 					{
 						struct BasicType* errorBasicType = NULL;
-						bool bErrorIssue = false;
+//						bool bErrorIssue = false;
 						if (errorType)
 						{
 							errorBasicType = ResolveBasicTypeReferences(errorType->basicType, NULL);
 							if (!errorBasicType)
-								bErrorIssue = true;
+                            {
+							//	bErrorIssue = true;
+                            }
 							else
 							{
 								char szBuffer[512] = {0};
