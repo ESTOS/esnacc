@@ -175,7 +175,7 @@ static void PrintJsonDocBitstringDefCode(FILE* src, ModuleList* mods, Module* m,
 				fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
 				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
 				if (comment.i64Deprecated > 1)
-					fprintf(src, "\t\t\"deprecated_starting\": %lld\n", comment.i64Deprecated);
+					fprintf(src, "\t\t\t\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
 				fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
 			}
 
@@ -213,7 +213,7 @@ static void PrintJsonDocEnumDefCode(FILE* src, ModuleList* mods, Module* m, Type
 				fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
 				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
 				if (comment.i64Deprecated > 1)
-					fprintf(src, "\t\t\"deprecated_starting\": %lld\n", comment.i64Deprecated);
+					fprintf(src, "\t\t\t\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
 				fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
 			}
 
@@ -249,7 +249,7 @@ static void PrintJsonDocChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Ty
 			fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
 			fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
 			if (comment.i64Deprecated > 1)
-				fprintf(src, "\t\t\"deprecated_starting\": %lld\n", comment.i64Deprecated);
+				fprintf(src, "\t\t\t\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
 			fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
 		}
 
@@ -295,7 +295,7 @@ static void PrintJsonDocSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 					fprintf(src, "\t\t\t\t\t\"linkedType\" : \"%s\",\n", comment.szLinkedType);
 				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
 				if (comment.i64Deprecated > 1)
-					fprintf(src, "\t\t\"deprecated_starting\": %lld\n", comment.i64Deprecated);
+					fprintf(src, "\t\t\t\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
 				fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
 			}
 			else
@@ -397,10 +397,10 @@ static void PrintJsonDocTypeDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		fprintf(src, "\t\t\t\"category\" : \"%s\",\n", comment.szCategory);
 		fprintf(src, "\t\t\t\"short\" : \"%s\",\n", comment.szShort);
 		fprintf(src, "\t\t\t\"long\" : \"%s\",\n", comment.szLong);
-		fprintf(src, "\t\t\t\"private\" : %d,\n", comment.iPrivate);
-		fprintf(src, "\t\t\t\"deprecated\" : \"%d\",\n", comment.i64Deprecated ? 1 : 0);
+		fprintf(src, "\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
 		if (comment.i64Deprecated > 1)
-			fprintf(src, "\t\t\"deprecated_starting\": %lld\n", comment.i64Deprecated);
+			fprintf(src, "\t\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
+		fprintf(src, "\t\t\t\"private\" : %d,\n", comment.iPrivate);
 	}
 
 	switch (td->type->basicType->choiceId)
@@ -579,10 +579,10 @@ static int PrintJsonDocOperation(FILE* src, Module* mod, ValueDef* vd)
 				fprintf(src, "\t\t\t\"short\" : \"%s\",\n", comment.szShort);
 			if (comment.szLong)
 				fprintf(src, "\t\t\t\"long\" : \"%s\",\n", comment.szLong);
-			fprintf(src, "\t\t\t\"private\" : %d,\n", comment.iPrivate);
 			fprintf(src, "\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
 			if (comment.i64Deprecated > 1)
-				fprintf(src, "\t\t\"deprecated_starting\": %lld\n", comment.i64Deprecated);
+				fprintf(src, "\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
+			fprintf(src, "\t\t\t\"private\" : %d,\n", comment.iPrivate);
 		}
 
 		fprintf(src, "\t\t\t\"arg\" : \"%s\"", pszArgument);
@@ -656,10 +656,10 @@ void PrintJsonDocModule(FILE* src, ModuleList* mods, Module* m)
 		fprintf(src, "\t\t\"short\": \"%s\",\n", comment.szShort);
 		fprintf(src, "\t\t\"long\": \"%s\",\n", comment.szLong);
 		fprintf(src, "\t\t\"category\" : \"%s\",\n", comment.szCategory);
-		fprintf(src, "\t\t\"private\": %d,\n", comment.iPrivate);
-		fprintf(src, "\t\t\"deprecated\": %d\n", comment.i64Deprecated ? 1 : 0);
+		fprintf(src, "\t\t\"deprecated\": %d,\n", comment.i64Deprecated ? 1 : 0);
 		if (comment.i64Deprecated > 1)
-			fprintf(src, "\t\t\"deprecated_starting\": %lld\n", comment.i64Deprecated);
+			fprintf(src, "\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
+		fprintf(src, "\t\t\"private\": %d\n", comment.iPrivate);
 	}
 	else
 		fprintf(src, "\n");
