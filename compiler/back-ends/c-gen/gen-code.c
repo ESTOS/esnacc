@@ -111,7 +111,8 @@
 #include "../../../snacc.h"
 
 /* Function Prototypes */
-char* Code2UnivCodeStr PROTO((BER_UNIV_CODE code));
+const char* Code2UnivCodeStr PROTO((BER_UNIV_CODE code));
+const char* BasicType2UnivCodeStr(enum BasicTypeChoiceId);
 void PrintCAnyCode(FILE* src, FILE* hdr, CRules* r, ModuleList* mods, Module* m, int printEncoders, int printDecoders, int printPrinters, int printFree);
 void PrintCContentDecoder PROTO((FILE * src, FILE* hdr, CRules* r, Module* m, TypeDef* td, long int* longJmpVal));
 void PrintCContentEncoder PROTO((FILE * src, FILE* hdr, CRules* r, Module* m, TypeDef* td));

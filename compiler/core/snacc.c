@@ -239,7 +239,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 #endif
 	fprintf(fp, "  -noprivate   do not generate code that is marked as private\n");
 	fprintf(fp, "  -nodeprecated   do not generate code that is marked as deprecated (any date)\n");
-	fprintf(fp, "  -nodeprecated:[Day.Month.Year]  do not generate code that has been marked deprecated prior to this date\n");
+	fprintf(fp, "  -nodeprecated:Day.Month.Year  do not generate code that has been marked deprecated prior to this date\n");
 	fprintf(fp, "  -ValidationLevel n - Sets a specific validation rule set for the asn1 files. Default is that all of the following checks are applied\n");
 	fprintf(fp, "   0 no validation\n");
 	fprintf(fp, "   1 Validates that operationIDs are not used twice\n");
@@ -248,6 +248,8 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "   8 Validates that all sequences contain ... to allow extending them (@deprecated are not validated)\n");
 	fprintf(fp, "   16 Validates that only allow types from the esnacc_whiteliste.txt are used (@deprecated are not validated)\n");
 	fprintf(fp, "   32 Ensure that invokes are specified with argument, result and error where events only consists of an argument (@deprecated are not validated)\n");
+	fprintf(fp, "   64 Ensure that optional parameters are not encoded implicit (context specific, with number) and explicit (without) in the same object (@deprecated are not validated)\n");
+	fprintf(fp, "   128 Ensure that optional parameters are always encoded implicit and never explicit (@deprecated are not validated)\n");
 	fprintf(fp, "  -h   prints this msg\n");
 	fprintf(fp, "  -P   print the parsed ASN.1 modules to stdout from their parse trees\n");
 	fprintf(fp, "       (helpful debugging)\n");

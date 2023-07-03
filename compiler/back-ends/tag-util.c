@@ -64,6 +64,7 @@
 #include "c-gen/util.h"
 #include "tag-util.h"
 #include <memory.h>
+#include <assert.h>
 
 /*
  * returns the tags for the given type (stops at next type definition).
@@ -403,7 +404,7 @@ char* Form2FormStr PARAMS((form), BER_FORM form)
 	}
 } /* Form2FormStr */
 
-char* Code2UnivCodeStr PARAMS((code), BER_UNIV_CODE code)
+const char* Code2UnivCodeStr PARAMS((code), BER_UNIV_CODE code)
 {
 	// static char UNKNOWN_TAG_CODE[10];
 
@@ -577,10 +578,10 @@ int CmpTags PARAMS((a, b), Type* a _AND_ Type* b)
 
 //
 //
-char* DetermineCode(Tag* tag, int* ptagLen, int bJustIntegerFlag)
+const char* DetermineCode(Tag* tag, int* ptagLen, int bJustIntegerFlag)
 {
 	static char retstring[5];
-	char* codeStr = NULL;
+	const char* codeStr = NULL;
 	int iValue = 500; // WILL indicate a problem on source creation...
 
 	if (tag->valueRef == NULL)
@@ -631,3 +632,57 @@ char* DetermineCode(Tag* tag, int* ptagLen, int bJustIntegerFlag)
 	} // END IF tag->valueRef
 	return (codeStr);
 } // END DetermineCode(...)
+
+const char* BasicType2UnivCodeStr(enum BasicTypeChoiceId choice)
+{
+	switch (choice)
+	{
+		case BASICTYPE_BOOLEAN:
+			return "BOOLEAN_TAG_CODE";
+		case BASICTYPE_INTEGER:
+			return "INTEGER_TAG_CODE";
+		case BASICTYPE_BITSTRING:
+			return "BITSTRING_TAG_CODE";
+		case BASICTYPE_OCTETSTRING:
+			return "OCTETSTRING_TAG_CODE";
+		case BASICTYPE_NULL:
+			return "NULLTYPE_TAG_CODE";
+		case BASICTYPE_OID:
+			return "OID_TAG_CODE";
+		case BASICTYPE_REAL:
+			return "REAL_TAG_CODE";
+		case BASICTYPE_ENUMERATED:
+			return "ENUM_TAG_CODE";
+		case BASICTYPE_SEQUENCE:
+			return "SEQ_TAG_CODE";
+		case BASICTYPE_SET:
+			return "SET_TAG_CODE";
+		case BASICTYPE_NUMERIC_STR:
+			return "NUMERICSTRING_TAG_CODE";
+		case BASICTYPE_PRINTABLE_STR:
+			return "PRINTABLESTRING_TAG_CODE";
+		case BASICTYPE_VIDEOTEX_STR:
+			return "VIDEOTEXSTRING_TAG_CODE";
+		case BASICTYPE_IA5_STR:
+			return "IA5STRING_TAG_CODE";
+		case BASICTYPE_UTCTIME:
+			return "UTCTIME_TAG_CODE";
+		case BASICTYPE_GENERALIZEDTIME:
+			return "GENERALIZEDTIME_TAG_CODE";
+		case BASICTYPE_GRAPHIC_STR:
+			return "GRAPHICSTRING_TAG_CODE";
+		case BASICTYPE_VISIBLE_STR:
+			return "VISIBLESTRING_TAG_CODE";
+		case BASICTYPE_GENERAL_STR:
+			return "GENERALSTRING_TAG_CODE";
+		case BASICTYPE_UNIVERSAL_STR:
+			return "UNIVERSALSTRING_TAG_CODE";
+		case BASICTYPE_BMP_STR:
+			return "BMPSTRING_TAG_CODE";
+		case BASICTYPE_UTF8_STR:
+			return "UTF8STRING_TAG_CODE";
+		default:
+			assert(0);
+			return NULL;
+	}
+}

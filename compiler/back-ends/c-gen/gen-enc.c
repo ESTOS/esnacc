@@ -274,7 +274,7 @@ void PrintCEncoder PARAMS((src, hdr, r, m, td), FILE* src _AND_ FILE* hdr _AND_ 
 	int tagLen;
 	int stoleChoiceTags;
 	EncRulesType* encoding;
-	char* pszCode = NULL;
+	const char* pszCode = NULL;
 
 	ctdi = td->cTypeDefInfo;
 	if (!ctdi->genEncodeRoutine)
