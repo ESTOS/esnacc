@@ -2954,6 +2954,8 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 			if (e->type->optional)
 			{
 				tags = GetTags(e->type, &stoleChoiceTags);
+				if (LIST_EMPTY(tags))
+					continue;
 				tag = (Tag*)FIRST_LIST_ELMT(tags);
 				if (!tag)
 					break;
