@@ -1048,7 +1048,7 @@ bool ValidateOptionals(ModuleList* allMods)
 					iErrorCounter = 0;
 				}
 
-				if (nError & VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS && nError & VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS)
+				if (nError & VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS)
 					fprintf(stderr, "- %s contains explicit and implicit optionals, use only implicit (with number)\n", td->definedName);
 				else if (nError & VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS)
 					fprintf(stderr, "- %s contains explicit optionals, use only implicit (with number)\n", td->definedName);
