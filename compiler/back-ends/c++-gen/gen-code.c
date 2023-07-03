@@ -2973,9 +2973,6 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 		else if (iNotContextSpecificOptionals == 0 && iFirstContextOptionalStartsWith == 0)
 			parser = OPTIONALSTATE_BEFOREFIRST;
 
-		if (parser == OPTIONALSTATE_BEFOREFIRST)
-			printf("Alternative matching for %s\n", td->cxxTypeDefInfo->className);
-
 		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 		{
 			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
