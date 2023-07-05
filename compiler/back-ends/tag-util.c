@@ -644,6 +644,7 @@ const char* BasicType2UnivCodeStr(enum BasicTypeChoiceId choice)
 		case BASICTYPE_BITSTRING:
 			return "BITSTRING_TAG_CODE";
 		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
 			return "OCTETSTRING_TAG_CODE";
 		case BASICTYPE_NULL:
 			return "NULLTYPE_TAG_CODE";
