@@ -3059,8 +3059,15 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 							// Okay we can try to match this attribute in a different way
 							if (tag->tclass == CNTX)
 							{
+								enum BasicTypeChoiceId choiceId = e->type->basicType->choiceId;
+								if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
+								{
+									Type* pType = GetRootType(e->type, NULL);
+									if (pType)
+										choiceId = pType->basicType->choiceId;
+								}
 								// If it was context specific we match it using concrete type
-								codeStr = BasicType2UnivCodeStr(e->type->basicType->choiceId);
+								codeStr = BasicType2UnivCodeStr(choiceId);
 								if (codeStr)
 								{
 									classStr = Class2ClassStr(UNIV);
