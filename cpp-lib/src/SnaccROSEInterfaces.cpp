@@ -1,6 +1,7 @@
 #include "../include/SnaccROSEInterfaces.h"
 #include "../include/SnaccROSEBase.h"
 #include "../include/SNACCROSE.h"
+#include <assert.h>
 
 using namespace SNACC;
 
@@ -18,8 +19,9 @@ long SnaccROSESender::HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pI
 				else if (pResultMsg->result->result.jsonBuf)
 					result->JDec(*pResultMsg->result->result.jsonBuf);
 
-				if (GetLogLevel(true))
-					PrintAsnType(false, result, pInvokeMsg);
+				assert(false);
+				// JANTODO
+				// PrintAsnData(false, result, pInvokeMsg);
 			}
 			catch (SnaccException&)
 			{
@@ -39,8 +41,9 @@ long SnaccROSESender::HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pI
 				else if (pErrorMsg->error->jsonBuf)
 					error->JDec(*pErrorMsg->error->jsonBuf);
 
-				if (GetLogLevel(true))
-					PrintAsnType(false, error, pInvokeMsg);
+				assert(false);
+				// JANTODO
+				// PrintAsnData(false, error, pInvokeMsg);
 			}
 			catch (SnaccException&)
 			{

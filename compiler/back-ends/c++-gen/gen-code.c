@@ -1050,9 +1050,9 @@ static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd,
 			// there is a result -> it is a Funktion
 			// Header
 			if (pszError)
-				fprintf(hdr, "\tvirtual SnaccInvokeResult OnInvoke_%s(%s* argument, %s* result, %s* error, SnaccInvokeContext* cxt) { return returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
+				fprintf(hdr, "\tvirtual InvokeResult OnInvoke_%s(%s* argument, %s* result, %s* error, SnaccInvokeContext* cxt) { return InvokeResult::returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
 			else
-				fprintf(hdr, "\tvirtual SnaccInvokeResult OnInvoke_%s(%s* argument, %s* result, SnaccInvokeContext* cxt) { return returnReject; }\n", vd->definedName, pszArgument, pszResult);
+				fprintf(hdr, "\tvirtual InvokeResult OnInvoke_%s(%s* argument, %s* result, SnaccInvokeContext* cxt) { return InvokeResult::returnReject; }\n", vd->definedName, pszArgument, pszResult);
 		}
 		else if (!pszResult && bEvents)
 		{
@@ -1105,8 +1105,7 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 			fprintf(src, "\t\t\t\t\targument.JDec(*pinvoke->argument->jsonBuf);\n");
 			fprintf(src, "\t\t\t}\n");
 			fprintf(src, "\n");
-			fprintf(src, "\t\t\tif(pBase->GetLogLevel(false))\n");
-			fprintf(src, "\t\t\t\tpBase->PrintAsnType(false, &argument, pinvoke);\n");
+			fprintf(src, "\t\t\tpBase->PrintAsnData(false, &argument, pinvoke);\n");
 			fprintf(src, "\n");
 
 			if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
@@ -1124,16 +1123,14 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 				else
 					fprintf(src, "\t\t\tswitch (pInt->OnInvoke_%s(&argument, &result, cxt))\n", vd->definedName);
 				fprintf(src, "\t\t\t{\n");
-				fprintf(src, "\t\t\tcase returnResult:\n");
-				fprintf(src, "\t\t\t\tif(pBase->GetLogLevel(true))\n");
-				fprintf(src, "\t\t\t\t\tpBase->PrintAsnType(true, &result, pinvoke);\n");
+				fprintf(src, "\t\t\tcase InvokeResult::returnResult:\n");
+				fprintf(src, "\t\t\t\tpBase->PrintAsnData(true, &result, pinvoke);\n");
 				fprintf(src, "\t\t\t\tlRoseResult = pBase->SendResult(pinvoke->invokeID, &result, pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);\n");
 				fprintf(src, "\t\t\t\tbreak;\n");
-				fprintf(src, "\t\t\tcase returnError:\n");
+				fprintf(src, "\t\t\tcase InvokeResult::returnError:\n");
 				if (pszError)
 				{
-					fprintf(src, "\t\t\t\tif(pBase->GetLogLevel(true))\n");
-					fprintf(src, "\t\t\t\t\tpBase->PrintAsnType(true, &error, pinvoke);\n");
+					fprintf(src, "\t\t\t\tpBase->PrintAsnData(true, &error, pinvoke);\n");
 					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pinvoke->invokeID, &error, pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);\n");
 				}
 				else
@@ -1313,9 +1310,6 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 				fprintf(src, "\tROSEResult* pResultMsg = NULL;\n");
 				fprintf(src, "\tROSEError* pErrorMsg = NULL;\n\n");
 			}
-
-			fprintf(src, "\tif(m_pSB->GetLogLevel(true))\n");
-			fprintf(src, "\t\tm_pSB->PrintAsnType(true, argument, &InvokeMsg);\n\n");
 
 			if (IsDeprecatedFlaggedOperation(m, vd->definedName))
 			{

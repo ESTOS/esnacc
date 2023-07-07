@@ -113,18 +113,8 @@ public:
 	void* pCustom;
 };
 
-enum class SnaccTransportEncoding
-{
-	// Transport Encoding Basic Encoding Rules (Binary)
-	BER = 0,
-	// Transport Encoding JSON (Text)
-	JSON = 1,
-	// Transport Encoding JSON (Text), but without a framing header (J0000XXX{...})
-	JSON_NO_HEADING = 2
-};
-
-#define SNACC_TE_BER SnaccTransportEncoding::BER
-#define SNACC_TE_JSON SnaccTransportEncoding::JSON
+#define SNACC_TE_BER SNACC::TransportEncoding::BER
+#define SNACC_TE_JSON SNACC::TransportEncoding::JSON
 
 /*! SnaccROSEBase implements the ROSE (ASN.1) protocol.
 
@@ -172,15 +162,6 @@ public:
 		member map is not protected by locks! */
 	void SetMultithreadInvokeIds(std::map<int, int> mapIds);
 
-	/*! Input of the binary data
-		This processes results and Invokes that are in the list of MultiThreadedInvokeIDs.
-		It is used for the Single thread mode.
-		First call this function to complete pending invokes and if not processed
-		call OnBinaryDataBlock.
-		The data should be pure ASN.1 data without header.
-		The must be one call for each ROSEMessage. */
-	bool OnBinaryDataBlockResult(const char* lpBytes, unsigned long lSize);
-
 	/*! Input of the binary data.
 		The data should be pure ASN.1 data without header.
 		The must be one call for each ROSEMessage. */
@@ -221,8 +202,8 @@ public:
 	}
 
 	/* Set the Transport Encoding to be used */
-	bool SetTransportEncoding(const SnaccTransportEncoding transportEncoding);
-	SnaccTransportEncoding GetTransportEncoding() const;
+	bool SetTransportEncoding(const SNACC::TransportEncoding transportEncoding);
+	SNACC::TransportEncoding GetTransportEncoding() const;
 
 	/* Send a Result Message. */
 	virtual long SendResult(SNACC::ROSEResult* presult);
@@ -248,19 +229,12 @@ public:
 		Override from SnaccRoseSender*/
 	virtual long GetNextInvokeID() override;
 
-	/* Log level 0 oder 1
-		bout=true for outgoing messages,
-		bout=false for incoming messages,
-		Override to set a different log level
-		Override from SnaccRoseSender*/
-	virtual long GetLogLevel(bool /*bOut*/) override
-	{
-		return 0;
-	}
+	/* Retrieve the log level - do we need to log something */
+	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) override;
 
-	/* used for printing alle the messages
-		Override from SnaccRoseSender*/
-	virtual void PrintAsnType(bool bOutbound, SNACC::AsnType* pType, SNACC::ROSEInvoke* pInvoke) override;
+	/* Print the object pType to the log output */
+	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const std::string& strTransportData, const SNACC::ROSEMessage* pMSg);
+	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg);
 
 	// protected:
 	/** The following function should only be called by the generated ROSE stub */
@@ -294,7 +268,7 @@ protected:
 	}
 
 	/*! Add the invokeid and operationid the the log stream */
-	void AddInvokeHeaderLog(std::stringstream& strOut, SNACC::ROSEInvoke* pInvoke);
+	void AddInvokeHeaderLog(std::stringstream& strOut, const SNACC::ROSEInvoke* pInvoke);
 
 	/*! The decoded message.
 		pmessage is new allocated and must be deleted inside this function.
@@ -356,7 +330,7 @@ private:
 	ISnaccROSETransport* m_pTransport = NULL;
 
 	// Transport Encoding to be used
-	SnaccTransportEncoding m_eTransportEncoding = SnaccTransportEncoding::BER;
+	SNACC::TransportEncoding m_eTransportEncoding = SNACC::TransportEncoding::BER;
 
 	// Get Length of JSON Header J1235{} )
 	int GetJsonHeaderLen(const char* lpBytes, unsigned long iLength);

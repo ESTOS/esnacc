@@ -1,6 +1,8 @@
 #ifndef _SnaccROSEInterfaces_h_
 #define _SnaccROSEInterfaces_h_
 
+#include <string>
+
 namespace SNACC
 {
 	class AsnType;
@@ -11,11 +13,33 @@ namespace SNACC
 	class ROSEReject;
 	class InvokeProblem;
 
-	enum SnaccInvokeResult
+	enum class InvokeResult
 	{
 		returnResult = 0,
 		returnError = 1,
 		returnReject = 2
+	};
+
+	enum class TransportEncoding
+	{
+		// Transport Encoding Basic Encoding Rules (Binary)
+		BER = 0,
+		// Transport Encoding JSON (Text)
+		JSON = 1,
+		// Transport Encoding JSON (Text), but without a framing header (J0000XXX{...})
+		JSON_NO_HEADING = 2
+	};
+
+	enum class EAsnLogLevel
+	{
+		// No logging
+		DISABLED = 0,
+		// JSON pretty printed output
+		JSON = 1,
+		// BER encoded data (hex with spaces)
+		BER = 2,
+		// JSON and BER combined
+		JSON_AND_BER = 3
 	};
 
 } // namespace SNACC
@@ -87,14 +111,14 @@ public:
 	/*! Increment invoke counter and return InvokeID */
 	virtual long GetNextInvokeID() = 0;
 
-	/* Log level 0 oder 1
-		bout=true for outgoing messages,
-		bout=false for incoming messages,
-		Override to set a different log level */
-	virtual long GetLogLevel(bool /*bOut*/) = 0;
+	/* Retrieve the log level - do we need to log something */
+	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;
 
-	/* used for printing alle the messages */
-	virtual void PrintAsnType(bool bOutbound, SNACC::AsnType* pType, SNACC::ROSEInvoke* pInvoke) = 0;
+	/* Print the object pType to the log output */
+	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const std::string& strTransportData, const SNACC::ROSEMessage* pMSg) = 0;
+	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg) = 0;
+
+	virtual bool Decode();
 
 	/** The following function should only be called by the generated ROSE stub */
 	/* Invoke a function.
