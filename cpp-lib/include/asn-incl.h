@@ -2312,15 +2312,6 @@ _END_SNACC_NAMESPACE
 // Overload of operator<< to stream out an AsnType
 SNACCDLL_API std::ostream& operator<<(std::ostream& os, const SNACC::AsnType& a);
 
-class AsnBuf;
-class AsnLen;
-
-class AsnBaseDecoder
-{
-	virtual void BDec(const AsnBuf& _b, AsnLen& bytesDecoded) = 0;
-	virtual bool JDec(const SJson::Value& b) = 0;
-};
-
 #include "snaccexcept.h"
 #include "asn-usefultypes.h"
 
