@@ -482,7 +482,7 @@ template <class T> SNACC::AsnLen AsnSetOf<T>::BEncContent(SNACC::AsnBuf& b) cons
 
 	// Encode each component of the SET OF into the AsnBuf list;
 	std::list<SNACC::AsnBuf> bufList;
-	for (auto i = AsnSeqOf<T>::cbegin(); i != AsnSeqOf<T>::cend(); ++i)
+	for (auto i = AsnSetOf<T>::cbegin(); i != AsnSetOf<T>::cend(); ++i)
 	{
 		SNACC::AsnBuf& bufRef = *bufList.insert(bufList.end(), SNACC::AsnBuf());
 		totalLen += i->BEnc(bufRef);

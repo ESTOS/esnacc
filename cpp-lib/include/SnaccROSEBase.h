@@ -179,7 +179,7 @@ public:
 	/* Log output.
 		Override to print the log data out
 		All messages (in and out will be decoded to the logger */
-	virtual void PrintToLog(const std::string& /* strOutput*/)
+	virtual void PrintToLog(const char* szData)
 	{
 		return;
 	}
@@ -210,7 +210,7 @@ public:
 
 	/* Send a Result Message.
 		Override from SnaccRoseSender */
-	virtual long SendResult(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0) override;
+	virtual long SendResult(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, const wchar_t* szSessionID = 0) override;
 
 	/* Send a Reject Message. */
 	long SendReject(SNACC::ROSEReject* preject);
@@ -223,7 +223,7 @@ public:
 
 	/* Send a Error Message.
 		Override from SnaccRoseSender */
-	virtual long SendError(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0) override;
+	virtual long SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID = 0) override;
 
 	/*! Increment invoke counter
 		Override from SnaccRoseSender*/
@@ -233,7 +233,6 @@ public:
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) override;
 
 	/* Print the object pType to the log output */
-	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const std::string& strTransportData, const SNACC::ROSEMessage* pMSg);
 	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg);
 
 	// protected:
@@ -260,15 +259,12 @@ protected:
 	/*! Die functions and events.
 		The implementation of this functions is contained in the generated code from the
 		esnacc. */
-	virtual long OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt) = 0;
+	virtual long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccInvokeContext* cxt) = 0;
 
 	/* Function is called when a received data Packet cannot be decoded (invalid Rose Message) */
 	virtual void OnRoseDecodeError(const char* /*lpBytes*/, unsigned long /*lSize*/, const std::string& /*strWhat */)
 	{
 	}
-
-	/*! Add the invokeid and operationid the the log stream */
-	void AddInvokeHeaderLog(std::stringstream& strOut, const SNACC::ROSEInvoke* pInvoke);
 
 	/*! The decoded message.
 		pmessage is new allocated and must be deleted inside this function.
@@ -300,7 +296,7 @@ private:
 		These are called from the OnROSEMessage.
 		Do not dete the parameters. The functions are called
 		before the CompleteOperation */
-	virtual void OnInvokeMessage(SNACC::ROSEInvoke* pinvoke);
+	virtual void OnInvokeMessage(SNACC::ROSEMessage* pMsg);
 	virtual void OnResultMessage(SNACC::ROSEResult* presult);
 	virtual void OnErrorMessage(SNACC::ROSEError* perror);
 	virtual void OnRejectMessage(SNACC::ROSEReject* preject);

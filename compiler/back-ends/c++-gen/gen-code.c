@@ -1094,19 +1094,7 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 			if (pszError)
 				fprintf(src, "\t\t\t%s error;\n", pszError);
 
-			fprintf(src, "\t\t\tif (pinvoke->argument)\n");
-			fprintf(src, "\t\t\t{\n");
-			fprintf(src, "\t\t\t\tif (pinvoke->argument->anyBuf)\n");
-			fprintf(src, "\t\t\t\t{\n");
-			fprintf(src, "\t\t\t\t\tAsnLen len;\n");
-			fprintf(src, "\t\t\t\t\targument.BDec(*pinvoke->argument->anyBuf, len);\n");
-			fprintf(src, "\t\t\t\t}\n");
-			fprintf(src, "\t\t\t\telse if (pinvoke->argument->jsonBuf)\n");
-			fprintf(src, "\t\t\t\t\targument.JDec(*pinvoke->argument->jsonBuf);\n");
-			fprintf(src, "\t\t\t}\n");
-			fprintf(src, "\n");
-			fprintf(src, "\t\t\tpBase->PrintAsnData(false, &argument, pinvoke);\n");
-			fprintf(src, "\n");
+			fprintf(src, "\n\t\t\tSnaccROSEHelper::DecodeInvoke(pMsg, &argument, pBase);\n\n");
 
 			if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
 			{
@@ -1124,17 +1112,13 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 					fprintf(src, "\t\t\tswitch (pInt->OnInvoke_%s(&argument, &result, cxt))\n", vd->definedName);
 				fprintf(src, "\t\t\t{\n");
 				fprintf(src, "\t\t\tcase InvokeResult::returnResult:\n");
-				fprintf(src, "\t\t\t\tpBase->PrintAsnData(true, &result, pinvoke);\n");
-				fprintf(src, "\t\t\t\tlRoseResult = pBase->SendResult(pinvoke->invokeID, &result, pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);\n");
+				fprintf(src, "\t\t\t\tlRoseResult = pBase->SendResult(pMsg->invoke, &result);\n");
 				fprintf(src, "\t\t\t\tbreak;\n");
 				fprintf(src, "\t\t\tcase InvokeResult::returnError:\n");
 				if (pszError)
-				{
-					fprintf(src, "\t\t\t\tpBase->PrintAsnData(true, &error, pinvoke);\n");
-					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pinvoke->invokeID, &error, pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);\n");
-				}
+					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pMsg->invoke, &error);\n");
 				else
-					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pinvoke->invokeID, NULL, pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);\n");
+					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pMsg->invoke, NULL);\n");
 
 				fprintf(src, "\t\t\t\tbreak;\n");
 				fprintf(src, "\t\t\tdefault:\n");
@@ -4614,6 +4598,7 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(hdr, "#include <%sSnaccROSEInterfaces.h>\n", szCppHeaderIncludePath);
 
 	fprintf(hdrInterface, "#include <%sSnaccROSEInterfaces.h>\n", szCppHeaderIncludePath);
+	fprintf(hdrInterface, "#include <%sSnaccROSEHelper.h>\n", szCppHeaderIncludePath);
 	fprintf(hdrInterface, "#include \"%s\"\n", RemovePath(m->ROSEHdrForwardDeclFileName));
 
 	fprintf(src, "\n"); // RWC; PRINT before possible "namespace" designations.
@@ -4686,13 +4671,13 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 
 	// generate the InvokeHandler
 	fprintf(hdr, "\t// The main Invoke Dispatcher\n");
-	fprintf(hdr, "\tstatic long OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt);\n", m->ROSEClassName);
-	fprintf(src, "long %s::OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt)\n", m->ROSEClassName, m->ROSEClassName);
+	fprintf(hdr, "\tstatic long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt);\n", m->ROSEClassName);
+	fprintf(src, "long %s::OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt)\n", m->ROSEClassName, m->ROSEClassName);
 	fprintf(src, "{\n");
 	fprintf(src, "\tlong lRoseResult = ROSE_REJECT_UNKNOWNOPERATION;\n");
 	fprintf(src, "\n");
 	fprintf(src, "\t#ifndef ROSENOINVOKEDISPATCH\n");
-	fprintf(src, "\tswitch (pinvoke->operationID)\n");
+	fprintf(src, "\tswitch (pMsg->invoke->operationID)\n");
 	fprintf(src, "\t{\n");
 
 	// Rose Interface class

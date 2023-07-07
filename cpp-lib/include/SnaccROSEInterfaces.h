@@ -115,10 +115,7 @@ public:
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;
 
 	/* Print the object pType to the log output */
-	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const std::string& strTransportData, const SNACC::ROSEMessage* pMSg) = 0;
 	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg) = 0;
-
-	virtual bool Decode();
 
 	/** The following function should only be called by the generated ROSE stub */
 	/* Invoke a function.
@@ -135,10 +132,10 @@ public:
 	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* pCtx = nullptr) = 0;
 
 	/* Send a Result Message. */
-	virtual long SendResult(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0) = 0;
+	virtual long SendResult(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, const wchar_t* szSessionID = 0) = 0;
 
 	/* Send a Error Message. */
-	virtual long SendError(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0) = 0;
+	virtual long SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID = 0) = 0;
 
 	/*! Helper Function to handle the result after a SendInvoke */
 	long HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEResult* pResultMsg, SNACC::ROSEError* pErrorMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt);

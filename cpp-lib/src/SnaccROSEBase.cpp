@@ -400,12 +400,7 @@ bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllIn
 				if (bAllowAllInvokes || m_mapMultithreadInvokeIDs.find(pmessage->invoke->operationID) != m_mapMultithreadInvokeIDs.end())
 				{
 					if (pmessage->invoke->operationID != 0 || pmessage->invoke->operationName != nullptr)
-						OnInvokeMessage(pmessage->invoke);
-					// else
-					//{
-					//   wird am Ende der Methode gemacht
-					//	delete pmessage;
-					// }
+						OnInvokeMessage(pmessage);
 					bProcessed = true;
 				}
 			}
@@ -484,8 +479,8 @@ long SnaccROSEBase::SendReject(SNACC::ROSEReject* preject)
 			str << "REJECT" << std::endl;
 		}
 
-		std::string outStr = str.str();
-		PrintToLog(outStr);
+		auto data = str.rdbuf()->str();
+		PrintToLog(data.c_str());
 	}
 
 	ROSEMessage rejectMsg;
@@ -568,23 +563,25 @@ long SnaccROSEBase::SendRejectInvoke(int invokeID, SNACC::InvokeProblem problem,
 	return SendReject(&reject);
 }
 
-void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEInvoke* pinvoke)
+void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEMessage* pMsg)
 {
 	long lRoseResult = ROSE_REJECT_UNKNOWNOPERATION;
 
+	ROSEInvoke* pInvoke = pMsg->invoke;
+
 	SnaccInvokeContext invokeContext;
-	invokeContext.pInvokeAuth = pinvoke->authentication;
-	invokeContext.pInvoke = pinvoke;
+	invokeContext.pInvokeAuth = pInvoke->authentication;
+	invokeContext.pInvoke = pInvoke;
 
 	bool bNotifyRunningOutOfScope = OnInvokeContextCreated(&invokeContext);
 
 	std::string strError;
 	try
 	{
-		if (pinvoke->operationName && pinvoke->operationID == 0)
-			pinvoke->operationID = SnaccRoseOperationLookup::LookUpID(pinvoke->operationName->getASCII().c_str());
+		if (pInvoke->operationName && pInvoke->operationID == 0)
+			pInvoke->operationID = SnaccRoseOperationLookup::LookUpID(pInvoke->operationName->getASCII().c_str());
 
-		lRoseResult = OnInvoke(pinvoke, &invokeContext);
+		lRoseResult = OnInvoke(pMsg, &invokeContext);
 	}
 	catch (SnaccException& ex)
 	{
@@ -593,10 +590,10 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEInvoke* pinvoke)
 
 		strError = ex.what();
 		std::stringstream str;
-		str << "SnaccException InvokeID " << pinvoke->invokeID << " : " << ex.m_errorCode << " - " << ex.what() << std::endl;
+		str << "SnaccException InvokeID " << pInvoke->invokeID << " : " << ex.m_errorCode << " - " << ex.what() << std::endl;
 
-		std::string outStr = str.str();
-		PrintToLog(outStr);
+		auto data = str.rdbuf()->str();
+		PrintToLog(data.c_str());
 	}
 
 	// if the Result is ROSE_NOERROR, then the Result has been sent.
@@ -605,25 +602,25 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEInvoke* pinvoke)
 	{
 		// Send reject
 		if (lRoseResult == ROSE_REJECT_UNKNOWNOPERATION)
-			SendRejectInvoke(pinvoke->invokeID, InvokeProblem::unrecognisedOperation, "unrecognisedOperation", pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::unrecognisedOperation, "unrecognisedOperation", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
 		else if (lRoseResult == ROSE_REJECT_MISTYPEDARGUMENT)
-			SendRejectInvoke(pinvoke->invokeID, InvokeProblem::mistypedArgument, strError.c_str(), pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::mistypedArgument, strError.c_str(), pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
 		else if (lRoseResult == ROSE_REJECT_FUNCTIONMISSING)
-			SendRejectInvoke(pinvoke->invokeID, InvokeProblem::resourceLimitation, "functionMissing", pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::resourceLimitation, "functionMissing", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
 		else if (lRoseResult == ROSE_REJECT_INVALIDSESSIONID)
-			SendRejectInvoke(pinvoke->invokeID, InvokeProblem::invalidSessionID, "invalidSessionID", pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::invalidSessionID, "invalidSessionID", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
 		else if (lRoseResult == ROSE_REJECT_AUTHENTICATIONFAILED)
-			SendRejectInvoke(pinvoke->invokeID, InvokeProblem::authenticationFailed, "authenticationFailed", pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::authenticationFailed, "authenticationFailed", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
 		else if (lRoseResult == ROSE_REJECT_AUTHENTICATIONINCOMPLETE)
-			SendRejectInvoke(pinvoke->invokeID, InvokeProblem::authenticationIncomplete, "authenticationIncomplete", pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::authenticationIncomplete, "authenticationIncomplete", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
 		else if (lRoseResult == ROSE_REJECT_AUTHENTICATION_USER_TEMPORARY_LOCKED_OUT)
-			SendRejectInvoke(pinvoke->invokeID, InvokeProblem::authenticationFailed, "temporaryLockedOut", pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::authenticationFailed, "temporaryLockedOut", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
 		else if (lRoseResult == ROSE_REJECT_AUTHENTICATION_USER_LOCKED_OUT)
-			SendRejectInvoke(pinvoke->invokeID, InvokeProblem::authenticationFailed, "lockedOut", pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::authenticationFailed, "lockedOut", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
 		else if (lRoseResult == ROSE_REJECT_AUTHENTICATION_SERVER_BUSY)
-			SendRejectInvoke(pinvoke->invokeID, InvokeProblem::authenticationFailed, "serverBusy", pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::authenticationFailed, "serverBusy", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
 		else
-			SendRejectInvoke(pinvoke->invokeID, InvokeProblem::unrecognisedOperation, "otherError", pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::unrecognisedOperation, "otherError", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
 	}
 	if (invokeContext.funcAfterResult)
 		invokeContext.funcAfterResult();
@@ -706,43 +703,7 @@ EAsnLogLevel SnaccROSEBase::GetLogLevel(const bool bOutbound)
 	return EAsnLogLevel::DISABLED;
 }
 
-/*
-void SnaccROSEBase::PrintAsnData(bool bOutbound, const SNACC::AsnType* pType, const SNACC::ROSEInvoke* pInvoke)
-{
-	EAsnLogLevel level = GetLogLevel(bOutbound);
-	if (level != EAsnLogLevel::DISABLED)
-	{
-		std::stringstream strOut;
-		if (level == EAsnLogLevel::JSON || level == EAsnLogLevel::JSON_AND_BER)
-		{
-			SJson::StyledStreamWriter writer;
-			SJson::Value value;
-			pType->JEnc(value);
-			if (pInvoke)
-				AddInvokeHeaderLog(strOut, pInvoke);
-			strOut << pType->typeName() << std::endl;
-			writer.write(strOut, value);
-		}
-		if (level == EAsnLogLevel::BER || level == EAsnLogLevel::JSON_AND_BER)
-		{
-		}
-		PrintToLog(strOut.str());
-	}
-}
-*/
-
 void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg)
-{
-	EAsnLogLevel level = GetLogLevel(bOutbound);
-	if (level != EAsnLogLevel::DISABLED)
-	{
-		std::string strTransportData;
-		strTransportData.assign(szData, size);
-		LogTransportData(bOutbound, encoding, strTransportData, pMSg);
-	}
-}
-
-void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const std::string& strTransportData, const SNACC::ROSEMessage* pMSg)
 {
 	EAsnLogLevel level = GetLogLevel(bOutbound);
 	if (level != EAsnLogLevel::DISABLED)
@@ -755,7 +716,7 @@ void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 			if (encoding == SNACC::TransportEncoding::JSON || encoding == SNACC::TransportEncoding::JSON_NO_HEADING)
 			{
 				// The payload is already json -> we can directly log it
-				PrintToLog(strTransportData);
+				PrintToLog(szData);
 			}
 			else if (pMSg)
 			{
@@ -765,7 +726,7 @@ void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 				pMSg->JEnc(value);
 				SJson::StyledWriter writer;
 				std::string strLogData = writer.write(value);
-				PrintToLog(strLogData);
+				PrintToLog(strLogData.c_str());
 			}
 			else
 			{
@@ -780,8 +741,9 @@ void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 			{
 				bool bFirst = true;
 				std::string strLogData;
-				strLogData.reserve(strTransportData.length() * 3);
-				for (const unsigned char c : strTransportData)
+				strLogData.reserve(size * 3);
+				const char* szCur = szData;
+				for(size_t pos = 0; pos < size; pos++)
 				{
 					char szHex[5] = {0};
 					if (bFirst)
@@ -789,14 +751,15 @@ void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 					else
 						strLogData += " ";
 #if _WIN32
-					sprintf_s(szHex, 5, "%02X", c);
+					sprintf_s(szHex, 5, "%02X", *szCur);
 #else
-					snprintf(szHex, 5, "%02X", c);
+					snprintf(szHex, 5, "%02X", *szCur);
 #endif
+					szCur++;
 					strLogData += szHex;
 				}
 				strLogData += "\n";
-				PrintToLog(strLogData);
+				PrintToLog(strLogData.c_str());
 			}
 		}
 	}
@@ -825,7 +788,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** p
 		OutBuf.ResetMode();
 		OutBuf.GetSeg(strData, BytesEncoded);
 
-		LogTransportData(true, m_eTransportEncoding, strData, &InvokeMsg);
+		LogTransportData(true, m_eTransportEncoding, strData.c_str(), strData.length(), &InvokeMsg);
 
 		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), BytesEncoded, pCtx);
 	}
@@ -851,7 +814,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** p
 		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
 			strData = GetJsonAsnPrefix(strData) + strData;
 
-		LogTransportData(true, m_eTransportEncoding, strData, &InvokeMsg);
+		LogTransportData(true, m_eTransportEncoding, strData.c_str(), strData.length(), &InvokeMsg);
 
 		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), pCtx);
 	}
@@ -985,6 +948,8 @@ long SnaccROSEBase::SendResult(SNACC::ROSEResult* presult)
 		OutBuf.ResetMode();
 		OutBuf.GetSeg(strData, BytesEncoded);
 
+		LogTransportData(true, m_eTransportEncoding, strData.c_str(), BytesEncoded, nullptr);
+
 		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), BytesEncoded, nullptr);
 	}
 	else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
@@ -995,6 +960,9 @@ long SnaccROSEBase::SendResult(SNACC::ROSEResult* presult)
 		std::string strData = writer.write(value);
 		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
 			strData = GetJsonAsnPrefix(strData) + strData;
+
+		LogTransportData(true, m_eTransportEncoding, strData.c_str(), strData.length(), nullptr);
+
 		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), nullptr);
 	}
 	else
@@ -1008,15 +976,15 @@ long SnaccROSEBase::SendResult(SNACC::ROSEResult* presult)
 	return lRoseResult;
 }
 
-long SnaccROSEBase::SendResult(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID)
+long SnaccROSEBase::SendResult(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, const wchar_t* szSessionID /* = 0 */)
 {
 	long lRoseResult = ROSE_NOERROR;
 
 	ROSEResult result;
-	result.invokeID = invokeID;
+	result.invokeID = pInvoke->invokeID;
 	result.result = new ROSEResultSeq;
 	result.result->resultValue = 0;
-	result.result->result.value = value;
+	result.result->result.value = pResult;
 	if (szSessionID)
 		result.sessionID = new UTF8String(szSessionID);
 
@@ -1069,15 +1037,15 @@ long SnaccROSEBase::SendError(SNACC::ROSEError* perror)
 	return lRoseResult;
 }
 
-long SnaccROSEBase::SendError(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID)
+long SnaccROSEBase::SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID /* = 0 */)
 {
 	long lRoseResult = ROSE_NOERROR;
 
 	ROSEError error;
-	error.invokedID = invokeID;
+	error.invokedID = pInvoke->invokeID;
 	error.error_value = 0;
 	error.error = new AsnAny;
-	error.error->value = value;
+	error.error->value = pError;
 	if (szSessionID)
 		error.sessionID = new UTF8String(szSessionID);
 
@@ -1087,13 +1055,6 @@ long SnaccROSEBase::SendError(int invokeID, SNACC::AsnType* value, const wchar_t
 	error.error->value = 0;
 
 	return lRoseResult;
-}
-
-void SnaccROSEBase::AddInvokeHeaderLog(std::stringstream& strOut, const SNACC::ROSEInvoke* pInvoke)
-{
-	strOut << "InvokeMsg.invokeID = " << (int)pInvoke->invokeID << std::endl;
-	strOut << "InvokeMsg.operationID = " << (int)pInvoke->operationID << std::endl;
-	strOut << "InvokeMsg.operationName = " << SnaccRoseOperationLookup::LookUpName((int)pInvoke->operationID) << std::endl;
 }
 
 void SnaccROSEBase::SetMultithreadInvokeIds(std::map<int, int> mapIds)
