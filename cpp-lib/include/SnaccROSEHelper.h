@@ -1,0 +1,3 @@
+class SnaccROSEHelper {
+	static DecodeInvoke();
+}
