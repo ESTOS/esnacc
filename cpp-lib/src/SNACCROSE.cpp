@@ -3879,19 +3879,19 @@ void ROSEMessage::JEnc(SJson::Value& b) const
 
 	switch (choiceId)
 	{
-		case invokeCid:
+		case ROSEMessage::invokeCid:
 			invoke->JEnc(tmp);
 			b["invoke"] = tmp;
 		break;
-		case resultCid:
+		case ROSEMessage::resultCid:
 			result->JEnc(tmp);
 			b["result"] = tmp;
 		break;
-		case errorCid:
+		case ROSEMessage::errorCid:
 			error->JEnc(tmp);
 			b["error"] = tmp;
 		break;
-		case rejectCid:
+		case ROSEMessage::rejectCid:
 			reject->JEnc(tmp);
 			b["reject"] = tmp;
 		break;

@@ -39,10 +39,18 @@ namespace SNACC
 		// BER encoded data (hex with spaces)
 		BER = 2,
 		// JSON and BER combined
-		JSON_AND_BER = 3
+		JSON_AND_BER = 3,
+		// JSON (always pretty printed)
+		// Special case for inbound plain json data. If no newline is found in the payload the data is parsed and pretty printed
+		// TAKE CARE: This CHANGES (!) the inbound data as it is reintpreted. If you are looking for json issues you should NOT use this option
+		JSON_ALWAYS_PRETTY_PRINTED = 4
 	};
 
 } // namespace SNACC
+
+namespace SJson {
+	class Value;
+}
 
 //! Error definitions
 /*! During Invoke NOERROR means that a ROSEResult has been received. */
@@ -114,8 +122,16 @@ public:
 	/* Retrieve the log level - do we need to log something */
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;
 
-	/* Print the object pType to the log output */
-	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg) = 0;
+	/* Print the object pType to the log output 
+	 *
+	 * bOutbound = true if the data is sent, or false if it was received
+	 * encoding = the encoding that will be used for sending or was detected while receiving
+	 * szData = the plain transport data, pretty much uninterpreted (only the length heading is removed)
+	 * size = the size of the plain transport data
+	 * pMSg = the asn1 message that was encoded or decoded from the transport payload
+	 * pParsedValue = only for inboud data, the parsed json object (required if the logging shall get pretty printed, saves another parsing of the payload), only available inbound and if the transport is using json
+	 */
+	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue = nullptr) = 0;
 
 	/** The following function should only be called by the generated ROSE stub */
 	/* Invoke a function.

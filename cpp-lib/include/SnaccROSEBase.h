@@ -176,10 +176,8 @@ public:
 		This is an alternative to overriding SendBinaryDataBlock */
 	void SetSnaccROSETransport(ISnaccROSETransport* pTransport);
 
-	/* Log output.
-		Override to print the log data out
-		All messages (in and out will be decoded to the logger */
-	virtual void PrintToLog(const char* szData)
+	/* Writes json encoded log messages to the log file */
+	virtual void PrintJSONToLog(const bool bOutbound, const char* szData, const size_t length = 0)
 	{
 		return;
 	}
@@ -232,8 +230,16 @@ public:
 	/* Retrieve the log level - do we need to log something */
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) override;
 
-	/* Print the object pType to the log output */
-	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg);
+	/* Print the object pType to the log output 
+	 *
+	 * bOutbound = true if the data is sent, or false if it was received
+	 * encoding = the encoding that will be used for sending or was detected while receiving
+	 * szData = the plain transport data, pretty much uninterpreted (only the length heading is removed)
+	 * size = the size of the plain transport data
+	 * pMSg = the asn1 message that was encoded or decoded from the transport payload
+	 * pParsedValue = only for inboud data, the parsed json object (required if the logging shall get pretty printed, saves another parsing of the payload), only available inbound and if the transport is using json
+	 */
+	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue) override;
 
 	// protected:
 	/** The following function should only be called by the generated ROSE stub */

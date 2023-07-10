@@ -462,9 +462,11 @@ void AsnAny::JEnc(SJson::Value& b) const
 	else if (anyBuf != NULL)
 	{
 		std::string data;
+		auto before = anyBuf->GetReadLoc();
 		anyBuf->ResetMode();
 		anyBuf->GetSeg(data);
 		b = SJson::Value(data);
+		anyBuf->SetReadLoc(before);
 	}
 }
 

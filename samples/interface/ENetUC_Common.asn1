@@ -279,7 +279,7 @@ AsnNetDatabaseContactID ::= SEQUENCE
 }
 
 -- @brief List of AsnNetDatabaseContactID .
-AsnNetDatabaseContactIDList ::= SEQUENCE OF AsnNetDatabaseContactID;
+AsnNetDatabaseContactIDList ::= SEQUENCE OF AsnNetDatabaseContactID
 
 -- @brief Property bag definition for storing runtime defined content for objects (like users, computers, groups etc.).
 -- @long To make it possible to transport and store runtime defined content in some objects, these object contain

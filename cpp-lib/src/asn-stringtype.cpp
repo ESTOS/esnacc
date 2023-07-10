@@ -1359,9 +1359,7 @@ UTF8String* UTF8String::CreateNewFromASCII(const std::string& strAscii)
 
 void UTF8String::JEnc(SJson::Value& b) const
 {
-	std::string utf8;
-	getUTF8(utf8);
-	b = SJson::Value(utf8);
+	b = SJson::Value(getUTF8().c_str());
 }
 
 bool UTF8String::JDec(const SJson::Value& b)
