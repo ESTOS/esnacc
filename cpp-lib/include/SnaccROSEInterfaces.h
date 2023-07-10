@@ -127,6 +127,7 @@ public:
 		iTimeout : 0 no timeout
 		*/
 	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** ppresult, SNACC::ROSEError** pperror, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) = 0;
+	virtual long SendInvokeEx(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) = 0;
 
 	/* Send a Event Message. */
 	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* pCtx = nullptr) = 0;
@@ -138,7 +139,8 @@ public:
 	virtual long SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID = 0) = 0;
 
 	/*! Helper Function to handle the result after a SendInvoke */
-	long HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEResult* pResultMsg, SNACC::ROSEError* pErrorMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt);
+	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEResult* pResultMsg, SNACC::ROSEError* pErrorMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) = 0;
+	virtual long HandleInvokeResultEx(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) = 0;
 };
 
 /*! ISnaccROSEInvoke is the base class

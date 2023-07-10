@@ -247,7 +247,12 @@ public:
 		Override from SnaccRoseSender
 	*/
 	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** ppresult, SNACC::ROSEError** pperror, int iTimeout = -1, SnaccInvokeContext* cxt = nullptr) override;
+	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEResult* pResultMsg, SNACC::ROSEError* pErrorMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
 
+	virtual long SendInvokeEx(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) override;
+	virtual long HandleInvokeResultEx(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
+
+	static long DecodeResponse(SNACC::ROSEMessage* pResponse, SNACC::ROSEResult** ppResult, SNACC::ROSEError** ppError, SnaccInvokeContext* pCtx);
 	/* Send a Event Message.
 		Override from SnaccRoseSender*/
 	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt = nullptr) override;
