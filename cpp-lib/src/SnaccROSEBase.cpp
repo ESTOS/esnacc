@@ -238,6 +238,8 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 						delete pmessage;
 						return true;
 					}
+					LogTransportData(false, m_eTransportEncoding, lpBytes, lSize, nullptr, nullptr);
+
 					// pmessage will be deleted inside
 					bReturn = OnROSEMessage(pmessage, false);
 					break;
@@ -260,6 +262,8 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 						}
 						catch (SnaccException& ex)
 						{
+							LogTransportData(false, m_eTransportEncoding, lpBytes, lSize, nullptr, nullptr);
+
 							SJson::Value error;
 							error["exception"] = ex.what();
 							error["method"] = __FUNCTION__;
@@ -290,6 +294,9 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 							delete pmessage;
 							return true;
 						}
+
+						LogTransportData(false, m_eTransportEncoding, lpBytes, lSize, pmessage, &value);
+
 						// pmessage will be deleted inside
 						bReturn = OnROSEMessage(pmessage, false);
 					}
@@ -454,7 +461,6 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 				{
 					if (!pmessage->JDec(value))
 						throw InvalidTagException("ROSEMessage", "decode failed: ROSEMessage", STACK_ENTRY);
-					LogTransportData(false, m_eTransportEncoding, lpBytes, lSize, pmessage, &value);
 				}
 				catch (SnaccException& ex)
 				{
@@ -492,6 +498,8 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 					delete pmessage;
 					return;
 				}
+				LogTransportData(false, m_eTransportEncoding, lpBytes, lSize, pmessage, &value);
+
 				// pmessage will be deleted inside
 				OnROSEMessage(pmessage, true);
 			}
