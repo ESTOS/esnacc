@@ -440,18 +440,10 @@ bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllIn
 					if (pmessage->reject->invokedID.invokedID != nullptr)
 					{
 						CompletePendingOperation(*pmessage->reject->invokedID.invokedID, pmessage);
-					}
-					else
-					{
-						// Can happen if you send e.g. a1 00 00 as a BER Encoded packet
-						delete pmessage;
+						return true;
 					}
 				}
-				else
-				{
-					delete pmessage;
-				}
-				return true;
+				bProcessed = true;
 			}
 			break;
 		default:
@@ -762,7 +754,7 @@ void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 	}
 }
 
-long SnaccROSEBase::SendInvokeEx(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, int iTimeout /*= -1*/, SnaccInvokeContext* pCtx /*= nullptr*/)
+long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, int iTimeout /*= -1*/, SnaccInvokeContext* pCtx /*= nullptr*/)
 {
 	long lRoseResult = ROSE_NOERROR;
 	ROSEMessage InvokeMsg;
@@ -860,7 +852,7 @@ long SnaccROSEBase::SendInvokeEx(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage*
 	return lRoseResult;
 }
 
-long SnaccROSEBase::DecodeResponse(SNACC::ROSEMessage* pResponse, SNACC::ROSEResult** ppResult, SNACC::ROSEError** ppError, SnaccInvokeContext* pCtx)
+long SnaccROSEBase::DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::ROSEResult** ppResult, SNACC::ROSEError** ppError, SnaccInvokeContext* pCtx)
 {
 	long lRoseResult = ROSE_RE_INVALID_ANSWER;
 	if (!pResponse)
@@ -920,106 +912,6 @@ long SnaccROSEBase::DecodeResponse(SNACC::ROSEMessage* pResponse, SNACC::ROSERes
 			}
 			break;
 	}
-
-	return lRoseResult;
-}
-
-long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** ppresult, SNACC::ROSEError** pperror, int iTimeout /*= -1*/, SnaccInvokeContext* pCtx /*= nullptr*/)
-{
-	long lRoseResult = ROSE_NOERROR;
-	ROSEMessage InvokeMsg;
-
-	InvokeMsg.choiceId = ROSEMessage::invokeCid;
-	InvokeMsg.invoke = pinvoke;
-
-	// encode now.
-	SnaccROSEPendingOperation* pendingOP = new SnaccROSEPendingOperation;
-	pendingOP->m_lInvokeID = pinvoke->invokeID;
-	AddPendingOperation(pendingOP->m_lInvokeID, pendingOP);
-
-	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
-	{
-		AsnBuf OutBuf;
-		AsnLen BytesEncoded = InvokeMsg.BEnc(OutBuf);
-
-		std::string strData;
-		OutBuf.ResetMode();
-		OutBuf.GetSeg(strData, BytesEncoded);
-
-		LogTransportData(true, m_eTransportEncoding, strData.c_str(), strData.length(), &InvokeMsg, nullptr);
-
-		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), BytesEncoded, pCtx);
-	}
-	else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
-	{
-		InvokeMsg.invoke->operationName = UTF8String::CreateNewFromASCII(SnaccRoseOperationLookup::LookUpName((int)InvokeMsg.invoke->operationID));
-
-		SJson::Value value;
-		InvokeMsg.JEnc(value);
-		std::string strData;
-
-		int logLevel = (int)GetLogLevel(true);
-		if (logLevel & (int)EAsnLogLevel::JSON || logLevel & (int)EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED)
-		{
-			strData = getPrettyPrinted(value);
-		}
-		else
-		{
-			SJson::FastWriter writer;
-			strData = writer.write(value);
-		}
-
-		LogTransportData(true, m_eTransportEncoding, strData.c_str(), strData.length(), &InvokeMsg, nullptr);
-
-		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
-			strData = GetJsonAsnPrefix(strData) + strData;
-
-		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), pCtx);
-	}
-	else
-	{
-		throw std::runtime_error("invalid m_eTransportEncoding");
-	}
-
-	if (lRoseResult == 0)
-	{
-		// Wait for Answer...
-		if (iTimeout == -1)
-			iTimeout = m_lMaxInvokeWait;
-
-		if (iTimeout)
-		{
-			if (pendingOP->WaitForComplete(iTimeout))
-			{
-				if (pendingOP->m_pAnswerMessage)
-				{
-					lRoseResult = DecodeResponse(pendingOP->m_pAnswerMessage, ppresult, pperror, pCtx);
-					pendingOP->m_pAnswerMessage->result = NULL;
-					pendingOP->m_pAnswerMessage->error = NULL;
-				}
-				else
-					lRoseResult = pendingOP->m_lRoseResult;
-			}
-			else
-			{
-				// not completed
-				lRoseResult = ROSE_TE_TIMEOUT;
-			}
-		}
-		else
-		{
-			lRoseResult = ROSE_NOERROR;
-		}
-	}
-	else
-	{
-		lRoseResult = ROSE_TE_TRANSPORTFAILED;
-	}
-	RemovePendingOperation(pendingOP->m_lInvokeID);
-	delete pendingOP;
-
-	// prevent autodelete of pinvoke
-	InvokeMsg.invoke = NULL;
 
 	return lRoseResult;
 }
@@ -1189,56 +1081,7 @@ SNACC::TransportEncoding SnaccROSEBase::GetTransportEncoding() const
 	return m_eTransportEncoding;
 }
 
-long SnaccROSEBase::HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEResult* pResultMsg, SNACC::ROSEError* pErrorMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt)
-{
-	if (lRoseResult == ROSE_NOERROR)
-	{
-		if (pResultMsg && pResultMsg->result && result)
-		{
-			AsnLen len;
-			try
-			{
-				if (pResultMsg->result->result.anyBuf)
-					result->BDec(*pResultMsg->result->result.anyBuf, len);
-				else if (pResultMsg->result->result.jsonBuf)
-					result->JDec(*pResultMsg->result->result.jsonBuf);
-
-				// assert(false);
-				// JANTODO
-				// PrintAsnData(false, result, pInvokeMsg);
-			}
-			catch (SnaccException&)
-			{
-				lRoseResult = ROSE_RE_DECODE_FAILED;
-			}
-		}
-	}
-	else if (lRoseResult == ROSE_ERROR_VALUE)
-	{
-		if (pErrorMsg && pErrorMsg->error && error)
-		{
-			AsnLen len;
-			try
-			{
-				if (pErrorMsg->error->anyBuf)
-					error->BDec(*pErrorMsg->error->anyBuf, len);
-				else if (pErrorMsg->error->jsonBuf)
-					error->JDec(*pErrorMsg->error->jsonBuf);
-
-				// assert(false);
-				// JANTODO
-				// PrintAsnData(false, error, pInvokeMsg);
-			}
-			catch (SnaccException&)
-			{
-				lRoseResult = ROSE_RE_DECODE_FAILED;
-			}
-		}
-	}
-	return lRoseResult;
-}
-
-long SnaccROSEBase::HandleInvokeResultEx(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* pCtx)
+long SnaccROSEBase::HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* pCtx)
 {
 	SNACC::ROSEError* pError = nullptr;
 	SNACC::ROSEResult* pResult = nullptr;
@@ -1263,11 +1106,19 @@ long SnaccROSEBase::HandleInvokeResultEx(long lRoseResult, SNACC::ROSEInvoke* pI
 					int logLevel = (int)GetLogLevel(false);
 					if (logLevel & ((int)SNACC::EAsnLogLevel::JSON | (int)SNACC::EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED))
 					{
+						// Backup the original response object inside the response message
+						ROSEResultSeq* pOriginalResponse = pResponseMsg->result->result;
+
+						// Set the decoded result object into the response to be able to fully log the whole message
 						pResponseMsg->result->result = new ROSEResultSeq();
 						pResponseMsg->result->result->result.value = result;
 						LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, 0, pResponseMsg, nullptr);
-						// As we hand back the result object to the outer world (function argument) we need to set it to NULL to prevent deletion if we discard the pResponseMsg at the end of the function
+						// As we hand back the result object to the outer world (function argument) we need to set it to NULL to prevent deletion if we discard the inserted object
 						pResponseMsg->result->result->result.value = NULL;
+
+						// Delete the inserted result object and reset to the original response object
+						delete pResponseMsg->result->result;
+						pResponseMsg->result->result = pOriginalResponse;
 					}
 				}
 				else if (pResult->result->result.jsonBuf)
@@ -1301,11 +1152,19 @@ long SnaccROSEBase::HandleInvokeResultEx(long lRoseResult, SNACC::ROSEInvoke* pI
 					int logLevel = (int)GetLogLevel(false);
 					if (logLevel & ((int)SNACC::EAsnLogLevel::JSON | (int)SNACC::EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED))
 					{
+						// Backup the original error object inside the response message
+						AsnAny* pOriginalError = pResponseMsg->error->error;
+
+						// Set the decoded error object into the response to be able to fully log the whole message
 						pResponseMsg->error->error = new AsnAny();
 						pResponseMsg->error->error->value = error;
 						LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, 0, pResponseMsg, nullptr);
-						// As we hand back the error object to the outer world (function argument) we need to set it to NULL to prevent deletion if we discard the pResponseMsg at the end of the function
+						// As we hand back the error object to the outer world (function argument) we need to set it to NULL to prevent deletion if we discard the inserted object
 						pResponseMsg->error->error->value = NULL;
+
+						// Delete the inserted error object and reset to the original response object
+						delete pResponseMsg->error->error;
+						pResponseMsg->error->error = pOriginalError;
 					}
 				}
 				else if (pError->error->jsonBuf)
@@ -1326,108 +1185,3 @@ long SnaccROSEBase::HandleInvokeResultEx(long lRoseResult, SNACC::ROSEInvoke* pI
 
 	return lRoseResult;
 }
-
-/*
-
-long SnaccROSEBase::HandleInvokeResultEx(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* pCtx)
-{
-	{
-		SNACC::ROSEError* pError = nullptr;
-		SNACC::ROSEResult* pResult = nullptr;
-		lRoseResult = DecodeResponse(pResponseMsg, &pResult, &pError, pCtx);
-		AsnLen len;
-		error->BDec(*pError->error->anyBuf, len);
-		int iDebug = 1;
-	}
-
-	SNACC::ROSEResult* pResult = nullptr;
-	switch (pResponseMsg->choiceId)
-	{
-		case ROSEMessage::resultCid:
-			lRoseResult = ROSE_NOERROR;
-			if (pResponseMsg->result && result)
-				pResult = pResponseMsg->result;
-			break;
-		case ROSEMessage::errorCid:
-			lRoseResult = ROSE_ERROR_VALUE;
-			if (pResponseMsg->error && error)
-			{
-				auto pError = pResponseMsg->error->error;
-				if (pError->anyBuf)
-				{
-					AsnLen len;
-					error->BDec(*pError->anyBuf, len);
-				}
-				else if (pError->jsonBuf)
-				{
-					error->JDec(*pError->jsonBuf);
-				}
-				pResponseMsg->error->error->value = error;
-			}
-			break;
-	}
-
-	if (lRoseResult == ROSE_NOERROR)
-	{
-		if (pResult && pResult->result && result)
-		{
-			AsnLen len;
-			try
-			{
-				if (pResult->result->result.anyBuf)
-				{
-					result->BDec(*pResult->result->result.anyBuf, len);
-					// We log the decoded object here, the plain BER payload has already been logged in
-					// LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, 0, &result, nullptr);
-				}
-				else if (pResult->result->result.jsonBuf)
-					result->JDec(*pResult->result->result.jsonBuf);
-
-				// assert(false);
-				// JANTODO
-				// PrintAsnData(false, result, pInvokeMsg);
-			}
-			catch (SnaccException&)
-			{
-				lRoseResult = ROSE_RE_DECODE_FAILED;
-			}
-		}
-	}
-	else if (lRoseResult == ROSE_ERROR_VALUE)
-	{
-		if (pError && pError->error && error)
-		{
-			AsnLen len;
-			try
-			{
-				if (pError->error->anyBuf)
-				{
-					error->BDec(*pError->error->anyBuf, len);
-					// LogTransportData(false, SNACC::TransportEncoding::BER, )
-				}
-				else if (pError->error->jsonBuf)
-				{
-					error->JDec(*pError->error->jsonBuf);
-				}
-
-				// assert(false);
-				// JANTODO
-				// PrintAsnData(false, error, pInvokeMsg);
-			}
-			catch (SnaccException&)
-			{
-				lRoseResult = ROSE_RE_DECODE_FAILED;
-			}
-		}
-	}
-
-	if (pResponseMsg)
-		delete pResponseMsg;
-	if (pResult)
-		delete pResult;
-	if (pError)
-		delete pError;
-
-return lRoseResult;
-}
-*/

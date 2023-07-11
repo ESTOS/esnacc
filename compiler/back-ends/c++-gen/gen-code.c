@@ -1261,13 +1261,13 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			{
 				if (pszError)
 				{
-					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout = -1, SnaccInvokeContext* cxt = 0);\n", vd->definedName, pszArgument, pszResult, pszError);
-					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout, SnaccInvokeContext* cxt)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult, pszError);
+					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout = -1, SnaccInvokeContext* pCtx = 0);\n", vd->definedName, pszArgument, pszResult, pszError);
+					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout, SnaccInvokeContext* pCtx)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult, pszError);
 				}
 				else
 				{
-					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, int iTimeout = -1, SnaccInvokeContext* cxt = 0);\n", vd->definedName, pszArgument, pszResult);
-					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, int iTimeout, SnaccInvokeContext* cxt)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult);
+					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, int iTimeout = -1, SnaccInvokeContext* pCtx = 0);\n", vd->definedName, pszArgument, pszResult);
+					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, int iTimeout, SnaccInvokeContext* pCtx)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult);
 				}
 			}
 			else
@@ -1277,8 +1277,6 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			}
 
 			fprintf(src, "{\n");
-			fprintf(src, "\tlong lRoseResult = ROSE_NOERROR;\n\n");
-
 			fprintf(src, "\tROSEInvoke InvokeMsg;\n");
 			if (pszResult)
 				fprintf(src, "\tInvokeMsg.invokeID = m_pSB->GetNextInvokeID();\n");
@@ -1290,41 +1288,29 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			fprintf(src, "\tInvokeMsg.argument->value = argument;\n\n");
 
 			if (pszResult)
-			{
-				fprintf(src, "\tROSEResult* pResultMsg = NULL;\n");
-				fprintf(src, "\tROSEError* pErrorMsg = NULL;\n\n");
-			}
+				fprintf(src, "\tROSEMessage* pResponseMsg = NULL;\n");
 
 			if (IsDeprecatedFlaggedOperation(m, vd->definedName))
 			{
 				fprintf(src, "\t// This method has been flagged deprecated\n");
 				asnoperationcomment comment;
 				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-				fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out%s);\n\n", comment.i64Deprecated, m->moduleName, vd->definedName, pszResult ? ", cxt" : "");
+				fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out%s);\n\n", comment.i64Deprecated, m->moduleName, vd->definedName, pszResult ? ", pCtx" : "");
 			}
-
-			if (pszResult)
-				fprintf(src, "\tlRoseResult = m_pSB->SendInvoke(&InvokeMsg, &pResultMsg, &pErrorMsg, iTimeout, cxt);\n");
-			else
-				fprintf(src, "\tlRoseResult = m_pSB->SendEvent(&InvokeMsg);\n");
-
-			fprintf(src, "\t//prevent autodelete of argument\n");
-			fprintf(src, "\tInvokeMsg.argument->value = NULL;\n");
 
 			if (pszResult)
 			{
-				fprintf(src, "\t//decode result\n");
-				if (pszError)
-					fprintf(src, "\tlRoseResult = m_pSB->HandleInvokeResult(lRoseResult, &InvokeMsg, pResultMsg, pErrorMsg, result, error, cxt);\n");
-				else
-					fprintf(src, "\tlRoseResult = m_pSB->HandleInvokeResult(lRoseResult, &InvokeMsg, pResultMsg, pErrorMsg, result, NULL, cxt);\n");
-				fprintf(src, "\tif (pResultMsg)\n");
-				fprintf(src, "\t\tdelete pResultMsg;\n");
-				fprintf(src, "\tif (pErrorMsg)\n");
-				fprintf(src, "\t\tdelete pErrorMsg;\n");
+				fprintf(src, "\tlong lRoseResult = m_pSB->SendInvoke(&InvokeMsg, &pResponseMsg, iTimeout, pCtx);\n");
+				fprintf(src, "\tlRoseResult = m_pSB->HandleInvokeResult(lRoseResult, pResponseMsg, result, %s, pCtx);\n", pszError ? "error" : "nullptr");
 			}
+			else
+				fprintf(src, "\tlong lRoseResult = m_pSB->SendEvent(&InvokeMsg);\n");
+
+			fprintf(src, "\n\t// prevent auto deletion of argument\n");
+			fprintf(src, "\tInvokeMsg.argument->value = nullptr;\n\n");
 
 			fprintf(src, "\treturn lRoseResult;\n");
+
 			fprintf(src, "}\n");
 			fprintf(src, "\n");
 		}

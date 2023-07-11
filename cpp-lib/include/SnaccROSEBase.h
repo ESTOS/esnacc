@@ -230,7 +230,8 @@ public:
 	/* Retrieve the log level - do we need to log something */
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) override;
 
-	/* Print the object pType to the log output 
+	/**
+	 * Print the object pType to the log output
 	 *
 	 * bOutbound = true if the data is sent, or false if it was received
 	 * encoding = the encoding that will be used for sending or was detected while receiving
@@ -241,27 +242,44 @@ public:
 	 */
 	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue) override;
 
-	// protected:
-	/** The following function should only be called by the generated ROSE stub */
-	/* Invoke a function.
-		ppresult or pperror will be filled on return
-		caller must delete returned result!
-		returns NO_ERROR for Result
-		iTimeout: Waiting time for the result. in msec
-		iTimeout : -1 default waiting time m_lMaxInvokeWait
-		iTimeout : 0 no waiting time
-		Override from SnaccRoseSender
-	*/
-	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** ppresult, SNACC::ROSEError** pperror, int iTimeout = -1, SnaccInvokeContext* cxt = nullptr) override;
-	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEResult* pResultMsg, SNACC::ROSEError* pErrorMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
+	/**
+	 * An invoke that is send to the other side. Should only be called by the ROSE stub itself generated files
+	 *
+	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
+	 * pResponse - the response payload (is handled afterwards in the HandleInvokeResult method
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
+	 * pCtx - contextual data for the invoke
+	 */
+	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) override;
 
-	virtual long SendInvokeEx(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) override;
-	virtual long HandleInvokeResultEx(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
+	/**
+	 * Handles the response payload of the SendInvoke method. Retrieves the result or error from the response
+	 *
+	 * lRoseResult - the result of the SendInvoke method
+	 * pResponseMsg - the response message as provided by the SendInvoke method
+	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
+	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
+	 * pCtx - contextual data for the invoke
+	 */
+	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
 
-	static long DecodeResponse(SNACC::ROSEMessage* pResponse, SNACC::ROSEResult** ppResult, SNACC::ROSEError** ppError, SnaccInvokeContext* pCtx);
-	/* Send a Event Message.
-		Override from SnaccRoseSender*/
+	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
+	 *
+	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
+	 * pCtx - contextual data for the invoke
+	 */
 	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt = nullptr) override;
+
+	/**
+	 * Helper method that retrieves the proper object (result, error, reject) from the repsonse Message
+	 *
+	 * pResponseMsg - the response message as provided by the SendInvoke method
+	 * ppResult - filled with the result object in case we have received a result
+	 * ppError - filled with the error object in case we have received an error
+	 * pCtx - contextual data from the invoke
+	 */
+	static long DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::ROSEResult** ppResult, SNACC::ROSEError** ppError, SnaccInvokeContext* pCtx);
 
 protected:
 	// ASN prefix with length prefix to build the JSON message

@@ -48,7 +48,8 @@ namespace SNACC
 
 } // namespace SNACC
 
-namespace SJson {
+namespace SJson
+{
 	class Value;
 }
 
@@ -122,7 +123,7 @@ public:
 	/* Retrieve the log level - do we need to log something */
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;
 
-	/* Print the object pType to the log output 
+	/* Print the object pType to the log output
 	 *
 	 * bOutbound = true if the data is sent, or false if it was received
 	 * encoding = the encoding that will be used for sending or was detected while receiving
@@ -133,30 +134,38 @@ public:
 	 */
 	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue = nullptr) = 0;
 
-	/** The following function should only be called by the generated ROSE stub */
-	/* Invoke a function.
-		ppresult or pperror will be filled on return
-		caller must delete returned result!
-		returns NO_ERROR for Result
-		iTimeout: timeout for the result in msec
-		iTimeout : -1 default timeout m_lMaxInvokeWait
-		iTimeout : 0 no timeout
-		*/
-	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** ppresult, SNACC::ROSEError** pperror, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) = 0;
-	virtual long SendInvokeEx(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) = 0;
+	/** An invoke that is send to the other side. Should only be called by the ROSE stub itself generated files
+	 *
+	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
+	 * pResponse - the response payload (is handled afterwards in the HandleInvokeResult method
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
+	 * pCtx - contextual data for the invoke
+	 */
+	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::ROSEMessage** pResponse, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) = 0;
 
-	/* Send a Event Message. */
-	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* pCtx = nullptr) = 0;
+	/** Handles the response payload of the SendInvoke method. Retrieves the result or error from the response
+	 *
+	 * lRoseResult - the result of the SendInvoke method
+	 * pResponseMsg - the response message as provided by the SendInvoke method
+	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
+	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
+	 * pCtx - contextual data for the invoke
+	 */
+	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) = 0;
+
+	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
+	 *
+	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
+	 * pCtx - contextual data for the invoke
+	 */
+	virtual long SendEvent(SNACC::ROSEInvoke* pInvoke, SnaccInvokeContext* pCtx = nullptr) = 0;
 
 	/* Send a Result Message. */
 	virtual long SendResult(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, const wchar_t* szSessionID = 0) = 0;
 
 	/* Send a Error Message. */
 	virtual long SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID = 0) = 0;
-
-	/*! Helper Function to handle the result after a SendInvoke */
-	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEResult* pResultMsg, SNACC::ROSEError* pErrorMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) = 0;
-	virtual long HandleInvokeResultEx(long lRoseResult, SNACC::ROSEInvoke* pInvokeMsg, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) = 0;
 };
 
 /*! ISnaccROSEInvoke is the base class
