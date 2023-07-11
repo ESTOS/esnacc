@@ -1094,7 +1094,9 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 			if (pszError)
 				fprintf(src, "\t\t\t%s error;\n", pszError);
 
-			fprintf(src, "\n\t\t\tSnaccROSEHelper::DecodeInvoke(pMsg, &argument, pBase);\n\n");
+			fprintf(src, "\n\t\t\tlRoseResult = pBase->DecodeInvoke(pMsg, &argument);\n");
+			fprintf(src, "\t\t\tif (lRoseResult != ROSE_NOERROR)\n");
+			fprintf(src, "\t\t\t\tbreak;\n\n");
 
 			if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
 			{
@@ -4584,7 +4586,6 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(hdr, "#include <%sSnaccROSEInterfaces.h>\n", szCppHeaderIncludePath);
 
 	fprintf(hdrInterface, "#include <%sSnaccROSEInterfaces.h>\n", szCppHeaderIncludePath);
-	fprintf(hdrInterface, "#include <%sSnaccROSEHelper.h>\n", szCppHeaderIncludePath);
 	fprintf(hdrInterface, "#include \"%s\"\n", RemovePath(m->ROSEHdrForwardDeclFileName));
 
 	fprintf(src, "\n"); // RWC; PRINT before possible "namespace" designations.

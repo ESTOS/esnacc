@@ -154,6 +154,14 @@ public:
 	 */
 	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) = 0;
 
+	/**
+	 * Decodes an invoke and properly handles logging for it
+	 *
+	 * pInvokeMessage - the invoke message as provided from the other side
+	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
+	 */
+	virtual long DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) = 0;
+
 	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)

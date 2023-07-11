@@ -162,6 +162,15 @@ public:
 		member map is not protected by locks! */
 	void SetMultithreadInvokeIds(std::map<int, int> mapIds);
 
+	/*! Input of the binary data
+		This processes results and Invokes that are in the list of MultiThreadedInvokeIDs.
+		It is used for the Single thread mode.
+		First call this function to complete pending invokes and if not processed
+		call OnBinaryDataBlock.
+		The data should be pure ASN.1 data without header.
+		The must be one call for each ROSEMessage. */
+	bool OnBinaryDataBlockResult(const char* lpBytes, unsigned long lSize);
+
 	/*! Input of the binary data.
 		The data should be pure ASN.1 data without header.
 		The must be one call for each ROSEMessage. */
@@ -176,25 +185,13 @@ public:
 		This is an alternative to overriding SendBinaryDataBlock */
 	void SetSnaccROSETransport(ISnaccROSETransport* pTransport);
 
-	/* Writes json encoded log messages to the log file */
-	virtual void PrintJSONToLog(const bool bOutbound, const char* szData, const size_t length = 0)
-	{
-		return;
-	}
-
-	/* Log level 0 oder 1
-		bout=true for outgoing messages,
-		bout=false for incoming messages,
-		Override to set a different log level */
-	virtual long GetErrorLogLevel()
-	{
-		return 0;
-	}
-
-	/* Log Errors
-		Override to print Errors
+	/*! Writes JSON encoded log messages to the log file
+		bOutbound = true in case the log entry is related to an outbound message
+		bError = true in case this is an error message
+		szData = the JSON (!) encoded log message. (!) The message is no necessarily null terminated (!)
+		length = length of the szData (as it is not necessarily null terminated respect the length!)
 	*/
-	virtual void PrintToErrorLog(const std::string& /* strOutput*/)
+	virtual void PrintJSONToLog(const bool bOutbound, const bool bError, const char* szData, const size_t length = 0)
 	{
 		return;
 	}
@@ -281,6 +278,14 @@ public:
 	 */
 	static long DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::ROSEResult** ppResult, SNACC::ROSEError** ppError, SnaccInvokeContext* pCtx);
 
+	/**
+	 * Decodes an invoke and properly handles logging for it
+	 *
+	 * pInvokeMessage - the invoke message as provided from the other side
+	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
+	 */
+	long DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument);
+
 protected:
 	// ASN prefix with length prefix to build the JSON message
 	std::string GetJsonAsnPrefix(std::string& strJson);
@@ -359,6 +364,9 @@ private:
 
 	// Get Length of JSON Header J1235{} )
 	int GetJsonHeaderLen(const char* lpBytes, unsigned long iLength);
+
+	// Encodes a value based on the transportencoding and loglevel
+	std::string GetEncoded(const SNACC::TransportEncoding encoding, SNACC::AsnType* pValue, unsigned long* pUlSize = nullptr);
 };
 
 #endif //_SnaccROSEBase_h_
