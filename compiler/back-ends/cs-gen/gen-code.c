@@ -114,9 +114,9 @@ static void PrintROSEOnInvokeCS(FILE* src, int bEvents, ValueDef* vd)
 			// there is a result -> it is a Funktion
 			// Header
 			if (pszError)
-				fprintf(src, "\tpublic virtual InvokeResult OnInvoke_%s(%s argument, %s result, %s error) { return InvokeResult::returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
+				fprintf(src, "\tpublic virtual InvokeResult OnInvoke_%s(%s argument, %s result, %s error) { return InvokeResult.returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
 			else
-				fprintf(src, "\tpublic virtual InvokeResult OnInvoke_%s(%s argument, %s result) { return InvokeResult::returnReject; }\n", vd->definedName, pszArgument, pszResult);
+				fprintf(src, "\tpublic virtual InvokeResult OnInvoke_%s(%s argument, %s result) { return InvokeResult.returnReject; }\n", vd->definedName, pszArgument, pszResult);
 		}
 		else if (!pszResult && bEvents)
 		{
