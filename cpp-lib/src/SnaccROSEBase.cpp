@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <iomanip>
 #include <locale>
+#include <chrono>
 
 using namespace SNACC;
 
@@ -125,6 +126,7 @@ SnaccROSEBase::SnaccROSEBase(void)
 
 SnaccROSEBase::~SnaccROSEBase(void)
 {
+	ConfigureFileLogging(nullptr);
 }
 
 void SnaccROSEBase::StopProcessing(bool bStop /*= true*/)
@@ -830,11 +832,6 @@ long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* pC
 	return lRoseResult;
 }
 
-EAsnLogLevel SnaccROSEBase::GetLogLevel(const bool bOutbound)
-{
-	return EAsnLogLevel::DISABLED;
-}
-
 void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue)
 {
 	int level = (int)GetLogLevel(bOutbound);
@@ -1389,4 +1386,123 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 	}
 
 	return lRoseResult;
+}
+
+int SnaccROSEBase::ConfigureFileLogging(const wchar_t* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = false */)
+{
+	std::lock_guard<std::mutex> lock(m_mtxLogFile);
+
+	if (szPath && wcslen(szPath) && !m_pAsnLogFile)
+	{
+		m_bFlushEveryWrite = bFlushEveryWrite;
+		const wchar_t* szMode = bAppend ? L"a" : L"w";
+		m_pAsnLogFile = _wfsopen(szPath, szMode, _SH_DENYWR);
+		if (!m_pAsnLogFile)
+		{
+			int iErr = 0;
+			_get_errno(&iErr);
+			return iErr;
+		}
+		else
+		{
+			fseek(m_pAsnLogFile, 0, SEEK_END);
+			m_bAsnLogFileContainsData = ftell(m_pAsnLogFile) > 0;
+		}
+	}
+	else if ((!szPath || !wcslen(szPath)) && m_pAsnLogFile)
+	{
+		fclose(m_pAsnLogFile);
+		m_pAsnLogFile = nullptr;
+		m_bAsnLogFileContainsData = false;
+	}
+	return 0;
+}
+
+void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, const char* szData, const size_t stLength)
+{
+	if (!m_pAsnLogFile)
+		return;
+
+	// Die ASN.1-Funktionen können auch aus verschiedenen Threads gerufen werden.
+	// Das Schreiben in die roseout.log muss aber damit serialisiert werden.
+	// Der Lock sollte nicht schaden, da nur die Datei selbst gelockt wird und kein anderes Objekt (PAIM-1732).
+	std::lock_guard<std::mutex> lock(m_mtxLogFile);
+
+	// Securly check the logfile pointer once more after aquiring the lock
+	if (!m_pAsnLogFile)
+		return;
+
+	try
+	{
+		auto currentTime = std::chrono::system_clock::now();
+		std::time_t currentTimeT = std::chrono::system_clock::to_time_t(currentTime);
+		auto duration = currentTime.time_since_epoch();
+		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration) % 1000;
+		std::tm timeInfo;
+		gmtime_s(&timeInfo, &currentTimeT);
+		std::ostringstream strTime;
+		strTime << std::put_time(&timeInfo, "%Y-%m-%dT%H:%M:%S.");
+		strTime << std::setfill('0') << std::setw(3) << milliseconds.count();
+
+		if (!m_bAsnLogFileContainsData)
+		{
+			fprintf(m_pAsnLogFile, "[\n");
+			m_bAsnLogFileContainsData = true;
+		}
+		else
+		{
+			fseek(m_pAsnLogFile, -1, SEEK_END);
+			fprintf(m_pAsnLogFile, ",\n");
+		}
+
+		fprintf(m_pAsnLogFile, "{\n\t\"%s\" : \"%s\",\n", bOutbound ? "OUT" : "IN", strTime.str().c_str());
+
+		// if the data is encapsulated json we need a name
+		if (*szData == '{' || *szData == '[')
+			fprintf(m_pAsnLogFile, "\t\"%s\" : \n", bError ? "ERROR" : "ROSE");
+
+		size_t stPrintLength = stLength;
+		if (!stPrintLength)
+			stPrintLength = strlen(szData);
+
+		// Remove potential null characters at the end of the string
+		while (stPrintLength > 0)
+			if (szData[stPrintLength - 1])
+				break;
+			else
+				stPrintLength--;
+
+		const char* start = szData;
+		const char* end = szData;
+		size_t stCount = 0;
+
+		while (stCount < stPrintLength)
+		{
+			if (*end == '\n')
+			{
+				fprintf(m_pAsnLogFile, "\t");
+				fwrite(start, sizeof(char), end - start + 1, m_pAsnLogFile);
+				start = end + 1;
+			}
+			stCount++;
+			end++;
+		}
+
+		if (start != end)
+		{
+			fprintf(m_pAsnLogFile, "\t");
+			fwrite(start, sizeof(char), end - start + 1, m_pAsnLogFile);
+		}
+
+		if (szData[stPrintLength - 1] != '\n')
+			fprintf(m_pAsnLogFile, "\n");
+		fprintf(m_pAsnLogFile, "}]");
+
+		if (m_bFlushEveryWrite)
+			fflush(m_pAsnLogFile);
+	}
+	catch (...)
+	{
+		assert(false);
+	}
 }

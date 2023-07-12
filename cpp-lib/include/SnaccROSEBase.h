@@ -185,16 +185,28 @@ public:
 		This is an alternative to overriding SendBinaryDataBlock */
 	void SetSnaccROSETransport(ISnaccROSETransport* pTransport);
 
+	/*! Enables or disables file logging for this instance of the SnaccROSEBase.
+	 *  Call this function with filepath to enable logging from the library side
+	 *  Call this function with a nullpointer to disable logging from the library side
+	 *  Furthermore the call to GetLogLevel needs to provide the proper loglevel (what and how to write it)
+	 *
+	 *  szPath - the path to write to, also enabled logging, or a nullpointer to disable logging
+	 *  bAppend - true to append data to an existing logfile, or false to overwrite any existing logfile
+	 *  bFlushEveryWrite - true flushes every write operation (ideal for debugging), false to let the os decide when to flush
+	 *
+	 *  returns NO_ERROR on success (logfile opened, logfile closed, nothing to do) or an error value */
+	int ConfigureFileLogging(const wchar_t* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
+
+	/* Retrieve the log level - do we need to log something */
+	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;
+
 	/*! Writes JSON encoded log messages to the log file
 		bOutbound = true in case the log entry is related to an outbound message
 		bError = true in case this is an error message
 		szData = the JSON (!) encoded log message. (!) The message is no necessarily null terminated (!)
 		length = length of the szData (as it is not necessarily null terminated respect the length!)
 	*/
-	virtual void PrintJSONToLog(const bool bOutbound, const bool bError, const char* szData, const size_t length = 0)
-	{
-		return;
-	}
+	virtual void PrintJSONToLog(const bool bOutbound, const bool bError, const char* szData, const size_t length = 0);
 
 	/* Set the Transport Encoding to be used */
 	bool SetTransportEncoding(const SNACC::TransportEncoding transportEncoding);
@@ -223,9 +235,6 @@ public:
 	/*! Increment invoke counter
 		Override from SnaccRoseSender*/
 	virtual long GetNextInvokeID() override;
-
-	/* Retrieve the log level - do we need to log something */
-	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) override;
 
 	/**
 	 * Print the object pType to the log output
@@ -343,6 +352,14 @@ private:
 	long m_lInvokeCounter = 0;
 	/*! The guard for m_bProcessingAllowed and SnaccROSEPendingOperationMap */
 	std::mutex m_InternalProtectMutex;
+	/*! If set, the open file where we append log data to. The pointer is created with ConfigureFileLogging() */
+	FILE* m_pAsnLogFile = nullptr;
+	/*! true if the logfile already contains data, false if not */
+	bool m_bAsnLogFileContainsData = false;
+	/*! true if every write to the logger shall get flushed */
+	bool m_bFlushEveryWrite = false;
+	/*! Mutex to access the logging function (serialize multiple threads to it) */
+	std::mutex m_mtxLogFile;
 
 	void AddPendingOperation(int invokeID, SnaccROSEPendingOperation* pOperation);
 	void RemovePendingOperation(int invokeID);
