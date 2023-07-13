@@ -990,18 +990,12 @@ long SnaccROSEBase::DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::R
 		case ROSEMessage::resultCid:
 			lRoseResult = ROSE_NOERROR;
 			if (pResponse->result && ppResult)
-			{
-				// the result is passed to the caller, who then has to deallocate it.
 				*ppResult = pResponse->result;
-			}
 			break;
 		case ROSEMessage::errorCid:
 			lRoseResult = ROSE_ERROR_VALUE;
 			if (pResponse->error && ppError)
-			{
-				// pass the error to the caller, who then has to deallocate it.
 				*ppError = pResponse->error;
-			}
 			break;
 		case ROSEMessage::rejectCid:
 			lRoseResult = ROSE_REJECT_UNKNOWN;
