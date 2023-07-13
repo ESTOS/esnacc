@@ -1492,7 +1492,7 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 		if (start != end)
 		{
 			fprintf(m_pAsnLogFile, "\t");
-			fwrite(start, sizeof(char), end - start + 1, m_pAsnLogFile);
+			fwrite(start, sizeof(char), end - start, m_pAsnLogFile);
 		}
 
 		if (szData[stPrintLength - 1] != '\n')
