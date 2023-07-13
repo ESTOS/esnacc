@@ -1264,8 +1264,6 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pRe
 			}
 			catch (const SnaccException& ex)
 			{
-				assert(false);
-
 				SJson::Value err;
 				err["exception"] = ex.what();
 				err["method"] = __FUNCTION__;
@@ -1319,8 +1317,6 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pRe
 			}
 			catch (const SnaccException& ex)
 			{
-				assert(false);
-
 				SJson::Value err;
 				err["exception"] = ex.what();
 				err["method"] = __FUNCTION__;
