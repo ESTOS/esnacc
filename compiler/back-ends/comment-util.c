@@ -158,6 +158,8 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 			int iMultiline = 0;
 			if (comment.i64Deprecated)
 				iMultiline++;
+			if (strstr(comment.szDeprecated, "\\n"))
+				iMultiline += 1;
 			if (comment.iPrivate)
 				iMultiline++;
 			if (strstr(comment.szShort, "\\n"))
@@ -197,7 +199,7 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 						fprintf(src, " %s", szTime);
 					if (szComment)
 						fprintf(src, " %s", szComment);
-					fprintf(src, "\n");
+					fprintf(src, "%s\n", szSuffix);
 					free(szTime);
 				}
 				if (comment.iPrivate)
@@ -209,7 +211,7 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 			if (iMultiline > 1)
 			{
 				if (style == COMMENTSTYLE_TYPESCRIPT)
-					fprintf(src, "\n%s */\n", szIndent);
+					fprintf(src, "%s */\n", szIndent);
 			}
 		}
 	}

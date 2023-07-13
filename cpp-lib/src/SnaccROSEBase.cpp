@@ -210,7 +210,7 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 					{
 						pmessage->BDec(buffer, bytesDecoded);
 					}
-					catch (SnaccException& ex)
+					catch (const SnaccException& ex)
 					{
 						LogTransportData(false, m_eTransportEncoding, lpBytes, lSize, nullptr, nullptr);
 
@@ -262,7 +262,7 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 							if (!bSuccess)
 								throw InvalidTagException("ROSEMessage", "decode failed: ROSEMessage", STACK_ENTRY);
 						}
-						catch (SnaccException& ex)
+						catch (const SnaccException& ex)
 						{
 							LogTransportData(false, m_eTransportEncoding, lpBytes, lSize, nullptr, nullptr);
 
@@ -319,7 +319,7 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 				break;
 		}
 	}
-	catch (SnaccException& ex)
+	catch (const SnaccException& ex)
 	{
 		SJson::Value error;
 		error["exception"] = ex.what();
@@ -405,7 +405,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 			{
 				pmessage->BDec(buffer, bytesDecoded);
 			}
-			catch (SnaccException& ex)
+			catch (const SnaccException& ex)
 			{
 				LogTransportData(false, m_eTransportEncoding, lpBytes, lSize, nullptr, nullptr);
 
@@ -464,7 +464,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 					if (!pmessage->JDec(value))
 						throw InvalidTagException("ROSEMessage", "decode failed: ROSEMessage", STACK_ENTRY);
 				}
-				catch (SnaccException& ex)
+				catch (const SnaccException& ex)
 				{
 					LogTransportData(false, m_eTransportEncoding, lpBytes, lSize, nullptr, nullptr);
 
@@ -537,7 +537,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 			OnRoseDecodeError(lpBytes, lSize, "unknown encoding");
 		}
 	}
-	catch (SnaccException& ex)
+	catch (const SnaccException& ex)
 	{
 		SJson::Value error;
 		error["exception"] = ex.what();
@@ -715,7 +715,7 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEMessage* pMsg)
 
 		lRoseResult = OnInvoke(pMsg, &invokeContext);
 	}
-	catch (SnaccException& ex)
+	catch (const SnaccException& ex)
 	{
 		// decode of invoke detail failed.
 		lRoseResult = ROSE_REJECT_MISTYPEDARGUMENT;
@@ -1262,8 +1262,17 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pRe
 					// No logging here as the full object has already been logged in OnBinaryDataBlock
 				}
 			}
-			catch (SnaccException&)
+			catch (const SnaccException& ex)
 			{
+				assert(false);
+
+				SJson::Value err;
+				err["exception"] = ex.what();
+				err["method"] = __FUNCTION__;
+				err["error"] = (int)ex.m_errorCode;
+				std::string strError = getPrettyPrinted(err);
+				PrintJSONToLog(false, true, strError.c_str(), strError.length());
+
 				lRoseResult = ROSE_RE_DECODE_FAILED;
 			}
 		}
@@ -1308,8 +1317,10 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pRe
 					// No logging here as the full object has already been logged in OnBinaryDataBlock
 				}
 			}
-			catch (SnaccException& ex)
+			catch (const SnaccException& ex)
 			{
+				assert(false);
+
 				SJson::Value err;
 				err["exception"] = ex.what();
 				err["method"] = __FUNCTION__;
@@ -1373,7 +1384,7 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 		else
 			lRoseResult = ROSE_RE_DECODE_FAILED;
 	}
-	catch (SnaccException& ex)
+	catch (const SnaccException& ex)
 	{
 		SJson::Value error;
 		error["exception"] = ex.what();

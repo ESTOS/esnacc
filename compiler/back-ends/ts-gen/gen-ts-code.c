@@ -825,7 +825,7 @@ void PrintTSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int pr
 	PrintTSComments(src, m);
 
 	// Imports
-	PrintTSImports(src, mods, m, false, true, true);
+	PrintTSImports(src, mods, m, false, true, false);
 
 	// Root types
 	PrintTSRootTypes(src, m, "");
