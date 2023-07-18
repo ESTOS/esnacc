@@ -103,6 +103,8 @@ const long ROSE_REJECT_AUTHENTICATION_SERVER_BUSY = 0x00000A00;
 const long ROSE_REJECT_AUTHENTICATION_USER_TEMPORARY_LOCKED_OUT = 0x00000B00;
 //! User locked out due to to many failed authentication attempts
 const long ROSE_REJECT_AUTHENTICATION_USER_LOCKED_OUT = 0x00000C00;
+//! The invoke requires an argument but it was not specified
+const long ROSE_REJECT_ARGUMENT_MISSING = 0x00000D00;
 
 //! ROSE Server side ROSEError answers:
 //! ROSEError Message received

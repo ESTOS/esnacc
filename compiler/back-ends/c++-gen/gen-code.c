@@ -451,6 +451,50 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 	fprintf(src, "}\n\n");
 }
 
+void PrintMayBeEmpty(FILE* hdr, FILE* src, Module* m, Type* t, TypeDef* td)
+{
+	bool bOnlyOptionals = false;
+	if (t->basicType->choiceId == BASICTYPE_SEQUENCE)
+	{
+		bOnlyOptionals = true;
+		NamedType* e = NULL;
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
+		{
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
+			if (!e->type->cxxTypeRefInfo->isPtr && e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+			{
+				bOnlyOptionals = false;
+				break;
+			}
+		}
+	}
+	else if (t->basicType->choiceId == BASICTYPE_SET)
+	{
+		bOnlyOptionals = true;
+		NamedType* e = NULL;
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.set)
+		{
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
+			if (!e->type->cxxTypeRefInfo->isPtr && e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+			{
+				bOnlyOptionals = false;
+				break;
+			}
+		}
+	}
+	if (bOnlyOptionals)
+	{
+		fprintf(hdr, "\tbool mayBeEmpty() const override;\n");
+		fprintf(src, "// [%s]\n", __FUNCTION__);
+		fprintf(src, "bool %s::mayBeEmpty() const\n", td->cxxTypeDefInfo->className);
+		fprintf(src, "{\n");
+		fprintf(src, "\treturn true;\n");
+		fprintf(src, "}\n\n");
+	}
+}
+
 void PrintCheckConstraints(FILE* hdr, FILE* src, Module* m, Type* t, TypeDef* td)
 {
 	fprintf(hdr, "\tint checkConstraints(ConstraintFailList* pConstraintFails) const override;\n");
@@ -3643,6 +3687,7 @@ static void PrintCxxSeqDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 		PrintCxxSeqDefCodeMeta_1(hdr, src, td, seq, m, e)
 #endif
 
+			//
 			PrintConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintCopyConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintDestructor(hdr, src, m, td->cxxTypeDefInfo->className);
@@ -3653,6 +3698,7 @@ static void PrintCxxSeqDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	PrintAssignmentOperator(hdr, src, m, seq, td);
 	PrintTypeName(hdr, src, td->cxxTypeDefInfo->className, 0);
 	PrintCheckConstraints(hdr, src, m, seq, td);
+	PrintMayBeEmpty(hdr, src, m, seq, td);
 
 	if (printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode)
 	{
@@ -3729,6 +3775,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	PrintTypeName(hdr, src, td->cxxTypeDefInfo->className, 0);
 	PrintClear(hdr, src, m, td, set);
 	PrintCheckConstraints(hdr, src, m, set, td);
+	PrintMayBeEmpty(hdr, src, m, set, td);
 	PrintClone(hdr, src, td);
 	PrintAssignmentOperator(hdr, src, m, set, td);
 

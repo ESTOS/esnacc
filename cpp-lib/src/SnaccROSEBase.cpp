@@ -707,7 +707,6 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEMessage* pMsg)
 
 	bool bNotifyRunningOutOfScope = OnInvokeContextCreated(&invokeContext);
 
-	std::string strError;
 	try
 	{
 		if (pInvoke->operationName && pInvoke->operationID == 0)
@@ -737,7 +736,7 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEMessage* pMsg)
 		if (lRoseResult == ROSE_REJECT_UNKNOWNOPERATION)
 			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::unrecognisedOperation, "unrecognisedOperation", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
 		else if (lRoseResult == ROSE_REJECT_MISTYPEDARGUMENT)
-			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::mistypedArgument, strError.c_str(), pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::mistypedArgument, "mistypedArgument", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
 		else if (lRoseResult == ROSE_REJECT_FUNCTIONMISSING)
 			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::resourceLimitation, "functionMissing", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
 		else if (lRoseResult == ROSE_REJECT_INVALIDSESSIONID)
@@ -752,6 +751,8 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEMessage* pMsg)
 			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::authenticationFailed, "lockedOut", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
 		else if (lRoseResult == ROSE_REJECT_AUTHENTICATION_SERVER_BUSY)
 			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::authenticationFailed, "serverBusy", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
+		else if (lRoseResult == ROSE_REJECT_ARGUMENT_MISSING)
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::mistypedArgument, "argumentMissing", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
 		else
 			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::unrecognisedOperation, "otherError", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
 	}
@@ -1331,8 +1332,15 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pRe
 
 long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument)
 {
-	if (!pInvokeMessage || !pInvokeMessage->invoke || !pInvokeMessage->invoke->argument)
+	if (!pInvokeMessage || !pInvokeMessage->invoke)
 		return ROSE_RE_DECODE_FAILED;
+	if (!pInvokeMessage->invoke->argument)
+	{
+		if(argument->mayBeEmpty())
+			return ROSE_NOERROR;
+		else
+			return ROSE_REJECT_ARGUMENT_MISSING;
+	}
 
 	long lRoseResult = ROSE_NOERROR;
 
