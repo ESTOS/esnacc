@@ -583,6 +583,8 @@ static int PrintJsonDocOperation(FILE* src, Module* mod, ValueDef* vd)
 			if (comment.i64Deprecated > 1)
 				fprintf(src, "\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
 			fprintf(src, "\t\t\t\"private\" : %d,\n", comment.iPrivate);
+			int opid = vd->value->basicValue->a.integer;
+			fprintf(src, "\t\t\t\"operationid\" : %d,\n", opid);
 		}
 
 		fprintf(src, "\t\t\t\"arg\" : \"%s\"", pszArgument);
