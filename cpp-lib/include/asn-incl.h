@@ -300,6 +300,16 @@ public:
 		return 0;
 	}
 
+	/* In case a sequence only contains optional parameters (or is empty)
+	 * the function is overwritten an returns true
+	 * This allows the stub to verify whether an argument has to get filled
+	 * or may be provided empty on an invoke
+	 */
+	virtual bool mayBeEmpty() const
+	{
+		return false;
+	}
+
 	virtual void BDec(const AsnBuf& b, AsnLen& bytesDecoded) = 0;
 	virtual AsnLen BEnc(AsnBuf& b) const = 0;
 
@@ -2174,6 +2184,12 @@ public:
 	const char* typeName() const override
 	{
 		return "AsnExtension";
+	}
+
+	/* An array may be empty */
+	virtual bool mayBeEmpty() const override
+	{
+		return true;
 	}
 
 	void operator=(const AsnExtension& ext)

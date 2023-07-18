@@ -451,6 +451,50 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 	fprintf(src, "}\n\n");
 }
 
+void PrintMayBeEmpty(FILE* hdr, FILE* src, Module* m, Type* t, TypeDef* td)
+{
+	bool bOnlyOptionals = false;
+	if (t->basicType->choiceId == BASICTYPE_SEQUENCE)
+	{
+		bOnlyOptionals = true;
+		NamedType* e = NULL;
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
+		{
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
+			if (!e->type->cxxTypeRefInfo->isPtr && e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+			{
+				bOnlyOptionals = false;
+				break;
+			}
+		}
+	}
+	else if (t->basicType->choiceId == BASICTYPE_SET)
+	{
+		bOnlyOptionals = true;
+		NamedType* e = NULL;
+		FOR_EACH_LIST_ELMT(e, t->basicType->a.set)
+		{
+			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
+				continue;
+			if (!e->type->cxxTypeRefInfo->isPtr && e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+			{
+				bOnlyOptionals = false;
+				break;
+			}
+		}
+	}
+	if (bOnlyOptionals)
+	{
+		fprintf(hdr, "\tbool mayBeEmpty() const override;\n");
+		fprintf(src, "// [%s]\n", __FUNCTION__);
+		fprintf(src, "bool %s::mayBeEmpty() const\n", td->cxxTypeDefInfo->className);
+		fprintf(src, "{\n");
+		fprintf(src, "\treturn true;\n");
+		fprintf(src, "}\n\n");
+	}
+}
+
 void PrintCheckConstraints(FILE* hdr, FILE* src, Module* m, Type* t, TypeDef* td)
 {
 	fprintf(hdr, "\tint checkConstraints(ConstraintFailList* pConstraintFails) const override;\n");
@@ -1050,9 +1094,9 @@ static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd,
 			// there is a result -> it is a Funktion
 			// Header
 			if (pszError)
-				fprintf(hdr, "\tvirtual SnaccInvokeResult OnInvoke_%s(%s* argument, %s* result, %s* error, SnaccInvokeContext* cxt) { return returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
+				fprintf(hdr, "\tvirtual InvokeResult OnInvoke_%s(%s* argument, %s* result, %s* error, SnaccInvokeContext* cxt) { return InvokeResult::returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
 			else
-				fprintf(hdr, "\tvirtual SnaccInvokeResult OnInvoke_%s(%s* argument, %s* result, SnaccInvokeContext* cxt) { return returnReject; }\n", vd->definedName, pszArgument, pszResult);
+				fprintf(hdr, "\tvirtual InvokeResult OnInvoke_%s(%s* argument, %s* result, SnaccInvokeContext* cxt) { return InvokeResult::returnReject; }\n", vd->definedName, pszArgument, pszResult);
 		}
 		else if (!pszResult && bEvents)
 		{
@@ -1094,20 +1138,9 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 			if (pszError)
 				fprintf(src, "\t\t\t%s error;\n", pszError);
 
-			fprintf(src, "\t\t\tif (pinvoke->argument)\n");
-			fprintf(src, "\t\t\t{\n");
-			fprintf(src, "\t\t\t\tif (pinvoke->argument->anyBuf)\n");
-			fprintf(src, "\t\t\t\t{\n");
-			fprintf(src, "\t\t\t\t\tAsnLen len;\n");
-			fprintf(src, "\t\t\t\t\targument.BDec(*pinvoke->argument->anyBuf, len);\n");
-			fprintf(src, "\t\t\t\t}\n");
-			fprintf(src, "\t\t\t\telse if (pinvoke->argument->jsonBuf)\n");
-			fprintf(src, "\t\t\t\t\targument.JDec(*pinvoke->argument->jsonBuf);\n");
-			fprintf(src, "\t\t\t}\n");
-			fprintf(src, "\n");
-			fprintf(src, "\t\t\tif(pBase->GetLogLevel(false))\n");
-			fprintf(src, "\t\t\t\tpBase->PrintAsnType(false, &argument, pinvoke);\n");
-			fprintf(src, "\n");
+			fprintf(src, "\n\t\t\tlRoseResult = pBase->DecodeInvoke(pMsg, &argument);\n");
+			fprintf(src, "\t\t\tif (lRoseResult != ROSE_NOERROR)\n");
+			fprintf(src, "\t\t\t\tbreak;\n\n");
 
 			if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
 			{
@@ -1124,20 +1157,14 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 				else
 					fprintf(src, "\t\t\tswitch (pInt->OnInvoke_%s(&argument, &result, cxt))\n", vd->definedName);
 				fprintf(src, "\t\t\t{\n");
-				fprintf(src, "\t\t\tcase returnResult:\n");
-				fprintf(src, "\t\t\t\tif(pBase->GetLogLevel(true))\n");
-				fprintf(src, "\t\t\t\t\tpBase->PrintAsnType(true, &result, pinvoke);\n");
-				fprintf(src, "\t\t\t\tlRoseResult = pBase->SendResult(pinvoke->invokeID, &result, pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);\n");
+				fprintf(src, "\t\t\tcase InvokeResult::returnResult:\n");
+				fprintf(src, "\t\t\t\tlRoseResult = pBase->SendResult(pMsg->invoke, &result);\n");
 				fprintf(src, "\t\t\t\tbreak;\n");
-				fprintf(src, "\t\t\tcase returnError:\n");
+				fprintf(src, "\t\t\tcase InvokeResult::returnError:\n");
 				if (pszError)
-				{
-					fprintf(src, "\t\t\t\tif(pBase->GetLogLevel(true))\n");
-					fprintf(src, "\t\t\t\t\tpBase->PrintAsnType(true, &error, pinvoke);\n");
-					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pinvoke->invokeID, &error, pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);\n");
-				}
+					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pMsg->invoke, &error);\n");
 				else
-					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pinvoke->invokeID, NULL, pinvoke->sessionID ? pinvoke->sessionID->c_str() : 0);\n");
+					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pMsg->invoke, NULL);\n");
 
 				fprintf(src, "\t\t\t\tbreak;\n");
 				fprintf(src, "\t\t\tdefault:\n");
@@ -1280,13 +1307,13 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			{
 				if (pszError)
 				{
-					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout = -1, SnaccInvokeContext* cxt = 0);\n", vd->definedName, pszArgument, pszResult, pszError);
-					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout, SnaccInvokeContext* cxt)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult, pszError);
+					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout = -1, SnaccInvokeContext* pCtx = 0);\n", vd->definedName, pszArgument, pszResult, pszError);
+					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout, SnaccInvokeContext* pCtx)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult, pszError);
 				}
 				else
 				{
-					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, int iTimeout = -1, SnaccInvokeContext* cxt = 0);\n", vd->definedName, pszArgument, pszResult);
-					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, int iTimeout, SnaccInvokeContext* cxt)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult);
+					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, int iTimeout = -1, SnaccInvokeContext* pCtx = 0);\n", vd->definedName, pszArgument, pszResult);
+					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, int iTimeout, SnaccInvokeContext* pCtx)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult);
 				}
 			}
 			else
@@ -1296,8 +1323,6 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			}
 
 			fprintf(src, "{\n");
-			fprintf(src, "\tlong lRoseResult = ROSE_NOERROR;\n\n");
-
 			fprintf(src, "\tROSEInvoke InvokeMsg;\n");
 			if (pszResult)
 				fprintf(src, "\tInvokeMsg.invokeID = m_pSB->GetNextInvokeID();\n");
@@ -1309,44 +1334,29 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			fprintf(src, "\tInvokeMsg.argument->value = argument;\n\n");
 
 			if (pszResult)
-			{
-				fprintf(src, "\tROSEResult* pResultMsg = NULL;\n");
-				fprintf(src, "\tROSEError* pErrorMsg = NULL;\n\n");
-			}
-
-			fprintf(src, "\tif(m_pSB->GetLogLevel(true))\n");
-			fprintf(src, "\t\tm_pSB->PrintAsnType(true, argument, &InvokeMsg);\n\n");
+				fprintf(src, "\tROSEMessage* pResponseMsg = NULL;\n");
 
 			if (IsDeprecatedFlaggedOperation(m, vd->definedName))
 			{
 				fprintf(src, "\t// This method has been flagged deprecated\n");
 				asnoperationcomment comment;
 				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-				fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out%s);\n\n", comment.i64Deprecated, m->moduleName, vd->definedName, pszResult ? ", cxt" : "");
+				fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out%s);\n\n", comment.i64Deprecated, m->moduleName, vd->definedName, pszResult ? ", pCtx" : "");
 			}
-
-			if (pszResult)
-				fprintf(src, "\tlRoseResult = m_pSB->SendInvoke(&InvokeMsg, &pResultMsg, &pErrorMsg, iTimeout, cxt);\n");
-			else
-				fprintf(src, "\tlRoseResult = m_pSB->SendEvent(&InvokeMsg);\n");
-
-			fprintf(src, "\t//prevent autodelete of argument\n");
-			fprintf(src, "\tInvokeMsg.argument->value = NULL;\n");
 
 			if (pszResult)
 			{
-				fprintf(src, "\t//decode result\n");
-				if (pszError)
-					fprintf(src, "\tlRoseResult = m_pSB->HandleInvokeResult(lRoseResult, &InvokeMsg, pResultMsg, pErrorMsg, result, error, cxt);\n");
-				else
-					fprintf(src, "\tlRoseResult = m_pSB->HandleInvokeResult(lRoseResult, &InvokeMsg, pResultMsg, pErrorMsg, result, NULL, cxt);\n");
-				fprintf(src, "\tif (pResultMsg)\n");
-				fprintf(src, "\t\tdelete pResultMsg;\n");
-				fprintf(src, "\tif (pErrorMsg)\n");
-				fprintf(src, "\t\tdelete pErrorMsg;\n");
+				fprintf(src, "\tlong lRoseResult = m_pSB->SendInvoke(&InvokeMsg, &pResponseMsg, iTimeout, pCtx);\n");
+				fprintf(src, "\tlRoseResult = m_pSB->HandleInvokeResult(lRoseResult, pResponseMsg, result, %s, pCtx);\n", pszError ? "error" : "nullptr");
 			}
+			else
+				fprintf(src, "\tlong lRoseResult = m_pSB->SendEvent(&InvokeMsg);\n");
+
+			fprintf(src, "\n\t// prevent auto deletion of argument\n");
+			fprintf(src, "\tInvokeMsg.argument->value = nullptr;\n\n");
 
 			fprintf(src, "\treturn lRoseResult;\n");
+
 			fprintf(src, "}\n");
 			fprintf(src, "\n");
 		}
@@ -3677,6 +3687,7 @@ static void PrintCxxSeqDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 		PrintCxxSeqDefCodeMeta_1(hdr, src, td, seq, m, e)
 #endif
 
+			//
 			PrintConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintCopyConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintDestructor(hdr, src, m, td->cxxTypeDefInfo->className);
@@ -3687,6 +3698,7 @@ static void PrintCxxSeqDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	PrintAssignmentOperator(hdr, src, m, seq, td);
 	PrintTypeName(hdr, src, td->cxxTypeDefInfo->className, 0);
 	PrintCheckConstraints(hdr, src, m, seq, td);
+	PrintMayBeEmpty(hdr, src, m, seq, td);
 
 	if (printEncodersG || printDecodersG || printJSONEncDecG || printJSONEncDecG || genPERCode)
 	{
@@ -3763,6 +3775,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	PrintTypeName(hdr, src, td->cxxTypeDefInfo->className, 0);
 	PrintClear(hdr, src, m, td, set);
 	PrintCheckConstraints(hdr, src, m, set, td);
+	PrintMayBeEmpty(hdr, src, m, set, td);
 	PrintClone(hdr, src, td);
 	PrintAssignmentOperator(hdr, src, m, set, td);
 
@@ -4692,13 +4705,13 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 
 	// generate the InvokeHandler
 	fprintf(hdr, "\t// The main Invoke Dispatcher\n");
-	fprintf(hdr, "\tstatic long OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt);\n", m->ROSEClassName);
-	fprintf(src, "long %s::OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt)\n", m->ROSEClassName, m->ROSEClassName);
+	fprintf(hdr, "\tstatic long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt);\n", m->ROSEClassName);
+	fprintf(src, "long %s::OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt)\n", m->ROSEClassName, m->ROSEClassName);
 	fprintf(src, "{\n");
 	fprintf(src, "\tlong lRoseResult = ROSE_REJECT_UNKNOWNOPERATION;\n");
 	fprintf(src, "\n");
 	fprintf(src, "\t#ifndef ROSENOINVOKEDISPATCH\n");
-	fprintf(src, "\tswitch (pinvoke->operationID)\n");
+	fprintf(src, "\tswitch (pMsg->invoke->operationID)\n");
 	fprintf(src, "\t{\n");
 
 	// Rose Interface class

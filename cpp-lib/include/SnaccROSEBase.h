@@ -113,18 +113,8 @@ public:
 	void* pCustom;
 };
 
-enum class SnaccTransportEncoding
-{
-	// Transport Encoding Basic Encoding Rules (Binary)
-	BER = 0,
-	// Transport Encoding JSON (Text)
-	JSON = 1,
-	// Transport Encoding JSON (Text), but without a framing header (J0000XXX{...})
-	JSON_NO_HEADING = 2
-};
-
-#define SNACC_TE_BER SnaccTransportEncoding::BER
-#define SNACC_TE_JSON SnaccTransportEncoding::JSON
+#define SNACC_TE_BER SNACC::TransportEncoding::BER
+#define SNACC_TE_JSON SNACC::TransportEncoding::JSON
 
 /*! SnaccROSEBase implements the ROSE (ASN.1) protocol.
 
@@ -195,41 +185,39 @@ public:
 		This is an alternative to overriding SendBinaryDataBlock */
 	void SetSnaccROSETransport(ISnaccROSETransport* pTransport);
 
-	/* Log output.
-		Override to print the log data out
-		All messages (in and out will be decoded to the logger */
-	virtual void PrintToLog(const std::string& /* strOutput*/)
-	{
-		return;
-	}
+	/*! Enables or disables file logging for this instance of the SnaccROSEBase.
+	 *  Call this function with filepath to enable logging from the library side
+	 *  Call this function with a nullpointer to disable logging from the library side
+	 *  Furthermore the call to GetLogLevel needs to provide the proper loglevel (what and how to write it)
+	 *
+	 *  szPath - the path to write to, also enabled logging, or a nullpointer to disable logging
+	 *  bAppend - true to append data to an existing logfile, or false to overwrite any existing logfile
+	 *  bFlushEveryWrite - true flushes every write operation (ideal for debugging), false to let the os decide when to flush
+	 *
+	 *  returns NO_ERROR on success (logfile opened, logfile closed, nothing to do) or an error value */
+	int ConfigureFileLogging(const wchar_t* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
 
-	/* Log level 0 oder 1
-		bout=true for outgoing messages,
-		bout=false for incoming messages,
-		Override to set a different log level */
-	virtual long GetErrorLogLevel()
-	{
-		return 0;
-	}
+	/* Retrieve the log level - do we need to log something */
+	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;
 
-	/* Log Errors
-		Override to print Errors
+	/*! Writes JSON encoded log messages to the log file
+		bOutbound = true in case the log entry is related to an outbound message
+		bError = true in case this is an error message
+		szData = the JSON (!) encoded log message. (!) The message is no necessarily null terminated (!)
+		length = length of the szData (as it is not necessarily null terminated respect the length!)
 	*/
-	virtual void PrintToErrorLog(const std::string& /* strOutput*/)
-	{
-		return;
-	}
+	virtual void PrintJSONToLog(const bool bOutbound, const bool bError, const char* szData, const size_t length = 0);
 
 	/* Set the Transport Encoding to be used */
-	bool SetTransportEncoding(const SnaccTransportEncoding transportEncoding);
-	SnaccTransportEncoding GetTransportEncoding() const;
+	bool SetTransportEncoding(const SNACC::TransportEncoding transportEncoding);
+	SNACC::TransportEncoding GetTransportEncoding() const;
 
 	/* Send a Result Message. */
 	virtual long SendResult(SNACC::ROSEResult* presult);
 
 	/* Send a Result Message.
 		Override from SnaccRoseSender */
-	virtual long SendResult(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0) override;
+	virtual long SendResult(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, const wchar_t* szSessionID = 0) override;
 
 	/* Send a Reject Message. */
 	long SendReject(SNACC::ROSEReject* preject);
@@ -242,42 +230,70 @@ public:
 
 	/* Send a Error Message.
 		Override from SnaccRoseSender */
-	virtual long SendError(int invokeID, SNACC::AsnType* value, const wchar_t* szSessionID = 0) override;
+	virtual long SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID = 0) override;
 
 	/*! Increment invoke counter
 		Override from SnaccRoseSender*/
 	virtual long GetNextInvokeID() override;
 
-	/* Log level 0 oder 1
-		bout=true for outgoing messages,
-		bout=false for incoming messages,
-		Override to set a different log level
-		Override from SnaccRoseSender*/
-	virtual long GetLogLevel(bool /*bOut*/) override
-	{
-		return 0;
-	}
+	/**
+	 * Print the object pType to the log output
+	 *
+	 * bOutbound = true if the data is sent, or false if it was received
+	 * encoding = the encoding that will be used for sending or was detected while receiving
+	 * szData = the plain transport data, pretty much uninterpreted (only the length heading is removed)
+	 * size = the size of the plain transport data
+	 * pMSg = the asn1 message that was encoded or decoded from the transport payload
+	 * pParsedValue = only for inboud data, the parsed json object (required if the logging shall get pretty printed, saves another parsing of the payload), only available inbound and if the transport is using json
+	 */
+	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue) override;
 
-	/* used for printing alle the messages
-		Override from SnaccRoseSender*/
-	virtual void PrintAsnType(bool bOutbound, SNACC::AsnType* pType, SNACC::ROSEInvoke* pInvoke) override;
+	/**
+	 * An invoke that is send to the other side. Should only be called by the ROSE stub itself generated files
+	 *
+	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
+	 * pResponse - the response payload (is handled afterwards in the HandleInvokeResult method
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
+	 * pCtx - contextual data for the invoke
+	 */
+	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) override;
 
-	// protected:
-	/** The following function should only be called by the generated ROSE stub */
-	/* Invoke a function.
-		ppresult or pperror will be filled on return
-		caller must delete returned result!
-		returns NO_ERROR for Result
-		iTimeout: Waiting time for the result. in msec
-		iTimeout : -1 default waiting time m_lMaxInvokeWait
-		iTimeout : 0 no waiting time
-		Override from SnaccRoseSender
-	*/
-	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEResult** ppresult, SNACC::ROSEError** pperror, int iTimeout = -1, SnaccInvokeContext* cxt = nullptr) override;
+	/**
+	 * Handles the response payload of the SendInvoke method. Retrieves the result or error from the response
+	 *
+	 * lRoseResult - the result of the SendInvoke method
+	 * pResponseMsg - the response message as provided by the SendInvoke method
+	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
+	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
+	 * pCtx - contextual data for the invoke
+	 */
+	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
 
-	/* Send a Event Message.
-		Override from SnaccRoseSender*/
+	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
+	 *
+	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
+	 * pCtx - contextual data for the invoke
+	 */
 	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt = nullptr) override;
+
+	/**
+	 * Helper method that retrieves the proper object (result, error, reject) from the repsonse Message
+	 *
+	 * pResponseMsg - the response message as provided by the SendInvoke method
+	 * ppResult - filled with the result object in case we have received a result
+	 * ppError - filled with the error object in case we have received an error
+	 * pCtx - contextual data from the invoke
+	 */
+	static long DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::ROSEResult** ppResult, SNACC::ROSEError** ppError, SnaccInvokeContext* pCtx);
+
+	/**
+	 * Decodes an invoke and properly handles logging for it
+	 *
+	 * pInvokeMessage - the invoke message as provided from the other side
+	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
+	 */
+	long DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument);
 
 protected:
 	// ASN prefix with length prefix to build the JSON message
@@ -286,15 +302,12 @@ protected:
 	/*! Die functions and events.
 		The implementation of this functions is contained in the generated code from the
 		esnacc. */
-	virtual long OnInvoke(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt) = 0;
+	virtual long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccInvokeContext* cxt) = 0;
 
 	/* Function is called when a received data Packet cannot be decoded (invalid Rose Message) */
 	virtual void OnRoseDecodeError(const char* /*lpBytes*/, unsigned long /*lSize*/, const std::string& /*strWhat */)
 	{
 	}
-
-	/*! Add the invokeid and operationid the the log stream */
-	void AddInvokeHeaderLog(std::stringstream& strOut, SNACC::ROSEInvoke* pInvoke);
 
 	/*! The decoded message.
 		pmessage is new allocated and must be deleted inside this function.
@@ -326,7 +339,7 @@ private:
 		These are called from the OnROSEMessage.
 		Do not dete the parameters. The functions are called
 		before the CompleteOperation */
-	virtual void OnInvokeMessage(SNACC::ROSEInvoke* pinvoke);
+	virtual void OnInvokeMessage(SNACC::ROSEMessage* pMsg);
 	virtual void OnResultMessage(SNACC::ROSEResult* presult);
 	virtual void OnErrorMessage(SNACC::ROSEError* perror);
 	virtual void OnRejectMessage(SNACC::ROSEReject* preject);
@@ -339,6 +352,14 @@ private:
 	long m_lInvokeCounter = 0;
 	/*! The guard for m_bProcessingAllowed and SnaccROSEPendingOperationMap */
 	std::mutex m_InternalProtectMutex;
+	/*! If set, the open file where we append log data to. The pointer is created with ConfigureFileLogging() */
+	FILE* m_pAsnLogFile = nullptr;
+	/*! true if the logfile already contains data, false if not */
+	bool m_bAsnLogFileContainsData = false;
+	/*! true if every write to the logger shall get flushed */
+	bool m_bFlushEveryWrite = false;
+	/*! Mutex to access the logging function (serialize multiple threads to it) */
+	std::mutex m_mtxLogFile;
 
 	void AddPendingOperation(int invokeID, SnaccROSEPendingOperation* pOperation);
 	void RemovePendingOperation(int invokeID);
@@ -356,10 +377,13 @@ private:
 	ISnaccROSETransport* m_pTransport = NULL;
 
 	// Transport Encoding to be used
-	SnaccTransportEncoding m_eTransportEncoding = SnaccTransportEncoding::BER;
+	SNACC::TransportEncoding m_eTransportEncoding = SNACC::TransportEncoding::BER;
 
 	// Get Length of JSON Header J1235{} )
 	int GetJsonHeaderLen(const char* lpBytes, unsigned long iLength);
+
+	// Encodes a value based on the transportencoding and loglevel
+	std::string GetEncoded(const SNACC::TransportEncoding encoding, SNACC::AsnType* pValue, unsigned long* pUlSize = nullptr);
 };
 
 #endif //_SnaccROSEBase_h_

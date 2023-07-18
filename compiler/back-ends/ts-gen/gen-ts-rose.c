@@ -112,7 +112,7 @@ void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
 	fprintf(src, "import * as Converter from \"./%s_Converter\";\n", mod->moduleName);
 
-	PrintTSImports(src, mods, mod, true, false, true);
+	PrintTSImports(src, mods, mod, true, false, false);
 }
 
 void PrintTSROSETypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td)
