@@ -14,6 +14,7 @@
 
 #include "asn-config.h"
 #include "asn-buf.h"
+#include "snaccexcept.h"
 #include "../jsoncpp/include/json.h"
 
 #ifdef _WIN32
@@ -315,10 +316,11 @@ public:
 
 	virtual void JEnc(SJson::Value& b) const
 	{
+		throw EXCEPT("If you want to use JSON encoding you need to create the structures with JSON encoders/decoders. Check the compiler command line switches for -j", PARAMETER_ERROR);
 	}
 	virtual bool JDec(const SJson::Value& b)
 	{
-		return true;
+		throw EXCEPT("If you want to use JSON encoding you need to create the structures with JSON encoders/decoders. Check the compiler command line switches for -j", PARAMETER_ERROR);
 	}
 
 	virtual void PDec(AsnBufBits& b, AsnLen& bitsDecoded)
@@ -2202,12 +2204,23 @@ public:
 		return 0;
 	}
 
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override
+	virtual void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override
 	{
 	}
-	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override
+	
+	virtual void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override
 	{
 	}
+	
+	virtual void JEnc(SJson::Value& b) const override
+	{
+	}
+	
+	virtual bool JDec(const SJson::Value& b) override
+	{
+		return true;
+	}
+
 	AsnLen BEnc(AsnBuf& b) const override;
 	AsnLen PEnc(AsnBufBits& b) const override;
 

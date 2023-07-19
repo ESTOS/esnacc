@@ -50,6 +50,13 @@ public:
 	void BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded /*, s env*/);
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded /*, s env*/) override;
+	virtual void JEnc(SJson::Value& b) const override
+	{
+	}
+	virtual bool JDec(const SJson::Value& b) override
+	{
+		return true;
+	}
 
 	AsnLen PEnc(AsnBufBits& b) const override;
 
@@ -93,6 +100,13 @@ public:
 
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded /*, s env*/) override;
+	virtual void JEnc(SJson::Value& b) const override
+	{
+	}
+	virtual bool JDec(const SJson::Value& b) override
+	{
+		return true;
+	}
 
 	AsnLen PEnc(AsnBufBits& b) const override;
 
