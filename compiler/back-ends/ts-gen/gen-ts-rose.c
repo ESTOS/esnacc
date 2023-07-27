@@ -234,17 +234,18 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 				fprintf(src, " * -\n");
 			fprintf(src, " *\n");
 			asnsequencecomment argumentComment;
-			GetSequenceComment_UTF8(m->moduleName, pszArgument, &argumentComment);
-			fprintf(src, " * @param argument -");
-
-			char* szComment = getNakedCommentDupped(argumentComment.szShort);
-			if (szComment)
+			if (GetSequenceComment_UTF8(m->moduleName, pszArgument, &argumentComment))
 			{
-				if (strlen(szComment))
-					fprintf(src, " %s", szComment);
-				free(szComment);
+				fprintf(src, " * @param argument -");
+				char* szComment = getNakedCommentDupped(argumentComment.szShort);
+				if (szComment)
+				{
+					if (strlen(szComment))
+						fprintf(src, " %s", szComment);
+					free(szComment);
+				}
+				fprintf(src, "\n");
 			}
-			fprintf(src, "\n");
 			fprintf(src, " * @param invokeContext - Invokecontext from the asn.1 lib (containing invoke related data)\n");
 			if (pszResult)
 				fprintf(src, " * @returns - %s on success, %s on error or undefined if the function is not implemented\n", pszResult, pszError);

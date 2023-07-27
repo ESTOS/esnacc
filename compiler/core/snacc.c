@@ -1067,6 +1067,8 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 
 	free(allMods);
 
+	printf("Now exiting...\n");
+
 	// getchar();
 	return 0;
 } /* end main */

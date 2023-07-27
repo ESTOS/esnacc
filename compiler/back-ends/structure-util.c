@@ -554,13 +554,12 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 				AsnListNode* curr = td->type->basicType->a.sequence->curr;
 				FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
 				{
+					if (!e->fieldName)
+						continue;
 					if (strcmp(e->fieldName, szElement) != 0)
 						continue;
-					if (e->type->optional)
-					{
-						bReturn = true;
-						break;
-					}
+					bReturn = e->type->optional;
+					break;
 				}
 				if (!td->type->basicType->a.sequence)
 				{

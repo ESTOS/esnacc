@@ -1138,55 +1138,38 @@ void Print_JSON_DecoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, Typ
 	fprintf(src, "%st = %s_Converter.%s_Converter.fromJSON(s, errors, newContext, undefined, optional);\n", szIndent, szNameSpace, szClassName);
 }
 
+void Print_JSON_EncoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
+{
+	fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
+	Module* mod = GetImportModuleRefByClassName(td->type->basicType->a.importTypeRef->link->definedName, mods, m);
+	const char* szNameSpace = GetNameSpace(mod);
+	fprintf(src, "\t\tconst t = %s_Converter.%s_Converter.toJSON(s, errors, newContext, name);\n", szNameSpace, td->type->basicType->a.importTypeRef->link->definedName);
+}
+
 void Print_BER_DecoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs, const char* szIndent)
 {
-	fprintf(src, "\n%s// [%s]\n", szIndent, __FUNCTION__);
+	fprintf(src, "%s// [%s]\n", szIndent, __FUNCTION__);
 	const char* szClassName = td->type->basicType->a.importTypeRef->link->definedName;
 	Module* mod = GetImportModuleRefByClassName(szClassName, mods, m);
 	const char* szNameSpace = GetNameSpace(mod);
-	fprintf(src, "%st = %s_Converter.%s_Converter.fromBER(s, errors, newContext, name, optional);\n", szIndent, szNameSpace, szClassName);
+	fprintf(src, "%sconst t = %s_Converter.%s_Converter.fromBER(s, errors, newContext, name, optional);\n", szIndent, szNameSpace, szClassName);
 }
 
 void Print_JSON_DecoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs, const char* szIndent)
 {
-	// Seems to be unused
-	assert(FALSE);
-	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
-
 	fprintf(src, "\n%s// [%s]\n", szIndent, __FUNCTION__);
 	fprintf(src, "%st = %s_Converter.fromJSON(s, errors, newContext, name, optional);\n", szIndent, td->type->basicType->a.localTypeRef->link->definedName);
 }
 
 void Print_BER_DecoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs, const char* szIndent)
 {
-	// Seems to be unused
-	assert(FALSE);
-	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
-
 	fprintf(src, "\n%s// [%s]\n", szIndent, __FUNCTION__);
 	fprintf(src, "%st = %s_Converter.fromJSON(s, errors, newContext, name, optional);\n", szIndent, td->type->basicType->a.localTypeRef->link->definedName);
 }
 
-void Print_JSON_EncoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
-{
-	// Seems to be unused
-	assert(FALSE);
-	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
-
-	fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
-	Module* mod = GetImportModuleRefByClassName(td->type->basicType->a.importTypeRef->link->definedName, mods, m);
-	const char* szNameSpace = GetNameSpace(mod);
-	fprintf(src, "\t\t%s_Converter.%s_Converter.toJSON(s, t, errors, newContext, name);\n", szNameSpace, td->type->basicType->a.importTypeRef->link->definedName);
-}
-
 void Print_BER_EncoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
 {
-	// Seems to be unused
-	assert(FALSE);
-	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
-
-	fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
-
+	fprintf(src, "\n\t\t// [%s]\n", __FUNCTION__);
 	const char* szElementName = td->type->basicType->a.importTypeRef->link->definedName;
 	Module* mod = GetImportModuleRefByClassName(szElementName, mods, m);
 	const char* szNameSpace = GetNameSpace(mod);
@@ -1201,22 +1184,14 @@ void Print_BER_EncoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, Type
 
 void Print_JSON_EncoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
 {
-	// Seems to be unused
-	assert(FALSE);
-	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
-
 	fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
 
-	fprintf(src, "\t\t%s_Converter.toJSON(s, t, errors, newContext, name);\n", td->type->basicType->a.importTypeRef->link->definedName);
+	fprintf(src, "\t\tconst t = %s_Converter.toJSON(s, errors, newContext, name);\n", td->type->basicType->a.importTypeRef->link->definedName);
 }
 
 void Print_BER_EncoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
 {
-	// Seems to be unused
-	assert(FALSE);
-	snacc_exit_now(__FUNCTION__, "Not handled - needs implementation");
-
-	fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
+	fprintf(src, "\n\t\t// [%s]\n", __FUNCTION__);
 
 	const char* szElementName = td->type->basicType->a.importTypeRef->link->definedName;
 
@@ -1380,7 +1355,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 
 			if (type == BASICTYPE_SEQUENCEOF || type == BASICTYPE_SETOF)
 				fprintf(src, "\t\tconst t = [] as %s.%s;\n\n", szNameSpace, szConverted);
-			else
+			else if (type != BASICTYPE_IMPORTTYPEREF && type != BASICTYPE_LOCALTYPEREF)
 				fprintf(src, "\t\tconst t = {} as %s.%s & INamedType;\n\n", szNameSpace, szConverted);
 
 			if (strcmp(szConverted, "AsnOptionalParam") == 0)
