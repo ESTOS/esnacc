@@ -45,7 +45,7 @@
             "reAttach": true,
             "keepProfileChanges": true,
             "name": "Firefox http://",
-            "url": "http://${env:COMPUTERNAME}.${env:USERDNSDOMAIN}",
+            "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}",
             "profile": "default",
             "skipFiles": [
@@ -64,7 +64,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Chrome http://",
-            "url": "http://localhost",
+            "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}",
             "sourceMaps": true,
             "trace": true
@@ -73,7 +73,7 @@
             "type": "msedge",
             "request": "launch",
             "name": "Edge http://",
-            "url": "http://localhost",
+            "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}",
             "sourceMaps": true,
             "trace": true

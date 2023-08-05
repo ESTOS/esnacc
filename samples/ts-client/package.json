@@ -11,6 +11,8 @@
 	"scripts": {
 		"build:local": "webpack -p",
 		"start": "webpack-dev-server",
+		"start-http": "webpack-dev-server --open",
+		"start-https": "webpack-dev-server --open --https",
 		"check": "npx madge --circular --extensions ts ./",
 		"lint": "eslint --cache --fix -c .eslintrc.precommit.js src/**/*.{js,ts,tsx}",
 		"lintclear": "del /s .eslintcache",
