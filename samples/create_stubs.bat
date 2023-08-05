@@ -21,7 +21,7 @@ set FILES=%CD%\interface\*.asn1
 
 rem Building browser client stubs...
 echo Building browser client stubs...
-PUSHD ts-microservice\client\src\stub
+PUSHD ts-client\src\stub
 SET COMMAND=-JT -j -RTS_CLIENT_BROWSER %FILES%
 echo %COMPILER% %COMMAND%
 %COMPILER% %COMMAND%
@@ -31,7 +31,7 @@ POPD
 
 rem Building node server stubs...
 echo Building node server stubs...
-PUSHD ts-microservice\server\src\stub
+PUSHD ts-server\src\stub
 SET COMMAND=-JT -j -RTS_SERVER %FILES%
 echo %COMPILER% %COMMAND%
 %COMPILER% %COMMAND%
