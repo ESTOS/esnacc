@@ -1155,18 +1155,6 @@ void Print_BER_DecoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, Type
 	fprintf(src, "%sconst t = %s_Converter.%s_Converter.fromBER(s, errors, newContext, name, optional);\n", szIndent, szNameSpace, szClassName);
 }
 
-void Print_JSON_DecoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs, const char* szIndent)
-{
-	fprintf(src, "\n%s// [%s]\n", szIndent, __FUNCTION__);
-	fprintf(src, "%st = %s_Converter.fromJSON(s, errors, newContext, name, optional);\n", szIndent, td->type->basicType->a.localTypeRef->link->definedName);
-}
-
-void Print_BER_DecoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs, const char* szIndent)
-{
-	fprintf(src, "\n%s// [%s]\n", szIndent, __FUNCTION__);
-	fprintf(src, "%st = %s_Converter.fromJSON(s, errors, newContext, name, optional);\n", szIndent, td->type->basicType->a.localTypeRef->link->definedName);
-}
-
 void Print_BER_EncoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
 {
 	fprintf(src, "\n\t\t// [%s]\n", __FUNCTION__);
@@ -1182,11 +1170,22 @@ void Print_BER_EncoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, Type
 	fprintf(src, "\t\t}\n");
 }
 
+void Print_JSON_DecoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs, const char* szIndent)
+{
+	fprintf(src, "\n%s// [%s]\n", szIndent, __FUNCTION__);
+	fprintf(src, "%st = %s_Converter.fromJSON(s, errors, newContext, name, optional);\n", szIndent, td->type->basicType->a.localTypeRef->link->definedName);
+}
+
 void Print_JSON_EncoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
 {
 	fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
-
 	fprintf(src, "\t\tconst t = %s_Converter.toJSON(s, errors, newContext, name);\n", td->type->basicType->a.importTypeRef->link->definedName);
+}
+
+void Print_BER_DecoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs, const char* szIndent)
+{
+	fprintf(src, "\n%s// [%s]\n", szIndent, __FUNCTION__);
+	fprintf(src, "%st = %s_Converter.fromBER(s, errors, newContext, name, optional);\n", szIndent, td->type->basicType->a.localTypeRef->link->definedName);
 }
 
 void Print_BER_EncoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs)
