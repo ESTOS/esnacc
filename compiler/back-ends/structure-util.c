@@ -474,12 +474,7 @@ bool IsDeprecatedFlaggedModule(Module* mod)
 	if (GetModuleComment_UTF8(mod->moduleName, &comment))
 	{
 		if (comment.i64Deprecated)
-		{
-			if (gi64NoDeprecatedSymbols)
-				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
-			else
-				return true;
-		}
+			return true;
 	}
 
 	return false;
@@ -502,12 +497,7 @@ bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szEle
 	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment))
 	{
 		if (comment.i64Deprecated)
-		{
-			if (gi64NoDeprecatedSymbols)
-				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
-			else
-				return true;
-		}
+			return true;
 	}
 
 	return false;
@@ -583,12 +573,7 @@ bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName)
 	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment))
 	{
 		if (comment.i64Deprecated)
-		{
-			if (gi64NoDeprecatedSymbols)
-				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
-			else
-				return true;
-		}
+			return true;
 	}
 	return false;
 }
@@ -611,12 +596,7 @@ bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName)
 	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment))
 	{
 		if (comment.i64Deprecated)
-		{
-			if (gi64NoDeprecatedSymbols)
-				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
-			else
-				return true;
-		}
+			return true;
 	}
 	return false;
 }

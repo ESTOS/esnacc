@@ -9,7 +9,7 @@
 
 void Print_JSON_EncoderCodeStructuredType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs);
 void Print_JSON_DecoderCodeStructuredType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs, const char* szIndent);
-void Print_JSON_EncoderNamedType(FILE* src, ModuleList* mods, Module* m, enum BasicTypeChoiceId type, NamedType* e, const char* szIndent, const char* szObjectName, const char* szFieldName);
+void Print_JSON_EncoderNamedType(FILE* src, ModuleList* mods, Module* m, enum BasicTypeChoiceId type, NamedType* e, const char* szIndent);
 void Print_BER_EncoderCodeStructuredType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs);
 void Print_BER_DecoderCodeStructuredType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs, const char* szIndent);
 void Print_BER_EncoderChoiceNamedType(FILE* src, ModuleList* mods, Module* m, enum BasicTypeChoiceId choiceId, Type* type, const char* szIndent, const char* szSourceFieldName, int iOptionalID);
@@ -50,9 +50,9 @@ void PrintTSConverterImports(FILE* src, ModuleList* mods, Module* mod)
 	PrintTSImports(src, mods, mod, true, true, false);
 }
 
-const char* GetJSONType(const enum BasicTypeChoiceId basicTypeChoiseId)
+const char* GetJSONType(enum BasicTypeChoiceId choiceId)
 {
-	switch (basicTypeChoiseId)
+	switch (choiceId)
 	{
 		case BASICTYPE_BOOLEAN:
 			return "boolean";
@@ -71,7 +71,7 @@ const char* GetJSONType(const enum BasicTypeChoiceId basicTypeChoiseId)
 		case BASICTYPE_ASNSYSTEMTIME:
 			return "Date";
 		default:
-			snacc_exit("unknown basicTypeChoiseId %d", basicTypeChoiseId);
+			snacc_exit("unknown choiceId %d", choiceId);
 	}
 
 	return "";
@@ -86,18 +86,17 @@ void Print_JSON_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	// Unser Sequence Typ
 	enum BasicTypeChoiceId choice = seqOf->basicType->a.sequenceOf->basicType->choiceId;
 
-	// Basis Typ der Sequence
-	enum BasicTypeChoiceId rootBasicType = GetRootType(seqOf, NULL)->basicType->choiceId;
-
 	const char* szTypeName = NULL;
 	BasicType* pBase = GetBaseBasicType(seqOf->basicType->a.sequenceOf->basicType, &szTypeName);
 	enum BasicTypeChoiceId baseChoice = pBase->choiceId;
+	if (baseChoice == BASICTYPE_OCTETCONTAINING && pBase->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+		baseChoice = BASICTYPE_UTF8_STR;
 
 	// Ist der Typ den wir iterieren eine basis Type?
 	if (IsSimpleType(baseChoice))
 	{
 		fprintf(src, "\t\tfor (const se of s) {\n");
-		fprintf(src, "\t\t\tif (TSConverter.validateParamType(se, \"%s\", \"%s\", errors, newContext, %s))\n", szConverted, GetJSONType(rootBasicType), td->type->optional ? "true" : "false");
+		fprintf(src, "\t\t\tif (TSConverter.validateParamType(se, \"%s\", \"%s\", errors, newContext, %s))\n", szConverted, GetJSONType(baseChoice), td->type->optional ? "true" : "false");
 		fprintf(src, "\t\t\t\tt.push(se);\n");
 		fprintf(src, "\t\t}\n");
 	}
@@ -141,7 +140,10 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	enum BasicTypeChoiceId choice = seqOf->basicType->a.sequenceOf->basicType->choiceId;
 
 	// Basis Typ der Sequence
-	enum BasicTypeChoiceId rootBasicType = GetRootType(seqOf, NULL)->basicType->choiceId;
+	BasicType* pRootBasicType = GetRootType(seqOf, NULL)->basicType;
+	enum BasicTypeChoiceId rootChoiceId = pRootBasicType->choiceId;
+	if (rootChoiceId == BASICTYPE_OCTETCONTAINING && pRootBasicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+		rootChoiceId = BASICTYPE_UTF8_STR;
 
 	const char* szTypeName = NULL;
 	BasicType* pBase = GetBaseBasicType(seqOf->basicType->a.sequenceOf->basicType, &szTypeName);
@@ -151,7 +153,7 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	if (IsSimpleType(baseChoice))
 	{
 		fprintf(src, "\t\tfor (const se of s) {\n");
-		fprintf(src, "\t\t\tif (TSConverter.validateParamType(se, \"%s\", \"%s\", errors, newContext, %s))\n", szConverted, GetJSONType(rootBasicType), td->type->optional ? "true" : "false");
+		fprintf(src, "\t\t\tif (TSConverter.validateParamType(se, \"%s\", \"%s\", errors, newContext, %s))\n", szConverted, GetJSONType(rootChoiceId), td->type->optional ? "true" : "false");
 		fprintf(src, "\t\t\t\tt.push(new asn1ts.%s({ value: se }));\n", GetBERType(baseChoice));
 		fprintf(src, "\t\t}\n");
 	}
@@ -193,6 +195,10 @@ void Print_JSON_DecoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		const char* szType = "";
 		const char* szElement = "";
 		bool bInstanceOfCompare = false;
+
+		enum BasicTypeChoiceId choiceId = type->choiceId;
+		if (choiceId == BASICTYPE_OCTETCONTAINING && type->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+			choiceId = BASICTYPE_UTF8_STR;
 
 		switch (type->choiceId)
 		{
@@ -265,6 +271,8 @@ void Print_BER_DecoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	BasicType* type = GetRootType(seqOf->basicType->a.sequenceOf, &szTypeName)->basicType;
 
 	enum BasicTypeChoiceId choiceId = type->choiceId;
+	if (choiceId == BASICTYPE_OCTETCONTAINING && type->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+		choiceId = BASICTYPE_UTF8_STR;
 
 	fprintf(src, "%sfor (const se of s.valueBlock.value) {\n", szIdendt);
 	fprintf(src, "%s\tif (asn1ts.%s.typeGuard(se)) {\n", szIdendt, GetBERType(choiceId));
@@ -355,7 +363,7 @@ void Print_JSON_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 		else
 			fprintf(src, "\n");
 
-		Print_JSON_EncoderNamedType(src, mods, m, choiceId, e, "\t\t\t", "t", e->fieldName);
+		Print_JSON_EncoderNamedType(src, mods, m, choiceId, e, "\t\t\t");
 
 		bFirst = FALSE;
 	}
@@ -450,6 +458,9 @@ void Print_JSON_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 			fprintf(src, " {");
 		fprintf(src, "\n");
 
+		if (choiceId == BASICTYPE_OCTETCONTAINING && type->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+			choiceId = BASICTYPE_UTF8_STR;
+
 		switch (choiceId)
 		{
 			case BASICTYPE_BOOLEAN:
@@ -459,7 +470,7 @@ void Print_JSON_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 			case BASICTYPE_UTF8_STR:
 			case BASICTYPE_ASNSYSTEMTIME:
 			case BASICTYPE_NULL:
-				fprintf(src, "%s\tif (TSConverter.validateParam(s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, GetJSONType(type->choiceId));
+				fprintf(src, "%s\tif (TSConverter.validateParam(s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, GetJSONType(choiceId));
 				fprintf(src, "%s\t\tt.%s = s.%s;\n", szIdendt, e->fieldName, e->fieldName);
 				break;
 			case BASICTYPE_OCTETCONTAINING:
@@ -507,7 +518,8 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	NamedType* e;
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
-		enum BasicTypeChoiceId choiceId = ResolveBasicTypeReferences(e->type->basicType, NULL)->choiceId;
+		BasicType* pBasicType = ResolveBasicTypeReferences(e->type->basicType, NULL);
+		enum BasicTypeChoiceId choiceId = pBasicType->choiceId;
 
 		fprintf(src, "%s", szIdendt);
 		if (bMultiLine)
@@ -528,6 +540,9 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		if (bMultiLine)
 			fprintf(src, " {");
 		fprintf(src, "\n");
+
+		if (choiceId == BASICTYPE_OCTETCONTAINING && pBasicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+			choiceId = BASICTYPE_UTF8_STR;
 
 		switch (choiceId)
 		{
@@ -595,8 +610,10 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	free(szConverted);
 }
 
-void Print_JSON_EncoderNamedType(FILE* src, ModuleList* mods, Module* m, enum BasicTypeChoiceId type, NamedType* e, const char* szIndent, const char* szObjectName, const char* szFieldName)
+void Print_JSON_EncoderNamedType(FILE* src, ModuleList* mods, Module* m, enum BasicTypeChoiceId type, NamedType* e, const char* szIndent)
 {
+	char* szFieldName = FixName(e->fieldName);
+	const char* szObjectName = "t";
 	const bool bOptional = e->type->optional;
 	const char* szClassName = e->type->cxxTypeRefInfo->className;
 	const char* szOptional = bOptional ? ", true" : "";
@@ -650,6 +667,7 @@ void Print_JSON_EncoderNamedType(FILE* src, ModuleList* mods, Module* m, enum Ba
 		default:
 			snacc_exit("unknown type %d", type);
 	}
+	free(szFieldName);
 }
 
 void Print_BER_EncoderChoiceNamedType(FILE* src, ModuleList* mods, Module* m, enum BasicTypeChoiceId choiceId, Type* type, const char* szIndent, const char* szSourceFieldName, int iOptionalID)
@@ -855,21 +873,19 @@ void Print_JSON_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
 
-		enum BasicTypeChoiceId type = e->type->basicType->choiceId;
-		if (type == BASICTYPE_LOCALTYPEREF || type == BASICTYPE_IMPORTTYPEREF)
+		enum BasicTypeChoiceId choideId = e->type->basicType->choiceId;
+		if (choideId == BASICTYPE_LOCALTYPEREF || choideId == BASICTYPE_IMPORTTYPEREF)
 		{
 			if (strcmp(e->type->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
-				type = BASICTYPE_ASNSYSTEMTIME;
+				choideId = BASICTYPE_ASNSYSTEMTIME;
 			else
 			{
-				enum BasicTypeChoiceId baseType = GetBaseBasicTypeChoiceId(e->type->basicType);
-				if (IsSimpleType(baseType))
-					type = baseType;
+				BasicType* pBaseType = GetBaseBasicType(e->type->basicType, NULL);
+				if (IsSimpleType(pBaseType->choiceId))
+					choideId = pBaseType->choiceId;
 			}
 		}
-		char* szFixedName = FixName(e->fieldName);
-		Print_JSON_EncoderNamedType(src, mods, m, type, e, "\t\t", "t", szFixedName);
-		free(szFixedName);
+		Print_JSON_EncoderNamedType(src, mods, m, choideId, e, "\t\t");
 	}
 	free(szConverted);
 }
@@ -935,8 +951,25 @@ void Print_BER_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 		fprintf(src, "\n\t\treturn result;\n");
 }
 
-void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedType* type, enum BasicTypeChoiceId choice, const char* szIndent)
+void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedType* type, BasicType* pBasicType, const char* szIndent)
 {
+	enum BasicTypeChoiceId choiceID = pBasicType->choiceId;
+
+	if (choiceID == BASICTYPE_LOCALTYPEREF || choiceID == BASICTYPE_IMPORTTYPEREF)
+	{
+		if (strcmp(type->type->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
+			choiceID = BASICTYPE_ASNSYSTEMTIME;
+		else
+		{
+			BasicType* pBasicType2 = GetBaseBasicType(pBasicType, NULL);
+			if (IsSimpleType(pBasicType2->choiceId))
+			{
+				pBasicType = pBasicType2;
+				choiceID = pBasicType->choiceId;
+			}
+		}
+	}
+
 	const char* szFieldName = type->fieldName;
 	const char* szClassName = type->type->cxxTypeRefInfo->className;
 	bool bOptional = type->type->optional ? true : false;
@@ -946,14 +979,17 @@ void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTy
 
 	char* szAccessName = FixName(szFieldName);
 
-	switch (choice)
+	if (choiceID == BASICTYPE_OCTETCONTAINING && pBasicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+		choiceID = BASICTYPE_UTF8_STR;
+
+	switch (choiceID)
 	{
 		case BASICTYPE_BOOLEAN:
 		case BASICTYPE_INTEGER:
 		case BASICTYPE_ENUMERATED:
 		case BASICTYPE_REAL:
 		case BASICTYPE_UTF8_STR:
-			fprintf(src, "%sTSConverter.fillJSONParam(s, t, \"%s\", \"%s\", errors, context, %s);\n", szIndent, szAccessName, GetJSONType(choice), szOptional);
+			fprintf(src, "%sTSConverter.fillJSONParam(s, t, \"%s\", \"%s\", errors, context, %s);\n", szIndent, szAccessName, GetJSONType(choiceID), szOptional);
 			break;
 		case BASICTYPE_ASNSYSTEMTIME:
 			fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, context, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
@@ -974,7 +1010,7 @@ void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTy
 				else
 					fprintf(src, "%sconst _%s = ", szIndent, pBuffer);
 
-				if (choice == BASICTYPE_IMPORTTYPEREF)
+				if (choiceID == BASICTYPE_IMPORTTYPEREF)
 				{
 					Module* mod = GetImportModuleRefByClassName(szClassName, mods, m);
 					fprintf(src, "%s_Converter.", GetNameSpace(mod));
@@ -999,7 +1035,7 @@ void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTy
 			// Do Nothing here
 			break;
 		default:
-			snacc_exit("unknown choice %d", choice);
+			snacc_exit("unknown choice %d", choiceID);
 	}
 
 	free(szAccessName);
@@ -1079,21 +1115,7 @@ void Print_JSON_DecoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
 
-		enum BasicTypeChoiceId type = e->type->basicType->choiceId;
-
-		if (type == BASICTYPE_LOCALTYPEREF || type == BASICTYPE_IMPORTTYPEREF)
-		{
-			if (strcmp(e->type->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
-				type = BASICTYPE_ASNSYSTEMTIME;
-			else
-			{
-				enum BasicTypeChoiceId baseType = GetBaseBasicTypeChoiceId(e->type->basicType);
-				if (IsSimpleType(baseType))
-					type = baseType;
-			}
-		}
-
-		Print_JSON_DecoderNamedType(src, m, mods, e, type, szIndent);
+		Print_JSON_DecoderNamedType(src, m, mods, e, e->type->basicType, szIndent);
 	}
 	free(szConverted);
 }

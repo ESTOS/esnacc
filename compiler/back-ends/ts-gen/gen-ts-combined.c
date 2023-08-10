@@ -60,7 +60,10 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	if (bIncludeTASN1Base)
+	{
+		fprintf(src, "// Is needed in case we hold deprecated elements\n");
 		fprintf(src, "import { TSASN1Base } from \"./TSASN1Base\";\n");
+	}
 	if (bIncludeasn1ts)
 		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
 
