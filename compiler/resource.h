@@ -1,4 +1,5 @@
 //{{NO_DEPENDENCIES}}
+// clang-format off
 // Microsoft Visual C++ generated include file.
 // Used by compiler.rc
 //
@@ -12,7 +13,8 @@
 #define TS_SNACCROSE					1007
 #define TS_SNACCROSE_CONVERTER			1008
 #define TS_OPTIONALPARAM_CONVERTER		1009
-#define DELPHI_ASN1_TYPES		        1010
+#define TS_DEPRECATED_CALLBACK			1010
+#define DELPHI_ASN1_TYPES				1011
 
 // Next default values for new objects
 //

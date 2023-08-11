@@ -834,8 +834,13 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 			case BASICTYPE_ANY:
 				fprintf(src, "s.%s as asn1ts.Sequence", szAccessName);
 				break;
-			case BASICTYPE_OCTETSTRING:
 			case BASICTYPE_OCTETCONTAINING:
+				if (e->type->basicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+					fprintf(src, "new asn1ts.%s({ valueHex: new TextEncoder().encode(s.%s), name: \"%s\"%s })", GetBERType(type), szAccessName, szAccessName, szOptional);
+				else
+					fprintf(src, "new asn1ts.%s({ valueHex: s.%s, name: \"%s\"%s })", GetBERType(type), szAccessName, szAccessName, szOptional);
+				break;
+			case BASICTYPE_OCTETSTRING:
 				fprintf(src, "new asn1ts.%s({ valueHex: s.%s, name: \"%s\"%s })", GetBERType(type), szAccessName, szAccessName, szOptional);
 				break;
 			case BASICTYPE_ASNSYSTEMTIME:

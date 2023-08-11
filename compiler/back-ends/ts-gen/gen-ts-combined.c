@@ -56,14 +56,11 @@ void PrintTSRootTypes(FILE* src, Module* mod, const char* szSuffix)
 	fprintf(src, "export const moduleName = \"%s%s\";\n", mod->moduleName, szSuffix ? szSuffix : "");
 }
 
-void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConverters, bool bIncludeasn1ts, bool bIncludeTASN1Base)
+void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConverters, bool bIncludeasn1ts, bool bIncludeDeprecatedCallback)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
-	if (bIncludeTASN1Base)
-	{
-		fprintf(src, "// Is needed in case we hold deprecated elements\n");
-		fprintf(src, "import { TSASN1Base } from \"./TSASN1Base\";\n");
-	}
+	if (bIncludeDeprecatedCallback)
+		fprintf(src, "import { TSDeprecatedCallback } from \"./TSDeprecatedCallback\";\n");
 	if (bIncludeasn1ts)
 		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
 
