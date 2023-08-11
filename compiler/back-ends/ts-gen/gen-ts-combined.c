@@ -60,7 +60,35 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	if (bIncludeDeprecatedCallback)
-		fprintf(src, "import { TSDeprecatedCallback } from \"./TSDeprecatedCallback\";\n");
+	{
+		bool bContainsDeprecated = false;
+		TypeDef* td;
+		FOR_EACH_LIST_ELMT(td, mod->typeDefs)
+		{
+			if (IsDeprecatedFlaggedSequence(mod, td->definedName))
+			{
+				bContainsDeprecated = true;
+				break;
+			}
+		}
+		if (!bContainsDeprecated)
+		{
+			ValueDef* vd;
+			FOR_EACH_LIST_ELMT(vd, mod->valueDefs)
+			{
+				if (vd->value->basicValue->choiceId != BASICVALUE_INTEGER)
+					continue;
+				if (vd->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
+					continue;
+				if (vd->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
+					continue;
+				if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
+					bContainsDeprecated = true;
+			}
+		}
+		if (bContainsDeprecated)
+			fprintf(src, "import { TSDeprecatedCallback } from \"./TSDeprecatedCallback\";\n");
+	}
 	if (bIncludeasn1ts)
 		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
 
