@@ -560,7 +560,7 @@ bool ValidateSequencesAreExtendable(ModuleList* allMods)
 			TypeDef* td;
 			FOR_EACH_LIST_ELMT(td, mod->typeDefs)
 			{
-				if (IsDeprecatedNoOutputSequence(mod, td->definedName))
+				if (IsDeprecatedFlaggedSequence(mod, td->definedName))
 					continue;
 
 				struct BasicType* type = td->type->basicType;
