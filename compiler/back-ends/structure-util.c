@@ -474,12 +474,7 @@ bool IsDeprecatedFlaggedModule(Module* mod)
 	if (GetModuleComment_UTF8(mod->moduleName, &comment))
 	{
 		if (comment.i64Deprecated)
-		{
-			if (gi64NoDeprecatedSymbols)
-				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
-			else
-				return true;
-		}
+			return true;
 	}
 
 	return false;
@@ -502,12 +497,7 @@ bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szEle
 	if (GetMemberComment_UTF8(mod->moduleName, td->definedName, szElement, &comment))
 	{
 		if (comment.i64Deprecated)
-		{
-			if (gi64NoDeprecatedSymbols)
-				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
-			else
-				return true;
-		}
+			return true;
 	}
 
 	return false;
@@ -554,13 +544,12 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 				AsnListNode* curr = td->type->basicType->a.sequence->curr;
 				FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
 				{
+					if (!e->fieldName)
+						continue;
 					if (strcmp(e->fieldName, szElement) != 0)
 						continue;
-					if (e->type->optional)
-					{
-						bReturn = true;
-						break;
-					}
+					bReturn = e->type->optional;
+					break;
 				}
 				if (!td->type->basicType->a.sequence)
 				{
@@ -584,12 +573,7 @@ bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName)
 	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment))
 	{
 		if (comment.i64Deprecated)
-		{
-			if (gi64NoDeprecatedSymbols)
-				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
-			else
-				return true;
-		}
+			return true;
 	}
 	return false;
 }
@@ -612,12 +596,7 @@ bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName)
 	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment))
 	{
 		if (comment.i64Deprecated)
-		{
-			if (gi64NoDeprecatedSymbols)
-				return gi64NoDeprecatedSymbols < comment.i64Deprecated;
-			else
-				return true;
-		}
+			return true;
 	}
 	return false;
 }

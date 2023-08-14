@@ -19,6 +19,7 @@ INCBIN(BIN_ASN1_SERVER, "compiler/back-ends/ts-gen/gluecode/TSASN1Server.ts");
 INCBIN(BIN_ROSE_BASE, "compiler/back-ends/ts-gen/gluecode/TSROSEBase.ts");
 INCBIN(BIN_SNACCROSE, "compiler/back-ends/ts-gen/gluecode/SNACCROSE.ts");
 INCBIN(BIN_SNACCROSE_CONVERTER, "compiler/back-ends/ts-gen/gluecode/SNACCROSE_Converter.ts");
+INCBIN(BIN_DEPRECATED_CALLBACK, "compiler/back-ends/ts-gen/gluecode/TSDeprecatedCallback.ts");
 INCBIN(BIN_EDELPHI_ASN1_YPES, "compiler/back-ends/delphi-gen/gluecode/DelphiAsn1Types.pas");
 #endif // _WIN32
 
@@ -97,6 +98,9 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 			break;
 		case ETS_OPTIONALPARAM_CONVERTER:
 			SaveIncBinToFile(gBIN_OPTIONALPARAM_CONVERTERData, gBIN_OPTIONALPARAM_CONVERTERSize, szFileName);
+			break;
+		case ETS_DEPRECATED_CALLBACK:
+			SaveIncBinToFile(gBIN_DEPRECATED_CALLBACKData, gBIN_DEPRECATED_CALLBACKSize, szFileName);
 			break;
 		case EDELPHI_ASN1_TYPES:
 			SaveIncBinToFile(gBIN_EDELPHI_ASN1_YPESData, gBIN_EDELPHI_ASN1_YPESSize, szFileName);
