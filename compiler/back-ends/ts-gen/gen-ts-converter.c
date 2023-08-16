@@ -148,6 +148,8 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	const char* szTypeName = NULL;
 	BasicType* pBase = GetBaseBasicType(seqOf->basicType->a.sequenceOf->basicType, &szTypeName);
 	enum BasicTypeChoiceId baseChoice = pBase->choiceId;
+	if (baseChoice == BASICTYPE_OCTETCONTAINING && pBase->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+		baseChoice = BASICTYPE_UTF8_STR;
 
 	// Ist der Typ den wir iterieren eine basis Type?
 	if (IsSimpleType(baseChoice))
@@ -878,19 +880,26 @@ void Print_JSON_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
 
-		enum BasicTypeChoiceId choideId = e->type->basicType->choiceId;
-		if (choideId == BASICTYPE_LOCALTYPEREF || choideId == BASICTYPE_IMPORTTYPEREF)
+		BasicType* pBaseType = e->type->basicType;
+		enum BasicTypeChoiceId choiceId = pBaseType->choiceId;
+		if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
 		{
 			if (strcmp(e->type->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
-				choideId = BASICTYPE_ASNSYSTEMTIME;
+				choiceId = BASICTYPE_ASNSYSTEMTIME;
 			else
 			{
-				BasicType* pBaseType = GetBaseBasicType(e->type->basicType, NULL);
-				if (IsSimpleType(pBaseType->choiceId))
-					choideId = pBaseType->choiceId;
+				BasicType* pBaseType2 = GetBaseBasicType(e->type->basicType, NULL);
+				if (IsSimpleType(pBaseType2->choiceId))
+				{
+					pBaseType = pBaseType2;
+					choiceId = pBaseType2->choiceId;
+				}
 			}
 		}
-		Print_JSON_EncoderNamedType(src, mods, m, choideId, e, "\t\t");
+		if (choiceId == BASICTYPE_OCTETCONTAINING && pBaseType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+			choiceId = BASICTYPE_UTF8_STR;
+
+		Print_JSON_EncoderNamedType(src, mods, m, choiceId, e, "\t\t");
 	}
 	free(szConverted);
 }
