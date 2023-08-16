@@ -235,36 +235,6 @@ export interface IASN1CallStackEntry {
 }
 
 /**
- * This is the central deprecated callback
- *
- * The asn1 files allow to flag objects or methods as deprecated
- * If that is the case the compiler adds callbacks in case such an object is created or such a method is called
- */
-export interface IASN1DeprecatedCallback {
-	/**
-	 * A deprecated object has been created
-	 *
-	 * @param deprecatedSince - unix time when the object has been flagged deprecated
-	 * @param moduleName - the module in which the object is located
-	 * @param objectName - the name of the object that is about to get created
-	 * @param callStack - the call stack that shows where the object has been created
-	 */
-	deprecatedObject(deprecatedSince: number, moduleName: string, objectName: string, callStack: IASN1CallStackEntry[]): void;
-
-	/**
-	 * A deprecated method has been called
-	 *
-	 * @param deprecatedSince - unix time when the method has been flagged deprecated
-	 * @param moduleName - the module in which the object is located
-	 * @param methodName - the name of the method that has been called
-	 * @param direction - whether the call was inbound or outbound
-	 * @param invokeContext - the invokeContext that shows more details about the invoke
-	 * @param callStack - the call stack that shows where the object has been created
-	 */
-	deprecatedMethod(deprecatedSince: number, moduleName: string, methodName: string, direction: "IN" | "OUT", invokeContext: IReceiveInvokeContextParams | ISendInvokeContextParams | undefined, callStack: IASN1CallStackEntry[]): void;
-}
-
-/**
  * Base class for the TASN1Server and the node and browser Client
  */
 export abstract class TSASN1Base implements IASN1Transport {
@@ -292,8 +262,6 @@ export abstract class TSASN1Base implements IASN1Transport {
 	protected additionalLogMetaForRawTransport: Record<string, unknown> | undefined;
 	// The type of instance of this class (Helps debugging if two instances are running in parallel (TSASN1NodeClient and TSASN1Server)
 	protected readonly instanceType: ASN1ClassInstanceType;
-	// This is the central deprecated callback, see ASN1DeprecatedCallback for details.
-	private static deprecatedCallback?: IASN1DeprecatedCallback;
 
 	/**
 	 * Constructs the ASN1 base class
@@ -448,46 +416,6 @@ export abstract class TSASN1Base implements IASN1Transport {
 	public abstract sendEventSync(data: IASN1InvokeData): boolean;
 	// Retrieves the client connection ID we got from the server
 	public abstract getSessionID(): string | undefined;
-
-	/**
-	 * Sets the callback that is informed about deprecaetd method calls, deprecated object creation
-	 *
-	 * @param callback - the callback that shall get notified
-	 */
-	public static setDeprecatedCallback(callback: IASN1DeprecatedCallback | undefined): void {
-		TSASN1Base.deprecatedCallback = callback;
-	}
-
-	/**
-	 * This method is called in case an object is created which is flagged deprecated
-	 *
-	 * @param deprecatedSince - unix time when the object has been flagged deprecated
-	 * @param moduleName - the module in which the object is located
-	 * @param obj - the object that has been created
-	 */
-	public static deprecatedObject(deprecatedSince: number, moduleName: string, obj: object): void {
-		if (!TSASN1Base.deprecatedCallback)
-			return;
-		const name = obj.constructor.name;
-		const stack = this.getCallStack();
-		TSASN1Base.deprecatedCallback.deprecatedObject(deprecatedSince, moduleName, name, stack);
-	}
-
-	/**
-	 * This method is called in case a method is called which is flagged deprecated
-	 *
-	 * @param deprecatedSince - unix time when the method has been flagged deprecated
-	 * @param moduleName - the module in which the object is located
-	 * @param methodName - the name of the method that has been called
-	 * @param direction - whether the call was inbound or outbound
-	 * @param invokeContext - the invokeContext that shows more details about the invoke
-	 */
-	public static deprecatedMethod(deprecatedSince: number, moduleName: string, methodName: string, direction: "IN" | "OUT", invokeContext: IReceiveInvokeContextParams | ISendInvokeContextParams | undefined): void {
-		if (!TSASN1Base.deprecatedCallback)
-			return;
-		const stack = this.getCallStack();
-		TSASN1Base.deprecatedCallback.deprecatedMethod(deprecatedSince, moduleName, methodName, direction, invokeContext, stack);
-	}
 
 	/**
 	 * The client and server implementation needs to pass received data (the transport blob) into this function
