@@ -7,10 +7,11 @@
 
 import { InvokeProblemenum, RejectProblem, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSERejectChoice, ROSEResult, ROSEResultSeq } from "./SNACCROSE";
 import { ConverterErrors, DecodeContext, IConverter, EncodeContext } from "./TSConverterBase";
-import { ENetUC_Common, ENetUC_Common_Converter } from "./types";
 import { IncomingHttpHeaders } from "http";
 import { ROSEMessage_Converter, ROSEReject_Converter } from "./SNACCROSE_Converter";
 import * as asn1ts from "@estos/asn1ts";
+import * as ENetUC_Common from "./ENetUC_Common";
+import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter";
 
 /**
  * The websocket is different between the node and the browser implemenation, thus we cast it to any
