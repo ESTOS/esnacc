@@ -3,7 +3,7 @@
 // Do not directly edit or modify the code as it is machine generated and will be overwritten with every compilation
 
 // prettier-ignore
-/* eslint-disable no-debugger */
+/* eslint-disable */
 
 import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
 import { ROSEMessage_Converter } from "./SNACCROSE_Converter";

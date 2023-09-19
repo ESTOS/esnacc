@@ -11,7 +11,7 @@ const name = process.env["MICROSERVICE_SERVER_LISTEN_NAME"] || "localhost";
 const port = process.env["MICROSERVICE_SERVER_LISTEN_PORT"] || 3010;
 let wstarget = "ws";
 let resttarget = "http";
-if (process.env["MICROSERVICE_SERVER_LISTEN_TLS"] == "1") {
+if (process.env["MICROSERVICE_SERVER_LISTEN_TLS"] === "1") {
 	wstarget += "s";
 	resttarget += "s";
 }

@@ -1,7 +1,8 @@
 import { TSConverter, DecodeContext, EncodeContext, ConverterErrors, ConverterError, ConverterErrorType, INamedType } from "./TSConverterBase";
 import * as ENetUC_Common from "./ENetUC_Common";
 
-/* eslint-disable @typescript-eslint/naming-convention */
+// prettier-ignore
+/* eslint-disable */
 
 /**
  * Sadly someone added custom written encoders decoders for the custom parameters in the UCServer

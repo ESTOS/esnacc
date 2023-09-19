@@ -163,7 +163,7 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 							fprintf(hdr, "%s.%s.%s", szNameSpace, szConverted, pFirstEnumValue->name);
 						}
 						else
-							fprintf(hdr, "%s.%s.initEmpty()", szNameSpace, szConverted);
+							fprintf(hdr, "%s.%s[\"initEmpty\"].call(0)", szNameSpace, szConverted);
 						free(szConverted);
 					}
 					break;
@@ -175,7 +175,7 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 					if (baseType == BASICTYPE_SEQUENCEOF || baseType == BASICTYPE_SETOF)
 						fprintf(hdr, "new %s()", szConverted);
 					else
-						fprintf(hdr, "%s.initEmpty()", szConverted);
+						fprintf(hdr, "%s[\"initEmpty\"].call(0)", szConverted);
 					free(szConverted);
 				}
 				break;
@@ -331,7 +331,7 @@ void PrintTSChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 	fprintf(src, "\tpublic constructor(that?: %s) {\n", szConverted);
 	fprintf(src, "\t\tObject.assign(this, that);\n");
 	fprintf(src, "\t}\n\n");
-	fprintf(src, "\tpublic static initEmpty(): %s {\n", szConverted);
+	fprintf(src, "\tprivate static initEmpty(): %s {\n", szConverted);
 	fprintf(src, "\t\treturn new %s(", szConverted);
 	fprintf(src, ");\n\t}\n\n");
 
@@ -453,7 +453,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	fprintf(src, "\t}\n\n");
 
 	// and a static initEmpty() method to be able to create an empty object if necessary
-	fprintf(src, "\tpublic static initEmpty(): %s {\n", szConverted);
+	fprintf(src, "\tprivate static initEmpty(): %s {\n", szConverted);
 	fprintf(src, "\t\treturn new %s(", szConverted);
 	if (iMandatoryFields)
 	{

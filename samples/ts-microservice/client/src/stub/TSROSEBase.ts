@@ -3,7 +3,7 @@
 // Do not directly edit or modify the code as it is machine generated and will be overwritte n with every compilation
 
 // prettier-ignore
-/* eslint-disable no-debugger */
+/* eslint-disable */
 
 import { InvokeProblemenum, RejectProblem, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSERejectChoice, ROSEResult, ROSEResultSeq } from "./SNACCROSE";
 import { ConverterErrors, DecodeContext, IConverter, EncodeContext } from "./TSConverterBase";
@@ -429,9 +429,8 @@ export interface IASN1Transport {
 	logReject(calling_method: string, callback: IASN1LogCallback, reject: object, invoke: unknown | undefined, context: IInvokeContextBase, isOutbound: boolean): void;
 }
 
-// Envelop to be able to call initEmpty on the class object we pass to ROSEBase.handleRequest
+// Envelop to be able to retrieve the objects name
 interface IASN1DataClass {
-	initEmpty(): unknown;
 	readonly type: string;
 }
 // Envelop that holds the handler class that acts on invokes and events

@@ -5,7 +5,6 @@
 // prettier-ignore
 /* eslint-disable */
 
-
 import { ROSEError, ROSEMessage, ROSEReject, ROSEResult, InvokeProblemenum } from "./SNACCROSE";
 import { TSASN1Base, PendingInvoke, ITransportMetaData, ASN1ClassInstanceType } from "./TSASN1Base";
 import { ELogSeverity, IASN1Transport, createInvokeReject, ReceiveInvokeContext, CustomInvokeProblemEnum, EASN1TransportEncoding, IASN1InvokeData } from "./TSROSEBase";

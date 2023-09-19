@@ -3,6 +3,7 @@
 // Do not directly edit or modify the code as it is machine generated and will be overwritten with every compilation
 
 // prettier-ignore
+/* eslint-disable */
 
 import { TSASN1Client } from "./TSASN1Client";
 import { EASN1TransportEncoding, ELogSeverity, IDualWebSocket } from "./TSROSEBase";

@@ -1,5 +1,8 @@
 import { IReceiveInvokeContextParams, ISendInvokeContextParams } from "./TSROSEBase";
 
+// prettier-ignore
+/* eslint-disable */
+
 /**
  * This is the central deprecated callback
  *
