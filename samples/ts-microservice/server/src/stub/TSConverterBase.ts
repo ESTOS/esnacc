@@ -3,7 +3,7 @@
 // Do not directly edit or modify the code as it is machine generated and will be overwritten with every compilation
 
 // prettier-ignore
-/* eslint-disable no-debugger */
+/* eslint-disable */
 
 import * as asn1ts from "@estos/asn1ts";
 
