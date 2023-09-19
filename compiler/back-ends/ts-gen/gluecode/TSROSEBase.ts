@@ -3,7 +3,7 @@
 // Do not directly edit or modify the code as it is machine generated and will be overwritte n with every compilation
 
 // prettier-ignore
-/* eslint-disable no-debugger */
+/* eslint-disable */
 
 import { InvokeProblemenum, RejectProblem, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSERejectChoice, ROSEResult, ROSEResultSeq } from "./SNACCROSE";
 import { ConverterErrors, DecodeContext, IConverter, EncodeContext } from "./TSConverterBase";
