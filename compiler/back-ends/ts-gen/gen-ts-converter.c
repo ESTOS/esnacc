@@ -1424,7 +1424,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 				if (type == BASICTYPE_SEQUENCEOF || type == BASICTYPE_SETOF)
 					fprintf(src, "\t\t\tt = new %s.%s();", szNameSpace, szConverted);
 				else
-					fprintf(src, "\t\t\tt = %s.%s.initEmpty();", szNameSpace, szConverted);
+					fprintf(src, "\t\t\tt = %s.%s[\"initEmpty\"].call(0);", szNameSpace, szConverted);
 			}
 
 			const char* szIdendt = "\t\t\t";
@@ -1512,7 +1512,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 				if (type == BASICTYPE_SEQUENCEOF || type == BASICTYPE_SETOF)
 					fprintf(src, "\t\t\tt = new %s.%s();", szNameSpace, szConverted);
 				else
-					fprintf(src, "\t\t\tt = %s.%s.initEmpty();", szNameSpace, szConverted);
+					fprintf(src, "\t\t\tt = %s.%s[\"initEmpty\"].call(0);", szNameSpace, szConverted);
 			}
 
 			Print_BER_DecoderCodeStructuredType(src, mods, m, td, novolatilefuncs, "\t\t\t");
