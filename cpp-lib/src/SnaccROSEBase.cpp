@@ -798,22 +798,30 @@ long SnaccROSEBase::GetNextInvokeID()
 	return m_lInvokeCounter;
 }
 
-long SnaccROSEBase::Send(SNACC::ROSEMessage* pMsg, const char* szOperationName, SnaccInvokeContext* pCtx /*= nullptr*/)
+long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, SnaccInvokeContext* pCtx /*= nullptr*/)
 {
 	long lRoseResult = ROSE_NOERROR;
+
+	ROSEMessage invokeMsg;
+	invokeMsg.choiceId = ROSEMessage::invokeCid;
+	invokeMsg.invoke = pInvoke;
 
 	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
 	{
 		unsigned long ulSize;
-		std::string strData = GetEncoded(m_eTransportEncoding, pMsg, &ulSize);
-		LogTransportData(true, m_eTransportEncoding, szOperationName, strData.c_str(), ulSize, pMsg, nullptr);
+		std::string strData = GetEncoded(m_eTransportEncoding, &invokeMsg, &ulSize);
+		LogTransportData(true, m_eTransportEncoding, szOperationName, strData.c_str(), ulSize, &invokeMsg, nullptr);
 
 		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), ulSize, pCtx);
 	}
 	else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
 	{
-		std::string strData = GetEncoded(m_eTransportEncoding, pMsg);
-		LogTransportData(true, m_eTransportEncoding, szOperationName, strData.c_str(), strData.length(), pMsg, nullptr);
+		// The mobiles currently rely on the operationName so we need to fill it if it is missing here
+		if (!pInvoke->operationName)
+			pInvoke->operationName = UTF8String::CreateNewFromASCII(SnaccRoseOperationLookup::LookUpName((int)invokeMsg.invoke->operationID));
+
+		std::string strData = GetEncoded(m_eTransportEncoding, &invokeMsg);
+		LogTransportData(true, m_eTransportEncoding, szOperationName, strData.c_str(), strData.length(), &invokeMsg, nullptr);
 
 		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
 			strData = GetJsonAsnPrefix(strData) + strData;
@@ -825,21 +833,15 @@ long SnaccROSEBase::Send(SNACC::ROSEMessage* pMsg, const char* szOperationName, 
 		throw std::runtime_error("invalid m_eTransportEncoding");
 	}
 
+	// prevent autodelete of pInvoke
+	invokeMsg.invoke = NULL;
+
 	return lRoseResult;
 }
 
 long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperationName, SnaccInvokeContext * pCtx /*= nullptr*/)
 {
-	ROSEMessage InvokeMsg;
-	InvokeMsg.choiceId = ROSEMessage::invokeCid;
-	InvokeMsg.invoke = pinvoke;
-
-	long lRoseResult = Send(&InvokeMsg, szOperationName, pCtx);
-
-	// prevent autodelete of pinvoke
-	InvokeMsg.invoke = NULL;
-
-	return lRoseResult;
+	return Send(pinvoke, szOperationName, pCtx);
 }
 
 void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szOperationName, const char* szData, const size_t size, const SNACC::ROSEMessage* pMsg, const SJson::Value* pParsedValue)
@@ -930,15 +932,11 @@ void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 
 long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, const char* szOperationName = nullptr, int iTimeout /*= -1*/, SnaccInvokeContext* pCtx /*= nullptr*/)
 {
-	ROSEMessage InvokeMsg;
-	InvokeMsg.choiceId = ROSEMessage::invokeCid;
-	InvokeMsg.invoke = pinvoke;
-
 	SnaccROSEPendingOperation* pendingOP = new SnaccROSEPendingOperation;
 	pendingOP->m_lInvokeID = pinvoke->invokeID;
 	AddPendingOperation(pendingOP->m_lInvokeID, pendingOP);
 
-	long lRoseResult = Send(&InvokeMsg, szOperationName, pCtx);
+	long lRoseResult = Send(pinvoke, szOperationName, pCtx);
 
 	if (lRoseResult == 0)
 	{
@@ -975,9 +973,6 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** 
 	}
 	RemovePendingOperation(pendingOP->m_lInvokeID);
 	delete pendingOP;
-
-	// prevent autodelete of pinvoke
-	InvokeMsg.invoke = NULL;
 
 	return lRoseResult;
 }

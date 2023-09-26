@@ -391,11 +391,11 @@ private:
 	/**
 	 * The combined method that takes care about encoding and sending an event or invoke
 	 *
-	 * pMsg - the message to send
+	 * pInvoke - the invoke to send
 	 * szOperationName - the operationName (for logging purposes)
 	 * pCtx - contextual data for the invoke
 	 */
-	long Send(SNACC::ROSEMessage* pMsg, const char* szOperationName, SnaccInvokeContext* pCtx = nullptr);
+	long Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, SnaccInvokeContext* pCtx = nullptr);
 };
 
 #endif //_SnaccROSEBase_h_
