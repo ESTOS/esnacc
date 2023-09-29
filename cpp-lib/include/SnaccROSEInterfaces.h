@@ -130,21 +130,23 @@ public:
 	 * bOutbound = true if the data is sent, or false if it was received
 	 * encoding = the encoding that will be used for sending or was detected while receiving
 	 * szData = the plain transport data, pretty much uninterpreted (only the length heading is removed)
+	 * szOperationName = name of the operation beeing called (if available)
 	 * size = the size of the plain transport data
 	 * pMSg = the asn1 message that was encoded or decoded from the transport payload
 	 * pParsedValue = only for inboud data, the parsed json object (required if the logging shall get pretty printed, saves another parsing of the payload), only available inbound and if the transport is using json
 	 */
-	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue = nullptr) = 0;
+	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szOperationName, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue = nullptr) = 0;
 
 	/** An invoke that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
 	 * pResponse - the response payload (is handled afterwards in the HandleInvokeResult method
+	 * szOperationName - the operationName (for logging purposes)
 	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
 	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
 	 * pCtx - contextual data for the invoke
 	 */
-	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::ROSEMessage** pResponse, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) = 0;
+	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::ROSEMessage** pResponse, const char* szOperationName, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) = 0;
 
 	/** Handles the response payload of the SendInvoke method. Retrieves the result or error from the response
 	 *
@@ -167,9 +169,10 @@ public:
 	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
+	 * szOperationName - the operationName (for logging purposes)
 	 * pCtx - contextual data for the invoke
 	 */
-	virtual long SendEvent(SNACC::ROSEInvoke* pInvoke, SnaccInvokeContext* pCtx = nullptr) = 0;
+	virtual long SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, SnaccInvokeContext* pCtx = nullptr) = 0;
 
 	/* Send a Result Message. */
 	virtual long SendResult(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, const wchar_t* szSessionID = 0) = 0;

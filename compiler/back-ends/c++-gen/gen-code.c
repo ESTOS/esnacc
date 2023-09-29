@@ -1346,11 +1346,11 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 
 			if (pszResult)
 			{
-				fprintf(src, "\tlong lRoseResult = m_pSB->SendInvoke(&InvokeMsg, &pResponseMsg, iTimeout, pCtx);\n");
+				fprintf(src, "\tlong lRoseResult = m_pSB->SendInvoke(&InvokeMsg, &pResponseMsg, \"%s\", iTimeout, pCtx);\n", vd->definedName);
 				fprintf(src, "\tlRoseResult = m_pSB->HandleInvokeResult(lRoseResult, pResponseMsg, result, %s, pCtx);\n", pszError ? "error" : "nullptr");
 			}
 			else
-				fprintf(src, "\tlong lRoseResult = m_pSB->SendEvent(&InvokeMsg);\n");
+				fprintf(src, "\tlong lRoseResult = m_pSB->SendEvent(&InvokeMsg, \"%s\");\n", vd->definedName);
 
 			fprintf(src, "\n\t// prevent auto deletion of argument\n");
 			fprintf(src, "\tInvokeMsg.argument->value = nullptr;\n\n");
