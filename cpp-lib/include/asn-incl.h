@@ -380,7 +380,7 @@ private:
 class SNACCDLL_API AsnNull : public AsnType
 {
 public:
-	AsnType* Clone() const override
+	virtual AsnNull* Clone() const override
 	{
 		return new AsnNull(*this);
 	}
@@ -430,7 +430,7 @@ public:
 		value = val;
 	}
 
-	AsnType* Clone() const override
+	virtual AsnBool* Clone() const override
 	{
 		return new AsnBool(*this);
 	}
@@ -507,7 +507,7 @@ public:
 		return NULL;
 	}
 
-	AsnType* Clone() const override
+	virtual AsnOcts* Clone() const override
 	{
 		return new AsnOcts(*this);
 	}
@@ -617,7 +617,7 @@ public:
 	{
 	}
 
-	AsnType* Clone() const override
+	virtual AsnStringOcts* Clone() const override
 	{
 		return new AsnStringOcts(*this);
 	}
@@ -693,7 +693,7 @@ public:
 		return NULL;
 	}
 
-	AsnType* Clone() const override
+	virtual AsnBits* Clone() const override
 	{
 		return new AsnBits(*this);
 	}
@@ -851,7 +851,7 @@ public:
 		return NULL;
 	}
 
-	AsnType* Clone() const override
+	virtual AsnInt* Clone() const override
 	{
 		return new AsnInt(*this);
 	}
@@ -939,7 +939,7 @@ public:
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 
-	virtual AsnType* Clone() const override
+	virtual AsnEnum* Clone() const override
 	{
 		return new AsnEnum(*this);
 	}
@@ -979,7 +979,7 @@ public:
 	{
 	}
 
-	virtual AsnType* Clone() const override
+	virtual AsnReal* Clone() const override
 	{
 		return new AsnReal(*this);
 	}
@@ -1056,7 +1056,7 @@ public:
 		return *this;
 	}
 
-	virtual AsnType* Clone() const override
+	virtual AsnSystemTime* Clone() const override
 	{
 		return new AsnSystemTime(*this);
 	}
@@ -1100,7 +1100,7 @@ public:
 	}
 	operator const char*() const;
 
-	AsnType* Clone() const override
+	virtual AsnRelativeOid* Clone() const override
 	{
 		return new AsnRelativeOid(*this);
 	}
@@ -1195,7 +1195,7 @@ public:
 		m_isRelative = false;
 	}
 
-	AsnType* Clone() const override
+	virtual AsnOid* Clone() const override
 	{
 		return new AsnOid(*this);
 	}
@@ -1295,7 +1295,7 @@ public:
 
 	AsnAny& operator=(const AsnAny& o);
 
-	AsnType* Clone() const override
+	virtual AsnAny* Clone() const override
 	{
 		return new AsnAny(*this);
 	}
@@ -1465,7 +1465,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual NumericString* Clone() const override
 	{
 		return new NumericString(*this);
 	}
@@ -1508,7 +1508,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual PrintableString* Clone() const override
 	{
 		return new PrintableString(*this);
 	}
@@ -1555,7 +1555,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual TeletexString* Clone() const override
 	{
 		return new TeletexString(*this);
 	}
@@ -1595,7 +1595,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual VideotexString* Clone() const override
 	{
 		return new VideotexString(*this);
 	}
@@ -1632,7 +1632,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual IA5String* Clone() const override
 	{
 		return new IA5String(*this);
 	}
@@ -1678,7 +1678,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual GraphicString* Clone() const override
 	{
 		return new GraphicString(*this);
 	}
@@ -1715,7 +1715,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual VisibleString* Clone() const override
 	{
 		return new VisibleString(*this);
 	}
@@ -1764,7 +1764,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual GeneralString* Clone() const override
 	{
 		return new GeneralString(*this);
 	}
@@ -1921,7 +1921,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual BMPString* Clone() const override
 	{
 		return new BMPString(*this);
 	}
@@ -1971,7 +1971,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual UniversalString* Clone() const override
 	{
 		return new UniversalString(*this);
 	}
@@ -2018,7 +2018,7 @@ public:
 	// Create the WideAsnString from an ASCII string
 	static UTF8String* CreateNewFromASCII(const std::string& strAscii);
 
-	AsnType* Clone() const override
+	virtual UTF8String* Clone() const override
 	{
 		return new UTF8String(*this);
 	}
@@ -2065,7 +2065,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual UTCTime* Clone() const override
 	{
 		return new UTCTime(*this);
 	}
@@ -2104,7 +2104,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual GeneralizedTime* Clone() const override
 	{
 		return new GeneralizedTime(*this);
 	}
@@ -2142,7 +2142,7 @@ public:
 		return *this;
 	}
 
-	AsnType* Clone() const override
+	virtual ObjectDescriptor* Clone() const override
 	{
 		return new ObjectDescriptor(*this);
 	}
@@ -2179,7 +2179,7 @@ public:
 	{
 	}
 
-	AsnType* Clone() const override
+	virtual AsnExtension* Clone() const override
 	{
 		return new AsnExtension(*this);
 	}
@@ -2271,7 +2271,7 @@ public:
 
 	void Clear();
 
-	AsnType* Clone() const override;
+	virtual AsnOptionalParamChoice* Clone() const override;
 
 	AsnOptionalParamChoice& operator=(const AsnOptionalParamChoice& that);
 	AsnLen BEncContent(AsnBuf& _b) const;
@@ -2311,7 +2311,7 @@ public:
 	{
 		return "AsnOptionalParam";
 	}
-	AsnType* Clone() const override;
+	virtual AsnOptionalParam* Clone() const override;
 
 	AsnOptionalParam& operator=(const AsnOptionalParam& that);
 	AsnLen BEncContent(AsnBuf& _b) const;
