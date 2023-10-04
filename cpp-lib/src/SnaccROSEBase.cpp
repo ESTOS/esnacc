@@ -506,7 +506,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 					delete pmessage;
 					return;
 				}
-				// LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, pmessage, &value);
+				LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, pmessage, &value);
 
 				// pmessage will be deleted inside
 				OnROSEMessage(pmessage, true);
