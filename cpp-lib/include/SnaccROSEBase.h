@@ -64,7 +64,7 @@ class SnaccROSEBase;
 class SnaccRoseOperationLookup
 {
 public:
-	static std::string LookUpName(int iOpID);
+	static const char* LookUpName(int iOpID);
 	static int LookUpID(const char* szOpName);
 	static void RegisterOperation(int iOpID, const char* szOpName, int iInterfaceID);
 	static int LookUpInterfaceID(int iOpID);

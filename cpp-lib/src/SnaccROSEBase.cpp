@@ -58,8 +58,11 @@ void SnaccRoseOperationLookup::CleanUp()
 void SnaccRoseOperationLookup::RegisterOperation(int iOpID, const char* szOpName, int iInterfaceID)
 {
 #ifdef _DEBUG
-	// Checking whether an ASN1 operationID was assigned twice
-	assert(LookUpName(iOpID) == "unknown");
+	if (m_mapIDToOp.find(iOpID) != m_mapIDToOp.end())
+	{
+		// In case we land here we have two operations using the same operationID
+		assert(0);
+	}
 #endif
 
 	m_mapOpToID[szOpName] = iOpID;
@@ -69,25 +72,31 @@ void SnaccRoseOperationLookup::RegisterOperation(int iOpID, const char* szOpName
 
 int SnaccRoseOperationLookup::LookUpInterfaceID(int iOpID)
 {
-	std::map<int, int>::iterator it = m_mapIDToInterface.find(iOpID);
+	const auto it = m_mapIDToInterface.find(iOpID);
 	if (it != m_mapIDToInterface.end())
 		return it->second;
 
 	return 0;
 }
 
-std::string SnaccRoseOperationLookup::LookUpName(int iOpID)
+const char* SnaccRoseOperationLookup::LookUpName(int iOpID)
 {
-	std::map<int, std::string>::iterator it = m_mapIDToOp.find(iOpID);
+	const auto it = m_mapIDToOp.find(iOpID);
 	if (it != m_mapIDToOp.end())
-		return it->second;
+		return it->second.c_str();
 
-	return "unknown";
+#ifdef _DEBUG
+	// This may only happen if the other side calls a method we are not aware of
+	// We handle it here as assert as it should not happen in development
+	assert(0);
+#endif
+
+	return nullptr;
 }
 
 int SnaccRoseOperationLookup::LookUpID(const char* szOpName)
 {
-	std::map<std::string, int>::iterator it = m_mapOpToID.find(szOpName);
+	const auto it = m_mapOpToID.find(szOpName);
 	if (it != m_mapOpToID.end())
 		return it->second;
 
@@ -149,8 +158,7 @@ void SnaccROSEBase::CompleteAllPendingOperations()
 {
 	std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
 
-	SnaccROSEPendingOperationMap::iterator it;
-	for (it = m_PendingOperations.begin(); it != m_PendingOperations.end(); it++)
+	for (auto it = m_PendingOperations.begin(); it != m_PendingOperations.end(); it++)
 		it->second->CompleteOperation(ROSE_TE_SHUTDOWN, NULL);
 }
 
@@ -165,8 +173,7 @@ void SnaccROSEBase::RemovePendingOperation(int invokeID)
 {
 	std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
 
-	SnaccROSEPendingOperationMap::iterator it;
-	it = m_PendingOperations.find(invokeID);
+	const auto it = m_PendingOperations.find(invokeID);
 	if (it != m_PendingOperations.end())
 		m_PendingOperations.erase(it);
 }
@@ -175,8 +182,7 @@ bool SnaccROSEBase::CompletePendingOperation(int invokeID, SNACC::ROSEMessage* p
 {
 	std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
 
-	SnaccROSEPendingOperationMap::iterator it;
-	it = m_PendingOperations.find(invokeID);
+	const auto it = m_PendingOperations.find(invokeID);
 	if (it != m_PendingOperations.end())
 	{
 		// found...
@@ -500,7 +506,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 					delete pmessage;
 					return;
 				}
-				LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, pmessage, &value);
+				// LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, pmessage, &value);
 
 				// pmessage will be deleted inside
 				OnROSEMessage(pmessage, true);
@@ -818,7 +824,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 	{
 		// The mobiles currently rely on the operationName so we need to fill it if it is missing here
 		if (!pInvoke->operationName)
-			pInvoke->operationName = UTF8String::CreateNewFromASCII(SnaccRoseOperationLookup::LookUpName((int)invokeMsg.invoke->operationID));
+			pInvoke->operationName = UTF8String::CreateNewFromASCII(szOperationName);
 
 		std::string strData = GetEncoded(m_eTransportEncoding, &invokeMsg);
 		LogTransportData(true, m_eTransportEncoding, szOperationName, strData.c_str(), strData.length(), &invokeMsg, nullptr);

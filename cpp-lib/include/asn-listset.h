@@ -607,7 +607,7 @@ namespace SNACC
 		{
 			return "AsnOptionalParameters";
 		}
-		AsnType* Clone() const override
+		virtual AsnOptionalParameters* Clone() const override
 		{
 			return new AsnOptionalParameters(*this);
 		}
