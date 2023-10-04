@@ -145,7 +145,7 @@ static void PrintROSEOnInvokeCS(FILE* src, int bEvents, ValueDef* vd)
 			fprintf(src, "\t\t\t\t\telse\n");
 			fprintf(src, "\t\t\t\t\t\t\tsingleCast(this, argument);\n");
 			fprintf(src, "\t\t\t\t}\n");
-			fprintf(src, "\t\t\t\tcatch (Exception ex) { m_Log.ErrorException(\"OnEvent_%s\", ex); }\n", vd->definedName);
+			fprintf(src, "\t\t\t\tcatch (Exception ex) { m_Log.Error(\"OnEvent_%s\", ex); }\n", vd->definedName);
 			fprintf(src, "\t\t\t}\n");
 			fprintf(src, "\t\t}\n");
 			fprintf(src, "\t}\n\n");
