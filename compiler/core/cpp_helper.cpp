@@ -3,6 +3,7 @@
 #include "../../c-lib/include/asn-incl.h"
 #include <filesystem>
 #include <string>
+#include <cstring> // -> MingW, Clang, GCC
 #include <regex>
 #include <chrono>
 #include <thread>
