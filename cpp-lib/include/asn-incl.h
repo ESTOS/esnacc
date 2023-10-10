@@ -899,7 +899,11 @@ public:
 	void Set(AsnIntType i);
 
 	void Set(long long i);
+
+    #ifndef WIN32
+    // With Win32 SJson::Int64 is the same as long long
     void Set(SJson::Int64 i);
+    #endif
 
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;

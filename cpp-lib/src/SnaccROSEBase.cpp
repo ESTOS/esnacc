@@ -1425,7 +1425,12 @@ int SnaccROSEBase::ConfigureFileLogging(const char* szPath, const bool bAppend /
 		m_bFlushEveryWrite = bFlushEveryWrite;
 		const char* szMode = bAppend ? "a" : "w";
 #ifdef WIN32
+    #ifdef _MSC_VER
 		m_pAsnLogFile = _fsopen(szPath, szMode, _SH_DENYWR);
+    #else
+        // MingW, Clang, GCC
+        m_pAsnLogFile = fopen(szPath, szMode);
+    #endif
 #else
         m_pAsnLogFile = fopen(szPath, szMode);
 #endif

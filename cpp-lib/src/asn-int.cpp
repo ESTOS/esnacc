@@ -741,10 +741,12 @@ void AsnInt::Set(AsnIntType iIn)
 	storeDERInteger(cTmp, sizeof(iIn), (iIn >= 0));
 }
 
+#ifndef WIN32
 void AsnInt::Set(SJson::Int64 iIn)
 {
     Set((long long)iIn);
 }
+#endif
 
 void AsnInt::Set(long long iIn)
 {
