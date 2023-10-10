@@ -861,7 +861,12 @@ public:
 	}
 
 	operator AsnIntType() const;
+
+#ifdef WIN32
 	long long GetLongLong() const;
+#else
+    SJson::Int64 GetLongLong() const;
+#endif
 
 	bool operator==(AsnIntType o) const;
 	bool operator!=(AsnIntType o) const
@@ -892,7 +897,12 @@ public:
 
 	void Set(const unsigned char* str, size_t len, bool unsignedFlag = true);
 	void Set(AsnIntType i);
+
+#ifdef WIN32
 	void Set(long long i);
+#else
+    void Set(SJson::Int64 i);
+#endif
 
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
