@@ -6,8 +6,11 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>MicroService Test Client</title>
     <link rel="stylesheet" href="sampleclient.css" type="text/css" />
-    <script src="/dist/bundle.js"></script>
-    <script>
+    <script type="module" src="/@vite/client"></script>
+    <script type="module" src="/src/client.ts"></script>
+    <script type="module">
+      import { theClient } from "/src/client.ts";
+
       function encoding_changed() {
         const encoding = document.getElementById("encoding");
         if(encoding)
@@ -42,15 +45,26 @@
         if(enabled && username)
           theClient.settingsManager.setSettings(enabled.checked, username.value);
       }
+      function clearLog() {
+        theClient.clearLog();
+      }
+      
+      window.encoding_changed = encoding_changed;
+      window.transport_changed = transport_changed;
+      window.getEvents = getEvents;
+      window.getSettings = getSettings;
+      window.setSettings = setSettings;
+      window.clearLog = clearLog;
+
       window.onload = function() {
         encoding_changed();
         transport_changed();
       }
-    </script>
+    </script> 
   </head>
 
   <body>
-    <script type="text/javascript" src="bundle.js"></script>
+
     <form>
       <h3>Welcome to the microservice test client</h3>
 
@@ -123,7 +137,7 @@
       <input
         type="button"
         id="clear"
-        onclick="theClient.clearLog();"
+        onclick="clearLog();"
         value="Clear log"
         disabled
       />

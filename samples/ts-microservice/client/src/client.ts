@@ -7,11 +7,11 @@ import { SettingsManager } from "./handlers/settingsManager";
 import { IErrorLogEntry, IInvokeLogEntry, IRejectLogEntry, IResultLogEntry, IROSELogEntryBase } from "./stub/TSASN1Base";
 
 // These settings are provided by the .env file
-const name = process.env["MICROSERVICE_SERVER_LISTEN_NAME"] || "localhost";
-const port = process.env["MICROSERVICE_SERVER_LISTEN_PORT"] || 3010;
+const name = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_NAME"] || "localhost";
+const port = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_PORT"] || 3010;
 let wstarget = "ws";
 let resttarget = "http";
-if (process.env["MICROSERVICE_SERVER_LISTEN_TLS"] === "1") {
+if (import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_TLS"] === "1") {
 	wstarget += "s";
 	resttarget += "s";
 }
