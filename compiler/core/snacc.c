@@ -1129,7 +1129,12 @@ Module* ParseAsn1File(const char* fileName, short ImportFlag, int parseComments)
 		}
 		unsigned char szFileType[3] = {0};
 #ifdef _WIN32
+    #ifdef _MSC_VER
 		fread_s(szFileType, 3, sizeof(char), 3, fPtr);
+    #else
+        // MingW, Clang, GCC
+        fread(szFileType, sizeof(char), 3, fPtr);
+    #endif
 #else
 		fread(szFileType, sizeof(char), 3, fPtr);
 #endif
