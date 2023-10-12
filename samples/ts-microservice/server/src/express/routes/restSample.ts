@@ -36,7 +36,8 @@ class RestSample implements IEModule {
 			try {
 				const invokeContext = new ReceiveInvokeContext({
 					clientIP: req.ip,
-					headers: req.headers
+					headers: req.headers,
+					url: req.url
 				});
 				const response = await theServer.receive(req.body, invokeContext);
 				if (response) {

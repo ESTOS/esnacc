@@ -14,10 +14,10 @@
 		"build": "tsc && vite build",
 		"preview": "vite preview",
 		"check": "npx madge --circular --extensions ts ./",
-		"lint": "eslint --cache --fix -c .eslintrc.precommit.js src/**/*.{js,ts,tsx}",
+		"lint": "eslint --cache --fix -c .eslintrc.precommit.cjs src/**/*.{js,ts,tsx}",
 		"lintclear": "del /s .eslintcache",
 		"relint": "run-s lintclear lint",
-		"lintnocache": "eslint --fix -c .eslintrc.precommit.js src/**/*.{js,ts,tsx}",
+		"lintnocache": "eslint --fix -c .eslintrc.precommit.cjs src/**/*.{js,ts,tsx}",
 		"depcheck": "npx depcheck"
 	},
 	"browserslist": [

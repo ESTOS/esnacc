@@ -120,7 +120,7 @@ export class ENetUC_Settings_ManagerROSE extends ROSEBase implements IInvokeHand
 	 * @returns a Promise resolving into AsnGetSettingsResult, an AsnRequestError or AsnInvokeProblem object
 	 */
 	public async invoke_asnGetSettings(argument: ENetUC_Settings_Manager.AsnGetSettingsArgument, invokeContext?: ISendInvokeContextParams): Promise<ENetUC_Settings_Manager.AsnGetSettingsResult | ENetUC_Common.AsnRequestError | AsnInvokeProblem> {
-		return this.handleInvoke(argument, ENetUC_Settings_Manager.AsnGetSettingsResult, OperationIDs.OPID_asnGetSettings, Converter.AsnGetSettingsArgument_Converter, Converter.AsnGetSettingsResult_Converter, invokeContext);
+		return this.handleInvoke(argument, ENetUC_Settings_Manager.AsnGetSettingsResult, OperationIDs.OPID_asnGetSettings, "asnGetSettings", Converter.AsnGetSettingsArgument_Converter, Converter.AsnGetSettingsResult_Converter, invokeContext);
 	}
 
 	// [PrintTSROSEInvokeMethod]
@@ -133,7 +133,7 @@ export class ENetUC_Settings_ManagerROSE extends ROSEBase implements IInvokeHand
 	 * @returns a Promise resolving into AsnSetSettingsResult, an AsnRequestError or AsnInvokeProblem object
 	 */
 	public async invoke_asnSetSettings(argument: ENetUC_Settings_Manager.AsnSetSettingsArgument, invokeContext?: ISendInvokeContextParams): Promise<ENetUC_Settings_Manager.AsnSetSettingsResult | ENetUC_Common.AsnRequestError | AsnInvokeProblem> {
-		return this.handleInvoke(argument, ENetUC_Settings_Manager.AsnSetSettingsResult, OperationIDs.OPID_asnSetSettings, Converter.AsnSetSettingsArgument_Converter, Converter.AsnSetSettingsResult_Converter, invokeContext);
+		return this.handleInvoke(argument, ENetUC_Settings_Manager.AsnSetSettingsResult, OperationIDs.OPID_asnSetSettings, "asnSetSettings", Converter.AsnSetSettingsArgument_Converter, Converter.AsnSetSettingsResult_Converter, invokeContext);
 	}
 
 	// [PrintTSROSEInvokeMethod]
@@ -145,7 +145,7 @@ export class ENetUC_Settings_ManagerROSE extends ROSEBase implements IInvokeHand
 	 * @returns undefined or, if bSendEventSynchronous has been set true when the event was sent
 	 */
 	public event_asnSettingsChanged(argument: ENetUC_Settings_Manager.AsnSettingsChangedArgument, invokeContext?: ISendInvokeContextParams): undefined | boolean {
-		return this.handleEvent(argument, OperationIDs.OPID_asnSettingsChanged, Converter.AsnSettingsChangedArgument_Converter, invokeContext);
+		return this.handleEvent(argument, OperationIDs.OPID_asnSettingsChanged, "asnSettingsChanged", Converter.AsnSettingsChangedArgument_Converter, invokeContext);
 	}
 
 	// [PrintTSROSEOnInvokeswitchCase]

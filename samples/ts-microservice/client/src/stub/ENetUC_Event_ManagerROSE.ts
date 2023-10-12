@@ -117,7 +117,7 @@ export class ENetUC_Event_ManagerROSE extends ROSEBase implements IInvokeHandler
 	 * @returns a Promise resolving into AsnCreateFancyEventsResult, an AsnRequestError or AsnInvokeProblem object
 	 */
 	public async invoke_asnCreateFancyEvents(argument: ENetUC_Event_Manager.AsnCreateFancyEventsArgument, invokeContext?: ISendInvokeContextParams): Promise<ENetUC_Event_Manager.AsnCreateFancyEventsResult | ENetUC_Common.AsnRequestError | AsnInvokeProblem> {
-		return this.handleInvoke(argument, ENetUC_Event_Manager.AsnCreateFancyEventsResult, OperationIDs.OPID_asnCreateFancyEvents, Converter.AsnCreateFancyEventsArgument_Converter, Converter.AsnCreateFancyEventsResult_Converter, invokeContext);
+		return this.handleInvoke(argument, ENetUC_Event_Manager.AsnCreateFancyEventsResult, OperationIDs.OPID_asnCreateFancyEvents, "asnCreateFancyEvents", Converter.AsnCreateFancyEventsArgument_Converter, Converter.AsnCreateFancyEventsResult_Converter, invokeContext);
 	}
 
 	// [PrintTSROSEInvokeMethod]
@@ -129,7 +129,7 @@ export class ENetUC_Event_ManagerROSE extends ROSEBase implements IInvokeHandler
 	 * @returns undefined or, if bSendEventSynchronous has been set true when the event was sent
 	 */
 	public event_asnFancyEvent(argument: ENetUC_Event_Manager.AsnFancyEventArgument, invokeContext?: ISendInvokeContextParams): undefined | boolean {
-		return this.handleEvent(argument, OperationIDs.OPID_asnFancyEvent, Converter.AsnFancyEventArgument_Converter, invokeContext);
+		return this.handleEvent(argument, OperationIDs.OPID_asnFancyEvent, "asnFancyEvent", Converter.AsnFancyEventArgument_Converter, invokeContext);
 	}
 
 	// [PrintTSROSEOnInvokeswitchCase]

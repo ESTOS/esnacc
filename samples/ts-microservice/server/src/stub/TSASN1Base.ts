@@ -8,7 +8,7 @@
 import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
 import { ROSEMessage_Converter } from "./SNACCROSE_Converter";
 import { DecodeContext, ConverterErrors, EncodeContext } from "./TSConverterBase";
-import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, EASN1TransportEncoding, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, IReceiveInvokeContextParams, ISendInvokeContextParams } from "./TSROSEBase";
+import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, EASN1TransportEncoding, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, IReceiveInvokeContextParams, ISendInvokeContextParams, ReceiveInvokeContext } from "./TSROSEBase";
 import * as ENetUC_Common from "./ENetUC_Common";
 import * as asn1ts from "@estos/asn1ts";
 
@@ -223,6 +223,8 @@ export interface ITransportMetaData {
 	invokeID: number | undefined;
 	direction: "in" | "out";
 	type: "ws" | "rest";
+	operationID: number | undefined;
+	operationName: string | undefined;
 	payLoad: string | object;
 }
 
@@ -402,7 +404,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @returns undefined or, if bSendEventSynchronous has been set true when the event was sent
 	 */
 	public sendEvent(data: IASN1InvokeData): undefined | boolean {
-		if (data.context?.bSendEventSynchronous)
+		if (data.invokeContext?.bSendEventSynchronous)
 			return this.sendEventSync(data);
 		else {
 			void this.sendInvoke(data);
@@ -425,7 +427,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param invokeContext - Invoke context as specified from the caller (if we have something like a client connection handler, we will have a sessionid. At least some identifier of the client should be provided (e.g. the ip address)
 	 * @returns - a string if an invoke was handled (contains the result) void in case an event was received (has no result)
 	 */
-	public async receive(rawData: object | Uint8Array, invokeContext: IReceiveInvokeContext): Promise<IResponseData | void> {
+	public async receive(rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): Promise<IResponseData | void> {
 		let result: ROSEReject | ROSEResult | ROSEError | void;
 
 		const errors = new ConverterErrors();
@@ -434,6 +436,11 @@ export abstract class TSASN1Base implements IASN1Transport {
 		// ROSEResult.result.result
 		// ROSEError.error
 		const message = asn1Decode<ROSEMessage>(rawData, ROSEMessage_Converter, errors, this.getDecodeContext(), invokeContext);
+		if (!message && invokeContext.url) {
+			const operationName = invokeContext.getOperationNameFromURL();
+			if (operationName) {
+			}
+		}
 		if (!message) {
 			const payLoad = ROSEBase.getDebugPayload(rawData);
 			this.log(ELogSeverity.error, "Failed to decode ROSEMessage", "receive", this, { payLoad, errors });
@@ -448,6 +455,13 @@ export abstract class TSASN1Base implements IASN1Transport {
 					invokeContext.operationID = message.invoke.operationID;
 					if (message.invoke.operationName)
 						invokeContext.operationName = message.invoke.operationName;
+					else {
+						// In case the client did not provide an operationName, look it up
+						// This only works if we have a registered handler for the operation
+						const operation = this.getOperation(invokeContext.invokeID);
+						if(operation)
+							invokeContext.operationName = operation?.operationName;
+					}
 					if (!invokeContext.clientConnectionID)
 						invokeContext.clientConnectionID = message.invoke.sessionID;
 				} else if (message.result)
@@ -554,6 +568,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 				clientIP: invokeContext.clientIP,
 				invokeID: invokeContext.invokeID,
 				type: invokeContext.clientConnectionID ? "ws" : "rest",
+				operationID: invokeContext.operationID,
+				operationName: invokeContext.operationName,
 				direction,
 				payLoad
 			};

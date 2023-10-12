@@ -18,8 +18,10 @@
       }
       function transport_changed() {
         const transport = document.getElementById("transport");
-        if(transport)
+        if(transport) {
           theClient.setTransport(transport.value);
+          updateTarget()
+        }
       }
       function getEvents() {
         const amount = document.getElementById("amount");
@@ -48,7 +50,14 @@
       function clearLog() {
         theClient.clearLog();
       }
-      
+      function updateTarget() {
+        const ahref = document.getElementById("target")
+        if(ahref) {
+          ahref.textContent = theClient.getTarget();
+          ahref.href = theClient.getTarget();
+        }
+      }
+
       window.encoding_changed = encoding_changed;
       window.transport_changed = transport_changed;
       window.getEvents = getEvents;
@@ -59,6 +68,7 @@
       window.onload = function() {
         encoding_changed();
         transport_changed();
+        updateTarget();
       }
     </script> 
   </head>
@@ -67,7 +77,6 @@
 
     <form>
       <h3>Welcome to the microservice test client</h3>
-
       <h4>General section:</h4>
       Encoding:
       <select id="encoding" onchange="encoding_changed()">
@@ -86,7 +95,9 @@
         value="Disconnect"
         disabled
       />
-      
+      <br/>
+      Connecting to: <a href="" target="_blank" id="target"></a>
+     
       <h4>Module One Functions:</h4>
       <br/>
       Amount:

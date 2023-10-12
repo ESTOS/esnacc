@@ -7,8 +7,8 @@ import { SettingsManager } from "./handlers/settingsManager";
 import { IErrorLogEntry, IInvokeLogEntry, IRejectLogEntry, IResultLogEntry, IROSELogEntryBase } from "./stub/TSASN1Base";
 
 // These settings are provided by the .env file
-const name = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_NAME"] || "localhost";
-const port = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_PORT"] || 3010;
+const name = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_NAME"] as string || "localhost";
+const port = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_PORT"] as string || "3010";
 let wstarget = "ws";
 let resttarget = "http";
 if (import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_TLS"] === "1") {
