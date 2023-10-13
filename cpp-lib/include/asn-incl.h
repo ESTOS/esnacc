@@ -901,8 +901,10 @@ public:
 	void Set(long long i);
 
     #ifndef WIN32
+    #ifndef __APPLE__
     // With Win32 SJson::Int64 is the same as long long
     void Set(SJson::Int64 i);
+    #endif
     #endif
 
 	AsnLen BEnc(AsnBuf& b) const override;

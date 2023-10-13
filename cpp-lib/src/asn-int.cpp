@@ -742,10 +742,12 @@ void AsnInt::Set(AsnIntType iIn)
 }
 
 #ifndef WIN32
+#ifndef __APPLE__
 void AsnInt::Set(SJson::Int64 iIn)
 {
     Set((long long)iIn);
 }
+#endif
 #endif
 
 void AsnInt::Set(long long iIn)
