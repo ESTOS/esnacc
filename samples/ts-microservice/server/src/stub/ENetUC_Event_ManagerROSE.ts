@@ -51,19 +51,35 @@ export class ENetUC_Event_ManagerROSE extends ROSEBase implements IInvokeHandler
 	}
 
 	/**
-	 * Returns the name for a certain operationID
+	 * Returns the operationName for an operationID
 	 *
 	 * @param id - the id we want to have the name for
-	 * @returns - the name or an emtpy string if not found
+	 * @returns - the name or undefined if not found
 	 */
-	public getNameForOperationID(id: OperationIDs): string {
+	public getNameForOperationID(id: OperationIDs): string | undefined {
 		switch (id) {
 			case OperationIDs.OPID_asnCreateFancyEvents:
 				return "asnCreateFancyEvents";
 			case OperationIDs.OPID_asnFancyEvent:
 				return "asnFancyEvent";
 			default:
-				return "";
+				return undefined;
+		}
+	}
+	/**
+	 * Returns the operationID for an operationName
+	 *
+	 * @param id - the id we want to have the name for
+	 * @returns - the id or undefined if not found
+	 */
+	public getIDForOperationName(name: string): OperationIDs | undefined {
+		switch (name) {
+			case "asnCreateFancyEvents":
+				return OperationIDs.OPID_asnCreateFancyEvents;
+			case "asnFancyEvent":
+				return OperationIDs.OPID_asnFancyEvent;
+			default:
+				return undefined;
 		}
 	}
 
@@ -101,8 +117,8 @@ export class ENetUC_Event_ManagerROSE extends ROSEBase implements IInvokeHandler
 	 * back to the other side. If a certain function is not register the function call will fail with not function not implemented
 	 */
 	public setHandler(handler: Partial<IENetUC_Event_ManagerROSE_Handler>) {
-		this.transport.registerOperation(this, handler, 4000);
-		this.transport.registerOperation(this, handler, 4050);
+		this.transport.registerOperation(this, handler, OperationIDs.OPID_asnCreateFancyEvents, "asnCreateFancyEvents");
+		this.transport.registerOperation(this, handler, OperationIDs.OPID_asnFancyEvent, "asnFancyEvent");
 	}
 
 	// [PrintTSROSEInvokeMethods]

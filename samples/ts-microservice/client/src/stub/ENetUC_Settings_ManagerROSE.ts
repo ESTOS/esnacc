@@ -52,12 +52,12 @@ export class ENetUC_Settings_ManagerROSE extends ROSEBase implements IInvokeHand
 	}
 
 	/**
-	 * Returns the name for a certain operationID
+	 * Returns the operationName for an operationID
 	 *
 	 * @param id - the id we want to have the name for
-	 * @returns - the name or an emtpy string if not found
+	 * @returns - the name or undefined if not found
 	 */
-	public getNameForOperationID(id: OperationIDs): string {
+	public getNameForOperationID(id: OperationIDs): string | undefined {
 		switch (id) {
 			case OperationIDs.OPID_asnGetSettings:
 				return "asnGetSettings";
@@ -66,7 +66,25 @@ export class ENetUC_Settings_ManagerROSE extends ROSEBase implements IInvokeHand
 			case OperationIDs.OPID_asnSettingsChanged:
 				return "asnSettingsChanged";
 			default:
-				return "";
+				return undefined;
+		}
+	}
+	/**
+	 * Returns the operationID for an operationName
+	 *
+	 * @param id - the id we want to have the name for
+	 * @returns - the id or undefined if not found
+	 */
+	public getIDForOperationName(name: string): OperationIDs | undefined {
+		switch (name) {
+			case "asnGetSettings":
+				return OperationIDs.OPID_asnGetSettings;
+			case "asnSetSettings":
+				return OperationIDs.OPID_asnSetSettings;
+			case "asnSettingsChanged":
+				return OperationIDs.OPID_asnSettingsChanged;
+			default:
+				return undefined;
 		}
 	}
 
@@ -104,9 +122,9 @@ export class ENetUC_Settings_ManagerROSE extends ROSEBase implements IInvokeHand
 	 * back to the other side. If a certain function is not register the function call will fail with not function not implemented
 	 */
 	public setHandler(handler: Partial<IENetUC_Settings_ManagerROSE_Handler>) {
-		this.transport.registerOperation(this, handler, 4100);
-		this.transport.registerOperation(this, handler, 4101);
-		this.transport.registerOperation(this, handler, 4150);
+		this.transport.registerOperation(this, handler, OperationIDs.OPID_asnGetSettings, "asnGetSettings");
+		this.transport.registerOperation(this, handler, OperationIDs.OPID_asnSetSettings, "asnSetSettings");
+		this.transport.registerOperation(this, handler, OperationIDs.OPID_asnSettingsChanged, "asnSettingsChanged");
 	}
 
 	// [PrintTSROSEInvokeMethods]

@@ -1,6 +1,6 @@
-// Centralised code for the TypeScript converters.
 // This file is embedded as resource file in the esnacc.exe ASN1 Compiler
-// Do not directly edit or modify the code as it is machine generated and will be overwritten with every compilation
+// Do NOT edit or modify this code as it is machine generated
+// and will be overwritten with every code generation of the esnacc.exe
 
 // prettier-ignore
 /* eslint-disable */
@@ -62,7 +62,7 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 		if (this.connectionhandler && data.invokeContext.clientConnectionID) {
 			const client = this.connectionhandler.getClientConnection(data.invokeContext.clientConnectionID);
 			if (client) {
-				const encoded = ROSEBase.encodeToTransport(data.rosePayLoad, this.encodeContext);
+				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 				client.send(encoded.forTransport);
 				return true;
 			}
@@ -88,7 +88,7 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 	 */
 	public override getEncoding(clientConnectionID?: string): EASN1TransportEncoding {
 		let result: undefined | EASN1TransportEncoding;
-		if(clientConnectionID)
+		if (clientConnectionID)
 			result = this.connectionhandler?.getClientConnection(clientConnectionID)?.getTransportEncoding();
 		if (result)
 			return result;
@@ -132,7 +132,7 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 					this.pendingInvokes.set(id, pending);
 					resolveUndefined = false;
 				}
-				const encoded = ROSEBase.encodeToTransport(data.rosePayLoad, this.encodeContext);
+				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 
 				this.logTransport(encoded.logData, "sendInvoke", "out", data.invokeContext);
 				if (!client.send(encoded.forTransport)) {

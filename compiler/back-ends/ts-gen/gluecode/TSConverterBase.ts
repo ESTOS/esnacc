@@ -1,6 +1,6 @@
-// Centralised code for the TypeScript converters.
 // This file is embedded as resource file in the esnacc.exe ASN1 Compiler
-// Do not directly edit or modify the code as it is machine generated and will be overwritten with every compilation
+// Do NOT edit or modify this code as it is machine generated
+// and will be overwritten with every code generation of the esnacc.exe
 
 // prettier-ignore
 /* eslint-disable */
@@ -166,6 +166,10 @@ export class DecodeContext implements IDecodeContext {
  * An array of converter errors
  */
 export class ConverterErrors extends Array<ConverterError> {
+	// Holds the error Count when we call storeState()
+	// The variable is used in validateResult to know if new errors where added or not
+	private lastStoredErrorCount = 0;
+
 	/**
 	 * Helper method that provides all parsing errors as text
 	 *
@@ -182,6 +186,33 @@ export class ConverterErrors extends Array<ConverterError> {
 	}
 
 	/**
+	 * Checks whether the converter has detected errors
+	 * 
+	 * @returns true if we hold errors or false if not
+	 */
+	public hasErrors(): boolean {
+		return this.length !== 0;
+	}
+
+	/**
+	 * Checks whether we have new errors since the last call of storeState()
+	 * 
+	 * @returns true if we hold new errors or false if not
+	 */
+	public hasNewErrors(): boolean {
+		return this.length !== this.lastStoredErrorCount;
+	}
+
+	/**
+	 * Updates the internal lastStoredErrorCount to the current amount of errors
+	 * We need the stored value to be able to validateResult (see if we hold new errors or not)
+	 */
+	public storeState(): void {
+		this.lastStoredErrorCount = this.length;
+	}
+
+
+	/**
 	 * Clears the list of errors
 	 */
 	public clear(): void {
@@ -192,14 +223,13 @@ export class ConverterErrors extends Array<ConverterError> {
 	 * Evaluates whether a function has caused errors or not and adds the errorDescription
 	 * to the appropriate position in the errorList
 	 *
-	 * @param errorCount - the ErrorCounter when the function was entered
 	 * @param context - the context what where we are in the structure
 	 * @param objectName - the objectName which we are currently validating
 	 * @returns true on success or false on error
 	 */
-	public validateResult(errorCount: number, context: IContextBase, objectName: string): boolean {
+	public validateResult(context: IContextBase, objectName: string): boolean {
 		// Is our error counter now higher than when entering the encoding/decoding function? -> no = return false
-		if (this.length <= errorCount)
+		if (this.length <= this.lastStoredErrorCount)
 			return true;
 
 		let bSuccess = false;

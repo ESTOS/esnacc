@@ -40,6 +40,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 		this.settingsManager = new SettingsManager(this);
 		this.addConnectionCallback(this);
 		this.setTarget(wstarget);
+		this.encodeContext.bAddTypes = false;
 		this.defaultTimeout = 1000;
 	}
 

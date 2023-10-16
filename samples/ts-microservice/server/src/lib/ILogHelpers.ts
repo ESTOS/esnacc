@@ -1,6 +1,7 @@
 import { ILogCallback, ILogData } from "uclogger";
-import { EOwnInterval, EOwnTimeout } from "./common_timers";
 import WebSocket from "ws";
+
+import { EOwnInterval, EOwnTimeout } from "./common_timers";
 
 // Loglevels we support
 export type LogLevels = "error" | "warn" | "info" | "debug";
@@ -24,6 +25,7 @@ type logany = any
 /**
  * This function removes rather large objects from a log object which bring no benefit to the log output
  * e.g. a websocket requires 100k json log, but has no sense to be logged, same for the timer objects
+ *
  * @param obj - the object to parse
  * @param levelstoprocess - a counter that is used to only process a certain level (deepness in the object)
  * @param id - in recursion the id of the parent element we are currently handling
@@ -67,30 +69,31 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 
 						let counter = 0;
 						result = {};
-						Object.keys(obj).forEach((iid) => {
+						const keys = Object.keys(obj);
+						for (const key of keys) {
 							if (counter < 20 || levelstoprocess === undefined) {
-								const element = obj[iid];
+								const element = obj[key];
 								if (levelstoprocess === undefined)
-									result[iid] = omitForLoggingInternal(element, levelstoprocess, iid, cache);
+									result[key] = omitForLoggingInternal(element, levelstoprocess, key, cache);
 								else if (levelstoprocess > 0)
-									result[iid] = omitForLoggingInternal(element, levelstoprocess - 1, iid, cache);
+									result[key] = omitForLoggingInternal(element, levelstoprocess - 1, key, cache);
 								else {
 									const type = typeof element;
 									if (type === "object")
-										result[iid] = "obj truncated";
+										result[key] = "obj truncated";
 									else if (type === "function")
-										result[iid] = "func truncated";
+										result[key] = "func truncated";
 									else if (type === "symbol")
-										result[iid] = "sym truncated";
+										result[key] = "sym truncated";
 									else
-										result[iid] = element;
+										result[key] = element;
 								}
 								counter++;
 							} else if (counter === 20) {
 								result.truncated = true;
 								counter++;
 							}
-						});
+						}
 					}
 				}
 				break;
@@ -112,6 +115,7 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 /**
  * This function removes rather large objects from a log object which bring no benefit to the log output
  * e.g. a websocket requires 100k json log, but has no sense to be logged, same for the timer objects
+ *
  * @param obj - the object to parse
  * @param levelstoprocess - a counter that is used to only process a certain level (deepness in the object)
  * @returns - the cleaned object

@@ -468,7 +468,7 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (IsROSEValueDef(m, vd))
-			fprintf(src, "\t\tthis.transport.registerOperation(this, handler, %d);\n", vd->value->basicValue->a.integer);
+			fprintf(src, "\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\");\n", vd->definedName, vd->definedName);
 	}
 	fprintf(src, "\t}\n");
 }
@@ -873,7 +873,7 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t * @param id - the id we want to have the name for\n");
 	fprintf(src, "\t * @returns - the name or undefined if not found\n");
 	fprintf(src, "\t */\n");
-	fprintf(src, "\tpublic getNameForOperationID(id: OperationIDs): string | undefined{\n");
+	fprintf(src, "\tpublic getNameForOperationID(id: OperationIDs): string | undefined {\n");
 	fprintf(src, "\t\tswitch (id) {\n");
 	ValueDef* v;
 	FOR_EACH_LIST_ELMT(v, m->valueDefs)
@@ -902,9 +902,8 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t * @param id - the id we want to have the name for\n");
 	fprintf(src, "\t * @returns - the id or undefined if not found\n");
 	fprintf(src, "\t */\n");
-	fprintf(src, "\tpublic getIDForOperationName(name: string): string {\n");
-	fprintf(src, "\t\tswitch (id) {\n");
-	ValueDef* v;
+	fprintf(src, "\tpublic getIDForOperationName(name: string): OperationIDs | undefined {\n");
+	fprintf(src, "\t\tswitch (name) {\n");
 	FOR_EACH_LIST_ELMT(v, m->valueDefs)
 	{
 		/* just do ints */
@@ -918,7 +917,7 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 			continue;
 
 		fprintf(src, "\t\t\tcase \"%s\":\n", v->definedName);
-		fprintf(src, "\t\t\t\treturn OPID_%s;\n", v->definedName);
+		fprintf(src, "\t\t\t\treturn OperationIDs.OPID_%s;\n", v->definedName);
 	}
 	fprintf(src, "\t\t\tdefault:\n");
 	fprintf(src, "\t\t\t\treturn undefined;\n");

@@ -1,10 +1,11 @@
 import express from "express";
+import fs from "fs";
 import http from "http";
 import https from "https";
-import fs from "fs";
-import path from "path";
 import net from "net";
+import path from "path";
 import { ILogData } from "uclogger";
+
 import { theLogger } from "../globals";
 const router = express.Router();
 
@@ -35,6 +36,7 @@ class ERouter {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
+	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public static getLogData(): ILogData {
@@ -45,10 +47,11 @@ class ERouter {
 
 	/**
 	 * Fetches the available Routes to add them to the express routing table
+	 *
 	 * @returns - the router which is a static in this scope to be handed over to the express app.use
 	 */
 	public static getRoutes(): express.Router {
-		this.getFiles().forEach((file: string) => {
+		for (const file of this.getFiles()) {
 			// eslint-disable-next-line @typescript-eslint/no-var-requires
 			const mod = require("./routes/" + file) as IEModule;
 			if (mod) {
@@ -56,12 +59,13 @@ class ERouter {
 					mod.init(router);
 				this.modules.push(mod);
 			}
-		});
+		}
 		return router;
 	}
 
 	/**
 	 * Allows to handle server related stuff in the Module (e.g. upgrade to websocket)
+	 *
 	 * @param server - the express server object to add the upgrade callback to
 	 */
 	public static setServer(server: http.Server | https.Server): void {
@@ -79,16 +83,18 @@ class ERouter {
 
 	/**
 	 * Retrieves the available modules in the same path
+	 *
 	 * @returns - the list of modules in the path
 	 */
 	private static getFiles(): string[] {
 		const routes = new Array<string>(0);
 		const normalizedPath = path.join(__dirname, "routes");
-		fs.readdirSync(normalizedPath).forEach((file: string) => {
+		const files = fs.readdirSync(normalizedPath);
+		for (const file of files) {
 			const ext = path.extname(file).toLowerCase();
 			if (ext === ".js")
 				routes.push(file);
-		});
+		}
 		return routes;
 	}
 }

@@ -1,6 +1,6 @@
 import * as express from "express";
-import WebSocket from "ws";
 import http from "http";
+import WebSocket from "ws";
 
 export interface IVerifyClientOptions {
 	origin: string;
@@ -18,6 +18,7 @@ export abstract class WebSocketRoute {
 
 	/**
 	 * Initializes the websocket route object
+	 *
 	 * @param router - parent router
 	 */
 	public init(router: express.Router): void {
@@ -27,5 +28,5 @@ export abstract class WebSocketRoute {
 		});
 	}
 
-	protected abstract verifyClient(options: IVerifyClientOptions, func: VerifyClientFunction): Promise<void>;
+	protected abstract verifyClient(options: IVerifyClientOptions, func: VerifyClientFunction): void;
 }

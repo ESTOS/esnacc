@@ -9,6 +9,7 @@ import { ROSEError, ROSEReject, ROSEResult } from "./SNACCROSE";
 import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base";
 import { EHttpHeaders, ELogSeverity, IASN1Transport, IDualWebSocket, EDualWebSocketState, IDualWebSocketCloseEvent, ISendInvokeContext, ReceiveInvokeContext, CustomInvokeProblemEnum, EASN1TransportEncoding, createInvokeReject, IASN1InvokeData, ROSEBase } from "./TSROSEBase";
 import * as ENetUC_Common from "./ENetUC_Common";
+import { TSConverter } from "./TSConverterBase";
 
 export interface IDualWebSocketOptions {
 	perMessageDeflate?: boolean;
@@ -163,7 +164,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 */
 	public sendEventSync(data: IASN1InvokeData): boolean {
 		if (this.ws && this.ws.readyState === EDualWebSocketState.OPEN) {
-			const encoded = ROSEBase.encodeToTransport(data.rosePayLoad, this.encodeContext);
+			const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 			this.ws.send(encoded.forTransport);
 			return true;
 		}
@@ -229,7 +230,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 						this.onROSEReject(invokeReject, receiveInvokeContext);
 						throw (invokeReject);
 					} else {
-						const encoded = ROSEBase.encodeToTransport(data.rosePayLoad, this.encodeContext);
+						const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 						this.logTransport(encoded.logData, "sendInvoke", "out", data.invokeContext);
 						// Send the message
 						ws.send(encoded.forTransport);
@@ -250,26 +251,13 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 					target += "/";
 				target += data.invokeContext.operationName;
 				
-				// The ROSE enevelop is somehow obsolete for a HTTP RPC call as the request gives the context for the invoke result correlation
-				// So we send it optionally and by default we don´t send it
-				const payLoad = data.invokeContext.bSendRestWithROSEEnvelop ? data.rosePayLoad : data.invokePayLoad;
-
-				const encoded = ROSEBase.encodeToTransport(payLoad, this.encodeContext);
+				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
+				const hex = ROSEBase.buf2hex(encoded.forTransport as Uint8Array);
+				
 				// Contains the encoded data for the transport
-				let body: Uint8Array | string | undefined;
+				const body = encoded.forTransport;
 				// Contains the encoded data for logging
-				let logData: Uint8Array | object | undefined;
-				body = encoded.forTransport;
-				logData = encoded.logData;
-
-				if (!data.invokeContext.bSendRestWithROSEEnvelop) {
-					// Special for a real empty request
-					if (body === "{}") {
-						body = undefined;
-						logData = undefined;
-						delete headers["Content-Type"];
-					}
-				}
+				const logData = encoded.logData;
 
 				// Set the additional headers from the class object
 				if (this.additionalHeaders) {
