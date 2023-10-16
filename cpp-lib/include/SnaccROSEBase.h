@@ -195,7 +195,7 @@ public:
 	 *  bFlushEveryWrite - true flushes every write operation (ideal for debugging), false to let the os decide when to flush
 	 *
 	 *  returns NO_ERROR on success (logfile opened, logfile closed, nothing to do) or an error value */
-	int ConfigureFileLogging(const wchar_t* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
+	int ConfigureFileLogging(const char* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
 
 	/* Retrieve the log level - do we need to log something */
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;
@@ -256,8 +256,8 @@ public:
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
 	 * pResponse - the response payload (is handled afterwards in the HandleInvokeResult method
 	 * szOperationName - the operationName (for logging purposes)
-	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
-	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (donï¿½t care about the result))
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (donï¿½t care about the result))
 	 * pCtx - contextual data for the invoke
 	 */
 	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, const char* szOperationName, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) override;
