@@ -800,13 +800,13 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 {
 	const char* szFieldName = e->fieldName;
 	const bool bOptional = e->type->optional ? true : false;
-	const bool bImplicit = e->type->implicit ? true : false;
+	// const bool bImplicit = e->type->implicit ? true : false;
 	char szOptional[128] = {0};
 	int iOptionalID = -1;
 	if (bOptional)
 	{
 		iOptionalID = GetContextID(e->type);
-		if (bImplicit && iOptionalID >= 0)
+		if (iOptionalID >= 0)
 			sprintf_s(szOptional, sizeof(szOptional), ", idBlock: { optionalID: %i }", iOptionalID);
 	}
 
@@ -819,9 +819,6 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 		else if (bOptional)
 			fprintf(src, "%sif (s.%s !== undefined)\n\t", szIndent, szAccessName);
 		fprintf(src, "%st.push(", szIndent);
-
-		if (!bImplicit && iOptionalID >= 0)
-			fprintf(src, "new asn1ts.Sequence({ idBlock: { optionalID: %i }, value: [", iOptionalID);
 
 		switch (type)
 		{
@@ -859,8 +856,6 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 			default:
 				snacc_exit("unknown type %d", type);
 		}
-		if (!bImplicit && iOptionalID >= 0)
-			fprintf(src, "] })");
 
 		fprintf(src, ");\n");
 

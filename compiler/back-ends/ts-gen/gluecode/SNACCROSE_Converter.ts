@@ -365,7 +365,7 @@ export class ROSEError_Converter {
 		TSConverter.validateParam(s, "error", "object", errors, newContext, true);
 		if (errors.validateResult(newContext, "ROSEError")) {
 			if (s.sessionID !== undefined)
-				t.push(new asn1ts.Sequence({ idBlock: { optionalID: 1 }, value: [new asn1ts.Utf8String({ value: s.sessionID, name: "sessionID" })] }));
+				t.push(new asn1ts.Utf8String({ value: s.sessionID, name: "sessionID", idBlock: { optionalID: 1 } }));
 			t.push(new asn1ts.Integer({ value: s.invokedID, name: "invokedID" }));
 			t.push(new asn1ts.Integer({ value: s.error_value, name: "error_value" }));
 			if (s.error !== undefined)
@@ -770,14 +770,14 @@ export class ROSEInvoke_Converter {
 		TSConverter.validateParam(s, "argument", "object", errors, newContext, true);
 		if (errors.validateResult(newContext, "ROSEInvoke")) {
 			if (s.sessionID !== undefined)
-				t.push(new asn1ts.Sequence({ idBlock: { optionalID: 1 }, value: [new asn1ts.Utf8String({ value: s.sessionID, name: "sessionID" })] }));
+				t.push(new asn1ts.Utf8String({ value: s.sessionID, name: "sessionID", idBlock: { optionalID: 1 } }));
 			t.push(new asn1ts.Integer({ value: s.invokeID, name: "invokeID" }));
 			if (s.linked_ID !== undefined)
 				t.push(new asn1ts.Integer({ value: s.linked_ID, name: "linked_ID", idBlock: { optionalID: 0 } }));
 			if (s.operationName !== undefined)
-				t.push(new asn1ts.Sequence({ idBlock: { optionalID: 2 }, value: [new asn1ts.Utf8String({ value: s.operationName, name: "operationName" })] }));
+				t.push(new asn1ts.Utf8String({ value: s.operationName, name: "operationName", idBlock: { optionalID: 2 } }));
 			if (_authentication)
-				t.push(new asn1ts.Sequence({ idBlock: { optionalID: 3 }, value: [_authentication] }));
+				t.push(_authentication);
 			t.push(new asn1ts.Integer({ value: s.operationID, name: "operationID" }));
 			if (s.argument !== undefined)
 				t.push(s.argument as asn1ts.Sequence);
@@ -878,7 +878,7 @@ export class ROSEResult_Converter {
 		const _result = ROSEResultSeq_Converter.toBER(s.result, errors, newContext, "result", true);
 		if (errors.validateResult(newContext, "ROSEResult")) {
 			if (s.sessionID !== undefined)
-				t.push(new asn1ts.Sequence({ idBlock: { optionalID: 1 }, value: [new asn1ts.Utf8String({ value: s.sessionID, name: "sessionID" })] }));
+				t.push(new asn1ts.Utf8String({ value: s.sessionID, name: "sessionID", idBlock: { optionalID: 1 } }));
 			t.push(new asn1ts.Integer({ value: s.invokeID, name: "invokeID" }));
 			if (_result)
 				t.push(_result);
@@ -1115,7 +1115,7 @@ export class ROSEReject_Converter {
 		const _authentication = ROSEAuthResult_Converter.toBER(s.authentication, errors, newContext, "authentication", 4);
 		if (errors.validateResult(newContext, "ROSEReject")) {
 			if (s.sessionID !== undefined)
-				t.push(new asn1ts.Sequence({ idBlock: { optionalID: 1 }, value: [new asn1ts.Utf8String({ value: s.sessionID, name: "sessionID" })] }));
+				t.push(new asn1ts.Utf8String({ value: s.sessionID, name: "sessionID", idBlock: { optionalID: 1 } }));
 			if (_invokedID)
 				t.push(_invokedID);
 			if (_reject)
@@ -1123,7 +1123,7 @@ export class ROSEReject_Converter {
 			if (s.details !== undefined)
 				t.push(new asn1ts.Utf8String({ value: s.details, name: "details" }));
 			if (_authentication)
-				t.push(new asn1ts.Sequence({ idBlock: { optionalID: 4 }, value: [_authentication] }));
+				t.push(_authentication);
 			return result;
 		}
 		return undefined;

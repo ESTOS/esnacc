@@ -32,7 +32,7 @@
 	},
 	"license": "UNLICENSED",
 	"dependencies": {
-		"@estos/asn1ts": "^3.1.11",
+		"@estos/asn1ts": "^3.1.12",
 		"cors": "^2.8.5",
 		"cross-env": "^7.0.3",
 		"date-fns": "^2.29.3",

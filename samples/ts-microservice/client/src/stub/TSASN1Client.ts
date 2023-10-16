@@ -9,7 +9,6 @@ import { ROSEError, ROSEReject, ROSEResult } from "./SNACCROSE";
 import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base";
 import { EHttpHeaders, ELogSeverity, IASN1Transport, IDualWebSocket, EDualWebSocketState, IDualWebSocketCloseEvent, ISendInvokeContext, ReceiveInvokeContext, CustomInvokeProblemEnum, EASN1TransportEncoding, createInvokeReject, IASN1InvokeData, ROSEBase } from "./TSROSEBase";
 import * as ENetUC_Common from "./ENetUC_Common";
-import { TSConverter } from "./TSConverterBase";
 
 export interface IDualWebSocketOptions {
 	perMessageDeflate?: boolean;
@@ -209,7 +208,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 					let timerID: ReturnType<typeof setTimeout> | undefined;
 					if (timeout)
 						timerID = setTimeout((): void => { this.onROSETimeout(id); }, timeout);
-					const pending = new PendingInvoke(data.invoke, resolve, reject, timerID);
+					const pending = new PendingInvoke(data.invoke, data.invokeContext, this.encodeContext, resolve, reject, timerID);
 					this.pendingInvokes.set(id, pending);
 					resolveUndefined = false;
 				}
@@ -252,8 +251,6 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				target += data.invokeContext.operationName;
 				
 				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
-				const hex = ROSEBase.buf2hex(encoded.forTransport as Uint8Array);
-				
 				// Contains the encoded data for the transport
 				const body = encoded.forTransport;
 				// Contains the encoded data for logging

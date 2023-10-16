@@ -12,7 +12,7 @@ import * as ENetUC_Common from "./ENetUC_Common";
 import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter";
 import { InvokeProblemenum, RejectProblem, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSERejectChoice, ROSEResult, ROSEResultSeq } from "./SNACCROSE";
 import { ROSEMessage_Converter, ROSEReject_Converter } from "./SNACCROSE_Converter";
-import { ConverterErrors, DecodeContext, IConverter, EncodeContext, IEncodeContext } from "./TSConverterBase";
+import { ConverterErrors, DecodeContext, IConverter, EncodeContext, IEncodeContext, TSConverter } from "./TSConverterBase";
 
 /**
  * The websocket is different between the node and the browser implemenation, thus we cast it to any
@@ -882,8 +882,12 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			} else
 				payLoad = ROSEBase.getDebugPayload(roseResult.error);
 		} else if (roseResult instanceof ROSEReject) {
-			this.transport.logReject(method, this, roseResult, argument, context, false);
-			return handleRoseReject(roseResult);
+			const reject = asn1Decode<ROSEReject>(roseResult, ROSEReject_Converter, converterErrors, this.transport.getDecodeContext(), context);
+			if (reject) {
+				this.transport.logReject(method, this, reject, argument, context, false);
+				return handleRoseReject(reject);
+			} else
+				payLoad = ROSEBase.getDebugPayload(roseResult);
 		} else if (roseResult)
 			payLoad = ROSEBase.getDebugPayload(roseResult);
 
