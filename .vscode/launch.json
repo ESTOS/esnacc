@@ -72,6 +72,14 @@
             "cwd": "${workspaceFolder}/samples/interface",
             "preLaunchTask": "CMake: build"
         },
+        {
+            "name": "LLDB - openapi - compile asn1 files",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": ["-o", "${workspaceFolder}/output/openapi", "-OA", "${workspaceFolder}/samples/interface/*.asn1"],
+            "preLaunchTask": "CMake: build"
+        },
     ],
 	"tasks": [
 		{
