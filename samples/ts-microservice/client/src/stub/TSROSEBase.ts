@@ -12,7 +12,7 @@ import * as ENetUC_Common from "./ENetUC_Common";
 import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter";
 import { InvokeProblemenum, RejectProblem, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSERejectChoice, ROSEResult, ROSEResultSeq } from "./SNACCROSE";
 import { ROSEMessage_Converter, ROSEReject_Converter } from "./SNACCROSE_Converter";
-import { ConverterErrors, DecodeContext, IConverter, EncodeContext, IEncodeContext, TSConverter } from "./TSConverterBase";
+import { ConverterErrors, DecodeContext, IConverter, EncodeContext, IEncodeContext } from "./TSConverterBase";
 
 /**
  * The websocket is different between the node and the browser implemenation, thus we cast it to any

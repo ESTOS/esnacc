@@ -9,9 +9,10 @@ import * as asn1ts from "@estos/asn1ts";
 
 import * as ENetUC_Common from "./ENetUC_Common";
 import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
-import { ROSEMessage_Converter } from "./SNACCROSE_Converter";
-import { DecodeContext, ConverterErrors, EncodeContext, IEncodeContext } from "./TSConverterBase";
+import { ROSEMessage_Converter, ROSEReject_Converter } from "./SNACCROSE_Converter";
+import { DecodeContext, ConverterErrors, EncodeContext } from "./TSConverterBase";
 import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, EASN1TransportEncoding, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, ReceiveInvokeContext } from "./TSROSEBase";
+import { encode } from "punycode";
 
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
@@ -124,28 +125,20 @@ export class PendingInvoke {
 
 	// The timerid (if used) for the settimeout, if the server does not answer in time the object is completed automatically with a reject message
 	private timerID?: ReturnType<typeof setTimeout> = undefined;
-	// the original Invoke to be able to provide the timeout reject message
+	// the original Invoke to be able to provide the timeout reject message (and for debugging)
 	private readonly invoke: ROSEInvoke;
-	// the context of the invoke
-	private readonly context: ISendInvokeContext;
-	// the encoding that has been used to send the data
-	private readonly encoding: IEncodeContext;
 
 	/**
 	 * Constructs a pending invoke object, simply stores the handed over arguments in the class
 	 *
-	 * @param invoke - The original invoke message where we are waiting for a response
-	 * @param context - The context that contains details about the invoke
-	 * @param encoding - The encoding beeing used to send the invoke (needed to properly encode the reject in case it´s needed)
+	 * @param message - The original invoke message where we are waiting for a response
 	 * @param resolve - The resolve method we call in case we receive a proper ROSE Response (Reject, Result, Error)
 	 * @param reject - The reject method - (currently not used)
 	 * @param timerID - The timerID of the timer that has been created to handle the timeout
 	 * The timer is created outside as it depends on if we are running in a browser or in node
 	 */
-	public constructor(invoke: ROSEInvoke, context: ISendInvokeContext, encoding: IEncodeContext, resolve: (value?: ROSEReject | ROSEResult | ROSEError) => void, reject: (reason?: unknown) => void, timerID?: ReturnType<typeof setTimeout>) {
-		this.invoke = invoke;
-		this.context = context;
-		this.encoding = encoding;
+	public constructor(message: ROSEInvoke, resolve: (value?: ROSEReject | ROSEResult | ROSEError) => void, reject: (reason?: unknown) => void, timerID?: ReturnType<typeof setTimeout>) {
+		this.invoke = message;
 		this.resolve = resolve;
 		// this.reject = reject;
 		this.timerID = timerID;
@@ -197,10 +190,6 @@ export class PendingInvoke {
 					invokeProblem: CustomInvokeProblemEnum.requestTimedOut
 				}
 			});
-
-			// We need to encode it in the encoding the client is currently awaiting from the other side
-			// IF the encoding is BER we need to encoe the element in BER 
-
 			this.resolve(reject);
 		}
 	}

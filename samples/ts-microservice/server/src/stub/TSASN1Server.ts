@@ -128,7 +128,7 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 					// Create a timer if a timeout was provided
 					const id = data.invoke.invokeID;
 					const timerid = setTimeout((): void => { this.onROSETimeout(id); }, timeout);
-					const pending = new PendingInvoke(data.invoke, data.invokeContext, this.encodeContext, resolve, reject, timerid);
+					const pending = new PendingInvoke(data.invoke, resolve, reject, timerid);
 					this.pendingInvokes.set(id, pending);
 					resolveUndefined = false;
 				}
