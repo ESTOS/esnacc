@@ -37,6 +37,13 @@ static void PrintOpenApiStringType(FILE* src, ModuleList* mods, Module* m, TypeD
 	fprintf(src, "{\"type\": \"string\"}");
 }
 
+static void PrintOpenApiTimeType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
+{
+	if (td != NULL)
+		fprintf(src, "\"%s\": ", td->definedName);
+	fprintf(src, "{\"type\": \"string\", \"format\": \"date-time\"}");
+}
+
 static void PrintOpenApiPrimitiveType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
 {
 	if (td != NULL)
@@ -217,95 +224,100 @@ void PrintOpenApiRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* 
 
 static void PrintOpenApiTypeDefinitions(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
 {
-	switch (tp->basicType->choiceId)
-	{
-		// Primitive Types
-		case BASICTYPE_UNKNOWN: /* 0 */
-		case BASICTYPE_BOOLEAN: /* 1 */
-		case BASICTYPE_INTEGER: /* 2 */
-		case BASICTYPE_NULL:	/* 5 */
-		case BASICTYPE_REAL:	/* 7 */
-		// Base64 String
-		case BASICTYPE_OCTETSTRING: /* 4 */
-		case BASICTYPE_ANY:			/* 16 */
-			PrintOpenApiPrimitiveType(src, mods, m, td, tp);
-			break;
 
-		// Always Integer Enum
-		case BASICTYPE_ENUMERATED: /* 8 */
-			PrintOpenApiEnum(src, mods, m, td, tp);
-			break;
+	// Special cases for special types
+	if (td != NULL && strcmp(td->definedName, "AsnSystemTime") == 0)
+		PrintOpenApiTimeType(src, mods, m, td, tp);
 
-		// Objects
-		case BASICTYPE_SEQUENCE: /* 9 */
-		case BASICTYPE_SET:		 /* 11 */
-			PrintOpenApiSequence(src, mods, m, td, tp);
-			break;
+	else
+		switch (tp->basicType->choiceId)
+		{
+			// Primitive Types
+			case BASICTYPE_UNKNOWN: /* 0 */
+			case BASICTYPE_BOOLEAN: /* 1 */
+			case BASICTYPE_INTEGER: /* 2 */
+			case BASICTYPE_NULL:	/* 5 */
+			case BASICTYPE_REAL:	/* 7 */
+			// Base64 String
+			case BASICTYPE_OCTETSTRING: /* 4 */
+			case BASICTYPE_ANY:			/* 16 */
+				PrintOpenApiPrimitiveType(src, mods, m, td, tp);
+				break;
 
-		// Arrays
-		case BASICTYPE_SEQUENCEOF: /* 10 */
-		case BASICTYPE_SETOF:	   /* 12 */
-			PrintOpenApiSequenceOf(src, mods, m, td, tp);
-			break;
+			// Always Integer Enum
+			case BASICTYPE_ENUMERATED: /* 8 */
+				PrintOpenApiEnum(src, mods, m, td, tp);
+				break;
 
-		// OneOf
-		case BASICTYPE_CHOICE: /* 13 */
-			PrintOpenApiChoice(src, mods, m, td, tp);
-			break;
+			// Objects
+			case BASICTYPE_SEQUENCE: /* 9 */
+			case BASICTYPE_SET:		 /* 11 */
+				PrintOpenApiSequence(src, mods, m, td, tp);
+				break;
 
-		// Refs
-		case BASICTYPE_LOCALTYPEREF:  /* 18 */
-		case BASICTYPE_IMPORTTYPEREF: /* 19 */
-			PrintOpenApiRef(src, mods, m, td, tp);
-			break;
+			// Arrays
+			case BASICTYPE_SEQUENCEOF: /* 10 */
+			case BASICTYPE_SETOF:	   /* 12 */
+				PrintOpenApiSequenceOf(src, mods, m, td, tp);
+				break;
 
-		// String
-		case BASICTYPE_NUMERIC_STR:		 /* 22 */
-		case BASICTYPE_PRINTABLE_STR:	 /* 23 */
-		case BASICTYPE_UNIVERSAL_STR:	 /* 24 */
-		case BASICTYPE_IA5_STR:			 /* 25 */
-		case BASICTYPE_BMP_STR:			 /* 26 */
-		case BASICTYPE_UTF8_STR:		 /* 27 */
-		case BASICTYPE_UTCTIME:			 /* 28 */
-		case BASICTYPE_GENERALIZEDTIME:	 /* 29 */
-		case BASICTYPE_GRAPHIC_STR:		 /* 30 */
-		case BASICTYPE_VISIBLE_STR:		 /* 31 aka ISO646String */
-		case BASICTYPE_GENERAL_STR:		 /* 32 */
-		case BASICTYPE_OBJECTDESCRIPTOR: /* 33 */
-		case BASICTYPE_VIDEOTEX_STR:	 /* 34 */
-		case BASICTYPE_T61_STR:			 /* 35 */
-		case BASICTYPE_OID:				 /* 6 */
-		case BASICTYPE_BITSTRING:		 /* 3 */
-			PrintOpenApiStringType(src, mods, m, td, tp);
-			break;
+			// OneOf
+			case BASICTYPE_CHOICE: /* 13 */
+				PrintOpenApiChoice(src, mods, m, td, tp);
+				break;
 
-		// Date
-		case BASICTYPE_ASNSYSTEMTIME: /* estos special where we encode a time into a real value based on VariantTime */
-			// For now this is also a nomrla string
-			PrintOpenApiStringType(src, mods, m, td, tp);
-			break;
+			// Refs
+			case BASICTYPE_LOCALTYPEREF:  /* 18 */
+			case BASICTYPE_IMPORTTYPEREF: /* 19 */
+				PrintOpenApiRef(src, mods, m, td, tp);
+				break;
 
-		// Unsupported
-		case BASICTYPE_EXTERNAL:			 /* 36 */
-		case BASICTYPE_OCTETCONTAINING:		 /* 37 */
-		case BASICTYPE_BITCONTAINING:		 /* 38 */
-		case BASICTYPE_RELATIVE_OID:		 /* 39 JKG: added 11/Jan/2004 */
-		case BASICTYPE_EXTENSION:			 /*40 JKG:  added 21/Jan/2004 */
-		case BASICTYPE_SEQUENCET:			 /* 41 Deepak: read Note above */
-		case BASICTYPE_OBJECTCLASS:			 /* 42 Deepak: added on 11/Dec/2002 */
-		case BASICTYPE_OBJECTCLASSFIELDTYPE: /* 43 Deepak: added on 04/Feb/2003 */
-		case BASICTYPE_MACROTYPE:			 /* 20 */
-		case BASICTYPE_MACRODEF:			 /* 21 */
-		case BASICTYPE_ANYDEFINEDBY:		 /* 17 */
-		case BASICTYPE_SELECTION:			 /* 14 */
-		case BASICTYPE_COMPONENTSOF:		 /* 15 */
-			fprintf(src, "// [UNSUPPORTED TYPE]\n");
-			break;
-		default:
-			fprintf(src, "// [UNKNOWN TYPE]\n");
-			/* TBD: print error? */
-			break;
-	}
+			// String
+			case BASICTYPE_NUMERIC_STR:		 /* 22 */
+			case BASICTYPE_PRINTABLE_STR:	 /* 23 */
+			case BASICTYPE_UNIVERSAL_STR:	 /* 24 */
+			case BASICTYPE_IA5_STR:			 /* 25 */
+			case BASICTYPE_BMP_STR:			 /* 26 */
+			case BASICTYPE_UTF8_STR:		 /* 27 */
+			case BASICTYPE_UTCTIME:			 /* 28 */
+			case BASICTYPE_GENERALIZEDTIME:	 /* 29 */
+			case BASICTYPE_GRAPHIC_STR:		 /* 30 */
+			case BASICTYPE_VISIBLE_STR:		 /* 31 aka ISO646String */
+			case BASICTYPE_GENERAL_STR:		 /* 32 */
+			case BASICTYPE_OBJECTDESCRIPTOR: /* 33 */
+			case BASICTYPE_VIDEOTEX_STR:	 /* 34 */
+			case BASICTYPE_T61_STR:			 /* 35 */
+			case BASICTYPE_OID:				 /* 6 */
+			case BASICTYPE_BITSTRING:		 /* 3 */
+				PrintOpenApiStringType(src, mods, m, td, tp);
+				break;
+
+			// Date
+			case BASICTYPE_ASNSYSTEMTIME: /* estos special where we encode a time into a real value based on VariantTime */
+				PrintOpenApiTimeType(src, mods, m, td, tp);
+				break;
+
+			// Unsupported
+			case BASICTYPE_EXTERNAL:			 /* 36 */
+			case BASICTYPE_OCTETCONTAINING:		 /* 37 */
+			case BASICTYPE_BITCONTAINING:		 /* 38 */
+			case BASICTYPE_RELATIVE_OID:		 /* 39 JKG: added 11/Jan/2004 */
+			case BASICTYPE_EXTENSION:			 /*40 JKG:  added 21/Jan/2004 */
+			case BASICTYPE_SEQUENCET:			 /* 41 Deepak: read Note above */
+			case BASICTYPE_OBJECTCLASS:			 /* 42 Deepak: added on 11/Dec/2002 */
+			case BASICTYPE_OBJECTCLASSFIELDTYPE: /* 43 Deepak: added on 04/Feb/2003 */
+			case BASICTYPE_MACROTYPE:			 /* 20 */
+			case BASICTYPE_MACRODEF:			 /* 21 */
+			case BASICTYPE_ANYDEFINEDBY:		 /* 17 */
+			case BASICTYPE_SELECTION:			 /* 14 */
+			case BASICTYPE_COMPONENTSOF:		 /* 15 */
+				fprintf(src, "// [UNSUPPORTED TYPE]\n");
+				break;
+			default:
+				fprintf(src, "// [UNKNOWN TYPE]\n");
+				/* TBD: print error? */
+				break;
+		}
 
 } /* PrintCxxTypeDefCode */
 
@@ -402,8 +414,7 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 		asnoperationcomment comment;
 		if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment))
 		{
-			// fprintf(src, "\t\t\t\t\"category\" : \"%s\",\n", comment.szCategory);
-			// if (comment.szShort)
+			fprintf(src, "\t\t\t\t\"tags\" : [\"%s\"],\n", comment.szCategory);
 			fprintf(src, "\t\t\t\t\"summary\" : \"%s\",\n", comment.szShort);
 			if (comment.szLong)
 				fprintf(src, "\t\t\t\t\"description\" : \"%s\",\n", comment.szLong);
