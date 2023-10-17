@@ -222,6 +222,10 @@ export interface IReceiveInvokeContextParams {
 	// in case the request was handled by rest we add the url here
 	// The url may contain the operationName in case the body is not containing the full ROSE message
 	url?: string;
+
+	// The request was received without a ROSE envelop
+	// This value is only available on the server side if a request was sent without a ROSE envelop as HTTP rest like request
+	noROSEEnvelop?: true;
 }
 export interface IReceiveInvokeContext extends IReceiveInvokeContextParams, IInvokeContextBase {
 }
@@ -233,6 +237,7 @@ export class ReceiveInvokeContext extends BaseInvokeContext implements IReceiveI
 	public clientIP?: string;
 	public handleEvent?: true;
 	public url?: string;
+	public noROSEEnvelop?: true;
 
 	/**
 	 * Constructor for the ReceiveInvokeContext
@@ -493,8 +498,8 @@ export interface IASN1InvokeData {
 
 // Contains encoded data and the associated log data when we are about to send data
 interface IASN1EncodedInvoke {
-	// Contains the encoded data for the transport
-	forTransport: Uint8Array | string;
+	// Contains the encoded data for the transportlayer (the payload)
+	payLoad: Uint8Array | string;
 	// Contains the encoded data for logging
 	logData: Uint8Array | object;
 }
@@ -1012,20 +1017,20 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 */
 	public static encodeToTransport(data: object | asn1ts.Sequence, encodeContext: IEncodeContext): IASN1EncodedInvoke {
 		// Contains the encoded data for the transport
-		let forTransport: Uint8Array | string;
+		let payLoad: Uint8Array | string;
 		// Contains the encoded data for logging
 		let logData: Uint8Array | object;
 
 		if (data instanceof asn1ts.Sequence) {
-			forTransport = new Uint8Array(data.toBER());
-			logData = forTransport;
+			payLoad = new Uint8Array(data.toBER());
+			logData = payLoad;
 		} else {
-			forTransport = JSON.stringify(data, null, encodeContext.bPrettyPrint ? "\t" : undefined);
+			payLoad = JSON.stringify(data, null, encodeContext.bPrettyPrint ? "\t" : undefined);
 			logData = data;
 		}
 
 		return {
-			forTransport,
+			payLoad,
 			logData
 		};
 	}

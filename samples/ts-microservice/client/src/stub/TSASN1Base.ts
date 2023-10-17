@@ -9,10 +9,9 @@ import * as asn1ts from "@estos/asn1ts";
 
 import * as ENetUC_Common from "./ENetUC_Common";
 import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
-import { ROSEMessage_Converter, ROSEReject_Converter } from "./SNACCROSE_Converter";
+import { ROSEMessage_Converter } from "./SNACCROSE_Converter";
 import { DecodeContext, ConverterErrors, EncodeContext } from "./TSConverterBase";
 import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, EASN1TransportEncoding, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, ReceiveInvokeContext } from "./TSROSEBase";
-import { encode } from "punycode";
 
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
@@ -429,13 +428,24 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param invokeContext - Invoke context as specified from the caller (if we have something like a client connection handler, we will have a sessionid. At least some identifier of the client should be provided (e.g. the ip address)
 	 * @returns - the return data and http status code
 	 */
-	public async receive(rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): Promise<IResponseData | void> {
-		const errors = new ConverterErrors();
+	public async receive(rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): Promise<IResponseData | undefined> {
 		// Decodes the outer ROSE envelop, the embedded elements are not decoded:
 		// ROSEInvoke.argument
 		// ROSEResult.result.result
 		// ROSEError.error
-		const message = asn1Decode<ROSEMessage>(rawData, ROSEMessage_Converter, errors, this.getDecodeContext(), invokeContext);
+		const errors = new ConverterErrors();
+		let message = asn1Decode<ROSEMessage>(rawData, ROSEMessage_Converter, errors, this.getDecodeContext(), invokeContext);
+		
+		if (!message && invokeContext.url && this.instanceType === ASN1ClassInstanceType.TSASN1Server) {
+			// If the message was not decodable check if a URL was specified (rest like request), and if we are on the server side
+			// We allow HTTP POST requests without a ROSE envelop
+			const result = this.receiveHandleWithoutROSEEnvelop(rawData, invokeContext);
+			if (!(result instanceof ROSEMessage))
+				return result;
+			else
+				message = result;
+		}
+
 		if (message)
 			return this.receiveHandleROSEMessage(message, rawData, invokeContext);
 
@@ -443,8 +453,6 @@ export abstract class TSASN1Base implements IASN1Transport {
 		this.log(ELogSeverity.error, "Failed to decode ROSEMessage", "receive", this, { payLoad, errors });
 		const result = createInvokeReject(0, InvokeProblemenum.unexpectedChildOperation, "Failed to parse argument " + errors.getDiagnostic());
 		// If the request was not parsed and the encoding has not been defined we now need to specify one for the result
-		if (!invokeContext.encoding)
-			invokeContext.encoding = EASN1TransportEncoding.JSON;
 		return this.handleResult(result, invokeContext);
 	}
 
@@ -456,7 +464,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param invokeContext - the invokeContext
 	 * @returns - the return data and http status code
 	 */
-	public async receiveHandleROSEMessage(message: ROSEMessage, rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): Promise<IResponseData | void> {
+	public async receiveHandleROSEMessage(message: ROSEMessage, rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): Promise<IResponseData | undefined> {
 		let result: ROSEReject | ROSEResult | ROSEError | undefined;
 		try {
 			if (message.invoke) {
@@ -503,20 +511,81 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
+	 * Handles an invoke that has no ROSE envelop
+	 *
+	 * @param rawData - the raw data as read from the transport
+	 * @param invokeContext - Invoke context as specified from the caller (if we have something like a client connection handler, we will have a sessionid. At least some identifier of the client should be provided (e.g. the ip address)
+	 * @returns - the returns the ROSEMessage on success, or an IResponseData on error or undefined
+	 */
+	public receiveHandleWithoutROSEEnvelop(rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): ROSEMessage | IResponseData | undefined {
+		invokeContext.noROSEEnvelop = true;
+
+		const errors = new ConverterErrors();
+		const operationName = invokeContext.getOperationNameFromURL();
+		if (!operationName) {
+			const payLoad = ROSEBase.getDebugPayload(rawData);
+			this.log(ELogSeverity.error, "Could not retrieve operationName from URL", "receive", this, { payLoad, errors, url: invokeContext.url });
+			const result = createInvokeReject(0, InvokeProblemenum.unrecognisedOperation, "Failed to retrieve operationName from URL");
+			return this.handleResult(result, invokeContext);
+		}
+		const handler = this.handlersByName.get(operationName);
+		if (!handler) {
+			const payLoad = ROSEBase.getDebugPayload(rawData);
+			this.log(ELogSeverity.error, "There is no registered handler for this operation", "receive", this, { payLoad, errors, url: invokeContext.url, operationName});
+			const result = createInvokeReject(0, InvokeProblemenum.unrecognisedOperation, "There is no registered handler for this operation");
+			return this.handleResult(result, invokeContext);
+		}
+
+		// If the request did not contain any content we need to distinguish the encoding from the content-type
+		if (invokeContext.headers) {
+			let bEncodingFromHeader = false;
+			if (rawData instanceof Uint8Array && rawData.length === 0)
+				bEncodingFromHeader = true;
+			else if (Object.keys(rawData).length === 0)
+				bEncodingFromHeader = true;
+			if (bEncodingFromHeader) {
+				let contentType = invokeContext.headers["content-type"]
+				if (!contentType)
+					contentType = invokeContext.headers.accept
+				if (contentType) {
+					contentType = contentType.toLowerCase();
+					if (contentType === "application/octet-stream")
+						invokeContext.encoding = EASN1TransportEncoding.BER;
+					else if (contentType === "application/json")
+						invokeContext.encoding = EASN1TransportEncoding.JSON;
+				}
+			}
+		}
+
+
+
+		// If we found an operationName and an associated handler for it we now need to create a matching ROSE envelop for the handling of the request
+		const message = new ROSEMessage({
+			invoke: new ROSEInvoke({
+				invokeID: 1,
+				operationID: handler.operationID,
+				argument: rawData
+			})
+		})
+
+		return message;
+	}
+
+	/**
 	 * Logs the transport data
 	 *
 	 * @param result - the result to handle
 	 * @param invokeContext - the invokeContext
 	 * @returns - the responseData object
 	 */
-	protected handleResult(result: ROSEReject | ROSEResult | ROSEError | undefined, invokeContext: IReceiveInvokeContext): IResponseData | void {
+	protected handleResult(result: ROSEReject | ROSEResult | ROSEError | undefined, invokeContext: IReceiveInvokeContext): IResponseData | undefined {
 		if (!result)
 			return;
 
-		let encoded: object | asn1ts.Sequence | undefined = undefined;
-		const errors = new ConverterErrors();
-		const encodeContext = this.getEncodeContext();
+		if (!invokeContext.encoding)
+			invokeContext.encoding = EASN1TransportEncoding.JSON;
 
+		let plainResponse: unknown | undefined;
 		const message = new ROSEMessage();
 		let resultValue = 0;
 		if (result instanceof ROSEReject) {
@@ -529,12 +598,15 @@ export abstract class TSASN1Base implements IASN1Transport {
 			else if (result.reject?.returnResultProblem)
 				resultValue = result.reject?.returnResultProblem;
 			message.reject = result;
-		} else if (result instanceof ROSEResult)
+			plainResponse = result;
+		} else if (result instanceof ROSEResult) {
 			message.result = result;
-		else if (result instanceof ROSEError) {
+			plainResponse = result.result?.result;
+		} else if (result instanceof ROSEError) {
 			message.error = result;
 			message.error.sessionID = invokeContext.clientConnectionID;
 			resultValue = result.error_value;
+			plainResponse = result.error;
 		}
 
 		if (resultValue === 0)
@@ -543,23 +615,24 @@ export abstract class TSASN1Base implements IASN1Transport {
 			resultValue = 500;
 	
 		// Encode the ROSE message with the embedded result object
-		encoded = asn1Encode(invokeContext.encoding, message, ROSEMessage_Converter, errors, encodeContext);
-		if (!encoded) {
-			this.log(ELogSeverity.error, "Failed to encode result message", "receive", this, { errors: errors.getDiagnostic() });
-			return;
-		}
+		let encoded: object | asn1ts.Sequence | undefined = undefined;
 
-		let payLoad: Uint8Array | string;
-		if (invokeContext.encoding === EASN1TransportEncoding.BER) {
-			payLoad = new Uint8Array((encoded as asn1ts.Sequence).toBER());
-			this.logTransport(payLoad, "receive", "out", invokeContext);
-		} else {
-			payLoad = JSON.stringify(encoded, null, encodeContext.bPrettyPrint ? "\t" : undefined);
-			this.logTransport(encoded, "receive", "out", invokeContext);
-		}
+		const encodeContext = this.getEncodeContext();
+		if (!invokeContext.noROSEEnvelop) {
+			const errors = new ConverterErrors();
+			encoded = asn1Encode(invokeContext.encoding, message, ROSEMessage_Converter, errors, encodeContext);
+			if (!encoded) {
+				this.log(ELogSeverity.error, "Failed to encode result message", "receive", this, { errors: errors.getDiagnostic() });
+				return;
+			}
+		} else
+			encoded = plainResponse as object | asn1ts.Sequence;
+
+		const forTransport = ROSEBase.encodeToTransport(encoded, this.encodeContext);
+		this.logTransport(forTransport.logData, "receive", "out", invokeContext);
 
 		return {
-			payLoad,
+			payLoad: forTransport.payLoad,
 			httpStatusCode: resultValue
 		};
 	}
