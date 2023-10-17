@@ -154,11 +154,17 @@ export class DecodeContext implements IDecodeContext {
 	/**
 	 * Constructs a DecodeContext object, simply stores the handed over arguments in the class if provided
 	 *
-	 * @param bLaxDecoding - Shall the decoder ignore errors and do best it can
+	 * @param config - either a boolean to dedicatedly set lax decoding (old constructor), or a Partial IDecodeContext to configure more options
 	 */
-	public constructor(bLaxDecoding?: boolean) {
-		if (bLaxDecoding !== undefined)
-			this.bLaxDecoding = bLaxDecoding;
+	public constructor(config?: boolean | Partial<IDecodeContext>) {
+		if (!config)
+			return;
+		if (typeof config === "boolean")
+			this.bLaxDecoding = config;
+		else {
+			if (config.bLaxDecoding !== undefined)
+				this.bLaxDecoding = config.bLaxDecoding;
+		}
 	}
 }
 
@@ -359,6 +365,22 @@ export class TSConverter {
 			if (data instanceof Uint8Array) {
 				try {
 					const schema = getschema();
+					if (data.length === 0) {
+						// Special, if the incoming data is empty, the schema validation will fail but we allow that for structures that have no mandatory attributes
+						if (schema instanceof asn1ts.Sequence) {
+							let bContainsMandatory = false;
+							for(const value of schema.valueBlock.value)
+							{
+								if(!value.optional) {
+									bContainsMandatory = true;
+									break;
+								}
+							}
+							if (!bContainsMandatory)
+								return new asn1ts.Sequence();
+						}
+					}
+
 					const result = asn1ts.verifySchema(data, schema);
 					if (!result.verified) {
 						const message = JSON.stringify(result.errors);

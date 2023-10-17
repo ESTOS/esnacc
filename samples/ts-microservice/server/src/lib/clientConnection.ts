@@ -307,28 +307,16 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 		// Set the logContext for our invoke to have it available everywhere we then go within our code
 		theLogStorage.enterWith(this.logContext);
 
-		let message: Uint8Array | object;
-		// Ensure that the data is either an Uint8Array for BER or a json object for JSON encoding
-		if (this.encoding === undefined || this.encoding === EASN1TransportEncoding.BER) {
-			if (data instanceof Uint8Array)
-				message = data;
-			else if (data instanceof ArrayBuffer)
-				message = new Uint8Array(data);
-			else if (data instanceof Blob)
-				message = new Uint8Array(await data.arrayBuffer());
-			else {
-				debugger;
-				theLogger.error("Received payload which we could not handle", "wsClientMessage", this);
-				return;
-			}
-		} else {
-			const rawData = data.toString();
-			try {
-				message = JSON.parse(rawData) as object;
-			} catch (error) {
-				theLogger.error("Failed to JSON parse request object", "wsClientMessage", this, undefined, error);
-				return;
-			}
+		let message: Uint8Array | undefined;
+		if (data instanceof Uint8Array)
+			message = data;
+		else if (data instanceof ArrayBuffer)
+			message = new Uint8Array(data);
+		else if (data instanceof Blob)
+			message = new Uint8Array(await data.arrayBuffer());
+		else {
+			theLogger.error("Received payload which we could not handle", "wsClientMessage", this);
+			return;
 		}
 
 		try {
