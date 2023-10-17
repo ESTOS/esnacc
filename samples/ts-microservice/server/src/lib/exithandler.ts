@@ -1,10 +1,11 @@
-import { theConfig, theClientConnectionManager, theServer, theLogger, theLogStorage } from "../globals";
-import heapdump from "heapdump";
 import { format } from "date-fns";
-import path from "path";
 import { writeFileSync } from "fs";
+import heapdump from "heapdump";
+import path from "path";
 import { ILogData } from "uclogger";
+
 import { Common } from "./common";
+import { theConfig, theClientConnectionManager, theServer, theLogger, theLogStorage } from "../globals";
 
 enum CONF_EXIT_CODES {
 	EXIT_CODE_UNHANDLED_PROMISE = 64,

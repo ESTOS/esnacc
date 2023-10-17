@@ -1416,19 +1416,33 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 	return lRoseResult;
 }
 
-int SnaccROSEBase::ConfigureFileLogging(const wchar_t* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = false */)
+int SnaccROSEBase::ConfigureFileLogging(const char* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = false */)
 {
 	std::lock_guard<std::mutex> lock(m_mtxLogFile);
 
-	if (szPath && wcslen(szPath) && !m_pAsnLogFile)
+	if (szPath && strlen(szPath) && !m_pAsnLogFile)
 	{
 		m_bFlushEveryWrite = bFlushEveryWrite;
-		const wchar_t* szMode = bAppend ? L"a" : L"w";
-		m_pAsnLogFile = _wfsopen(szPath, szMode, _SH_DENYWR);
+		const char* szMode = bAppend ? "a" : "w";
+#ifdef WIN32
+    #ifdef _MSC_VER
+		m_pAsnLogFile = _fsopen(szPath, szMode, _SH_DENYWR);
+    #else
+        // MingW, Clang, GCC
+        m_pAsnLogFile = fopen(szPath, szMode);
+    #endif
+#else
+        m_pAsnLogFile = fopen(szPath, szMode);
+#endif
 		if (!m_pAsnLogFile)
 		{
 			int iErr = 0;
-			_get_errno(&iErr);
+#ifdef WIN32
+    _get_errno(&iErr);
+#else
+    iErr = errno;
+#endif
+
 			return iErr;
 		}
 		else
@@ -1437,7 +1451,7 @@ int SnaccROSEBase::ConfigureFileLogging(const wchar_t* szPath, const bool bAppen
 			m_bAsnLogFileContainsData = ftell(m_pAsnLogFile) > 0;
 		}
 	}
-	else if ((!szPath || !wcslen(szPath)) && m_pAsnLogFile)
+	else if ((!szPath || !strlen(szPath)) && m_pAsnLogFile)
 	{
 		fclose(m_pAsnLogFile);
 		m_pAsnLogFile = nullptr;
@@ -1451,7 +1465,7 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 	if (!m_pAsnLogFile)
 		return;
 
-	// Die ASN.1-Funktionen können auch aus verschiedenen Threads gerufen werden.
+	// Die ASN.1-Funktionen kï¿½nnen auch aus verschiedenen Threads gerufen werden.
 	// Das Schreiben in die roseout.log muss aber damit serialisiert werden.
 	// Der Lock sollte nicht schaden, da nur die Datei selbst gelockt wird und kein anderes Objekt (PAIM-1732).
 	std::lock_guard<std::mutex> lock(m_mtxLogFile);
@@ -1467,7 +1481,11 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 		auto duration = currentTime.time_since_epoch();
 		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration) % 1000;
 		std::tm timeInfo;
+#ifdef WIN32
 		gmtime_s(&timeInfo, &currentTimeT);
+#else
+        gmtime_r(&currentTimeT, &timeInfo);
+#endif
 		std::ostringstream strTime;
 		strTime << std::put_time(&timeInfo, "%Y-%m-%dT%H:%M:%S.");
 		strTime << std::setfill('0') << std::setw(3) << milliseconds.count();
