@@ -7,6 +7,7 @@ module.exports = {
 		"no-unreachable": "warn",
 		"no-unused-vars": "error",
 		"no-empty": "error",
+		"prefer-const": "error",
 		"import/no-deprecated": "error",
 		"@typescript-eslint/no-unused-vars": [
 			"error", {

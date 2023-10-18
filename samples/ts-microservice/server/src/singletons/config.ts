@@ -1,5 +1,6 @@
-import { EConfigTemplate, validators, ICoreConfig } from "ucconfig";
 import dotenv from "dotenv";
+import { EConfigTemplate, validators, ICoreConfig } from "ucconfig";
+
 import { Common } from "../lib/common";
 import { EASN1TransportEncoding } from "../stub/TSROSEBase";
 
@@ -58,6 +59,7 @@ export class Config extends EConfigTemplate {
 
 	/**
 	 * Getter for the main config
+	 *
 	 * @returns - IConfig object
 	 */
 	public get config(): IConfig {
@@ -66,6 +68,7 @@ export class Config extends EConfigTemplate {
 
 	/**
 	 * Inits all configurations/settings from given environment variables
+	 *
 	 * @returns - Instance of this config
 	 */
 	private init(): IEconfConfig {
@@ -87,6 +90,7 @@ export class Config extends EConfigTemplate {
 
 	/**
 	 * Current working directory of the Node.js process
+	 *
 	 * @returns - current working directory of the Node.js process
 	 */
 	public get rootdir(): string {

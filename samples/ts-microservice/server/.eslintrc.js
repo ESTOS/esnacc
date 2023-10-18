@@ -5,9 +5,9 @@ module.exports = {
 		"coverage",
 		"__snapshots__",
 		"__mocks__",
-		"*.test.ts",
 		"*.md",
 		"*.bak",
+		"*.js",
 		"*.json",
 		"*.buildagent",
 		"*.eslintrc.js",
@@ -26,7 +26,8 @@ module.exports = {
 	"plugins": [
 		"@typescript-eslint",
 		"jsdoc",
-		"eslint-plugin-tsdoc"
+		"github",
+		"deprecation"
 	],
 	"parserOptions": {
 		"ecmaVersion": 2018,
@@ -35,6 +36,7 @@ module.exports = {
 		"extraFileExtensions": []
 	},
 	"rules": {
+		"accessor-pairs": "off",
 		"brace-style": "off",
 		"no-tabs": "off",
 		"max-len": "off",
@@ -82,18 +84,18 @@ module.exports = {
 		],
 		"no-unneeded-ternary": "off",
 		"no-use-before-define": "off",
+		"no-nested-ternary": "error",
 		"no-empty": "off",
 		"no-self-compare": "error",
 		"no-var": "error",
-		"prefer-const": "error",
+		"prefer-const": "off",
+		"deprecation/deprecation": "warn",
+		"github/array-foreach": "error",
 		"@typescript-eslint/no-unused-vars": "off",
 		"@typescript-eslint/no-use-before-define": "error",
 		"@typescript-eslint/no-misused-new": "error",
 		"@typescript-eslint/no-floating-promises": "error",
-		"@typescript-eslint/no-misused-promises": ["error", {
-				"checksVoidReturn": false
-			}
-		],
+		"@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": { "arguments": false } }],
 		"@typescript-eslint/indent": ["error", "tab", { "SwitchCase": 1 }],
 		"@typescript-eslint/brace-style": ["error", "1tbs", { "allowSingleLine": true }],
 		"@typescript-eslint/no-confusing-void-expression": "error",
@@ -128,6 +130,7 @@ module.exports = {
 				"ignoreRestArgs": true
 			}
 		],
+		"@typescript-eslint/explicit-function-return-type": "error",
 		"@typescript-eslint/no-empty-function": "off",
 		"@typescript-eslint/no-this-alias": "error",
 		"@typescript-eslint/type-annotation-spacing": "error",
@@ -195,13 +198,13 @@ module.exports = {
 				"prefix": ["I"]
 			}
 		],
-		"tsdoc/syntax": "warn",
 		"jsdoc/check-indentation": 1,
 		"jsdoc/check-syntax": 1,
 		"jsdoc/no-types": 1,
 		"jsdoc/require-description": 1,
 		"jsdoc/require-param-type": 0,
 		"jsdoc/require-returns-type": 0,
+		"jsdoc/tag-lines": ["error", "any",{"startLines":1, "endLines":0}],
 		"jsdoc/require-jsdoc": [1, {
 				"require": {
 					"ArrowFunctionExpression": false,
@@ -212,6 +215,22 @@ module.exports = {
 					"MethodDefinition": true
 				}
 			}
-		]
+		],
+		'import/order': [
+			'error',
+			{
+			  groups: [['builtin', 'external'], 'internal'],
+			  'newlines-between': 'always',
+			  alphabetize: { order: 'asc' }
+			},
+		],
+		'no-restricted-syntax': [
+			'error',
+			{
+			  message: "Please don't use initEmpty on SNACC objects. It´s for the ROSE stub only. Always provide all parameters to create SNACC stub objects",
+			  selector:
+				'MemberExpression > Identifier[name="initEmpty"]'
+			}
+		  ]
 	}
 }

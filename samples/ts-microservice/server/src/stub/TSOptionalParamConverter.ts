@@ -1,8 +1,12 @@
-import { TSConverter, DecodeContext, EncodeContext, ConverterErrors, ConverterError, ConverterErrorType, INamedType } from "./TSConverterBase";
-import * as ENetUC_Common from "./ENetUC_Common";
+// This file is embedded as resource file in the esnacc.exe ASN1 Compiler
+// Do NOT edit or modify this code as it is machine generated
+// and will be overwritten with every code generation of the esnacc.exe
 
 // prettier-ignore
 /* eslint-disable */
+
+import * as ENetUC_Common from "./ENetUC_Common";
+import { TSConverter, DecodeContext, EncodeContext, ConverterErrors, ConverterError, ConverterErrorType, INamedType } from "./TSConverterBase";
 
 /**
  * Sadly someone added custom written encoders decoders for the custom parameters in the UCServer
@@ -21,7 +25,7 @@ type IUCServerOptionalParameters = Record<string, IUCServerOptionalParam>
 /**
  * Helper class that contains the code to do the custom conversion the UCServer is doing for the AsnOptionalParameters
  */
-export class EAsnOptionalParameters_Converter {
+export class EAsnOptionalParametersConverter {
 	/**
 	 * Encodes an AsnOptionalParameters object to JSON string encoding in the proprietary Notation the UCServer is using
 	 *
@@ -33,7 +37,7 @@ export class EAsnOptionalParameters_Converter {
 	 */
 	public static toJSON(obj: ENetUC_Common.AsnOptionalParameters, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): ENetUC_Common.AsnOptionalParameters & INamedType | undefined {
 		errors ||= new ConverterErrors();
-		const errorCount = errors.length;
+		errors.storeState();
 		const newContext = TSConverter.addEncodeContext(context, parametername, "AsnOptionalParameters");
 
 		if (!newContext?.bUCServerOptionalParams) {
@@ -63,7 +67,7 @@ export class EAsnOptionalParameters_Converter {
 			}
 		}
 
-		if (errors.validateResult(errorCount, newContext, "AsnOptionalParameters"))
+		if (errors.validateResult(newContext, "AsnOptionalParameters"))
 			return result as unknown as ENetUC_Common.AsnOptionalParameters;
 
 		return undefined;

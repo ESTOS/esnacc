@@ -4,11 +4,12 @@
 // Please do not forget to check for circular dependencies every now and then using
 // npm run check
 
-import { Config, IConfig } from "./singletons/config";
-import { ClientConnectionManager } from "./singletons/clientConnectionManager";
-import { Server } from "./singletons/server";
 import { ELogger } from "uclogger";
+
 import { LogLocalStorage } from "./singletons/asyncLocalStorage";
+import { ClientConnectionManager } from "./singletons/clientConnectionManager";
+import { Config, IConfig } from "./singletons/config";
+import { Server } from "./singletons/server";
 
 export const theConfig: IConfig = new Config().config;
 export const theClientConnectionManager = ClientConnectionManager.getInstance();

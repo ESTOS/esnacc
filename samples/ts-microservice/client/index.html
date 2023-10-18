@@ -6,7 +6,11 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>MicroService Test Client</title>
     <link rel="stylesheet" href="sampleclient.css" type="text/css" />
-    <script>
+    <script type="module" src="/@vite/client"></script>
+    <script type="module" src="/src/client.ts"></script>
+    <script type="module">
+      import { theClient } from "/src/client.ts";
+
       function encoding_changed() {
         const encoding = document.getElementById("encoding");
         if(encoding)
@@ -14,8 +18,10 @@
       }
       function transport_changed() {
         const transport = document.getElementById("transport");
-        if(transport)
+        if(transport) {
           theClient.setTransport(transport.value);
+          updateTarget()
+        }
       }
       function getEvents() {
         const amount = document.getElementById("amount");
@@ -41,18 +47,36 @@
         if(enabled && username)
           theClient.settingsManager.setSettings(enabled.checked, username.value);
       }
+      function clearLog() {
+        theClient.clearLog();
+      }
+      function updateTarget() {
+        const ahref = document.getElementById("target")
+        if(ahref) {
+          ahref.textContent = theClient.getTarget();
+          ahref.href = theClient.getTarget();
+        }
+      }
+
+      window.encoding_changed = encoding_changed;
+      window.transport_changed = transport_changed;
+      window.getEvents = getEvents;
+      window.getSettings = getSettings;
+      window.setSettings = setSettings;
+      window.clearLog = clearLog;
+
       window.onload = function() {
         encoding_changed();
         transport_changed();
+        updateTarget();
       }
-    </script>
+    </script> 
   </head>
 
   <body>
-    <script type="text/javascript" src="bundle.js"></script>
+
     <form>
       <h3>Welcome to the microservice test client</h3>
-
       <h4>General section:</h4>
       Encoding:
       <select id="encoding" onchange="encoding_changed()">
@@ -71,7 +95,9 @@
         value="Disconnect"
         disabled
       />
-      
+      <br/>
+      Connecting to: <a href="" target="_blank" id="target"></a>
+     
       <h4>Module One Functions:</h4>
       <br/>
       Amount:
@@ -122,12 +148,10 @@
       <input
         type="button"
         id="clear"
-        onclick="theClient.clearLog();"
+        onclick="clearLog();"
         value="Clear log"
         disabled
       />
-      <br/>
-    </div>
   </form>
 </body>
 </html>
