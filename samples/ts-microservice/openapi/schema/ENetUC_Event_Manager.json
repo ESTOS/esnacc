@@ -8,10 +8,10 @@
 	},
 	"servers": [
 		{
-			"url": "http://localhost:3020/rest"
+			"url": "ws://localhost:3020/ws"
 		},
 		{
-			"url": "ws://localhost:3020/ws"
+			"url": "http://localhost:3020/rest"
 		}
 	],
 	"paths": {

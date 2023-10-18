@@ -18,8 +18,7 @@
 		"/asnGetSettings": {
 			"post": {
 				"tags": [
-					"Settings Manager",
-					"asdadsa"
+					"Settings Manager"
 				],
 				"summary": "Method to retrieve settings from the server side\n",
 				"description": "",
@@ -116,6 +115,11 @@
 								"$ref": "#/components/schemas/AsnSettingsChangedArgument"
 							}
 						}
+					}
+				},
+				"responses": {
+					"default": {
+						"description": "Events don't have Responses"
 					}
 				}
 			}

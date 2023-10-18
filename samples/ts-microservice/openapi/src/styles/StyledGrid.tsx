@@ -9,8 +9,9 @@ interface StyledGridProps {
 }
 
 const StyledGrid = styled("div")<StyledGridProps & StyledDefaultProps>([
-    ({ columns }) => (columns ? { gridTemplateColumns: columns.join(",") } : {}),
-    ({ rows }) => (rows ? { gridTemplateColumns: rows.join(",") } : {}),
+    { display: "grid" },
+    ({ columns }) => (columns ? { gridTemplateColumns: columns.join(" ") } : {}),
+    ({ rows }) => (rows ? { gridTemplateColumns: rows.join(" ") } : {}),
     ...StyledDefaultArray,
 ]);
 

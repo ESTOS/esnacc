@@ -89,13 +89,13 @@ void PrintOpenApiSequence(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 	if (td != NULL && GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment))
 	{
 		fprintf(src, ",\"description\": \"");
-		fprintf(src, " | category : %s", comment.szCategory);
-		fprintf(src, " | short : %s", comment.szShort);
-		fprintf(src, " | long : %s", comment.szLong);
-		fprintf(src, " | deprecated : %d", comment.i64Deprecated ? 1 : 0);
+		fprintf(src, "### Category \\n%s\\n", comment.szCategory);
+		fprintf(src, "### Short \\n%s\\n", comment.szShort);
+		fprintf(src, "### Long \\n%s\\n", comment.szLong);
+		fprintf(src, "### Deprecated \\n%d\\n", comment.i64Deprecated ? 1 : 0);
 		if (comment.i64Deprecated > 1)
-			fprintf(src, " | deprecated_starting : %lld", comment.i64Deprecated);
-		fprintf(src, " | private : %d\"", comment.iPrivate);
+			fprintf(src, "### Deprecated_starting \\n%lld\\n", comment.i64Deprecated);
+		fprintf(src, "### Private \\n%d\"", comment.iPrivate);
 	}
 
 	bool bFirst = true;
@@ -467,7 +467,7 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 			fprintf(src, "\t\t\t\t}\n");
 		}
 		else
-			fprintf(src, "\n");
+			fprintf(src, ",\"responses\": {\"default\": {\"description\": \"Events don't have Responses\"}}\n");
 
 		fprintf(src, "\t\t\t}\n");
 		fprintf(src, "\t\t}");

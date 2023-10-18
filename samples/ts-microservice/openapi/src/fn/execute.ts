@@ -1,10 +1,9 @@
 //@ts-ignore
 import { execute, buildRequest, baseUrl } from "swagger-client/es/execute";
-import { invokeRest, invokeWs } from "../client";
+import { eventWs, invokeRest, invokeWs } from "./client";
 
 
 async function internalUserExecute(system: any, args: any) {
-    console.log(args);
     const urlBase: string = baseUrl(args);
     if (args.spec.paths[args.pathName][args.method].operationId == undefined)
         throw new Error("OperationId needs to be specified in OpenApi otherwise WS cant be used.")
@@ -18,22 +17,23 @@ async function internalUserExecute(system: any, args: any) {
                 ...args,
                 userFetch: async () => {
                     let header = new Headers();
-                    let data: any;
+                    let data: { status: number, data: any };
 
                     if (args.spec.paths[args.pathName][args.method].responses["200"] && args.spec.paths[args.pathName][args.method].responses["500"]) {
                         // This invoke has a result
                         data = await invokeWs(operationID, urlBase, JSON.parse(args.requestBody))
                     } else {
                         // This is an event
+                        eventWs(operationID, urlBase, JSON.parse(args.requestBody))
+                        data = { status: 200, data: "Event has been emitted!" }
                     }
-
 
                     header.append("content-type", "application/json");
                     let resp: Response = {
                         headers: header,
                         ok: true,
                         redirected: false,
-                        status: 200,
+                        status: data.status,
                         statusText: "OK",
                         type: "basic",
                         url: "",
@@ -52,10 +52,10 @@ async function internalUserExecute(system: any, args: any) {
                             throw new Error("Function not implemented.");
                         },
                         json: async function (): Promise<any> {
-                            return data;
+                            return data.data;
                         },
                         text: async function (): Promise<string> {
-                            return JSON.stringify(data);
+                            return JSON.stringify(data.data);
                         },
                     };
 
@@ -68,6 +68,8 @@ async function internalUserExecute(system: any, args: any) {
         }
         return test;
     } else {
+        // Not needed 
+        /** 
         if (args.requestContentType == "application/json")
             return await execute({
                 ...args,
@@ -75,7 +77,9 @@ async function internalUserExecute(system: any, args: any) {
                     return await invokeRest(operationID, urlBase, JSON.parse(args.requestBody));
                 },
             });
-        else return execute(args);
+        else 
+        */
+        return execute(args);
     }
 }
 

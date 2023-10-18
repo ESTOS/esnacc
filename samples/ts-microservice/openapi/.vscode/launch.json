@@ -8,7 +8,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Chrome http://",
-            "url": "http://localhost:88",
+            "url": "http://localhost:8800",
             "webRoot": "${workspaceFolder}",
             "sourceMaps": true,
             "trace": true

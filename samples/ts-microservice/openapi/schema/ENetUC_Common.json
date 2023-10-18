@@ -29,7 +29,7 @@
 			},
 			"AsnStringPair": {
 				"type": "object",
-				"description": " | category : Common | short : Key value pair of strings.\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nCommon\n### Short \nKey value pair of strings.\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"key": {
 						"type": "string"
@@ -45,7 +45,7 @@
 			},
 			"AsnIntegerPair": {
 				"type": "object",
-				"description": " | category : Common | short : Key value pair of integer\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nCommon\n### Short \nKey value pair of integer\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"key": {
 						"type": "integer"
@@ -61,7 +61,7 @@
 			},
 			"AsnStringIntegerPair": {
 				"type": "object",
-				"description": " | category : Common | short : Key value pair of &lt;string, integer&gt;\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nCommon\n### Short \nKey value pair of &lt;string, integer&gt;\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"u8sStr": {
 						"type": "string"
@@ -77,7 +77,7 @@
 			},
 			"AsnRequestError": {
 				"type": "object",
-				"description": " | category : Common | short : Generic error sequence. See the documentation of the operations specific descriptions.\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nCommon\n### Short \nGeneric error sequence. See the documentation of the operations specific descriptions.\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"iErrorDetail": {
 						"type": "integer"
@@ -93,7 +93,7 @@
 			},
 			"AsnNetDatabaseContactID": {
 				"type": "object",
-				"description": " | category : Common | short : A three tuple to identify contact data.\n | long : The three tuple EntryID, EntryIDDB and EntryIDStore identifies contact data including its\nsource database, so that contact data from different data sources can be differentiated from each other.\nIt is an own sequence, so it can be tranferred without any concrete contact data to save bandwidth.\n\nThe AsnNetDatabaseContact does not contain a AsnNetDatabaseContactID object, it contains the three\nmembers by itself.\n | deprecated : 0 | private : 0",
+				"description": "### Category \nCommon\n### Short \nA three tuple to identify contact data.\n\n### Long \nThe three tuple EntryID, EntryIDDB and EntryIDStore identifies contact data including its\nsource database, so that contact data from different data sources can be differentiated from each other.\nIt is an own sequence, so it can be tranferred without any concrete contact data to save bandwidth.\n\nThe AsnNetDatabaseContact does not contain a AsnNetDatabaseContactID object, it contains the three\nmembers by itself.\n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"u8sEntryID": {
 						"type": "string"
@@ -113,7 +113,7 @@
 			},
 			"AsnOptionalParam": {
 				"type": "object",
-				"description": " | category : Common | short : Encapsulated key value pair, including a definition of the value type.\n | long : Sequences can change over time of the development of the product. To ensure, that possible breaking changes can be avoided\nwithin the life cycle of a major version, most sequences contain a list of AsnOptionalParam.\n\nBecause of the generic nature of the this sequence, the documention of the content is defined in the sections\nusing the AsnOptionalParam.\n | deprecated : 0 | private : 0",
+				"description": "### Category \nCommon\n### Short \nEncapsulated key value pair, including a definition of the value type.\n\n### Long \nSequences can change over time of the development of the product. To ensure, that possible breaking changes can be avoided\nwithin the life cycle of a major version, most sequences contain a list of AsnOptionalParam.\n\nBecause of the generic nature of the this sequence, the documention of the content is defined in the sections\nusing the AsnOptionalParam.\n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"key": {
 						"type": "string"
@@ -135,7 +135,7 @@
 			},
 			"AsnJSONWebTokenHeader": {
 				"type": "object",
-				"description": " | category : Common | short : Header data for a RFC-7519 JSON Web Token\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nCommon\n### Short \nHeader data for a RFC-7519 JSON Web Token\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"u8sTYP": {
 						"type": "string"
@@ -157,7 +157,7 @@
 			},
 			"AsnJSONWebTokenPayLoad": {
 				"type": "object",
-				"description": " | category : Common | short : Payload data for a RFC-7519 JSON Web Token\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nCommon\n### Short \nPayload data for a RFC-7519 JSON Web Token\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"u8sISS": {
 						"type": "string"
@@ -199,7 +199,7 @@
 			},
 			"AsnNetDatabaseContact": {
 				"type": "object",
-				"description": " | category : Common | short : Sequence\/object containing contact data.\n | long : AsnNetDatabaseContact is widly used almost everywhere in the API. It contains the contact data of a contact and from which databse it comes from.\nAll fields in this sequence are optional, because not every field must have content, but the sequence is broadly used, so every field which is\nnot transmitted saves bandwidth.\n | deprecated : 0 | private : 0",
+				"description": "### Category \nCommon\n### Short \nSequence\/object containing contact data.\n\n### Long \nAsnNetDatabaseContact is widly used almost everywhere in the API. It contains the contact data of a contact and from which databse it comes from.\nAll fields in this sequence are optional, because not every field must have content, but the sequence is broadly used, so every field which is\nnot transmitted saves bandwidth.\n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"u8sFound": {
 						"type": "string"
@@ -421,7 +421,7 @@
 			},
 			"AsnUserPropertyBag": {
 				"type": "object",
-				"description": " | category : Common | short : Property bag definition for storing runtime defined content for objects (like users, computers, groups etc.).\n | long : To make it possible to transport and store runtime defined content in some objects, these object contain\na property bag, which is simply a key value store. Which keys (and therefor which data) is available\nis depending on the object and the business logic, which uses it. So see the according sequence (object) documentation\nfor more details.\n | deprecated : 0 | private : 0",
+				"description": "### Category \nCommon\n### Short \nProperty bag definition for storing runtime defined content for objects (like users, computers, groups etc.).\n\n### Long \nTo make it possible to transport and store runtime defined content in some objects, these object contain\na property bag, which is simply a key value store. Which keys (and therefor which data) is available\nis depending on the object and the business logic, which uses it. So see the according sequence (object) documentation\nfor more details.\n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"asnProperties": {
 						"$ref": "#/components/schemas/AsnStringPairList"
@@ -433,7 +433,7 @@
 			},
 			"AsnJSONWebToken": {
 				"type": "object",
-				"description": " | category : Common | short : Data for a RFC-7519 JSON Web Token\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nCommon\n### Short \nData for a RFC-7519 JSON Web Token\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"header": {
 						"$ref": "#/components/schemas/AsnJSONWebTokenHeader"
