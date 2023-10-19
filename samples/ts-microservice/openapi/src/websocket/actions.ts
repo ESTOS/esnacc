@@ -8,12 +8,12 @@ export const setWebsocket = (ws: WebSocket, server: string) => {
 }
 
 export const initWebsocket = (server: string) => (system: any) => {
-
     if (server.startsWith("ws") || server.startsWith("wss")) {
         let ws: WebSocket | undefined = system.websocketSelectors.getWebsocket(server)
+
+        // Only create if closed or not open yet
         if (ws == undefined || ws.readyState == ws.CLOSED) {
             let newWS = new WebSocket(server);
-            //let schemaUrl = system.spec().get("url");
             newWS.addEventListener("message", (m) => {
                 try {
                     let payload: RoseMessage<any> = JSON.parse(m.data);
@@ -30,6 +30,11 @@ export const initWebsocket = (server: string) => (system: any) => {
                     console.log(error);
                 }
             });
+
+            newWS.addEventListener("close", () => {
+                // Reconnect on ws close
+                system.websocketActions.initWebsocket(server)
+            })
 
             system.websocketActions.setWebsocket(newWS, server);
         }
