@@ -1,23 +1,22 @@
-import { Signal } from "@preact/signals-react";
-import { currentServer, eventStore, getStoreSignal, OwnEvent } from "../store";
 import StyledDiv from "../styles/StyledDiv";
 import StyledGrid from "../styles/StyledGrid";
 import ReactJson from "react-json-view";
 import { css } from "goober";
 import { useEffect, useRef } from "react";
+import { OwnEvent } from "../types";
 
 const InfoText = css({ color: "white", fontFamily: "monospace", padding: "0px 10px", margin: 0 });
 
 const Comp = (Original: any, system: any) => (props: any) => {
     const { operationId } = props.operationProps.toJS();
-    const events = getStoreSignal(currentServer.value, parseInt(operationId));
+    const events: OwnEvent[] = system.websocketSelectors.getEvents(system.oas3Selectors.selectedServer(), parseInt(operationId));
 
     useEffect(() => {
         const el = document.getElementById("event-info-" + operationId);
         if (el) {
             el.scrollTo({ left: 0, top: el.scrollHeight });
         }
-    }, [events.value]);
+    });
 
     return (
         <>
@@ -48,7 +47,7 @@ const Comp = (Original: any, system: any) => (props: any) => {
                                     minHeight: "100%",
                                 }}
                             >
-                                {events.value.slice(0, 100).map((item, index) => {
+                                {events.slice(0, 100).map((item, index) => {
                                     //return <div>{JSON.stringify(item)}</div>;
                                     return (
                                         <>

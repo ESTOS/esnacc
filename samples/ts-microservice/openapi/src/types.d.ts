@@ -23,3 +23,10 @@ export interface RoseMessage<T> {
         },
     }
 }
+
+export interface OwnEvent {
+    time: Date,
+    direction: "OUT" | "IN",
+    payload: any,
+    type: "invoke" | "result" | "reject"
+}

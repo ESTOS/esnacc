@@ -3,7 +3,10 @@ import ServerWrapper from "./components/ServerWrapper";
 import EmptyWrapper from "./components/EmptyWrapper";
 import OperationWrapper from "./components/OperationWrapper";
 import OperationSummaryPathWrapper from "./components/OperationSummaryPathWrapper";
-import { userExecute } from "./fn/execute";
+import { executeRequestWrapper, userExecute } from "./fn/execute";
+import * as websocketActions from "./websocket/actions";
+import * as websocketReducers from "./websocket/reducers";
+import * as websocketSelectors from "./websocket/selectors";
 
 /**
  *
@@ -19,7 +22,25 @@ const Plugin = function (system: any) {
             operation: OperationWrapper,
         },
         fn: {
-            execute: userExecute(system),
+            execute: userExecute,
+        },
+        statePlugins: {
+            spec: {
+                wrapActions: {
+                    executeRequest: executeRequestWrapper,
+                },
+            },
+            websocket: {
+                actions: {
+                    ...websocketActions,
+                },
+                reducers: {
+                    ...websocketReducers,
+                },
+                selectors: {
+                    ...websocketSelectors,
+                },
+            },
         },
     };
 };
