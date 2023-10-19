@@ -502,7 +502,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		fprintf(src, "\t\t\t\t");
 
 		const bool bOptional = e->type->optional ? true : false;
-// 		const bool bImplicit = e->type->implicit ? true : false;
+		// 		const bool bImplicit = e->type->implicit ? true : false;
 
 		char szOptionalParam[128] = {0};
 		int iOptionalID = -1;
@@ -512,7 +512,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 			if (iOptionalID > -1)
 				sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", idBlock: { optionalID: %i }", iOptionalID);
 			else
-				sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", optional: true");
+				sprintf_s(szOptionalParam, sizeof(szOptionalParam), "%s", ", optional: true");
 		}
 
 		char* szConverted2 = FixName(e->fieldName);
