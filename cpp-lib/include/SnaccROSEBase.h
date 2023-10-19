@@ -6,8 +6,16 @@
 #include <functional>
 #include <string>
 #include <mutex>
+#include <wchar.h>
 #include "SnaccROSEInterfaces.h"
 #include "syncevent.h"
+
+#if defined(_MSC_VER)
+#define HAS_WCHAR_T
+#define LOG_CHARTYPE wchar_t
+#else
+#define LOG_CHARTYPE char
+#endif
 
 namespace SNACC
 {
@@ -195,7 +203,7 @@ public:
 	 *  bFlushEveryWrite - true flushes every write operation (ideal for debugging), false to let the os decide when to flush
 	 *
 	 *  returns NO_ERROR on success (logfile opened, logfile closed, nothing to do) or an error value */
-	int ConfigureFileLogging(const char* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
+	int ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
 
 	/* Retrieve the log level - do we need to log something */
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;

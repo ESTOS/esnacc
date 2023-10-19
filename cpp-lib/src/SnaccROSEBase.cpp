@@ -1,6 +1,8 @@
 #include "../include/SnaccROSEBase.h"
 #include "../include/SNACCROSE.h"
 #include <assert.h>
+#include <stdio.h>
+#include <wchar.h>
 #include <iomanip>
 #include <locale>
 #include <chrono>
@@ -845,7 +847,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 	return lRoseResult;
 }
 
-long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperationName, SnaccInvokeContext * pCtx /*= nullptr*/)
+long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperationName, SnaccInvokeContext* pCtx /*= nullptr*/)
 {
 	return Send(pinvoke, szOperationName, pCtx);
 }
@@ -991,6 +993,8 @@ long SnaccROSEBase::DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::R
 
 	switch (pResponse->choiceId)
 	{
+		case ROSEMessage::invokeCid:
+			break;
 		case ROSEMessage::resultCid:
 			lRoseResult = ROSE_NOERROR;
 			if (pResponse->result && ppResult)
@@ -1347,7 +1351,7 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 		return ROSE_RE_DECODE_FAILED;
 	if (!pInvokeMessage->invoke->argument)
 	{
-		if(argument->mayBeEmpty())
+		if (argument->mayBeEmpty())
 			return ROSE_NOERROR;
 		else
 			return ROSE_REJECT_ARGUMENT_MISSING;
@@ -1416,33 +1420,37 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 	return lRoseResult;
 }
 
-int SnaccROSEBase::ConfigureFileLogging(const char* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = false */)
+#ifdef HAS_WCHAR_T
+#define STRINGLEN(sz) wcslen(sz)
+#else
+#define STRINGLEN(sz) strlen(sz)
+#endif
+
+int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = false */)
 {
 	std::lock_guard<std::mutex> lock(m_mtxLogFile);
 
-	if (szPath && strlen(szPath) && !m_pAsnLogFile)
+	if (szPath && STRINGLEN(szPath) && !m_pAsnLogFile)
 	{
 		m_bFlushEveryWrite = bFlushEveryWrite;
-		const char* szMode = bAppend ? "a" : "w";
-#ifdef WIN32
-    #ifdef _MSC_VER
-		m_pAsnLogFile = _fsopen(szPath, szMode, _SH_DENYWR);
-    #else
-        // MingW, Clang, GCC
-        m_pAsnLogFile = fopen(szPath, szMode);
-    #endif
+#ifdef HAS_WCHAR_T
+		const wchar_t* szMode = bAppend ? L"a" : L"w";
 #else
-        m_pAsnLogFile = fopen(szPath, szMode);
+		const char* szMode = bAppend ? "a" : "w";
+#endif
+#ifdef _MSC_VER
+		m_pAsnLogFile = _wfsopen(szPath, szMode, _SH_DENYWR);
+#else
+		m_pAsnLogFile = fopen(szPath, szMode);
 #endif
 		if (!m_pAsnLogFile)
 		{
 			int iErr = 0;
 #ifdef WIN32
-    _get_errno(&iErr);
+			_get_errno(&iErr);
 #else
-    iErr = errno;
+			iErr = errno;
 #endif
-
 			return iErr;
 		}
 		else
@@ -1451,7 +1459,7 @@ int SnaccROSEBase::ConfigureFileLogging(const char* szPath, const bool bAppend /
 			m_bAsnLogFileContainsData = ftell(m_pAsnLogFile) > 0;
 		}
 	}
-	else if ((!szPath || !strlen(szPath)) && m_pAsnLogFile)
+	else if ((!szPath || !STRINGLEN(szPath)) && m_pAsnLogFile)
 	{
 		fclose(m_pAsnLogFile);
 		m_pAsnLogFile = nullptr;
@@ -1484,7 +1492,7 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 #ifdef WIN32
 		gmtime_s(&timeInfo, &currentTimeT);
 #else
-        gmtime_r(&currentTimeT, &timeInfo);
+		gmtime_r(&currentTimeT, &timeInfo);
 #endif
 		std::ostringstream strTime;
 		strTime << std::put_time(&timeInfo, "%Y-%m-%dT%H:%M:%S.");
@@ -1505,7 +1513,7 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 
 		if (szOperationName)
 			fprintf(m_pAsnLogFile, "\t\"OPERATION\" : \"%s\",\n", szOperationName);
-		
+
 		// if the data is encapsulated json we need a name
 		if (*szData == '{' || *szData == '[')
 			fprintf(m_pAsnLogFile, "\t\"%s\" : \n", bError ? "ERROR" : "ROSE");
