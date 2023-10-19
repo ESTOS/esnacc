@@ -1,6 +1,8 @@
 #include "../include/SnaccROSEBase.h"
 #include "../include/SNACCROSE.h"
 #include <assert.h>
+#include <stdio.h>
+#include <wchar.h>
 #include <iomanip>
 #include <locale>
 #include <chrono>
@@ -991,6 +993,8 @@ long SnaccROSEBase::DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::R
 
 	switch (pResponse->choiceId)
 	{
+		case ROSEMessage::invokeCid:
+			break;
 		case ROSEMessage::resultCid:
 			lRoseResult = ROSE_NOERROR;
 			if (pResponse->result && ppResult)
@@ -1437,11 +1441,7 @@ int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool b
 #ifdef _MSC_VER
 		m_pAsnLogFile = _wfsopen(szPath, szMode, _SH_DENYWR);
 #else
-#ifdef HAS_WCHAR_T
-		m_pAsnLogFile = _wfopen(szPath, szMode);
-#else
 		m_pAsnLogFile = fopen(szPath, szMode);
-#endif
 #endif
 		if (!m_pAsnLogFile)
 		{

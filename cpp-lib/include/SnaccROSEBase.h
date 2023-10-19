@@ -6,14 +6,14 @@
 #include <functional>
 #include <string>
 #include <mutex>
+#include <wchar.h>
 #include "SnaccROSEInterfaces.h"
 #include "syncevent.h"
 
-#if defined _WCHAR_T_DEFINED || __WCHAR_TYPE__
-#define HAS_WCHAR_T (1)
+#if defined(_MSC_VER)
+#define HAS_WCHAR_T
 #define LOG_CHARTYPE wchar_t
 #else
-#define HAS_WCHAR_T (0)
 #define LOG_CHARTYPE char
 #endif
 

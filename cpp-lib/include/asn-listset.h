@@ -36,9 +36,9 @@ public:
 
 	// const char* typeName() const = 0;
 	virtual int checkConstraints(SNACC::ConstraintFailList* pConstraintFails) const override;
-	
+
 	// A list may be empty
-	virtual bool mayBeEmpty() const
+	virtual bool mayBeEmpty() const override
 	{
 		return true;
 	}
