@@ -9,6 +9,14 @@
 #include "SnaccROSEInterfaces.h"
 #include "syncevent.h"
 
+#if defined _WCHAR_T_DEFINED || __WCHAR_TYPE__
+#define HAS_WCHAR_T (1)
+#define LOG_CHARTYPE wchar_t
+#else
+#define HAS_WCHAR_T (0)
+#define LOG_CHARTYPE char
+#endif
+
 namespace SNACC
 {
 	class AsnType;
@@ -195,11 +203,7 @@ public:
 	 *  bFlushEveryWrite - true flushes every write operation (ideal for debugging), false to let the os decide when to flush
 	 *
 	 *  returns NO_ERROR on success (logfile opened, logfile closed, nothing to do) or an error value */
-#ifdef _WCHAR_T_DEFINED
-	int ConfigureFileLogging(const wchar_t* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
-#else
-	int ConfigureFileLogging(const char* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
-#endif
+	int ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
 
 	/* Retrieve the log level - do we need to log something */
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;

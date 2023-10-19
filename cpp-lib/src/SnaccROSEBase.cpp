@@ -1416,24 +1416,20 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 	return lRoseResult;
 }
 
-#ifdef _WCHAR_T_DEFINED
+#ifdef HAS_WCHAR_T
 #define STRINGLEN(sz) wcslen(sz)
 #else
 #define STRINGLEN(sz) strlen(sz)
 #endif
 
-#ifdef _WCHAR_T_DEFINED
-int SnaccROSEBase::ConfigureFileLogging(const wchar_t* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = false */)
-#else
-int SnaccROSEBase::ConfigureFileLogging(const char* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = false */)
-#endif
+int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = false */)
 {
 	std::lock_guard<std::mutex> lock(m_mtxLogFile);
 
 	if (szPath && STRINGLEN(szPath) && !m_pAsnLogFile)
 	{
 		m_bFlushEveryWrite = bFlushEveryWrite;
-#ifdef _WCHAR_T_DEFINED
+#ifdef HAS_WCHAR_T
 		const wchar_t* szMode = bAppend ? L"a" : L"w";
 #else
 		const char* szMode = bAppend ? "a" : "w";
@@ -1441,7 +1437,11 @@ int SnaccROSEBase::ConfigureFileLogging(const char* szPath, const bool bAppend /
 #ifdef _MSC_VER
 		m_pAsnLogFile = _wfsopen(szPath, szMode, _SH_DENYWR);
 #else
+#ifdef HAS_WCHAR_T
+		m_pAsnLogFile = _wfopen(szPath, szMode);
+#else
 		m_pAsnLogFile = fopen(szPath, szMode);
+#endif
 #endif
 		if (!m_pAsnLogFile)
 		{
