@@ -19,8 +19,6 @@ export const WEBSOCKET_ADD_WEBSOCKET = (state: any, { payload }: any) => {
 }
 
 export const WEBSOCKET_ADD_EVENT = (state: any, { payload }: any) => {
-    console.log(payload)
-
     let check = state.getIn([payload.server, payload.operationID]);
     if (check)
         return state.updateIn([payload.server, payload.operationID], (arr: any) => {

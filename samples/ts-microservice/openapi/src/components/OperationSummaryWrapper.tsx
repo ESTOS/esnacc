@@ -47,7 +47,7 @@ const Comp = (Original: any, system: any) => (props: any) => {
                                     minHeight: "100%",
                                 }}
                             >
-                                {events.slice(0, 100).map((item, index) => {
+                                {events.slice(-100).map((item, index) => {
                                     //return <div>{JSON.stringify(item)}</div>;
                                     return (
                                         <>
