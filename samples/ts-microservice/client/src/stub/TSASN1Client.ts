@@ -164,7 +164,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	public sendEventSync(data: IASN1InvokeData): boolean {
 		if (this.ws && this.ws.readyState === EDualWebSocketState.OPEN) {
 			const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
-			this.ws.send(encoded.forTransport);
+			this.ws.send(encoded.payLoad);
 			return true;
 		}
 		return false;
@@ -232,7 +232,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 						const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 						this.logTransport(encoded.logData, "sendInvoke", "out", data.invokeContext);
 						// Send the message
-						ws.send(encoded.forTransport);
+						ws.send(encoded.payLoad);
 					}
 				}).catch((error): void => {
 					this.log(ELogSeverity.error, "exception", "sendInvoke", this, undefined, error);
@@ -252,7 +252,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				
 				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 				// Contains the encoded data for the transport
-				const body = encoded.forTransport;
+				const body = encoded.payLoad;
 				// Contains the encoded data for logging
 				const logData = encoded.logData;
 
