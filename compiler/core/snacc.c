@@ -226,6 +226,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "  -J   generate plain JavaScript code. For Java see -RJ.\n");
 	fprintf(fp, "  -JT  generate Javascript - Typescript code.\n");
 	fprintf(fp, "  -JD  generate JSON Documentation files.\n");
+	fprintf(fp, "  -JO  generate OpenApi Documentation files.\n");
 	fprintf(fp, "  -T   <filename> write a type table file for the ASN.1 modules to file filename\n");
 	fprintf(fp, "  -O   <filename> writes the type table file in the original (<1.3b2) format\n");
 	fprintf(fp, "  -O   <filename> writes the type table file in the original (<1.3b2) format\n");
@@ -550,6 +551,8 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						genJsonDocCode = TRUE;
 					else if (strcmp(argument + 1, "JT") == 0)
 						genTSCode = TRUE;
+					else if (strcmp(argument + 1, "JO") == 0)
+						genOpenApiCode = TRUE;
 					else
 						genJSCode = TRUE;
 					currArg++;
@@ -635,24 +638,16 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					break;
 				case 'T':
 				case 'O':
-					if (strcmp(argument + 1, "OA") == 0)
+					genTypeTbls = argument[1] == 'T' ? 2 : 1;
+					if (argument[2] != '\0') /* no space after -T */
 					{
-						genOpenApiCode = TRUE;
+						tblFileName = &argument[2];
 						currArg++;
 					}
 					else
 					{
-						genTypeTbls = argument[1] == 'T' ? 2 : 1;
-						if (argument[2] != '\0') /* no space after -T */
-						{
-							tblFileName = &argument[2];
-							currArg++;
-						}
-						else
-						{
-							tblFileName = argv[currArg + 1];
-							currArg += 2;
-						}
+						tblFileName = argv[currArg + 1];
+						currArg += 2;
 					}
 					break;
 				case 'o':
