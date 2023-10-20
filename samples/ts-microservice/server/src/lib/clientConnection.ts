@@ -188,7 +188,6 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 	 * Initializes the clientConnection object
 	 */
 	public init(): void {
-		this.setKeepAliveTimeout(theConfig.clientConnection.client_keepalive);
 		this.setPingPongInterval(1000);
 		this.setErrorCounterDecrementInterval(1000);
 		if (this.wsClient) {
