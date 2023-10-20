@@ -28,6 +28,63 @@
 #include "compiler/core/asn1module.h"
 #include "snacc.h"
 
+char* replace_str(char* str, char* orig, char* rep)
+{
+	char* result;
+	char* ins;
+	char* tmp;
+	int len_rep;
+	int len_orig;
+	int len_front;
+	int count;
+
+	if (!orig)
+		return NULL;
+	len_rep = strlen(rep);
+	if (!str)
+		return NULL;
+	len_orig = strlen(orig);
+	if (len_orig == 0)
+		return NULL;
+	if (!rep)
+		rep = "";
+
+	ins = str;
+	for (count = 0; (tmp = strstr(ins, orig)); ++count)
+		ins = tmp + len_orig;
+
+	tmp = result = malloc(strlen(str) + (len_rep - len_orig) * count + 1);
+
+	if (!result)
+		return NULL;
+
+	while (count--)
+	{
+		ins = strstr(str, orig);
+		len_front = ins - str;
+		tmp = strncpy(tmp, str, len_front) + len_front;
+		tmp = strcpy(tmp, rep) + len_rep;
+		str += len_front + len_orig;
+	}
+	strcpy(tmp, str);
+	return result;
+}
+
+char* replace_multi(const char* str, char** orig, char** rep, int num)
+{
+	char* result = strdup(str);
+	for (int i = 0; i < num; ++i)
+	{
+		char* replaced = replace_str(result, orig[i], rep[i]);
+		if (replaced != NULL)
+		{
+			free(result);
+			result = replaced;
+		}
+	}
+	return result;
+}
+
 static void PrintOpenApiTypeDefinitions(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp);
 
 static void PrintOpenApiStringType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
@@ -415,9 +472,28 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 		if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment))
 		{
 			fprintf(src, "\t\t\t\t\"tags\" : [\"%s\"],\n", comment.szCategory);
-			fprintf(src, "\t\t\t\t\"summary\" : \"%s\",\n", comment.szShort);
-			if (comment.szLong)
-				fprintf(src, "\t\t\t\t\"description\" : \"%s\",\n", comment.szLong);
+
+			char* orig[] = {"\\n", "\\t"};
+			char* rep[] = {"\\n\\n", ""};
+			if (strlen(comment.szShort) != 0)
+			{
+
+				char* szShort = replace_multi(comment.szShort, orig, rep, 2);
+				if (szShort != NULL)
+				{
+					fprintf(src, "\t\t\t\t\"summary\" : \"%s\",\n", szShort);
+					free(szShort);
+				}
+			}
+			if (strlen(comment.szLong) != 0)
+			{
+				char* szLong = replace_multi(comment.szLong, orig, rep, 2);
+				if (szLong != NULL)
+				{
+					fprintf(src, "\t\t\t\t\"description\" : \"%s\",\n", szLong);
+					free(szLong);
+				}
+			}
 			fprintf(src, "\t\t\t\t\"deprecated\" : %s,\n", comment.i64Deprecated ? "true" : "false");
 			int opid = vd->value->basicValue->a.integer;
 			fprintf(src, "\t\t\t\t\"operationId\" : \"%d\",\n", opid);
@@ -520,8 +596,27 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 	{
 		fprintf(src, ",\n");
 		fprintf(src, "\t\t\"version\": \"0.0.1\",\n");
-		fprintf(src, "\t\t\"summary\": \"%s\",\n", comment.szShort);
-		fprintf(src, "\t\t\"description\": \"%s\"\n", comment.szLong);
+		char* orig[] = {"\\n", "\\t"};
+		char* rep[] = {"\\n\\n", ""};
+		if (strlen(comment.szShort) != 0)
+		{
+
+			char* szShort = replace_multi(comment.szShort, orig, rep, 2);
+			if (szShort != NULL)
+			{
+				fprintf(src, "\t\t\"summary\": \"%s\",\n", szShort);
+				free(szShort);
+			}
+		}
+		if (strlen(comment.szLong) != 0)
+		{
+			char* szLong = replace_multi(comment.szLong, orig, rep, 2);
+			if (szLong != NULL)
+			{
+				fprintf(src, "\t\t\"description\": \"%s\"\n", szLong);
+				free(szLong);
+			}
+		}
 		// Cant be used in OpenApi for the module info
 		/*
 		fprintf(src, "\t\t\"category\" : \"%s\",\n", comment.szCategory);
