@@ -23,6 +23,9 @@ It is an functional enriched fork of the original enhanced sample neufeld asn c 
     * Structure definitions
   * JSDOC
     * JSON formatted Documentation generated based on the documentation inside the asn1 files
+  * OpenApi
+    * OpenApi JSON Documentation generated based on the documentation inside the asn1 files
+    * Should be used with our swagger-ui project https://github.com/ESTOS/esnacc-openapi-sdk
 
 # Functionality
 Based on asn1 files the compiler transcodes the information into matching representations in different languages. Different target languages have different feature sets implemented. The currently two main languages are typescript and c++ which offer the most features.
