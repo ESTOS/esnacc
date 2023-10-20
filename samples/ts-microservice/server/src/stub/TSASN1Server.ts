@@ -15,6 +15,7 @@ import { ELogSeverity, IASN1Transport, createInvokeReject, ReceiveInvokeContext,
 export interface IASN1ClientConnection {
 	send(response: string | Uint8Array): boolean;
 	getTransportEncoding(): EASN1TransportEncoding | undefined;
+	setTransportEncoding(encoding: EASN1TransportEncoding): void;
 }
 
 /**
@@ -94,6 +95,20 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 			return result;
 		return super.getEncoding();
 	}
+
+	/**
+	 * Sets the encoding to the transport
+	 * This method is overwritten in the server to set the encoding of a certain client connection
+	 *
+	 * @param encoding - the encoding we want to set
+	 * @param clientConnectionID - the clientConnectionID for which we want to set the encoding
+	 */
+	public override setEncoding(encoding: EASN1TransportEncoding, clientConnectionID?: string): void {
+		if (clientConnectionID)
+			this.connectionhandler?.getClientConnection(clientConnectionID)?.setTransportEncoding(encoding);
+		else
+			return super.setEncoding(encoding);
+	}	
 
 	/**
 	 * Sends a message towards the client

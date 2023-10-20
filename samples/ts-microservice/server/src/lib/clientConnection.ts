@@ -320,9 +320,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 		try {
 			const result = await theServer.receive(message, invokeContext);
-			if (this.encoding === undefined)
-				this.encoding = invokeContext.encoding;
-			else if (this.encoding !== invokeContext.encoding) {
+			if (this.encoding !== invokeContext.encoding) {
 				debugger;
 				theLogger.error("Client wants to change encoding on a websocket connection", "wsClientMessage", this, { encoding: this.encoding, invokeContext });
 			}
@@ -504,6 +502,15 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 	 */
 	public getTransportEncoding(): EASN1TransportEncoding | undefined {
 		return this.encoding;
+	}
+
+	/**
+	 * Set the encoding for this clientConnection
+	 *
+	 * @param encoding the encoding this connection shall use
+	 */
+	public setTransportEncoding(encoding: EASN1TransportEncoding): void {
+		this.encoding = encoding;
 	}
 }
 

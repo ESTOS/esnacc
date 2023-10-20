@@ -461,6 +461,7 @@ export interface IASN1Transport {
 	getNextInvokeID(): number;
 	getSessionID(): string | undefined;
 	getEncoding(clientConnectionID?: string): EASN1TransportEncoding;
+	setEncoding(encoding: EASN1TransportEncoding, clientConnectionID?: string): void;
 	log(severity: ELogSeverity, message: string, calling_method: string, callback: IASN1LogCallback, meta?: unknown, exception?: unknown): void;
 	logInvoke(calling_method: string, callback: IASN1LogCallback, argument: object | undefined, context: IReceiveInvokeContext | ISendInvokeContext, isOutbound: boolean): void;
 	logResult(calling_method: string, callback: IASN1LogCallback, result: object | undefined, context: IReceiveInvokeContext | ISendInvokeContext, isOutbound: boolean): void;
