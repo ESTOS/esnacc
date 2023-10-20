@@ -294,11 +294,13 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * Sets the encoding for the transport
+	 * Sets the encoding to the transport
+	 * This method is overwritten in the server to set the encoding of a certain client connection
 	 *
-	 * @param encoding - the encoding to set
+	 * @param encoding - the encoding we want to set
+	 * @param clientConnectionID - the clientConnectionID for which we want to get the encoding
 	 */
-	public setEncoding(encoding: EASN1TransportEncoding): void {
+	public setEncoding(encoding: EASN1TransportEncoding, clientConnectionID?: string): void {
 		this.encoding = encoding;
 	}
 
@@ -434,6 +436,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 		// ROSEResult.result.result
 		// ROSEError.error
 		const errors = new ConverterErrors();
+		const encoding = invokeContext.encoding;
 		let message = asn1Decode<ROSEMessage>(rawData, ROSEMessage_Converter, errors, this.getDecodeContext(), invokeContext);
 		
 		if (!message && invokeContext.url && this.instanceType === ASN1ClassInstanceType.TSASN1Server) {
@@ -445,9 +448,15 @@ export abstract class TSASN1Base implements IASN1Transport {
 			else
 				message = result;
 		}
+	
+		if (message) {
+			// Special for a websocket connection where we have just detected the encoding (for the first time)
+			// In case the handling method creates events, we need to set the encoding now so the handling finds the proper encoding when
+			if (encoding === undefined && invokeContext.encoding !== undefined && invokeContext.clientConnectionID)
+				this.setEncoding(invokeContext.encoding, invokeContext.clientConnectionID);
 
-		if (message)
 			return this.receiveHandleROSEMessage(message, rawData, invokeContext);
+		}
 
 		const payLoad = ROSEBase.getDebugPayload(rawData);
 		this.log(ELogSeverity.error, "Failed to decode ROSEMessage", "receive", this, { payLoad, errors });
