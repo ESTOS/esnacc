@@ -9,7 +9,14 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
-            "args": ["-o", "${workspaceFolder}/samples/ts-microservice/server/src/stub", "-JT", "-j", "-RTS_SERVER", "*.asn1"],
+            "args": [
+                "-o",
+                "${workspaceFolder}/samples/ts-microservice/server/src/stub",
+                "-JT",
+                "-j",
+                "-RTS_SERVER",
+                "*.asn1"
+            ],
             "cwd": "${workspaceFolder}/samples/interface",
             "preLaunchTask": "CMake: build",
             "console": "externalTerminal"
@@ -19,7 +26,14 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
-            "args": ["-o", "${workspaceFolder}/samples/ts-microservice/client/src/stub", "-JT", "-j", "-RTS_CLIENT_BROWSER", "*.asn1"],
+            "args": [
+                "-o",
+                "${workspaceFolder}/samples/ts-microservice/client/src/stub",
+                "-JT",
+                "-j",
+                "-RTS_CLIENT_BROWSER",
+                "*.asn1"
+            ],
             "cwd": "${workspaceFolder}/samples/interface",
             "preLaunchTask": "CMake: build",
             "console": "externalTerminal"
@@ -29,7 +43,14 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
-            "args": ["-o", "${workspaceFolder}/samples/ts-microservice/server/src/stub", "-JT", "-j", "-RTS_SERVER", "*.asn1"],
+            "args": [
+                "-o",
+                "${workspaceFolder}/samples/ts-microservice/server/src/stub",
+                "-JT",
+                "-j",
+                "-RTS_SERVER",
+                "*.asn1"
+            ],
             "cwd": "${workspaceFolder}/samples/interface",
             "preLaunchTask": "CMake: build"
         },
@@ -38,23 +59,42 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
-            "args": ["-o", "${workspaceFolder}/samples/ts-microservice/client/src/stub", "-JT", "-j", "-RTS_CLIENT_BROWSER", "*.asn1"],
+            "args": [
+                "-o",
+                "${workspaceFolder}/samples/ts-microservice/client/src/stub",
+                "-JT",
+                "-j",
+                "-RTS_CLIENT_BROWSER",
+                "*.asn1"
+            ],
             "cwd": "${workspaceFolder}/samples/interface",
             "preLaunchTask": "CMake: build"
         },
+        {
+            "name": "LLDB - openapi - compile asn1 files",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [
+                "-o",
+                "${workspaceFolder}/output/openapi",
+                "-JO",
+                "${workspaceFolder}/samples/interface/*.asn1"
+            ],
+            "preLaunchTask": "CMake: build"
+        },
     ],
-	"tasks": [
-		{
-			"type": "cmake",
-			"label": "CMake: build",
-			"command": "build",
-			"targets": [
-				"compiler"
-			],
-			"group": "build",
-			"problemMatcher": [],
-			"detail": "CMake template build task"
-		}
-	]
-
+    "tasks": [
+        {
+            "type": "cmake",
+            "label": "CMake: build",
+            "command": "build",
+            "targets": [
+                "compiler"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "CMake template build task"
+        }
+    ]
 }

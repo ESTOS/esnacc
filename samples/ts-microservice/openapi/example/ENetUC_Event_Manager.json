@@ -1,0 +1,118 @@
+{
+	"openapi": "3.1.0",
+	"info": {
+		"title": "ENetUC_Event_Manager",
+		"version": "0.0.1",
+		"summary": "This module is used to create and dispatch events.\n\n",
+		"description": "Clients may request events from the server\n\nThe server then sends events to all websocket connected clients\n\nRequesting events through rest is not supported and rejected\n\nMethods and Events\n\nMethods:\n\n4000 asnCreateFancyEvents- A method that will create events on the server side\n\nEvents:\n\n4050 asnFancyEvent- An event that is fired by the server in case a client request an event\n\n"
+	},
+	"paths": {
+		"/asnCreateFancyEvents": {
+			"post": {
+				"tags": [
+					"Event Manager"
+				],
+				"summary": "Method that will create some events the server will then dispatch to the clients\n\n",
+				"description": "It´s not possible to call this method through rest as the client won´t receive these events\n\n",
+				"deprecated": false,
+				"operationId": "4000",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AsnCreateFancyEventsArgument"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AsnCreateFancyEventsResult"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AsnRequestError"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/asnFancyEvent": {
+			"post": {
+				"tags": [
+					"Event Manager"
+				],
+				"summary": "An event that is dispatched from the server to the clients\n\n",
+				"deprecated": false,
+				"operationId": "4050",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AsnFancyEventArgument"
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"AsnOptionalParameters": {
+				"$ref": "ENetUC_Common.json#/components/schemas/AsnOptionalParameters"
+			},
+			"AsnRequestError": {
+				"$ref": "ENetUC_Common.json#/components/schemas/AsnRequestError"
+			},
+			"AsnCreateFancyEventsArgument": {
+				"type": "object",
+				"description": "### Category \nEvent Manager\n### Short \nArgument to create fancy events on the server side\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"iEventDelay": {
+						"type": "integer"
+					},
+					"iEventCount": {
+						"type": "integer"
+					}
+				},
+				"required": [
+					"iEventDelay",
+					"iEventCount"
+				]
+			},
+			"AsnCreateFancyEventsResult": {
+				"type": "object",
+				"description": "### Category \nEvent Manager\n### Short \nResult for the asnCreateFancyEvents method\n\n### Long \n\n### Deprecated \n0\n### Private \n0"
+			},
+			"AsnFancyEventArgument": {
+				"type": "object",
+				"description": "### Category \nEvent Manager\n### Short \nArgument for the AsnFancyEventArgument method\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"iEventCounter": {
+						"type": "integer"
+					},
+					"iEventsLeft": {
+						"type": "integer"
+					}
+				},
+				"required": [
+					"iEventCounter",
+					"iEventsLeft"
+				]
+			}
+		}
+	}
+}

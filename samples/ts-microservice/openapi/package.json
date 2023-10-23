@@ -1,0 +1,19 @@
+{
+  "name": "openapi-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node esbuild.mjs",
+    "serve": "serve ./unpkg-example -l 8800"
+  },
+  "author": "Dominik Kerzel",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.19.5",
+    "serve": "^14.2.1"
+  },
+  "dependencies": {
+    "@estos/esnacc-openapi-sdk": "^1.0.11"
+  }
+}

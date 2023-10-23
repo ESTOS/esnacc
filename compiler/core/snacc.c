@@ -95,6 +95,7 @@ char* bVDAGlobalDLLExport = (char*)0;
 #include "../back-ends/ts-gen/gen-ts-combined.h"
 #include "../back-ends/delphi-gen/gen-delphi-code.h"
 #include "../back-ends/jsondoc-gen/gen-jsondoc-code.h"
+#include "../back-ends/openapi-gen/gen-openapi-code.h"
 #include "asn_comments.h"
 
 /* ******************* */
@@ -127,6 +128,8 @@ static void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int g
 static void GenSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, int novolatilefuncs, int genROSEDecoders);
 
 static void GenJSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, int novolatilefuncs, int genROSEDecoders);
+
+static void GenOpenApiCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, int novolatilefuncs, int genROSEDecoders);
 
 static void GenTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genJSONEncDec, int genTSROSEStubs, int genPrinters, int genPrintersXML, int genValues, int genFree, int novolatilefuncs, int genROSEDecoders);
 
@@ -223,7 +226,9 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "  -J   generate plain JavaScript code. For Java see -RJ.\n");
 	fprintf(fp, "  -JT  generate Javascript - Typescript code.\n");
 	fprintf(fp, "  -JD  generate JSON Documentation files.\n");
+	fprintf(fp, "  -JO  generate OpenApi Documentation files.\n");
 	fprintf(fp, "  -T   <filename> write a type table file for the ASN.1 modules to file filename\n");
+	fprintf(fp, "  -O   <filename> writes the type table file in the original (<1.3b2) format\n");
 	fprintf(fp, "  -O   <filename> writes the type table file in the original (<1.3b2) format\n");
 	fprintf(fp, "  -o   write output to a different folder, default is the current folder\n");
 	fprintf(fp, "  -b   turns on generation of PER support\n");
@@ -348,6 +353,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	int genCSCode = FALSE;	   // c#
 	int genSwiftCode = FALSE;
 	int genJSCode = FALSE;
+	int genOpenApiCode = FALSE;
 	int genTSCode = FALSE;
 	int genJsonDocCode = FALSE;
 	long longJmpVal = -100;
@@ -545,6 +551,8 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						genJsonDocCode = TRUE;
 					else if (strcmp(argument + 1, "JT") == 0)
 						genTSCode = TRUE;
+					else if (strcmp(argument + 1, "JO") == 0)
+						genOpenApiCode = TRUE;
 					else
 						genJSCode = TRUE;
 					currArg++;
@@ -800,14 +808,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		genPrintCode = TRUE;
 		genPrintCodeXML = FALSE;
 	}
-	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCode + genDelphiCode > 1 + genJsonDocCode)
+	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCode + genDelphiCode + genOpenApiCode > 1 + genJsonDocCode)
 	{
-		fprintf(stderr, "%s: ERROR---Choose only one of the -c -C or -D or -T or -RCS or -RJ or or -J OR -JD options\n", argv[0]);
+		fprintf(stderr, "%s: ERROR---Choose only one of the -c -C or -D or -T or -RCS or -RJ or -OA or -J or -JD options\n", argv[0]);
 		Usage(argv[0], stderr);
 		return 1;
 	}
 
-	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCode && !genJsonDocCode)
+	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCode && !genJsonDocCode && !genOpenApiCode)
 		genCCode = TRUE; /* default to C if neither specified */
 
 	/* Set the encoding rules to BER if not set */
@@ -980,7 +988,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	if (genCCode)
 		FillCTypeInfo(&cRulesG, allMods);
 
-	else if (genCxxCode || genJAVACode || genCSCode || genSwiftCode || genJSCode || genDelphiCode || genTSCode || genJsonDocCode)
+	else if (genCxxCode || genJAVACode || genCSCode || genSwiftCode || genJSCode || genDelphiCode || genTSCode || genJsonDocCode || genOpenApiCode)
 		FillCxxTypeInfo(&cxxRulesG, allMods);
 
 #if IDL
@@ -1042,6 +1050,9 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 
 	if (genJSCode)
 		GenJSCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
+
+	if (genOpenApiCode)
+		GenOpenApiCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
 
 	if (genTSCode)
 		GenTSCode(allMods, longJmpVal, genTypeCode, genValueCode, genJSONEncDec, genTSRoseStubs, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
@@ -1129,12 +1140,12 @@ Module* ParseAsn1File(const char* fileName, short ImportFlag, int parseComments)
 		}
 		unsigned char szFileType[3] = {0};
 #ifdef _WIN32
-    #ifdef _MSC_VER
+#ifdef _MSC_VER
 		fread_s(szFileType, 3, sizeof(char), 3, fPtr);
-    #else
-        // MingW, Clang, GCC
-        fread(szFileType, sizeof(char), 3, fPtr);
-    #endif
+#else
+		// MingW, Clang, GCC
+		fread(szFileType, sizeof(char), 3, fPtr);
+#endif
 #else
 		fread(szFileType, sizeof(char), 3, fPtr);
 #endif
@@ -1783,6 +1794,71 @@ void GenJSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues
 		}
 	}
 } /* GenJSCode */
+
+/*
+ * Given the list of parsed, linked, normalized, error-checked and sorted
+ * modules, and some code generation flags, generates OpenApi code and
+ * writes it to files derived from each modules name.
+ */
+void GenOpenApiCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genFree, int novolatilefuncs, int genROSEDecoders)
+{
+	Module* currMod;
+	AsnListNode* saveMods;
+	FILE* srcFilePtr;
+	// FILE		*hdrInterfaceFilePtr;
+	// FILE		*hdrForwardDecl;
+	DefinedObj* fNames;
+	int fNameConflict = FALSE;
+
+	genROSEDecoders = 1;
+
+	/*
+	 * Make names for each module's encoder/decoder src and hdr files
+	 * so import references can be made via include files
+	 * check for truncation --> name conflicts & exit if nec
+	 */
+	fNames = NewObjList();
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		currMod->jsFileName = MakeJsonDocFileName(currMod->baseFileName);
+
+		if (ObjIsDefined(fNames, currMod->jsFileName, StrObjCmp))
+		{
+			fprintf(errFileG, "Ack! ERROR---file name conflict for generated swift file with name `%s'.\n\n", currMod->jsFileName);
+			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
+			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
+			fprintf(errFileG, "This error can also be caused by 2 modules having the same name but different OBJECT IDENTIFIERs.");
+			fprintf(errFileG, "Try renaming the modules to correct this.\n");
+			fNameConflict = TRUE;
+		}
+		else
+		{
+			DefineObj(&fNames, currMod->jsFileName);
+		}
+
+		if (fNameConflict)
+			return;
+
+		FreeDefinedObjs(&fNames);
+	}
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+			if (fopen_s(&srcFilePtr, currMod->jsFileName, "wt") != 0 || srcFilePtr == NULL)
+			{
+				perror("fopen");
+			}
+			else
+			{
+				saveMods = allMods->curr;
+				PrintOpenApiCode(srcFilePtr, allMods, currMod, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, novolatilefuncs);
+				allMods->curr = saveMods;
+				fclose(srcFilePtr);
+			}
+		}
+	}
+} /* GenOpenAPICode */
 
 int sortstring(const void* str1, const void* str2)
 {

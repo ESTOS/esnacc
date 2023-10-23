@@ -39,6 +39,7 @@ if(MSVC)
 	if(MSVC_STATIC_RUNTIME)
 		target_compile_options(cpp-lib PRIVATE "/MT$<$<CONFIG:Debug>:d>")
 	endif()
+	target_compile_options(cpp-lib PRIVATE /Zi)
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
 	# -Wno-self-assign -Wno-misleading-indentation -Wno-for-loop-analysis
 	target_compile_options(cpp-lib PRIVATE -Wall)

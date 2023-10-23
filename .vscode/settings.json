@@ -8,5 +8,8 @@
 	},
 	"editor.formatOnSave": true,
 	"editor.defaultFormatter": "xaver.clang-format",
-	"C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+	"C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+	"[html]": {
+		"editor.defaultFormatter": "vscode.html-language-features"
+	}
 }
