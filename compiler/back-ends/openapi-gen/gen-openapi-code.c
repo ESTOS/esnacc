@@ -542,8 +542,6 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 			fprintf(src, "\t\t\t\t\t}\n");
 			fprintf(src, "\t\t\t\t}\n");
 		}
-		else
-			fprintf(src, ",\"responses\": {\"default\": {\"description\": \"Events don't have Responses\"}}\n");
 
 		fprintf(src, "\t\t\t}\n");
 		fprintf(src, "\t\t}");

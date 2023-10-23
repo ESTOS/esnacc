@@ -3,8 +3,8 @@
 	"info": {
 		"title": "ENetUC_Settings_Manager",
 		"version": "0.0.1",
-		"summary": "This module is used to retrieve and store settings and to dispatch events for changed settings\n",
-		"description": "A client may retrieve settings, adopt them and store them on the server\nIn case a property in the events has changed the server will notify this to connected websocket events\nMethods and Events\nMethods:\n4100 asnGetSettings\t\t\t\t\t- Sample to get settings\n4101 asnSetSettings\t\t\t\t\t- Sample to set settings\nEvents:\n4150 asnSettingsChanged\t\t\t\t- An event that the settings have changed\n"
+		"summary": "This module is used to retrieve and store settings and to dispatch events for changed settings\n\n",
+		"description": "A client may retrieve settings, adopt them and store them on the server\n\nIn case a property in the events has changed the server will notify this to connected websocket events\n\nMethods and Events\n\nMethods:\n\n4100 asnGetSettings- Sample to get settings\n\n4101 asnSetSettings- Sample to set settings\n\nEvents:\n\n4150 asnSettingsChanged- An event that the settings have changed\n\n"
 	},
 	"paths": {
 		"/asnGetSettings": {
@@ -12,8 +12,7 @@
 				"tags": [
 					"Settings Manager"
 				],
-				"summary": "Method to retrieve settings from the server side\n",
-				"description": "",
+				"summary": "Method to retrieve settings from the server side\n\n",
 				"deprecated": false,
 				"operationId": "4100",
 				"requestBody": {
@@ -54,8 +53,8 @@
 				"tags": [
 					"Settings Manager"
 				],
-				"summary": "Method to store settings on the server side\n",
-				"description": "If a settings property has changed the client will get notified by an event\n",
+				"summary": "Method to store settings on the server side\n\n",
+				"description": "If a settings property has changed the client will get notified by an event\n\n",
 				"deprecated": false,
 				"operationId": "4101",
 				"requestBody": {
@@ -96,8 +95,7 @@
 				"tags": [
 					"Settings Manager"
 				],
-				"summary": "Sent to the clients in the case settings have changed\n",
-				"description": "",
+				"summary": "Sent to the clients in the case settings have changed\n\n",
 				"deprecated": false,
 				"operationId": "4150",
 				"requestBody": {
@@ -107,11 +105,6 @@
 								"$ref": "#/components/schemas/AsnSettingsChangedArgument"
 							}
 						}
-					}
-				},
-				"responses": {
-					"default": {
-						"description": "Events don't have Responses"
 					}
 				}
 			}
@@ -130,7 +123,7 @@
 			},
 			"AsnSomeSettings": {
 				"type": "object",
-				"description": " | category : Settings Manager | short :  | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nSettings Manager\n### Short \n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"bEnabled": {
 						"type": "boolean"
@@ -145,15 +138,15 @@
 			},
 			"AsnGetSettingsArgument": {
 				"type": "object",
-				"description": " | category : Settings Manager | short : Argument for the asnGetSettings method\n | long :  | deprecated : 0 | private : 0"
+				"description": "### Category \nSettings Manager\n### Short \nArgument for the asnGetSettings method\n\n### Long \n\n### Deprecated \n0\n### Private \n0"
 			},
 			"AsnSetSettingsResult": {
 				"type": "object",
-				"description": " | category : Settings Manager | short : Result for the asnSetSettings method\n | long :  | deprecated : 0 | private : 0"
+				"description": "### Category \nSettings Manager\n### Short \nResult for the asnSetSettings method\n\n### Long \n\n### Deprecated \n0\n### Private \n0"
 			},
 			"AsnGetSettingsResult": {
 				"type": "object",
-				"description": " | category : Settings Manager | short : Result for the asnGetSettings method\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nSettings Manager\n### Short \nResult for the asnGetSettings method\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"settings": {
 						"$ref": "#/components/schemas/AsnSomeSettings"
@@ -165,7 +158,7 @@
 			},
 			"AsnSetSettingsArgument": {
 				"type": "object",
-				"description": " | category : Settings Manager | short : Argument for the asnSetSettings method\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nSettings Manager\n### Short \nArgument for the asnSetSettings method\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"settings": {
 						"$ref": "#/components/schemas/AsnSomeSettings"
@@ -177,7 +170,7 @@
 			},
 			"AsnSettingsChangedArgument": {
 				"type": "object",
-				"description": " | category : Settings Manager | short : Argument for the asnSettingsChanged event\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nSettings Manager\n### Short \nArgument for the asnSettingsChanged event\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"settings": {
 						"$ref": "#/components/schemas/AsnSomeSettings"

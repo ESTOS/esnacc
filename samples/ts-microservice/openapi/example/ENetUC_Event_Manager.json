@@ -3,8 +3,8 @@
 	"info": {
 		"title": "ENetUC_Event_Manager",
 		"version": "0.0.1",
-		"summary": "This module is used to create and dispatch events.\n",
-		"description": "Clients may request events from the server\nThe server then sends events to all websocket connected clients\nRequesting events through rest is not supported and rejected\nMethods and Events\nMethods:\n4000 asnCreateFancyEvents\t\t\t- A method that will create events on the server side\nEvents:\n4050 asnFancyEvent\t\t\t\t\t- An event that is fired by the server in case a client request an event\n"
+		"summary": "This module is used to create and dispatch events.\n\n",
+		"description": "Clients may request events from the server\n\nThe server then sends events to all websocket connected clients\n\nRequesting events through rest is not supported and rejected\n\nMethods and Events\n\nMethods:\n\n4000 asnCreateFancyEvents- A method that will create events on the server side\n\nEvents:\n\n4050 asnFancyEvent- An event that is fired by the server in case a client request an event\n\n"
 	},
 	"paths": {
 		"/asnCreateFancyEvents": {
@@ -12,8 +12,8 @@
 				"tags": [
 					"Event Manager"
 				],
-				"summary": "Method that will create some events the server will then dispatch to the clients\n",
-				"description": "It´s not possible to call this method through rest as the client won´t receive these events\n",
+				"summary": "Method that will create some events the server will then dispatch to the clients\n\n",
+				"description": "It´s not possible to call this method through rest as the client won´t receive these events\n\n",
 				"deprecated": false,
 				"operationId": "4000",
 				"requestBody": {
@@ -54,8 +54,7 @@
 				"tags": [
 					"Event Manager"
 				],
-				"summary": "An event that is dispatched from the server to the clients\n",
-				"description": "",
+				"summary": "An event that is dispatched from the server to the clients\n\n",
 				"deprecated": false,
 				"operationId": "4050",
 				"requestBody": {
@@ -80,7 +79,7 @@
 			},
 			"AsnCreateFancyEventsArgument": {
 				"type": "object",
-				"description": " | category : Event Manager | short : Argument to create fancy events on the server side\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nEvent Manager\n### Short \nArgument to create fancy events on the server side\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"iEventDelay": {
 						"type": "integer"
@@ -96,11 +95,11 @@
 			},
 			"AsnCreateFancyEventsResult": {
 				"type": "object",
-				"description": " | category : Event Manager | short : Result for the asnCreateFancyEvents method\n | long :  | deprecated : 0 | private : 0"
+				"description": "### Category \nEvent Manager\n### Short \nResult for the asnCreateFancyEvents method\n\n### Long \n\n### Deprecated \n0\n### Private \n0"
 			},
 			"AsnFancyEventArgument": {
 				"type": "object",
-				"description": " | category : Event Manager | short : Argument for the AsnFancyEventArgument method\n | long :  | deprecated : 0 | private : 0",
+				"description": "### Category \nEvent Manager\n### Short \nArgument for the AsnFancyEventArgument method\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
 				"properties": {
 					"iEventCounter": {
 						"type": "integer"
