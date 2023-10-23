@@ -6,14 +6,6 @@
 		"summary": "This module is used to retrieve and store settings and to dispatch events for changed settings\n",
 		"description": "A client may retrieve settings, adopt them and store them on the server\nIn case a property in the events has changed the server will notify this to connected websocket events\nMethods and Events\nMethods:\n4100 asnGetSettings\t\t\t\t\t- Sample to get settings\n4101 asnSetSettings\t\t\t\t\t- Sample to set settings\nEvents:\n4150 asnSettingsChanged\t\t\t\t- An event that the settings have changed\n"
 	},
-	"servers": [
-		{
-			"url": "http://localhost:3020/rest"
-		},
-		{
-			"url": "ws://localhost:3020/ws"
-		}
-	],
 	"paths": {
 		"/asnGetSettings": {
 			"post": {

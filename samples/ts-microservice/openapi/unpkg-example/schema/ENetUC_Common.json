@@ -1,0 +1,456 @@
+{
+	"openapi": "3.1.0",
+	"info": {
+		"title": "ENetUC_Common",
+		"version": "0.0.1",
+		"summary": "Common interface definitions\n",
+		"description": "## Module description\nThis module contains common usable strutures for the other interfaces.\nThere should not be any function\/operation defintions in this module.\n"
+	},
+	"paths": {},
+	"components": {
+		"schemas": {
+			"AsnSystemTime": {
+				"type": "string",
+				"format": "date-time"
+			},
+			"AsnOptionalParamChoice": {
+				"oneOf": [
+					{
+						"type": "string"
+					},
+					{
+						"type": "string",
+						"format": "byte"
+					},
+					{
+						"type": "integer"
+					}
+				]
+			},
+			"AsnStringPair": {
+				"type": "object",
+				"description": "### Category \nCommon\n### Short \nKey value pair of strings.\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"key": {
+						"type": "string"
+					},
+					"value": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"key",
+					"value"
+				]
+			},
+			"AsnIntegerPair": {
+				"type": "object",
+				"description": "### Category \nCommon\n### Short \nKey value pair of integer\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"key": {
+						"type": "integer"
+					},
+					"value": {
+						"type": "integer"
+					}
+				},
+				"required": [
+					"key",
+					"value"
+				]
+			},
+			"AsnStringIntegerPair": {
+				"type": "object",
+				"description": "### Category \nCommon\n### Short \nKey value pair of &lt;string, integer&gt;\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"u8sStr": {
+						"type": "string"
+					},
+					"iInt": {
+						"type": "integer"
+					}
+				},
+				"required": [
+					"u8sStr",
+					"iInt"
+				]
+			},
+			"AsnRequestError": {
+				"type": "object",
+				"description": "### Category \nCommon\n### Short \nGeneric error sequence. See the documentation of the operations specific descriptions.\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"iErrorDetail": {
+						"type": "integer"
+					},
+					"u8sErrorString": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"iErrorDetail",
+					"u8sErrorString"
+				]
+			},
+			"AsnNetDatabaseContactID": {
+				"type": "object",
+				"description": "### Category \nCommon\n### Short \nA three tuple to identify contact data.\n\n### Long \nThe three tuple EntryID, EntryIDDB and EntryIDStore identifies contact data including its\nsource database, so that contact data from different data sources can be differentiated from each other.\nIt is an own sequence, so it can be tranferred without any concrete contact data to save bandwidth.\n\nThe AsnNetDatabaseContact does not contain a AsnNetDatabaseContactID object, it contains the three\nmembers by itself.\n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"u8sEntryID": {
+						"type": "string"
+					},
+					"u8sEntryIDDB": {
+						"type": "string"
+					},
+					"u8sEntryIDStore": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"u8sEntryID",
+					"u8sEntryIDDB",
+					"u8sEntryIDStore"
+				]
+			},
+			"AsnOptionalParam": {
+				"type": "object",
+				"description": "### Category \nCommon\n### Short \nEncapsulated key value pair, including a definition of the value type.\n\n### Long \nSequences can change over time of the development of the product. To ensure, that possible breaking changes can be avoided\nwithin the life cycle of a major version, most sequences contain a list of AsnOptionalParam.\n\nBecause of the generic nature of the this sequence, the documention of the content is defined in the sections\nusing the AsnOptionalParam.\n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"key": {
+						"type": "string"
+					},
+					"value": {
+						"$ref": "#/components/schemas/AsnOptionalParamChoice"
+					}
+				},
+				"required": [
+					"key",
+					"value"
+				]
+			},
+			"AsnStringPairList": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/AsnStringPair"
+				}
+			},
+			"AsnJSONWebTokenHeader": {
+				"type": "object",
+				"description": "### Category \nCommon\n### Short \nHeader data for a RFC-7519 JSON Web Token\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"u8sTYP": {
+						"type": "string"
+					},
+					"u8sALG": {
+						"type": "string"
+					},
+					"u8sCTY": {
+						"type": "string"
+					},
+					"optionals": {
+						"$ref": "#/components/schemas/AsnStringPairList"
+					}
+				},
+				"required": [
+					"u8sTYP",
+					"u8sALG"
+				]
+			},
+			"AsnJSONWebTokenPayLoad": {
+				"type": "object",
+				"description": "### Category \nCommon\n### Short \nPayload data for a RFC-7519 JSON Web Token\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"u8sISS": {
+						"type": "string"
+					},
+					"u8sSUB": {
+						"type": "string"
+					},
+					"u8sAUD": {
+						"type": "string"
+					},
+					"utcEXP": {
+						"$ref": "#/components/schemas/AsnSystemTime"
+					},
+					"utcNBF": {
+						"$ref": "#/components/schemas/AsnSystemTime"
+					},
+					"utcIAT": {
+						"$ref": "#/components/schemas/AsnSystemTime"
+					},
+					"u8sJTI": {
+						"type": "string"
+					},
+					"iUserType": {
+						"type": "integer"
+					},
+					"optionals": {
+						"$ref": "#/components/schemas/AsnStringPairList"
+					}
+				},
+				"required": [
+					"u8sJTI"
+				]
+			},
+			"AsnOptionalParameters": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/AsnOptionalParam"
+				}
+			},
+			"AsnNetDatabaseContact": {
+				"type": "object",
+				"description": "### Category \nCommon\n### Short \nSequence\/object containing contact data.\n\n### Long \nAsnNetDatabaseContact is widly used almost everywhere in the API. It contains the contact data of a contact and from which databse it comes from.\nAll fields in this sequence are optional, because not every field must have content, but the sequence is broadly used, so every field which is\nnot transmitted saves bandwidth.\n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"u8sFound": {
+						"type": "string"
+					},
+					"u8sDatabaseName": {
+						"type": "string"
+					},
+					"u8sEntryIDDB": {
+						"type": "string"
+					},
+					"u8sEntryIDStore": {
+						"type": "string"
+					},
+					"u8sEntryID": {
+						"type": "string"
+					},
+					"u8sCtiServerUserName": {
+						"type": "string"
+					},
+					"u8sDisplayName": {
+						"type": "string"
+					},
+					"u8sFirstName": {
+						"type": "string"
+					},
+					"u8sLastName": {
+						"type": "string"
+					},
+					"u8sJobTitle": {
+						"type": "string"
+					},
+					"u8sCompany": {
+						"type": "string"
+					},
+					"u8sDepartment": {
+						"type": "string"
+					},
+					"u8sOfficeRoomNumber": {
+						"type": "string"
+					},
+					"u8sCustomerID": {
+						"type": "string"
+					},
+					"u8sBusinessAddressStreet": {
+						"type": "string"
+					},
+					"u8sBusinessAddressPostalCode": {
+						"type": "string"
+					},
+					"u8sBusinessAddressCity": {
+						"type": "string"
+					},
+					"u8sBusinessAddressState": {
+						"type": "string"
+					},
+					"u8sBusinessAddressCountry": {
+						"type": "string"
+					},
+					"u8sPrivateAddressStreet": {
+						"type": "string"
+					},
+					"u8sPrivateAddressPostalCode": {
+						"type": "string"
+					},
+					"u8sPrivateAddressCity": {
+						"type": "string"
+					},
+					"u8sPrivateAddressState": {
+						"type": "string"
+					},
+					"u8sPrivateAddressCountry": {
+						"type": "string"
+					},
+					"u8sOtherAddressStreet": {
+						"type": "string"
+					},
+					"u8sOtherAddressPostalCode": {
+						"type": "string"
+					},
+					"u8sOtherAddressCity": {
+						"type": "string"
+					},
+					"u8sOtherAddressState": {
+						"type": "string"
+					},
+					"u8sOtherAddressCountry": {
+						"type": "string"
+					},
+					"u8sEMail": {
+						"type": "string"
+					},
+					"u8sEMail2": {
+						"type": "string"
+					},
+					"u8sEMail3": {
+						"type": "string"
+					},
+					"u8sSIPAddress": {
+						"type": "string"
+					},
+					"u8sWebPageURL": {
+						"type": "string"
+					},
+					"u8sPhoneBusiness": {
+						"type": "string"
+					},
+					"u8sPhoneBusiness2": {
+						"type": "string"
+					},
+					"u8sCompanyMainTelephoneNumber": {
+						"type": "string"
+					},
+					"u8sAssistantTelephoneNumber": {
+						"type": "string"
+					},
+					"u8sPhoneHome": {
+						"type": "string"
+					},
+					"u8sPhoneHome2": {
+						"type": "string"
+					},
+					"u8sPrimaryTelephoneNumber": {
+						"type": "string"
+					},
+					"u8sPhoneMobile": {
+						"type": "string"
+					},
+					"u8sCarTelephoneNumber": {
+						"type": "string"
+					},
+					"u8sRadioTelephoneNumber": {
+						"type": "string"
+					},
+					"u8sPagerTelephoneNumber": {
+						"type": "string"
+					},
+					"u8sOtherTelephoneNumber": {
+						"type": "string"
+					},
+					"u8sCallbackTelephoneNumber": {
+						"type": "string"
+					},
+					"u8sISDNTelephoneNumber": {
+						"type": "string"
+					},
+					"u8sTTYTTDTelephoneNumber": {
+						"type": "string"
+					},
+					"u8sFaxBusiness": {
+						"type": "string"
+					},
+					"u8sFaxHome": {
+						"type": "string"
+					},
+					"u8sBody": {
+						"type": "string"
+					},
+					"u8sDirectWebLink": {
+						"type": "string"
+					},
+					"customFields": {
+						"$ref": "#/components/schemas/AsnStringPairList"
+					},
+					"bValid": {
+						"type": "boolean"
+					},
+					"iPrivateContact": {
+						"type": "integer"
+					},
+					"iCtiServerUser": {
+						"type": "integer"
+					},
+					"optionalParams": {
+						"$ref": "#/components/schemas/AsnOptionalParameters"
+					}
+				}
+			},
+			"AsnIntegerPairList": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/AsnIntegerPair"
+				}
+			},
+			"AsnStringIntegerPairList": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/AsnStringIntegerPair"
+				}
+			},
+			"AsnRequestErrorList": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/AsnRequestError"
+				}
+			},
+			"SEQInteger": {
+				"type": "array",
+				"items": {
+					"type": "integer"
+				}
+			},
+			"UTF8StringList": {
+				"type": "array",
+				"items": {
+					"type": "string"
+				}
+			},
+			"AsnNetDatabaseContactList": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/AsnNetDatabaseContact"
+				}
+			},
+			"AsnNetDatabaseContactIDList": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/AsnNetDatabaseContactID"
+				}
+			},
+			"AsnUserPropertyBag": {
+				"type": "object",
+				"description": "### Category \nCommon\n### Short \nProperty bag definition for storing runtime defined content for objects (like users, computers, groups etc.).\n\n### Long \nTo make it possible to transport and store runtime defined content in some objects, these object contain\na property bag, which is simply a key value store. Which keys (and therefor which data) is available\nis depending on the object and the business logic, which uses it. So see the according sequence (object) documentation\nfor more details.\n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"asnProperties": {
+						"$ref": "#/components/schemas/AsnStringPairList"
+					}
+				},
+				"required": [
+					"asnProperties"
+				]
+			},
+			"AsnJSONWebToken": {
+				"type": "object",
+				"description": "### Category \nCommon\n### Short \nData for a RFC-7519 JSON Web Token\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
+				"properties": {
+					"header": {
+						"$ref": "#/components/schemas/AsnJSONWebTokenHeader"
+					},
+					"payload": {
+						"$ref": "#/components/schemas/AsnJSONWebTokenPayLoad"
+					},
+					"signature": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"header",
+					"payload",
+					"signature"
+				]
+			}
+		}
+	}
+}

@@ -6,14 +6,6 @@
 		"summary": "This module is used to create and dispatch events.\n",
 		"description": "Clients may request events from the server\nThe server then sends events to all websocket connected clients\nRequesting events through rest is not supported and rejected\nMethods and Events\nMethods:\n4000 asnCreateFancyEvents\t\t\t- A method that will create events on the server side\nEvents:\n4050 asnFancyEvent\t\t\t\t\t- An event that is fired by the server in case a client request an event\n"
 	},
-	"servers": [
-		{
-			"url": "ws://localhost:3020/ws"
-		},
-		{
-			"url": "http://localhost:3020/rest"
-		}
-	],
 	"paths": {
 		"/asnCreateFancyEvents": {
 			"post": {
