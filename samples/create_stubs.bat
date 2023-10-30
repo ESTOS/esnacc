@@ -39,6 +39,26 @@ echo.
 if NOT %ERRORLEVEL% == 0 echo Build has failed, check console...>&2
 POPD
 
+rem Building openapi files...
+echo Building openapi files...
+PUSHD ts-microservice\openapi\example
+SET COMMAND=-JO %FILES%
+echo %COMPILER% %COMMAND%
+%COMPILER% %COMMAND%
+echo.
+if NOT %ERRORLEVEL% == 0 echo Build has failed, check console...>&2
+POPD
+PUSHD ts-microservice\openapi\unpkg-example
+SET COMMAND=-JO %FILES%
+echo %COMPILER% %COMMAND%
+%COMPILER% %COMMAND%
+echo.
+if NOT %ERRORLEVEL% == 0 echo Build has failed, check console...>&2
+POPD
+
+
+
+
 echo finished...
 GOTO end
 
