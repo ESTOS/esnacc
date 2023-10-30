@@ -28,59 +28,77 @@
 #include "compiler/core/asn1module.h"
 #include "snacc.h"
 
-char* replace_str(char* str, char* orig, char* rep)
+char* replace_str(const char* str, const char* orig, const char* rep)
 {
-	char* result;
-	char* ins;
-	char* tmp;
-	int len_rep;
-	int len_orig;
-	int len_front;
-	int count;
-
-	if (!orig)
+	if (!str || !orig || !rep)
 		return NULL;
-	len_rep = strlen(rep);
-	if (!str)
-		return NULL;
-	len_orig = strlen(orig);
-	if (len_orig == 0)
-		return NULL;
-	if (!rep)
-		rep = "";
 
-	ins = str;
-	for (count = 0; (tmp = strstr(ins, orig)); ++count)
-		ins = tmp + len_orig;
+	// Get the length of the strings
+	size_t len_orig = strlen(orig);
+	if (!len_orig)
+		return NULL;
+	size_t len_rep = strlen(rep);
 
-	tmp = result = malloc(strlen(str) + (len_rep - len_orig) * count + 1);
+	// Get the amount of replaces we have to handle (to be able to calculate the length)
+	int count = 0;
+	char* tmp = strstr(str, orig);
+	while (tmp)
+	{
+		count++;
+		tmp += len_orig;
+		tmp = strstr(tmp, orig);
+	}
+
+	// Source len + len difference * count of replacers + null byte
+	size_t resultSize = strlen(str) + (len_rep - len_orig) * count + 1;
+	char* result = malloc(resultSize);
 
 	if (!result)
 		return NULL;
 
+	memset(result, 0x00, resultSize);
+	tmp = result;
 	while (count--)
 	{
-		ins = strstr(str, orig);
-		len_front = ins - str;
-		tmp = strncpy(tmp, str, len_front) + len_front;
-		tmp = strcpy(tmp, rep) + len_rep;
+		// Get the first position for a replacement
+		const char* ins = strstr(str, orig);
+		// Get the length information of the replacement (this is the amount of data we need to copy)
+		size_t len_front = ins - str;
+
+		// Copy the data prior to the replacement into the result buffer
+		strncpy_s(tmp, resultSize, str, len_front);
+		tmp += len_front;
+		resultSize -= len_front;
+
+		// Add the replacer
+		strcat_s(tmp, resultSize, rep);
+		tmp += len_rep;
+		resultSize -= len_rep;
+
+		// Correct the starting position
 		str += len_front + len_orig;
 	}
-	strcpy(tmp, str);
+	strcat_s(tmp, resultSize, str);
 	return result;
 }
 
-char* replace_multi(const char* str, char** orig, char** rep, int num)
+char* replace_multi(const char* str, const char** orig, const char** rep)
 {
-	char* result = strdup(str);
-	for (int i = 0; i < num; ++i)
+	char* result = _strdup(str);
+	int i = 0;
+	while (true)
 	{
-		char* replaced = replace_str(result, orig[i], rep[i]);
+		const char* o = orig[i];
+		const char* r = rep[i];
+		if (!o || !r)
+			break;
+		char* replaced = replace_str(result, o, r);
 		if (replaced != NULL)
 		{
 			free(result);
 			result = replaced;
 		}
+		i++;
 	}
 	return result;
 }
@@ -473,12 +491,12 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 		{
 			fprintf(src, "\t\t\t\t\"tags\" : [\"%s\"],\n", comment.szCategory);
 
-			char* orig[] = {"\\n", "\\t"};
-			char* rep[] = {"\\n\\n", ""};
+			const char* orig[] = {"\\n", "\\t", 0};
+			const char* rep[] = {"\\n\\n", "", 0};
 			if (strlen(comment.szShort) != 0)
 			{
 
-				char* szShort = replace_multi(comment.szShort, orig, rep, 2);
+				char* szShort = replace_multi(comment.szShort, orig, rep);
 				if (szShort != NULL)
 				{
 					fprintf(src, "\t\t\t\t\"summary\" : \"%s\",\n", szShort);
@@ -487,7 +505,7 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 			}
 			if (strlen(comment.szLong) != 0)
 			{
-				char* szLong = replace_multi(comment.szLong, orig, rep, 2);
+				char* szLong = replace_multi(comment.szLong, orig, rep);
 				if (szLong != NULL)
 				{
 					fprintf(src, "\t\t\t\t\"description\" : \"%s\",\n", szLong);
@@ -594,12 +612,12 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 	{
 		fprintf(src, ",\n");
 		fprintf(src, "\t\t\"version\": \"0.0.1\",\n");
-		char* orig[] = {"\\n", "\\t"};
-		char* rep[] = {"\\n\\n", ""};
+		char* orig[] = {"\\n", "\\t", 0};
+		char* rep[] = {"\\n\\n", "", 0};
 		if (strlen(comment.szShort) != 0)
 		{
 
-			char* szShort = replace_multi(comment.szShort, orig, rep, 2);
+			char* szShort = replace_multi(comment.szShort, orig, rep);
 			if (szShort != NULL)
 			{
 				fprintf(src, "\t\t\"summary\": \"%s\",\n", szShort);
@@ -608,7 +626,7 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 		}
 		if (strlen(comment.szLong) != 0)
 		{
-			char* szLong = replace_multi(comment.szLong, orig, rep, 2);
+			char* szLong = replace_multi(comment.szLong, orig, rep);
 			if (szLong != NULL)
 			{
 				fprintf(src, "\t\t\"description\": \"%s\"\n", szLong);
