@@ -10,7 +10,6 @@
     "incremental": true,
     "inlineSources": true,
     "lib": [
-      "dom",
       "es6"
     ],
     "module": "commonjs",

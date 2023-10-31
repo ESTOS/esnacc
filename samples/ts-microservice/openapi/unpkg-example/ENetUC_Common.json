@@ -3,10 +3,11 @@
 	"info": {
 		"title": "ENetUC_Common",
 		"version": "0.0.1",
-		"summary": "Common interface definitions\n",
-		"description": "## Module description\nThis module contains common usable strutures for the other interfaces.\nThere should not be any function\/operation defintions in this module.\n"
+		"summary": "Common interface definitions\n\n",
+		"description": "## Module description\n\nThis module contains common usable strutures for the other interfaces.\n\nThere should not be any function\/operation defintions in this module.\n\n"
 	},
-	"paths": {},
+	"paths": {
+	},
 	"components": {
 		"schemas": {
 			"AsnSystemTime": {
