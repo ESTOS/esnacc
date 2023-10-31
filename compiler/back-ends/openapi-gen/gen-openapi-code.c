@@ -28,104 +28,131 @@
 #include "compiler/core/asn1module.h"
 #include "snacc.h"
 
-char* replace_str(char* str, char* orig, char* rep)
+char* replace_str(const char* str, const char* orig, const char* rep)
 {
-	char* result;
-	char* ins;
-	char* tmp;
-	int len_rep;
-	int len_orig;
-	int len_front;
-	int count;
-
-	if (!orig)
+	if (!str || !orig || !rep)
 		return NULL;
-	len_rep = strlen(rep);
-	if (!str)
-		return NULL;
-	len_orig = strlen(orig);
-	if (len_orig == 0)
-		return NULL;
-	if (!rep)
-		rep = "";
 
-	ins = str;
-	for (count = 0; (tmp = strstr(ins, orig)); ++count)
-		ins = tmp + len_orig;
+	// Get the length of the strings
+	size_t len_orig = strlen(orig);
+	if (!len_orig)
+		return NULL;
+	size_t len_rep = strlen(rep);
 
-	tmp = result = malloc(strlen(str) + (len_rep - len_orig) * count + 1);
+	// Get the amount of replaces we have to handle (to be able to calculate the length)
+	int count = 0;
+	char* tmp = strstr(str, orig);
+	while (tmp)
+	{
+		count++;
+		tmp += len_orig;
+		tmp = strstr(tmp, orig);
+	}
+
+	// Source len + len difference * count of replacers + null byte
+	size_t resultSize = strlen(str) + (len_rep - len_orig) * count + 1;
+	char* result = malloc(resultSize);
 
 	if (!result)
 		return NULL;
 
+	memset(result, 0x00, resultSize);
+	tmp = result;
 	while (count--)
 	{
-		ins = strstr(str, orig);
-		len_front = ins - str;
-		tmp = strncpy(tmp, str, len_front) + len_front;
-		tmp = strcpy(tmp, rep) + len_rep;
+		// Get the first position for a replacement
+		const char* ins = strstr(str, orig);
+		// Get the length information of the replacement (this is the amount of data we need to copy)
+		size_t len_front = ins - str;
+
+		// Copy the data prior to the replacement into the result buffer
+		strncpy_s(tmp, resultSize, str, len_front);
+		tmp += len_front;
+		resultSize -= len_front;
+
+		// Add the replacer
+		strcat_s(tmp, resultSize, rep);
+		tmp += len_rep;
+		resultSize -= len_rep;
+
+		// Correct the starting position
 		str += len_front + len_orig;
 	}
-	strcpy(tmp, str);
+	strcat_s(tmp, resultSize, str);
 	return result;
 }
 
-char* replace_multi(const char* str, char** orig, char** rep, int num)
+char* replace_multi(const char* str, const char** orig, const char** rep)
 {
-	char* result = strdup(str);
-	for (int i = 0; i < num; ++i)
+	char* result = _strdup(str);
+	int i = 0;
+	while (true)
 	{
-		char* replaced = replace_str(result, orig[i], rep[i]);
+		const char* o = orig[i];
+		const char* r = rep[i];
+		if (!o || !r)
+			break;
+		char* replaced = replace_str(result, o, r);
 		if (replaced != NULL)
 		{
 			free(result);
 			result = replaced;
 		}
+		i++;
 	}
 	return result;
 }
 
-static void PrintOpenApiTypeDefinitions(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp);
+static void PrintOpenApiTypeDefinitions(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp, char* tabs);
 
-static void PrintOpenApiStringType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
+static void PrintOpenApiStringType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp, char* tabs)
 {
 	if (td != NULL)
-		fprintf(src, "\"%s\": ", td->definedName);
-	fprintf(src, "{\"type\": \"string\"}");
+		fprintf(src, "%s\"%s\": {\n", tabs, td->definedName);
+	else
+		fprintf(src, "{\n");
+	fprintf(src, "%s\t\"type\": \"string\"\n", tabs);
+	fprintf(src, "%s}", tabs);
 }
 
-static void PrintOpenApiTimeType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
+static void PrintOpenApiTimeType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp, char* tabs)
 {
 	if (td != NULL)
-		fprintf(src, "\"%s\": ", td->definedName);
-	fprintf(src, "{\"type\": \"string\", \"format\": \"date-time\"}");
+		fprintf(src, "%s\"%s\": {\n", tabs, td->definedName);
+	else
+		fprintf(src, "{\n");
+	fprintf(src, "%s\t\"type\": \"string\",\n", tabs);
+	fprintf(src, "%s\t\"format\": \"date-time\"\n", tabs);
+	fprintf(src, "%s}", tabs);
 }
 
-static void PrintOpenApiPrimitiveType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
+static void PrintOpenApiPrimitiveType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp, char* tabs)
 {
 	if (td != NULL)
-		fprintf(src, "\"%s\": ", td->definedName);
+		fprintf(src, "%s\"%s\": {", tabs, td->definedName);
+	else
+		fprintf(src, "{");
 
 	switch (tp->basicType->choiceId)
 	{
 		case BASICTYPE_ANY:		/* 16 */
 		case BASICTYPE_UNKNOWN: /* 0 */
-			fprintf(src, "{}");
+			fprintf(src, "}");
 			break;
 		case BASICTYPE_BOOLEAN: /* 1 */
-			fprintf(src, "{\"type\" : \"boolean\"}");
+			fprintf(src, "\n%s\t\"type\": \"boolean\"\n%s}", tabs, tabs);
 			break;
 		case BASICTYPE_INTEGER: /* 2 */
-			fprintf(src, "{\"type\" : \"integer\"}");
+			fprintf(src, "\n%s\t\"type\": \"integer\"\n%s}", tabs, tabs);
 			break;
 		case BASICTYPE_NULL: /* 5 */
-			fprintf(src, "{\"nullable\": \"true\"}");
+			fprintf(src, "\n%s\t\"nullable\": \"true\"\n%s}", tabs, tabs);
 			break;
 		case BASICTYPE_REAL: /* 7 */
-			fprintf(src, "{\"type\": \"number\", \"format\": \"float\"}");
+			fprintf(src, "\n%s\t\"type\": \"number\",\n%s\t\"format\": \"float\"\n%s}", tabs, tabs, tabs);
 			break;
 		case BASICTYPE_OCTETSTRING:
-			fprintf(src, "{\"type\": \"string\", \"format\": \"byte\"}");
+			fprintf(src, "\n%s\t\"type\": \"string\",\n%s\t\"format\": \"byte\"\n%s}", tabs, tabs, tabs);
 			break;
 		default:
 			exit(1);
@@ -133,19 +160,20 @@ static void PrintOpenApiPrimitiveType(FILE* src, ModuleList* mods, Module* m, Ty
 	}
 }
 
-void PrintOpenApiSequence(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
+void PrintOpenApiSequence(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp, char* tabs)
 {
-
 	if (td != NULL)
-		fprintf(src, "\"%s\": ", FixName(td->definedName));
+		fprintf(src, "%s\"%s\": {\n", tabs, FixName(td->definedName));
+	else
+		fprintf(src, "{\n");
 
 	NamedType* n;
-	fprintf(src, "{\"type\": \"object\"");
+	fprintf(src, "%s\t\"type\": \"object\"", tabs);
 
 	asnsequencecomment comment;
 	if (td != NULL && GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment))
 	{
-		fprintf(src, ",\"description\": \"");
+		fprintf(src, ",\n%s\t\"description\": \"", tabs);
 		fprintf(src, "### Category \\n%s\\n", comment.szCategory);
 		fprintf(src, "### Short \\n%s\\n", comment.szShort);
 		fprintf(src, "### Long \\n%s\\n", comment.szLong);
@@ -162,17 +190,19 @@ void PrintOpenApiSequence(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 		if (IsDeprecatedNoOutputMember(m, td, n->fieldName) || n->type->basicType->choiceId == BASICTYPE_EXTENSION)
 			continue;
 		if (bFirst)
-			fprintf(src, ", \"properties\": {");
+			fprintf(src, ",\n%s\t\"properties\": {\n", tabs);
 		else
-			fprintf(src, ", ");
-		fprintf(src, "\"%s\": ", n->fieldName);
+			fprintf(src, ",\n");
+		fprintf(src, "%s\t\t\"%s\": ", tabs, n->fieldName);
+		char newTabs[100];
+		sprintf_s(newTabs, 100, "%s\t", tabs);
 		// Insert Member comments
-		PrintOpenApiTypeDefinitions(src, mods, m, NULL, n->type);
+		PrintOpenApiTypeDefinitions(src, mods, m, NULL, n->type, newTabs);
 		bFirst = false;
 	}
 
 	if (bFirst == false)
-		fprintf(src, "} ");
+		fprintf(src, "\n%s\t}", tabs);
 
 	bFirst = true;
 	FOR_EACH_LIST_ELMT(n, tp->basicType->choiceId == BASICTYPE_SEQUENCE ? tp->basicType->a.sequence : tp->basicType->a.set)
@@ -180,37 +210,44 @@ void PrintOpenApiSequence(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 		if (IsDeprecatedNoOutputMember(m, td, n->fieldName) || n->type->optional || n->type->basicType->choiceId == BASICTYPE_EXTENSION)
 			continue;
 		if (bFirst)
-			fprintf(src, ", \"required\": [");
+			fprintf(src, ",\n%s\t\"required\": [", tabs);
 		else
-			fprintf(src, ", ");
-		fprintf(src, "\"%s\"", n->fieldName);
+			fprintf(src, ",");
+		fprintf(src, "\n%s\t\t\"%s\"", tabs, n->fieldName);
 		bFirst = false;
 	}
 	if (bFirst == false)
-		fprintf(src, "] ");
+		fprintf(src, "\n%s\t]", tabs);
 
 	/* close class definition */
-	fprintf(src, "}");
+	fprintf(src, "\n%s}", tabs);
 }
 
-void PrintOpenApiSequenceOf(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
+void PrintOpenApiSequenceOf(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp, char* tabs)
 {
 	if (td != NULL)
-		fprintf(src, "\"%s\": ", FixName(td->definedName));
-	fprintf(src, "{\"type\": \"array\", \"items\": ");
-	PrintOpenApiTypeDefinitions(src, mods, m, NULL, tp->basicType->choiceId == BASICTYPE_SEQUENCEOF ? tp->basicType->a.sequenceOf : tp->basicType->a.setOf);
-	fprintf(src, "}");
+		fprintf(src, "%s\"%s\": {\n", tabs, FixName(td->definedName));
+	else
+		fprintf(src, "{\n");
+
+	fprintf(src, "%s\t\"type\": \"array\",\n%s\t\"items\": ", tabs, tabs);
+	char newTabs[100] = {0};
+	sprintf_s(newTabs, 100, "%s", tabs);
+	PrintOpenApiTypeDefinitions(src, mods, m, NULL, tp->basicType->choiceId == BASICTYPE_SEQUENCEOF ? tp->basicType->a.sequenceOf : tp->basicType->a.setOf, newTabs);
+	fprintf(src, "\n%s}", tabs);
 }
 
-void PrintOpenApiEnum(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
+void PrintOpenApiEnum(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp, char* tabs)
 {
 	if (td != NULL)
-		fprintf(src, "\"%s\": ", td->definedName);
+		fprintf(src, "%s\"%s\": {\n", tabs, td->definedName);
+	else
+		fprintf(src, "{\n");
 
 	//	NamedType *e;
 	//	enum BasicTypeChoiceId tmpTypeId;
 	CNamedElmt* n;
-	fprintf(src, "{\"type\": \"integer\"");
+	fprintf(src, "%s\t\"type\": \"integer\"", tabs);
 
 	if (HasNamedElmts(tp) != 0)
 	{
@@ -220,10 +257,10 @@ void PrintOpenApiEnum(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type*
 			if (IsDeprecatedNoOutputMember(m, td, n->name))
 				continue;
 			if (bFirst)
-				fprintf(src, ", \"oneOf\": [");
+				fprintf(src, ",\n%s\t\"oneOf\": [", tabs);
 			else
 				fprintf(src, ",");
-			fprintf(src, "{\"title\": \"%s\", \"const\": %d}", n->name, n->value);
+			fprintf(src, "\n%s\t\t{\n%s\t\t\t\"title\": \"%s\",\n%s\t\t\t\"const\": %d\n%s\t\t}", tabs, tabs, n->name, tabs, n->value, tabs);
 			bFirst = false;
 		}
 		if (bFirst == FALSE)
@@ -234,15 +271,16 @@ void PrintOpenApiEnum(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type*
 	fprintf(src, "}");
 }
 
-void PrintOpenApiChoice(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
+void PrintOpenApiChoice(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp, char* tabs)
 {
 	if (td != NULL)
-		fprintf(src, "\"%s\": ", td->definedName);
+		fprintf(src, "%s\"%s\": {\n", tabs, td->definedName);
+	else
+		fprintf(src, "{\n");
 
 	//	NamedType *e;
 	//	enum BasicTypeChoiceId tmpTypeId;
 	NamedType* n;
-	fprintf(src, "{\"oneOf\": [");
 
 	bool bFirst = true;
 	FOR_EACH_LIST_ELMT(n, tp->basicType->a.sequence)
@@ -250,28 +288,36 @@ void PrintOpenApiChoice(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Typ
 		if (IsDeprecatedNoOutputMember(m, td, n->fieldName))
 			continue;
 		if (bFirst)
+		{
 			bFirst = false;
+			fprintf(src, "%s\t\"oneOf\": [\n%s\t\t", tabs, tabs);
+		}
 		else
-			fprintf(src, ",");
-		PrintOpenApiTypeDefinitions(src, mods, m, NULL, n->type);
+			fprintf(src, ",\n%s\t\t", tabs);
+		char newTabs[100] = {0};
+		sprintf_s(newTabs, 100, "%s\t", tabs);
+		PrintOpenApiTypeDefinitions(src, mods, m, NULL, n->type, newTabs);
 	}
-	fprintf(src, "]");
+	fprintf(src, "\n\t%s]", tabs);
 
 	/* close class definition */
-	fprintf(src, "}");
+	fprintf(src, "\n%s}", tabs);
 }
 
-void PrintOpenApiRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
+void PrintOpenApiRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp, char* tabs)
 {
 	if (td != NULL)
-		fprintf(src, "\"%s\": ", td->definedName);
+		fprintf(src, "%s\"%s\": {\n", tabs, td->definedName);
+	else
+		fprintf(src, "{\n");
+
 	switch (tp->basicType->choiceId)
 	{
 		case BASICTYPE_LOCALTYPEREF:
-			fprintf(src, "{\"$ref\": \"#/components/schemas/%s\"}", tp->basicType->a.localTypeRef->typeName);
+			fprintf(src, "%s\t\"$ref\": \"#/components/schemas/%s\"\n%s}", tabs, tp->basicType->a.localTypeRef->typeName, tabs);
 			break;
 		case BASICTYPE_IMPORTTYPEREF:
-			fprintf(src, "{\"$ref\": \"#/components/schemas/%s\"}", tp->basicType->a.importTypeRef->typeName);
+			fprintf(src, "%s\t\"$ref\": \"#/components/schemas/%s\"\n%s}", tabs, tp->basicType->a.importTypeRef->typeName, tabs);
 			break;
 		default:
 			exit(1);
@@ -279,12 +325,14 @@ void PrintOpenApiRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* 
 	}
 }
 
-static void PrintOpenApiTypeDefinitions(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp)
+static void PrintOpenApiTypeDefinitions(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp, char* tabs)
 {
+	char newTabs[100];
+	sprintf_s(newTabs, 100, "%s\t", tabs);
 
 	// Special cases for special types
 	if (td != NULL && strcmp(td->definedName, "AsnSystemTime") == 0)
-		PrintOpenApiTimeType(src, mods, m, td, tp);
+		PrintOpenApiTimeType(src, mods, m, td, tp, newTabs);
 
 	else
 		switch (tp->basicType->choiceId)
@@ -298,35 +346,35 @@ static void PrintOpenApiTypeDefinitions(FILE* src, ModuleList* mods, Module* m, 
 			// Base64 String
 			case BASICTYPE_OCTETSTRING: /* 4 */
 			case BASICTYPE_ANY:			/* 16 */
-				PrintOpenApiPrimitiveType(src, mods, m, td, tp);
+				PrintOpenApiPrimitiveType(src, mods, m, td, tp, newTabs);
 				break;
 
 			// Always Integer Enum
 			case BASICTYPE_ENUMERATED: /* 8 */
-				PrintOpenApiEnum(src, mods, m, td, tp);
+				PrintOpenApiEnum(src, mods, m, td, tp, newTabs);
 				break;
 
 			// Objects
 			case BASICTYPE_SEQUENCE: /* 9 */
 			case BASICTYPE_SET:		 /* 11 */
-				PrintOpenApiSequence(src, mods, m, td, tp);
+				PrintOpenApiSequence(src, mods, m, td, tp, newTabs);
 				break;
 
 			// Arrays
 			case BASICTYPE_SEQUENCEOF: /* 10 */
 			case BASICTYPE_SETOF:	   /* 12 */
-				PrintOpenApiSequenceOf(src, mods, m, td, tp);
+				PrintOpenApiSequenceOf(src, mods, m, td, tp, newTabs);
 				break;
 
 			// OneOf
 			case BASICTYPE_CHOICE: /* 13 */
-				PrintOpenApiChoice(src, mods, m, td, tp);
+				PrintOpenApiChoice(src, mods, m, td, tp, newTabs);
 				break;
 
 			// Refs
 			case BASICTYPE_LOCALTYPEREF:  /* 18 */
 			case BASICTYPE_IMPORTTYPEREF: /* 19 */
-				PrintOpenApiRef(src, mods, m, td, tp);
+				PrintOpenApiRef(src, mods, m, td, tp, newTabs);
 				break;
 
 			// String
@@ -346,12 +394,12 @@ static void PrintOpenApiTypeDefinitions(FILE* src, ModuleList* mods, Module* m, 
 			case BASICTYPE_T61_STR:			 /* 35 */
 			case BASICTYPE_OID:				 /* 6 */
 			case BASICTYPE_BITSTRING:		 /* 3 */
-				PrintOpenApiStringType(src, mods, m, td, tp);
+				PrintOpenApiStringType(src, mods, m, td, tp, newTabs);
 				break;
 
 			// Date
 			case BASICTYPE_ASNSYSTEMTIME: /* estos special where we encode a time into a real value based on VariantTime */
-				PrintOpenApiTimeType(src, mods, m, td, tp);
+				PrintOpenApiTimeType(src, mods, m, td, tp, newTabs);
 				break;
 
 			// Unsupported
@@ -465,45 +513,45 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 
 	if (GetOpenApiROSEDetails(vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL))
 	{
-		fprintf(src, "\t\t\"/%s\" : {\n", vd->definedName);
-		fprintf(src, "\t\t\t\"post\" : {\n");
+		fprintf(src, "\t\t\"/%s\": {\n", vd->definedName);
+		fprintf(src, "\t\t\t\"post\": {\n");
 
 		asnoperationcomment comment;
 		if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment))
 		{
-			fprintf(src, "\t\t\t\t\"tags\" : [\"%s\"],\n", comment.szCategory);
+			fprintf(src, "\t\t\t\t\"tags\": [\"%s\"],\n", comment.szCategory);
 
-			char* orig[] = {"\\n", "\\t"};
-			char* rep[] = {"\\n\\n", ""};
+			const char* orig[] = {"\\n", "\\t", 0};
+			const char* rep[] = {"\\n\\n", "", 0};
 			if (strlen(comment.szShort) != 0)
 			{
 
-				char* szShort = replace_multi(comment.szShort, orig, rep, 2);
+				char* szShort = replace_multi(comment.szShort, orig, rep);
 				if (szShort != NULL)
 				{
-					fprintf(src, "\t\t\t\t\"summary\" : \"%s\",\n", szShort);
+					fprintf(src, "\t\t\t\t\"summary\": \"%s\",\n", szShort);
 					free(szShort);
 				}
 			}
 			if (strlen(comment.szLong) != 0)
 			{
-				char* szLong = replace_multi(comment.szLong, orig, rep, 2);
+				char* szLong = replace_multi(comment.szLong, orig, rep);
 				if (szLong != NULL)
 				{
-					fprintf(src, "\t\t\t\t\"description\" : \"%s\",\n", szLong);
+					fprintf(src, "\t\t\t\t\"description\": \"%s\",\n", szLong);
 					free(szLong);
 				}
 			}
-			fprintf(src, "\t\t\t\t\"deprecated\" : %s,\n", comment.i64Deprecated ? "true" : "false");
+			fprintf(src, "\t\t\t\t\"deprecated\": %s,\n", comment.i64Deprecated ? "true" : "false");
 			int opid = vd->value->basicValue->a.integer;
-			fprintf(src, "\t\t\t\t\"operationId\" : \"%d\",\n", opid);
+			fprintf(src, "\t\t\t\t\"operationId\": \"%d\",\n", opid);
 		}
 
-		fprintf(src, "\t\t\t\t\"requestBody\" : {\n");
-		fprintf(src, "\t\t\t\t\t\"content\" : {\n");
-		fprintf(src, "\t\t\t\t\t\t\"application/json\" : {\n");
-		fprintf(src, "\t\t\t\t\t\t\t\"schema\" : {\n");
-		fprintf(src, "\t\t\t\t\t\t\t\t\"$ref\" : \"#/components/schemas/%s\"\n", pszArgument);
+		fprintf(src, "\t\t\t\t\"requestBody\": {\n");
+		fprintf(src, "\t\t\t\t\t\"content\": {\n");
+		fprintf(src, "\t\t\t\t\t\t\"application/json\": {\n");
+		fprintf(src, "\t\t\t\t\t\t\t\"schema\": {\n");
+		fprintf(src, "\t\t\t\t\t\t\t\t\"$ref\": \"#/components/schemas/%s\"\n", pszArgument);
 		fprintf(src, "\t\t\t\t\t\t\t}\n");
 		fprintf(src, "\t\t\t\t\t\t}\n");
 		fprintf(src, "\t\t\t\t\t}\n");
@@ -511,13 +559,13 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 		if (pszResult)
 		{
 			fprintf(src, ",\n");
-			fprintf(src, "\t\t\t\t\"responses\" : {\n");
-			fprintf(src, "\t\t\t\t\t\"200\" : {\n");
-			fprintf(src, "\t\t\t\t\t\t\"description\" : \"Response\",\n");
-			fprintf(src, "\t\t\t\t\t\t\"content\" : {\n");
-			fprintf(src, "\t\t\t\t\t\t\t\"application/json\" : {\n");
-			fprintf(src, "\t\t\t\t\t\t\t\t\"schema\" : {\n");
-			fprintf(src, "\t\t\t\t\t\t\t\t\t\"$ref\" : \"#/components/schemas/%s\"\n", pszResult);
+			fprintf(src, "\t\t\t\t\"responses\": {\n");
+			fprintf(src, "\t\t\t\t\t\"200\": {\n");
+			fprintf(src, "\t\t\t\t\t\t\"description\": \"Response\",\n");
+			fprintf(src, "\t\t\t\t\t\t\"content\": {\n");
+			fprintf(src, "\t\t\t\t\t\t\t\"application/json\": {\n");
+			fprintf(src, "\t\t\t\t\t\t\t\t\"schema\": {\n");
+			fprintf(src, "\t\t\t\t\t\t\t\t\t\"$ref\": \"#/components/schemas/%s\"\n", pszResult);
 			fprintf(src, "\t\t\t\t\t\t\t\t}\n");
 			fprintf(src, "\t\t\t\t\t\t\t}\n");
 			fprintf(src, "\t\t\t\t\t\t}\n");
@@ -525,12 +573,12 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 			if (pszError)
 			{
 				fprintf(src, ",\n");
-				fprintf(src, "\t\t\t\t\t\"500\" : {\n");
-				fprintf(src, "\t\t\t\t\t\t\"description\" : \"Error\",\n");
-				fprintf(src, "\t\t\t\t\t\t\"content\" : {\n");
-				fprintf(src, "\t\t\t\t\t\t\t\"application/json\" : {\n");
-				fprintf(src, "\t\t\t\t\t\t\t\t\"schema\" : {\n");
-				fprintf(src, "\t\t\t\t\t\t\t\t\t\"$ref\" : \"#/components/schemas/%s\"\n", pszError);
+				fprintf(src, "\t\t\t\t\t\"500\": {\n");
+				fprintf(src, "\t\t\t\t\t\t\"description\": \"Error\",\n");
+				fprintf(src, "\t\t\t\t\t\t\"content\": {\n");
+				fprintf(src, "\t\t\t\t\t\t\t\"application/json\": {\n");
+				fprintf(src, "\t\t\t\t\t\t\t\t\"schema\": {\n");
+				fprintf(src, "\t\t\t\t\t\t\t\t\t\"$ref\": \"#/components/schemas/%s\"\n", pszError);
 				fprintf(src, "\t\t\t\t\t\t\t\t}\n");
 				fprintf(src, "\t\t\t\t\t\t\t}\n");
 				fprintf(src, "\t\t\t\t\t\t}\n");
@@ -541,6 +589,10 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 			}
 			fprintf(src, "\t\t\t\t\t}\n");
 			fprintf(src, "\t\t\t\t}\n");
+		}
+		else
+		{
+			fprintf(src, "\n");
 		}
 
 		fprintf(src, "\t\t\t}\n");
@@ -594,12 +646,12 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 	{
 		fprintf(src, ",\n");
 		fprintf(src, "\t\t\"version\": \"0.0.1\",\n");
-		char* orig[] = {"\\n", "\\t"};
-		char* rep[] = {"\\n\\n", ""};
+		char* orig[] = {"\\n", "\\t", 0};
+		char* rep[] = {"\\n\\n", "", 0};
 		if (strlen(comment.szShort) != 0)
 		{
 
-			char* szShort = replace_multi(comment.szShort, orig, rep, 2);
+			char* szShort = replace_multi(comment.szShort, orig, rep);
 			if (szShort != NULL)
 			{
 				fprintf(src, "\t\t\"summary\": \"%s\",\n", szShort);
@@ -608,7 +660,7 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 		}
 		if (strlen(comment.szLong) != 0)
 		{
-			char* szLong = replace_multi(comment.szLong, orig, rep, 2);
+			char* szLong = replace_multi(comment.szLong, orig, rep);
 			if (szLong != NULL)
 			{
 				fprintf(src, "\t\t\"description\": \"%s\"\n", szLong);
@@ -617,7 +669,7 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 		}
 		// Cant be used in OpenApi for the module info
 		/*
-		fprintf(src, "\t\t\"category\" : \"%s\",\n", comment.szCategory);
+		fprintf(src, "\t\t\"category\": \"%s\",\n", comment.szCategory);
 		fprintf(src, "\t\t\"deprecated\": %d,\n", comment.i64Deprecated ? 1 : 0);
 		if (comment.i64Deprecated > 1)
 			fprintf(src, "\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
@@ -668,18 +720,20 @@ bool PrintOpenApiImports(FILE* src, ModuleList* mods, Module* m)
 
 				if (impMod->moduleRef == NULL)
 					impMod->moduleRef = GetImportModuleRef(impMod->modId->name, mods);
+				if (printedSomething == FALSE)
+					fprintf(src, "\n");
 
 				FOR_EACH_LIST_ELMT(impElmt, impMod->importElmts)
 				{
 					{
-						fprintf(src, "\t\t\t\"%s\" : {\n", impElmt->name);
+						fprintf(src, "\t\t\t\"%s\": {\n", impElmt->name);
 						if (!impMod->moduleRef)
 						{
 							snacc_exit("Invalid parameter, == NULL");
 							return TRUE;
 						}
 
-						fprintf(src, "\t\t\t\t\"$ref\" : \"%s.json", impMod->moduleRef->moduleName);
+						fprintf(src, "\t\t\t\t\"$ref\": \"%s.json", impMod->moduleRef->moduleName);
 						fprintf(src, "#/components/schemas/%s\"\n", impElmt->name);
 						fprintf(src, "\t\t\t}");
 					}
@@ -688,7 +742,6 @@ bool PrintOpenApiImports(FILE* src, ModuleList* mods, Module* m)
 				}
 				if (ModLists->curr->next)
 					fprintf(src, ",\n");
-				fprintf(src, "\n");
 				printedSomething = TRUE;
 			}
 			mods->curr = currModTmp; // RWC;RESET loop control
@@ -708,8 +761,8 @@ void PrintOpenApiCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, i
 
 	PrintOpenApiPaths(src, m);
 
-	fprintf(src, "\t\"components\" : {\n");
-	fprintf(src, "\t\t\"schemas\" : {\n");
+	fprintf(src, "\t\"components\": {\n");
+	fprintf(src, "\t\t\"schemas\": {");
 
 	bool importsPrinted = PrintOpenApiImports(src, mods, m);
 
@@ -721,13 +774,15 @@ void PrintOpenApiCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, i
 			if (!bIsFirst)
 				continue;
 		if (bIsFirst && importsPrinted)
-			fprintf(src, ",");
-		fprintf(src, "\n");
-		PrintOpenApiTypeDefinitions(src, mods, m, td, td->type);
+			fprintf(src, ",\n");
+		if (bIsFirst && importsPrinted == FALSE)
+			fprintf(src, "\n");
+		PrintOpenApiTypeDefinitions(src, mods, m, td, td->type, "\t\t");
 		bIsFirst = false;
 		if (m->typeDefs->curr->next)
 			fprintf(src, ",\n");
-		fprintf(src, "\n");
+		else
+			fprintf(src, "\n");
 	}
 	fprintf(src, "\t\t}\n");
 	fprintf(src, "\t}\n");

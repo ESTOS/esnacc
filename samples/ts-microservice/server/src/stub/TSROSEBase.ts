@@ -1064,7 +1064,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				.map(x => x.toString(16).padStart(2, "0"))
 				.join(separator);
 		} else {
-			const data = new Array<string>();
+			const data: string[] = [];
 			for (const elem of buffer)
 				data.push(elem.toString(16).padStart(2, "0"));
 			return data.join(separator);

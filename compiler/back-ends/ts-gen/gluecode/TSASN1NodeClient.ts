@@ -8,7 +8,7 @@
 import { TSASN1Client } from "./TSASN1Client";
 import fetch, { RequestInit as FetchInit } from "node-fetch";
 import WebSocket from "ws";
-import { EASN1TransportEncoding, ELogSeverity, IDualWebSocket } from "./TSROSEBase";
+import { EASN1TransportEncoding, ELogSeverity, IDualWebSocket, IDualWebSocketMessageEvent } from "./TSROSEBase";
 import { ASN1ClassInstanceType } from "./TSASN1Base";
 
 /**
@@ -199,7 +199,7 @@ export abstract class TSASN1NodeClient extends TSASN1Client {
 	 * @param event - the message that contains the payload
 	 * @returns data on successs or undefined on error
 	 */
-	protected async prepareData(event: MessageEvent): Promise<Uint8Array | object | undefined> {
+	protected async prepareData(event: IDualWebSocketMessageEvent): Promise<Uint8Array | object | undefined> {
 		let rawData: Uint8Array | object | undefined;
 		if (event.data instanceof Uint8Array)
 			rawData = event.data;

@@ -9,9 +9,7 @@
 	"paths": {
 		"/asnCreateFancyEvents": {
 			"post": {
-				"tags": [
-					"Event Manager"
-				],
+				"tags": ["Event Manager"],
 				"summary": "Method that will create some events the server will then dispatch to the clients\n\n",
 				"description": "It´s not possible to call this method through rest as the client won´t receive these events\n\n",
 				"deprecated": false,
@@ -51,9 +49,7 @@
 		},
 		"/asnFancyEvent": {
 			"post": {
-				"tags": [
-					"Event Manager"
-				],
+				"tags": ["Event Manager"],
 				"summary": "An event that is dispatched from the server to the clients\n\n",
 				"deprecated": false,
 				"operationId": "4050",

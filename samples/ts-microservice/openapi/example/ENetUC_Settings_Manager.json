@@ -9,9 +9,7 @@
 	"paths": {
 		"/asnGetSettings": {
 			"post": {
-				"tags": [
-					"Settings Manager"
-				],
+				"tags": ["Settings Manager"],
 				"summary": "Method to retrieve settings from the server side\n\n",
 				"deprecated": false,
 				"operationId": "4100",
@@ -50,9 +48,7 @@
 		},
 		"/asnSetSettings": {
 			"post": {
-				"tags": [
-					"Settings Manager"
-				],
+				"tags": ["Settings Manager"],
 				"summary": "Method to store settings on the server side\n\n",
 				"description": "If a settings property has changed the client will get notified by an event\n\n",
 				"deprecated": false,
@@ -92,9 +88,7 @@
 		},
 		"/asnSettingsChanged": {
 			"post": {
-				"tags": [
-					"Settings Manager"
-				],
+				"tags": ["Settings Manager"],
 				"summary": "Sent to the clients in the case settings have changed\n\n",
 				"deprecated": false,
 				"operationId": "4150",
