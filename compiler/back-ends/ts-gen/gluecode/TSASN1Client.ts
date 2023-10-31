@@ -7,13 +7,16 @@
 
 import { ROSEError, ROSEReject, ROSEResult } from "./SNACCROSE";
 import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base";
-import { EHttpHeaders, ELogSeverity, IASN1Transport, IDualWebSocket, EDualWebSocketState, IDualWebSocketCloseEvent, ISendInvokeContext, ReceiveInvokeContext, CustomInvokeProblemEnum, EASN1TransportEncoding, createInvokeReject, IASN1InvokeData, ROSEBase } from "./TSROSEBase";
+import { EHttpHeaders, ELogSeverity, IASN1Transport, IDualWebSocket, EDualWebSocketState, IDualWebSocketCloseEvent, ISendInvokeContext, ReceiveInvokeContext, CustomInvokeProblemEnum, EASN1TransportEncoding, createInvokeReject, IASN1InvokeData, ROSEBase, IDualWebSocketMessageEvent } from "./TSROSEBase";
 import * as ENetUC_Common from "./ENetUC_Common";
 
 export interface IDualWebSocketOptions {
 	perMessageDeflate?: boolean;
 	headers?: { [key: string]: string };
 }
+
+// Node is not aware of this type but node-fetch which we use until node itself supports fetch uses it that way
+type HeadersInit = string[][] | Record<string, string> | Headers;
 
 /**
  * A Promise that is fullfilled if the requested websocket was created or rejected if the creation failed
@@ -86,7 +89,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	// List of pending requests for a websocket towards the target
 	// As long as the connection is beeing established every request for a websocket is qued
 	// This list is automatically cleared if the connection failed.
-	protected pendingwebsockets = new Array<WebSocketPromise>();
+	protected pendingwebsockets: WebSocketPromise[] = [];
 
 	// We are currently reconnecting
 	private basn1ClientReconnecting = false;
@@ -431,7 +434,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	protected abstract getWebSocket(address: string, options?: IDualWebSocketOptions): IDualWebSocket | undefined;
 	protected abstract fetch(input: string, init?: RequestInit): Promise<Response>;
 	protected abstract asn1ClientsetReconnectTimeout(timeout: number): void;
-	protected abstract prepareData(event: MessageEvent): Promise<Uint8Array | object | undefined>;
+	protected abstract prepareData(event: IDualWebSocketMessageEvent): Promise<Uint8Array | object | undefined>;
 
 	/**
 	 * Helper function to get or create a websocket connection object
@@ -595,7 +598,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @param event - the websocket close event
 	 */
-	private async onClientClose(event: CloseEvent): Promise<void> {
+	private async onClientClose(event: IDualWebSocketCloseEvent): Promise<void> {
 		this.log(ELogSeverity.error, "WebSocket was closed. Going to reconnect", "onClientClose", this, { code: event.code, reason: event.reason });
 		await this.fire_OnDisconnected(false);
 
@@ -620,7 +623,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @param event - the websocket message event
 	 */
-	private async onClientMessage(event: MessageEvent): Promise<void> {
+	private async onClientMessage(event: IDualWebSocketMessageEvent): Promise<void> {
 		if (event.data) {
 			// Fill the invokecontext
 			const invokeContext = new ReceiveInvokeContext({
