@@ -195,7 +195,7 @@ void PrintOpenApiSequence(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 			fprintf(src, ",\n");
 		fprintf(src, "%s\t\t\"%s\": ", tabs, n->fieldName);
 		char newTabs[100];
-		sprintf(newTabs, "%s\t", tabs);
+		sprintf_s(newTabs, 100, "%s\t", tabs);
 		// Insert Member comments
 		PrintOpenApiTypeDefinitions(src, mods, m, NULL, n->type, newTabs);
 		bFirst = false;
@@ -231,8 +231,8 @@ void PrintOpenApiSequenceOf(FILE* src, ModuleList* mods, Module* m, TypeDef* td,
 		fprintf(src, "{\n");
 
 	fprintf(src, "%s\t\"type\": \"array\",\n%s\t\"items\": ", tabs, tabs);
-	char newTabs[100];
-	sprintf(newTabs, "%s", tabs);
+	char newTabs[100] = {0};
+	sprintf_s(newTabs, 100, "%s", tabs);
 	PrintOpenApiTypeDefinitions(src, mods, m, NULL, tp->basicType->choiceId == BASICTYPE_SEQUENCEOF ? tp->basicType->a.sequenceOf : tp->basicType->a.setOf, newTabs);
 	fprintf(src, "\n%s}", tabs);
 }
@@ -247,7 +247,7 @@ void PrintOpenApiEnum(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type*
 	//	NamedType *e;
 	//	enum BasicTypeChoiceId tmpTypeId;
 	CNamedElmt* n;
-	fprintf(src, "%s\t\"type\": \"integer\"");
+	fprintf(src, "%s\t\"type\": \"integer\"", tabs);
 
 	if (HasNamedElmts(tp) != 0)
 	{
@@ -294,8 +294,8 @@ void PrintOpenApiChoice(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Typ
 		}
 		else
 			fprintf(src, ",\n%s\t\t", tabs);
-		char newTabs[100];
-		sprintf(newTabs, "%s\t", tabs);
+		char newTabs[100] = {0};
+		sprintf_s(newTabs, 100, "%s\t", tabs);
 		PrintOpenApiTypeDefinitions(src, mods, m, NULL, n->type, newTabs);
 	}
 	fprintf(src, "\n\t%s]", tabs);
@@ -328,7 +328,7 @@ void PrintOpenApiRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* 
 static void PrintOpenApiTypeDefinitions(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* tp, char* tabs)
 {
 	char newTabs[100];
-	sprintf(newTabs, "%s\t", tabs);
+	sprintf_s(newTabs, 100, "%s\t", tabs);
 
 	// Special cases for special types
 	if (td != NULL && strcmp(td->definedName, "AsnSystemTime") == 0)
