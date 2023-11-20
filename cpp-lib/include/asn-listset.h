@@ -20,7 +20,7 @@ public:
 	// Appends newly inserted element to list and returns its iterator
 	typename std::list<T>::iterator append(const T& x = T())
 	{
-		return std::list<T>::insert(std::list<T>::end(), x);
+		return this->insert(this->end(), x);
 	}
 
 	// encode and decode routines
@@ -62,7 +62,7 @@ public:
 	}
 	virtual void Clear() override
 	{
-		std::list<T>::clear();
+		this->clear();
 	}
 	virtual SNACC::AsnLen Interpret(SNACC::AsnBufBits& b, long offset) const override;
 	virtual void Deterpret(SNACC::AsnBufBits& b, SNACC::AsnLen& bitsDecoded, long offset) override;
@@ -83,14 +83,14 @@ template <class T> SNACC::AsnLen AsnList<T>::Interpret(SNACC::AsnBufBits& b, lon
 {
 	FUNC("AsnList<T>::Interpret()");
 
-	auto i = AsnList<T>::cbegin();
-	while ((i != AsnList<T>::end()) && (offset > 0))
+	auto i = this->cbegin();
+	while ((i != this->end()) && (offset > 0))
 	{
 		++i;
 		--offset;
 	}
 
-	if (i != AsnList<T>::end())
+	if (i != this->end())
 		return i->PEnc(b);
 	else
 		throw SNACC_EXCEPT("Null element found in List");
@@ -107,15 +107,15 @@ template <class T> SNACC::AsnLen AsnList<T>::PEnc(SNACC::AsnBufBits& b) const
 		SNACC::AsnLen sum = 0;
 		if (SizeConstraints()->upperBoundExists == 0)
 		{
-			if (AsnList<T>::size() != (unsigned int)SizeConstraints()->lowerBound)
+			if (this->size() != (unsigned int)SizeConstraints()->lowerBound)
 				throw EXCEPT("Number of elements in AsnList does not match singlevalue constraint", ENCODE_ERROR);
 
-			for (auto i = AsnList<T>::cbegin(); i != AsnList<T>::cend(); ++i)
+			for (auto i = this->cbegin(); i != this->cend(); ++i)
 				sum += i->PEnc(b);
 		}
 		else if (SizeConstraints()->upperBoundExists == 1)
 		{
-			if ((AsnList<T>::size() < SizeConstraints()->lowerBound) || (AsnList<T>::size() > SizeConstraints()->upperBound))
+			if ((this->size() < SizeConstraints()->lowerBound) || (this->size() > SizeConstraints()->upperBound))
 				throw EXCEPT("Number of elements in AsnList is not within the size constraint", ENCODE_ERROR);
 
 			unsigned char pStr[] = {0x00, 0x00, 0x00, 0x00};
@@ -131,7 +131,7 @@ template <class T> SNACC::AsnLen AsnList<T>::PEnc(SNACC::AsnBufBits& b) const
 
 			long minBytesNeeded = minBitsNeeded / 8;
 			minBitsNeeded %= 8;
-			long numExtra = (long)AsnList<T>::size() - SizeConstraints()->lowerBound;
+			long numExtra = (long)this->size() - SizeConstraints()->lowerBound;
 			if (minBytesNeeded > 0)
 			{
 				pStr[0] = (unsigned char)(numExtra >> minBitsNeeded);
@@ -146,17 +146,17 @@ template <class T> SNACC::AsnLen AsnList<T>::PEnc(SNACC::AsnBufBits& b) const
 		}
 		else
 		{
-			if (AsnList<T>::size() < SizeConstraints()->lowerBound)
+			if (this->size() < SizeConstraints()->lowerBound)
 				throw EXCEPT("Number of elements in AsnList is below the minimum size constraint", ENCODE_ERROR);
 
-			SNACC::AsnInt listLen((long)AsnList<T>::size() - SizeConstraints()->lowerBound);
+			SNACC::AsnInt listLen((long)this->size() - SizeConstraints()->lowerBound);
 			sum += b.OctetAlignWrite();
 			listLen.PEnc(b);
 			sum += b.OctetAlignWrite();
 		}
 
 		// Encode the elements
-		for (auto i = AsnList<T>::cbegin(); i != AsnList<T>::cend(); ++i)
+		for (auto i = this->cbegin(); i != this->cend(); ++i)
 			sum += i->PEnc(b);
 
 		return sum;
@@ -167,7 +167,7 @@ template <class T> SNACC::AsnLen AsnList<T>::PEnc(SNACC::AsnBufBits& b) const
 template <class T> void AsnList<T>::PDec(SNACC::AsnBufBits& b, SNACC::AsnLen& bitsDecoded)
 {
 	// Remove existing elements
-	AsnList<T>::clear();
+	this->clear();
 
 	if (!SizeConstraints())
 	{
@@ -238,10 +238,10 @@ template <class T> void AsnList<T>::PDec(SNACC::AsnBufBits& b, SNACC::AsnLen& bi
 template <class T> char* AsnList<T>::checkSOfSingleVal(long m_SingleVal) const
 {
 	char* pError = NULL;
-	if (AsnList<T>::size() != m_SingleVal)
+	if (this->size() != m_SingleVal)
 	{
 		char cTmperr[200];
-		snprintf(cTmperr, 200, "_______\nList--SingleValue Constraints:\n_______\nError: --Invalid Number of Elements in List--\nNumber of Elements: %d must match the Constraint Single Value: %d \n", AsnList<T>::size(), m_SingleVal);
+		snprintf(cTmperr, 200, "_______\nList--SingleValue Constraints:\n_______\nError: --Invalid Number of Elements in List--\nNumber of Elements: %d must match the Constraint Single Value: %d \n", this->size(), m_SingleVal);
 		pError = strdup(cTmperr);
 	}
 
@@ -252,17 +252,17 @@ template <class T> char* AsnList<T>::checkSOfVRange(long m_Lower, long m_Upper) 
 {
 	char* pError = NULL;
 
-	if (AsnList<T>::size() < m_Lower)
+	if (this->size() < m_Lower)
 	{
 		char cTmperr[200];
-		snprintf(cTmperr, 200, "_______\nList--Valuerange Constraints:\n_______\nError: --Not Enough Elements In List--\nNumber of Elements: %d is below the Lower Limit: %d \n", AsnList<T>::size(), m_Lower);
+		snprintf(cTmperr, 200, "_______\nList--Valuerange Constraints:\n_______\nError: --Not Enough Elements In List--\nNumber of Elements: %d is below the Lower Limit: %d \n", this->size(), m_Lower);
 		pError = strdup(cTmperr);
 	}
 
-	if (AsnList<T>::size() > m_Upper)
+	if (this->size() > m_Upper)
 	{
 		char cTmperr[200];
-		snprintf(cTmperr, 200, "_______\nList--Valuerange Constraints:\n_______\nError: --Too Many Elements In List--\nNumber of Elements: %d is above the Upper Limit: %d \n", AsnList<T>::size(), m_Upper);
+		snprintf(cTmperr, 200, "_______\nList--Valuerange Constraints:\n_______\nError: --Too Many Elements In List--\nNumber of Elements: %d is above the Upper Limit: %d \n", this->size(), m_Upper);
 		pError = strdup(cTmperr);
 	}
 
@@ -271,7 +271,7 @@ template <class T> char* AsnList<T>::checkSOfVRange(long m_Lower, long m_Upper) 
 
 template <class T> int AsnList<T>::checkConstraints(SNACC::ConstraintFailList* pConstraintFails) const
 {
-	for (typename AsnList<T>::const_iterator i = AsnList<T>::begin(); i != AsnList<T>::end(); ++i)
+	for (typename AsnList<T>::const_iterator i = this->begin(); i != this->end(); ++i)
 		i->checkConstraints(pConstraintFails);
 	return 0;
 }
@@ -279,7 +279,7 @@ template <class T> int AsnList<T>::checkConstraints(SNACC::ConstraintFailList* p
 template <class T> SNACC::AsnLen AsnList<T>::BEncContent(SNACC::AsnBuf& b) const
 {
 	SNACC::AsnLen sum = 0;
-	for (typename AsnList<T>::const_reverse_iterator i = AsnList<T>::rbegin(); i != AsnList<T>::rend(); ++i)
+	for (typename AsnList<T>::const_reverse_iterator i = this->rbegin(); i != this->rend(); ++i)
 		sum += i->BEnc(b);
 	return sum;
 }
@@ -309,7 +309,7 @@ template <class T> void AsnList<T>::JEnc(SJson::Value& b) const
 	b = SJson::Value(SJson::arrayValue);
 	SJson::Value tmp;
 
-	for (auto i = AsnList<T>::cbegin(); i != AsnList<T>::cend(); ++i)
+	for (auto i = this->cbegin(); i != this->cend(); ++i)
 	{
 		i->JEnc(tmp);
 		b.append(tmp);
@@ -341,13 +341,13 @@ template <class T> void AsnList<T>::Print(std::ostream& os, unsigned short inden
 	os << "OF ";
 	++indent;
 
-	if (AsnList<T>::empty())
+	if (this->empty())
 		os << "is EMPTY\n";
 	else
 	{
-		os << AsnList<T>::front().typeName() << " \n";
+		os << this->front().typeName() << " \n";
 
-		for (auto i = AsnList<T>::cbegin(); i != AsnList<T>::cend(); ++i)
+		for (auto i = this->cbegin(); i != this->cend(); ++i)
 		{
 			SNACC::Indent(os, indent);
 			i->Print(os, indent);
@@ -359,12 +359,12 @@ template <class T> void AsnList<T>::Print(std::ostream& os, unsigned short inden
 
 template <class T> void AsnList<T>::PrintXML(std::ostream& os, const char* lpszTitle) const
 {
-	if (AsnList<T>::empty())
+	if (this->empty())
 		os << "-- Void --\n";
 	else
 	{
 		// os << "<" << first->elmt->typeName() << ">" << endl;
-		for (auto i = AsnList<T>::cbegin(); i != AsnList<T>::cend(); ++i)
+		for (auto i = this->cbegin(); i != this->cend(); ++i)
 			i->PrintXML(os, lpszTitle);
 		// os << "</" << first->elmt->typeName() << ">" << endl;
 	}
@@ -417,13 +417,13 @@ template <class T> void AsnSeqOf<T>::Print(std::ostream& os, unsigned short inde
 	os << "{ -- " << this->typeName() << " SEQUENCE OF ";
 	++indent;
 
-	if (AsnSeqOf<T>::empty())
+	if (this->empty())
 		os << "is EMPTY\n";
 	else
 	{
 		os << this->front().typeName() << " \n";
 
-		for (auto i = AsnSeqOf<T>::cbegin(); i != AsnSeqOf<T>::cend(); ++i)
+		for (auto i = this->cbegin(); i != this->cend(); ++i)
 		{
 			SNACC::Indent(os, indent);
 			i->Print(os, indent);
