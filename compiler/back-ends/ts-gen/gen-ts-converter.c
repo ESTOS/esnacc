@@ -45,7 +45,7 @@ void PrintTSConverterImports(FILE* src, ModuleList* mods, Module* mod)
 	// Our own data structure file is not in the imports
 	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
 	if (strcmp(mod->modId->name, "UC-Server-Access-Protocol-Common") == 0)
-		fprintf(src, "import { EAsnOptionalParameters_Converter } from \"./TSOptionalParamConverter\";\n");
+		fprintf(src, "import { EAsnOptionalParametersConverter } from \"./TSOptionalParamConverter\";\n");
 
 	PrintTSImports(src, mods, mod, true, true, false);
 }
@@ -177,7 +177,7 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 		fprintf(src, "\t\t}\n\n");
 	}
 
-	fprintf(src, "\t\tif (errors.validateResult(errorCount, newContext, \"%s\"))\n", szTypeName);
+	fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\"))\n", szTypeName);
 	fprintf(src, "\t\t\treturn result;\n\n");
 
 	free(szConverted);
@@ -251,10 +251,10 @@ void Print_JSON_DecoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		if (seqOf->basicType->a.sequenceOf->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
 		{
 			Module* mod = GetImportModuleRefByClassName(szTypeName, mods, m);
-			fprintf(src, "%s\tconst val = %s_Converter.%s_Converter.fromJSON(se, errors, newContext, \"%s\", optional);\n", szIdendt, GetNameSpace(mod), szClassName, szClassName);
+			fprintf(src, "%s\tconst val = %s_Converter.%s_Converter.fromJSON(se, errors, newContext, \"%s\", false);\n", szIdendt, GetNameSpace(mod), szClassName, szClassName);
 		}
 		else
-			fprintf(src, "%s\tconst val = %s_Converter.fromJSON(se, errors, newContext, \"%s\", optional);\n", szIdendt, szClassName, szClassName);
+			fprintf(src, "%s\tconst val = %s_Converter.fromJSON(se, errors, newContext, \"%s\", false);\n", szIdendt, szClassName, szClassName);
 		fprintf(src, "%s\tif (val)\n", szIdendt);
 		fprintf(src, "%s\t\tt.push(val);\n", szIdendt);
 		fprintf(src, "%s}\n", szIdendt);
@@ -422,7 +422,7 @@ void Print_BER_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	fprintf(src, "\t\telse\n");
 	fprintf(src, "\t\t\terrors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, newContext.context, \"property missing\"));\n");
 
-	fprintf(src, "\t\tif (errors.validateResult(errorCount, newContext, \"%s\"))\n", szConverted);
+	fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\"))\n", szConverted);
 	fprintf(src, "\t\t\treturn t;\n");
 
 	free(szConverted);
@@ -440,6 +440,7 @@ void Print_JSON_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
 		BasicType* type = e->type->basicType;
+		const char* szOptional = e->type->optional ? "true" : "false";
 		const char* szTypeName = NULL;
 		BasicType* newtype = GetRootType(e->type, &szTypeName)->basicType;
 		if (IsSimpleType(newtype->choiceId))
@@ -488,9 +489,9 @@ void Print_JSON_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 						mod = GetImportModuleRefByClassName(e->type->cxxTypeRefInfo->className, mods, m);
 					const char* ns = GetNameSpace(mod);
 					if (mod == m)
-						fprintf(src, "%s\tt.%s = %s_Converter.fromJSON(s.%s, errors, newContext, \"%s\");\n", szIdendt, e->fieldName, e->type->cxxTypeRefInfo->className, e->fieldName, e->fieldName);
+						fprintf(src, "%s\tt.%s = %s_Converter.fromJSON(s.%s, errors, newContext, \"%s\", %s);\n", szIdendt, e->fieldName, e->type->cxxTypeRefInfo->className, e->fieldName, e->fieldName, szOptional);
 					else
-						fprintf(src, "%s\tt.%s = %s_Converter.%s_Converter.fromJSON(s.%s, errors, newContext, \"%s\");\n", szIdendt, e->fieldName, ns, e->type->cxxTypeRefInfo->className, e->fieldName, e->fieldName);
+						fprintf(src, "%s\tt.%s = %s_Converter.%s_Converter.fromJSON(s.%s, errors, newContext, \"%s\", %s);\n", szIdendt, e->fieldName, ns, e->type->cxxTypeRefInfo->className, e->fieldName, e->fieldName, szOptional);
 				}
 				break;
 			case BASICTYPE_EXTENSION:
@@ -522,6 +523,7 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	{
 		BasicType* pBasicType = ResolveBasicTypeReferences(e->type->basicType, NULL);
 		enum BasicTypeChoiceId choiceId = pBasicType->choiceId;
+		const char* szOptional = e->type->optional ? "true" : "false";
 
 		fprintf(src, "%s", szIdendt);
 		if (bMultiLine)
@@ -555,18 +557,18 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 			case BASICTYPE_UTF8_STR:
 			case BASICTYPE_NULL:
 				fprintf(src, "%s\tconst _%s = s.getValue();\n", szIdendt, e->fieldName);
-				fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId));
+				fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext, %s))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId), szOptional);
 				fprintf(src, "%s\t\tt.%s = _%s;\n", szIdendt, e->fieldName, e->fieldName);
 				break;
 			case BASICTYPE_OCTETCONTAINING:
 			case BASICTYPE_OCTETSTRING:
 				fprintf(src, "%s\tconst _%s = s.getValue();\n", szIdendt, e->fieldName);
-				fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId));
+				fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext, %s))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId), szOptional);
 				fprintf(src, "%s\t\tt.%s = new Uint8Array(_%s);\n", szIdendt, e->fieldName, e->fieldName);
 				break;
 			case BASICTYPE_ASNSYSTEMTIME:
 				fprintf(src, "%s\tconst _%s = s.getValue();\n", szIdendt, e->fieldName);
-				fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId));
+				fprintf(src, "%s\tif (TSConverter.validateParamType(_%s, \"%s\", \"%s\", errors, newContext, %s))\n", szIdendt, e->fieldName, e->fieldName, GetJSONType(choiceId), szOptional);
 				fprintf(src, "%s\t\tt.%s = TSConverter.getDateTimeFromVariantTime(_%s);\n", szIdendt, e->fieldName, e->fieldName);
 				break;
 			case BASICTYPE_SEQUENCEOF:
@@ -590,9 +592,9 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 						mod = GetImportModuleRefByClassName(e->type->cxxTypeRefInfo->className, mods, m);
 					const char* ns = GetNameSpace(mod);
 					if (mod == m)
-						fprintf(src, "%s\tt.%s = %s_Converter.fromBER(s, undefined, newContext, \"%s\");\n", szIdendt, e->fieldName, e->type->cxxTypeRefInfo->className, pBuffer);
+						fprintf(src, "%s\tt.%s = %s_Converter.fromBER(s, undefined, newContext, \"%s\", %s);\n", szIdendt, e->fieldName, e->type->cxxTypeRefInfo->className, pBuffer, szOptional);
 					else
-						fprintf(src, "%s\tt.%s = %s_Converter.%s_Converter.fromBER(s, undefined, newContext, \"%s\");\n", szIdendt, e->fieldName, ns, e->type->cxxTypeRefInfo->className, pBuffer);
+						fprintf(src, "%s\tt.%s = %s_Converter.%s_Converter.fromBER(s, undefined, newContext, \"%s\", %s);\n", szIdendt, e->fieldName, ns, e->type->cxxTypeRefInfo->className, pBuffer, szOptional);
 					free(pBuffer);
 				}
 				break;
@@ -798,13 +800,13 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 {
 	const char* szFieldName = e->fieldName;
 	const bool bOptional = e->type->optional ? true : false;
-	const bool bImplicit = e->type->implicit ? true : false;
+	// const bool bImplicit = e->type->implicit ? true : false;
 	char szOptional[128] = {0};
 	int iOptionalID = -1;
 	if (bOptional)
 	{
 		iOptionalID = GetContextID(e->type);
-		if (bImplicit && iOptionalID >= 0)
+		if (iOptionalID >= 0)
 			sprintf_s(szOptional, sizeof(szOptional), ", idBlock: { optionalID: %i }", iOptionalID);
 	}
 
@@ -817,9 +819,6 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 		else if (bOptional)
 			fprintf(src, "%sif (s.%s !== undefined)\n\t", szIndent, szAccessName);
 		fprintf(src, "%st.push(", szIndent);
-
-		if (!bImplicit && iOptionalID >= 0)
-			fprintf(src, "new asn1ts.Sequence({ idBlock: { optionalID: %i }, value: [", iOptionalID);
 
 		switch (type)
 		{
@@ -857,8 +856,6 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 			default:
 				snacc_exit("unknown type %d", type);
 		}
-		if (!bImplicit && iOptionalID >= 0)
-			fprintf(src, "] })");
 
 		fprintf(src, ");\n");
 
@@ -947,7 +944,7 @@ void Print_BER_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 	if (iLines)
 	{
 		// If the validation succeeded we assign them to the asn1 object
-		fprintf(src, "\t\tif (errors.validateResult(errorCount, newContext, \"%s\")) {\n", td->definedName);
+		fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\")) {\n", td->definedName);
 		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 		{
 			if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
@@ -1199,7 +1196,7 @@ void Print_BER_EncoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, Type
 	const char* szNameSpace = GetNameSpace(mod);
 
 	fprintf(src, "\t\tconst v = %s_Converter.%s_Converter.toBER(s, errors, newContext, name, optional);\n", szNameSpace, szElementName);
-	fprintf(src, "\t\tif (errors.validateResult(errorCount, newContext, \"%s\")) {\n", szElementName);
+	fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\")) {\n", szElementName);
 	fprintf(src, "\t\t\tif (v)\n");
 	fprintf(src, "\t\t\t\tt.push(v);\n");
 	fprintf(src, "\t\t\treturn result;\n");
@@ -1231,7 +1228,7 @@ void Print_BER_EncoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeD
 	const char* szElementName = td->type->basicType->a.importTypeRef->link->definedName;
 
 	fprintf(src, "\t\tconst v = %s_Converter.toBER(s, errors, newContext, name, optional);\n", szElementName);
-	fprintf(src, "\t\tif (errors.validateResult(errorCount, newContext, \"%s\")) {\n", szElementName);
+	fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\")) {\n", szElementName);
 	fprintf(src, "\t\t\tif (v)\n");
 	fprintf(src, "\t\t\t\tt.push(v);\n");
 	fprintf(src, "\t\t\treturn result;\n");
@@ -1385,7 +1382,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 
 			// An array cannot create any erros while converting
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");
-			fprintf(src, "\t\tconst errorCount = errors.length;\n");
+			fprintf(src, "\t\terrors.storeState();\n");
 			fprintf(src, "\t\tconst newContext = TSConverter.addEncodeContext(context, name, \"%s\");\n\n", szConverted);
 
 			if (type == BASICTYPE_SEQUENCEOF || type == BASICTYPE_SETOF)
@@ -1402,8 +1399,8 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			else if (strcmp(szConverted, "AsnOptionalParameters") == 0)
 			{
 				fprintf(src, "\t\tif (newContext?.bUCServerOptionalParams) {\n");
-				fprintf(src, "\t\t\tconst params = EAsnOptionalParameters_Converter.toJSON(s, errors, newContext, name);\n");
-				fprintf(src, "\t\t\tif (errors.validateResult(errorCount, newContext, \"EAsnOptionalParameters\"))\n");
+				fprintf(src, "\t\t\tconst params = EAsnOptionalParametersConverter.toJSON(s, errors, newContext, name);\n");
+				fprintf(src, "\t\t\tif (errors.validateResult(newContext, \"EAsnOptionalParameters\"))\n");
 				fprintf(src, "\t\t\t\treturn params;\n");
 				fprintf(src, "\t\t\treturn undefined;\n");
 				fprintf(src, "\t\t}\n");
@@ -1411,7 +1408,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 
 			Print_JSON_EncoderCodeStructuredType(src, mods, m, td, novolatilefuncs);
 
-			fprintf(src, "\n\t\tif (errors.validateResult(errorCount, newContext, \"%s\"))\n", td->definedName);
+			fprintf(src, "\n\t\tif (errors.validateResult(newContext, \"%s\"))\n", td->definedName);
 			fprintf(src, "\t\t\treturn t;\n\n");
 			fprintf(src, "\t\treturn undefined;\n\n");
 			fprintf(src, "\t}\n");
@@ -1420,12 +1417,12 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 		{
 			fprintf(src, "\n\tpublic static fromJSON(data: string | object | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): %s.%s | undefined {\n", szNameSpace, szConverted);
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");
-			fprintf(src, "\t\tconst errorCount = errors.length;\n");
+			fprintf(src, "\t\terrors.storeState();\n");
 			fprintf(src, "\t\tconst newContext = TSConverter.addDecodeContext(context, name, \"%s\");\n\n", szConverted);
 			fprintf(src, "\t\tlet t: %s.%s | undefined;\n", szNameSpace, szConverted);
 
 			fprintf(src, "\t\tconst s = TSConverter.prepareJSONData<%s.%s>(data, errors, newContext, optional);\n", szNameSpace, szConverted);
-			fprintf(src, "\t\tif (s !== undefined) {");
+			fprintf(src, "\t\tif (s) {");
 			enum BasicTypeChoiceId choice = td->type->basicType->choiceId;
 			if (choice != BASICTYPE_LOCALTYPEREF && choice != BASICTYPE_IMPORTTYPEREF)
 			{
@@ -1452,7 +1449,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 				fprintf(src, "\n");
 				fprintf(src, "\t\t\tif (s.length === undefined) {\n");
 				fprintf(src, "\t\t\t\t// Proprietary UCServer AsnOptionalParameters decoding\n");
-				fprintf(src, "\t\t\t\tEAsnOptionalParameters_Converter.fromJSON(s, t, errors, context, name, optional);\n");
+				fprintf(src, "\t\t\t\tEAsnOptionalParametersConverter.fromJSON(s, t, errors, context, name, optional);\n");
 				fprintf(src, "\t\t\t} else {");
 				szIdendt = "\t\t\t\t";
 			}
@@ -1462,7 +1459,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 				fprintf(src, "\t\t\t}\n");
 			fprintf(src, "\t\t}\n");
 
-			fprintf(src, "\t\tif (errors.validateResult(errorCount, newContext, \"%s\"))\n", td->definedName);
+			fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\"))\n", td->definedName);
 			fprintf(src, "\t\t\treturn t;\n\n");
 
 			fprintf(src, "\t\treturn undefined;\n");
@@ -1491,7 +1488,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 				fprintf(src, "\t\tlet t: asn1ts.BaseBlock | undefined;\n");
 
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");
-			fprintf(src, "\t\tconst errorCount = errors.length;\n");
+			fprintf(src, "\t\terrors.storeState();\n");
 			fprintf(src, "\t\tconst newContext = TSConverter.addEncodeContext(context, name, \"%s\");\n", szConverted);
 
 			Print_BER_EncoderCodeStructuredType(src, mods, m, td, novolatilefuncs);
@@ -1503,7 +1500,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 		{
 			fprintf(src, "\n\tpublic static fromBER(data: Uint8Array | asn1ts.BaseBlock | undefined, errors?: ConverterErrors, context?: IDecodeContext, name?: string, optional?: boolean): %s.%s | undefined {\n", szNameSpace, szConverted);
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");
-			fprintf(src, "\t\tconst errorCount = errors.length;\n");
+			fprintf(src, "\t\terrors.storeState();\n");
 			fprintf(src, "\t\tconst newContext = TSConverter.addDecodeContext(context, name, \"%s\");\n\n", szConverted);
 
 			fprintf(src, "\t\tlet t: %s.%s | undefined;\n", szNameSpace, szConverted);
@@ -1528,7 +1525,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 
 			fprintf(src, "\t\t}\n\n");
 
-			fprintf(src, "\t\tif (errors.validateResult(errorCount, newContext, \"%s\"))\n", td->definedName);
+			fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\"))\n", td->definedName);
 			fprintf(src, "\t\t\treturn t;\n\n");
 
 			fprintf(src, "\t\treturn undefined;\n");

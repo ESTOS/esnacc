@@ -1,16 +1,17 @@
-// Centralised code for the TypeScript converters.
 // This file is embedded as resource file in the esnacc.exe ASN1 Compiler
-// Do not directly edit or modify the code as it is machine generated and will be overwritten with every compilation
+// Do NOT edit or modify this code as it is machine generated
+// and will be overwritten with every code generation of the esnacc.exe
 
 // prettier-ignore
 /* eslint-disable */
 
+import * as asn1ts from "@estos/asn1ts";
+
+import * as ENetUC_Common from "./ENetUC_Common";
 import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
 import { ROSEMessage_Converter } from "./SNACCROSE_Converter";
 import { DecodeContext, ConverterErrors, EncodeContext } from "./TSConverterBase";
-import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, EASN1TransportEncoding, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, IReceiveInvokeContextParams, ISendInvokeContextParams } from "./TSROSEBase";
-import * as ENetUC_Common from "./ENetUC_Common";
-import * as asn1ts from "@estos/asn1ts";
+import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, EASN1TransportEncoding, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, ReceiveInvokeContext } from "./TSROSEBase";
 
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
@@ -48,19 +49,14 @@ class Handler {
 	 * @param oninvokehandler - The handler that will handle operationID / operationName
 	 * @param requesthandler - The requesthandler that will handle the request as decoded in oninvokehandler
 	 * @param operationID - The id we registger
+	 * @param operationName - The name we registger
 	 */
-	public constructor(oninvokehandler: IInvokeHandler, requesthandler: never, operationID: number) {
+	public constructor(oninvokehandler: IInvokeHandler, requesthandler: never, operationID: number, operationName: string) {
 		this.oninvokehandler = oninvokehandler;
 		this.requesthandler = requesthandler;
 		this.operationID = operationID;
-		this.operationName = oninvokehandler.getNameForOperationID(operationID);
+		this.operationName = operationName;
 	}
-}
-
-/**
- * List of invoke handlers based on the operationID.
- */
-class Handlers extends Map<number, Handler> {
 }
 
 // The base class for all log entries
@@ -223,6 +219,8 @@ export interface ITransportMetaData {
 	invokeID: number | undefined;
 	direction: "in" | "out";
 	type: "ws" | "rest";
+	operationID: number | undefined;
+	operationName: string | undefined;
 	payLoad: string | object;
 }
 
@@ -249,7 +247,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 	// The encoding to use for outbound calls (may be overwritten by custom settings in the invokeContext)
 	protected encoding: EASN1TransportEncoding;
 	// Holds all registered invoke handlers
-	private handlers = new Handlers();
+	private handlersByID = new Map<number, Handler>();
+	private handlersByName = new Map<string, Handler>();
 	// The Logger Callback which must be set with the SetLogger Method
 	protected logger?: IROSELogger;
 	// Logs the raw transport (inbound before decoding, outbound after encoding)
@@ -295,11 +294,13 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * Sets the encoding for the transport
+	 * Sets the encoding to the transport
+	 * This method is overwritten in the server to set the encoding of a certain client connection
 	 *
-	 * @param encoding - the encoding to set
+	 * @param encoding - the encoding we want to set
+	 * @param clientConnectionID - the clientConnectionID for which we want to get the encoding
 	 */
-	public setEncoding(encoding: EASN1TransportEncoding): void {
+	public setEncoding(encoding: EASN1TransportEncoding, clientConnectionID?: string): void {
 		this.encoding = encoding;
 	}
 
@@ -313,11 +314,15 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * Basically the invokeHandler takes care of the rose decoding argument, encoding result where the requesthandler deals
 	 * with the plain argument and result objects
 	 * @param requesthandler - this is the class that is implementing the function (operationID / operationName)
-	 * @param operationID - the id of the operation that is to register
+	 * @param operationID - the id of the operation that registers
+	 * @param operationName - the name of the operation that registers
 	 */
-	public registerOperation(oninvokehandler: IInvokeHandler, requesthandler: never, operationID: number): void {
-		if (!this.handlers.has(operationID))
-			this.handlers.set(operationID, new Handler(oninvokehandler, requesthandler, operationID));
+	public registerOperation(oninvokehandler: IInvokeHandler, requesthandler: never, operationID: number, operationName: string): void {
+		if (!this.handlersByID.has(operationID)) {
+			const handler = new Handler(oninvokehandler, requesthandler, operationID, operationName);
+			this.handlersByID.set(operationID, handler);
+			this.handlersByName.set(operationName, handler);
+		}
 	}
 
 	/**
@@ -402,7 +407,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @returns undefined or, if bSendEventSynchronous has been set true when the event was sent
 	 */
 	public sendEvent(data: IASN1InvokeData): undefined | boolean {
-		if (data.context?.bSendEventSynchronous)
+		if (data.invokeContext?.bSendEventSynchronous)
 			return this.sendEventSync(data);
 		else {
 			void this.sendInvoke(data);
@@ -423,111 +428,222 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 *
 	 * @param rawData - the raw data as read from the transport
 	 * @param invokeContext - Invoke context as specified from the caller (if we have something like a client connection handler, we will have a sessionid. At least some identifier of the client should be provided (e.g. the ip address)
-	 * @returns - a string if an invoke was handled (contains the result) void in case an event was received (has no result)
+	 * @returns - the return data and http status code
 	 */
-	public async receive(rawData: object | Uint8Array, invokeContext: IReceiveInvokeContext): Promise<IResponseData | void> {
-		let result: ROSEReject | ROSEResult | ROSEError | void;
-
-		const errors = new ConverterErrors();
+	public async receive(rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): Promise<IResponseData | undefined> {
 		// Decodes the outer ROSE envelop, the embedded elements are not decoded:
 		// ROSEInvoke.argument
 		// ROSEResult.result.result
 		// ROSEError.error
-		const message = asn1Decode<ROSEMessage>(rawData, ROSEMessage_Converter, errors, this.getDecodeContext(), invokeContext);
-		if (!message) {
+		const errors = new ConverterErrors();
+		const encoding = invokeContext.encoding;
+		let message = asn1Decode<ROSEMessage>(rawData, ROSEMessage_Converter, errors, this.getDecodeContext(), invokeContext);
+		
+		if (!message && invokeContext.url && this.instanceType === ASN1ClassInstanceType.TSASN1Server) {
+			// If the message was not decodable check if a URL was specified (rest like request), and if we are on the server side
+			// We allow HTTP POST requests without a ROSE envelop
+			const result = this.receiveHandleWithoutROSEEnvelop(rawData, invokeContext);
+			if (!(result instanceof ROSEMessage))
+				return result;
+			else
+				message = result;
+		}
+	
+		if (message) {
+			// Special for a websocket connection where we have just detected the encoding (for the first time)
+			// In case the handling method creates events, we need to set the encoding now so the handling finds the proper encoding when
+			if (encoding === undefined && invokeContext.encoding !== undefined && invokeContext.clientConnectionID)
+				this.setEncoding(invokeContext.encoding, invokeContext.clientConnectionID);
+
+			return this.receiveHandleROSEMessage(message, rawData, invokeContext);
+		}
+
+		const payLoad = ROSEBase.getDebugPayload(rawData);
+		this.log(ELogSeverity.error, "Failed to decode ROSEMessage", "receive", this, { payLoad, errors });
+		const result = createInvokeReject(0, InvokeProblemenum.unexpectedChildOperation, "Failed to parse argument " + errors.getDiagnostic());
+		// If the request was not parsed and the encoding has not been defined we now need to specify one for the result
+		return this.handleResult(result, invokeContext);
+	}
+
+	/**
+	 * Handles the decoded ROSEMessage from the receive method
+	 *
+	 * @param message - the decoded ROSEMessage
+	 * @param rawData - the rawData (for logging)
+	 * @param invokeContext - the invokeContext
+	 * @returns - the return data and http status code
+	 */
+	public async receiveHandleROSEMessage(message: ROSEMessage, rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): Promise<IResponseData | undefined> {
+		let result: ROSEReject | ROSEResult | ROSEError | undefined;
+		try {
+			if (message.invoke) {
+				invokeContext.invokeID = message.invoke.invokeID;
+				invokeContext.operationID = message.invoke.operationID;
+				if (message.invoke.operationName)
+					invokeContext.operationName = message.invoke.operationName;
+				else {
+					// In case the client did not provide an operationName, look it up
+					// This only works if we have a registered handler for the operation
+					const handler = this.getHandler(invokeContext.operationID);
+					if (handler)
+						invokeContext.operationName = handler.operationName;
+				}
+				if (!invokeContext.clientConnectionID)
+					invokeContext.clientConnectionID = message.invoke.sessionID;
+			} else if (message.result)
+				invokeContext.invokeID = message.result.invokeID;
+			else if (message.error)
+				invokeContext.invokeID = message.error.invokedID;
+			else if (message.reject && message.reject.invokedID.invokedID)
+				invokeContext.invokeID = message.reject.invokedID.invokedID;
+
+			if (invokeContext.encoding === EASN1TransportEncoding.JSON)
+				this.logTransport(message, "receive", "in", invokeContext);
+			else
+				this.logTransport(rawData, "receive", "in", invokeContext);
+
+			if (message.invoke)
+				result = await this.onROSEInvoke(message.invoke, invokeContext);
+			else if (message.result)
+				result = await this.onROSEResult(message.result, invokeContext);
+			else if (message.error)
+				result = await this.onROSEError(message.error, invokeContext);
+			else if (message.reject)
+				result = await this.onROSEReject(message.reject, invokeContext);
+			else
+				result = createInvokeReject(0, InvokeProblemenum.mistypedArgument, "No member was filled within the ROSEMessage");
+		} catch (error) {
+			this.log(ELogSeverity.error, "exception", "receive", this, undefined, error);
+			result = createInvokeReject(0, InvokeProblemenum.unexpectedChildOperation, "Exception catched while trying to parse argument...");
+		}
+		return this.handleResult(result, invokeContext);
+	}
+
+	/**
+	 * Handles an invoke that has no ROSE envelop
+	 *
+	 * @param rawData - the raw data as read from the transport
+	 * @param invokeContext - Invoke context as specified from the caller (if we have something like a client connection handler, we will have a sessionid. At least some identifier of the client should be provided (e.g. the ip address)
+	 * @returns - the returns the ROSEMessage on success, or an IResponseData on error or undefined
+	 */
+	public receiveHandleWithoutROSEEnvelop(rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): ROSEMessage | IResponseData | undefined {
+		invokeContext.noROSEEnvelop = true;
+
+		const errors = new ConverterErrors();
+		const operationName = invokeContext.getOperationNameFromURL();
+		if (!operationName) {
 			const payLoad = ROSEBase.getDebugPayload(rawData);
-			this.log(ELogSeverity.error, "Failed to decode ROSEMessage", "receive", this, { payLoad, errors });
-			result = createInvokeReject(0, InvokeProblemenum.unexpectedChildOperation, "Failed to parse argument " + errors.getDiagnostic());
-			// If the request was not parsed and the encoding has not been defined we now need to specify one...
-			if (!invokeContext.encoding)
-				invokeContext.encoding = EASN1TransportEncoding.JSON;
-		} else {
-			try {
-				if (message.invoke) {
-					invokeContext.invokeID = message.invoke.invokeID;
-					invokeContext.operationID = message.invoke.operationID;
-					if (message.invoke.operationName)
-						invokeContext.operationName = message.invoke.operationName;
-					if (!invokeContext.clientConnectionID)
-						invokeContext.clientConnectionID = message.invoke.sessionID;
-				} else if (message.result)
-					invokeContext.invokeID = message.result.invokeID;
-				else if (message.error)
-					invokeContext.invokeID = message.error.invokedID;
-				else if (message.reject && message.reject.invokedID.invokedID)
-					invokeContext.invokeID = message.reject.invokedID.invokedID;
+			this.log(ELogSeverity.error, "Could not retrieve operationName from URL", "receive", this, { payLoad, errors, url: invokeContext.url });
+			const result = createInvokeReject(0, InvokeProblemenum.unrecognisedOperation, "Failed to retrieve operationName from URL");
+			return this.handleResult(result, invokeContext);
+		}
+		const handler = this.handlersByName.get(operationName);
+		if (!handler) {
+			const payLoad = ROSEBase.getDebugPayload(rawData);
+			this.log(ELogSeverity.error, "There is no registered handler for this operation", "receive", this, { payLoad, errors, url: invokeContext.url, operationName});
+			const result = createInvokeReject(0, InvokeProblemenum.unrecognisedOperation, "There is no registered handler for this operation");
+			return this.handleResult(result, invokeContext);
+		}
 
-				if (invokeContext.encoding === EASN1TransportEncoding.JSON)
-					this.logTransport(message, "receive", "in", invokeContext);
-				else
-					this.logTransport(rawData, "receive", "in", invokeContext);
-
-				if (message.invoke)
-					result = await this.onROSEInvoke(message.invoke, invokeContext);
-				else if (message.result)
-					result = await this.onROSEResult(message.result, invokeContext);
-				else if (message.error)
-					result = await this.onROSEError(message.error, invokeContext);
-				else if (message.reject)
-					result = await this.onROSEReject(message.reject, invokeContext);
-				else
-					result = createInvokeReject(0, InvokeProblemenum.mistypedArgument, "No member was filled within the ROSEMessage");
-			} catch (error) {
-				this.log(ELogSeverity.error, "exception", "receive", this, undefined, error);
-				result = createInvokeReject(0, InvokeProblemenum.unexpectedChildOperation, "Exception catched while trying to parse argument...");
+		// If the request did not contain any content we need to distinguish the encoding from the content-type
+		if (invokeContext.headers) {
+			let bEncodingFromHeader = false;
+			if (rawData instanceof Uint8Array && rawData.length === 0)
+				bEncodingFromHeader = true;
+			else if (Object.keys(rawData).length === 0)
+				bEncodingFromHeader = true;
+			if (bEncodingFromHeader) {
+				let contentType = invokeContext.headers["content-type"]
+				if (!contentType)
+					contentType = invokeContext.headers.accept
+				if (contentType) {
+					contentType = contentType.toLowerCase();
+					if (contentType === "application/octet-stream")
+						invokeContext.encoding = EASN1TransportEncoding.BER;
+					else if (contentType === "application/json")
+						invokeContext.encoding = EASN1TransportEncoding.JSON;
+				}
 			}
 		}
 
-		if (result) {
-			// The result object itself is already encoded according to the encoding of the invokeContext (Result or Error member)
-			// We have a result of the invoke, let´s encoded it accordingly
-			const message = new ROSEMessage();
-			let resultValue = 0;
-			if (result instanceof ROSEReject) {
-				message.reject = result;
-				if (result.reject?.generalProblem)
-					resultValue = result.reject?.generalProblem;
-				else if (result.reject?.invokeProblem)
-					resultValue = result.reject?.invokeProblem;
-				else if (result.reject?.returnErrorProblem)
-					resultValue = result.reject?.returnErrorProblem;
-				else if (result.reject?.returnResultProblem)
-					resultValue = result.reject?.returnResultProblem;
-			} else if (result instanceof ROSEResult)
-				message.result = result;
-			else if (result instanceof ROSEError) {
-				message.error = result;
-				message.error.sessionID = invokeContext.clientConnectionID;
-				resultValue = result.error_value;
-			}
 
-			if (resultValue === 0)
-				resultValue = 200;
-			else if (resultValue <= 200 || resultValue >= 600)
-				resultValue = 500;
 
-			errors.clear();
-			const encodeContext = this.getEncodeContext();
-			// Encode the ROSE message with the embedded result object
-			const encoded = asn1Encode(invokeContext.encoding, message, ROSEMessage_Converter, errors, encodeContext);
-			if (encoded === undefined) {
+		// If we found an operationName and an associated handler for it we now need to create a matching ROSE envelop for the handling of the request
+		const message = new ROSEMessage({
+			invoke: new ROSEInvoke({
+				invokeID: 1,
+				operationID: handler.operationID,
+				argument: rawData
+			})
+		})
+
+		return message;
+	}
+
+	/**
+	 * Logs the transport data
+	 *
+	 * @param result - the result to handle
+	 * @param invokeContext - the invokeContext
+	 * @returns - the responseData object
+	 */
+	protected handleResult(result: ROSEReject | ROSEResult | ROSEError | undefined, invokeContext: IReceiveInvokeContext): IResponseData | undefined {
+		if (!result)
+			return;
+
+		if (!invokeContext.encoding)
+			invokeContext.encoding = EASN1TransportEncoding.JSON;
+
+		let plainResponse: unknown | undefined;
+		const message = new ROSEMessage();
+		let resultValue = 0;
+		if (result instanceof ROSEReject) {
+			if (result.reject?.generalProblem)
+				resultValue = result.reject?.generalProblem;
+			else if (result.reject?.invokeProblem)
+				resultValue = result.reject?.invokeProblem;
+			else if (result.reject?.returnErrorProblem)
+				resultValue = result.reject?.returnErrorProblem;
+			else if (result.reject?.returnResultProblem)
+				resultValue = result.reject?.returnResultProblem;
+			message.reject = result;
+			plainResponse = result;
+		} else if (result instanceof ROSEResult) {
+			message.result = result;
+			plainResponse = result.result?.result;
+		} else if (result instanceof ROSEError) {
+			message.error = result;
+			message.error.sessionID = invokeContext.clientConnectionID;
+			resultValue = result.error_value;
+			plainResponse = result.error;
+		}
+
+		if (resultValue === 0)
+			resultValue = 200;
+		else if (resultValue <= 200 || resultValue >= 600)
+			resultValue = 500;
+	
+		// Encode the ROSE message with the embedded result object
+		let encoded: object | asn1ts.Sequence | undefined = undefined;
+
+		const encodeContext = this.getEncodeContext();
+		if (!invokeContext.noROSEEnvelop) {
+			const errors = new ConverterErrors();
+			encoded = asn1Encode(invokeContext.encoding, message, ROSEMessage_Converter, errors, encodeContext);
+			if (!encoded) {
 				this.log(ELogSeverity.error, "Failed to encode result message", "receive", this, { errors: errors.getDiagnostic() });
 				return;
 			}
-			let payLoad: Uint8Array | string;
-			if (invokeContext.encoding === EASN1TransportEncoding.BER) {
-				payLoad = new Uint8Array((encoded as asn1ts.Sequence).toBER());
-				this.logTransport(payLoad, "receive", "out", invokeContext);
-			} else {
-				payLoad = JSON.stringify(encoded, null, encodeContext.bPrettyPrint ? "\t" : undefined);
-				this.logTransport(encoded, "receive", "out", invokeContext);
-			}
+		} else
+			encoded = plainResponse as object | asn1ts.Sequence;
 
-			return {
-				payLoad,
-				httpStatusCode: resultValue
-			};
-		}
+		const forTransport = ROSEBase.encodeToTransport(encoded, this.encodeContext);
+		this.logTransport(forTransport.logData, "receive", "out", invokeContext);
+
+		return {
+			payLoad: forTransport.payLoad,
+			httpStatusCode: resultValue
+		};
 	}
 
 	/**
@@ -554,6 +670,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 				clientIP: invokeContext.clientIP,
 				invokeID: invokeContext.invokeID,
 				type: invokeContext.clientConnectionID ? "ws" : "rest",
+				operationID: invokeContext.operationID,
+				operationName: invokeContext.operationName,
 				direction,
 				payLoad
 			};
@@ -567,7 +685,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @returns - the EncodeContext telling the encoder how to encoder the transport data
 	 */
 	public getEncodeContext(): EncodeContext {
-		return this.encodeContext;
+		return new EncodeContext(this.encodeContext);
 	}
 
 	/**
@@ -576,7 +694,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @returns - the DecodeContext telling the decoder how to decode the transport data
 	 */
 	public getDecodeContext(): DecodeContext {
-		return this.decodeContext;
+		return new DecodeContext(this.decodeContext.bLaxDecoding);
 	}
 
 	/**
@@ -720,8 +838,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param operationID - the operationID for which we want to find a handler
 	 * @returns - a handler if we found one or undefined
 	 */
-	protected getOperation(operationID: number): Handler | undefined {
-		return this.handlers.get(operationID);
+	protected getHandler(operationID: number): Handler | undefined {
+		return this.handlersByID.get(operationID);
 	}
 
 	/**
@@ -735,11 +853,11 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 */
 	protected async onROSEInvoke(invoke: ROSEInvoke, invokeContext: IReceiveInvokeContext): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
 		try {
-			const operation = this.getOperation(invoke.operationID);
-			if (operation === undefined)
+			const handler = this.getHandler(invoke.operationID);
+			if (handler === undefined)
 				return createInvokeReject(invoke, InvokeProblemenum.unrecognisedOperation, `There is no registered handler for operation ${invoke.operationName} (${invoke.operationID})`);
 			else
-				return await operation.oninvokehandler.onInvoke(invoke, invokeContext, operation.requesthandler);
+				return await handler.oninvokehandler.onInvoke(invoke, invokeContext, handler.requesthandler);
 		} catch (error) {
 			// We want the debugger to catch that behaviour instantly -> so the developer can fix it right away
 			// !!! An exception should NEVER EVER reach this point !!!

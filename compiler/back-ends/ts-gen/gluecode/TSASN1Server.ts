@@ -1,13 +1,13 @@
-// Centralised code for the TypeScript converters.
 // This file is embedded as resource file in the esnacc.exe ASN1 Compiler
-// Do not directly edit or modify the code as it is machine generated and will be overwritten with every compilation
+// Do NOT edit or modify this code as it is machine generated
+// and will be overwritten with every code generation of the esnacc.exe
 
 // prettier-ignore
 /* eslint-disable */
 
 import { ROSEError, ROSEMessage, ROSEReject, ROSEResult, InvokeProblemenum } from "./SNACCROSE";
 import { TSASN1Base, PendingInvoke, ITransportMetaData, ASN1ClassInstanceType } from "./TSASN1Base";
-import { ELogSeverity, IASN1Transport, createInvokeReject, ReceiveInvokeContext, CustomInvokeProblemEnum, EASN1TransportEncoding, IASN1InvokeData } from "./TSROSEBase";
+import { ELogSeverity, IASN1Transport, createInvokeReject, ReceiveInvokeContext, CustomInvokeProblemEnum, EASN1TransportEncoding, IASN1InvokeData, ROSEBase } from "./TSROSEBase";
 
 /**
  * Interface a client connection object has to provide to be able to send an event based on the id of a client to this client
@@ -15,6 +15,7 @@ import { ELogSeverity, IASN1Transport, createInvokeReject, ReceiveInvokeContext,
 export interface IASN1ClientConnection {
 	send(response: string | Uint8Array): boolean;
 	getTransportEncoding(): EASN1TransportEncoding | undefined;
+	setTransportEncoding(encoding: EASN1TransportEncoding): void;
 }
 
 /**
@@ -59,10 +60,11 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 	 * @returns true when the event was sent
 	 */
 	public sendEventSync(data: IASN1InvokeData): boolean {
-		if (this.connectionhandler && data.context.clientConnectionID) {
-			const client = this.connectionhandler.getClientConnection(data.context.clientConnectionID);
+		if (this.connectionhandler && data.invokeContext.clientConnectionID) {
+			const client = this.connectionhandler.getClientConnection(data.invokeContext.clientConnectionID);
 			if (client) {
-				client.send(data.payLoad);
+				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
+				client.send(encoded.payLoad);
 				return true;
 			}
 		}
@@ -87,12 +89,26 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 	 */
 	public override getEncoding(clientConnectionID?: string): EASN1TransportEncoding {
 		let result: undefined | EASN1TransportEncoding;
-		if(clientConnectionID)
+		if (clientConnectionID)
 			result = this.connectionhandler?.getClientConnection(clientConnectionID)?.getTransportEncoding();
 		if (result)
 			return result;
 		return super.getEncoding();
 	}
+
+	/**
+	 * Sets the encoding to the transport
+	 * This method is overwritten in the server to set the encoding of a certain client connection
+	 *
+	 * @param encoding - the encoding we want to set
+	 * @param clientConnectionID - the clientConnectionID for which we want to set the encoding
+	 */
+	public override setEncoding(encoding: EASN1TransportEncoding, clientConnectionID?: string): void {
+		if (clientConnectionID)
+			this.connectionhandler?.getClientConnection(clientConnectionID)?.setTransportEncoding(encoding);
+		else
+			return super.setEncoding(encoding);
+	}	
 
 	/**
 	 * Sends a message towards the client
@@ -107,7 +123,7 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 	 * If no timeout was specified we resolve in undefined to cleanup the promise object
 	 */
 	public async sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
-		const clientConnectionID = data.context.clientConnectionID || data.invoke.sessionID;
+		const clientConnectionID = data.invokeContext.clientConnectionID || data.invoke.sessionID;
 		if (!clientConnectionID)
 			return createInvokeReject(data.invoke.invokeID, InvokeProblemenum.invalidSessionID, "SendInvoke no sessionID specified");
 		else if (!this.connectionhandler)
@@ -123,26 +139,18 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 
 			try {
 				if (data.invoke.invokeID !== 99999) {
-					const timeout = data.context?.timeout || this.defaultTimeout;
-					if (!timeout) {
-						// You are calling an invoke but the timeout is not specified
-						// We will not wait for the result but the other will send it, which is useless
-						// Either use an event if you are not interested in the result or properly specify a timeout.
-						// Either in the base class or in the invokeContext per request
-						debugger;
-						this.logError("Missing timeout for an invoke based operation.", this, {}, data.invoke, data.context, true);
-					} else {
-						// Create a timer if a timeout was provided
-						const id = data.invoke.invokeID;
-						const timerid = setTimeout((): void => { this.onROSETimeout(id); }, timeout);
-						const pending = new PendingInvoke(data.invoke, resolve, reject, timerid);
-						this.pendingInvokes.set(id, pending);
-						resolveUndefined = false;
-					}
+					const timeout = data.invokeContext?.timeout || this.defaultTimeout;
+					// Create a timer if a timeout was provided
+					const id = data.invoke.invokeID;
+					const timerid = setTimeout((): void => { this.onROSETimeout(id); }, timeout);
+					const pending = new PendingInvoke(data.invoke, resolve, reject, timerid);
+					this.pendingInvokes.set(id, pending);
+					resolveUndefined = false;
 				}
+				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 
-				this.logTransport(data.logMessage, "sendInvoke", "out", data.context);
-				if (!client.send(data.payLoad)) {
+				this.logTransport(encoded.logData, "sendInvoke", "out", data.invokeContext);
+				if (!client.send(encoded.payLoad)) {
 					const msg = new ROSEMessage();
 					msg.reject = {
 						invokedID: {

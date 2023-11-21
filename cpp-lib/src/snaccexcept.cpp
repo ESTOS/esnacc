@@ -2,6 +2,8 @@
 //
 //
 #include "../include/snaccexcept.h"
+#include <memory.h>
+#include <cstring>
 
 namespace SNACC
 {

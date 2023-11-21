@@ -468,7 +468,7 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (IsROSEValueDef(m, vd))
-			fprintf(src, "\t\tthis.transport.registerOperation(this, handler, %d);\n", vd->value->basicValue->a.integer);
+			fprintf(src, "\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\");\n", vd->definedName, vd->definedName);
 	}
 	fprintf(src, "\t}\n");
 }
@@ -723,6 +723,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 				fprintf(src, "\t\treturn this.handleInvoke(argument, ");
 				fprintf(src, "%s.%s, ", szResultNS, pszResult);
 				fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
+				fprintf(src, "\"%s\", ", pszFunction);
 				if (argumentMod == m)
 					fprintf(src, "Converter.%s_Converter, ", pszArgument);
 				else
@@ -756,6 +757,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 				}
 				fprintf(src, "\t\treturn this.handleEvent(argument, ");
 				fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
+				fprintf(src, "\"%s\", ", pszFunction);
 				if (argumentMod == m)
 					fprintf(src, "Converter.%s_Converter, ", pszArgument);
 				else
@@ -866,12 +868,12 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t}\n\n");
 
 	fprintf(src, "\t/**\n");
-	fprintf(src, "\t * Returns the name for a certain operationID\n");
+	fprintf(src, "\t * Returns the operationName for an operationID\n");
 	fprintf(src, "\t *\n");
 	fprintf(src, "\t * @param id - the id we want to have the name for\n");
-	fprintf(src, "\t * @returns - the name or an emtpy string if not found\n");
+	fprintf(src, "\t * @returns - the name or undefined if not found\n");
 	fprintf(src, "\t */\n");
-	fprintf(src, "\tpublic getNameForOperationID(id: OperationIDs): string {\n");
+	fprintf(src, "\tpublic getNameForOperationID(id: OperationIDs): string | undefined {\n");
 	fprintf(src, "\t\tswitch (id) {\n");
 	ValueDef* v;
 	FOR_EACH_LIST_ELMT(v, m->valueDefs)
@@ -890,7 +892,35 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 		fprintf(src, "\t\t\t\treturn \"%s\";\n", v->definedName);
 	}
 	fprintf(src, "\t\t\tdefault:\n");
-	fprintf(src, "\t\t\t\treturn \"\";\n");
+	fprintf(src, "\t\t\t\treturn undefined;\n");
+	fprintf(src, "\t\t}\n");
+	fprintf(src, "\t}\n");
+
+	fprintf(src, "\t/**\n");
+	fprintf(src, "\t * Returns the operationID for an operationName\n");
+	fprintf(src, "\t *\n");
+	fprintf(src, "\t * @param id - the id we want to have the name for\n");
+	fprintf(src, "\t * @returns - the id or undefined if not found\n");
+	fprintf(src, "\t */\n");
+	fprintf(src, "\tpublic getIDForOperationName(name: string): OperationIDs | undefined {\n");
+	fprintf(src, "\t\tswitch (name) {\n");
+	FOR_EACH_LIST_ELMT(v, m->valueDefs)
+	{
+		/* just do ints */
+		if (v->value->basicValue->choiceId != BASICVALUE_INTEGER)
+			continue;
+		if (v->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
+			continue;
+		if (v->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
+			continue;
+		if (IsDeprecatedNoOutputOperation(m, v->definedName))
+			continue;
+
+		fprintf(src, "\t\t\tcase \"%s\":\n", v->definedName);
+		fprintf(src, "\t\t\t\treturn OperationIDs.OPID_%s;\n", v->definedName);
+	}
+	fprintf(src, "\t\t\tdefault:\n");
+	fprintf(src, "\t\t\t\treturn undefined;\n");
 	fprintf(src, "\t\t}\n");
 	fprintf(src, "\t}\n");
 

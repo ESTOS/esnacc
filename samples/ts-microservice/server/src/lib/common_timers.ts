@@ -9,6 +9,7 @@ export class EOwnTimeout {
 
 	/**
 	 * Constructs the EOwnTimeout object
+	 *
 	 * @param callback - the function that has to be called on timeout
 	 * @param ms - the timeout in msec
 	 * @param args - arguments for the callback function
@@ -22,13 +23,14 @@ export class EOwnTimeout {
 	/**
 	 * Executes the timeout and clears the internal timeout value
 	 */
-	private execute() {
+	private execute(): void {
 		this.timeout = undefined;
 		this.callback(...this.args);
 	}
 
 	/**
 	 * Sets a new timeout for the underlying timeout object
+	 *
 	 * @param ms - the new timeout in msec
 	 */
 	public setNewTimeout(ms: number): void {
@@ -73,6 +75,7 @@ export class EOwnInterval {
 
 	/**
 	 * Constructs the EOwnInterval object
+	 *
 	 * @param callback - the function that has to be called on interval
 	 * @param ms - the interval in msec
 	 * @param args - arguments for the callback function
@@ -86,6 +89,7 @@ export class EOwnInterval {
 
 	/**
 	 * Sets a new interval for the underlying timer object
+	 *
 	 * @param ms - the new timer in msec
 	 */
 	public setNewInterval(ms: number): void {

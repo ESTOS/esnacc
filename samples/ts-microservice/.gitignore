@@ -3,6 +3,7 @@ node_modules/
 dist/
 log/
 .vs/
+esbuild/
 
 # files
 *.pem

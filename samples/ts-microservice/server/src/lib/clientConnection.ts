@@ -1,14 +1,15 @@
-import { theConfig, theServer, theLogger, theLogStorage } from "../globals";
+import { EventEmitter } from "events";
+import { ILogData } from "uclogger";
 import WebSocket from "ws";
+
+import { IClientConnection, IClientConnectionConstructorArguments, ICustomReceiveInvokeContext } from "./IClientConnection";
+import { IClientDetails } from "./IClientDetails";
+import { ClientConnectionNotifies } from "./clientConnectionNotify";
 import { Common } from "./common";
 import { EOwnTimeout, EOwnInterval } from "./common_timers";
-import { ILogData } from "uclogger";
-import { EventEmitter } from "events";
+import { theConfig, theServer, theLogger, theLogStorage } from "../globals";
 import { ILogContextStaticData, LogContextStaticData } from "../singletons/asyncLocalStorage";
-import { IClientConnection, IClientConnectionConstructorArguments, ICustomReceiveInvokeContext } from "./IClientConnection";
-import { ClientConnectionNotifies } from "./clientConnectionNotify";
 import { EASN1TransportEncoding, ReceiveInvokeContext } from "../stub/TSROSEBase";
-import { IClientDetails } from "./IClientDetails";
 
 /**
  * A Helper class to get the RTT times of a client
@@ -27,6 +28,7 @@ class RTTPingPongHelper {
 
 	/**
 	 * Constructs the RTT Helper object
+	 *
 	 * @param con - The associated client connection object
 	 */
 	public constructor(con: ClientConnection) {
@@ -54,6 +56,7 @@ class RTTPingPongHelper {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
+	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
@@ -65,13 +68,14 @@ class RTTPingPongHelper {
 	/**
 	 * If the pong was not handled within 5000 msec this function is called
 	 */
-	public onTimeout() {
+	public onTimeout(): void {
 		this.timeout = undefined;
 		this.con.onPingPongTimeout(this.id);
 	}
 
 	/**
 	 * Retrieves the RTT (current time vs. ping sent)
+	 *
 	 * @returns - the RTT or undefined if no ping was sent
 	 */
 	public getRTT(): number | undefined {
@@ -134,6 +138,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 	/**
 	 * Constructs the clientconnection object
+	 *
 	 * @param args - Arguments to construct the client connection
 	 */
 	public constructor(args: IClientConnectionConstructorArguments) {
@@ -171,6 +176,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 	/**
 	 * Set the websocket that we received after the verifyClient method has been processed
+	 *
 	 * @param ws - the inbound client websocket connection object
 	 */
 	public setWebSocket(ws: WebSocket): void {
@@ -182,7 +188,6 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 	 * Initializes the clientConnection object
 	 */
 	public init(): void {
-		this.setKeepAliveTimeout(theConfig.clientConnection.client_keepalive);
 		this.setPingPongInterval(1000);
 		this.setErrorCounterDecrementInterval(1000);
 		if (this.wsClient) {
@@ -214,6 +219,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
+	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
@@ -229,6 +235,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 	 * Retrieves the current round trip time which is evaluated every 5 seconds.
 	 * The server sends a websocket ping and waits for the response
 	 * The rtt is logged
+	 *
 	 * @returns - The websocket round trip time in msec or undefined if it has not yet been evaluated
 	 */
 	public getRTT(): number | undefined {
@@ -237,6 +244,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 	/**
 	 * Sending data to connected client over websocket connection
+	 *
 	 * @param data - data send to client
 	 * @returns - true on success or false on error
 	 */
@@ -258,6 +266,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 	/**
 	 * Logs websocket errors to our logging
+	 *
 	 * @param error - the websockets error object
 	 */
 	public wsClientError(error: Error): void {
@@ -266,6 +275,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 	/**
 	 * If the websocket is closed we handle it here
+	 *
 	 * @param code - the closing reason
 	 * @param message - the closing message
 	 */
@@ -277,6 +287,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 	/**
 	 * Called when data is received from client
+	 *
 	 * @param data - data send from client
 	 * @param isBinary - data is binary
 	 */
@@ -295,35 +306,21 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 		// Set the logContext for our invoke to have it available everywhere we then go within our code
 		theLogStorage.enterWith(this.logContext);
 
-		let message: Uint8Array | object;
-		// Ensure that the data is either an Uint8Array for BER or a json object for JSON encoding
-		if (this.encoding === undefined || this.encoding === EASN1TransportEncoding.BER) {
-			if (data instanceof Uint8Array)
-				message = data;
-			else if (data instanceof ArrayBuffer)
-				message = new Uint8Array(data);
-			else if (data instanceof Blob)
-				message = new Uint8Array(await data.arrayBuffer());
-			else {
-				debugger;
-				theLogger.error("Received payload which we could not handle", "wsClientMessage", this);
-				return;
-			}
-		} else {
-			const rawData = data.toString();
-			try {
-				message = JSON.parse(rawData) as object;
-			} catch (error) {
-				theLogger.error("Failed to JSON parse request object", "wsClientMessage", this, undefined, error);
-				return;
-			}
+		let message: Uint8Array | undefined;
+		if (data instanceof Uint8Array)
+			message = data;
+		else if (data instanceof ArrayBuffer)
+			message = new Uint8Array(data);
+		else if (data instanceof Blob)
+			message = new Uint8Array(await data.arrayBuffer());
+		else {
+			theLogger.error("Received payload which we could not handle", "wsClientMessage", this);
+			return;
 		}
 
 		try {
 			const result = await theServer.receive(message, invokeContext);
-			if (this.encoding === undefined)
-				this.encoding = invokeContext.encoding;
-			else if (this.encoding !== invokeContext.encoding) {
+			if (this.encoding !== invokeContext.encoding) {
 				debugger;
 				theLogger.error("Client wants to change encoding on a websocket connection", "wsClientMessage", this, { encoding: this.encoding, invokeContext });
 			}
@@ -344,6 +341,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 	/**
 	 * Updates elements in the logContext
+	 *
 	 * @param data - attributes to set into the logContext
 	 * @returns true if the logContext has changed
 	 */
@@ -367,6 +365,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 	 * The client must send keepAlive message within the specified amount of time
 	 *
 	 * This method is for the client triggered keepalive mechanism
+	 *
 	 * @param timeout - after timeout msec the client connection is discarded
 	 */
 	private setKeepAliveTimeout(timeout: number): void {
@@ -397,6 +396,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 	 * If the pong does not arrive we have an error counter that releases the connection if three pongs got lost
 	 *
 	 * This method is for the server triggered keepalive mechanism
+	 *
 	 * @param interval - the interval in msec to be used or 0 to reset the interval
 	 */
 	private setPingPongInterval(interval: number): void {
@@ -412,6 +412,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 	/**
 	 * Sets the interval in which the error Counter is decremented if it is larger than 0
+	 *
 	 * @param interval - the interval in msec to be used or 0 to reset the interval
 	 */
 	private setErrorCounterDecrementInterval(interval: number): void {
@@ -437,6 +438,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 	/**
 	 * Is called by the RTTPingPongHelper object if the pong was not received
+	 *
 	 * @param id - id of the ping pong object
 	 */
 	public onPingPongTimeout(id: number): void {
@@ -453,6 +455,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 	 * We reset the pongtimeout and reset the error counter value
 	 *
 	 * This method is for the server triggered keepalive mechanism
+	 *
 	 * @param data - the data received with the pong
 	 */
 	private wsClientPong(data: Buffer): void {
@@ -494,10 +497,20 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 
 	/**
 	 * Returns the encoding this clientConnection has been setup with
+	 *
 	 * @returns the encoding of the connection
 	 */
 	public getTransportEncoding(): EASN1TransportEncoding | undefined {
 		return this.encoding;
+	}
+
+	/**
+	 * Set the encoding for this clientConnection
+	 *
+	 * @param encoding the encoding this connection shall use
+	 */
+	public setTransportEncoding(encoding: EASN1TransportEncoding): void {
+		this.encoding = encoding;
 	}
 }
 

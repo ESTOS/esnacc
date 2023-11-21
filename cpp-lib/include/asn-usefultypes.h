@@ -36,7 +36,7 @@ public:
 
 	void Clear();
 
-	AsnType* Clone() const override
+	virtual EXTERNALChoice* Clone() const override
 	{
 		return new EXTERNALChoice(*this);
 	}
@@ -85,7 +85,7 @@ public:
 	EXTERNAL(const EXTERNAL& that);
 
 public:
-	AsnType* Clone() const override
+	virtual EXTERNAL* Clone() const override
 	{
 		return new EXTERNAL(*this);
 	}

@@ -1,12 +1,12 @@
+import cors from "cors";
 import express from "express";
 import fs from "fs";
 import http from "http";
 import https from "https";
-import cors from "cors";
+import { ILogData } from "uclogger";
 
 import { ERouter } from "./expressRouter";
 import { theConfig, theLogger } from "../globals";
-import { ILogData } from "uclogger";
 import { CONF_EXIT_CODES } from "../lib/exithandler";
 
 const expressInit = async (): Promise<boolean> => {
