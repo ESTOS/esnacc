@@ -314,6 +314,11 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 					{
 						LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
+						#ifdef _DEBUG
+							std::string strPayLoad;
+							strPayLoad.assign(lpBytes, lSize);
+						#endif
+
 						SJson::Value error;
 						error["exception"] = reader.getFormattedErrorMessages();
 						error["where"] = __FUNCTION__;
