@@ -1384,7 +1384,7 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 
 				// Get the name of the called operation for logging
 				std::string strOperationName;
-				const char* szOperationName;
+				const char* szOperationName = nullptr;
 				if (pInvokeMessage->invoke->operationName)
 				{
 					strOperationName = pInvokeMessage->invoke->operationName->getUTF8();
