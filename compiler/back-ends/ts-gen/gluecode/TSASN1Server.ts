@@ -6,8 +6,9 @@
 /* eslint-disable */
 
 import { ROSEError, ROSEMessage, ROSEReject, ROSEResult, InvokeProblemenum } from "./SNACCROSE";
-import { TSASN1Base, PendingInvoke, ITransportMetaData, ASN1ClassInstanceType } from "./TSASN1Base";
-import { ELogSeverity, IASN1Transport, createInvokeReject, ReceiveInvokeContext, CustomInvokeProblemEnum, EASN1TransportEncoding, IASN1InvokeData, ROSEBase } from "./TSROSEBase";
+import { TSASN1Base, PendingInvoke, ASN1ClassInstanceType } from "./TSASN1Base";
+import { ELogSeverity, IASN1Transport, createInvokeReject, ReceiveInvokeContext, CustomInvokeProblemEnum, IASN1InvokeData, ROSEBase } from "./TSROSEBase";
+import { EASN1TransportEncoding } from "./TSInvokeContext";
 
 /**
  * Interface a client connection object has to provide to be able to send an event based on the id of a client to this client

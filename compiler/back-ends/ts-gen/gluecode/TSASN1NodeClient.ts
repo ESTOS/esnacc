@@ -8,7 +8,8 @@
 import { TSASN1Client } from "./TSASN1Client";
 import fetch, { RequestInit as FetchInit } from "node-fetch";
 import WebSocket from "ws";
-import { EASN1TransportEncoding, ELogSeverity, IDualWebSocket, IDualWebSocketMessageEvent } from "./TSROSEBase";
+import { ELogSeverity, IDualWebSocket, IDualWebSocketMessageEvent } from "./TSROSEBase";
+import { EASN1TransportEncoding } from "./TSInvokeContext";
 import { ASN1ClassInstanceType } from "./TSASN1Base";
 
 /**

@@ -14,7 +14,8 @@
 #define TS_SNACCROSE_CONVERTER			1008
 #define TS_OPTIONALPARAM_CONVERTER		1009
 #define TS_DEPRECATED_CALLBACK			1010
-#define DELPHI_ASN1_TYPES				1011
+#define TS_INVOKE_CONTEXT				1011
+#define DELPHI_ASN1_TYPES				1012
 
 // Next default values for new objects
 //
