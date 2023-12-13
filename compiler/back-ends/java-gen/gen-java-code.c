@@ -273,9 +273,7 @@ static void PrintSeqJavaDataSequenceOf(ModuleList* mods, Module* mod, TypeDef* t
 	PrintJavaType(src, mods, mod, td->type->basicType->a.setOf);
 	fprintf(src, "> values){\n\n");
 	fprintf(src, "    super(values);\n");
-	fprintf(src, "  }\n");
-	fprintf(src, "}\n");
-
+	fprintf(src, "  }\n\n");
 	fprintf(src, "  public %s(){\n\n");
 	fprintf(src, "    super();\n");
 	fprintf(src, "  }\n");
