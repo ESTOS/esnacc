@@ -462,7 +462,7 @@ static void PrintJavaEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "  {\n");
 	fprintf(src, "    this.value = value;\n");
 	fprintf(src, "  }\n");
-	fprintf(src, "  private int getValue()\n");
+	fprintf(src, "  public int getValue()\n");
 	fprintf(src, "  {\n");
 	fprintf(src, "    return value;\n");
 	fprintf(src, "  }\n");
