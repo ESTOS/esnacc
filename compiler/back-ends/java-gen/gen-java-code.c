@@ -482,12 +482,12 @@ static void PrintJavaSimpleDef(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "import javax.annotation.Generated;\n\n");
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
 	fprintf(src, "public class %s extends SimpleJavaType<", name);
-	handleDeprecatedSequence(src, mod, td);
 	if (strcmp("AsnSystemTime", name) == 0)
 		fprintf(src, "String");
 	else
 		PrintJavaNativeType(src, td->type);
 	fprintf(src, ">{\n\n");
+	handleDeprecatedSequence(src, mod, td);
 	fprintf(src, "  public %s() {\n", name);
 	fprintf(src, "    super(");
 	if (strcmp("AsnSystemTime", name) == 0)
