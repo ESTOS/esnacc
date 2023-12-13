@@ -438,6 +438,7 @@ static void PrintJavaEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	char* enumValue;
 	CNamedElmt* n;
 	fprintf(src, "package com.estos.asn;\n\n");
+	fprintf(src, "import javax.annotation.Generated;\n\n");
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
 	fprintf(src, "public enum %s{\n", name);
 
