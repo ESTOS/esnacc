@@ -267,14 +267,13 @@ static void PrintSeqJavaDataSequenceOf(ModuleList* mods, Module* mod, TypeDef* t
 	fprintf(src, "public class %s extends ArrayList<", name);
 	PrintJavaType(src, mods, mod, td->type->basicType->a.setOf);
 	fprintf(src, "> {\n");
-	handleDeprecatedSequence(src, mod, td);
 	fprintf(src, "  private static final long serialVersionUID = 1L;\n");
 	fprintf(src, "  public %s(List<", name);
 	PrintJavaType(src, mods, mod, td->type->basicType->a.setOf);
-	fprintf(src, "> values){\n\n");
+	fprintf(src, "> values){\n");
 	fprintf(src, "    super(values);\n");
 	fprintf(src, "  }\n\n");
-	fprintf(src, "  public %s(){\n\n");
+	fprintf(src, "  public %s(){\n");
 	fprintf(src, "    super();\n");
 	fprintf(src, "  }\n");
 	fprintf(src, "}\n");
