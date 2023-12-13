@@ -741,7 +741,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			// Encode the embedded invoke argument
 			const encoded = asn1Encode(encoding, argument, argumentConverter, converterErrors, encodeContext);
 			if (converterErrors.length || !encoded)
-				return new AsnInvokeProblem(InvokeProblemenum.mistypedArgument, "Errors encoding ROSEInvoke.argument");
+				return new AsnInvokeProblem(InvokeProblemenum.mistypedArgument, "Errors encoding ROSEInvoke.argument - " + converterErrors.getDiagnostic());
 			message.invoke.argument = encoded;
 		}
 
@@ -750,7 +750,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			// Encode the ROSE envelop
 			const encoded = asn1Encode(encoding, message, ROSEMessage_Converter, converterErrors, encodeContext);
 			if (converterErrors.length || !encoded)
-				return new AsnInvokeProblem(InvokeProblemenum.mistypedArgument, "Errors encoding ROSEMessage");
+				return new AsnInvokeProblem(InvokeProblemenum.mistypedArgument, "Errors encoding ROSEMessage - " + converterErrors.getDiagnostic());
 			payLoad = encoded;
 		}
 
@@ -827,12 +827,8 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			} else
 				payLoad = ROSEBase.getDebugPayload(roseResult.error);
 		} else if (roseResult instanceof ROSEReject) {
-			const reject = asn1Decode<ROSEReject>(roseResult, ROSEReject_Converter, converterErrors, this.transport.getDecodeContext(), context);
-			if (reject) {
-				this.transport.logReject(method, this, reject, argument, context, false);
-				return handleRoseReject(reject);
-			} else
-				payLoad = ROSEBase.getDebugPayload(roseResult);
+			this.transport.logReject(method, this, roseResult, argument, context, false);
+			return handleRoseReject(roseResult);
 		} else if (roseResult)
 			payLoad = ROSEBase.getDebugPayload(roseResult);
 

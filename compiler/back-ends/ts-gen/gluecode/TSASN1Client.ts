@@ -295,19 +295,26 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				// The result is handled through the regular methods and completed in the background
 				this.logTransport(encoded.logData, "sendInvoke", "out", data.invokeContext);
 				this.fetch(target, requestdata).then(async (response: Response): Promise<boolean> => {
-					try {
-						// We received a result (Will this work for BER encoding as well?)
-						let message: Uint8Array | object;
-						if (encoding === EASN1TransportEncoding.BER) {
-							const buffer = await response.arrayBuffer();
-							message = new Uint8Array(buffer);
-						} else
-							message = (await response.json()) as object;
-						await this.receive(message, receiveInvokeContext);
-					} catch (error) {
-						// We received something else -> create reject object and process it
-						const reject = createInvokeReject(data.invoke, CustomInvokeProblemEnum.missingResponse, "Exception while handling server response");
+					if (response.status < 200 || response.status > 299)
+					{
+						const reject = createInvokeReject(data.invoke, response.status, response.statusText);
 						this.onROSEReject(reject, receiveInvokeContext);
+					}
+					else {
+						try {
+							// We received a result (Will this work for BER encoding as well?)
+							let message: Uint8Array | object;
+							if (encoding === EASN1TransportEncoding.BER) {
+								const buffer = await response.arrayBuffer();
+								message = new Uint8Array(buffer);
+							} else
+								message = (await response.json()) as object;
+							await this.receive(message, receiveInvokeContext);
+						} catch (error) {
+							// We received something else -> create reject object and process it
+							const reject = createInvokeReject(data.invoke, CustomInvokeProblemEnum.missingResponse, "Exception while handling server response");
+							this.onROSEReject(reject, receiveInvokeContext);
+						}
 					}
 					return false; // We are not really interested in this result or handle it
 				}).catch((error) => {
