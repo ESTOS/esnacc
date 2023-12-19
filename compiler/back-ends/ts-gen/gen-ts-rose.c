@@ -103,6 +103,12 @@ void SaveTSROSEFilesToOutputDirectory(const int genRoseStubs, const char* szPath
 		strcat_s(szFileName, _MAX_PATH, "TSDeprecatedCallback.ts");
 		SaveResourceToFile(ETS_DEPRECATED_CALLBACK, szFileName);
 	}
+	{
+		char szFileName[_MAX_PATH] = {0};
+		strcpy_s(szFileName, _MAX_PATH, szPath);
+		strcat_s(szFileName, _MAX_PATH, "TSInvokeContext.ts");
+		SaveResourceToFile(ETS_INVOKE_CONTEXT, szFileName);
+	}
 }
 
 void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)
@@ -112,7 +118,8 @@ void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "// Global imports\n");
 	fprintf(src, "import { I%s, I%s_Handler } from \"./%s_Interface\";\n", mod->ROSEClassName, mod->ROSEClassName, mod->ROSEClassName);
 	fprintf(src, "import { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from \"./SNACCROSE\";\n");
-	fprintf(src, "import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, ISendInvokeContextParams, IInvokeHandler, ELogSeverity, ROSEBase } from \"./TSROSEBase\";\n");
+	fprintf(src, "import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, IInvokeHandler, ELogSeverity, ROSEBase } from \"./TSROSEBase\";\n");
+	fprintf(src, "import { ISendInvokeContextParams } from \"./TSInvokeContext\";\n");
 
 	fprintf(src, "// Local imports\n");
 	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
@@ -295,7 +302,8 @@ void PrintTSROSEImport(FILE* src, ModuleList* mods, Module* mod)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	fprintf(src, "import { IReceiveInvokeContext, ISendInvokeContextParams, AsnInvokeProblem } from \"./TSROSEBase\";\n");
+	fprintf(src, "import { IReceiveInvokeContext, AsnInvokeProblem } from \"./TSROSEBase\";\n");
+	fprintf(src, "import { ISendInvokeContextParams } from \"./TSInvokeContext\";\n");
 	fprintf(src, "// Local imports\n");
 	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
 
