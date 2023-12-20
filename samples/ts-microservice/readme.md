@@ -27,3 +27,7 @@ The server is node based
 *** Call npm start in the console of VSCode
 *** In Run and Debug select the appropriate client and http:// or https:// depending on your configuration
 
+# OpenApi
+This is an example usage of https://www.npmjs.com/package/@estos/esnacc-openapi-sdk?activeTab=readme
+
+Either you start it with `npm run start` that uses the local npm package or you use `npm run serve` that just hosts the schema and index.html and gets the sdk from unpkg

@@ -1,9 +1,9 @@
 // loads environment variables from a .env file into process.env
 import * as dotenv from "dotenv";
 import { IELoggerSettings } from "uclogger";
-import { theConfig, theClientConnectionManager, theLogger, theServer, theLogStorage } from "./globals";
 
 import expressInit from "./express/expressInit";
+import { theConfig, theClientConnectionManager, theLogger, theServer, theLogStorage } from "./globals";
 import { setDecoratorLogger } from "./lib/loggerdecorators";
 
 dotenv.config();

@@ -56,11 +56,39 @@ void PrintTSRootTypes(FILE* src, Module* mod, const char* szSuffix)
 	fprintf(src, "export const moduleName = \"%s%s\";\n", mod->moduleName, szSuffix ? szSuffix : "");
 }
 
-void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConverters, bool bIncludeasn1ts, bool bIncludeTASN1Base)
+void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConverters, bool bIncludeasn1ts, bool bIncludeDeprecatedCallback)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
-	if (bIncludeTASN1Base)
-		fprintf(src, "import { TSASN1Base } from \"./TSASN1Base\";\n");
+	if (bIncludeDeprecatedCallback)
+	{
+		bool bContainsDeprecated = false;
+		TypeDef* td;
+		FOR_EACH_LIST_ELMT(td, mod->typeDefs)
+		{
+			if (IsDeprecatedFlaggedSequence(mod, td->definedName))
+			{
+				bContainsDeprecated = true;
+				break;
+			}
+		}
+		if (!bContainsDeprecated)
+		{
+			ValueDef* vd;
+			FOR_EACH_LIST_ELMT(vd, mod->valueDefs)
+			{
+				if (vd->value->basicValue->choiceId != BASICVALUE_INTEGER)
+					continue;
+				if (vd->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
+					continue;
+				if (vd->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
+					continue;
+				if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
+					bContainsDeprecated = true;
+			}
+		}
+		if (bContainsDeprecated)
+			fprintf(src, "import { TSDeprecatedCallback } from \"./TSDeprecatedCallback\";\n");
+	}
 	if (bIncludeasn1ts)
 		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
 

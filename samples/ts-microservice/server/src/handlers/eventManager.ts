@@ -1,9 +1,10 @@
-import { IASN1Transport, IReceiveInvokeContext } from "../stub/TSROSEBase";
 import { ILogData } from "uclogger";
-import { ENetUC_Common, ENetUC_Event_Manager } from "../stub/types";
+
 import { theClientConnectionManager } from "../globals";
 import { ENetUC_Event_ManagerROSE } from "../stub/ENetUC_Event_ManagerROSE";
 import { IENetUC_Event_ManagerROSE_Invoke_Handler } from "../stub/ENetUC_Event_ManagerROSE_Interface";
+import { IASN1Transport, IReceiveInvokeContext } from "../stub/TSROSEBase";
+import { ENetUC_Common, ENetUC_Event_Manager } from "../stub/types";
 
 /**
  * This module creates events for clients
@@ -14,6 +15,7 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 
 	/**
 	 * Creates the SettingsManager object
+	 *
 	 * @param transport - the transport layer (the TSASN1Server instance that holds the hole ROSE ASN1 stuff)
 	 */
 	public constructor(transport: IASN1Transport) {
@@ -23,6 +25,7 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
+	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
@@ -35,6 +38,7 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 	 * Method that will create some events the server will then dispatch to the clients
 	 *
 	 * It´s not possible to call this method through rest as the client won´t receive these events
+	 *
 	 * @param argument - Argument to create fancy events on the server side
 	 * @param invokeContext - Invokecontext from the asn.1 lib (containing invoke related data)
 	 * @returns - AsnCreateFancyEventsResult on success, AsnRequestError on error or undefined if the function is not implemented
@@ -57,6 +61,7 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 
 	/**
 	 * Sends an event to all currently connected clients
+	 *
 	 * @param counter - the Counter that is increased with every event
 	 * @param left - The amount of eveets that are left to be send
 	 * @param delay - the delay for the next trigger

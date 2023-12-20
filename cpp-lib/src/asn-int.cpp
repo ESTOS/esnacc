@@ -686,7 +686,11 @@ AsnInt::operator AsnIntType() const
 	return iResult;
 }
 
+#ifdef WIN32
 long long AsnInt::GetLongLong() const
+#else
+SJson::Int64 AsnInt::GetLongLong() const
+#endif
 {
 	FUNC("AsnInt::operator long long");
 
@@ -736,6 +740,15 @@ void AsnInt::Set(AsnIntType iIn)
 
 	storeDERInteger(cTmp, sizeof(iIn), (iIn >= 0));
 }
+
+#ifndef WIN32
+#ifndef __APPLE__
+void AsnInt::Set(SJson::Int64 iIn)
+{
+    Set((long long)iIn);
+}
+#endif
+#endif
 
 void AsnInt::Set(long long iIn)
 {

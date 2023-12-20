@@ -6,8 +6,16 @@
 #include <functional>
 #include <string>
 #include <mutex>
+#include <wchar.h>
 #include "SnaccROSEInterfaces.h"
 #include "syncevent.h"
+
+#if defined(_MSC_VER)
+#define HAS_WCHAR_T
+#define LOG_CHARTYPE wchar_t
+#else
+#define LOG_CHARTYPE char
+#endif
 
 namespace SNACC
 {
@@ -64,7 +72,7 @@ class SnaccROSEBase;
 class SnaccRoseOperationLookup
 {
 public:
-	static std::string LookUpName(int iOpID);
+	static const char* LookUpName(int iOpID);
 	static int LookUpID(const char* szOpName);
 	static void RegisterOperation(int iOpID, const char* szOpName, int iInterfaceID);
 	static int LookUpInterfaceID(int iOpID);
@@ -195,7 +203,7 @@ public:
 	 *  bFlushEveryWrite - true flushes every write operation (ideal for debugging), false to let the os decide when to flush
 	 *
 	 *  returns NO_ERROR on success (logfile opened, logfile closed, nothing to do) or an error value */
-	int ConfigureFileLogging(const wchar_t* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
+	int ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
 
 	/* Retrieve the log level - do we need to log something */
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;
@@ -203,10 +211,11 @@ public:
 	/*! Writes JSON encoded log messages to the log file
 		bOutbound = true in case the log entry is related to an outbound message
 		bError = true in case this is an error message
+		szOperationName = the operationName beeing called (if available)
 		szData = the JSON (!) encoded log message. (!) The message is no necessarily null terminated (!)
 		length = length of the szData (as it is not necessarily null terminated respect the length!)
 	*/
-	virtual void PrintJSONToLog(const bool bOutbound, const bool bError, const char* szData, const size_t length = 0);
+	virtual void PrintJSONToLog(const bool bOutbound, const bool bError, const char* szOperationName, const char* szData, const size_t length = 0);
 
 	/* Set the Transport Encoding to be used */
 	bool SetTransportEncoding(const SNACC::TransportEncoding transportEncoding);
@@ -241,23 +250,25 @@ public:
 	 *
 	 * bOutbound = true if the data is sent, or false if it was received
 	 * encoding = the encoding that will be used for sending or was detected while receiving
+	 * szOperationName = name of the operation beeing called (if available)
 	 * szData = the plain transport data, pretty much uninterpreted (only the length heading is removed)
 	 * size = the size of the plain transport data
 	 * pMSg = the asn1 message that was encoded or decoded from the transport payload
 	 * pParsedValue = only for inboud data, the parsed json object (required if the logging shall get pretty printed, saves another parsing of the payload), only available inbound and if the transport is using json
 	 */
-	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue) override;
+	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szOperationName, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue) override;
 
 	/**
 	 * An invoke that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
 	 * pResponse - the response payload (is handled afterwards in the HandleInvokeResult method
-	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
-	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
+	 * szOperationName - the operationName (for logging purposes)
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (donï¿½t care about the result))
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (donï¿½t care about the result))
 	 * pCtx - contextual data for the invoke
 	 */
-	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) override;
+	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, const char* szOperationName, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) override;
 
 	/**
 	 * Handles the response payload of the SendInvoke method. Retrieves the result or error from the response
@@ -275,7 +286,7 @@ public:
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
 	 * pCtx - contextual data for the invoke
 	 */
-	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, SnaccInvokeContext* cxt = nullptr) override;
+	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperationName, SnaccInvokeContext* cxt = nullptr) override;
 
 	/**
 	 * Helper method that retrieves the proper object (result, error, reject) from the repsonse Message
@@ -384,6 +395,15 @@ private:
 
 	// Encodes a value based on the transportencoding and loglevel
 	std::string GetEncoded(const SNACC::TransportEncoding encoding, SNACC::AsnType* pValue, unsigned long* pUlSize = nullptr);
+
+	/**
+	 * The combined method that takes care about encoding and sending an event or invoke
+	 *
+	 * pInvoke - the invoke to send
+	 * szOperationName - the operationName (for logging purposes)
+	 * pCtx - contextual data for the invoke
+	 */
+	long Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, SnaccInvokeContext* pCtx = nullptr);
 };
 
 #endif //_SnaccROSEBase_h_

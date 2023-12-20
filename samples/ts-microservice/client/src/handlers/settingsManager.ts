@@ -41,6 +41,7 @@ export class SettingsManager implements IENetUC_Settings_ManagerROSE_Event_Handl
 	 */
 	public async getSettings(): Promise<{enabled?: boolean, username?: string} | undefined> {
 		const argument = new ENetUC_Settings_Manager.AsnGetSettingsArgument();
+		// const response = await this.server.invoke_asnGetSettings(argument, { bSendRestWithROSEEnvelop: true });
 		const response = await this.server.invoke_asnGetSettings(argument);
 		const result = theClient.getResult(response, ENetUC_Settings_Manager.AsnGetSettingsResult);
 		return {

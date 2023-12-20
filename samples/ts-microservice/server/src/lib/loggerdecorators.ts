@@ -1,4 +1,5 @@
 import { ILogCallback, ILogData, LogLevels } from "uclogger";
+
 import { ILogger, omitForLogging } from "./ILogHelpers";
 
 // By default do not log arguments and results, just the function call and the result
@@ -17,6 +18,7 @@ let gLogDebug: loggerinterface | undefined;
 
 /**
  * Allows to set the logger for the log decorators
+ *
  * @param logger - an ILogger interface that is used within the logger decorators
  */
 export function setDecoratorLogger(logger: ILogger): void {
@@ -54,6 +56,7 @@ interface ILogInternal {
 /**
  * To ease debugging through the decorators we try to move all code into two dedicated methods that allow to step over the code easily
  * This method logs the call and returns a structure that is reused in the logResult
+ *
  * @param level - the logger type that has been called (error, debug etc)
  * @param methodName - the method name calling the logger
  * @param bNoArgumentValues - true if the arguments shall not be logged
@@ -127,6 +130,7 @@ function logCall(level: LogLevels | "special", methodName: string, bNoArgumentVa
 /**
  * To ease debugging through the decorators we try to move all code into two dedicated methods that allow to step over the code easily
  * This method logs the result of the function call
+ *
  * @param logInternal - Internal data that is provided by the logCall
  * @param bNoResultValues - true if the result shall not be logged
  * @param result - the original result of the method beeing logged by the decorator
@@ -178,6 +182,7 @@ function logResult(logInternal: ILogInternal, bNoResultValues: boolean, result: 
 
 /**
  * Method that actually logs one of the log decorators
+ *
  * @param target - Either the constructor function of the class for a static method, or the prototype of the class for an instance method.
  * @param methodName - The methods name
  * @param propertyDesciptor - The Property Descriptor for the method
@@ -198,6 +203,7 @@ function logMethod(
 
 	/**
 	 * The internal decorator function that is called when the function itself is called
+	 *
 	 * @param args - Arguments of the decorator function
 	 * @returns - the methods result property descriptor
 	 */
@@ -216,6 +222,7 @@ function logMethod(
 
 /**
  * Empty decorator if we do not want to log the function call but want to have a decorator for linting
+ *
  * @param target - Either the constructor function of the class for a static method, or the prototype of the class for an instance method.
  * @param methodName - The methods name
  * @param propertyDesciptor - The Property Descriptor for the method
@@ -232,6 +239,7 @@ export function logNothing(
  * Decorator that logs a function call/result and takes care of the embedding class might be a ILogBase derived class (Adds identifiers from these classes)
  * Logs as debug message
  * Log with this level if you need debug information
+ *
  * @param target - Either the constructor function of the class for a static method, or the prototype of the class for an instance method.
  * @param methodName - The methods name
  * @param propertyDesciptor - The Property Descriptor for the method
@@ -246,6 +254,7 @@ export function logDebug(
 
 /**
  * Same as above but optionally no Argument and or no Result in the Log
+ *
  * @param noArgument - do not log the argument of the method
  * @param noResult - do not log the result of the method
  * @returns - The Property Descriptor for the method
@@ -259,6 +268,7 @@ export function logDebugEx(noArgument: boolean, noResult: boolean) {
 /**
  * Decorator that logs a function call/result and takes care of the embedding class might be a ILogBase derived class (Adds identifiers from these classes)
  * Logs as error message
+ *
  * @param target - Either the constructor function of the class for a static method, or the prototype of the class for an instance method.
  * @param methodName - The methods name
  * @param propertyDesciptor - The Property Descriptor for the method
@@ -273,6 +283,7 @@ export function logError(
 
 /**
  * Same as above but optionally no Argument and or no Result in the Log
+ *
  * @param noArgument - do not log the argument of the method
  * @param noResult - do not log the result of the method
  * @returns - The Property Descriptor for the method
@@ -287,6 +298,7 @@ export function logErrorEx(noArgument: boolean, noResult: boolean) {
  * Decorator that logs a function call/result and takes care of the embedding class might be a ILogBase derived class (Adds identifiers from these classes)
  * Logs as info message
  * With info you log things which you want to see in a regular logfile not in debugging mode
+ *
  * @param target - Either the constructor function of the class for a static method, or the prototype of the class for an instance method.
  * @param methodName - The methods name
  * @param propertyDesciptor - The Property Descriptor for the method
@@ -301,6 +313,7 @@ export function logInfo(
 
 /**
  * Same as above but optionally no Argument and or no Result in the Log
+ *
  * @param noArgument - do not log the argument of the method
  * @param noResult - do not log the result of the method
  * @returns - The Property Descriptor for the method
@@ -314,6 +327,7 @@ export function logInfoEx(noArgument: boolean, noResult: boolean) {
 /**
  * Decorator that logs a function call/result and takes care of the embedding class might be a ILogBase derived class (Adds identifiers from these classes)
  * Logs as warn message
+ *
  * @param target - Either the constructor function of the class for a static method, or the prototype of the class for an instance method.
  * @param methodName - The methods name
  * @param propertyDesciptor - The Property Descriptor for the method
@@ -328,6 +342,7 @@ export function logWarn(
 
 /**
  * Same as above but optionally no Argument and or no Result in the Log
+ *
  * @param noArgument - do not log the argument of the method
  * @param noResult - do not log the result of the method
  * @returns - The Property Descriptor for the method
@@ -342,6 +357,7 @@ export function logWarnEx(noArgument: boolean, noResult: boolean) {
  * Decorator that logs a function call/result and takes care of the embedding class might be a ILogBase derived class (Adds identifiers from these classes)
  * Logs as debug message
  * DO NOT use this logger for production, only use it if you want to debug the logging decorator of a method and need a breakpoint for this special method
+ *
  * @param target - Either the constructor function of the class for a static method, or the prototype of the class for an instance method.
  * @param methodName - The methods name
  * @param propertyDesciptor - The Property Descriptor for the method

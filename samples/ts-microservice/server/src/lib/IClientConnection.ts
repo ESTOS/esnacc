@@ -1,8 +1,9 @@
 import { IncomingMessage } from "http";
 import WebSocket from "ws";
+
+import { IClientDetails } from "./IClientDetails";
 import { ILogContextData, ILogContextStaticData } from "../singletons/asyncLocalStorage";
 import { IASN1ClientConnection } from "../stub/TSASN1Server";
-import { IClientDetails } from "./IClientDetails";
 
 /**
  * Custom Invoke Data we add to the receive invoke context as customData (void*)
@@ -43,6 +44,7 @@ export interface IClientConnectionNotify {
 
 	/**
 	 * Notifies that the client connection has a new rtt (round trip time value)
+	 *
 	 * @param con - the affected client connection
 	 * @param rtt - the new round trip time in msec
 	 */
@@ -52,12 +54,14 @@ export interface IClientConnectionNotify {
 	 * Notifies that a client is disconnecting from the server
 	 * The notify has a slightly different name than the IClientConnectionManagerNotify as this event comes prior to the on_ClientDisconnected
 	 * While this notify is processed the client is still in the list of connections in the clientConnectionManager
+	 *
 	 * @param con - the connected client connection object
 	 */
 	on_ClientDisconnecting?(con: IClientConnection): void;
 
 	/**
 	 * Notifies that a client timed out in sending a keepalive to the server
+	 *
 	 * @param con - the connected client connection object
 	 */
 	on_ClientKeepAliveTimedOut?(con: IClientConnection): void;
@@ -72,11 +76,13 @@ export interface IClientConnectionManagerNotify {
 
 	/**
 	 * Notifies that a client connected the server
+	 *
 	 * @param con - the connected client connection object
 	 */
 	on_ClientConnected?(con: IClientConnection): void;
 	/**
 	 * Notifies that a client disconnected from the server
+	 *
 	 * @param con - the connected client connection object
 	 */
 	on_ClientDisconnected?(con: IClientConnection): void;

@@ -112,7 +112,7 @@ AsnOptionalParam::AsnOptionalParam(const AsnOptionalParam& that)
 	Init();
 	*this = that;
 }
-AsnType* AsnOptionalParam::Clone() const
+AsnOptionalParam* AsnOptionalParam::Clone() const
 {
 	return new AsnOptionalParam(*this);
 }
@@ -318,7 +318,7 @@ void AsnOptionalParamChoice::Clear()
 	} // end of switch
 } // end of Clear()
 
-AsnType* AsnOptionalParamChoice::Clone() const
+AsnOptionalParamChoice* AsnOptionalParamChoice::Clone() const
 {
 	return new AsnOptionalParamChoice(*this);
 }

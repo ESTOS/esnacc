@@ -1,6 +1,7 @@
 {
 	"name": "microservice_client",
 	"version": "1.0.1",
+	"type": "module",
 	"engines": {
 		"npm": ">=9.0.0",
 		"node": ">=18.0.0"
@@ -9,13 +10,14 @@
 	"private": true,
 	"main": "src/sampleclient.js",
 	"scripts": {
-		"build:local": "webpack -p",
-		"start": "webpack-dev-server",
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview",
 		"check": "npx madge --circular --extensions ts ./",
-		"lint": "eslint --cache --fix -c .eslintrc.precommit.js src/**/*.{js,ts,tsx}",
+		"lint": "eslint --cache --fix -c .eslintrc.precommit.cjs src/**/*.{js,ts,tsx}",
 		"lintclear": "del /s .eslintcache",
 		"relint": "run-s lintclear lint",
-		"lintnocache": "eslint --fix -c .eslintrc.precommit.js src/**/*.{js,ts,tsx}",
+		"lintnocache": "eslint --fix -c .eslintrc.precommit.cjs src/**/*.{js,ts,tsx}",
 		"depcheck": "npx depcheck"
 	},
 	"browserslist": [
@@ -27,15 +29,14 @@
 		"not op_mob > 0"
 	],
 	"dependencies": {
-		"@estos/asn1ts": "^3.1.10",
+		"@estos/asn1ts": "^3.1.12",
 		"ts-loader": "^9.4.2",
 		"typescript": "^5.1.6"
 	},
 	"devDependencies": {
 		"@types/node": "^20.3.2",
-		"@typescript-eslint/eslint-plugin": "^5.46.1",
-		"@typescript-eslint/parser": "^5.46.1",
-		"dotenv-webpack": "^8.0.1",
+		"@typescript-eslint/eslint-plugin": "^6.7.2",
+		"@typescript-eslint/parser": "^6.7.2",
 		"eslint": "^8.29.0",
 		"eslint-config-standard": "^17.0.0",
 		"eslint-plugin-compat": "^4.0.2",
@@ -46,8 +47,6 @@
 		"eslint-plugin-standard": "^5.0.0",
 		"eslint-plugin-tsdoc": "^0.2.17",
 		"npm-run-all": "^4.1.5",
-		"webpack": "^5.75.0",
-		"webpack-cli": "^4.10.0",
-		"webpack-dev-server": "^4.11.1"
+		"vite": "^4.4.11"
 	}
 }

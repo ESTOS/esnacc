@@ -1346,11 +1346,11 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 
 			if (pszResult)
 			{
-				fprintf(src, "\tlong lRoseResult = m_pSB->SendInvoke(&InvokeMsg, &pResponseMsg, iTimeout, pCtx);\n");
+				fprintf(src, "\tlong lRoseResult = m_pSB->SendInvoke(&InvokeMsg, &pResponseMsg, \"%s\", iTimeout, pCtx);\n", vd->definedName);
 				fprintf(src, "\tlRoseResult = m_pSB->HandleInvokeResult(lRoseResult, pResponseMsg, result, %s, pCtx);\n", pszError ? "error" : "nullptr");
 			}
 			else
-				fprintf(src, "\tlong lRoseResult = m_pSB->SendEvent(&InvokeMsg);\n");
+				fprintf(src, "\tlong lRoseResult = m_pSB->SendEvent(&InvokeMsg, \"%s\");\n", vd->definedName);
 
 			fprintf(src, "\n\t// prevent auto deletion of argument\n");
 			fprintf(src, "\tInvokeMsg.argument->value = nullptr;\n\n");
@@ -2614,44 +2614,46 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 		fprintf(src, "\t\tos << \" typeName=\\\"%s\\\" type=\\\"CHOICE\\\">\";\n", td->cxxTypeDefInfo->className);
 		fprintf(src, "\t}\n");
 		fprintf(src, "\telse\n");
+		fprintf(src, "\t{\n");
 		fprintf(src, "\t\tos << \"<%s type=\\\"CHOICE\\\">\";\n", td->cxxTypeDefInfo->className);
-		fprintf(src, "\t\tswitch (choiceId)\n");
-		fprintf(src, "\t\t{\n");
+		fprintf(src, "\t}\n");
+		fprintf(src, "\tswitch (choiceId)\n");
+		fprintf(src, "\t{\n");
 
 		FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
 		{
-			fprintf(src, "\t\t\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
+			fprintf(src, "\t\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
 
 			/* value notation so print the choice elmts field name */
 			if (e->type->cxxTypeRefInfo->isPtr)
 			{
-				fprintf(src, "\t\t\t\tif (%s)\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "\t\t\t\t\t%s->PrintXML(os", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\tif (%s)\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\t\t%s->PrintXML(os", e->type->cxxTypeRefInfo->fieldName);
 				if (e->fieldName != NULL)
 					fprintf(src, ",\"%s\");\n", e->fieldName);
 				else
 					fprintf(src, ");\n");
-				fprintf(src, "\t\t\t\telse\n");
-				fprintf(src, "\t\t\t\t{\n");
+				fprintf(src, "\t\t\telse\n");
+				fprintf(src, "\t\t\t{\n");
 
 				if (e->fieldName != NULL)
-					fprintf(src, "\t\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->fieldName, e->fieldName);
+					fprintf(src, "\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->fieldName, e->fieldName);
 				else
-					fprintf(src, "\t\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->fieldName);
+					fprintf(src, "\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->fieldName);
 
-				fprintf(src, "\t\t\t\t}\n");
+				fprintf(src, "\t\t\t}\n");
 			}
 			else
-				fprintf(src, "\t\t\t\t%s.PrintXML(os, \"%s\");\n", e->type->cxxTypeRefInfo->fieldName, e->fieldName);
+				fprintf(src, "\t\t\t%s.PrintXML(os, \"%s\");\n", e->type->cxxTypeRefInfo->fieldName, e->fieldName);
 
-			fprintf(src, "\t\t\tbreak;\n\n");
+			fprintf(src, "\t\tbreak;\n\n");
 		}
-		fprintf(src, "\t\t} // end of switch\n");
-		fprintf(src, "\t\tif (lpszTitle)\n");
-		fprintf(src, "\t\t\tos << \"</\" << lpszTitle << \">\";\n");
-		fprintf(src, "\t\telse\n");
-		fprintf(src, "\t\t\tos << \"</%s>\";\n", td->cxxTypeDefInfo->className);
-		fprintf(src, "\t\t}\n");
+		fprintf(src, "\t} // end of switch\n");
+		fprintf(src, "\tif (lpszTitle)\n");
+		fprintf(src, "\t\tos << \"</\" << lpszTitle << \">\";\n");
+		fprintf(src, "\telse\n");
+		fprintf(src, "\t\tos << \"</%s>\";\n", td->cxxTypeDefInfo->className);
+		fprintf(src, "}\n");
 
 		/* END XML Print capability. */
 		/* ################################################################## */
@@ -3196,8 +3198,8 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 				/* decode Eoc (s) */
 				for (i = elmtLevel - 1; i > 0; i--)
 				{
-					fprintf(src, "\tif (elmtLen%d == INDEFINITE_LEN)\n", i);
-					fprintf(src, "\t\tBDecEoc(_b, seqBytesDecoded);\n\n");
+					fprintf(src, "\t\tif (elmtLen%d == INDEFINITE_LEN)\n", i);
+					fprintf(src, "\t\t\tBDecEoc(_b, seqBytesDecoded);\n\n");
 				}
 
 				/*
@@ -4300,7 +4302,9 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 		fprintf(src, "     os << \" typeName=\\\"%s\\\" type=\\\"SET\\\">\" << std::endl;\n", td->cxxTypeDefInfo->className);
 		fprintf(src, "  }\n");
 		fprintf(src, "  else\n");
+		fprintf(src, "  {\n");
 		fprintf(src, "     os << \"<%s type=\\\"SET\\\">\" << std::endl;\n", td->cxxTypeDefInfo->className);
+		fprintf(src, "  }\n");
 		FOR_EACH_LIST_ELMT(e, set->basicType->a.set)
 		{
 			if (e->type->cxxTypeRefInfo->isPtr)

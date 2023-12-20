@@ -30,9 +30,14 @@
 #include <inttypes.h>
 #include <assert.h>
 
-void PrintTSNativeType(FILE* hdr, enum BasicTypeChoiceId basicTypeChoiseId)
+void PrintTSNativeType(FILE* hdr, BasicType* pBasicType)
 {
-	switch (basicTypeChoiseId)
+	enum BasicTypeChoiceId choiceId = pBasicType->choiceId;
+
+	if (choiceId == BASICTYPE_OCTETCONTAINING && pBasicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+		choiceId = BASICTYPE_UTF8_STR;
+
+	switch (choiceId)
 	{
 		case BASICTYPE_BOOLEAN:
 			fprintf(hdr, "boolean");
@@ -53,7 +58,7 @@ void PrintTSNativeType(FILE* hdr, enum BasicTypeChoiceId basicTypeChoiseId)
 			fprintf(hdr, "object");
 			break;
 		default:
-			snacc_exit("Invalid basicTypeChoiseId %d", basicTypeChoiseId);
+			snacc_exit("Invalid basicTypeChoiseId %d", choiceId);
 	}
 }
 
@@ -82,7 +87,8 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 	}
 	else
 	{
-		enum BasicTypeChoiceId choiceId = t->basicType->choiceId;
+		BasicType* pBasicType = t->basicType;
+		enum BasicTypeChoiceId choiceId = pBasicType->choiceId;
 		if (choiceId == BASICTYPE_IMPORTTYPEREF || choiceId == BASICTYPE_LOCALTYPEREF)
 		{
 			if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
@@ -90,12 +96,18 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 			else if (choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link)
 			{
 				if (IsSimpleType(t->basicType->a.importTypeRef->link->type->basicType->choiceId))
-					choiceId = t->basicType->a.importTypeRef->link->type->basicType->choiceId;
+				{
+					pBasicType = t->basicType->a.importTypeRef->link->type->basicType;
+					choiceId = pBasicType->choiceId;
+				}
 			}
 			else if (choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link)
 			{
 				if (IsSimpleType(t->basicType->a.localTypeRef->link->type->basicType->choiceId))
-					choiceId = t->basicType->a.localTypeRef->link->type->basicType->choiceId;
+				{
+					pBasicType = t->basicType->a.localTypeRef->link->type->basicType;
+					choiceId = pBasicType->choiceId;
+				}
 			}
 			else
 			{
@@ -103,6 +115,9 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 				return;
 			}
 		}
+
+		if (choiceId == BASICTYPE_OCTETCONTAINING && pBasicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+			choiceId = BASICTYPE_UTF8_STR;
 
 		switch (choiceId)
 		{
@@ -148,7 +163,7 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 							fprintf(hdr, "%s.%s.%s", szNameSpace, szConverted, pFirstEnumValue->name);
 						}
 						else
-							fprintf(hdr, "%s.%s.initEmpty()", szNameSpace, szConverted);
+							fprintf(hdr, "%s.%s[\"initEmpty\"].call(0)", szNameSpace, szConverted);
 						free(szConverted);
 					}
 					break;
@@ -160,7 +175,7 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 					if (baseType == BASICTYPE_SEQUENCEOF || baseType == BASICTYPE_SETOF)
 						fprintf(hdr, "new %s()", szConverted);
 					else
-						fprintf(hdr, "%s.initEmpty()", szConverted);
+						fprintf(hdr, "%s[\"initEmpty\"].call(0)", szConverted);
 					free(szConverted);
 				}
 				break;
@@ -176,9 +191,11 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 	}
 }
 
-void PrintTSType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t, int iForceType)
+void PrintTSType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t)
 {
-	enum BasicTypeChoiceId choiceId = t->basicType->choiceId;
+	BasicType* basicType = t->basicType;
+	enum BasicTypeChoiceId choiceId = basicType->choiceId;
+
 	if (choiceId == BASICTYPE_IMPORTTYPEREF || choiceId == BASICTYPE_LOCALTYPEREF)
 	{
 		if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
@@ -186,27 +203,36 @@ void PrintTSType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* pare
 		else if (choiceId == BASICTYPE_IMPORTTYPEREF)
 		{
 			if (IsSimpleType(t->basicType->a.importTypeRef->link->type->basicType->choiceId))
-				choiceId = t->basicType->a.importTypeRef->link->type->basicType->choiceId;
+			{
+				basicType = t->basicType->a.importTypeRef->link->type->basicType;
+				choiceId = basicType->choiceId;
+			}
 		}
 		else if (choiceId == BASICTYPE_LOCALTYPEREF)
 		{
 			if (IsSimpleType(t->basicType->a.localTypeRef->link->type->basicType->choiceId))
-				choiceId = t->basicType->a.localTypeRef->link->type->basicType->choiceId;
+			{
+				basicType = t->basicType->a.localTypeRef->link->type->basicType;
+				choiceId = basicType->choiceId;
+			}
 		}
 	}
+
+	if (choiceId == BASICTYPE_OCTETCONTAINING && basicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+		choiceId = BASICTYPE_UTF8_STR;
 
 	switch (choiceId)
 	{
 		case BASICTYPE_BOOLEAN:
+			fprintf(hdr, ": boolean");
+			break;
 		case BASICTYPE_INTEGER:
 		case BASICTYPE_REAL:
 		case BASICTYPE_ENUMERATED:
+			fprintf(hdr, ": number");
+			break;
 		case BASICTYPE_UTF8_STR:
-			if (iForceType)
-			{
-				fprintf(hdr, ": ");
-				PrintTSNativeType(hdr, choiceId);
-			}
+			fprintf(hdr, ": string");
 			break;
 		case BASICTYPE_OCTETSTRING:
 		case BASICTYPE_OCTETCONTAINING:
@@ -305,7 +331,7 @@ void PrintTSChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 	fprintf(src, "\tpublic constructor(that?: %s) {\n", szConverted);
 	fprintf(src, "\t\tObject.assign(this, that);\n");
 	fprintf(src, "\t}\n\n");
-	fprintf(src, "\tpublic static initEmpty(): %s {\n", szConverted);
+	fprintf(src, "\tprivate static initEmpty(): %s {\n", szConverted);
 	fprintf(src, "\t\treturn new %s(", szConverted);
 	fprintf(src, ");\n\t}\n\n");
 
@@ -364,7 +390,7 @@ void PrintTSChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 			fprintf(src, "public %s?", szConverted2);
 			free(szConverted2);
 		}
-		PrintTSType(src, mods, m, td, choice, e->type, 1);
+		PrintTSType(src, mods, m, td, choice, e->type);
 		fprintf(src, ";");
 	}
 
@@ -421,13 +447,13 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	{
 		asnsequencecomment comment;
 		GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment);
-		fprintf(src, "\t\tTSASN1Base.deprecatedObject(%" PRId64 ", moduleName, this);\n", comment.i64Deprecated);
+		fprintf(src, "\t\tTSDeprecatedCallback.deprecatedObject(%" PRId64 ", moduleName, this);\n", comment.i64Deprecated);
 	}
 	fprintf(src, "\t\tObject.assign(this, that);\n");
 	fprintf(src, "\t}\n\n");
 
 	// and a static initEmpty() method to be able to create an empty object if necessary
-	fprintf(src, "\tpublic static initEmpty(): %s {\n", szConverted);
+	fprintf(src, "\tprivate static initEmpty(): %s {\n", szConverted);
 	fprintf(src, "\t\treturn new %s(", szConverted);
 	if (iMandatoryFields)
 	{
@@ -476,27 +502,22 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		fprintf(src, "\t\t\t\t");
 
 		const bool bOptional = e->type->optional ? true : false;
-		const bool bImplicit = e->type->implicit ? true : false;
+		// 		const bool bImplicit = e->type->implicit ? true : false;
 
 		char szOptionalParam[128] = {0};
 		int iOptionalID = -1;
 		if (bOptional)
 		{
 			iOptionalID = GetContextID(e->type);
-			if (bImplicit && iOptionalID >= 0)
+			if (iOptionalID > -1)
 				sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", idBlock: { optionalID: %i }", iOptionalID);
 			else
-				sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", optional: %s", "true");
+				sprintf_s(szOptionalParam, sizeof(szOptionalParam), "%s", ", optional: true");
 		}
-
-		if (!bImplicit && iOptionalID >= 0)
-			fprintf(src, "new asn1ts.Sequence({ idBlock: { optionalID: %i }, value: [", iOptionalID);
 
 		char* szConverted2 = FixName(e->fieldName);
 		if (IsSimpleType(choiceId))
-		{
 			fprintf(src, "new asn1ts.%s({ name: \"%s\"%s })", GetBERType(e->type->basicType->choiceId), szConverted2, szOptionalParam);
-		}
 		else if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
 		{
 
@@ -523,9 +544,6 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		else
 			snacc_exit("unknown choiceId %d", choiceId);
 		free(szConverted2);
-
-		if (!bImplicit && iOptionalID >= 0)
-			fprintf(src, "] })");
 
 		bFirst = false;
 	}
@@ -577,7 +595,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		else
 			fprintf(src, "!");
 
-		PrintTSType(src, mods, m, td, seq, e->type, 1);
+		PrintTSType(src, mods, m, td, seq, e->type);
 		fprintf(src, ";\n");
 	}
 	// fprintf(src, "\n\t}");
@@ -633,7 +651,7 @@ void PrintTSListClass(FILE* src, TypeDef* td, Type* type, Module* m, ModuleList*
 		case BASICTYPE_UTF8_STR:
 			// fprintf(src, "//  %s [No collections of primitive Types %s]\n", td->cxxTypeDefInfo->className, p_e->type->cxxTypeRefInfo->className);
 			fprintf(src, "export class %s extends Array<", szName);
-			PrintTSNativeType(src, pBase->choiceId);
+			PrintTSNativeType(src, pBase);
 			fprintf(src, "> {\n");
 			break;
 		case BASICTYPE_LOCALTYPEREF:
@@ -707,7 +725,7 @@ void PrintTSimpleDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Ty
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	fprintf(src, "export type %s = ", td->definedName);
-	PrintTSNativeType(src, td->type->basicType->choiceId);
+	PrintTSNativeType(src, td->type->basicType);
 	fprintf(src, ";\n");
 
 	if (td->type->basicType->choiceId == BASICTYPE_INTEGER && td->type->basicType->a.integer->count)
@@ -825,7 +843,7 @@ void PrintTSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int pr
 	PrintTSComments(src, m);
 
 	// Imports
-	PrintTSImports(src, mods, m, false, true, false);
+	PrintTSImports(src, mods, m, false, true, true);
 
 	// Root types
 	PrintTSRootTypes(src, m, "");

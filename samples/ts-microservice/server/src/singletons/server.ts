@@ -1,9 +1,10 @@
-import { TSASN1Server } from "../stub/TSASN1Server";
-import { EASN1TransportEncoding } from "../stub/TSROSEBase";
 import { ILogData } from "uclogger";
+
 import { theConfig } from "../globals";
 import { EventManager } from "../handlers/eventManager";
 import { SettingsManager } from "../handlers/settingsManager";
+import { TSASN1Server } from "../stub/TSASN1Server";
+import { EASN1TransportEncoding } from "../stub/TSROSEBase";
 
 /**
  * Receiver and sender singleton
@@ -30,10 +31,12 @@ export class Server extends TSASN1Server {
 		// The modules hold the rose implementation capsuled as member but use this class as transport layer
 		this.eventManager = new EventManager(this);
 		this.settingsManager = new SettingsManager(this);
+		this.encodeContext.bAddTypes = false;
 	}
 
 	/**
 	 * Gets instance of Server to use as singleton.
+	 *
 	 * @returns - an instance of this class.
 	 */
 	public static getInstance(): Server {
@@ -44,6 +47,7 @@ export class Server extends TSASN1Server {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
+	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public override getLogData(): ILogData {
