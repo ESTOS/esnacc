@@ -490,7 +490,6 @@ static void PrintJavaSimpleDef(ModuleList* mods, Module* mod, TypeDef* td)
 	else
 		PrintJavaNativeType(src, td->type);
 	fprintf(src, ">{\n\n");
-	//handleDeprecatedSequence(src, mod, td);
 	fprintf(src, "  public %s() {\n", name);
 	fprintf(src, "    super(");
 	if (strcmp("AsnSystemTime", name) == 0)
