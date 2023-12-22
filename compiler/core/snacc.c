@@ -191,6 +191,9 @@ int giValidationLevel = 0xffffffff;
 // Write comments to the target files on true (parsing is always enabled)
 int giWriteComments = 0;
 
+// Defines whether we write commonsJS or ESM typescript code
+int genTSESMCode = FALSE;
+
 #ifdef WIN_SNACC /* Deepak: 14/Feb/2003 */
 #define main Win_Snacc_Main
 #endif
@@ -224,9 +227,10 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "  -S   generate Swift code\n");
 	fprintf(fp, "  -j   generate JSON encoders/decoders. Use with -J or -JT.\n");
 	fprintf(fp, "  -J   generate plain JavaScript code. For Java see -RJ.\n");
-	fprintf(fp, "  -JT  generate Javascript - Typescript code.\n");
+	fprintf(fp, "  -JT  generate Typescript CommonJS code.\n");
 	fprintf(fp, "  -JD  generate JSON Documentation files.\n");
 	fprintf(fp, "  -JO  generate OpenApi Documentation files.\n");
+	fprintf(fp, "  -JTE  generate Typescript ES Module code.\n");
 	fprintf(fp, "  -T   <filename> write a type table file for the ASN.1 modules to file filename\n");
 	fprintf(fp, "  -O   <filename> writes the type table file in the original (<1.3b2) format\n");
 	fprintf(fp, "  -O   <filename> writes the type table file in the original (<1.3b2) format\n");
@@ -354,7 +358,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	int genSwiftCode = FALSE;
 	int genJSCode = FALSE;
 	int genOpenApiCode = FALSE;
-	int genTSCode = FALSE;
+	int genTSCommonJSCode = FALSE;
 	int genJsonDocCode = FALSE;
 	long longJmpVal = -100;
 	int novolatilefuncs = FALSE;
@@ -550,7 +554,9 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					if (strcmp(argument + 1, "JD") == 0)
 						genJsonDocCode = TRUE;
 					else if (strcmp(argument + 1, "JT") == 0)
-						genTSCode = TRUE;
+						genTSCommonJSCode = TRUE;
+					else if (strcmp(argument + 1, "JTE") == 0)
+						genTSESMCode = TRUE;
 					else if (strcmp(argument + 1, "JO") == 0)
 						genOpenApiCode = TRUE;
 					else
@@ -808,14 +814,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		genPrintCode = TRUE;
 		genPrintCodeXML = FALSE;
 	}
-	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCode + genDelphiCode + genOpenApiCode > 1 + genJsonDocCode)
+	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCommonJSCode + genTSESMCode + genDelphiCode + genOpenApiCode > 1 + genJsonDocCode)
 	{
 		fprintf(stderr, "%s: ERROR---Choose only one of the -c -C or -D or -T or -RCS or -RJ or -OA or -J or -JD options\n", argv[0]);
 		Usage(argv[0], stderr);
 		return 1;
 	}
 
-	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCode && !genJsonDocCode && !genOpenApiCode)
+	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCommonJSCode && !genTSESMCode && !genJsonDocCode && !genOpenApiCode)
 		genCCode = TRUE; /* default to C if neither specified */
 
 	/* Set the encoding rules to BER if not set */
@@ -988,7 +994,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	if (genCCode)
 		FillCTypeInfo(&cRulesG, allMods);
 
-	else if (genCxxCode || genJAVACode || genCSCode || genSwiftCode || genJSCode || genDelphiCode || genTSCode || genJsonDocCode || genOpenApiCode)
+	else if (genCxxCode || genJAVACode || genCSCode || genSwiftCode || genJSCode || genDelphiCode || genTSCommonJSCode || genTSESMCode || genJsonDocCode || genOpenApiCode)
 		FillCxxTypeInfo(&cxxRulesG, allMods);
 
 #if IDL
@@ -1054,7 +1060,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	if (genOpenApiCode)
 		GenOpenApiCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
 
-	if (genTSCode)
+	if (genTSCommonJSCode || genTSESMCode)
 		GenTSCode(allMods, longJmpVal, genTypeCode, genValueCode, genJSONEncDec, genTSRoseStubs, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
 
 	if (genJsonDocCode)

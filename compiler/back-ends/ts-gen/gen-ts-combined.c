@@ -2,6 +2,7 @@
 #include "../../core/snacc-util.h"
 #include "../str-util.h"
 #include "../structure-util.h"
+#include "../../../snacc.h"
 #include <assert.h>
 #include <string.h>
 
@@ -87,10 +88,10 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 			}
 		}
 		if (bContainsDeprecated)
-			fprintf(src, "import { TSDeprecatedCallback } from \"./TSDeprecatedCallback\";\n");
+			fprintf(src, "import { TSDeprecatedCallback } from \"./TSDeprecatedCallback%s\";\n", getCommonJSFileExtension());
 	}
 	if (bIncludeasn1ts)
-		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
+		fprintf(src, "import * as asn1ts from \"@estos/asn1ts%s\";\n", getCommonJSFileExtension());
 
 	if (mod->imports)
 	{
@@ -107,7 +108,7 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 				if (strstr(szAlreadyAdded, szNameSpace) == NULL)
 				{
 					strcat_s(szAlreadyAdded, 4096, szNameSpace);
-					fprintf(src, "import * as %s from \"./%s\";\n", szNameSpace, referencedModule->moduleName);
+					fprintf(src, "import * as %s from \"./%s%s\";\n", szNameSpace, referencedModule->moduleName, getCommonJSFileExtension());
 				}
 			}
 		}
@@ -125,7 +126,7 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 					{
 						strcat_s(szAlreadyAdded, 4096, szNameSpace);
 						impMod->moduleRef = referencedModule;
-						fprintf(src, "import * as %s_Converter from \"./%s_Converter\";\n", szNameSpace, referencedModule->moduleName);
+						fprintf(src, "import * as %s_Converter from \"./%s_Converter%s\";\n", szNameSpace, referencedModule->moduleName, getCommonJSFileExtension());
 					}
 				}
 			}
@@ -193,4 +194,12 @@ int GetContextID(struct Type* type)
 		}
 	}
 	return iResult;
+}
+
+const char* getCommonJSFileExtension()
+{
+	if (genTSESMCode)
+		return ".js";
+	else
+		return "";
 }
