@@ -177,9 +177,6 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 		fprintf(src, "\t\t}\n\n");
 	}
 
-	fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\"))\n", szTypeName);
-	fprintf(src, "\t\t\treturn result;\n\n");
-
 	free(szConverted);
 }
 
@@ -421,9 +418,6 @@ void Print_BER_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	}
 	fprintf(src, "\t\telse\n");
 	fprintf(src, "\t\t\terrors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, newContext.context, \"property missing\"));\n");
-
-	fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\"))\n", szConverted);
-	fprintf(src, "\t\t\treturn t;\n");
 
 	free(szConverted);
 }
@@ -944,7 +938,7 @@ void Print_BER_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 	if (iLines)
 	{
 		// If the validation succeeded we assign them to the asn1 object
-		fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\")) {\n", td->definedName);
+		fprintf(src, "\t\tif (!errors.hasNewErrors()) {\n");
 		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 		{
 			if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
@@ -953,13 +947,9 @@ void Print_BER_EncoderSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 			enum BasicTypeChoiceId type = TSResolveImportedType(e);
 			Print_BER_EncoderAssignProperty(src, mods, m, type, e, "\t\t\t");
 		}
-		fprintf(src, "\t\t\treturn result;\n");
 		fprintf(src, "\t\t}\n");
-
 		free(szConverted);
 	}
-	else
-		fprintf(src, "\n\t\treturn result;\n");
 }
 
 void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedType* type, BasicType* pBasicType, const char* szIndent)
@@ -1196,11 +1186,8 @@ void Print_BER_EncoderImportTypeRef(FILE* src, ModuleList* mods, Module* m, Type
 	const char* szNameSpace = GetNameSpace(mod);
 
 	fprintf(src, "\t\tconst v = %s_Converter.%s_Converter.toBER(s, errors, newContext, name, optional);\n", szNameSpace, szElementName);
-	fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\")) {\n", szElementName);
-	fprintf(src, "\t\t\tif (v)\n");
-	fprintf(src, "\t\t\t\tt.push(v);\n");
-	fprintf(src, "\t\t\treturn result;\n");
-	fprintf(src, "\t\t}\n");
+	fprintf(src, "\t\tif (v && !errors.hasNewErrors())\n");
+	fprintf(src, "\t\t\tt.push(v);\n");
 }
 
 void Print_JSON_DecoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* seq, int novolatilefuncs, const char* szIndent)
@@ -1228,11 +1215,8 @@ void Print_BER_EncoderLocalTypeRef(FILE* src, ModuleList* mods, Module* m, TypeD
 	const char* szElementName = td->type->basicType->a.importTypeRef->link->definedName;
 
 	fprintf(src, "\t\tconst v = %s_Converter.toBER(s, errors, newContext, name, optional);\n", szElementName);
-	fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\")) {\n", szElementName);
-	fprintf(src, "\t\t\tif (v)\n");
-	fprintf(src, "\t\t\t\tt.push(v);\n");
-	fprintf(src, "\t\t\treturn result;\n");
-	fprintf(src, "\t\t}\n");
+	fprintf(src, "\t\tif (v && !errors.hasNewErrors())\n");
+	fprintf(src, "\t\t\tt.push(v);\n");
 }
 
 void Print_JSON_EncoderCodeStructuredType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs)
@@ -1410,7 +1394,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 
 			fprintf(src, "\n\t\tif (errors.validateResult(newContext, \"%s\"))\n", td->definedName);
 			fprintf(src, "\t\t\treturn t;\n\n");
-			fprintf(src, "\t\treturn undefined;\n\n");
+			fprintf(src, "\t\treturn undefined;\n");
 			fprintf(src, "\t}\n");
 		}
 		if (printDecoders)
@@ -1459,7 +1443,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 				fprintf(src, "\t\t\t}\n");
 			fprintf(src, "\t\t}\n");
 
-			fprintf(src, "\t\tif (errors.validateResult(newContext, \"%s\"))\n", td->definedName);
+			fprintf(src, "\n\t\tif (errors.validateResult(newContext, \"%s\"))\n", td->definedName);
 			fprintf(src, "\t\t\treturn t;\n\n");
 
 			fprintf(src, "\t\treturn undefined;\n");
@@ -1493,7 +1477,10 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 
 			Print_BER_EncoderCodeStructuredType(src, mods, m, td, novolatilefuncs);
 
+			fprintf(src, "\n\t\tif (errors.validateResult(newContext, \"%s\"))\n", td->definedName);
+			fprintf(src, "\t\t\treturn result;\n\n");
 			fprintf(src, "\t\treturn undefined;\n");
+
 			fprintf(src, "\t}\n");
 		}
 		if (printDecoders)
