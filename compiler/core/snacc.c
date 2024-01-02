@@ -1951,9 +1951,9 @@ void GenTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues
 			char* szModName = strings[iCount];
 			if (!szModName)
 				break;
-			fprintf(typesFile, "export * as %s from \"./%s\";\n", szModName, szModName);
+			fprintf(typesFile, "export * as %s from \"./%s%s\";\n", szModName, szModName, getCommonJSFileExtension());
 			if (genJSONEncDec)
-				fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter\";\n", szModName, szModName);
+				fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter%s\";\n", szModName, szModName, getCommonJSFileExtension());
 			free(szModName);
 		}
 

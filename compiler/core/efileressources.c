@@ -61,7 +61,7 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 			if (genTSESMCode)
 			{
 				const char* szInsert = ".js\";\r\n";
-				int iInsertLen = strlen(szInsert);
+				size_t iInsertLen = strlen(szInsert);
 
 				while (buffer && buffer < szLastElement)
 				{
@@ -70,7 +70,7 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 						szLine = buffer;
 					size_t lineLength = szLine - buffer + 1;
 					// Reserve memory for an optional .js addon + 0 byte
-					const int iBufferSize = lineLength + 4;
+					const size_t iBufferSize = lineLength + 4;
 					char* szBuffer = malloc(iBufferSize);
 					memset(szBuffer, 0x00, iBufferSize);
 					memcpy(szBuffer, buffer, lineLength);
@@ -79,7 +79,7 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 					if (strstr(szBuffer, "import") == szBuffer && strstr(szBuffer, "from \"."))
 					{
 						// We have an import statement, we now need to touch the filename
-						const char* szEnd = strstr(szBuffer, "\";");
+						char* szEnd = strstr(szBuffer, "\";");
 						if (szEnd)
 						{
 							lineLength += 3;

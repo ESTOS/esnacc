@@ -91,7 +91,7 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 			fprintf(src, "import { TSDeprecatedCallback } from \"./TSDeprecatedCallback%s\";\n", getCommonJSFileExtension());
 	}
 	if (bIncludeasn1ts)
-		fprintf(src, "import * as asn1ts from \"@estos/asn1ts%s\";\n", getCommonJSFileExtension());
+		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
 
 	if (mod->imports)
 	{
