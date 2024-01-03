@@ -123,7 +123,7 @@ int yyparse();
 void CreateNames(ModuleList* allMods);
 static int GenCCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genPrinters, int genValues, int genFree);
 
-static void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta COMMA MetaPDU* meta_pdus COMMA) if_TCL(int genTcl COMMA) int novolatilefuncs, int genROSEDecoders);
+static void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta COMMA MetaPDU* meta_pdus COMMA) if_TCL(int genTcl COMMA) int novolatilefuncs, int genROSEDecoders, const int genCxxCode_EnumClasses);
 
 static void GenSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, int novolatilefuncs, int genROSEDecoders);
 
@@ -223,6 +223,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "            <ASN.1 file list>\n\n");
 	fprintf(fp, "  -c   generate C encoders and decoders (default)\n");
 	fprintf(fp, "  -C   generate C++ encoders and decoders\n");
+	fprintf(fp, "  -Ce  Uses dedicated enum classes for enums instead of burried enums inside a class\n");
 	fprintf(fp, "  -Ch  <path> header prefix for the generated cpp files (defaults to cpp-lib/include/ but you may e.g. define libs/snacclib5/cpp-lib/include/)\n");
 	fprintf(fp, "  -S   generate Swift code\n");
 	fprintf(fp, "  -j   generate JSON encoders/decoders. Use with -J or -JT.\n");
@@ -351,6 +352,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 #endif
 	int genCCode = FALSE; /* defaults to C if neither specified */
 	int genCxxCode = FALSE;
+	int genCxxCode_EnumClasses = FALSE;
 	int genIDLCode = FALSE;
 	int genJAVACode = FALSE;   // JAVA
 	int genDelphiCode = FALSE; // Delphi
@@ -540,6 +542,8 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						if (szCppHeaderIncludePath == 0 || strlen(szCppHeaderIncludePath) == 0)
 							goto error;
 					}
+					else if (strcmp(argument + 1, "Ce") == 0)
+						genCxxCode_EnumClasses = TRUE;
 					else if (strcmp(argument + 1, "C") == 0)
 						genCxxCode = TRUE;
 					else
@@ -1049,7 +1053,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		GenCCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genPrintCode, genFreeCode);
 
 	if (genCxxCode)
-		GenCxxCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, szCppHeaderIncludePath, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
+		GenCxxCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, szCppHeaderIncludePath, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders, genCxxCode_EnumClasses);
 
 	if (genSwiftCode)
 		GenSwiftCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
@@ -1419,7 +1423,7 @@ void GenCSCode(ModuleList* allMods, int genROSECSDecoders)
  * gets 2 source files, one .h for data struct and prototypes, the other .C
  * for the enc/dec/print/free routine code.
  */
-void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta _AND_) if_META(MetaPDU* meta_pdus _AND_) if_TCL(int genTcl _AND_) int novolatilefuncs, int genROSEDecoders)
+void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta _AND_) if_META(MetaPDU* meta_pdus _AND_) if_TCL(int genTcl _AND_) int novolatilefuncs, int genROSEDecoders, const int genCxxCode_EnumClasses)
 {
 	Module* currMod;
 	AsnListNode* saveMods;
@@ -1519,7 +1523,7 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 			else
 			{
 				saveMods = allMods->curr;
-				PrintCxxCode(srcFilePtr, hdrFilePtr, if_META(genMeta COMMA & meta COMMA meta_pdus COMMA) allMods, currMod, &cxxRulesG, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, genPrinters, genPrintersXML, genFree, if_TCL(genTcl COMMA) novolatilefuncs, szCppHeaderIncludePath);
+				PrintCxxCode(srcFilePtr, hdrFilePtr, if_META(genMeta COMMA & meta COMMA meta_pdus COMMA) allMods, currMod, &cxxRulesG, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, genPrinters, genPrintersXML, genFree, if_TCL(genTcl COMMA) novolatilefuncs, szCppHeaderIncludePath, genCxxCode_EnumClasses);
 				allMods->curr = saveMods;
 				fclose(hdrFilePtr);
 				fclose(srcFilePtr);

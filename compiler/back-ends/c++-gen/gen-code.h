@@ -20,7 +20,7 @@
 #include "rules.h"
 #include "../../core/snacc-util.h"
 
-void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle genMeta COMMA const Meta* meta COMMA MetaPDU* metapdus COMMA) ModuleList* mods, Module* m, CxxRules* r, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int printPrinters, int printPrintersXML, int printFree, if_TCL(int printTcl COMMA) int novolatilefuncs, const char* szCppHeaderIncludePath);
+void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle genMeta COMMA const Meta* meta COMMA MetaPDU* metapdus COMMA) ModuleList* mods, Module* m, CxxRules* r, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int printPrinters, int printPrintersXML, int printFree, if_TCL(int printTcl COMMA) int novolatilefuncs, const char* szCppHeaderIncludePath, const int genCxxCode_EnumClasses);
 
 // ROSE Protocol Stub (V2) - ste 22.10.2014
 void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, Module* m, CxxRules* r, const char* szCppHeaderIncludePath);

@@ -113,13 +113,19 @@ static Module* GetImportModuleRef(char* Impname, ModuleList* mods)
 	return currMod;
 }
 
-void PrintClassHeader(FILE* hdr, Module* m, TypeDef* td, const char* szBaseClass)
+void PrintClassHeader(FILE* hdr, Module* m, TypeDef* td, const char* szBaseClass, const int genCxxCode_EnumClasses)
 {
 	printSequenceComment(hdr, m, td, COMMENTSTYLE_CPP);
 	fprintf(hdr, "class ");
 	if (bVDAGlobalDLLExport)
 		fprintf(hdr, "%s ", bVDAGlobalDLLExport);
-	fprintf(hdr, "%s : public %s\n", td->cxxTypeDefInfo->className, szBaseClass);
+	if (td->type->basicType->choiceId == BASICTYPE_ENUMERATED)
+		if (genCxxCode_EnumClasses)
+			fprintf(hdr, "%s : public %s<E%s>\n", td->cxxTypeDefInfo->className, szBaseClass, td->cxxTypeDefInfo->className);
+		else
+			fprintf(hdr, "%s : public %s<int>\n", td->cxxTypeDefInfo->className, szBaseClass);
+	else
+		fprintf(hdr, "%s : public %s\n", td->cxxTypeDefInfo->className, szBaseClass);
 	fprintf(hdr, "{\n");
 	fprintf(hdr, "public:\n");
 }
@@ -745,7 +751,7 @@ static void PrintAssignmentOperator(FILE* hdr, FILE* src, Module* m, Type* t, Ty
  *
  * 12/92 MS - added overloaded "=" ops for string types.
  */
-static void PrintDerivedConstructors(FILE* hdr, FILE* src, CxxRules* r, TypeDef* td)
+static void PrintDerivedConstructors(FILE* hdr, FILE* src, CxxRules* r, TypeDef* td, const int genCxxCode_EnumClasses)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
@@ -783,6 +789,31 @@ static void PrintDerivedConstructors(FILE* hdr, FILE* src, CxxRules* r, TypeDef*
 			break;
 
 		case BASICTYPE_ENUMERATED:
+			fprintf(hdr, "\t%s();\n", derivedClassName);
+			if (genCxxCode_EnumClasses)
+			{
+				CNamedElmts* namedElements = td->type->cxxTypeRefInfo->namedElmts;
+				CNamedElmt* n = namedElements->first->data;
+				fprintf(src, "%s::%s(): %s(E%s::%s)\n", derivedClassName, derivedClassName, baseClassName, derivedClassName, n->name);
+			}
+			else
+				fprintf(src, "%s::%s(): %s(0)\n", derivedClassName, derivedClassName, baseClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
+			if (genCxxCode_EnumClasses)
+			{
+				fprintf(hdr, "\t%s(const E%s i);\n", derivedClassName, derivedClassName);
+				fprintf(src, "%s::%s(const E%s i): %s(i)\n", derivedClassName, derivedClassName, derivedClassName, baseClassName);
+			}
+			else
+			{
+				fprintf(hdr, "\t%s(const int i);\n", derivedClassName);
+				fprintf(src, "%s::%s(const int i): %s(i)\n", derivedClassName, derivedClassName, baseClassName);
+			}
+			fprintf(src, "{\n");
+			fprintf(src, "}\n\n");
+			break;
+
 		case BASICTYPE_INTEGER:
 			fprintf(hdr, "\t%s();\n", derivedClassName);
 			fprintf(src, "%s::%s(): %s()\n", derivedClassName, derivedClassName, baseClassName);
@@ -1368,7 +1399,7 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
  * prints typedef or new class given an ASN.1  type def of a primitive type
  * or typeref.  Uses inheritance to cover re-tagging and named elmts.
  */
-static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, TypeDef* td)
+static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, TypeDef* td, const int genCxxCode_EnumClasses)
 {
 	if (IsDeprecatedNoOutputSequence(m, td->type->cxxTypeRefInfo->className))
 		return;
@@ -1386,6 +1417,8 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 	int elmtLevel;
 	enum BasicTypeChoiceId typeId;
 
+	int isNewType = IsNewType(td->type);
+
 	// fprintf(hdr, "/* ");
 	// SpecialPrintType (hdr, td, td->type);
 	// fprintf(hdr, " */\n");
@@ -1397,16 +1430,40 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 	 *  eg Foo ::= INTEGER { one (1), two (2), three (3) }
 	 */
 
-	if (IsNewType(td->type))
+	if (isNewType)
 	{
-		int hasNamedElmts;
+		bool bEnumClasses = genCxxCode_EnumClasses && td->type->basicType->choiceId == BASICTYPE_ENUMERATED;
 
-		PrintClassHeader(hdr, m, td, td->type->cxxTypeRefInfo->className);
+		int count = 0;
+		if (bEnumClasses)
+		{
+			// Use enum values as enum class outside the class holding the value
+			printSequenceComment(hdr, m, td, COMMENTSTYLE_CPP);
+			fprintf(hdr, "enum class E%s\n", td->cxxTypeDefInfo->className);
+			fprintf(hdr, "{\n");
+			FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
+			{
+				if (IsDeprecatedNoOutputMember(m, td, n->name))
+					continue;
+
+				printMemberComment(hdr, m, td, n->name, "\t", COMMENTSTYLE_CPP);
+				fprintf(hdr, "\t%s = %d", n->name, n->value);
+				if (n != (CNamedElmt*)LAST_LIST_ELMT(td->type->cxxTypeRefInfo->namedElmts))
+					fprintf(hdr, ",\n");
+				else
+					fprintf(hdr, "\n");
+
+				count++;
+			}
+			fprintf(hdr, "};\n");
+		}
+
+		PrintClassHeader(hdr, m, td, td->type->cxxTypeRefInfo->className, genCxxCode_EnumClasses);
 
 		/*
 		 * must explicitly call constructors for base class
 		 */
-		PrintDerivedConstructors(hdr, src, r, td);
+		PrintDerivedConstructors(hdr, src, r, td, genCxxCode_EnumClasses);
 
 		/* do named elmts enum if any */
 		/* for types with named elements, inherit from the base
@@ -1436,27 +1493,30 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 		 * (must 'inherit' constructors explicitly)
 		 */
 
-		if ((hasNamedElmts = HasNamedElmts(td->type)) != 0)
+		int hasNamedElmts = HasNamedElmts(td->type);
+		if (hasNamedElmts)
 		{
-			int count = 0;
-
-			fprintf(hdr, "\n\tenum %senum\n", td->cxxTypeDefInfo->className);
-			fprintf(hdr, "\t{\n");
-			FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
+			if (!bEnumClasses)
 			{
-				if (IsDeprecatedNoOutputMember(m, td, n->name))
-					continue;
+				// Use embedded enum values inside the class that stores the enum value
+				fprintf(hdr, "\n\tenum %senum\n", td->cxxTypeDefInfo->className);
+				fprintf(hdr, "\t{\n");
+				FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
+				{
+					if (IsDeprecatedNoOutputMember(m, td, n->name))
+						continue;
 
-				printMemberComment(hdr, m, td, n->name, "\t\t", COMMENTSTYLE_CPP);
-				fprintf(hdr, "\t\t%s = %d", n->name, n->value);
-				if (n != (CNamedElmt*)LAST_LIST_ELMT(td->type->cxxTypeRefInfo->namedElmts))
-					fprintf(hdr, ",\n");
-				else
-					fprintf(hdr, "\n");
+					printMemberComment(hdr, m, td, n->name, "\t\t", COMMENTSTYLE_CPP);
+					fprintf(hdr, "\t\t%s = %d", n->name, n->value);
+					if (n != (CNamedElmt*)LAST_LIST_ELMT(td->type->cxxTypeRefInfo->namedElmts))
+						fprintf(hdr, ",\n");
+					else
+						fprintf(hdr, "\n");
 
-				count++;
+					count++;
+				}
+				fprintf(hdr, "\t};\n");
 			}
-			fprintf(hdr, "\t};\n");
 
 			if (td->type->basicType->choiceId == BASICTYPE_BITSTRING)
 			{
@@ -2500,7 +2560,7 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 	if (gAlternateNamespaceString == 0 && (strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParam") == 0 || strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParamChoice") == 0))
 		return;
 
-	PrintClassHeader(hdr, m, td, baseClassesG);
+	PrintClassHeader(hdr, m, td, baseClassesG, 0);
 
 	/* write out choiceId enum type */
 	NamedType* e = NULL;
@@ -3682,7 +3742,7 @@ static void PrintCxxSeqDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	if (gAlternateNamespaceString == 0 && (strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParam") == 0 || strcmp(td->cxxTypeDefInfo->className, "AsnOptionalParameters") == 0))
 		return;
 
-	PrintClassHeader(hdr, m, td, baseClassesG);
+	PrintClassHeader(hdr, m, td, baseClassesG, 0);
 
 #if META
 	if (printMetaG)
@@ -3760,7 +3820,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	NamedType** pSetElementNamedType = NULL;
 	int extensionAdditions = FALSE;
 
-	PrintClassHeader(hdr, m, td, baseClassesG);
+	PrintClassHeader(hdr, m, td, baseClassesG, 0);
 	PrintMemberAttributes(hdr, src, r, td, mods, m, set);
 
 #if META
@@ -4465,7 +4525,7 @@ static void PrintCxxAnyDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 	fprintf(hdr, "class %s : public %s {};\n\n", td->cxxTypeDefInfo->className, td->type->cxxTypeRefInfo->className);
 } /* PrintCxxAnyDefCode */
 
-static void PrintCxxTypeDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m, CxxRules* r, TypeDef* td, int novolatilefuncs)
+static void PrintCxxTypeDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m, CxxRules* r, TypeDef* td, int novolatilefuncs, const int genCxxCode_EnumClasses)
 {
 	switch (td->type->basicType->choiceId)
 	{
@@ -4494,7 +4554,7 @@ static void PrintCxxTypeDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* 
 		case BASICTYPE_OBJECTDESCRIPTOR: /* 33 tag 7 */
 		case BASICTYPE_VIDEOTEX_STR:	 /* 34 tag 21 */
 		case BASICTYPE_T61_STR:			 /* 35 tag 20 */
-			PrintCxxSimpleDef(hdr, src, m, r, td);
+			PrintCxxSimpleDef(hdr, src, m, r, td, genCxxCode_EnumClasses);
 			break;
 		case BASICTYPE_SEQUENCEOF: /* list types */
 		case BASICTYPE_SETOF:
@@ -4506,7 +4566,7 @@ static void PrintCxxTypeDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* 
 			 * if this type has been re-tagged then
 			 * must create new class instead of using a typedef
 			 */
-			PrintCxxSimpleDef(hdr, src, m, r, td);
+			PrintCxxSimpleDef(hdr, src, m, r, td, genCxxCode_EnumClasses);
 			break;
 		case BASICTYPE_ANYDEFINEDBY: /* ANY types */
 		case BASICTYPE_ANY:
@@ -4819,7 +4879,7 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 
 } /* PrintROSECode */
 
-void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) if_META(const Meta* meta _AND_) if_META(MetaPDU* meta_pdus _AND_) ModuleList* mods, Module* m, CxxRules* r, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int printPrinters, int printPrintersXML, int printFree if_TCL(_AND_ int printTcl), int novolatilefuncs, const char* szCppHeaderIncludePath)
+void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) if_META(const Meta* meta _AND_) if_META(MetaPDU* meta_pdus _AND_) ModuleList* mods, Module* m, CxxRules* r, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int printPrinters, int printPrintersXML, int printFree if_TCL(_AND_ int printTcl), int novolatilefuncs, const char* szCppHeaderIncludePath, const int genCxxCode_EnumClasses)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
@@ -5071,7 +5131,7 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 	PrintCxxAnyCode(src, hdr, r, mods, m);
 
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
-	PrintCxxTypeDefCode(src, hdr, mods, m, r, td, novolatilefuncs);
+	PrintCxxTypeDefCode(src, hdr, mods, m, r, td, novolatilefuncs, genCxxCode_EnumClasses);
 
 	/* 7-09-2001 Pierce Leonberger
 	 */
@@ -5931,7 +5991,7 @@ void PrintCxxSimpleDefMeta_2(FILE* hdr, FILE* src, TypeDef* td, int hasNamedElmt
 	fprintf(hdr, "struct %s: public %s\n", td->cxxTypeDefInfo->className, td->type->cxxTypeRefInfo->className);
 	fprintf(hdr, "{\n");
 
-	PrintDerivedConstructors(hdr, r, td);
+	PrintDerivedConstructors(hdr, r, td, 0);
 	PrintClone(hdr, src, td);
 
 	fprintf(hdr, "  static const AsnAliasTypeDesc	_desc;\n");
