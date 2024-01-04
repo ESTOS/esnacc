@@ -1463,13 +1463,13 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			fprintf(src, "\t\t\treturn undefined;\n");
 			fprintf(src, "\t\t}\n\n");
 
-			if (td->type->basicType->choiceId != BASICTYPE_CHOICE)
+			if (td->type->basicType->choiceId == BASICTYPE_CHOICE)
+				fprintf(src, "\t\tlet t: asn1ts.BaseBlock | undefined;\n");
+			else
 			{
 				fprintf(src, "\t\tconst result = new asn1ts.Sequence(TSConverter.getASN1TSConstructorParams(name, optional));\n");
 				fprintf(src, "\t\tconst t = result.valueBlock.value;\n");
 			}
-			else
-				fprintf(src, "\t\tlet t: asn1ts.BaseBlock | undefined;\n");
 
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");
 			fprintf(src, "\t\terrors.storeState();\n");
@@ -1478,7 +1478,10 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			Print_BER_EncoderCodeStructuredType(src, mods, m, td, novolatilefuncs);
 
 			fprintf(src, "\n\t\tif (errors.validateResult(newContext, \"%s\"))\n", td->definedName);
-			fprintf(src, "\t\t\treturn result;\n\n");
+			if (td->type->basicType->choiceId == BASICTYPE_CHOICE)
+				fprintf(src, "\t\t\treturn t;\n\n");
+			else
+				fprintf(src, "\t\t\treturn result;\n\n");
 			fprintf(src, "\t\treturn undefined;\n");
 
 			fprintf(src, "\t}\n");
