@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import { EConfigTemplate, validators, ICoreConfig } from "ucconfig";
 
 import { Common } from "../lib/common";
-import { EASN1TransportEncoding } from "../stub/TSROSEBase";
+import { EASN1TransportEncoding } from "../stub/TSInvokeContext";
 
 /**
  * The static config of our server

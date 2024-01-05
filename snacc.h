@@ -141,5 +141,6 @@ typedef char bool;
 extern long long gi64NoDeprecatedSymbols;
 extern int giValidationLevel;
 extern int giWriteComments;
+extern int genTSESMCode;
 
 #endif /* _SNACC_H_ */

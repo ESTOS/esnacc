@@ -15,9 +15,10 @@ module.exports = {
 		"*.png",
 		"*.sample",
 		"*.woff2",
+		"*.json",
 		"*.buildagent",
-		"*.eslintrc.js",
-		"*.eslintrc.precommit.js"
+		"*.eslintrc.cjs",
+		"*.eslintrc.precommit.cjs"
 	],
 	"extends": [
 		"standard",

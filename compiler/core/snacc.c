@@ -123,7 +123,7 @@ int yyparse();
 void CreateNames(ModuleList* allMods);
 static int GenCCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genPrinters, int genValues, int genFree);
 
-static void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta COMMA MetaPDU* meta_pdus COMMA) if_TCL(int genTcl COMMA) int novolatilefuncs, int genROSEDecoders);
+static void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta COMMA MetaPDU* meta_pdus COMMA) if_TCL(int genTcl COMMA) int novolatilefuncs, int genROSEDecoders, const int genCxxCode_EnumClasses);
 
 static void GenSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, int novolatilefuncs, int genROSEDecoders);
 
@@ -191,6 +191,9 @@ int giValidationLevel = 0xffffffff;
 // Write comments to the target files on true (parsing is always enabled)
 int giWriteComments = 0;
 
+// Defines whether we write commonsJS or ESM typescript code
+int genTSESMCode = FALSE;
+
 #ifdef WIN_SNACC /* Deepak: 14/Feb/2003 */
 #define main Win_Snacc_Main
 #endif
@@ -220,13 +223,15 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "            <ASN.1 file list>\n\n");
 	fprintf(fp, "  -c   generate C encoders and decoders (default)\n");
 	fprintf(fp, "  -C   generate C++ encoders and decoders\n");
+	fprintf(fp, "  -Ce  Uses dedicated enum classes for enums instead of burried enums inside a class\n");
 	fprintf(fp, "  -Ch  <path> header prefix for the generated cpp files (defaults to cpp-lib/include/ but you may e.g. define libs/snacclib5/cpp-lib/include/)\n");
 	fprintf(fp, "  -S   generate Swift code\n");
 	fprintf(fp, "  -j   generate JSON encoders/decoders. Use with -J or -JT.\n");
 	fprintf(fp, "  -J   generate plain JavaScript code. For Java see -RJ.\n");
-	fprintf(fp, "  -JT  generate Javascript - Typescript code.\n");
+	fprintf(fp, "  -JT  generate Typescript CommonJS code.\n");
 	fprintf(fp, "  -JD  generate JSON Documentation files.\n");
 	fprintf(fp, "  -JO  generate OpenApi Documentation files.\n");
+	fprintf(fp, "  -JTE  generate Typescript ES Module code.\n");
 	fprintf(fp, "  -T   <filename> write a type table file for the ASN.1 modules to file filename\n");
 	fprintf(fp, "  -O   <filename> writes the type table file in the original (<1.3b2) format\n");
 	fprintf(fp, "  -O   <filename> writes the type table file in the original (<1.3b2) format\n");
@@ -347,6 +352,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 #endif
 	int genCCode = FALSE; /* defaults to C if neither specified */
 	int genCxxCode = FALSE;
+	int genCxxCode_EnumClasses = FALSE;
 	int genIDLCode = FALSE;
 	int genJAVACode = FALSE;   // JAVA
 	int genDelphiCode = FALSE; // Delphi
@@ -354,7 +360,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	int genSwiftCode = FALSE;
 	int genJSCode = FALSE;
 	int genOpenApiCode = FALSE;
-	int genTSCode = FALSE;
+	int genTSCommonJSCode = FALSE;
 	int genJsonDocCode = FALSE;
 	long longJmpVal = -100;
 	int novolatilefuncs = FALSE;
@@ -536,6 +542,8 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						if (szCppHeaderIncludePath == 0 || strlen(szCppHeaderIncludePath) == 0)
 							goto error;
 					}
+					else if (strcmp(argument + 1, "Ce") == 0)
+						genCxxCode_EnumClasses = TRUE;
 					else if (strcmp(argument + 1, "C") == 0)
 						genCxxCode = TRUE;
 					else
@@ -550,7 +558,9 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					if (strcmp(argument + 1, "JD") == 0)
 						genJsonDocCode = TRUE;
 					else if (strcmp(argument + 1, "JT") == 0)
-						genTSCode = TRUE;
+						genTSCommonJSCode = TRUE;
+					else if (strcmp(argument + 1, "JTE") == 0)
+						genTSESMCode = TRUE;
 					else if (strcmp(argument + 1, "JO") == 0)
 						genOpenApiCode = TRUE;
 					else
@@ -808,14 +818,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		genPrintCode = TRUE;
 		genPrintCodeXML = FALSE;
 	}
-	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCode + genDelphiCode + genOpenApiCode > 1 + genJsonDocCode)
+	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCommonJSCode + genTSESMCode + genDelphiCode + genOpenApiCode > 1 + genJsonDocCode)
 	{
 		fprintf(stderr, "%s: ERROR---Choose only one of the -c -C or -D or -T or -RCS or -RJ or -OA or -J or -JD options\n", argv[0]);
 		Usage(argv[0], stderr);
 		return 1;
 	}
 
-	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCode && !genJsonDocCode && !genOpenApiCode)
+	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCommonJSCode && !genTSESMCode && !genJsonDocCode && !genOpenApiCode)
 		genCCode = TRUE; /* default to C if neither specified */
 
 	/* Set the encoding rules to BER if not set */
@@ -988,7 +998,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	if (genCCode)
 		FillCTypeInfo(&cRulesG, allMods);
 
-	else if (genCxxCode || genJAVACode || genCSCode || genSwiftCode || genJSCode || genDelphiCode || genTSCode || genJsonDocCode || genOpenApiCode)
+	else if (genCxxCode || genJAVACode || genCSCode || genSwiftCode || genJSCode || genDelphiCode || genTSCommonJSCode || genTSESMCode || genJsonDocCode || genOpenApiCode)
 		FillCxxTypeInfo(&cxxRulesG, allMods);
 
 #if IDL
@@ -1043,7 +1053,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		GenCCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genPrintCode, genFreeCode);
 
 	if (genCxxCode)
-		GenCxxCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, szCppHeaderIncludePath, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
+		GenCxxCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, szCppHeaderIncludePath, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders, genCxxCode_EnumClasses);
 
 	if (genSwiftCode)
 		GenSwiftCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
@@ -1054,7 +1064,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	if (genOpenApiCode)
 		GenOpenApiCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
 
-	if (genTSCode)
+	if (genTSCommonJSCode || genTSESMCode)
 		GenTSCode(allMods, longJmpVal, genTypeCode, genValueCode, genJSONEncDec, genTSRoseStubs, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
 
 	if (genJsonDocCode)
@@ -1413,7 +1423,7 @@ void GenCSCode(ModuleList* allMods, int genROSECSDecoders)
  * gets 2 source files, one .h for data struct and prototypes, the other .C
  * for the enc/dec/print/free routine code.
  */
-void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta _AND_) if_META(MetaPDU* meta_pdus _AND_) if_TCL(int genTcl _AND_) int novolatilefuncs, int genROSEDecoders)
+void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta _AND_) if_META(MetaPDU* meta_pdus _AND_) if_TCL(int genTcl _AND_) int novolatilefuncs, int genROSEDecoders, const int genCxxCode_EnumClasses)
 {
 	Module* currMod;
 	AsnListNode* saveMods;
@@ -1513,7 +1523,7 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 			else
 			{
 				saveMods = allMods->curr;
-				PrintCxxCode(srcFilePtr, hdrFilePtr, if_META(genMeta COMMA & meta COMMA meta_pdus COMMA) allMods, currMod, &cxxRulesG, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, genPrinters, genPrintersXML, genFree, if_TCL(genTcl COMMA) novolatilefuncs, szCppHeaderIncludePath);
+				PrintCxxCode(srcFilePtr, hdrFilePtr, if_META(genMeta COMMA & meta COMMA meta_pdus COMMA) allMods, currMod, &cxxRulesG, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, genPrinters, genPrintersXML, genFree, if_TCL(genTcl COMMA) novolatilefuncs, szCppHeaderIncludePath, genCxxCode_EnumClasses);
 				allMods->curr = saveMods;
 				fclose(hdrFilePtr);
 				fclose(srcFilePtr);
@@ -1945,9 +1955,9 @@ void GenTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues
 			char* szModName = strings[iCount];
 			if (!szModName)
 				break;
-			fprintf(typesFile, "export * as %s from \"./%s\";\n", szModName, szModName);
+			fprintf(typesFile, "export * as %s from \"./%s%s\";\n", szModName, szModName, getCommonJSFileExtension());
 			if (genJSONEncDec)
-				fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter\";\n", szModName, szModName);
+				fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter%s\";\n", szModName, szModName, getCommonJSFileExtension());
 			free(szModName);
 		}
 
