@@ -171,6 +171,8 @@ const char* GetBERType(const enum BasicTypeChoiceId basicTypeChoiseId)
 			return "SequenceOf";
 		case BASICTYPE_SEQUENCEOF:
 			return "SetOf";
+		case BASICTYPE_EXTENSION:
+			return "Extension";
 		default:
 			assert(FALSE);
 	}

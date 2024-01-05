@@ -490,8 +490,6 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
 		enum BasicTypeChoiceId choiceId = e->type->basicType->choiceId;
-		if (choiceId == BASICTYPE_EXTENSION)
-			continue;
 
 		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
@@ -516,7 +514,9 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		}
 
 		char* szConverted2 = FixName(e->fieldName);
-		if (IsSimpleType(choiceId))
+		if (choiceId == BASICTYPE_EXTENSION)
+			fprintf(src, "new asn1ts.%s()", GetBERType(e->type->basicType->choiceId));
+		else if (IsSimpleType(choiceId))
 			fprintf(src, "new asn1ts.%s({ name: \"%s\"%s })", GetBERType(e->type->basicType->choiceId), szConverted2, szOptionalParam);
 		else if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
 		{
@@ -543,7 +543,11 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		}
 		else
 			snacc_exit("unknown choiceId %d", choiceId);
-		free(szConverted2);
+		if (szConverted2)
+		{
+			free(szConverted2);
+			szConverted2 = NULL;
+		}
 
 		bFirst = false;
 	}
