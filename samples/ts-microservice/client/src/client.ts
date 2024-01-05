@@ -1,10 +1,11 @@
 import { TSASN1BrowserClient } from "./stub/TSASN1BrowserClient";
-import { AsnInvokeProblem, IASN1LogCallback, EASN1TransportEncoding, CustomInvokeProblemEnum, ELogSeverity, IASN1LogData } from "./stub/TSROSEBase";
+import { AsnInvokeProblem, IASN1LogCallback, CustomInvokeProblemEnum, ELogSeverity, IASN1LogData } from "./stub/TSROSEBase";
 import { IClientConnectionCallback } from "./stub/TSASN1Client";
 import { ENetUC_Common } from "./stub/types";
 import { EventManager } from "./handlers/eventManager";
 import { SettingsManager } from "./handlers/settingsManager";
 import { IErrorLogEntry, IInvokeLogEntry, IRejectLogEntry, IResultLogEntry, IROSELogEntryBase } from "./stub/TSASN1Base";
+import { EASN1TransportEncoding } from "./stub/TSInvokeContext";
 
 // These settings are provided by the .env file
 const name = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_NAME"] as string || "localhost";

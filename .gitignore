@@ -3,3 +3,4 @@ build*/
 output/
 .cache
 dist/
+*.tsbuildinfo
