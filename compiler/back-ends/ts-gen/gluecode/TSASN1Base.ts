@@ -711,6 +711,22 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
+	 * Combines the logdata based on the callback and the context
+	 * 
+	 * @param callback - the callback that provides additional contextual data
+	 * @param context - the context that is passed along with an invoke
+	 */
+	private getCombinedLogData(callback: IASN1LogCallback, context: IReceiveInvokeContext | ISendInvokeContext): ILogData {
+		return {
+			...callback.getLogData(),
+			classProps: {
+				clientConnectionID: context.clientConnectionID,
+				invokeID: context.invokeID
+			}
+		}
+	}
+
+	/**
 	 * This logger is called when we decoded an invoke and are about to call the handler
 	 *
 	 * @param calling_method - the handler that is called next
@@ -732,11 +748,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			argumentName: argument.constructor.name
 		};
 
-		const logData = {
-			...callback.getLogData(),
-			clientConnectionID: context.clientConnectionID,
-			invokeID: context.invokeID
-		};
+		const logData = this.getCombinedLogData(callback, context);
 
 		this.log(ELogSeverity.debug, `${meta.isEvent ? "event" : "invoke"} ${isOutbound ? "out" : "in"}`, calling_method, logData, meta);
 	}
@@ -762,11 +774,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			resultName: result.constructor.name
 		};
 
-		const logData = {
-			...callback.getLogData(),
-			clientConnectionID: context.clientConnectionID,
-			invokeID: context.invokeID
-		};
+		const logData = this.getCombinedLogData(callback, context);
 
 		this.log(ELogSeverity.debug, `result ${isOutbound ? "out" : "in"}`, calling_method, logData, meta);
 	}
@@ -793,11 +801,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			error
 		};
 
-		const logData = {
-			...callback.getLogData(),
-			clientConnectionID: context.clientConnectionID,
-			invokeID: context.invokeID
-		};
+		const logData = this.getCombinedLogData(callback, context);
 
 		this.log(ELogSeverity.warn, `error ${isOutbound ? "out" : "in"}`, calling_method, logData, meta);
 	}
@@ -824,11 +828,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			reject
 		};
 
-		const logData = {
-			...callback.getLogData(),
-			clientConnectionID: context.clientConnectionID,
-			invokeID: context.invokeID
-		};
+		const logData = this.getCombinedLogData(callback, context);
 
 		this.log(ELogSeverity.warn, "rejecting invoke", calling_method, logData, meta);
 	}
