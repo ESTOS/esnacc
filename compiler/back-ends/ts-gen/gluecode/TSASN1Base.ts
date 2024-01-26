@@ -11,7 +11,8 @@ import * as ENetUC_Common from "./ENetUC_Common";
 import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
 import { ROSEMessage_Converter } from "./SNACCROSE_Converter";
 import { DecodeContext, ConverterErrors, EncodeContext } from "./TSConverterBase";
-import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, EASN1TransportEncoding, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, ReceiveInvokeContext } from "./TSROSEBase";
+import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, ReceiveInvokeContext } from "./TSROSEBase";
+import { EASN1TransportEncoding } from "./TSInvokeContext";
 
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
@@ -710,6 +711,22 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
+	 * Combines the logdata based on the callback and the context
+	 * 
+	 * @param callback - the callback that provides additional contextual data
+	 * @param context - the context that is passed along with an invoke
+	 */
+	private getCombinedLogData(callback: IASN1LogCallback, context: IReceiveInvokeContext | ISendInvokeContext): ILogData {
+		return {
+			...callback.getLogData(),
+			classProps: {
+				clientConnectionID: context.clientConnectionID,
+				invokeID: context.invokeID
+			}
+		}
+	}
+
+	/**
 	 * This logger is called when we decoded an invoke and are about to call the handler
 	 *
 	 * @param calling_method - the handler that is called next
@@ -731,11 +748,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			argumentName: argument.constructor.name
 		};
 
-		const logData = {
-			...callback.getLogData(),
-			clientConnectionID: context.clientConnectionID,
-			invokeID: context.invokeID
-		};
+		const logData = this.getCombinedLogData(callback, context);
 
 		this.log(ELogSeverity.debug, `${meta.isEvent ? "event" : "invoke"} ${isOutbound ? "out" : "in"}`, calling_method, logData, meta);
 	}
@@ -761,11 +774,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			resultName: result.constructor.name
 		};
 
-		const logData = {
-			...callback.getLogData(),
-			clientConnectionID: context.clientConnectionID,
-			invokeID: context.invokeID
-		};
+		const logData = this.getCombinedLogData(callback, context);
 
 		this.log(ELogSeverity.debug, `result ${isOutbound ? "out" : "in"}`, calling_method, logData, meta);
 	}
@@ -792,11 +801,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			error
 		};
 
-		const logData = {
-			...callback.getLogData(),
-			clientConnectionID: context.clientConnectionID,
-			invokeID: context.invokeID
-		};
+		const logData = this.getCombinedLogData(callback, context);
 
 		this.log(ELogSeverity.warn, `error ${isOutbound ? "out" : "in"}`, calling_method, logData, meta);
 	}
@@ -823,11 +828,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			reject
 		};
 
-		const logData = {
-			...callback.getLogData(),
-			clientConnectionID: context.clientConnectionID,
-			invokeID: context.invokeID
-		};
+		const logData = this.getCombinedLogData(callback, context);
 
 		this.log(ELogSeverity.warn, "rejecting invoke", calling_method, logData, meta);
 	}

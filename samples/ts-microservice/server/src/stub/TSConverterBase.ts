@@ -206,7 +206,7 @@ export class ConverterErrors extends Array<ConverterError> {
 	 * @returns true if we hold new errors or false if not
 	 */
 	public hasNewErrors(): boolean {
-		return this.length !== this.lastStoredErrorCount;
+		return this.length > this.lastStoredErrorCount;
 	}
 
 	/**
@@ -369,9 +369,8 @@ export class TSConverter {
 						// Special, if the incoming data is empty, the schema validation will fail but we allow that for structures that have no mandatory attributes
 						if (schema instanceof asn1ts.Sequence) {
 							let bContainsMandatory = false;
-							for(const value of schema.valueBlock.value)
-							{
-								if(!value.optional) {
+							for (const value of schema.valueBlock.value) {
+								if (!value.optional) {
 									bContainsMandatory = true;
 									break;
 								}

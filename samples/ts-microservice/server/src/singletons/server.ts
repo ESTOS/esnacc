@@ -4,7 +4,7 @@ import { theConfig } from "../globals";
 import { EventManager } from "../handlers/eventManager";
 import { SettingsManager } from "../handlers/settingsManager";
 import { TSASN1Server } from "../stub/TSASN1Server";
-import { EASN1TransportEncoding } from "../stub/TSROSEBase";
+import { EASN1TransportEncoding } from "../stub/TSInvokeContext";
 
 /**
  * Receiver and sender singleton

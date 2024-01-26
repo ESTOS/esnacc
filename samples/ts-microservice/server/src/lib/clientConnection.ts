@@ -9,7 +9,8 @@ import { Common } from "./common";
 import { EOwnTimeout, EOwnInterval } from "./common_timers";
 import { theConfig, theServer, theLogger, theLogStorage } from "../globals";
 import { ILogContextStaticData, LogContextStaticData } from "../singletons/asyncLocalStorage";
-import { EASN1TransportEncoding, ReceiveInvokeContext } from "../stub/TSROSEBase";
+import { EASN1TransportEncoding } from "../stub/TSInvokeContext";
+import { ReceiveInvokeContext } from "../stub/TSROSEBase";
 
 /**
  * A Helper class to get the RTT times of a client

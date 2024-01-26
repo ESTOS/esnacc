@@ -103,6 +103,12 @@ void SaveTSROSEFilesToOutputDirectory(const int genRoseStubs, const char* szPath
 		strcat_s(szFileName, _MAX_PATH, "TSDeprecatedCallback.ts");
 		SaveResourceToFile(ETS_DEPRECATED_CALLBACK, szFileName);
 	}
+	{
+		char szFileName[_MAX_PATH] = {0};
+		strcpy_s(szFileName, _MAX_PATH, szPath);
+		strcat_s(szFileName, _MAX_PATH, "TSInvokeContext.ts");
+		SaveResourceToFile(ETS_INVOKE_CONTEXT, szFileName);
+	}
 }
 
 void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)
@@ -110,13 +116,14 @@ void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	fprintf(src, "// Global imports\n");
-	fprintf(src, "import { I%s, I%s_Handler } from \"./%s_Interface\";\n", mod->ROSEClassName, mod->ROSEClassName, mod->ROSEClassName);
-	fprintf(src, "import { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from \"./SNACCROSE\";\n");
-	fprintf(src, "import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, ISendInvokeContextParams, IInvokeHandler, ELogSeverity, ROSEBase } from \"./TSROSEBase\";\n");
+	fprintf(src, "import { I%s, I%s_Handler } from \"./%s_Interface%s\";\n", mod->ROSEClassName, mod->ROSEClassName, mod->ROSEClassName, getCommonJSFileExtension());
+	fprintf(src, "import { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from \"./SNACCROSE%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, IInvokeHandler, ELogSeverity, ROSEBase } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { ISendInvokeContextParams } from \"./TSInvokeContext%s\";\n", getCommonJSFileExtension());
 
 	fprintf(src, "// Local imports\n");
-	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
-	fprintf(src, "import * as Converter from \"./%s_Converter\";\n", mod->moduleName);
+	fprintf(src, "import * as %s from \"./%s%s\";\n", GetNameSpace(mod), mod->moduleName, getCommonJSFileExtension());
+	fprintf(src, "import * as Converter from \"./%s_Converter%s\";\n", mod->moduleName, getCommonJSFileExtension());
 
 	PrintTSImports(src, mods, mod, true, false, true);
 }
@@ -295,9 +302,10 @@ void PrintTSROSEImport(FILE* src, ModuleList* mods, Module* mod)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	fprintf(src, "import { IReceiveInvokeContext, ISendInvokeContextParams, AsnInvokeProblem } from \"./TSROSEBase\";\n");
+	fprintf(src, "import { IReceiveInvokeContext, AsnInvokeProblem } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { ISendInvokeContextParams } from \"./TSInvokeContext%s\";\n", getCommonJSFileExtension());
 	fprintf(src, "// Local imports\n");
-	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
+	fprintf(src, "import * as %s from \"./%s%s\";\n", GetNameSpace(mod), mod->moduleName, getCommonJSFileExtension());
 
 	PrintTSImports(src, mods, mod, false, false, false);
 }
@@ -365,9 +373,9 @@ void PrintTSROSEServerCopyPasteInterface(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	fprintf(src, "/* Copy paste code for the import statement\n");
-	fprintf(src, "import { IReceiveInvokeContext } from \"./TSROSEBase\";\n");
-	fprintf(src, "import * as ENetUC_Common from \"./ENetUC_Common\";\n");
-	fprintf(src, "import { %s } from \"./%s\";\n", GetNameSpace(m), RemovePath(m->baseFileName));
+	fprintf(src, "import { IReceiveInvokeContext } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import * as ENetUC_Common from \"./ENetUC_Common%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { %s } from \"./%s%s\";\n", GetNameSpace(m), RemovePath(m->baseFileName), getCommonJSFileExtension());
 	fprintf(src, "*/\n");
 
 	fprintf(src, "\n/**\n");

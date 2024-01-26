@@ -1,6 +1,7 @@
 #include "efileressources.h"
 
 #include <assert.h>
+#include "../../snacc.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -19,7 +20,9 @@ INCBIN(BIN_ASN1_SERVER, "compiler/back-ends/ts-gen/gluecode/TSASN1Server.ts");
 INCBIN(BIN_ROSE_BASE, "compiler/back-ends/ts-gen/gluecode/TSROSEBase.ts");
 INCBIN(BIN_SNACCROSE, "compiler/back-ends/ts-gen/gluecode/SNACCROSE.ts");
 INCBIN(BIN_SNACCROSE_CONVERTER, "compiler/back-ends/ts-gen/gluecode/SNACCROSE_Converter.ts");
+INCBIN(BIN_INVOKE_CONTEXT, "compiler/back-ends/ts-gen/gluecode/TSInvokeContext.ts");
 INCBIN(BIN_DEPRECATED_CALLBACK, "compiler/back-ends/ts-gen/gluecode/TSDeprecatedCallback.ts");
+
 INCBIN(BIN_EDELPHI_ASN1_YPES, "compiler/back-ends/delphi-gen/gluecode/DelphiAsn1Types.pas");
 #endif // _WIN32
 
@@ -45,15 +48,58 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 		HGLOBAL hMem = LoadResource(hInst, hRes);
 		if (hMem)
 		{
-			DWORD size = SizeofResource(hInst, hRes);
-			char* resText = (char*)LockResource(hMem);
-
 			FILE* file = 0;
-			if (fopen_s(&file, szFileName, "wb") == 0 && file)
+			if (!fopen_s(&file, szFileName, "wb") == 0 && file)
 			{
-				fwrite(resText, 1, size, file);
-				fclose(file);
+				fprintf(stderr, "Could not open file %s for writing", szFileName);
+				exit(1);
 			}
+
+			DWORD size = SizeofResource(hInst, hRes);
+			const char* buffer = (const char*)LockResource(hMem);
+			const char* szLastElement = buffer + size;
+			if (genTSESMCode)
+			{
+				const char* szInsert = ".js\";\r\n";
+				size_t iInsertLen = strlen(szInsert);
+
+				while (buffer && buffer < szLastElement)
+				{
+					const char* szLine = strstr(buffer, "\n");
+					if (!szLine) // Last line, no newline...
+						szLine = buffer;
+					size_t lineLength = szLine - buffer + 1;
+					// Reserve memory for an optional .js addon + 0 byte
+					const size_t iBufferSize = lineLength + 4;
+					char* szBuffer = malloc(iBufferSize);
+					memset(szBuffer, 0x00, iBufferSize);
+					memcpy(szBuffer, buffer, lineLength);
+
+					// We have an import, and the import is relative
+					if (strstr(szBuffer, "import") == szBuffer && strstr(szBuffer, "from \"."))
+					{
+						// We have an import statement, we now need to touch the filename
+						char* szEnd = strstr(szBuffer, "\";");
+						if (szEnd)
+						{
+							lineLength += 3;
+							memcpy(szEnd, szInsert, iInsertLen);
+						}
+					}
+
+					if (file)
+						fwrite(szBuffer, 1, lineLength, file);
+
+					buffer = szLine + 1;
+				}
+			}
+			else
+			{
+				if (file)
+					fwrite(buffer, 1, size, file);
+			}
+			if (file)
+				fclose(file);
 			FreeResource(hMem);
 		}
 		else
@@ -101,6 +147,9 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 			break;
 		case ETS_DEPRECATED_CALLBACK:
 			SaveIncBinToFile(gBIN_DEPRECATED_CALLBACKData, gBIN_DEPRECATED_CALLBACKSize, szFileName);
+			break;
+		case ETS_INVOKE_CONTEXT:
+			SaveIncBinToFile(gBIN_INVOKE_CONTEXTData, gBIN_INVOKE_CONTEXTSize, szFileName);
 			break;
 		case EDELPHI_ASN1_TYPES:
 			SaveIncBinToFile(gBIN_EDELPHI_ASN1_YPESData, gBIN_EDELPHI_ASN1_YPESSize, szFileName);

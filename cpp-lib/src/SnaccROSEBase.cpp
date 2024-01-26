@@ -314,6 +314,11 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 					{
 						LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
+#ifdef _DEBUG
+						std::string strPayLoad;
+						strPayLoad.assign(lpBytes, lSize);
+#endif
+
 						SJson::Value error;
 						error["exception"] = reader.getFormattedErrorMessages();
 						error["where"] = __FUNCTION__;
@@ -873,11 +878,7 @@ void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 						szOperationName = strOperationName.c_str();
 				}
 				if (!szOperationName)
-				{
-					strOperationName = SnaccRoseOperationLookup::LookUpName(pMsg->invoke->operationID);
-					if (!strOperationName.empty())
-						szOperationName = strOperationName.c_str();
-				}
+					szOperationName = SnaccRoseOperationLookup::LookUpName(pMsg->invoke->operationID);
 			}
 
 			// JSON logging is requested
@@ -1383,11 +1384,14 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 
 				// Get the name of the called operation for logging
 				std::string strOperationName;
+				const char* szOperationName = nullptr;
 				if (pInvokeMessage->invoke->operationName)
-					strOperationName = pInvokeMessage->invoke->operationName->getUTF8().c_str();
-				if (strOperationName.empty())
-					strOperationName = SnaccRoseOperationLookup::LookUpName(pInvokeMessage->invoke->operationID);
-				const char* szOperationName = strOperationName.empty() ? nullptr : strOperationName.c_str();
+				{
+					strOperationName = pInvokeMessage->invoke->operationName->getUTF8();
+					szOperationName = strOperationName.c_str();
+				}
+				if (!szOperationName)
+					szOperationName = SnaccRoseOperationLookup::LookUpName(pInvokeMessage->invoke->operationID);
 				LogTransportData(false, SNACC::TransportEncoding::BER, szOperationName, nullptr, 0, pInvokeMessage, nullptr);
 				// As we hand back the result object to the outer world (function argument) we need to set it to NULL to prevent deletion if we discard the inserted object
 				pInvokeMessage->invoke->argument->value = NULL;

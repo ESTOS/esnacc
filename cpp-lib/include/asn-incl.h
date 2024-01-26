@@ -865,7 +865,7 @@ public:
 #ifdef WIN32
 	long long GetLongLong() const;
 #else
-    SJson::Int64 GetLongLong() const;
+	SJson::Int64 GetLongLong() const;
 #endif
 
 	bool operator==(AsnIntType o) const;
@@ -900,12 +900,12 @@ public:
 
 	void Set(long long i);
 
-    #ifndef WIN32
-    #ifndef __APPLE__
-    // With Win32 SJson::Int64 is the same as long long
-    void Set(SJson::Int64 i);
-    #endif
-    #endif
+#ifndef WIN32
+#ifndef __APPLE__
+	// With Win32 SJson::Int64 is the same as long long
+	void Set(SJson::Int64 i);
+#endif
+#endif
 
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
@@ -941,36 +941,162 @@ public:
 
 // ########################################################################
 
-class SNACCDLL_API AsnEnum : public AsnInt
+template <typename T = int> class SNACCDLL_API AsnEnum : public AsnInt
 {
 public:
-	AsnEnum(int val = 0)
-		: AsnInt(val)
+	AsnEnum(T val)
+		: AsnInt((int)val)
 	{
 	}
 
-	AsnLen BEnc(AsnBuf& b) const override;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
+	virtual AsnLen BEnc(AsnBuf& b) const override
+	{
+		AsnLen l;
+		l = BEncContent(b);
+		BEncDefLenTo127(b, l);
+		l++;
+		l += BEncTag1(b, UNIV, PRIM, ENUM_TAG_CODE);
+		return l;
+	}
+
+	virtual void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override
+	{
+		FUNC("AsnEnum::BDec");
+
+		AsnLen elmtLen;
+		AsnTag tagId;
+
+		tagId = BDecTag(b, bytesDecoded);
+		if (tagId != MAKE_TAG_ID(UNIV, PRIM, ENUM_TAG_CODE))
+			throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
+
+		elmtLen = BDecLen(b, bytesDecoded);
+		BDecContent(b, MAKE_TAG_ID(UNIV, PRIM, ENUM_TAG_CODE), elmtLen, bytesDecoded);
+	}
 
 	virtual AsnEnum* Clone() const override
 	{
 		return new AsnEnum(*this);
 	}
-	const char* typeName() const override
+
+	virtual const char* typeName() const override
 	{
 		return "AsnEnum";
 	}
 
-	long IndexedVal(long* penumList, long numVals) const;
-	void SetIndex(long* penumList, long numVals, long index);
+	/*Takes the enumerated list, sorts them, and returns the index of the */
+	/*number that matches the value                                       */
+	long IndexedVal(long* penumList, long numVals) const
+	{
+		FUNC("AsnEnum::IndexedVal");
+		long* indexedList = penumList;
+		long temp = 0;
+		long count1 = 0;
+		long count2 = 0;
+		bool bValueNotInList = true;
+
+		if (m_len > 4)
+			throw EXCEPT("enumerated value is too big", INTEGER_ERROR);
+
+		for (count1 = 0; count1 < numVals; count1++)
+		{
+			for (count2 = 0; count2 < numVals; count2++)
+			{
+				if (indexedList[count2] < indexedList[count1])
+				{
+					temp = indexedList[count2];
+					indexedList[count2] = indexedList[count1];
+					indexedList[count1] = temp;
+				}
+			}
+		}
+
+		temp = (long)*this;
+		for (count1 = 0; count1 < numVals; count1++)
+		{
+			if (temp == indexedList[count1])
+			{
+				temp = count1;
+				count1 = numVals;
+				bValueNotInList = false;
+			}
+		}
+
+		if (bValueNotInList)
+			throw EXCEPT("value is not in enumerated List", INTEGER_ERROR);
+
+		return temp;
+	}
+
+	/*sorts the enumerated list and matches the decoded number with */
+	/*the associated indexed number in the list                     */
+	void SetIndex(long* penumList, long numVals, long index)
+	{
+		long* indexedList = penumList;
+		long temp = 0;
+		long count1 = 0;
+		long count2 = 0;
+
+		for (count1 = 0; count1 < numVals; count1++)
+		{
+			for (count2 = 0; count2 < numVals; count2++)
+			{
+				if (indexedList[count2] < indexedList[count1])
+				{
+					temp = indexedList[count2];
+					indexedList[count2] = indexedList[count1];
+					indexedList[count1] = temp;
+				}
+			}
+		}
+
+		Set((AsnIntType)indexedList[index]);
+	}
 
 #if META
-	static const AsnEnumTypeDesc _desc;
-	const AsnTypeDesc* _getdesc() const;
+	static const AsnEnumTypeDesc _desc(NULL, NULL, false, AsnTypeDesc::ENUMERATED, NULL, NULL);
+
+	const AsnTypeDesc* _getdesc() const
+	{
+		return &_desc;
+	}
 
 #if TCL
-	int TclGetVal(Tcl_Interp*) const;
-	int TclSetVal(Tcl_Interp*, const char* val);
+	int TclGetVal(Tcl_Interp* interp) const
+	{
+		const AsnNameDesc* n = _getdesc()->getnames();
+		if (n)
+		{
+			for (; n->name; n++)
+				if (n->value == value)
+				{
+					Tcl_SetResult(interp, (char*)n->name, TCL_STATIC);
+					return TCL_OK;
+				}
+		}
+		char valstr[80];
+		sprintf(valstr, "%d", value);
+		Tcl_AppendResult(interp, "illegal numeric enumeration value ", valstr, " for type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
+		Tcl_SetErrorCode(interp, "SNACC", "ILLENUM", NULL);
+		return TCL_ERROR;
+	}
+
+	int TclSetVal(Tcl_Interp* interp, const char* valstr)
+	{
+		const AsnNameDesc* n = _getdesc()->getnames();
+		if (n)
+		{
+			for (; n->name; n++)
+				if (!strcmp(n->name, valstr))
+				{
+					value = n->value;
+					return TCL_OK;
+				}
+		}
+		Tcl_SetErrorCode(interp, "SNACC", "ILLENUM", NULL);
+		Tcl_AppendResult(interp, "illegal symbolic enumeration value \"", valstr, "\" for type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
+		return TCL_ERROR;
+	}
 #endif /* TCL */
 #endif /* META */
 };
@@ -2220,15 +2346,15 @@ public:
 	virtual void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override
 	{
 	}
-	
+
 	virtual void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override
 	{
 	}
-	
+
 	virtual void JEnc(SJson::Value& b) const override
 	{
 	}
-	
+
 	virtual bool JDec(const SJson::Value& b) override
 	{
 		return true;

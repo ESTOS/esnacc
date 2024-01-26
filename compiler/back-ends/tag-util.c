@@ -682,6 +682,9 @@ const char* BasicType2UnivCodeStr(enum BasicTypeChoiceId choice)
 			return "BMPSTRING_TAG_CODE";
 		case BASICTYPE_UTF8_STR:
 			return "UTF8STRING_TAG_CODE";
+		case BASICTYPE_CHOICE:
+			// Intendet. Therefore no assert...
+			return NULL;
 		default:
 			assert(0);
 			return NULL;

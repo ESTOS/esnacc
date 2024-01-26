@@ -35,6 +35,7 @@ TS_ROSE_BASE            RCDATA                  "back-ends/ts-gen/gluecode/TSROS
 TS_SNACCROSE            RCDATA                  "back-ends/ts-gen/gluecode/SNACCROSE.ts"
 TS_SNACCROSE_CONVERTER  RCDATA                  "back-ends/ts-gen/gluecode/SNACCROSE_Converter.ts"
 TS_DEPRECATED_CALLBACK  RCDATA                  "back-ends/ts-gen/gluecode/TSDeprecatedCallback.ts"
+TS_INVOKE_CONTEXT       RCDATA                  "back-ends/ts-gen/gluecode/TSInvokeContext.ts"
 DELPHI_ASN1_YPES		RCDATA					"back-ends/delphi-gen/gluecode/DelphiAsn1Types.pas"
 
 VS_VERSION_INFO VERSIONINFO

@@ -6,8 +6,9 @@
 /* eslint-disable */
 
 import { TSASN1Client } from "./TSASN1Client";
-import { EASN1TransportEncoding, ELogSeverity, IDualWebSocket } from "./TSROSEBase";
+import { ELogSeverity, IDualWebSocket } from "./TSROSEBase";
 import { ASN1ClassInstanceType } from "./TSASN1Base";
+import { EASN1TransportEncoding } from "./TSInvokeContext";
 /**
  * The ASN1 client side as required in the browser (different websocket and timer)
  */
