@@ -488,7 +488,7 @@ template <class T> SNACC::AsnLen AsnSetOf<T>::BEncContent(SNACC::AsnBuf& b) cons
 
 	// Encode each component of the SET OF into the AsnBuf list;
 	std::list<SNACC::AsnBuf> bufList;
-	for (auto i = AsnSetOf<T>::cbegin(); i != AsnSetOf<T>::cend(); ++i)
+	for (auto i = this->cbegin(); i != this->cend(); ++i)
 	{
 		SNACC::AsnBuf& bufRef = *bufList.insert(bufList.end(), SNACC::AsnBuf());
 		totalLen += i->BEnc(bufRef);
@@ -508,7 +508,7 @@ template <class T> SNACC::AsnLen AsnSetOf<T>::BEncContent(SNACC::AsnBuf& b) cons
 template <class T> void AsnSetOf<T>::BDec(const SNACC::AsnBuf& b, SNACC::AsnLen& bytesDecoded)
 {
 	// Clear the existing elements
-	AsnSetOf<T>::clear();
+	this->clear();
 
 	SNACC::AsnTag tagId = SNACC::BDecTag(b, bytesDecoded);
 	if (tagId != MAKE_TAG_ID(SNACC::UNIV, SNACC::CONS, SNACC::SET_TAG_CODE))
@@ -524,24 +524,24 @@ template <class T> void AsnSetOf<T>::BDec(const SNACC::AsnBuf& b, SNACC::AsnLen&
 template <class T> void AsnSetOf<T>::PDec(SNACC::AsnBufBits& b, SNACC::AsnLen& bitsDecoded)
 {
 	// Clear the existing elements
-	AsnSetOf<T>::clear();
+	this->clear();
 
 	SNACC::AsnInt intSetOfLength;
 	intSetOfLength.PDec(b, bitsDecoded);
 	for (int i = 0; i < intSetOfLength; i++)
-		AsnSetOf<T>::append()->PDec(b, bitsDecoded);
+		this->append()->PDec(b, bitsDecoded);
 }
 
 template <class T> SNACC::AsnLen AsnSetOf<T>::PEnc(SNACC::AsnBufBits& b) const
 {
-	SNACC::AsnInt intSetOfLength((int)AsnSetOf<T>::size());
+	SNACC::AsnInt intSetOfLength((int)this->size());
 	intSetOfLength.PEnc(b);
 
 	SNACC::AsnLen totalLen = 0;
 	std::list<SNACC::AsnBufBits> bufList;
 
 	// Encode each component of the SET OF into the AsnBuf list
-	for (auto i = AsnSetOf<T>::begin(); i != AsnSetOf<T>::end(); ++i)
+	for (auto i = this->begin(); i != this->end(); ++i)
 	{
 		SNACC::AsnBufBits& bufRef = *bufList.insert(bufList.end(), SNACC::AsnBufBits(b.IsAligned()));
 		totalLen += i->PEnc(bufRef);
@@ -561,13 +561,13 @@ template <class T> void AsnSetOf<T>::Print(std::ostream& os, unsigned short inde
 	os << "{ -- " << this->typeName() << " SET OF ";
 	++indent;
 
-	if (AsnSetOf<T>::empty())
+	if (this->empty())
 		os << "is EMPTY\n";
 	else
 	{
 		os << this->front().typeName() << " \n";
 
-		for (auto i = AsnSetOf<T>::begin(); i != AsnSetOf<T>::end(); ++i)
+		for (auto i = this->begin(); i != this->end(); ++i)
 		{
 			SNACC::Indent(os, indent);
 			i->Print(os, indent);
