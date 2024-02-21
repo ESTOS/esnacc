@@ -18,6 +18,11 @@ extern "C"
 		return CPPHelper::GetNextFile(file, loopID);
 	}
 
+	bool getDirectoryWithDelimiterFromFileName(char* szFileName, unsigned long ulLen)
+	{
+		return CPPHelper::GetDirectoryWithDelimiterFromFileName(szFileName, ulLen);
+	}
+
 	bool getDirectoryWithDelimiterFromPath(char* szPath, unsigned long ulLen)
 	{
 		return CPPHelper::GetDirectoryWithDelimiterFromPath(szPath, ulLen);

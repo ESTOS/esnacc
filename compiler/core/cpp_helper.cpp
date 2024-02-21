@@ -157,6 +157,34 @@ std::string CPPHelper::wildcardToRegex(const std::string& wildcard)
 	return regex;
 }
 
+bool CPPHelper::GetDirectoryWithDelimiterFromFileName(char* szFileName, unsigned long ulLen)
+{
+	fs::path path = szFileName;
+
+	// Replace non platform conforming delimiters
+	path.make_preferred();
+
+	if (path.empty())
+		return false;
+
+	fs::path directory = path.parent_path();
+	auto strDirectoryPath = directory.string();
+
+	if (strDirectoryPath.back() != fs::path::preferred_separator)
+		strDirectoryPath += fs::path::preferred_separator;
+
+	if (strDirectoryPath.length() > ulLen)
+		return false;
+
+#if _WIN32
+	strcpy_s(szFileName, ulLen, strDirectoryPath.c_str());
+#else
+	strcpy(szFileName, strDirectoryPath.c_str());
+#endif
+
+	return true;
+}
+
 bool CPPHelper::GetDirectoryWithDelimiterFromPath(char* szPath, unsigned long ulLen)
 {
 	fs::path path = szPath;

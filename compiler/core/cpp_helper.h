@@ -61,6 +61,14 @@ public:
 	static bool GetNextFile(SASN1File* file, int loopID);
 
 	/*
+	 * Retrieves the directory from a filename
+	 * @param szFileName - The filename we will touch
+	 * @param iLen - The len of the buffer szPath
+	 * @returns true on success (Path was copied to szPath)
+	 */
+	static bool GetDirectoryWithDelimiterFromFileName(char* szFileName, unsigned long ulLen);
+
+	/*
 	 * Retrieves the path with delimiter from a path that may or may not have one
 	 * @param szPath - The path we will touch
 	 * @param iLen - The len of the buffer szPath

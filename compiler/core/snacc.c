@@ -172,6 +172,9 @@ int isInWithSyntax = 0;			  /* Deepak: 26/Mar/2003 */
 // ste 9.9.2016 - allow private declared symbols to be suppressed
 int gPrivateSymbols = 1;
 
+// The version which was read from a version.txt the compiler searches in the same directory as the asn1 files.
+int gVersion = -1;
+
 // jan 10.1.2023 - if set deprecated symbols are removed from the generated code
 //  The value contains a timestamp, either specified by the command line or set to 1 (if nodeprecated has been set!)
 //  The comment parser reads @deprecated flags in association to sequences, attributes and operations and stores them with the comment content
@@ -318,6 +321,40 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "GNU General Public License for more details.\n\n");
 
 	fprintf(fp, "You should have received a copy of the GNU General Public License\n");
+}
+
+void loadInterfaceVersionFile(const char* szFileName)
+{
+	char szFolderPath[_MAX_PATH] = {0};
+	strcpy_s(szFolderPath, _MAX_PATH, szFileName);
+	getDirectoryWithDelimiterFromFileName(szFolderPath, _MAX_PATH);
+
+	char szVersionFile[_MAX_PATH] = {0};
+	const char* szVersionFileName = "interfaceversion.txt";
+	strcpy_s(szVersionFile, _MAX_PATH, szFolderPath);
+	strcat_s(szVersionFile, _MAX_PATH, szVersionFileName);
+	FILE* file = fopen(szVersionFile, "r");
+	if (!file)
+	{
+		szVersionFileName = "version.txt";
+		strcpy_s(szVersionFile, _MAX_PATH, szFolderPath);
+		strcat_s(szVersionFile, _MAX_PATH, szVersionFileName);
+		file = fopen(szVersionFile, "r");
+	}
+
+	if (file)
+	{
+		char buffer[100] = {0};
+		char* szBuffer = fgets(buffer, sizeof(buffer), file);
+		if (szBuffer == buffer)
+			gVersion = atoi(szBuffer);
+		fclose(file);
+	}
+
+	if (gVersion)
+		fprintf(stdout, "Found major interface version %i in %s\n", gVersion, szVersionFileName);
+	else
+		fprintf(errFileG, "Found no major interface version!. Add a \"interfaceversion.txt\" to the asn1 files\n");
 }
 
 /****************/
@@ -840,10 +877,17 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	 * STEP 1---parse each ASN.1 src file
 	 */
 	allMods = (ModuleList*)AsnListNew(sizeof(void*));
+	bool bHandleVersionFile = true;
 
 	SASN1File file;
 	while (getNextFile(&file, 0))
 	{
+		if (bHandleVersionFile)
+		{
+			bHandleVersionFile = false;
+			loadInterfaceVersionFile(file.filePath);
+		}
+
 		currMod = ParseAsn1File(file.filePath, file.bIsImportedFile, 1);
 
 		if (currMod == NULL)
