@@ -1438,9 +1438,9 @@ int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool b
 	{
 		m_bFlushEveryWrite = bFlushEveryWrite;
 #ifdef HAS_WCHAR_T
-		const wchar_t* szMode = bAppend ? L"a" : L"w";
+		const wchar_t* szMode = bAppend ? L"ab" : L"wb";
 #else
-		const char* szMode = bAppend ? "a" : "w";
+		const char* szMode = bAppend ? "ab" : "wb";
 #endif
 #ifdef _MSC_VER
 		m_pAsnLogFile = _wfsopen(szPath, szMode, _SH_DENYWR);
