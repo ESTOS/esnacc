@@ -990,15 +990,15 @@ void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTy
 		case BASICTYPE_ENUMERATED:
 		case BASICTYPE_REAL:
 		case BASICTYPE_UTF8_STR:
-			fprintf(src, "%sTSConverter.fillJSONParam(s, t, \"%s\", \"%s\", errors, context, %s);\n", szIndent, szAccessName, GetJSONType(choiceID), szOptional);
+			fprintf(src, "%sTSConverter.fillJSONParam(s, t, \"%s\", \"%s\", errors, newContext, %s);\n", szIndent, szAccessName, GetJSONType(choiceID), szOptional);
 			break;
 		case BASICTYPE_ASNSYSTEMTIME:
-			fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, context, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
+			fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, newContext, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
 			fprintf(src, "%s\tt.%s = new Date(s.%s);\n", szIndent, szAccessName, szAccessName);
 			break;
 		case BASICTYPE_OCTETSTRING:
 		case BASICTYPE_OCTETCONTAINING:
-			fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, context, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
+			fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, newContext, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
 			fprintf(src, "%s\tt.%s = TSConverter.decode64(s.%s as unknown as string);\n", szIndent, szAccessName, szAccessName);
 			break;
 		case BASICTYPE_LOCALTYPEREF:
