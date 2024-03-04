@@ -42,6 +42,14 @@ extern "C"
 	bool getNextFile(SASN1File* file, int loopID);
 
 	/*
+	 * Retrieves the path with delimiter from a filename
+	 * @param szPath - The path we will touch
+	 * @param iLen - The len of the buffer szPath
+	 * @returns true on success (Path was copied to szPath)
+	 */
+	bool getDirectoryWithDelimiterFromFileName(char* szPath, unsigned long ulLen);
+
+	/*
 	 * Retrieves the path with delimiter from a path that may or may not have one
 	 * @param szPath - The path we will touch
 	 * @param iLen - The len of the buffer szPath

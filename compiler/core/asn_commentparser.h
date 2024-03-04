@@ -9,16 +9,30 @@
 
 std::string escapeJsonString(const std::string& input);
 
+class EAdded
+{
+public:
+	void handleAdded(const std::string& strParsedLine);
+	// @added dd.mm.yyyy [optional] comment
+	// @added yyyy-mm-dd [optional] comment
+	// @added yyyy/mm/dd [optional] comment
+
+	// If no time has been specified the value is set to 0
+	// The value is the unix time of that day (00:00:00:000)
+	long long i64Added = 0;
+	// Added comment - text that was written behing the @added flag
+	std::string strAdded_UTF8;
+	std::string strAdded_ASCII;
+};
+
 class EDeprecated
 {
 public:
 	void handleDeprecated(const std::string& strParsedLine);
-	// Type is deprecated, the value shows the time in unix time when the property has been flagged deprecated
-
-	// @deprecated [optional] 1.1.2023 [optional] comment
-	// e.g.
-	// @deprecated 1.1.2023 Superseeded by method xyz
-
+	// @deprecated dd.mm.yyyy [optional] comment
+	// @deprecated yyyy-mm-dd [optional] comment
+	// @deprecated yyyy/mm/dd [optional] comment
+	//
 	// If no time has been specified the value is set to 1
 	// The value is compared with the global gi64NoDeprecatedSymbols to validate whether the symbol shall get excluded or not for the output
 	long long i64Deprecated = 0;
@@ -27,7 +41,7 @@ public:
 	std::string strDeprecated_ASCII;
 };
 
-class EStructMemberComment : public EDeprecated
+class EStructMemberComment : public EDeprecated, public EAdded
 {
 public:
 	// Short Description - must be stored json encoded
@@ -42,7 +56,7 @@ public:
 	bool m_bConvertedToAscii = false;
 };
 
-class ETypeComment : public EDeprecated
+class ETypeComment : public EDeprecated, public EAdded
 {
 public:
 	// Name of the strCategory

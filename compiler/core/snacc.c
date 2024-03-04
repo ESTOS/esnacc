@@ -57,6 +57,7 @@ char* bVDAGlobalDLLExport = (char*)0;
 
 #include "../../c-lib/include/asn-incl.h"
 #include <string.h>
+#include "platform-functions.h"
 
 #include "mem.h"
 #include "asn1module.h"
@@ -333,13 +334,14 @@ void loadInterfaceVersionFile(const char* szFileName)
 	const char* szVersionFileName = "interfaceversion.txt";
 	strcpy_s(szVersionFile, _MAX_PATH, szFolderPath);
 	strcat_s(szVersionFile, _MAX_PATH, szVersionFileName);
-	FILE* file = fopen(szVersionFile, "r");
+	FILE* file = NULL;
+	myfopen(&file, szVersionFile, "r");
 	if (!file)
 	{
 		szVersionFileName = "version.txt";
 		strcpy_s(szVersionFile, _MAX_PATH, szFolderPath);
 		strcat_s(szVersionFile, _MAX_PATH, szVersionFileName);
-		file = fopen(szVersionFile, "r");
+		myfopen(&file, szVersionFile, "r");
 	}
 
 	if (file)
@@ -2592,18 +2594,58 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
 	exit(200);
 }
 
+enum EDateFormat
+{
+	EDateFormat_UNKNOWN,
+	EDateFormat_EUROPEAN, // 31.1.2024
+	EDateFormat_US_SLASH, // 1/31/2024
+	EDateFormat_US_MINUS  // 1-31-2024
+};
+
 /**
- * Converts a date in notation day.month.year into the seconds based on unix time 1.1.1970
+ * Converts a date in different notations into the seconds based on unix time 1.1.1970
+ * DD.MM.YYYY
+ * MM/DD/YYYY
+ * MM-DD-YYYY
  *
  * Returns -1 on error
  */
 long long ConvertDateToUnixTime(const char* szDate)
 {
 	long long tmResult = -1;
+
+	enum EDateFormat format = EDateFormat_UNKNOWN;
+	if (strstr(szDate, "."))
+		format = EDateFormat_EUROPEAN;
+	else if (strstr(szDate, "-"))
+		format = EDateFormat_US_MINUS;
+	else if (strstr(szDate, "/"))
+		format = EDateFormat_US_SLASH;
+	else
+	{
+		assert(false);
+		fprintf(stderr, "Unknown date format %s", szDate);
+	}
+
 #ifdef _WIN32
 	SYSTEMTIME st;
 	memset(&st, 0x00, sizeof(SYSTEMTIME));
-	if (sscanf_s(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3)
+
+	bool bSucceeded = false;
+	switch (format)
+	{
+		case EDateFormat_EUROPEAN:
+			bSucceeded = sscanf_s(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3;
+			break;
+		case EDateFormat_US_MINUS:
+			bSucceeded = sscanf_s(szDate, "%hd-%hd-%hd", &st.wMonth, &st.wDay, &st.wYear) == 3;
+			break;
+		case EDateFormat_US_SLASH:
+			bSucceeded = sscanf_s(szDate, "%hd/%hd/%hd", &st.wMonth, &st.wDay, &st.wYear) == 3;
+			break;
+	}
+
+	if (bSucceeded)
 	{
 		if (st.wDay < 1 || st.wDay > 31)
 			return tmResult;
@@ -2620,8 +2662,23 @@ long long ConvertDateToUnixTime(const char* szDate)
 	}
 #else
 	struct tm tm;
-	if (strptime(szDate, "%d.%m.%Y", &tm))
-		tmResult = mktime(&tm);
+
+	switch (format)
+	{
+		case EDateFormat_EUROPEAN:
+			if (strptime(szDate, "%d.%m.%Y", &tm))
+				tmResult = mktime(&tm);
+			break;
+		case EDateFormat_US_MINUS:
+			if (strptime(szDate, "%m-%d-%Y", &tm))
+				tmResult = mktime(&tm);
+			break;
+		case EDateFormat_US_SLASH:
+			if (strptime(szDate, "%m/%d/%Y", &tm))
+				tmResult = mktime(&tm);
+			break;
+	}
+
 #endif
 	return tmResult;
 }

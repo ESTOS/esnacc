@@ -7,6 +7,7 @@
 #include <list>
 #include <string.h>
 #include <vector>
+#include <assert.h>
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 
@@ -25,6 +26,37 @@ std::string rtrim(const std::string& s)
 std::string trim(const std::string& s)
 {
 	return rtrim(ltrim(s));
+}
+
+void EAdded::handleAdded(const std::string& strParsedLine)
+{
+	std::string strComment = trim(strParsedLine);
+	// Check is ther a date in the value?
+	// @deprecated 1.1.2023 Some comment
+	auto pos = strComment.find(" ");
+	if (pos == std::string::npos)
+		pos = strComment.length();
+	// Longest is 31.12.2023 (10), shortest is 1.1.2000 (8) or 20240101 (8)
+	if (pos >= 8 && pos <= 10)
+	{
+		// Okay, let's see if this is timestamp value...
+		std::string strDate = strComment.substr(0, pos);
+		long long i64UnixTime = ConvertDateToUnixTime(strDate.c_str());
+		if (i64UnixTime > 0)
+		{
+			i64Added = i64UnixTime;
+			strComment = trim(strComment.substr(strDate.length()));
+		}
+	}
+	else
+	{
+		assert(false);
+	}
+	if (strComment.length())
+		strAdded_UTF8 = escapeJsonString(strComment);
+
+	if (i64Added == 0)
+		fprintf(stderr, "WARNING - @added flag is missing a timestamp. You MUST add a timestamp to the @added! - '%s'", strParsedLine.c_str());
 }
 
 void EDeprecated::handleDeprecated(const std::string& strParsedLine)
@@ -52,7 +84,7 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine)
 
 	if (i64Deprecated == 0)
 	{
-		fprintf(stderr, "WARNING - @deprecated flag is missing a timestamp. You need to add a timestamp in order to be able to deterministically remove deprecated things from the generated code!");
+		fprintf(stderr, "WARNING - @deprecated flag is missing a timestamp. You need to add a timestamp in order to be able to deterministically remove deprecated things from the generated code! - '%s'", strParsedLine.c_str());
 		i64Deprecated = 1;
 	}
 }
@@ -266,7 +298,8 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 		_brief = 1,
 		_private = 2,
 		_deprecated = 3,
-		_linked = 4,
+		_added = 4,
+		_linked = 5,
 	};
 
 	eLast last = eLast::_unknown;
@@ -274,38 +307,53 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 	for (auto el = commentList.begin(); el != commentList.end(); el++)
 	{
 		std::string strLine = *el;
-		if (strLine.substr(0, 6) == "@brief")
+		bool bHandled = false;
+		if (strLine.substr(0, 1) == "@")
 		{
-			last = eLast::_brief;
-			strLine = trim(strLine.substr(6));
-			pType->strShort_UTF8 += escapeJsonString(strLine);
+			bHandled = true;
+			if (strLine.substr(1, 5) == "brief")
+			{
+				last = eLast::_brief;
+				strLine = trim(strLine.substr(6));
+				pType->strShort_UTF8 += escapeJsonString(strLine);
+			}
+			else if (strLine.substr(1, 7) == "private")
+			{
+				last = eLast::_private;
+				pType->iPrivate = 1;
+			}
+			else if (strLine.substr(1, 10) == "deprecated")
+			{
+				last = eLast::_deprecated;
+				pType->handleDeprecated(strLine.substr(11));
+			}
+			else if (strLine.substr(1, 5) == "added")
+			{
+				last = eLast::_added;
+				pType->handleAdded(strLine.substr(6));
+			}
+			else if (strLine.substr(1, 6) == "linked")
+			{
+				last = eLast::_linked;
+				strLine = trim(strLine.substr(7));
+				pType->strLinkedType_UTF8 += escapeJsonString(strLine);
+			}
+			else if (strLine.substr(1, 4) == "long")
+			{
+				// in case someone added a long comment to a member variable we add the content to the short
+				last = eLast::_brief;
+				strLine = trim(strLine.substr(5));
+				if (!pType->strShort_UTF8.empty())
+					pType->strShort_UTF8 += escapeJsonString("\n");
+				pType->strShort_UTF8 += escapeJsonString(strLine);
+			}
+			else
+			{
+				bHandled = true;
+			}
 		}
-		else if (strLine.substr(0, 8) == "@private")
-		{
-			last = eLast::_private;
-			pType->iPrivate = 1;
-		}
-		else if (strLine.substr(0, 11) == "@deprecated")
-		{
-			last = eLast::_deprecated;
-			pType->handleDeprecated(strLine.substr(11));
-		}
-		else if (strLine.substr(0, 7) == "@linked")
-		{
-			last = eLast::_linked;
-			strLine = trim(strLine.substr(7));
-			pType->strLinkedType_UTF8 += escapeJsonString(strLine);
-		}
-		else if (strLine.substr(0, 5) == "@long")
-		{
-			// in case someone added a long comment to a member variable we add the content to the short
-			last = eLast::_brief;
-			strLine = trim(strLine.substr(5));
-			if (!pType->strShort_UTF8.empty())
-				pType->strShort_UTF8 += escapeJsonString("\n");
-			pType->strShort_UTF8 += escapeJsonString(strLine);
-		}
-		else
+
+		if (!bHandled)
 		{
 			strLine = trim(strLine);
 			if (last == eLast::_brief)
