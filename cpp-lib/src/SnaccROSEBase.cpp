@@ -44,6 +44,29 @@ std::string getPrettyPrinted(const SJson::Value& value)
 	return SJson::writeString(wbuilder, value);
 }
 
+/*
+ * Searches in haystack for needle but searches not until the null byte in haystack but until reaching limit
+ */
+const char* strstr_limited(const char* haystack, const char* needle, size_t limit)
+{
+	try
+	{
+		size_t needle_length = strlen(needle);
+		if (!needle_length)
+			return haystack;
+
+		for (size_t i = 0; i <= limit - needle_length; ++i)
+			if (haystack[i] == *needle && strncmp(haystack + i, needle, needle_length) == 0)
+				return (haystack + i);
+	}
+	catch (...)
+	{
+		assert(0);
+	}
+
+	return NULL;
+}
+
 // check if at least one Operation has been registerd
 bool SnaccRoseOperationLookup::Initialized()
 {
@@ -884,11 +907,11 @@ void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 			// JSON logging is requested
 			if (encoding == SNACC::TransportEncoding::JSON || encoding == SNACC::TransportEncoding::JSON_NO_HEADING)
 			{
-				if (strlen(szData))
+				if (size)
 				{
 					// The payload is already json -> we can directly log it
 					// in Case inbound data shall get pretty printed always we need to check if the payload is alrady pretty printed
-					if (pParsedValue && (level & (int)EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED) && strstr(szData, "\n") == nullptr)
+					if (pParsedValue && (level & (int)EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED) && strstr_limited(szData, "\n", size) == nullptr)
 					{
 						std::string strLogData = getPrettyPrinted(*pParsedValue);
 						PrintJSONToLog(bOutbound, false, szOperationName, strLogData.c_str(), strLogData.length());
@@ -1430,7 +1453,7 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 #define STRINGLEN(sz) strlen(sz)
 #endif
 
-int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = false */)
+int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = true */)
 {
 	std::lock_guard<std::mutex> lock(m_mtxLogFile);
 
@@ -1438,9 +1461,9 @@ int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool b
 	{
 		m_bFlushEveryWrite = bFlushEveryWrite;
 #ifdef HAS_WCHAR_T
-		const wchar_t* szMode = bAppend ? L"a" : L"w";
+		const wchar_t* szMode = bAppend ? L"ab" : L"wb";
 #else
-		const char* szMode = bAppend ? "a" : "w";
+		const char* szMode = bAppend ? "ab" : "wb";
 #endif
 #ifdef _MSC_VER
 		m_pAsnLogFile = _wfsopen(szPath, szMode, _SH_DENYWR);
@@ -1474,7 +1497,7 @@ int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool b
 
 void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, const char* szOperationName, const char* szData, const size_t stLength)
 {
-	if (!m_pAsnLogFile)
+	if (!m_pAsnLogFile || !szData)
 		return;
 
 	// Die ASN.1-Funktionen k�nnen auch aus verschiedenen Threads gerufen werden.
@@ -1524,7 +1547,18 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 
 		size_t stPrintLength = stLength;
 		if (!stPrintLength)
-			stPrintLength = strlen(szData);
+		{
+			try
+			{
+				stPrintLength = strlen(szData);
+			}
+			catch (...)
+			{
+				// No length was handed over
+				// When trying to get the length from a zero terminated string it looks like we ran into memory we are not allowed to read
+				assert(false);
+			}
+		}
 
 		// Remove potential null characters at the end of the string
 		while (stPrintLength > 0)
@@ -1536,7 +1570,6 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 		const char* start = szData;
 		const char* end = szData;
 		size_t stCount = 0;
-
 		while (stCount < stPrintLength)
 		{
 			if (*end == '\n')
