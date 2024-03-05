@@ -1453,7 +1453,7 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 #define STRINGLEN(sz) strlen(sz)
 #endif
 
-int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = false */)
+int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = true */)
 {
 	std::lock_guard<std::mutex> lock(m_mtxLogFile);
 
