@@ -3284,58 +3284,13 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 						else
 						{
 							if (!tmpElmt->type->extensionAddition)
-								fprintf(src, "\t\ttag1 = BDecTag (_b, seqBytesDecoded);\n");
+								fprintf(src, "\t\ttag1 = BDecTag(_b, seqBytesDecoded);\n");
 						}
 					}
 					else
 					{
-						fprintf(src, "\t\tif (seqBytesDecoded == elmtLen0)\n");
-						fprintf(src, "\t\t{\n");
-						fprintf(src, "\t\t\tbytesDecoded += seqBytesDecoded;\n");
+						fprintf(src, "\t\tif (BDecValidateEnd(_b, tag1, bytesDecoded, seqBytesDecoded, elmtLen0))\n");
 						fprintf(src, "\t\t\treturn;\n");
-						fprintf(src, "\t\t}\n");
-						fprintf(src, "\t\telse\n");
-						fprintf(src, "\t\t{\n");
-
-						if ((tmpTypeId == BASICTYPE_ANY || tmpTypeId == BASICTYPE_ANYDEFINEDBY) && !CountTags(tmpElmt->type))
-						{
-							/* don't get a tag since ANY's decode their own */
-							if (e->type->optional || (tmpElmt->type->optional && tmpElmt != (NamedType*)LAST_LIST_ELMT(seq->basicType->a.sequence)))
-							{
-								/*
-								 * let this cause a compile error in the generated code
-								 */
-								fprintf(src, "  <problems with untagged ANY that is optional or follows an optional sequence element - you must fix this>\n");
-							}
-							fprintf(src, "\t\t\ttag1 = _b.PeekByte();\n");
-							fprintf(src, "\t\t\tif (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)\n");
-							fprintf(src, "\t\t\t{\n");
-							fprintf(src, "\t\t\t\tBDecEoc(_b, seqBytesDecoded);\n\n");
-							fprintf(src, "\t\t\t\tbytesDecoded += seqBytesDecoded;\n");
-							fprintf(src, "\t\t\t\treturn;\n");
-							fprintf(src, "\t\t\t}\n");
-						}
-						else if (tmpTypeId == BASICTYPE_EXTENSION)
-						{
-							fprintf(src, "\t\t\ttag1 = _b.PeekByte();\n");
-							fprintf(src, "\t\t\tif (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)\n");
-							fprintf(src, "\t\t\t{\n");
-							fprintf(src, "\t\t\t\tBDecEoc(_b, seqBytesDecoded);\n\n");
-							fprintf(src, "\t\t\t\tbytesDecoded += seqBytesDecoded;\n");
-							fprintf(src, "\t\t\t\treturn;\n");
-							fprintf(src, "\t\t\t}\n");
-						}
-						else
-						{
-							fprintf(src, "\t\t\ttag1 = BDecTag(_b, seqBytesDecoded);\n");
-							fprintf(src, "\t\t\tif (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)\n");
-							fprintf(src, "\t\t\t{\n");
-							fprintf(src, "\t\t\t\tBDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);\n");
-							fprintf(src, "\t\t\t\tbytesDecoded += seqBytesDecoded;\n");
-							fprintf(src, "\t\t\t\treturn;\n");
-							fprintf(src, "\t\t\t}\n");
-						}
-						fprintf(src, "\t\t}\n");
 					}
 				}
 
@@ -3376,65 +3331,16 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 		/***********************************************************************/
 		/***********************************************************************/
 
-		/* for last elmt only */
-		// fprintf(src, "  bytesDecoded += seqBytesDecoded;\n"); nenene ... das muss unten passieren! wenn auch noch alles gelesen wurde was wir nicht kennen!
-		fprintf(src, "\tif (elmtLen0 == INDEFINITE_LEN)\n");
-		fprintf(src, "\t{\n");
 		if (extensionAdditionFound)
-		{
-			fprintf(src, "\t\t// keep grabbing any's into the extension list\n");
-			fprintf(src, "\t\t// until EOC is found\n");
-			fprintf(src, "\t\tbool b_not_EOC = true;\n");
-			fprintf(src, "\t\twhile(b_not_EOC)\n");
-			fprintf(src, "\t\t{\n");
-			fprintf(src, "\t\t\ttag1 = _b.PeekByte();\n\n");
-			fprintf(src, "\t\t\tif ((elmtLen0 == INDEFINITE_LEN) && (tag1 == EOC_TAG_ID))\n");
-			fprintf(src, "\t\t\t{\n");
-			fprintf(src, "\t\t\t\tBDecEoc (_b, seqBytesDecoded);\n\n");
-			fprintf(src, "\t\t\t\tbytesDecoded += seqBytesDecoded;\n");
-			fprintf(src, "\t\t\t\tb_not_EOC = false;\n");
-			fprintf(src, "\t\t\t}\n");
-			fprintf(src, "\t\t\telse\n");
-			fprintf(src, "\t\t\t{\n");
-			fprintf(src, "\t\t\t\tAsnAny extAny;\n");
-			fprintf(src, "\t\t\t\textAny.BDec(_b, seqBytesDecoded);\n");
-			fprintf(src, "\t\t\t\textension.extList.insert(extension.extList.end(), extAny);\n");
-			fprintf(src, "\t\t\t}\n");
-			fprintf(src, "\t\t}\n");
-		}
+			fprintf(src, "\textension.readFromBuffer(_b, tag1, elmtLen0, seqBytesDecoded);\n");
 		else
 		{
-			fprintf(src, "\t\tBDecEoc (_b, bytesDecoded);\n");
-			fprintf(src, "\t\treturn;\n");
-		}
-		fprintf(src, "\t}\n");
-		fprintf(src, "\telse if (seqBytesDecoded != elmtLen0)\n");
-		fprintf(src, "\t{\n");
-
-		if (extensionAdditionFound)
-		{
-			fprintf(src, "\t\twhile(seqBytesDecoded < elmtLen0)\n");
-			fprintf(src, "\t\t{\n");
-			fprintf(src, "\t\t\t// Grapping Anys until length is reached\n");
-			fprintf(src, "\t\t\tAsnAny extAny;\n");
-			fprintf(src, "\t\t\textAny.BDec(_b, seqBytesDecoded);\n");
-			fprintf(src, "\t\t\textension.extList.insert(extension.extList.end(), extAny);\n");
-			fprintf(src, "\t\t}\n");
-			fprintf(src, "\t\t// don't forget to add theese bytes too ...\n");
-			fprintf(src, "\t\tbytesDecoded += seqBytesDecoded;\n");
-			fprintf(src, "\t\treturn;\n");
-		}
-		else
-		{
+			fprintf(src, "\tif (elmtLen0 == INDEFINITE_LEN)\n");
+			fprintf(src, "\t\tBDecEoc(_b, bytesDecoded);\n");
+			fprintf(src, "\telse if (bytesDecoded < elmtLen0)\n");
 			fprintf(src, "\t\tthrow EXCEPT(\"Length discrepancy on sequence\", DECODE_ERROR);\n");
 		}
-		fprintf(src, "\t}\n");
-		fprintf(src, "\telse\n");
-		fprintf(src, "\t{\n");
-		fprintf(src, "\t\t// nothing more to read, just add the bytes read previously\n");
-		fprintf(src, "\t\tbytesDecoded += seqBytesDecoded;\n");
-		fprintf(src, "\t}\n");
-
+		fprintf(src, "\n\tbytesDecoded += seqBytesDecoded;\n");
 	} /* end of non-empty set else clause */
 
 	fprintf(src, "}\n\n");

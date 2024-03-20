@@ -109,6 +109,7 @@ namespace SNACC
 
 		void UnGetBytes(long lBytesToPutBack) const;
 
+		void GrabAnyEx(AsnBuf& anyBuf, AsnLen headerLen, AsnLen payloadLen, AsnLen& bytesDecoded) const;
 		void GrabAny(AsnBuf& anyBuf, SNACC::AsnLen& bytesDecoded) const;
 		const Deck& deck() const
 		{

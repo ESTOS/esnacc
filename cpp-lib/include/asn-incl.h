@@ -16,6 +16,7 @@
 #include "asn-buf.h"
 #include "snaccexcept.h"
 #include "../jsoncpp/include/json.h"
+#include "assert.h"
 
 #ifdef _WIN32
 #include <string>
@@ -232,6 +233,8 @@ void SNACCDLL_API BDecEoc(const AsnBuf& b, AsnLen& bytesDecoded);
 AsnLen SNACCDLL_API PEncDefLenTo127(AsnBufBits& b, int len);
 AsnLen SNACCDLL_API PEncLen_16kFragment(AsnBufBits& b, int len);
 AsnLen SNACCDLL_API PEncLen_1to16k(AsnBufBits& b, int len);
+
+bool SNACCDLL_API BDecValidateEnd(const AsnBuf& _b, AsnTag& tag1, AsnLen& bytesDecoded, AsnLen& seqBytesDecoded, const AsnLen elmtLen0);
 
 // Indent function used in Print() functions
 void SNACCDLL_API Indent(std::ostream& os, unsigned short i);
@@ -1461,11 +1464,10 @@ public:
 
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
+	void BDecExtensions(const AsnBuf& b, AsnLen& bytesDecoded);
 
 	void JEnc(SJson::Value& b) const override;
 	bool JDec(const SJson::Value& b) override;
-
-	void BDecContent(const AsnBuf& b, AsnTag tag, AsnLen len, AsnLen& bytesDecoded);
 
 	AsnLen PEnc(AsnBufBits& b) const override;
 	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
@@ -2316,6 +2318,48 @@ public:
 	}
 	~AsnExtension()
 	{
+	}
+
+	/*
+	 * In case the buffer still contains data (elmtLen0 vs bytesDecoded) we try to read additional objects from the buffer into the extList
+	 * This is however only possible if we know the type of object as AsnAny requires type and len.
+	 * So if the objects are context (CNTX, schema) based we need to stop
+	 *
+	 * _b = the buffer we are reading
+	 * tag1 = the tag which was read before (the buffer already points to the len element)
+	 * elementLen0 = the length of the sequence we are currently reading elements from (the total len including type and len data)
+	 * bytesDecoded = the current byte position in the buffer
+	 */
+	void readFromBuffer(const AsnBuf& _b, AsnTag tag, const AsnLen elementLen, AsnLen& bytesDecoded)
+	{
+		while (true)
+		{
+			if (elementLen == INDEFINITE_LEN)
+			{
+				auto bNext = _b.PeekByte();
+				if (bNext == EOC_TAG_ID)
+				{
+					BDecEoc(_b, bytesDecoded);
+					break;
+				}
+			}
+
+			const auto tagLen = BytesInTag(tag);
+			auto storedBytesDecoded = bytesDecoded;
+			auto payLoadLen = BDecLen(_b, bytesDecoded);
+			auto headerLen = tagLen + bytesDecoded - storedBytesDecoded;
+
+			// Grap the next any from the buffer
+			AsnAny extAny;
+			extAny.anyBuf = new AsnBuf();
+			_b.GrabAnyEx(*extAny.anyBuf, headerLen, payLoadLen, bytesDecoded);
+			extList.insert(extList.end(), extAny);
+
+			if (bytesDecoded >= elementLen)
+				break;
+			
+			tag = BDecTag(_b, bytesDecoded);
+		}
 	}
 
 	virtual AsnExtension* Clone() const override
