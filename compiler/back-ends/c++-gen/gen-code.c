@@ -2911,7 +2911,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 	*/
 
 	/* print local vars */
-	fprintf(src, "\t%s tag1 = %s();\n", tagTypeNameG, tagTypeNameG);
+	fprintf(src, "\t%s tag1 = 0;\n", tagTypeNameG);
 	fprintf(src, "\t%s seqBytesDecoded = 0;\n", lenTypeNameG);
 	/* count max number of extra length var nec */
 	varCount = 0;
@@ -2961,6 +2961,8 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 				fprintf(src, "\t\treturn;\n");
 				fprintf(src, "\ttag1 = BDecTag(_b, seqBytesDecoded);\n\n");
 			}
+			else
+				fprintf(src, "\n");
 		}
 		else
 		{
@@ -3064,7 +3066,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 				tags = GetTags(e->type, &stoleChoiceTags);
 
 				if (LIST_EMPTY(tags))
-					fprintf(src, "  // ANY type\n");
+					fprintf(src, "\t// ANY type\n");
 				else
 				{
 					tag = (Tag*)FIRST_LIST_ELMT(tags);
@@ -3332,15 +3334,16 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 		/***********************************************************************/
 
 		if (extensionAdditionFound)
-			fprintf(src, "\textension.readFromBuffer(_b, tag1, elmtLen0, seqBytesDecoded);\n");
+			fprintf(src, "\textension.readFromBuffer(_b, tag1, elmtLen0, seqBytesDecoded);\n\n");
 		else
 		{
 			fprintf(src, "\tif (elmtLen0 == INDEFINITE_LEN)\n");
 			fprintf(src, "\t\tBDecEoc(_b, bytesDecoded);\n");
-			fprintf(src, "\telse if (bytesDecoded < elmtLen0)\n");
-			fprintf(src, "\t\tthrow EXCEPT(\"Length discrepancy on sequence\", DECODE_ERROR);\n");
+			fprintf(src, "\telse if (seqBytesDecoded != elmtLen0)\n");
+			fprintf(src, "\t\tthrow EXCEPT(\"Length discrepancy on sequence\", DECODE_ERROR);\n\n");
+			fprintf(src, "\telse\n\t");
 		}
-		fprintf(src, "\n\tbytesDecoded += seqBytesDecoded;\n");
+		fprintf(src, "\tbytesDecoded += seqBytesDecoded;\n");
 	} /* end of non-empty set else clause */
 
 	fprintf(src, "}\n\n");
@@ -3889,7 +3892,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 		fprintf(src, "    AsnBufLoc readLoc;\n   readLoc = _b.GetReadLoc();\n");
 
 		/* print local vars */
-		fprintf(src, "  %s tag1 = %s();\n", tagTypeNameG, tagTypeNameG);
+		fprintf(src, "  %s tag1 = 0;\n", tagTypeNameG);
 		fprintf(src, "  %s setBytesDecoded = 0;\n", lenTypeNameG);
 		fprintf(src, "  unsigned int mandatoryElmtsDecoded = 0;\n");
 		/* count max number of extra length var nec */

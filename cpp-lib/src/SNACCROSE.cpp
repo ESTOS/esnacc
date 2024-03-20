@@ -397,7 +397,7 @@ AsnLen ROSEResultSeq::BEncContent(AsnBuf &_b) const
 void ROSEResultSeq::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 {
 	Clear();
-	AsnTag tag1 = AsnTag();
+	AsnTag tag1 = 0;
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
 	if (elmtLen0 == 0)
@@ -412,24 +412,17 @@ void ROSEResultSeq::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLe
 	else
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
-  // ANY type
+	// ANY type
 		result.BDec(_b, seqBytesDecoded);
 
 
 	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
+		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
-	{
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
+
 	else
-	{
-		// nothing more to read, just add the bytes read previously
 		bytesDecoded += seqBytesDecoded;
-	}
 }
 
 // [PrintSeqDefCodeBerEnc]
@@ -644,7 +637,7 @@ AsnLen ROSEAuth::BEncContent(AsnBuf &_b) const
 void ROSEAuth::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 {
 	Clear();
-	AsnTag tag1 = AsnTag();
+	AsnTag tag1 = 0;
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
 	if (elmtLen0 == 0)
@@ -655,7 +648,7 @@ void ROSEAuth::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, A
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		method.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		tag1 = BDecTag (_b, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 	else
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
@@ -669,19 +662,12 @@ void ROSEAuth::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, A
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
 	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
+		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
-	{
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
+
 	else
-	{
-		// nothing more to read, just add the bytes read previously
 		bytesDecoded += seqBytesDecoded;
-	}
 }
 
 // [PrintSeqDefCodeBerEnc]
@@ -950,7 +936,7 @@ AsnLen ROSEError::BEncContent(AsnBuf &_b) const
 void ROSEError::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 {
 	Clear();
-	AsnTag tag1 = AsnTag();
+	AsnTag tag1 = 0;
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
 	AsnLen elmtLen2 = 0;
@@ -973,14 +959,14 @@ void ROSEError::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, 
 		if (elmtLen1 == INDEFINITE_LEN)
 			BDecEoc(_b, seqBytesDecoded);
 
-		tag1 = BDecTag (_b, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 
 	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		invokedID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		tag1 = BDecTag (_b, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 	else
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
@@ -989,45 +975,24 @@ void ROSEError::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, 
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		error_value.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
-		{
-			bytesDecoded += seqBytesDecoded;
+		if (BDecValidateEnd(_b, tag1, bytesDecoded, seqBytesDecoded, elmtLen0))
 			return;
-		}
-		else
-		{
-			tag1 = _b.PeekByte();
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
-			{
-				BDecEoc(_b, seqBytesDecoded);
-
-				bytesDecoded += seqBytesDecoded;
-				return;
-			}
-		}
 	}
 	else
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
-  // ANY type
+	// ANY type
 		error = new AsnAny();
 		error->BDec(_b, seqBytesDecoded);
 
 
 	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
+		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
-	{
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
+
 	else
-	{
-		// nothing more to read, just add the bytes read previously
 		bytesDecoded += seqBytesDecoded;
-	}
 }
 
 // [PrintSeqDefCodeBerEnc]
@@ -1329,7 +1294,7 @@ AsnLen ROSEAuthRequest::BEncContent(AsnBuf &_b) const
 void ROSEAuthRequest::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 {
 	Clear();
-	AsnTag tag1 = AsnTag();
+	AsnTag tag1 = 0;
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
 	if (elmtLen0 == 0)
@@ -1340,21 +1305,8 @@ void ROSEAuthRequest::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmt
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		auth.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
-		{
-			bytesDecoded += seqBytesDecoded;
+		if (BDecValidateEnd(_b, tag1, bytesDecoded, seqBytesDecoded, elmtLen0))
 			return;
-		}
-		else
-		{
-			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
-			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
-				bytesDecoded += seqBytesDecoded;
-				return;
-			}
-		}
 	}
 	else
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
@@ -1367,19 +1319,12 @@ void ROSEAuthRequest::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmt
 	}
 
 	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
+		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
-	{
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
+
 	else
-	{
-		// nothing more to read, just add the bytes read previously
 		bytesDecoded += seqBytesDecoded;
-	}
 }
 
 // [PrintSeqDefCodeBerEnc]
@@ -1623,7 +1568,7 @@ AsnLen ROSEAuthResult::BEncContent(AsnBuf &_b) const
 void ROSEAuthResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 {
 	Clear();
-	AsnTag tag1 = AsnTag();
+	AsnTag tag1 = 0;
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
 	if (elmtLen0 == 0)
@@ -1634,21 +1579,8 @@ void ROSEAuthResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtL
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		authList.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
-		{
-			bytesDecoded += seqBytesDecoded;
+		if (BDecValidateEnd(_b, tag1, bytesDecoded, seqBytesDecoded, elmtLen0))
 			return;
-		}
-		else
-		{
-			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
-			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
-				bytesDecoded += seqBytesDecoded;
-				return;
-			}
-		}
 	}
 	else
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
@@ -1661,19 +1593,12 @@ void ROSEAuthResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtL
 	}
 
 	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
+		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
-	{
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
+
 	else
-	{
-		// nothing more to read, just add the bytes read previously
 		bytesDecoded += seqBytesDecoded;
-	}
 }
 
 // [PrintSeqDefCodeBerEnc]
@@ -2036,7 +1961,7 @@ AsnLen ROSEInvoke::BEncContent(AsnBuf &_b) const
 void ROSEInvoke::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 {
 	Clear();
-	AsnTag tag1 = AsnTag();
+	AsnTag tag1 = 0;
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
 	AsnLen elmtLen2 = 0;
@@ -2059,14 +1984,14 @@ void ROSEInvoke::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 		if (elmtLen1 == INDEFINITE_LEN)
 			BDecEoc(_b, seqBytesDecoded);
 
-		tag1 = BDecTag (_b, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 
 	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		invokeID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		tag1 = BDecTag (_b, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 	else
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
@@ -2076,7 +2001,7 @@ void ROSEInvoke::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		linked_ID = new AsnInt();
 		linked_ID->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		tag1 = BDecTag (_b, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 
 	if (tag1 == MAKE_TAG_ID(CNTX, CONS, 2))
@@ -2094,7 +2019,7 @@ void ROSEInvoke::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 		if (elmtLen1 == INDEFINITE_LEN)
 			BDecEoc(_b, seqBytesDecoded);
 
-		tag1 = BDecTag (_b, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 
 	if (tag1 == MAKE_TAG_ID(CNTX, CONS, 3))
@@ -2111,52 +2036,31 @@ void ROSEInvoke::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 		if (elmtLen1 == INDEFINITE_LEN)
 			BDecEoc(_b, seqBytesDecoded);
 
-		tag1 = BDecTag (_b, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 
 	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		operationID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
-		{
-			bytesDecoded += seqBytesDecoded;
+		if (BDecValidateEnd(_b, tag1, bytesDecoded, seqBytesDecoded, elmtLen0))
 			return;
-		}
-		else
-		{
-			tag1 = _b.PeekByte();
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
-			{
-				BDecEoc(_b, seqBytesDecoded);
-
-				bytesDecoded += seqBytesDecoded;
-				return;
-			}
-		}
 	}
 	else
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
-  // ANY type
+	// ANY type
 		argument = new AsnAny();
 		argument->BDec(_b, seqBytesDecoded);
 
 
 	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
+		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
-	{
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
+
 	else
-	{
-		// nothing more to read, just add the bytes read previously
 		bytesDecoded += seqBytesDecoded;
-	}
 }
 
 // [PrintSeqDefCodeBerEnc]
@@ -2555,7 +2459,7 @@ AsnLen ROSEResult::BEncContent(AsnBuf &_b) const
 void ROSEResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 {
 	Clear();
-	AsnTag tag1 = AsnTag();
+	AsnTag tag1 = 0;
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
 	AsnLen elmtLen2 = 0;
@@ -2578,28 +2482,15 @@ void ROSEResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 		if (elmtLen1 == INDEFINITE_LEN)
 			BDecEoc(_b, seqBytesDecoded);
 
-		tag1 = BDecTag (_b, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 
 	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE))
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		invokeID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
-		{
-			bytesDecoded += seqBytesDecoded;
+		if (BDecValidateEnd(_b, tag1, bytesDecoded, seqBytesDecoded, elmtLen0))
 			return;
-		}
-		else
-		{
-			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
-			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
-				bytesDecoded += seqBytesDecoded;
-				return;
-			}
-		}
 	}
 	else
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
@@ -2612,19 +2503,12 @@ void ROSEResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 	}
 
 	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
+		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
-	{
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
+
 	else
-	{
-		// nothing more to read, just add the bytes read previously
 		bytesDecoded += seqBytesDecoded;
-	}
 }
 
 // [PrintSeqDefCodeBerEnc]
@@ -3337,7 +3221,7 @@ AsnLen ROSEReject::BEncContent(AsnBuf &_b) const
 void ROSEReject::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, AsnLen& bytesDecoded)
 {
 	Clear();
-	AsnTag tag1 = AsnTag();
+	AsnTag tag1 = 0;
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
 	AsnLen elmtLen2 = 0;
@@ -3360,7 +3244,7 @@ void ROSEReject::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 		if (elmtLen1 == INDEFINITE_LEN)
 			BDecEoc(_b, seqBytesDecoded);
 
-		tag1 = BDecTag (_b, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 
 	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, INTEGER_TAG_CODE)
@@ -3368,21 +3252,8 @@ void ROSEReject::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		invokedID.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
-		{
-			bytesDecoded += seqBytesDecoded;
+		if (BDecValidateEnd(_b, tag1, bytesDecoded, seqBytesDecoded, elmtLen0))
 			return;
-		}
-		else
-		{
-			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
-			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
-				bytesDecoded += seqBytesDecoded;
-				return;
-			}
-		}
 	}
 	else
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
@@ -3395,21 +3266,8 @@ void ROSEReject::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		reject = new RejectProblem();
 		reject->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
-		{
-			bytesDecoded += seqBytesDecoded;
+		if (BDecValidateEnd(_b, tag1, bytesDecoded, seqBytesDecoded, elmtLen0))
 			return;
-		}
-		else
-		{
-			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
-			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
-				bytesDecoded += seqBytesDecoded;
-				return;
-			}
-		}
 	}
 
 	if (tag1 == MAKE_TAG_ID(UNIV, PRIM, UTF8STRING_TAG_CODE) || tag1 == MAKE_TAG_ID(UNIV, CONS, UTF8STRING_TAG_CODE))
@@ -3417,21 +3275,8 @@ void ROSEReject::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		details = new UTF8String();
 		details->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
-		if (seqBytesDecoded == elmtLen0)
-		{
-			bytesDecoded += seqBytesDecoded;
+		if (BDecValidateEnd(_b, tag1, bytesDecoded, seqBytesDecoded, elmtLen0))
 			return;
-		}
-		else
-		{
-			tag1 = BDecTag(_b, seqBytesDecoded);
-			if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
-			{
-				BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
-				bytesDecoded += seqBytesDecoded;
-				return;
-			}
-		}
 	}
 
 	if (tag1 == MAKE_TAG_ID(CNTX, CONS, 4))
@@ -3451,19 +3296,12 @@ void ROSEReject::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 	}
 
 	if (elmtLen0 == INDEFINITE_LEN)
-	{
-		BDecEoc (_b, bytesDecoded);
-		return;
-	}
+		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
-	{
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-	}
+
 	else
-	{
-		// nothing more to read, just add the bytes read previously
 		bytesDecoded += seqBytesDecoded;
-	}
 }
 
 // [PrintSeqDefCodeBerEnc]

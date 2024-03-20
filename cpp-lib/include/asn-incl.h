@@ -2332,6 +2332,9 @@ public:
 	 */
 	void readFromBuffer(const AsnBuf& _b, AsnTag tag, const AsnLen elementLen, AsnLen& bytesDecoded)
 	{
+		if (bytesDecoded == elementLen || tag == 0)
+			return;
+
 		while (true)
 		{
 			if (elementLen == INDEFINITE_LEN)
