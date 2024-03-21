@@ -557,6 +557,15 @@ void AsnAny::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	}
 }
 
+void AsnAny::BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded)
+{
+	const auto tagLen = BytesInTag(tag);
+	const auto elementLen = BytesInLen(elmtLen);
+	const auto headerLen = tagLen + elementLen;
+	anyBuf = new AsnBuf;
+	b.GrabAnyEx(*anyBuf, headerLen, elmtLen, bytesDecoded);
+}
+
 void AsnAny::Print(std::ostream& os, unsigned short indent) const
 {
 	if (value != NULL)

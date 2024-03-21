@@ -408,19 +408,19 @@ void ROSEResultSeq::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLe
 	{
 		elmtLen1 = BDecLen(_b, seqBytesDecoded);
 		resultValue.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+		tag1 = BDecTag(_b, seqBytesDecoded);
 	}
 	else
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
 	// ANY type
-		result.BDec(_b, seqBytesDecoded);
-
+	elmtLen1 = BDecLen(_b, seqBytesDecoded);
+	result.BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
 
 	if (elmtLen0 == INDEFINITE_LEN)
 		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-
 	else
 		bytesDecoded += seqBytesDecoded;
 }
@@ -535,7 +535,8 @@ void ROSEResultSeq::PrintXML(std::ostream& os, const char* lpszTitle) const
 			os << "<" << typeName();
 		}
 	}
-os << " type=\"SEQUENCE\">" << std::endl;
+	os << " type=\"SEQUENCE\">" << std::endl;
+
 	resultValue.PrintXML(os, "resultValue");
 
 	result.PrintXML(os, "result");
@@ -544,11 +545,10 @@ os << " type=\"SEQUENCE\">" << std::endl;
 	{
 		os << "</" << lpszTitle << ">" << std::endl;
 	}
-	else
-		if (typeName() && strlen(typeName()))
-		{
-			os << "</" << typeName() << ">" << std::endl;
-		}
+	else if (typeName() && strlen(typeName()))
+	{
+		os << "</" << typeName() << ">" << std::endl;
+	}
 }
 
 // [PrintConstructor]
@@ -665,7 +665,6 @@ void ROSEAuth::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, A
 		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-
 	else
 		bytesDecoded += seqBytesDecoded;
 }
@@ -780,7 +779,8 @@ void ROSEAuth::PrintXML(std::ostream& os, const char* lpszTitle) const
 			os << "<" << typeName();
 		}
 	}
-os << " type=\"SEQUENCE\">" << std::endl;
+	os << " type=\"SEQUENCE\">" << std::endl;
+
 	method.PrintXML(os, "method");
 
 	authdata.PrintXML(os, "authdata");
@@ -789,11 +789,10 @@ os << " type=\"SEQUENCE\">" << std::endl;
 	{
 		os << "</" << lpszTitle << ">" << std::endl;
 	}
-	else
-		if (typeName() && strlen(typeName()))
-		{
-			os << "</" << typeName() << ">" << std::endl;
-		}
+	else if (typeName() && strlen(typeName()))
+	{
+		os << "</" << typeName() << ">" << std::endl;
+	}
 }
 
 // [PrintConstructor]
@@ -982,15 +981,17 @@ void ROSEError::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0, 
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
 	// ANY type
+	if (tag1)
+	{
 		error = new AsnAny();
-		error->BDec(_b, seqBytesDecoded);
-
+		elmtLen1 = BDecLen(_b, seqBytesDecoded);
+		error->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+	}
 
 	if (elmtLen0 == INDEFINITE_LEN)
 		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-
 	else
 		bytesDecoded += seqBytesDecoded;
 }
@@ -1149,7 +1150,8 @@ void ROSEError::PrintXML(std::ostream& os, const char* lpszTitle) const
 			os << "<" << typeName();
 		}
 	}
-os << " type=\"SEQUENCE\">" << std::endl;
+	os << " type=\"SEQUENCE\">" << std::endl;
+
 	if (NOT_NULL (sessionID))
 	{
 		sessionID->PrintXML(os, "sessionID");
@@ -1168,11 +1170,10 @@ os << " type=\"SEQUENCE\">" << std::endl;
 	{
 		os << "</" << lpszTitle << ">" << std::endl;
 	}
-	else
-		if (typeName() && strlen(typeName()))
-		{
-			os << "</" << typeName() << ">" << std::endl;
-		}
+	else if (typeName() && strlen(typeName()))
+	{
+		os << "</" << typeName() << ">" << std::endl;
+	}
 }
 
 // [PrintClone]
@@ -1322,7 +1323,6 @@ void ROSEAuthRequest::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmt
 		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-
 	else
 		bytesDecoded += seqBytesDecoded;
 }
@@ -1443,7 +1443,8 @@ void ROSEAuthRequest::PrintXML(std::ostream& os, const char* lpszTitle) const
 			os << "<" << typeName();
 		}
 	}
-os << " type=\"SEQUENCE\">" << std::endl;
+	os << " type=\"SEQUENCE\">" << std::endl;
+
 	auth.PrintXML(os, "auth");
 
 	if (NOT_NULL (context))
@@ -1455,11 +1456,10 @@ os << " type=\"SEQUENCE\">" << std::endl;
 	{
 		os << "</" << lpszTitle << ">" << std::endl;
 	}
-	else
-		if (typeName() && strlen(typeName()))
-		{
-			os << "</" << typeName() << ">" << std::endl;
-		}
+	else if (typeName() && strlen(typeName()))
+	{
+		os << "</" << typeName() << ">" << std::endl;
+	}
 }
 
 // [PrintConstructor]
@@ -1596,7 +1596,6 @@ void ROSEAuthResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtL
 		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-
 	else
 		bytesDecoded += seqBytesDecoded;
 }
@@ -1717,7 +1716,8 @@ void ROSEAuthResult::PrintXML(std::ostream& os, const char* lpszTitle) const
 			os << "<" << typeName();
 		}
 	}
-os << " type=\"SEQUENCE\">" << std::endl;
+	os << " type=\"SEQUENCE\">" << std::endl;
+
 	authList.PrintXML(os, "authList");
 
 	if (NOT_NULL (context))
@@ -1729,11 +1729,10 @@ os << " type=\"SEQUENCE\">" << std::endl;
 	{
 		os << "</" << lpszTitle << ">" << std::endl;
 	}
-	else
-		if (typeName() && strlen(typeName()))
-		{
-			os << "</" << typeName() << ">" << std::endl;
-		}
+	else if (typeName() && strlen(typeName()))
+	{
+		os << "</" << typeName() << ">" << std::endl;
+	}
 }
 
 // [PrintConstructor]
@@ -2050,15 +2049,17 @@ void ROSEInvoke::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 		throw EXCEPT("SEQUENCE is missing non-optional root elmt", DECODE_ERROR);
 
 	// ANY type
+	if (tag1)
+	{
 		argument = new AsnAny();
-		argument->BDec(_b, seqBytesDecoded);
-
+		elmtLen1 = BDecLen(_b, seqBytesDecoded);
+		argument->BDecContent(_b, tag1, elmtLen1, seqBytesDecoded);
+	}
 
 	if (elmtLen0 == INDEFINITE_LEN)
 		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-
 	else
 		bytesDecoded += seqBytesDecoded;
 }
@@ -2283,7 +2284,8 @@ void ROSEInvoke::PrintXML(std::ostream& os, const char* lpszTitle) const
 			os << "<" << typeName();
 		}
 	}
-os << " type=\"SEQUENCE\">" << std::endl;
+	os << " type=\"SEQUENCE\">" << std::endl;
+
 	if (NOT_NULL (sessionID))
 	{
 		sessionID->PrintXML(os, "sessionID");
@@ -2317,11 +2319,10 @@ os << " type=\"SEQUENCE\">" << std::endl;
 	{
 		os << "</" << lpszTitle << ">" << std::endl;
 	}
-	else
-		if (typeName() && strlen(typeName()))
-		{
-			os << "</" << typeName() << ">" << std::endl;
-		}
+	else if (typeName() && strlen(typeName()))
+	{
+		os << "</" << typeName() << ">" << std::endl;
+	}
 }
 
 // [PrintConstructor]
@@ -2506,7 +2507,6 @@ void ROSEResult::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-
 	else
 		bytesDecoded += seqBytesDecoded;
 }
@@ -2649,7 +2649,8 @@ void ROSEResult::PrintXML(std::ostream& os, const char* lpszTitle) const
 			os << "<" << typeName();
 		}
 	}
-os << " type=\"SEQUENCE\">" << std::endl;
+	os << " type=\"SEQUENCE\">" << std::endl;
+
 	if (NOT_NULL (sessionID))
 	{
 		sessionID->PrintXML(os, "sessionID");
@@ -2666,11 +2667,10 @@ os << " type=\"SEQUENCE\">" << std::endl;
 	{
 		os << "</" << lpszTitle << ">" << std::endl;
 	}
-	else
-		if (typeName() && strlen(typeName()))
-		{
-			os << "</" << typeName() << ">" << std::endl;
-		}
+	else if (typeName() && strlen(typeName()))
+	{
+		os << "</" << typeName() << ">" << std::endl;
+	}
 }
 
 // [PrintConstructor]
@@ -3299,7 +3299,6 @@ void ROSEReject::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elmtLen0,
 		BDecEoc(_b, bytesDecoded);
 	else if (seqBytesDecoded != elmtLen0)
 		throw EXCEPT("Length discrepancy on sequence", DECODE_ERROR);
-
 	else
 		bytesDecoded += seqBytesDecoded;
 }
@@ -3486,7 +3485,8 @@ void ROSEReject::PrintXML(std::ostream& os, const char* lpszTitle) const
 			os << "<" << typeName();
 		}
 	}
-os << " type=\"SEQUENCE\">" << std::endl;
+	os << " type=\"SEQUENCE\">" << std::endl;
+
 	if (NOT_NULL (sessionID))
 	{
 		sessionID->PrintXML(os, "sessionID");
@@ -3513,11 +3513,10 @@ os << " type=\"SEQUENCE\">" << std::endl;
 	{
 		os << "</" << lpszTitle << ">" << std::endl;
 	}
-	else
-		if (typeName() && strlen(typeName()))
-		{
-			os << "</" << typeName() << ">" << std::endl;
-		}
+	else if (typeName() && strlen(typeName()))
+	{
+		os << "</" << typeName() << ">" << std::endl;
+	}
 }
 
 // [PrintConstructor]

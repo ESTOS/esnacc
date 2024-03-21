@@ -1464,7 +1464,7 @@ public:
 
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
-	void BDecExtensions(const AsnBuf& b, AsnLen& bytesDecoded);
+	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
 	void JEnc(SJson::Value& b) const override;
 	bool JDec(const SJson::Value& b) override;

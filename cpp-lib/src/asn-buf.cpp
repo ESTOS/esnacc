@@ -399,7 +399,7 @@ char AsnBuf::GetByte() const
 // - payloadLen - the len of the payload after tag and len
 // - bytesDecoded - the current position of the reader (behind the header elements)
 //
-void AsnBuf::GrabAnyEx(AsnBuf& anyBuf, AsnLen headerLen, AsnLen payloadLen, AsnLen& bytesDecoded) const
+void AsnBuf::GrabAnyEx(const AsnBuf& anyBuf, AsnLen headerLen, AsnLen payloadLen, AsnLen& bytesDecoded) const
 {
 	FUNC("AsnBuf::GrabAnyEx");
 
@@ -444,7 +444,7 @@ void AsnBuf::GrabAnyEx(AsnBuf& anyBuf, AsnLen headerLen, AsnLen payloadLen, AsnL
 //           into AsnBuf that was passed in.  This is useful for copying the raw encoding
 //           of any ANY out of an AsnBuf.
 //
-void AsnBuf::GrabAny(AsnBuf& anyBuf, AsnLen& bytesDecoded) const
+void AsnBuf::GrabAny(const AsnBuf& anyBuf, AsnLen& bytesDecoded) const
 {
 	FUNC("AsnBuf::GrabAny");
 
