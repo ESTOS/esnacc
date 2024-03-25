@@ -191,6 +191,9 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 	}
 }
 
+/**
+ * Add the declaration Type of a member
+ */
 void PrintTSType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t)
 {
 	BasicType* basicType = t->basicType;
@@ -600,6 +603,11 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 			fprintf(src, "!");
 
 		PrintTSType(src, mods, m, td, seq, e->type);
+
+		// Initialises optional params with undefined
+		if (e->type->optional)
+			fprintf(src, " = undefined");
+
 		fprintf(src, ";\n");
 	}
 	// fprintf(src, "\n\t}");
