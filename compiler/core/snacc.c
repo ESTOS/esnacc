@@ -1953,14 +1953,16 @@ void GenTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues
 		for (iCount = 0; iCount < 1000; iCount++)
 		{
 			// As - is an unsupported variable replace it with _
-			char* varName = Asn1FieldName2CFieldName(strings[iCount]);
-
 			char* szModName = strings[iCount];
 			if (!szModName)
 				break;
+
+			char* varName = Asn1FieldName2CFieldName(szModName);
+
 			fprintf(typesFile, "export * as %s from \"./%s%s\";\n", varName, szModName, getCommonJSFileExtension());
 			if (genJSONEncDec)
-				fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter%s\";\n", szModName, szModName, getCommonJSFileExtension());
+				fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter%s\";\n", varName, szModName, getCommonJSFileExtension());
+
 			free(varName);
 			free(szModName);
 		}
