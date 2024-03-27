@@ -30,6 +30,61 @@
 #include <inttypes.h>
 #include <assert.h>
 
+void PrintTSPropertyList(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* choice, int novolatilefuncs) 
+{
+	NamedType* e;
+
+	int amountOptionalVariables = 0;
+	int amountMandatoryVariables = 0;
+	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence) {
+		if (e->fieldName == NULL) continue;
+		if (e->type->optional) {
+			amountOptionalVariables++;
+		} else {
+			amountMandatoryVariables++;
+		}
+	}
+
+	fprintf(src, "\tpublic static getOwnPropertyNames(bIncludeOptionals: boolean = true): string[] {\n");
+	if (amountMandatoryVariables == 0) {
+		fprintf(src, "\t\tconst p = [];\n");
+	}else {
+		fprintf(src, "\t\tconst p = [");
+		FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
+		{
+			if (amountMandatoryVariables == 0) {
+
+			} else {
+				if (!e->type->optional && e->fieldName != NULL) 
+				{
+					char* szConverted2 = FixName(e->fieldName);
+					fprintf(src, "\n\t\t\t\"%s\",", szConverted2);
+					free(szConverted2);
+				}
+			}
+		}
+		fprintf(src, "\n\t\t];\n");
+	}
+
+	if (amountOptionalVariables != 0) {
+		fprintf(src, "\t\tif (bIncludeOptionals) {");
+		FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
+		{
+			if (e->type->optional && e->fieldName != NULL) 
+			{
+				char* szConverted2 = FixName(e->fieldName);
+				fprintf(src, "\n\t\t\tp.push(\"%s\");", szConverted2);
+				free(szConverted2);
+			}
+		}
+		fprintf(src, "\n\t\t};\n");
+	}
+	fprintf(src, "\t\treturn p;\n");
+	fprintf(src, "\t};\n");
+
+	fprintf(src, "\n");
+} /* PrintTSPropertyList */
+
 void PrintTSNativeType(FILE* hdr, BasicType* pBasicType)
 {
 	enum BasicTypeChoiceId choiceId = pBasicType->choiceId;
@@ -383,35 +438,7 @@ void PrintTSChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 	fprintf(src, "\t}\n\n");
 
 	/* Static method to get all own properties as key string */
-	fprintf(src, "\tpublic static getOwnPropertyNames(bIncludeOptionals: boolean = true): string[] {\n");
-	fprintf(src, "\t\tconst p = [");
-	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
-	{
-		if (!e->type->optional && e->fieldName != NULL) 
-		{
-			char* szConverted2 = FixName(e->fieldName);
-			fprintf(src, "\n\t\t\t\"%s\",", szConverted2);
-			free(szConverted2);
-		}
-	}
-	fprintf(src, "\n\t\t];\n");
-
-	fprintf(src, "\t\tif (bIncludeOptionals) {");
-	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
-	{
-		if (e->type->optional && e->fieldName != NULL) 
-		{
-			char* szConverted2 = FixName(e->fieldName);
-			fprintf(src, "\n\t\t\tp.push(\"%s\");", szConverted2);
-			free(szConverted2);
-		}
-	}
-	fprintf(src, "\n\t\t};\n");
-	fprintf(src, "\t\treturn p;\n");
-	fprintf(src, "\t};\n");
-
-	fprintf(src, "\n");
-
+	PrintTSPropertyList(src, mods, m, td, NULL, td->type, novolatilefuncs);
 
 	/* Write out properties */
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
@@ -589,35 +616,8 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	fprintf(src, "\t\t});\n");
 	fprintf(src, "\t}\n\n");
 
-		/* Static method to get all own properties as key string */
-	fprintf(src, "\tpublic static getOwnPropertyNames(bIncludeOptionals: boolean = true): string[] {\n");
-	fprintf(src, "\t\tconst p = [");
-	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
-	{
-		if (!e->type->optional && e->fieldName != NULL) 
-		{
-			char* szConverted2 = FixName(e->fieldName);
-			fprintf(src, "\n\t\t\t\"%s\",", szConverted2);
-			free(szConverted2);
-		}
-	}
-	fprintf(src, "\n\t\t];\n");
-
-	fprintf(src, "\t\tif (bIncludeOptionals) {");
-	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
-	{
-		if (e->type->optional && e->fieldName != NULL) 
-		{
-			char* szConverted2 = FixName(e->fieldName);
-			fprintf(src, "\n\t\t\tp.push(\"%s\");", szConverted2);
-			free(szConverted2);
-		}
-	}
-	fprintf(src, "\n\t\t};\n");
-	fprintf(src, "\t\treturn p;\n");
-	fprintf(src, "\t};\n");
-
-	fprintf(src, "\n");
+	/* Static method to get all own properties as key string */
+	PrintTSPropertyList(src, mods, m, td, NULL, td->type, novolatilefuncs);
 
 	/* Write out properties */
 	// fprintf(src, "\tprops: {\n");
