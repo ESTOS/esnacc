@@ -531,6 +531,8 @@ AsnLen AsnAny::BEnc(AsnBuf& b) const
 // Decoded ANY DEFINED BY or UNKNOWN ANY from 'b'.  If an ANY DEFINED
 // BY is found it's will be decoded into value.  If an UNKNOWN ANY is
 // found it's binary values will be copied into 'anyBuf'.
+
+// bSkipTag - true, the reader will NOT read the tag from the buffer as it has already been read
 //
 void AsnAny::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 {
@@ -555,22 +557,13 @@ void AsnAny::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	}
 }
 
-/* JKG -- added 03/03/04 for support of unkown any's in extension additions                   */
-/* This BDecContent function was written specifically to handle the decoding of unknown any's */
-/* that happened because of extension additions.  It is not intended for use with decoding    */
-/* known any's.  ALL extension additions that are not in the root extension list are unkown   */
-/* any's and these are the ONLY any's that should call this function.                         */
-void AsnAny::BDecContent(const AsnBuf& b, AsnTag tag, AsnLen len, AsnLen& bytesDecoded)
+void AsnAny::BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded)
 {
-
-	long lBytesToUnget = 0;
-
-	lBytesToUnget += BytesInLen(len);
-	lBytesToUnget += BytesInTag(tag);
-
-	b.UnGetBytes(lBytesToUnget);
+	const auto tagLen = BytesInTag(tag);
+	const auto elementLen = BytesInLen(elmtLen);
+	const auto headerLen = tagLen + elementLen;
 	anyBuf = new AsnBuf;
-	b.GrabAny(*anyBuf, bytesDecoded);
+	b.GrabAnyEx(*anyBuf, headerLen, elmtLen, bytesDecoded);
 }
 
 void AsnAny::Print(std::ostream& os, unsigned short indent) const
