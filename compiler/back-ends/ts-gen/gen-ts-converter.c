@@ -66,6 +66,7 @@ const char* GetJSONType(enum BasicTypeChoiceId choiceId)
 		case BASICTYPE_OCTETCONTAINING:
 			return "Uint8Array";
 		case BASICTYPE_NULL:
+			return "null";
 		case BASICTYPE_ANY:
 			return "object";
 		case BASICTYPE_ASNSYSTEMTIME:
