@@ -191,6 +191,9 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 	}
 }
 
+/**
+ * Add the declaration Type of a member
+ */
 void PrintTSType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t)
 {
 	BasicType* basicType = t->basicType;
@@ -425,13 +428,17 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	// fprintf(src, "\ttype: \"%s\",\n", td->definedName);
 
 	int iMandatoryFields = 0;
+	int iOptionalFields = 0;
 
 	// Wieviele Pflicht Elemente hat die Sequence?
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
-		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION || e->type->optional)
+		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
 			continue;
-		iMandatoryFields++;
+		if (e->type->optional)
+			iOptionalFields++;
+		else
+			iMandatoryFields++;
 	}
 
 	// Jetzt schreiben wir den Konstruktor mit dem einen Argumenten was unserer eigenen Klasse entspricht
@@ -476,6 +483,57 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		fprintf(src, "\n\t\t}");
 	}
 	fprintf(src, ");\n\t}\n\n");
+
+	// and a static initEmpty() method to be able to create an empty object if necessary
+	fprintf(src, "\tpublic static getOwnPropertyNames(bIncludeOptionals: boolean = true): string[] {\n");
+	if (iMandatoryFields)
+	{
+		fprintf(src, "\t\tconst p = [\n");
+		bool bFirst = true;
+		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
+		{
+			if (e->type->basicType->choiceId == BASICTYPE_EXTENSION || e->type->optional)
+				continue;
+			if (!bFirst)
+				fprintf(src, ",\n");
+			char* szConverted2 = FixName(e->fieldName);
+			fprintf(src, "\t\t\t\"%s\"", szConverted2);
+			free(szConverted2);
+			bFirst = false;
+		}
+		if (!bFirst)
+			fprintf(src, "\n");
+		fprintf(src, "\t\t];\n");
+	}
+	else
+		fprintf(src, "\t\tconst p: string[] = [];\n");
+
+	if (iOptionalFields)
+	{
+		fprintf(src, "\t\tif (bIncludeOptionals)%s\n", iOptionalFields > 1 ? " {" : "");
+		fprintf(src, "\t\t\tp.push(%s", iOptionalFields > 1 ? "\n" : "");
+
+		bool bFirst = true;
+		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
+		{
+			if (e->type->basicType->choiceId == BASICTYPE_EXTENSION || !e->type->optional)
+				continue;
+			if (!bFirst)
+				fprintf(src, ",\n");
+			char* szConverted2 = FixName(e->fieldName);
+			fprintf(src, "%s\"%s\"", iOptionalFields > 1 ? "\t\t\t\t" : "", szConverted2);
+			free(szConverted2);
+			bFirst = false;
+		}
+		if (!bFirst && iOptionalFields > 1)
+			fprintf(src, "\n");
+		fprintf(src, "%s);\n", iOptionalFields > 1 ? "\t\t\t" : "");
+		if (iOptionalFields > 1)
+			fprintf(src, "\t\t}\n");
+	}
+
+	fprintf(src, "\t\treturn p;\n");
+	fprintf(src, "\t}\n\n");
 
 	fprintf(src, "\tpublic static type = \"%s\";\n\n", szConverted);
 
@@ -600,6 +658,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 			fprintf(src, "!");
 
 		PrintTSType(src, mods, m, td, seq, e->type);
+
 		fprintf(src, ";\n");
 	}
 	// fprintf(src, "\n\t}");
