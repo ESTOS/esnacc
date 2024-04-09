@@ -2846,6 +2846,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 	int varCount, tmpVarCount;
 	int stoleChoiceTags;
 	int inTailOptElmts;
+	bool bHaveLength;
 	enum BasicTypeChoiceId tmpTypeId;
 	NamedType* defByNamedType;
 	NamedType* tmpElmt;
@@ -3001,6 +3002,8 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 
 		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 		{
+			bHaveLength = false;
+
 			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
 				continue;
 			if (e->type->optional && parser == OPTIONALSTATE_BEFOREFIRST)
@@ -3011,6 +3014,8 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 			{
 				cxxtri = e->type->cxxTypeRefInfo;
+				varName = cxxtri->fieldName;
+
 				elmtLevel = 0;
 
 				tags = GetTags(e->type, &stoleChoiceTags);
@@ -3084,6 +3089,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 						fprintf(src, ")\n");
 						fprintf(src, "\t{\n");
 						fprintf(src, "\t\telmtLen%d = BDecLen(_b, seqBytesDecoded);\n", ++elmtLevel);
+						bHaveLength = true;
 					}
 					else /* didn't steal nested choice's tags */
 					{
@@ -3122,6 +3128,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 						fprintf(src, ")\n");
 						fprintf(src, "\t{\n");
 						fprintf(src, "\t\telmtLen%d = BDecLen(_b, seqBytesDecoded);\n", ++elmtLevel);
+						bHaveLength = true;
 
 						FOR_REST_LIST_ELMT(tag, tags)
 						{
@@ -3157,9 +3164,8 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 				{
 					fprintf(src, "\t\ttag1 = BDecTag(_b, seqBytesDecoded);\n");
 					fprintf(src, "\t\telmtLen%d = BDecLen(_b, seqBytesDecoded);\n", ++elmtLevel);
+					bHaveLength = true;
 				}
-
-				varName = cxxtri->fieldName;
 
 				/* decode content */
 				if (cxxtri->isPtr)
@@ -3194,7 +3200,8 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 				{
 					// If we are here the tag has already been decoded
 					// We get the len and then we call the normal BDecContent of the any object
-					fprintf(src, "%selmtLen%d = B%sLen(_b, seqBytesDecoded);\n", szIndent, ++elmtLevel, r->decodeBaseName);
+					if (!bHaveLength)
+						fprintf(src, "%selmtLen%d = B%sLen(_b, seqBytesDecoded);\n", szIndent, ++elmtLevel, r->decodeBaseName);
 					fprintf(src, "%s%s", szIndent, varName);
 					fprintf(src, getAccessor(cxxtri->isPtr));
 					fprintf(src, "B%sContent(_b, tag1, elmtLen%d, seqBytesDecoded);\n", r->decodeBaseName, elmtLevel);
