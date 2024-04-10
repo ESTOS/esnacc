@@ -1011,8 +1011,8 @@ bool ValidateOptionals(ModuleList* allMods)
 						if (!bIsImplicit)
 						{
 							BasicType* resolvedType = ResolveBasicTypeReferences(subType->type->basicType, NULL);
-							// If the typeref points to a choice the implicit flag is not be properly set (seems to be an issue in the yacc bison code)
-							if (resolvedType->choiceId == BASICTYPE_CHOICE)
+							// If the typeref points to a choice or any the implicit flag is not be properly set (seems to be an issue in the yacc bison code)
+							if (resolvedType->choiceId == BASICTYPE_CHOICE || resolvedType->choiceId == BASICTYPE_ANY)
 							{
 								// So in this case we look if we have a context ID (which also points out the implicit flag)
 								if (GetContextID(subType->type) >= 0)
