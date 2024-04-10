@@ -180,24 +180,6 @@ const char* GetBERType(const enum BasicTypeChoiceId basicTypeChoiseId)
 	exit(1);
 }
 
-int GetContextID(struct Type* type)
-{
-	int iResult = -1;
-	if (type->tags->count)
-	{
-		Tag* pTag = NULL;
-		FOR_EACH_LIST_ELMT(pTag, type->tags)
-		{
-			if (pTag->tclass == CNTX)
-			{
-				iResult = pTag->code;
-				break;
-			}
-		}
-	}
-	return iResult;
-}
-
 const char* getCommonJSFileExtension()
 {
 	if (genTSESMCode)

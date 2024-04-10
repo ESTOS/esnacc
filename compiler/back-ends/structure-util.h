@@ -68,4 +68,8 @@ bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szEl
 bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName);
 bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName);
 
+// Retrieves the context id of a type structure
+// Numbered choice or indexed optional (implicit)
+int GetContextID(struct Type* type);
+
 #endif

@@ -612,3 +612,21 @@ bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName)
 	else
 		return false;
 }
+
+int GetContextID(struct Type* type)
+{
+	int iResult = -1;
+	if (type->tags->count)
+	{
+		Tag* pTag = NULL;
+		FOR_EACH_LIST_ELMT(pTag, type->tags)
+		{
+			if (pTag->tclass == CNTX)
+			{
+				iResult = pTag->code;
+				break;
+			}
+		}
+	}
+	return iResult;
+}
