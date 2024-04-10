@@ -128,7 +128,7 @@ bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszR
 	return bRetVal;
 }
 
-BasicType* ResolveBasicTypeReferences(BasicType* type, const char** szName)
+BasicType* ResolveBasicTypeReferences(BasicType* type, char** szName)
 {
 	BasicType* returnType = type;
 	while (returnType->choiceId == BASICTYPE_LOCALTYPEREF || returnType->choiceId == BASICTYPE_IMPORTTYPEREF)
