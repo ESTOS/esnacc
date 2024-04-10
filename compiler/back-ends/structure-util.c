@@ -128,7 +128,7 @@ bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszR
 	return bRetVal;
 }
 
-BasicType* ResolveBasicTypeReferences(BasicType* type, const char** szName)
+BasicType* ResolveBasicTypeReferences(BasicType* type, char** szName)
 {
 	BasicType* returnType = type;
 	while (returnType->choiceId == BASICTYPE_LOCALTYPEREF || returnType->choiceId == BASICTYPE_IMPORTTYPEREF)
@@ -611,4 +611,22 @@ bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName)
 		return IsDeprecatedNoOutput(comment.i64Deprecated);
 	else
 		return false;
+}
+
+int GetContextID(struct Type* type)
+{
+	int iResult = -1;
+	if (type->tags->count)
+	{
+		Tag* pTag = NULL;
+		FOR_EACH_LIST_ELMT(pTag, type->tags)
+		{
+			if (pTag->tclass == CNTX)
+			{
+				iResult = pTag->code;
+				break;
+			}
+		}
+	}
+	return iResult;
 }
