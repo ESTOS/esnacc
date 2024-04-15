@@ -500,7 +500,7 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 						{
 							fprintf(src, "            if let %s: Int = dictionary.object(forKey: \"%s\") as? Int\n", fieldName, fieldName);
 							fprintf(src, "            {\n");
-							fprintf(src, "                %s = %s\n", fieldName, fieldName);
+							fprintf(src, "                self.%s = %s\n", fieldName, fieldName);
 						}
 						else
 						{
@@ -955,14 +955,14 @@ static void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd
 			if (GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment))
 			{
 				fprintf(src, "\n");
-				fprintf(src, "      // CALL DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, vd->definedName, comment.szDeprecated);
+				fprintf(src, "        // CALL DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, vd->definedName, comment.szDeprecated);
 				fprintf(src, "    ");
 			}
 		}
 		fprintf(src, "}\n\n");
 
-		fprintf(src, "    open class var name: String { get { return \"%s\" } }\n", vd->definedName);
-		fprintf(src, "    open var operationName: String { get { return %s.name } }\n", vd->definedName);
+		fprintf(src, "    open class var name: String { return \"%s\" }\n", vd->definedName);
+		fprintf(src, "    open var operationName: String { return %s.name }\n", vd->definedName);
 
 		if (pszArgument)
 		{
@@ -994,16 +994,16 @@ static void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd
 		fprintf(src, "    public final func getArgument() -> AnyObject?\n");
 		fprintf(src, "    {\n");
 		if (pszArgument)
-			fprintf(src, "        return self.asnArgument\n");
+			fprintf(src, "        return asnArgument\n");
 		else
 			fprintf(src, "        return nil\n");
 		fprintf(src, "    }\n\n");
 
-		fprintf(src, "    public final func setArgument(_ argument:AnyObject?)\n");
+		fprintf(src, "    public final func setArgument(_ argument: AnyObject?)\n");
 		fprintf(src, "    {\n");
 		if (pszArgument)
 		{
-			fprintf(src, "        self.asnArgument = argument as? ");
+			fprintf(src, "        asnArgument = argument as? ");
 			if (argumentType->basicType->choiceId == BASICTYPE_ENUMERATED)
 				fprintf(src, "%s\n", "Int");
 			else
@@ -1014,42 +1014,46 @@ static void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd
 		fprintf(src, "    public final func getResult() -> AnyObject?\n");
 		fprintf(src, "    {\n");
 		if (pszResult)
-			fprintf(src, "        return self.asnResult\n");
+			fprintf(src, "        return asnResult\n");
 		else
 			fprintf(src, "        return nil\n");
 		fprintf(src, "    }\n\n");
 
-		fprintf(src, "    public final func setResult(_ result: AnyObject?)\n");
-		fprintf(src, "    {\n");
+		fprintf(src, "    public final func setResult(_%s: AnyObject?)\n", pszResult ? " result" : "");
+		fprintf(src, "    {");
 		if (pszResult)
 		{
-			fprintf(src, "        self.asnResult = result as? ");
+			fprintf(src, "\n");
+			fprintf(src, "        asnResult = result as? ");
 			if (resultType->basicType->choiceId == BASICTYPE_ENUMERATED)
 				fprintf(src, "%s\n", "Int");
 			else
 				fprintf(src, "%s\n", pszResult);
+			fprintf(src, "    ");
 		}
-		fprintf(src, "    }\n\n");
+		fprintf(src, "}\n\n");
 
 		fprintf(src, "    public final func getError() -> AnyObject?\n");
 		fprintf(src, "    {\n");
 		if (pszError)
-			fprintf(src, "        return self.asnError\n");
+			fprintf(src, "        return asnError\n");
 		else
 			fprintf(src, "        return nil\n");
 		fprintf(src, "    }\n\n");
 
-		fprintf(src, "    public final func setError(_ error:AnyObject?)\n");
-		fprintf(src, "    {\n");
+		fprintf(src, "    public final func setError(_%s: AnyObject?)\n", pszError ? " error" : "");
+		fprintf(src, "    {");
 		if (pszError)
 		{
-			fprintf(src, "        self.asnError = error as? ");
+			fprintf(src, "\n");
+			fprintf(src, "        asnError = error as? ");
 			if (errorType->basicType->choiceId == BASICTYPE_ENUMERATED)
 				fprintf(src, "%s\n", "Int");
 			else
 				fprintf(src, "%s\n", pszError);
+			fprintf(src, "    ");
 		}
-		fprintf(src, "    }\n\n");
+		fprintf(src, "}\n\n");
 
 		fprintf(src, "    public final func isEvent() -> Bool\n");
 		fprintf(src, "    {\n");
@@ -1059,7 +1063,7 @@ static void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd
 			fprintf(src, "        return true\n");
 		fprintf(src, "    }\n");
 
-		fprintf(src, "}\n\n");
+		fprintf(src, "}\n");
 	}
 }
 
@@ -1083,11 +1087,17 @@ void PrintSwiftROSECode(FILE* src, ModuleList* mods, Module* m)
 	PrintSwiftComments(src, m);
 
 	fprintf(src, "import Foundation\n\n");
+	bool bFirst = true;
 
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+		{
+			if (!bFirst)
+				fprintf(src, "\n");
 			PrintSwiftROSEInvoke(src, m, 0, vd);
+			bFirst = false;
+		}
 	}
 }
 
