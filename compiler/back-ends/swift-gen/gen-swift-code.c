@@ -114,7 +114,7 @@ static void PrintSwiftDefaultValue(FILE* src, ModuleList* mods, Module* m, TypeD
 				fprintf(src, "0");
 				break;
 			case BASICTYPE_OCTETSTRING:
-				fprintf(src, "Data()");
+				fprintf(src, ".init()");
 				break;
 			case BASICTYPE_ENUMERATED:
 				fprintf(src, "0"); // FIXME
@@ -138,19 +138,8 @@ static void PrintSwiftDefaultValue(FILE* src, ModuleList* mods, Module* m, TypeD
 					int refBasicTypeChoiceId = t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId;
 					int typeIdOfReferencesType = t->basicType->a.importTypeRef->link->type->basicType->choiceId;
 
-					if (0 == strcmp(kS_UTF8StringList, className))
-					{
-						fprintf(src, "StringArray<NSString>()");
-					}
-					else if (0 == strcmp(kS_SEQInteger, className))
-					{
-						fprintf(src, "IntArray()");
-					}
-					else if (typeIdOfReferencesType == BASICTYPE_SEQUENCEOF)
-					{
-						char* elementName = t->basicType->a.importTypeRef->link->type->basicType->a.sequenceOf->basicType->a.importTypeRef->typeName;
-						fprintf(src, "%sArray<%s>()", elementName, elementName);
-					}
+					if (typeIdOfReferencesType == BASICTYPE_SEQUENCEOF)
+						fprintf(src, ".init()");
 					else if (refBasicTypeChoiceId == BASICTYPE_ENUMERATED)
 					{
 						if (!t->basicType->a.importTypeRef->link)
@@ -168,7 +157,7 @@ static void PrintSwiftDefaultValue(FILE* src, ModuleList* mods, Module* m, TypeD
 					}
 					else
 					{
-						fprintf(src, "%s()", t->cxxTypeRefInfo->className);
+						fprintf(src, ".init()");
 					}
 					free(className);
 					break;
@@ -179,15 +168,8 @@ static void PrintSwiftDefaultValue(FILE* src, ModuleList* mods, Module* m, TypeD
 					int refBasicTypeChoiceId = t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId;
 					int typeIdOfReferencesType = t->basicType->a.localTypeRef->link->type->basicType->choiceId;
 
-					if (0 == strcmp(kS_UTF8StringList, className))
-						fprintf(src, "StringArray<NSString>()");
-					else if (0 == strcmp(kS_SEQInteger, className))
-						fprintf(src, "IntArray()");
 					if (typeIdOfReferencesType == BASICTYPE_SEQUENCEOF)
-					{
-						char* elementName = t->basicType->a.localTypeRef->link->type->basicType->a.sequenceOf->basicType->a.localTypeRef->typeName;
-						fprintf(src, "%sArray<%s>()", elementName, elementName);
-					}
+						fprintf(src, ".init()");
 					else if (refBasicTypeChoiceId == BASICTYPE_ENUMERATED)
 					{
 						if (!t->basicType->a.importTypeRef->link)
@@ -205,7 +187,7 @@ static void PrintSwiftDefaultValue(FILE* src, ModuleList* mods, Module* m, TypeD
 					}
 					else
 					{
-						fprintf(src, "%s()", className);
+						fprintf(src, ".init()");
 					}
 					free(className);
 					break;
@@ -338,19 +320,23 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 	int firstArgument = 1;
 
 	// constructors for decoding
-	fprintf(src, "  public init()\n");
-	fprintf(src, "  {\n");
+	fprintf(src, "    public init()\n");
+	fprintf(src, "    {");
 	if (IsDeprecatedFlaggedSequence(m, td->definedName))
 	{
 		asnsequencecomment comment;
 		if (GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment))
-			fprintf(src, "    // CALL DeprecatedASN1Object(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, td->definedName, comment.szDeprecated);
+		{
+			fprintf(src, "\n");
+			fprintf(src, "        // CALL DeprecatedASN1Object(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, td->definedName, comment.szDeprecated);
+			fprintf(src, "    ");
+		}
 	}
-	fprintf(src, "  }\n\n");
+	fprintf(src, "}\n");
 
 	if (t->basicType->a.sequence->count > 1)
 	{
-		fprintf(src, "  public convenience init(");
+		fprintf(src, "\n    public convenience init(");
 
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
 		{
@@ -369,7 +355,7 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 				else
 					fprintf(src, ", ");
 
-				fprintf(src, "%s : ", e->fieldName);
+				fprintf(src, "%s: ", e->fieldName);
 				PrintSwiftType(src, mods, m, td, parent, e->type);
 
 				fprintf(src, "%s", optionalQuestionMark);
@@ -377,46 +363,54 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 		}
 
 		fprintf(src, ")\n");
-		fprintf(src, "  {\n");
-		fprintf(src, "    self.init()\n");
+		fprintf(src, "    {\n");
+		fprintf(src, "        self.init()\n");
 
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
 		{
 			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
-				fprintf(src, "    self.%s = %s\n", e->fieldName, e->fieldName);
+				fprintf(src, "        self.%s = %s\n", e->fieldName, e->fieldName);
 		}
-		fprintf(src, "  }\n");
+		fprintf(src, "    }\n");
 	}
 
 	fprintf(src, "\n");
-	fprintf(src, "  public required init(json: String)\n");
-	fprintf(src, "  {\n");
-	fprintf(src, "    if let jsonData:Data = json.data(using: String.Encoding.utf8)\n");
+	fprintf(src, "    public required init(json: String)\n");
 	fprintf(src, "    {\n");
-	fprintf(src, "      do\n");
-	fprintf(src, "      {\n");
-	fprintf(src, "        let jsonObject:Any = try JSONSerialization.jsonObject(with: jsonData, options:[])\n");
-	fprintf(src, "        self.setJSONObject(jsonObject as AnyObject)\n");
-	fprintf(src, "      }\n");
-	fprintf(src, "      catch _\n");
-	fprintf(src, "      {\n");
-	fprintf(src, "      }\n");
+	fprintf(src, "        if let jsonData: Data = json.data(using: String.Encoding.utf8)\n");
+	fprintf(src, "        {\n");
+	fprintf(src, "            do\n");
+	fprintf(src, "            {\n");
+	fprintf(src, "                let jsonObject: Any = try JSONSerialization.jsonObject(with: jsonData, options: [])\n");
+	fprintf(src, "                setJSONObject(jsonObject as AnyObject)\n");
+	fprintf(src, "            }\n");
+	fprintf(src, "            catch _\n");
+	fprintf(src, "            {}\n");
+	fprintf(src, "        }\n");
 	fprintf(src, "    }\n");
-	fprintf(src, "  }\n");
 	fprintf(src, "\n");
 
-	fprintf(src, "  public required init(jsonObject: AnyObject)\n");
-	fprintf(src, "  {\n");
-	fprintf(src, "    self.setJSONObject(jsonObject)\n");
-	fprintf(src, "  }\n\n");
+	fprintf(src, "    public required init(jsonObject: AnyObject)\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        setJSONObject(jsonObject)\n");
+	fprintf(src, "    }\n\n");
 
-	fprintf(src, "  open class func fromJSONObject(_ jsonObject:AnyObject) -> AnyObject?\n");
-	fprintf(src, "  {\n");
-	fprintf(src, "    return %s(jsonObject:jsonObject)\n", td->definedName);
-	fprintf(src, "  }\n\n");
+	fprintf(src, "    open class func fromJSONObject(_ jsonObject: AnyObject) -> AnyObject?\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        return %s(jsonObject: jsonObject)\n", td->definedName);
+	fprintf(src, "    }\n\n");
 
-	fprintf(src, "  open func setJSONObject(_ jsonObject: AnyObject)\n");
-	fprintf(src, "  {\n");
+	bool bHasElement = false;
+	FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
+	{
+		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
+			bHasElement = true;
+	}
+
+	fprintf(src, "    open func setJSONObject(_%s: AnyObject)\n", bHasElement ? " jsonObject" : "");
+	fprintf(src, "    {");
+	if (bHasElement)
+		fprintf(src, "\n");
 
 	int dictionaryhaselements = FALSE;
 
@@ -426,8 +420,8 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 		{
 			if (!dictionaryhaselements)
 			{
-				fprintf(src, "    if let dictionary:NSDictionary = jsonObject as? NSDictionary\n");
-				fprintf(src, "    {\n");
+				fprintf(src, "        if let dictionary: NSDictionary = jsonObject as? NSDictionary\n");
+				fprintf(src, "        {\n");
 				dictionaryhaselements = TRUE;
 			}
 
@@ -451,23 +445,23 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 
 					if (typeIdOfReferencesType == BASICTYPE_SEQUENCE || typeIdOfReferencesType == BASICTYPE_CHOICE)
 					{
-						fprintf(src, "      if let %s:AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", e->fieldName, e->fieldName);
-						fprintf(src, "      {\n");
+						fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", e->fieldName, e->fieldName);
+						fprintf(src, "            {\n");
 
 						if (strlen(optionalQuestionMark) == 0)
 						{
-							fprintf(src, "        self.%s = self.%s.merge(%s(jsonObject: %s))\n", e->fieldName, e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
+							fprintf(src, "                self.%s = self.%s.merge(%s(jsonObject: %s))\n", e->fieldName, e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
 						}
 						else
 						{
-							fprintf(src, "        if self.%s != nil\n", e->fieldName);
-							fprintf(src, "        {\n");
-							fprintf(src, "          self.%s = self.%s%s.merge(%s(jsonObject: %s))\n", e->fieldName, e->fieldName, optionalQuestionMark, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
-							fprintf(src, "        }\n");
-							fprintf(src, "        else\n");
-							fprintf(src, "        {\n");
-							fprintf(src, "          self.%s = %s(jsonObject: %s)\n", e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
-							fprintf(src, "        }\n");
+							fprintf(src, "                if self.%s != nil\n", e->fieldName);
+							fprintf(src, "                {\n");
+							fprintf(src, "                    self.%s = self.%s%s.merge(%s(jsonObject: %s))\n", e->fieldName, e->fieldName, optionalQuestionMark, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
+							fprintf(src, "                }\n");
+							fprintf(src, "                else\n");
+							fprintf(src, "                {\n");
+							fprintf(src, "                    self.%s = %s(jsonObject: %s)\n", e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
+							fprintf(src, "                }\n");
 						}
 					}
 					else
@@ -477,57 +471,57 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 
 						if (0 == strcmp(kS_AsnSystemTime, basicTypeName))
 						{
-							fprintf(src, "      if let asnTimeString:String = dictionary.object(forKey: \"%s\") as? String,\n", fieldName);
-							fprintf(src, "        let convertedDate:AsnSystemTime = AsnSystemTime(from:asnTimeString)\n");
-							fprintf(src, "      {\n");
-							fprintf(src, "        self.%s = convertedDate\n", e->fieldName);
+							fprintf(src, "            if let asnTimeString: String = dictionary.object(forKey: \"%s\") as? String,\n", fieldName);
+							fprintf(src, "               let convertedDate = AsnSystemTime(from: asnTimeString)\n");
+							fprintf(src, "            {\n");
+							fprintf(src, "                %s = convertedDate\n", e->fieldName);
 						}
 						else if (0 == strcmp(kS_UTF8StringList, basicTypeName))
 						{
-							fprintf(src, "      if let %s:AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
-							fprintf(src, "      {\n");
-							fprintf(src, "        self.%s = StringArray<NSString>(jsonObject: %s )\n", fieldName, fieldName);
+							fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
+							fprintf(src, "            {\n");
+							fprintf(src, "                self.%s = StringArray<NSString>(jsonObject: %s)\n", fieldName, fieldName);
 						}
 						else if (0 == strcmp(kS_SEQInteger, basicTypeName))
 						{
-							fprintf(src, "      if let %s:AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
-							fprintf(src, "      {\n");
-							fprintf(src, "        self.%s = IntArray(jsonObject: %s )\n", fieldName, fieldName);
+							fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
+							fprintf(src, "            {\n");
+							fprintf(src, "                %s = IntArray(jsonObject: %s)\n", fieldName, fieldName);
 						}
 						else if (typeIdOfReferencesType == BASICTYPE_SEQUENCEOF)
 						{
 							char* elementName = e->type->basicType->a.localTypeRef->link->type->basicType->a.sequenceOf->basicType->a.localTypeRef->typeName;
 
-							fprintf(src, "      if let %s:AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
-							fprintf(src, "      {\n");
-							fprintf(src, "        self.%s = %sArray<%s>(jsonObject: %s )\n", fieldName, elementName, elementName, fieldName);
+							fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
+							fprintf(src, "            {\n");
+							fprintf(src, "                self.%s = %sArray<%s>(jsonObject: %s)\n", fieldName, elementName, elementName, fieldName);
 						}
 						else if (typeIdOfReferencesType == BASICTYPE_ENUMERATED)
 						{
-							fprintf(src, "      if let %s:Int = dictionary.object(forKey: \"%s\") as? Int\n", fieldName, fieldName);
-							fprintf(src, "      {\n");
-							fprintf(src, "        self.%s = %s\n", fieldName, fieldName);
+							fprintf(src, "            if let %s: Int = dictionary.object(forKey: \"%s\") as? Int\n", fieldName, fieldName);
+							fprintf(src, "            {\n");
+							fprintf(src, "                %s = %s\n", fieldName, fieldName);
 						}
 						else
 						{
-							fprintf(src, "      if let %s:%s = dictionary.object(forKey: \"%s\") as? %s\n", e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName, e->type->basicType->a.localTypeRef->link->definedName);
-							fprintf(src, "      {\n");
-							fprintf(src, "        self.%s = %s\n", e->fieldName, e->fieldName);
+							fprintf(src, "            if let %s: %s = dictionary.object(forKey: \"%s\") as? %s\n", e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName, e->type->basicType->a.localTypeRef->link->definedName);
+							fprintf(src, "            {\n");
+							fprintf(src, "                self.%s = %s\n", e->fieldName, e->fieldName);
 						}
 					}
 				}
 				else if (e->type->basicType->choiceId == BASICTYPE_OCTETSTRING)
 				{
-					fprintf(src, "      if let %sString:String = dictionary.object(forKey: \"%s\") as? String\n", e->fieldName, e->fieldName);
-					fprintf(src, "      {\n");
-					fprintf(src, "        if let %sData:Data = Data(base64Encoded:%sString, options: [])\n", e->fieldName, e->fieldName);
-					fprintf(src, "        {\n");
-					fprintf(src, "          self.%s = %sData\n", e->fieldName, e->fieldName);
-					fprintf(src, "        }\n");
+					fprintf(src, "            if let %sString: String = dictionary.object(forKey: \"%s\") as? String\n", e->fieldName, e->fieldName);
+					fprintf(src, "            {\n");
+					fprintf(src, "                if let %sData = Data(base64Encoded: %sString, options: [])\n", e->fieldName, e->fieldName);
+					fprintf(src, "                {\n");
+					fprintf(src, "                    %s = %sData\n", e->fieldName, e->fieldName);
+					fprintf(src, "                }\n");
 				}
 				else
 				{
-					fprintf(src, "      if let %s = dictionary.object(forKey: \"%s\") as", e->fieldName, e->fieldName);
+					fprintf(src, "            if let %s = dictionary.object(forKey: \"%s\") as", e->fieldName, e->fieldName);
 
 					if (e->type->basicType->choiceId != BASICTYPE_NULL)
 						fprintf(src, "?");
@@ -536,21 +530,24 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 					if (e->type->basicType->choiceId == BASICTYPE_NULL)
 						fprintf(src, "?");
 					fprintf(src, "\n");
-					fprintf(src, "      {\n");
-					fprintf(src, "        self.%s = %s\n", e->fieldName, e->fieldName);
+					fprintf(src, "            {\n");
+					fprintf(src, "                self.%s = %s\n", e->fieldName, e->fieldName);
 				}
 			}
-			fprintf(src, "      }\n");
+			fprintf(src, "            }\n");
 		}
 	}
 	if (dictionaryhaselements)
-		fprintf(src, "    }\n");
-	fprintf(src, "  }\n\n");
+		fprintf(src, "        }\n");
+	if (bHasElement)
+		fprintf(src, "    }\n\n");
+	else
+		fprintf(src, "}\n\n");
 
 	// encode as Dictionay
-	fprintf(src, "  open func toJSONObject() -> AnyObject\n");
-	fprintf(src, "  {\n");
-	fprintf(src, "    let dictionary:NSMutableDictionary = NSMutableDictionary()\n");
+	fprintf(src, "    open func toJSONObject() -> AnyObject\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        let dictionary = NSMutableDictionary()\n");
 
 	/* write out the sequence elmts */
 	FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
@@ -559,7 +556,7 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 		{
 			char* optionalQuestionMark = "";
 			char* optionalExclamationMark = "";
-			const char* szIndent = "    ";
+			const char* szIndent = "        ";
 
 			if (e->type->optional || t->basicType->choiceId == BASICTYPE_CHOICE)
 			{
@@ -568,8 +565,9 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 					optionalQuestionMark = "?";
 					optionalExclamationMark = "!";
 				}
-				szIndent = "      ";
-				fprintf(src, "    if self.%s != nil {\n", e->fieldName);
+				szIndent = "            ";
+				fprintf(src, "        if %s != nil\n", e->fieldName);
+				fprintf(src, "        {\n");
 			}
 
 			if (0 == strcmp("contactID", e->fieldName))
@@ -582,69 +580,68 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 					int refBasicTypeChoiceId = e->type->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId;
 
 					if (0 == strcmp(kS_AsnSystemTime, e->type->basicType->a.localTypeRef->link->definedName))
-						fprintf(src, "%sdictionary.setValue(self.%s%s.description, forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
+						fprintf(src, "%sdictionary.setValue(%s%s.description, forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
 					else if (0 == strcmp(kS_AsnOptionalParameters, e->type->basicType->a.localTypeRef->link->definedName))
-						fprintf(src, "%sdictionary.setValue(self.%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
+						fprintf(src, "%sdictionary.setValue(%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
 					else if (refBasicTypeChoiceId == BASICTYPE_BITSTRING || refBasicTypeChoiceId == BASICTYPE_ENUMERATED || refBasicTypeChoiceId == BASICTYPE_UTF8_STR)
 
-						fprintf(src, "%sdictionary.setValue(self.%s, forKey: \"%s\")\n", szIndent, e->fieldName, e->fieldName);
+						fprintf(src, "%sdictionary.setValue(%s, forKey: \"%s\")\n", szIndent, e->fieldName, e->fieldName);
 					else if (refBasicTypeChoiceId == BASICTYPE_SEQUENCE || refBasicTypeChoiceId == BASICTYPE_CHOICE)
-						fprintf(src, "%sdictionary.setValue(self.%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalQuestionMark, e->fieldName);
+						fprintf(src, "%sdictionary.setValue(%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalQuestionMark, e->fieldName);
 					else
-						fprintf(src, "%sdictionary.setValue(self.%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
+						fprintf(src, "%sdictionary.setValue(%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
 				}
 				else if (e->type->basicType->choiceId == BASICTYPE_OCTETSTRING)
 				{
-					fprintf(src, "%sdictionary.setValue(self.%s%s.base64EncodedString(options: []), forKey: \"%s\")\n", szIndent, e->fieldName, optionalQuestionMark, e->fieldName);
+					fprintf(src, "%sdictionary.setValue(%s%s.base64EncodedString(options: []), forKey: \"%s\")\n", szIndent, e->fieldName, optionalQuestionMark, e->fieldName);
 				}
 				else
 				{
-					fprintf(src, "%sdictionary.setValue(self.%s, forKey: \"%s\")\n", szIndent, e->fieldName, e->fieldName);
+					fprintf(src, "%sdictionary.setValue(%s, forKey: \"%s\")\n", szIndent, e->fieldName, e->fieldName);
 				}
 			}
 
 			if (e->type->optional || t->basicType->choiceId == BASICTYPE_CHOICE)
-				fprintf(src, "    }\n");
+				fprintf(src, "        }\n");
 		}
 	}
-	fprintf(src, "    return dictionary\n");
-	fprintf(src, "  }\n\n");
+	fprintf(src, "        return dictionary\n");
+	fprintf(src, "    }\n\n");
 
 	// encode as JSON
-	fprintf(src, "  open func toJSON() -> NSString?\n");
-	fprintf(src, "  {\n");
-	fprintf(src, "    let dictionary : AnyObject = self.toJSONObject()\n");
-	fprintf(src, "    if JSONSerialization.isValidJSONObject(dictionary)\n");
+	fprintf(src, "    open func toJSON() -> NSString?\n");
 	fprintf(src, "    {\n");
-	fprintf(src, "      do\n");
-	fprintf(src, "      {\n");
-	fprintf(src, "        let json:Data = try JSONSerialization.data(withJSONObject: dictionary, options: JSONSerialization.WritingOptions.prettyPrinted)\n");
-	fprintf(src, "        let jsonString:NSString? = NSString(data: json, encoding: String.Encoding.utf8.rawValue)\n");
-	fprintf(src, "        return jsonString\n");
-	fprintf(src, "      }\n");
-	fprintf(src, "      catch _\n");
-	fprintf(src, "      {\n");
-	fprintf(src, "      }\n");
-	fprintf(src, "    }\n");
-	fprintf(src, "    return nil\n");
-	fprintf(src, "  }\n\n");
+	fprintf(src, "        let dictionary: AnyObject = toJSONObject()\n");
+	fprintf(src, "        if JSONSerialization.isValidJSONObject(dictionary)\n");
+	fprintf(src, "        {\n");
+	fprintf(src, "            do\n");
+	fprintf(src, "            {\n");
+	fprintf(src, "                let json: Data = try JSONSerialization.data(withJSONObject: dictionary, options: JSONSerialization.WritingOptions.prettyPrinted)\n");
+	fprintf(src, "                let jsonString: NSString? = NSString(data: json, encoding: String.Encoding.utf8.rawValue)\n");
+	fprintf(src, "                return jsonString\n");
+	fprintf(src, "            }\n");
+	fprintf(src, "            catch _\n");
+	fprintf(src, "            {}\n");
+	fprintf(src, "        }\n");
+	fprintf(src, "        return nil\n");
+	fprintf(src, "    }\n\n");
 
-	fprintf(src, "  public final func copy() -> %s\n", td->definedName);
-	fprintf(src, "  {\n");
-	fprintf(src, "    return %s(jsonObject: self.toJSONObject())\n", td->definedName);
-	fprintf(src, "  }\n\n");
+	fprintf(src, "    public final func copy() -> %s\n", td->definedName);
+	fprintf(src, "    {\n");
+	fprintf(src, "        return %s(jsonObject: toJSONObject())\n", td->definedName);
+	fprintf(src, "    }\n\n");
 	// merge
-	fprintf(src, "  public final func merge(_ objectToMerge : %s) -> %s\n", td->definedName, td->definedName);
-	fprintf(src, "  {\n");
-	fprintf(src, "    let result = self.copy()\n");
-	fprintf(src, "    result.setJSONObject(objectToMerge.toJSONObject())\n");
-	fprintf(src, "    return result\n");
-	fprintf(src, "  }\n");
+	fprintf(src, "    public final func merge(_ objectToMerge: %s) -> %s\n", td->definedName, td->definedName);
+	fprintf(src, "    {\n");
+	fprintf(src, "        let result = copy()\n");
+	fprintf(src, "        result.setJSONObject(objectToMerge.toJSONObject())\n");
+	fprintf(src, "        return result\n");
+	fprintf(src, "    }\n");
 }
 
 static void PrintSwiftEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* enumerated, int novolatilefuncs)
 {
-	fprintf(src, "public enum %s : Int\n", td->definedName);
+	fprintf(src, "public enum %s: Int\n", td->definedName);
 	fprintf(src, "{\n");
 
 	if (HasNamedElmts(td->type) != 0)
@@ -653,34 +650,34 @@ static void PrintSwiftEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
 			printMemberComment(src, m, td, n->name, "  ", COMMENTSTYLE_SWIFT);
-			fprintf(src, "  case %s = %d\n", n->name, n->value);
+			fprintf(src, "    case %s = %d\n", n->name, n->value);
 		}
 	}
 
 	fprintf(src, "\n");
-	fprintf(src, "  static func fromJSONObject(_ jsonObject:AnyObject) -> Int?\n");
-	fprintf(src, "  {\n");
-	fprintf(src, "    return jsonObject as? Int\n");
-	fprintf(src, "  }\n");
+	fprintf(src, "    static func fromJSONObject(_ jsonObject: AnyObject) -> Int?\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        return jsonObject as? Int\n");
+	fprintf(src, "    }\n");
 	fflush(src);
 
-	fprintf(src, "}\n\n");
+	fprintf(src, "}\n");
 }
 
 static void PrintSwiftSimpleRefDef(FILE* src, Module* m, TypeDef* td)
 {
-	fprintf(src, "open class %s : %s\n", td->definedName, td->type->cxxTypeRefInfo->className);
+	fprintf(src, "open class %s: %s\n", td->definedName, td->type->cxxTypeRefInfo->className);
 	fprintf(src, "{\n");
-	fprintf(src, "  public required init(json: String)\n");
-	fprintf(src, "  {\n");
-	fprintf(src, "    super.init(json:json)\n");
-	fprintf(src, "  }\n\n");
-	fprintf(src, "  public required init(jsonObject: AnyObject)\n");
-	fprintf(src, "  {\n");
-	fprintf(src, "    super.init(jsonObject:jsonObject)\n");
-	fprintf(src, "  }\n");
+	fprintf(src, "    public required init(json: String)\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        super.init(json: json)\n");
+	fprintf(src, "    }\n\n");
+	fprintf(src, "    public required init(jsonObject: AnyObject)\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        super.init(jsonObject: jsonObject)\n");
+	fprintf(src, "    }\n");
 
-	fprintf(src, "}\n\n");
+	fprintf(src, "}\n");
 }
 
 static void PrintSwiftSimpleDef(FILE* src, ModuleList* mods, Module* m, TypeDef* td)
@@ -706,7 +703,7 @@ static void PrintSwiftSimpleDef(FILE* src, ModuleList* mods, Module* m, TypeDef*
 				break;
 		}
 	}
-	fprintf(src, "\n\n");
+	fprintf(src, "\n");
 }
 
 static void PrintSwiftSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
@@ -738,18 +735,21 @@ static void PrintSwiftSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 			{
 				fprintf(src, "public typealias %s = %sArray\n", td->definedName, innerType->cxxTypeRefInfo->className);
 
-				fprintf(src, "open class %sArray<T:%s> : GenericArray<%s>\n", innerType->cxxTypeRefInfo->className, innerType->cxxTypeRefInfo->className, innerType->cxxTypeRefInfo->className);
+				fprintf(src, "open class %sArray<T: %s>: GenericArray<%s>\n", innerType->cxxTypeRefInfo->className, innerType->cxxTypeRefInfo->className, innerType->cxxTypeRefInfo->className);
 				fprintf(src, "{\n");
-				fprintf(src, "  public override init() {\n");
-				fprintf(src, "    super.init()\n");
-				fprintf(src, "  }\n\n");
-				fprintf(src, "  public required init(jsonObject: AnyObject) {\n");
-				fprintf(src, "    super.init(jsonObject:jsonObject)\n");
-				fprintf(src, "  }\n\n");
-				fprintf(src, "  open override func convertFromJSONObject(_ jsonObject: AnyObject) -> AnyObject? {\n");
-				fprintf(src, "    return %s.fromJSONObject(jsonObject)\n", innerType->cxxTypeRefInfo->className);
-				fprintf(src, "  }\n");
-				fprintf(src, "}\n\n");
+				fprintf(src, "    override public init()\n");
+				fprintf(src, "    {\n");
+				fprintf(src, "        super.init()\n");
+				fprintf(src, "    }\n\n");
+				fprintf(src, "    public required init(jsonObject: AnyObject)\n");
+				fprintf(src, "    {\n");
+				fprintf(src, "        super.init(jsonObject: jsonObject)\n");
+				fprintf(src, "    }\n\n");
+				fprintf(src, "    override open func convertFromJSONObject(_ jsonObject: AnyObject) -> AnyObject?\n");
+				fprintf(src, "    {\n");
+				fprintf(src, "        return %s.fromJSONObject(jsonObject)\n", innerType->cxxTypeRefInfo->className);
+				fprintf(src, "    }\n");
+				fprintf(src, "}\n");
 			}
 
 			break;
@@ -761,7 +761,7 @@ static void PrintSwiftChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	if (strcmp("AsnOptionalParamChoice", td->definedName) == 0)
 		return; // is defined as custom class
 
-	fprintf(src, "open class %s : JSONConvertable, JSONObjectConvertable\n", td->definedName);
+	fprintf(src, "open class %s: JSONConvertable, JSONObjectConvertable\n", td->definedName);
 	fprintf(src, "{\n");
 
 	NamedType* e;
@@ -770,7 +770,7 @@ static void PrintSwiftChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 		{
 			printMemberComment(src, m, td, e->fieldName, "  ", COMMENTSTYLE_SWIFT);
-			fprintf(src, "  public final var %s : ", e->fieldName);
+			fprintf(src, "    public final var %s: ", e->fieldName);
 			PrintSwiftType(src, mods, m, td, choice, e->type);
 			fprintf(src, "? = nil");
 			fprintf(src, "\n");
@@ -781,7 +781,7 @@ static void PrintSwiftChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 
 	PrintSwiftEncoderDecoder(src, mods, m, td, parent, choice);
 
-	fprintf(src, "}\n\n");
+	fprintf(src, "}\n");
 }
 
 static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* seq, int novolatilefuncs)
@@ -804,8 +804,10 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 		/* put class spec in src file */
 
 		// fprintf (src, "class %s %s\n", td->cxxTypeDefInfo->className);
-		fprintf(src, "open class %s : JSONConvertable, JSONObjectConvertable\n", td->definedName);
+		fprintf(src, "open class %s: JSONConvertable, JSONObjectConvertable\n", td->definedName);
 		fprintf(src, "{\n");
+
+		bool bAddedSomething = false;
 
 		/* write out the sequence elmts */
 		FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
@@ -814,7 +816,7 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 			{
 				printMemberComment(src, m, td, e->fieldName, "  ", COMMENTSTYLE_SWIFT);
-				fprintf(src, "  public final var %s : ", e->fieldName);
+				fprintf(src, "    public final var %s: ", e->fieldName);
 				PrintSwiftType(src, mods, m, td, seq, e->type);
 				if (e->type->optional || e->type->basicType->choiceId == BASICTYPE_NULL)
 				{
@@ -826,10 +828,12 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 					PrintSwiftDefaultValue(src, mods, m, td, seq, e->type);
 				}
 				fprintf(src, "\n");
+				bAddedSomething = true;
 			}
 		}
 
-		fprintf(src, "\n");
+		if (bAddedSomething)
+			fprintf(src, "\n");
 
 		PrintSwiftEncoderDecoder(src, mods, m, td, parent, seq);
 
@@ -837,7 +841,7 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 			free(pSeqElementNamedType);
 
 		/* close class definition */
-		fprintf(src, "}\n\n");
+		fprintf(src, "}\n");
 	}
 }
 
@@ -940,117 +944,120 @@ static void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd
 	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, true))
 	{
 		printOperationComment(src, m, vd->definedName, COMMENTSTYLE_SWIFT);
-		fprintf(src, "open class %s : AsnOperation\n", vd->definedName);
+		fprintf(src, "open class %s: AsnOperation\n", vd->definedName);
 		fprintf(src, "{\n");
 
-		fprintf(src, "  public init()\n");
-		fprintf(src, "  {\n");
+		fprintf(src, "    public init()\n");
+		fprintf(src, "    {");
 		if (IsDeprecatedFlaggedOperation(m, vd->definedName))
 		{
 			asnoperationcomment comment;
 			if (GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment))
-				fprintf(src, "    // CALL DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, vd->definedName, comment.szDeprecated);
+			{
+				fprintf(src, "\n");
+				fprintf(src, "      // CALL DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, vd->definedName, comment.szDeprecated);
+				fprintf(src, "    ");
+			}
 		}
+		fprintf(src, "}\n\n");
 
-		fprintf(src, "  }\n\n");
-
-		fprintf(src, "  open class var name    : String { get { return \"%s\" } }\n", vd->definedName);
-		fprintf(src, "  open var operationName : String { get { return %s.name } }\n", vd->definedName);
+		fprintf(src, "    open class var name: String { get { return \"%s\" } }\n", vd->definedName);
+		fprintf(src, "    open var operationName: String { get { return %s.name } }\n", vd->definedName);
 
 		if (pszArgument)
 		{
 			if (argumentType->basicType->choiceId == BASICTYPE_ENUMERATED)
-				fprintf(src, "  public final var asnArgument : Int? = nil //%s\n", pszArgument);
+				fprintf(src, "    public final var asnArgument: Int? = nil //%s\n", pszArgument);
 			else
-				fprintf(src, "  public final var asnArgument : %s? = nil\n", pszArgument);
+				fprintf(src, "    public final var asnArgument: %s? = nil\n", pszArgument);
 		}
 
 		if (pszResult)
 		{
 			if (resultType->basicType->choiceId == BASICTYPE_ENUMERATED)
-				fprintf(src, "  public final var asnResult : Int? = nil //%s\n", pszResult);
+				fprintf(src, "    public final var asnResult: Int? = nil //%s\n", pszResult);
 			else
-				fprintf(src, "  public final var asnResult : %s? = nil\n", pszResult);
+				fprintf(src, "    public final var asnResult: %s? = nil\n", pszResult);
 		}
 
 		if (pszError)
 		{
 			if (errorType->basicType->choiceId == BASICTYPE_ENUMERATED)
-				fprintf(src, "  public final var asnError : Int? = nil //%s\n", pszError);
+				fprintf(src, "    public final var asnError: Int? = nil //%s\n", pszError);
 			else
-				fprintf(src, "  public final var asnError : %s? = nil\n", pszError);
+				fprintf(src, "    public final var asnError: %s? = nil\n", pszError);
 		}
 
 		fprintf(src, "\n");
 
 		// functions
-		fprintf(src, "  public final func getArgument() -> AnyObject?\n");
-		fprintf(src, "  {\n");
+		fprintf(src, "    public final func getArgument() -> AnyObject?\n");
+		fprintf(src, "    {\n");
 		if (pszArgument)
-			fprintf(src, "    return self.asnArgument\n");
+			fprintf(src, "        return self.asnArgument\n");
 		else
-			fprintf(src, "    return nil\n");
-		fprintf(src, "  }\n\n");
+			fprintf(src, "        return nil\n");
+		fprintf(src, "    }\n\n");
 
-		fprintf(src, "  public final func setArgument(_ argument:AnyObject?)\n");
-		fprintf(src, "  {\n");
+		fprintf(src, "    public final func setArgument(_ argument:AnyObject?)\n");
+		fprintf(src, "    {\n");
 		if (pszArgument)
 		{
-			fprintf(src, "    self.asnArgument = argument as? ");
+			fprintf(src, "        self.asnArgument = argument as? ");
 			if (argumentType->basicType->choiceId == BASICTYPE_ENUMERATED)
 				fprintf(src, "%s\n", "Int");
 			else
 				fprintf(src, "%s\n", pszArgument);
 		}
-		fprintf(src, "  }\n\n");
+		fprintf(src, "    }\n\n");
 
-		fprintf(src, "  public final func getResult() -> AnyObject?\n");
-		fprintf(src, "  {\n");
+		fprintf(src, "    public final func getResult() -> AnyObject?\n");
+		fprintf(src, "    {\n");
 		if (pszResult)
-			fprintf(src, "    return self.asnResult\n");
+			fprintf(src, "        return self.asnResult\n");
 		else
-			fprintf(src, "    return nil\n");
-		fprintf(src, "  }\n\n");
+			fprintf(src, "        return nil\n");
+		fprintf(src, "    }\n\n");
 
-		fprintf(src, "  public final func setResult(_ result:AnyObject?)\n");
-		fprintf(src, "  {\n");
+		fprintf(src, "    public final func setResult(_ result: AnyObject?)\n");
+		fprintf(src, "    {\n");
 		if (pszResult)
 		{
-			fprintf(src, "    self.asnResult = result as? ");
+			fprintf(src, "        self.asnResult = result as? ");
 			if (resultType->basicType->choiceId == BASICTYPE_ENUMERATED)
 				fprintf(src, "%s\n", "Int");
 			else
 				fprintf(src, "%s\n", pszResult);
 		}
-		fprintf(src, "  }\n\n");
+		fprintf(src, "    }\n\n");
 
-		fprintf(src, "  public final func getError() -> AnyObject?\n");
-		fprintf(src, "  {\n");
+		fprintf(src, "    public final func getError() -> AnyObject?\n");
+		fprintf(src, "    {\n");
 		if (pszError)
-			fprintf(src, "    return self.asnError\n");
+			fprintf(src, "        return self.asnError\n");
 		else
-			fprintf(src, "    return nil\n");
-		fprintf(src, "  }\n\n");
+			fprintf(src, "        return nil\n");
+		fprintf(src, "    }\n\n");
 
-		fprintf(src, "  public final func setError(_ error:AnyObject?)\n");
-		fprintf(src, "  {\n");
+		fprintf(src, "    public final func setError(_ error:AnyObject?)\n");
+		fprintf(src, "    {\n");
 		if (pszError)
 		{
-			fprintf(src, "    self.asnError = error as? ");
+			fprintf(src, "        self.asnError = error as? ");
 			if (errorType->basicType->choiceId == BASICTYPE_ENUMERATED)
 				fprintf(src, "%s\n", "Int");
 			else
 				fprintf(src, "%s\n", pszError);
 		}
-		fprintf(src, "  }\n\n");
+		fprintf(src, "    }\n\n");
 
-		fprintf(src, "  public final func isEvent() -> Bool\n");
-		fprintf(src, "  {\n");
+		fprintf(src, "    public final func isEvent() -> Bool\n");
+		fprintf(src, "    {\n");
 		if (pszResult)
-			fprintf(src, "    return false\n");
+			fprintf(src, "        return false\n");
 		else
-			fprintf(src, "    return true\n");
-		fprintf(src, "  }\n");
+			fprintf(src, "        return true\n");
+		fprintf(src, "    }\n");
 
 		fprintf(src, "}\n\n");
 	}
@@ -1094,10 +1101,14 @@ void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int
 
 	fprintf(src, "import Foundation\n\n");
 
+	bool bFirst = true;
 	TypeDef* td;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
+		if (!bFirst)
+			fprintf(src, "\n");
 		PrintSwiftTypeDefCode(src, mods, m, td, novolatilefuncs);
+		bFirst = false;
 	}
 }
 
@@ -1115,7 +1126,7 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 
 	// fprintf(src, "  public init() {}\n");
 
-	fprintf(src, "  public final class func createOperationFromJSONObject(_ operationName:String, argument:AnyObject?, result:AnyObject?, error:AnyObject?) -> AsnOperation?\n");
+	fprintf(src, "  public final class func createOperationFromJSONObject(_ operationName: String, argument: AnyObject?, result: AnyObject?, error: AnyObject?) -> AsnOperation?\n");
 	fprintf(src, "  {\n");
 	fprintf(src, "    switch(operationName)\n");
 	fprintf(src, "    {\n");
@@ -1147,23 +1158,23 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 					{
 						if (pszArgument)
 						{
-							fprintf(src, "        if let val : AnyObject = argument\n");
+							fprintf(src, "        if let val: AnyObject = argument\n");
 							fprintf(src, "        {\n");
-							fprintf(src, "          operation.setArgument(%s(jsonObject:val))\n", pszArgument);
+							fprintf(src, "          operation.setArgument(%s(jsonObject: val))\n", pszArgument);
 							fprintf(src, "        }\n");
 						}
 
 						if (pszResult)
 						{
-							fprintf(src, "        if let val : AnyObject = result\n");
+							fprintf(src, "        if let val: AnyObject = result\n");
 							fprintf(src, "        {\n");
-							fprintf(src, "          operation.setResult(%s(jsonObject:val))\n", pszResult);
+							fprintf(src, "          operation.setResult(%s(jsonObject: val))\n", pszResult);
 							fprintf(src, "        }\n");
 						}
 
 						if (pszError)
 						{
-							fprintf(src, "        if let val : AnyObject = error\n");
+							fprintf(src, "        if let val: AnyObject = error\n");
 							fprintf(src, "        {\n");
 							fprintf(src, "          operation.setError( %s.fromJSONObject(val) )\n", pszError);
 							fprintf(src, "        }\n");
@@ -1182,7 +1193,7 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 
 	fprintf(src, "  public final class func listOperationNames() -> [String]\n");
 	fprintf(src, "  {\n");
-	fprintf(src, "    var list:Array<String> = Array<String>()\n");
+	fprintf(src, "    var list: Array<String> = Array<String>()\n");
 
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
