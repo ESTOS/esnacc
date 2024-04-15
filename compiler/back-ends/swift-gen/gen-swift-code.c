@@ -486,7 +486,7 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 						{
 							fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
 							fprintf(src, "            {\n");
-							fprintf(src, "                %s = IntArray(jsonObject: %s)\n", fieldName, fieldName);
+							fprintf(src, "                self.%s = IntArray(jsonObject: %s)\n", fieldName, fieldName);
 						}
 						else if (typeIdOfReferencesType == BASICTYPE_SEQUENCEOF)
 						{
@@ -847,9 +847,6 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 
 static void PrintSwiftTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs)
 {
-	if (IsDeprecatedNoOutputSequence(m, td->definedName))
-		return;
-
 	PRINTDEBUGGING
 
 	printSequenceComment(src, m, td, COMMENTSTYLE_SWIFT);
@@ -1115,6 +1112,8 @@ void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int
 	TypeDef* td;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
+		if (IsDeprecatedNoOutputSequence(m, td->definedName))
+			continue;
 		if (!bFirst)
 			fprintf(src, "\n");
 		PrintSwiftTypeDefCode(src, mods, m, td, novolatilefuncs);
@@ -1136,10 +1135,10 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 
 	// fprintf(src, "  public init() {}\n");
 
-	fprintf(src, "  public final class func createOperationFromJSONObject(_ operationName: String, argument: AnyObject?, result: AnyObject?, error: AnyObject?) -> AsnOperation?\n");
-	fprintf(src, "  {\n");
-	fprintf(src, "    switch(operationName)\n");
+	fprintf(src, "    public final class func createOperationFromJSONObject(_ operationName: String, argument: AnyObject?, result: AnyObject?, error: AnyObject?) -> AsnOperation?\n");
 	fprintf(src, "    {\n");
+	fprintf(src, "        switch operationName\n");
+	fprintf(src, "        {\n");
 
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
@@ -1161,49 +1160,49 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 					Type* resultType = NULL;
 					Type* errorType = NULL;
 
-					fprintf(src, "      case \"%s\":\n", vd->definedName);
-					fprintf(src, "        let operation:%s = %s()\n", vd->definedName, vd->definedName);
+					fprintf(src, "            case \"%s\":\n", vd->definedName);
+					fprintf(src, "                let operation: %s = .init()\n", vd->definedName);
 
 					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, true))
 					{
 						if (pszArgument)
 						{
-							fprintf(src, "        if let val: AnyObject = argument\n");
-							fprintf(src, "        {\n");
-							fprintf(src, "          operation.setArgument(%s(jsonObject: val))\n", pszArgument);
-							fprintf(src, "        }\n");
+							fprintf(src, "                if let val: AnyObject = argument\n");
+							fprintf(src, "                {\n");
+							fprintf(src, "                    operation.setArgument(%s(jsonObject: val))\n", pszArgument);
+							fprintf(src, "                }\n");
 						}
 
 						if (pszResult)
 						{
-							fprintf(src, "        if let val: AnyObject = result\n");
-							fprintf(src, "        {\n");
-							fprintf(src, "          operation.setResult(%s(jsonObject: val))\n", pszResult);
-							fprintf(src, "        }\n");
+							fprintf(src, "                if let val: AnyObject = result\n");
+							fprintf(src, "                {\n");
+							fprintf(src, "                    operation.setResult(%s(jsonObject: val))\n", pszResult);
+							fprintf(src, "                }\n");
 						}
 
 						if (pszError)
 						{
-							fprintf(src, "        if let val: AnyObject = error\n");
-							fprintf(src, "        {\n");
-							fprintf(src, "          operation.setError( %s.fromJSONObject(val) )\n", pszError);
-							fprintf(src, "        }\n");
+							fprintf(src, "                if let val: AnyObject = error\n");
+							fprintf(src, "                {\n");
+							fprintf(src, "                    operation.setError(%s.fromJSONObject(val))\n", pszError);
+							fprintf(src, "                }\n");
 						}
 					}
-					fprintf(src, "        return operation\n\n");
+					fprintf(src, "                return operation\n\n");
 				}
 			}
 		}
 	}
 
-	fprintf(src, "      default:\n");
-	fprintf(src, "        return nil\n");
-	fprintf(src, "    }\n");
-	fprintf(src, "  }\n\n");
+	fprintf(src, "            default:\n");
+	fprintf(src, "                return nil\n");
+	fprintf(src, "        }\n");
+	fprintf(src, "    }\n\n");
 
-	fprintf(src, "  public final class func listOperationNames() -> [String]\n");
-	fprintf(src, "  {\n");
-	fprintf(src, "    var list: Array<String> = Array<String>()\n");
+	fprintf(src, "    public final class func listOperationNames() -> [String]\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        var list = [String]()\n");
 
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
@@ -1212,16 +1211,17 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 			FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
 			{
 				if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-					fprintf(src, "    list.append( \"%s\" )\n", vd->definedName);
+					fprintf(src, "        list.append(\"%s\")\n", vd->definedName);
 			}
 		}
 	}
-	fprintf(src, "    return list\n");
-	fprintf(src, "  }\n\n");
+	fprintf(src, "        return list\n");
+	fprintf(src, "    }\n\n");
 
-	fprintf(src, "  public final class func createOperation(_ operationName:String, initializeWithDefaultProperties:Bool) -> AsnOperation?\n");
-	fprintf(src, "  {\n");
-	fprintf(src, "    switch(operationName) {\n");
+	fprintf(src, "    public final class func createOperation(_ operationName: String, initializeWithDefaultProperties: Bool) -> AsnOperation?\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        switch operationName\n");
+	fprintf(src, "        {\n");
 
 	FOR_EACH_LIST_ELMT(currMod, mods)
 	{
@@ -1239,37 +1239,38 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 					Type* resultType = NULL;
 					Type* errorType = NULL;
 
-					fprintf(src, "      case \"%s\":\n", vd->definedName);
-					fprintf(src, "        let operation:%s = %s()\n", vd->definedName, vd->definedName);
+					fprintf(src, "            case \"%s\":\n", vd->definedName);
+					fprintf(src, "                let operation: %s = .init()\n", vd->definedName);
 
 					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, true))
 					{
-						fprintf(src, "        if(initializeWithDefaultProperties) {\n");
+						fprintf(src, "                if initializeWithDefaultProperties\n");
+						fprintf(src, "                {\n");
 						if (pszArgument)
-							fprintf(src, "          operation.setArgument( %s() )\n", pszArgument);
+							fprintf(src, "                    operation.setArgument(%s())\n", pszArgument);
 
 						if (pszResult)
-							fprintf(src, "          operation.setResult( %s() )\n", pszResult);
+							fprintf(src, "                    operation.setResult(%s())\n", pszResult);
 
 						if (pszError)
 						{
 							if (errorType->basicType->choiceId == BASICTYPE_ENUMERATED)
-								fprintf(src, "          operation.setError( 0 )\n");
+								fprintf(src, "                    operation.setError(0)\n");
 							else
-								fprintf(src, "          operation.setError( %s() )\n", pszError);
+								fprintf(src, "                    operation.setError(%s())\n", pszError);
 						}
-						fprintf(src, "        }\n");
+						fprintf(src, "                }\n");
 					}
-					fprintf(src, "        return operation\n\n");
+					fprintf(src, "                return operation\n\n");
 				}
 			}
 		}
 	}
 
-	fprintf(src, "      default:\n");
-	fprintf(src, "        return nil\n");
+	fprintf(src, "            default:\n");
+	fprintf(src, "                return nil\n");
+	fprintf(src, "        }\n");
 	fprintf(src, "    }\n");
-	fprintf(src, "  }\n");
 
 	fprintf(src, "}\n");
 }
