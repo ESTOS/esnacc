@@ -40,7 +40,7 @@
         },
         {
             "name": "LLDB - ts-microservice-sample - server - compile asn1 files",
-            "type": "cppdbg",
+            "type": "lldb",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "args": [
@@ -56,7 +56,7 @@
         },
         {
             "name": "LLDB - ts-microservice-sample - client - compile asn1 files",
-            "type": "cppdbg",
+            "type": "lldb",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "args": [
