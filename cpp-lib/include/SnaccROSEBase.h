@@ -206,7 +206,7 @@ public:
 	int ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend = true, const bool bFlushEveryWrite = true);
 
 	/* Retrieve the log level - do we need to log something */
-	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;
+	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) override = 0;
 
 	/*! Writes JSON encoded log messages to the log file
 		bOutbound = true in case the log entry is related to an outbound message
@@ -304,7 +304,7 @@ public:
 	 * pInvokeMessage - the invoke message as provided from the other side
 	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
 	 */
-	long DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument);
+	long DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) override;
 
 protected:
 	// ASN prefix with length prefix to build the JSON message

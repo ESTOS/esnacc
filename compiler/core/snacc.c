@@ -2556,7 +2556,6 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
 
 enum EDateFormat
 {
-	EDateFormat_UNKNOWN,
 	EDateFormat_EUROPEAN, // 31.1.2024
 	EDateFormat_US_SLASH, // 1/31/2024
 	EDateFormat_US_MINUS, // 1-31-2024
@@ -2581,7 +2580,7 @@ long long ConvertDateToUnixTime(const char* szDate)
 
 	long long tmResult = -1;
 
-	enum EDateFormat format = EDateFormat_UNKNOWN;
+	enum EDateFormat format = EDateFormat_EUROPEAN;
 	if (strstr(szDate, "."))
 		format = EDateFormat_EUROPEAN;
 	else if (strstr(szDate, "-"))

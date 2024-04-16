@@ -481,13 +481,10 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods)
 					if (GetROSEDetails(currMod, vd, NULL, NULL, &pszError, NULL, NULL, &errorType, false))
 					{
 						struct BasicType* errorBasicType = NULL;
-						bool bErrorIssue = false;
 						if (errorType)
 						{
 							errorBasicType = ResolveBasicTypeReferences(errorType->basicType, NULL);
-							if (!errorBasicType)
-								bErrorIssue = true;
-							else
+							if (errorBasicType)
 							{
 								char szBuffer[512] = {0};
 								sprintf_s(szBuffer, 512, "%i:%s", errorBasicType->choiceId, pszError);
