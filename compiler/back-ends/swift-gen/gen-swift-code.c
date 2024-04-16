@@ -355,7 +355,10 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 				else
 					fprintf(src, ", ");
 
-				fprintf(src, "%s: ", e->fieldName);
+				char* szFielName = Dash2UnderscoreEx(e->fieldName);
+				fprintf(src, "%s: ", szFielName);
+				free(szFielName);
+
 				PrintSwiftType(src, mods, m, td, parent, e->type);
 
 				fprintf(src, "%s", optionalQuestionMark);
@@ -368,8 +371,13 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
 		{
+
 			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
-				fprintf(src, "        self.%s = %s\n", e->fieldName, e->fieldName);
+			{
+				char* szFielName = Dash2UnderscoreEx(e->fieldName);
+				fprintf(src, "        self.%s = %s\n", szFielName, szFielName);
+				free(szFielName);
+			}
 		}
 		fprintf(src, "    }\n");
 	}
@@ -418,6 +426,8 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 	{
 		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 		{
+			char* szFieldName = Dash2UnderscoreEx(e->fieldName);
+
 			if (!dictionaryhaselements)
 			{
 				fprintf(src, "        if let dictionary: NSDictionary = jsonObject as? NSDictionary\n");
@@ -445,83 +455,82 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 
 					if (typeIdOfReferencesType == BASICTYPE_SEQUENCE || typeIdOfReferencesType == BASICTYPE_CHOICE)
 					{
-						fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", e->fieldName, e->fieldName);
+						fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", szFieldName, szFieldName);
 						fprintf(src, "            {\n");
 
 						if (strlen(optionalQuestionMark) == 0)
 						{
-							fprintf(src, "                self.%s = self.%s.merge(%s(jsonObject: %s))\n", e->fieldName, e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
+							fprintf(src, "                self.%s = self.%s.merge(%s(jsonObject: %s))\n", szFieldName, szFieldName, e->type->basicType->a.localTypeRef->link->definedName, szFieldName);
 						}
 						else
 						{
-							fprintf(src, "                if self.%s != nil\n", e->fieldName);
+							fprintf(src, "                if self.%s != nil\n", szFieldName);
 							fprintf(src, "                {\n");
-							fprintf(src, "                    self.%s = self.%s%s.merge(%s(jsonObject: %s))\n", e->fieldName, e->fieldName, optionalQuestionMark, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
+							fprintf(src, "                    self.%s = self.%s%s.merge(%s(jsonObject: %s))\n", szFieldName, szFieldName, optionalQuestionMark, e->type->basicType->a.localTypeRef->link->definedName, szFieldName);
 							fprintf(src, "                }\n");
 							fprintf(src, "                else\n");
 							fprintf(src, "                {\n");
-							fprintf(src, "                    self.%s = %s(jsonObject: %s)\n", e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName);
+							fprintf(src, "                    self.%s = %s(jsonObject: %s)\n", szFieldName, e->type->basicType->a.localTypeRef->link->definedName, szFieldName);
 							fprintf(src, "                }\n");
 						}
 					}
 					else
 					{
 						char* basicTypeName = e->type->basicType->a.localTypeRef->link->definedName;
-						char* fieldName = e->fieldName;
 
 						if (0 == strcmp(kS_AsnSystemTime, basicTypeName))
 						{
-							fprintf(src, "            if let asnTimeString: String = dictionary.object(forKey: \"%s\") as? String,\n", fieldName);
+							fprintf(src, "            if let asnTimeString: String = dictionary.object(forKey: \"%s\") as? String,\n", szFieldName);
 							fprintf(src, "               let convertedDate = AsnSystemTime(from: asnTimeString)\n");
 							fprintf(src, "            {\n");
-							fprintf(src, "                %s = convertedDate\n", e->fieldName);
+							fprintf(src, "                %s = convertedDate\n", szFieldName);
 						}
 						else if (0 == strcmp(kS_UTF8StringList, basicTypeName))
 						{
-							fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
+							fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", szFieldName, szFieldName);
 							fprintf(src, "            {\n");
-							fprintf(src, "                self.%s = StringArray<NSString>(jsonObject: %s)\n", fieldName, fieldName);
+							fprintf(src, "                self.%s = StringArray<NSString>(jsonObject: %s)\n", szFieldName, szFieldName);
 						}
 						else if (0 == strcmp(kS_SEQInteger, basicTypeName))
 						{
-							fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
+							fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", szFieldName, szFieldName);
 							fprintf(src, "            {\n");
-							fprintf(src, "                self.%s = IntArray(jsonObject: %s)\n", fieldName, fieldName);
+							fprintf(src, "                self.%s = IntArray(jsonObject: %s)\n", szFieldName, szFieldName);
 						}
 						else if (typeIdOfReferencesType == BASICTYPE_SEQUENCEOF)
 						{
 							char* elementName = e->type->basicType->a.localTypeRef->link->type->basicType->a.sequenceOf->basicType->a.localTypeRef->typeName;
 
-							fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", fieldName, fieldName);
+							fprintf(src, "            if let %s: AnyObject = dictionary.object(forKey: \"%s\") as AnyObject?\n", szFieldName, szFieldName);
 							fprintf(src, "            {\n");
-							fprintf(src, "                self.%s = %sArray<%s>(jsonObject: %s)\n", fieldName, elementName, elementName, fieldName);
+							fprintf(src, "                self.%s = %sArray<%s>(jsonObject: %s)\n", szFieldName, elementName, elementName, szFieldName);
 						}
 						else if (typeIdOfReferencesType == BASICTYPE_ENUMERATED)
 						{
-							fprintf(src, "            if let %s: Int = dictionary.object(forKey: \"%s\") as? Int\n", fieldName, fieldName);
+							fprintf(src, "            if let %s: Int = dictionary.object(forKey: \"%s\") as? Int\n", szFieldName, szFieldName);
 							fprintf(src, "            {\n");
-							fprintf(src, "                self.%s = %s\n", fieldName, fieldName);
+							fprintf(src, "                self.%s = %s\n", szFieldName, szFieldName);
 						}
 						else
 						{
-							fprintf(src, "            if let %s: %s = dictionary.object(forKey: \"%s\") as? %s\n", e->fieldName, e->type->basicType->a.localTypeRef->link->definedName, e->fieldName, e->type->basicType->a.localTypeRef->link->definedName);
+							fprintf(src, "            if let %s: %s = dictionary.object(forKey: \"%s\") as? %s\n", szFieldName, e->type->basicType->a.localTypeRef->link->definedName, szFieldName, e->type->basicType->a.localTypeRef->link->definedName);
 							fprintf(src, "            {\n");
-							fprintf(src, "                self.%s = %s\n", e->fieldName, e->fieldName);
+							fprintf(src, "                self.%s = %s\n", szFieldName, szFieldName);
 						}
 					}
 				}
 				else if (e->type->basicType->choiceId == BASICTYPE_OCTETSTRING)
 				{
-					fprintf(src, "            if let %sString: String = dictionary.object(forKey: \"%s\") as? String\n", e->fieldName, e->fieldName);
+					fprintf(src, "            if let %sString: String = dictionary.object(forKey: \"%s\") as? String\n", szFieldName, szFieldName);
 					fprintf(src, "            {\n");
-					fprintf(src, "                if let %sData = Data(base64Encoded: %sString, options: [])\n", e->fieldName, e->fieldName);
+					fprintf(src, "                if let %sData = Data(base64Encoded: %sString, options: [])\n", szFieldName, szFieldName);
 					fprintf(src, "                {\n");
-					fprintf(src, "                    %s = %sData\n", e->fieldName, e->fieldName);
+					fprintf(src, "                    %s = %sData\n", szFieldName, szFieldName);
 					fprintf(src, "                }\n");
 				}
 				else
 				{
-					fprintf(src, "            if let %s = dictionary.object(forKey: \"%s\") as", e->fieldName, e->fieldName);
+					fprintf(src, "            if let %s = dictionary.object(forKey: \"%s\") as", szFieldName, szFieldName);
 
 					if (e->type->basicType->choiceId != BASICTYPE_NULL)
 						fprintf(src, "?");
@@ -531,9 +540,10 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 						fprintf(src, "?");
 					fprintf(src, "\n");
 					fprintf(src, "            {\n");
-					fprintf(src, "                self.%s = %s\n", e->fieldName, e->fieldName);
+					fprintf(src, "                self.%s = %s\n", szFieldName, szFieldName);
 				}
 			}
+			free(szFieldName);
 			fprintf(src, "            }\n");
 		}
 	}
@@ -554,6 +564,8 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 	{
 		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 		{
+			char* szFieldName = Dash2UnderscoreEx(e->fieldName);
+
 			char* optionalQuestionMark = "";
 			char* optionalExclamationMark = "";
 			const char* szIndent = "        ";
@@ -566,11 +578,11 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 					optionalExclamationMark = "!";
 				}
 				szIndent = "            ";
-				fprintf(src, "        if %s != nil\n", e->fieldName);
+				fprintf(src, "        if %s != nil\n", szFieldName);
 				fprintf(src, "        {\n");
 			}
 
-			if (0 == strcmp("contactID", e->fieldName))
+			if (0 == strcmp("contactID", szFieldName))
 			{
 				//
 			}
@@ -580,29 +592,31 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 					int refBasicTypeChoiceId = e->type->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId;
 
 					if (0 == strcmp(kS_AsnSystemTime, e->type->basicType->a.localTypeRef->link->definedName))
-						fprintf(src, "%sdictionary.setValue(%s%s.description, forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
+						fprintf(src, "%sdictionary.setValue(%s%s.description, forKey: \"%s\")\n", szIndent, szFieldName, optionalExclamationMark, szFieldName);
 					else if (0 == strcmp(kS_AsnOptionalParameters, e->type->basicType->a.localTypeRef->link->definedName))
-						fprintf(src, "%sdictionary.setValue(%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
+						fprintf(src, "%sdictionary.setValue(%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, szFieldName, optionalExclamationMark, szFieldName);
 					else if (refBasicTypeChoiceId == BASICTYPE_BITSTRING || refBasicTypeChoiceId == BASICTYPE_ENUMERATED || refBasicTypeChoiceId == BASICTYPE_UTF8_STR)
 
-						fprintf(src, "%sdictionary.setValue(%s, forKey: \"%s\")\n", szIndent, e->fieldName, e->fieldName);
+						fprintf(src, "%sdictionary.setValue(%s, forKey: \"%s\")\n", szIndent, szFieldName, szFieldName);
 					else if (refBasicTypeChoiceId == BASICTYPE_SEQUENCE || refBasicTypeChoiceId == BASICTYPE_CHOICE)
-						fprintf(src, "%sdictionary.setValue(%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalQuestionMark, e->fieldName);
+						fprintf(src, "%sdictionary.setValue(%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, szFieldName, optionalQuestionMark, szFieldName);
 					else
-						fprintf(src, "%sdictionary.setValue(%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, e->fieldName, optionalExclamationMark, e->fieldName);
+						fprintf(src, "%sdictionary.setValue(%s%s.toJSONObject(), forKey: \"%s\")\n", szIndent, szFieldName, optionalExclamationMark, szFieldName);
 				}
 				else if (e->type->basicType->choiceId == BASICTYPE_OCTETSTRING)
 				{
-					fprintf(src, "%sdictionary.setValue(%s%s.base64EncodedString(options: []), forKey: \"%s\")\n", szIndent, e->fieldName, optionalQuestionMark, e->fieldName);
+					fprintf(src, "%sdictionary.setValue(%s%s.base64EncodedString(options: []), forKey: \"%s\")\n", szIndent, szFieldName, optionalQuestionMark, szFieldName);
 				}
 				else
 				{
-					fprintf(src, "%sdictionary.setValue(%s, forKey: \"%s\")\n", szIndent, e->fieldName, e->fieldName);
+					fprintf(src, "%sdictionary.setValue(%s, forKey: \"%s\")\n", szIndent, szFieldName, szFieldName);
 				}
 			}
 
 			if (e->type->optional || t->basicType->choiceId == BASICTYPE_CHOICE)
 				fprintf(src, "        }\n");
+
+			free(szFieldName);
 		}
 	}
 	fprintf(src, "        return dictionary\n");
@@ -780,7 +794,9 @@ static void PrintSwiftChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 		{
 			printMemberComment(src, m, td, e->fieldName, "  ", COMMENTSTYLE_SWIFT);
-			fprintf(src, "    public final var %s: ", e->fieldName);
+			char* szFieldName = Dash2UnderscoreEx(e->fieldName);
+			fprintf(src, "    public final var %s: ", szFieldName);
+			free(szFieldName);
 			PrintSwiftType(src, mods, m, td, choice, e->type);
 			fprintf(src, "? = nil");
 			fprintf(src, "\n");
@@ -828,7 +844,9 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 			{
 				printMemberComment(src, m, td, e->fieldName, "  ", COMMENTSTYLE_SWIFT);
-				fprintf(src, "    public final var %s: ", e->fieldName);
+				char* szFielName = Dash2UnderscoreEx(e->fieldName);
+				fprintf(src, "    public final var %s: ", szFielName);
+				free(szFielName);
 				PrintSwiftType(src, mods, m, td, seq, e->type);
 				if (e->type->optional || e->type->basicType->choiceId == BASICTYPE_NULL)
 				{

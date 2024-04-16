@@ -55,6 +55,7 @@ void Str2UCase PROTO((char* str, size_t len));
 void Str2LCase PROTO((char* str, size_t len));
 
 void Dash2Underscore PROTO((char* str, size_t len));
+char* Dash2UnderscoreEx PROTO((const char* str));
 
 void AppendDigit PROTO((char* str, size_t bufferSize, int digit));
 
