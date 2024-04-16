@@ -55,7 +55,7 @@ bool IsROSEValueDef(Module* mod, ValueDef* vd)
 	return true;
 }
 
-bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszResult, char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot)
+bool GetROSEDetails(Module* mod, ValueDef* vd, const char** ppszArgument, const char** ppszResult, const char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot)
 {
 	if (ppszArgument)
 		*ppszArgument = NULL;
