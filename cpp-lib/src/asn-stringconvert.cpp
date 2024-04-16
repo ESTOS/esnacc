@@ -1,6 +1,13 @@
 #include "../include/asn-stringconvert.h"
 #include <locale>
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 #include <codecvt>
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 #include <utility>
 #include <cassert>
 #ifdef _WIN32
