@@ -7,9 +7,6 @@
 #define NULL 0
 #endif
 
-// For the moment we don´t care about the codecvt_utf8 warnings (this is still supported also in cpp20)
-#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
-
 void snacc_exit_now(const char* szMethod, const char* szMessage, ...);
 #define snacc_exit(szMessage, ...)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
 	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
