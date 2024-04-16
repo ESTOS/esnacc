@@ -591,9 +591,9 @@ static void PrintJavaOperationClass(Module* mod, ValueDef* vd)
 	if (IsDeprecatedNoOutputOperation(mod, vd->definedName))
 		return;
 
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 
 	Type* argumentType = NULL;
 	Type* resultType = NULL;

@@ -359,9 +359,9 @@ bool ValidateArgumentResultErrorAreSequencesOrChoices(ModuleList* allMods)
 					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
 						continue;
 
-					char* pszArgument = NULL;
-					char* pszResult = NULL;
-					char* pszError = NULL;
+					const char* pszArgument = NULL;
+					const char* pszResult = NULL;
+					const char* pszError = NULL;
 					Type* argumentType = NULL;
 					Type* resultType = NULL;
 					Type* errorType = NULL;
@@ -476,7 +476,7 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods)
 					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
 						continue;
 
-					char* pszError = NULL;
+					const char* pszError = NULL;
 					Type* errorType = NULL;
 					if (GetROSEDetails(currMod, vd, NULL, NULL, &pszError, NULL, NULL, &errorType, false))
 					{
@@ -927,9 +927,9 @@ bool ValidateProperROSEArguments(ModuleList* allMods)
 					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
 						continue;
 
-					char* pszArgument = NULL;
-					char* pszResult = NULL;
-					char* pszError = NULL;
+					const char* pszArgument = NULL;
+					const char* pszResult = NULL;
+					const char* pszError = NULL;
 					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 					{
 						bool bMissingArgument = false;

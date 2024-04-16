@@ -1086,8 +1086,8 @@ static int RestAreTailOptional(NamedTypeList* e)
 
 static bool IsValidROSEOnInvoke(Module* mod, ValueDef* vd, bool bEvents)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
 	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, NULL, NULL, NULL, NULL, false))
 	{
 		if (pszResult && !bEvents)
@@ -1117,9 +1117,9 @@ static bool HasValidROSEOnInvokes(Module* mod, bool bEvents)
  */
 static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd, bool bCommentWasAdded)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 
 	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 	{
@@ -1157,9 +1157,9 @@ static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd,
  */
 static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, ValueDef* vd)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 
 	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 	{
@@ -1298,8 +1298,8 @@ void PrintLongComment(FILE* hdr, const char* szLinePrefix, const char* szComment
 
 static bool IsValidROSEInvoke(Module* m, ValueDef* vd, bool bEvents)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
 
 	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, NULL, NULL, NULL, NULL, false))
 	{
@@ -1326,9 +1326,9 @@ static bool HasValidROSEInvokes(Module* mod, bool bEvents)
 
 static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueDef* vd, bool bCommentWasAdded)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 
 	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 	{

@@ -958,9 +958,9 @@ static void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd
 
 	PRINTDEBUGGING
 
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 
 	Type* argumentType = NULL;
 	Type* resultType = NULL;
@@ -1180,9 +1180,9 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 					if (IsDeprecatedNoOutputOperation(currMod, vd->definedName))
 						continue;
 
-					char* pszArgument = NULL;
-					char* pszResult = NULL;
-					char* pszError = NULL;
+					const char* pszArgument = NULL;
+					const char* pszResult = NULL;
+					const char* pszError = NULL;
 
 					Type* argumentType = NULL;
 					Type* resultType = NULL;
@@ -1259,9 +1259,9 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 			{
 				if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
 				{
-					char* pszArgument = NULL;
-					char* pszResult = NULL;
-					char* pszError = NULL;
+					const char* pszArgument = NULL;
+					const char* pszResult = NULL;
+					const char* pszError = NULL;
 
 					Type* argumentType = NULL;
 					Type* resultType = NULL;
