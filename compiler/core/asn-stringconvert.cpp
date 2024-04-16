@@ -1,14 +1,13 @@
 #include "asn-stringconvert.h"
 #include <locale>
+// For the moment we don´t care about the codecvt_utf8 warnings (this is still supported also in cpp20)
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 #include <codecvt>
 #include <utility>
 #include <cassert>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
-
-// For the moment we don´t care about the codecvt_utf8 warnings (this is still supported also in cpp20)
-#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
 template <class Facet> struct deletable_facet : Facet
 {
