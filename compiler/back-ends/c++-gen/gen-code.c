@@ -1835,7 +1835,7 @@ void PrintChoiceDefCodeBerEncodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 		else if (tmpTypeId == BASICTYPE_ANY)
 		{
 			fprintf(src, "\t\t\tl = %s", varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "B%s(_b);\n", r->encodeBaseName);
 		}
 		else if (tmpTypeId == BASICTYPE_BITCONTAINING)
@@ -1845,13 +1845,13 @@ void PrintChoiceDefCodeBerEncodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 		else if (tmpTypeId == BASICTYPE_EXTENSION)
 		{
 			fprintf(src, "\t\t\tl = %s", varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "B%s(_b);\n", r->encodeBaseName);
 		}
 		else
 		{
 			fprintf(src, "\t\t\tl = %s", varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "B%s(_b);\n", r->encodeContentBaseName);
 		}
 
@@ -2047,14 +2047,14 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 				PrintCxxSetTypeByCode(defByNamedType, cxxtri, src, "\t\t\t");
 
 				fprintf(src, "\t\t\t%s", varName);
-				fprintf(src, getAccessor(cxxtri->isPtr));
+				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "B%s(_b, bytesDecoded);\n", r->decodeBaseName);
 			}
 			else if (tmpTypeId == BASICTYPE_ANY)
 			{
 				elmtLevel++;
 				fprintf(src, "\t\t\t%s", varName);
-				fprintf(src, getAccessor(cxxtri->isPtr));
+				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "B%s(_b, bytesDecoded);\n", r->decodeBaseName);
 			}
 			else if (tmpTypeId == BASICTYPE_BITCONTAINING)
@@ -2064,7 +2064,7 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 			else
 			{
 				fprintf(src, "\t\t\t%s", varName);
-				fprintf(src, getAccessor(cxxtri->isPtr));
+				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "B%s(_b, tag, elmtLen%d, bytesDecoded);\n", r->decodeContentBaseName, elmtLevel);
 			}
 
@@ -2226,7 +2226,7 @@ void PrintChoiceDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 
 			/* encode content */
 			fprintf(src, "\t\t\t%s", varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "JEnc(tmp);\n");
 			fprintf(src, "\t\t\tb[\"%s\"] = tmp;\n", varName);
 
@@ -2378,7 +2378,7 @@ void PrintChoiceDefCodePEREnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 		else if (tmpTypeId == BASICTYPE_ANY)
 		{
 			fprintf(src, "    l += %s", varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "P%s (_b);\n", r->encodeBaseName);
 		}
 		else if (tmpTypeId == BASICTYPE_BITCONTAINING)
@@ -2388,7 +2388,7 @@ void PrintChoiceDefCodePEREnc(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 		else
 		{
 			fprintf(src, "      l += %s", varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "P%s (_b);\n", r->encodeBaseName);
 		}
 		fprintf(src, "      break;\n\n");
@@ -2486,13 +2486,13 @@ void PrintChoiceDefCodePERDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 			PrintCxxSetTypeByCode(defByNamedType, cxxtri, src, "\t\t");
 
 			fprintf(src, "      %s", varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "P%s (_b, bitsDecoded);\n", r->decodeBaseName);
 		}
 		else if (tmpTypeId == BASICTYPE_ANY)
 		{
 			fprintf(src, "        %s", varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "P%s (_b, bitsDecoded);\n", r->decodeBaseName);
 		}
 		else if (tmpTypeId == BASICTYPE_BITCONTAINING)
@@ -2502,7 +2502,7 @@ void PrintChoiceDefCodePERDec(FILE* src, FILE* hdr, CxxRules* r, TypeDef* td, Ty
 		else
 		{
 			fprintf(src, "      %s", varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "P%s (_b, bitsDecoded);\n", r->decodeBaseName);
 		}
 
@@ -2789,13 +2789,13 @@ void PrintSeqDefCodeBerEncodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 			PrintCxxSetTypeByCode(defByNamedType, cxxtri, src, "\t\t");
 
 			fprintf(src, "%sl = %s", szIndent, varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "B%s(_b);\n", r->encodeBaseName);
 		}
 		else if (tmpTypeId == BASICTYPE_ANY)
 		{
 			fprintf(src, "%sl = %s", szIndent, varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "B%s(_b);\n", r->encodeBaseName);
 		}
 		else if (tmpTypeId == BASICTYPE_BITCONTAINING)
@@ -2805,13 +2805,13 @@ void PrintSeqDefCodeBerEncodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 		else if (tmpTypeId == BASICTYPE_EXTENSION)
 		{
 			fprintf(src, "%sl = %s", szIndent, varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "BEnc(_b);\n");
 		}
 		else
 		{
 			fprintf(src, "%sl = %s", szIndent, varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "B%s(_b);\n", r->encodeContentBaseName);
 		}
 
@@ -3193,7 +3193,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 					PrintCxxSetTypeByCode(defByNamedType, cxxtri, src, "\t\t");
 
 					fprintf(src, "\t\t%s", varName);
-					fprintf(src, getAccessor(cxxtri->isPtr));
+					fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 					fprintf(src, "B%s(_b, seqBytesDecoded);\n", r->decodeBaseName);
 				}
 				else if (tmpTypeId == BASICTYPE_ANY)
@@ -3203,7 +3203,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 					if (!bHaveLength)
 						fprintf(src, "%selmtLen%d = B%sLen(_b, seqBytesDecoded);\n", szIndent, ++elmtLevel, r->decodeBaseName);
 					fprintf(src, "%s%s", szIndent, varName);
-					fprintf(src, getAccessor(cxxtri->isPtr));
+					fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 					fprintf(src, "B%sContent(_b, tag1, elmtLen%d, seqBytesDecoded);\n", r->decodeBaseName, elmtLevel);
 				}
 				else if (tmpTypeId == BASICTYPE_BITCONTAINING)
@@ -3213,7 +3213,7 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 				else
 				{
 					fprintf(src, "\t\t%s", varName);
-					fprintf(src, getAccessor(cxxtri->isPtr));
+					fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 					fprintf(src, "B%s(_b, tag1, elmtLen%d, seqBytesDecoded);\n", r->decodeContentBaseName, elmtLevel);
 				}
 
@@ -3480,7 +3480,7 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 
 			/* encode content */
 			fprintf(src, "%s%s", szIndent, varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			fprintf(src, "JEnc(tmp);\n");
 			fprintf(src, "%sb[\"%s\"] = tmp;\n", szIndent, varName);
 
@@ -3738,14 +3738,14 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 				PrintCxxSetTypeByCode(defByNamedType, cxxtri, src, "\t\t");
 
 				fprintf(src, "    l = %s", varName);
-				fprintf(src, getAccessor(cxxtri->isPtr));
+				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "B%s (*iBuf);\n", r->encodeBaseName);
 			}
 			else if (tmpTypeId == BASICTYPE_ANY)
 			{
 				fprintf(src, "    iBuf = bufList.insert(bufList.begin(), AsnBuf());\n");
 				fprintf(src, "    l = %s", varName);
-				fprintf(src, getAccessor(cxxtri->isPtr));
+				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "B%s (*iBuf);\n", r->encodeBaseName);
 			}
 			else if (tmpTypeId == BASICTYPE_BITCONTAINING)
@@ -3756,14 +3756,14 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 			else if (tmpTypeId == BASICTYPE_EXTENSION)
 			{
 				fprintf(src, "       l = %s", varName);
-				fprintf(src, getAccessor(cxxtri->isPtr));
+				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "B%s (_b);\n", r->encodeBaseName);
 			}
 			else
 			{
 				fprintf(src, "    iBuf = bufList.insert(bufList.begin(), AsnBuf());\n");
 				fprintf(src, "    l = %s", varName);
-				fprintf(src, getAccessor(cxxtri->isPtr));
+				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "B%s (*iBuf);\n", r->encodeContentBaseName);
 			}
 
@@ -3996,12 +3996,12 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 						elmtLevel++;
 
 						fprintf(src, "        %s", varName);
-						fprintf(src, getAccessor(cxxtri->isPtr));
+						fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 						defByNamedType = e->type->basicType->a.anyDefinedBy->link;
 						PrintCxxSetTypeByCode(defByNamedType, cxxtri, src, "\t\t");
 
 						fprintf(src, "        %s", varName);
-						fprintf(src, getAccessor(cxxtri->isPtr));
+						fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 						fprintf(src, "B%s (_b, setBytesDecoded);\n", r->decodeBaseName);
 					}
 					else if (tmpTypeId == BASICTYPE_ANY)
@@ -4009,7 +4009,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 						elmtLevel++;
 
 						fprintf(src, "        %s", varName);
-						fprintf(src, getAccessor(cxxtri->isPtr));
+						fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 						fprintf(src, "B%s (_b, setBytesDecoded);\n", r->decodeBaseName);
 					}
 					else if (tmpTypeId == BASICTYPE_BITCONTAINING)
@@ -4019,7 +4019,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 					else
 					{
 						fprintf(src, "        %s", varName);
-						fprintf(src, getAccessor(cxxtri->isPtr));
+						fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 						fprintf(src, "B%s (_b, tag1, elmtLen%d, setBytesDecoded);\n", r->decodeContentBaseName, elmtLevel);
 					}
 
@@ -4981,7 +4981,7 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 void PrintCxxEncodeContaining(Type* t, CxxRules* r, FILE* src, const char* szIndent)
 {
 	fprintf(src, "%sl += %s", szIndent, t->cxxTypeRefInfo->fieldName);
-	fprintf(src, getAccessor(t->cxxTypeRefInfo->isPtr));
+	fprintf(src, "%s", getAccessor(t->cxxTypeRefInfo->isPtr));
 	fprintf(src, "B%s(_b);\n", r->encodeBaseName);
 
 	/* If this is a BITSTRING CONTAINING encode a NULL octet for the unused
@@ -5018,14 +5018,14 @@ void PrintCxxDecodeContaining(Type* t, CxxRules* r, FILE* src, const char* szInd
 	}
 
 	fprintf(src, "%s%s", t->cxxTypeRefInfo->fieldName, szIndent);
-	fprintf(src, getAccessor(t->cxxTypeRefInfo->isPtr));
+	fprintf(src, "%s", getAccessor(t->cxxTypeRefInfo->isPtr));
 	fprintf(src, "B%s(_b, seqBytesDecoded);\n", r->decodeBaseName);
 }
 
 void PrintCxxPEREncodeContaining(Type* t, CxxRules* r, FILE* src)
 {
 	fprintf(src, "    l += %s", t->cxxTypeRefInfo->fieldName);
-	fprintf(src, getAccessor(t->cxxTypeRefInfo->isPtr));
+	fprintf(src, "%s", getAccessor(t->cxxTypeRefInfo->isPtr));
 	fprintf(src, "P%s(_b);\n", r->encodeBaseName);
 
 	/* If this is a BITSTRING CONTAINING encode a NULL octet for the unused
@@ -5063,7 +5063,7 @@ void PrintCxxPERDecodeContaining(Type* t, CxxRules* r, FILE* src)
 	}
 
 	fprintf(src, "    %s", t->cxxTypeRefInfo->fieldName);
-	fprintf(src, getAccessor(t->cxxTypeRefInfo->isPtr));
+	fprintf(src, "%s", getAccessor(t->cxxTypeRefInfo->isPtr));
 	fprintf(src, "P%s (_b, bitsDecoded);\n", r->decodeBaseName);
 }
 
@@ -5074,7 +5074,7 @@ void PrintCxxSetTypeByCode(NamedType* defByNamedType, CxxTRI* cxxtri, FILE* src,
 	if (GetBuiltinType(defByNamedType->type) == BASICTYPE_OID)
 	{
 		fprintf(src, "%s%s", szIndent, varName);
-		fprintf(src, getAccessor(cxxtri->isPtr));
+		fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 		fprintf(src, "SetTypeByOid (");
 		if (defByNamedType->type->cxxTypeRefInfo->isPtr)
 			fprintf(src, " *");
@@ -5083,7 +5083,7 @@ void PrintCxxSetTypeByCode(NamedType* defByNamedType, CxxTRI* cxxtri, FILE* src,
 	else if (GetBuiltinType(defByNamedType->type) == BASICTYPE_INTEGER)
 	{
 		fprintf(src, "%s%s", szIndent, varName);
-		fprintf(src, getAccessor(cxxtri->isPtr));
+		fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 		fprintf(src, "SetTypeByInt (");
 		if (defByNamedType->type->cxxTypeRefInfo->isPtr)
 			fprintf(src, " *");
@@ -5101,7 +5101,7 @@ void PrintCxxSetTypeByCode(NamedType* defByNamedType, CxxTRI* cxxtri, FILE* src,
 		{
 			fprintf(src, "%s\tcase %s::%sCid:\n", szIndent, defByNamedType->type->cxxTypeRefInfo->className, nt->fieldName);
 			fprintf(src, "%s\t\t%s", szIndent, varName);
-			fprintf(src, getAccessor(cxxtri->isPtr));
+			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 			if (nt->type->basicType->choiceId == BASICTYPE_INTEGER || nt->type->basicType->choiceId == BASICTYPE_ENUMERATED)
 				fprintf(src, "SetTypeByInt(*%s->%s);\n", defByNamedType->type->cxxTypeRefInfo->fieldName, nt->fieldName);
 			else
@@ -5403,7 +5403,7 @@ static void PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, T
 				PrintCxxSetTypeByCode(defByNamedType, cxxtri, src, "\t\t");
 
 				fprintf(src, "%s += %s", tabAndlenVar, varName);
-				fprintf(src, getAccessor(cxxtri->isPtr));
+				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "P%s(_b);\n", r->encodeBaseName);
 			}
 			else if (tmpTypeId == BASICTYPE_ANY)
@@ -5411,7 +5411,7 @@ static void PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, T
 				// RWC;NOTE:  we will assume here that the ANY buffer is already
 				// RWC;NOTE:    properly PER encoder; we have no way of checking.
 				fprintf(src, "%s += %s", tabAndlenVar, varName);
-				fprintf(src, getAccessor(cxxtri->isPtr));
+				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "P%s(_b);\n", r->encodeBaseName);
 			}
 			else if (tmpTypeId == BASICTYPE_BITCONTAINING)
@@ -5423,7 +5423,7 @@ static void PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, T
 			else
 			{
 				fprintf(src, "%s += %s", tabAndlenVar, varName);
-				fprintf(src, getAccessor(cxxtri->isPtr));
+				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "P%s(_b);\n", r->encodeBaseName); /*RWC;r->encodeContentBaseName);*/
 			}
 		}
