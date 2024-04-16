@@ -1,19 +1,18 @@
 #include "asn-stringconvert.h"
 #include <locale>
-// For the moment we don´t care about the codecvt_utf8 warnings (this is still supported also in cpp20)
-#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
 #include <codecvt>
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 #include <utility>
 #include <cassert>
 #ifdef _WIN32
 #include <Windows.h>
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
 template <class Facet> struct deletable_facet : Facet
@@ -258,3 +257,9 @@ std::string AsnStringConvert::UTF16ToUTF8(const wchar_t* szUTF16)
 	}
 	return strUTF8;
 }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
