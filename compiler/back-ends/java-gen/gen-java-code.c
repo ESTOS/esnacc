@@ -307,7 +307,9 @@ static void PrintSeqJavaDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 		printMemberComment(src, mod, td, e->fieldName, "  ", COMMENTSTYLE_JAVA);
 		fprintf(src, "  private ");
 		PrintJavaType(src, mods, mod, e->type);
-		fprintf(src, " %s = ", e->fieldName);
+		char* szFieldName = Dash2UnderscoreEx(e->fieldName);
+		fprintf(src, " %s = ", szFieldName);
+		free(szFieldName);
 		if (e->type->optional || e->type->basicType->choiceId == BASICTYPE_NULL)
 			fprintf(src, "null");
 		else
@@ -324,7 +326,8 @@ static void PrintSeqJavaDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 		if (e->type->optional || td->type->basicType->choiceId == BASICTYPE_CHOICE || td->type->basicType->choiceId == BASICTYPE_NULL)
 			isNullable = 1;
 
-		tmpName = getJavaClassName(e->fieldName, "");
+		char* szFieldName = Dash2UnderscoreEx(e->fieldName);
+		tmpName = getJavaClassName(szFieldName, "");
 		fprintf(src, "\n  ");
 		if (isNullable == 1)
 			fprintf(src, "@Nullable");
@@ -334,7 +337,7 @@ static void PrintSeqJavaDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 		PrintJavaType(src, mods, mod, e->type);
 		fprintf(src, " get%s()\n", tmpName);
 		fprintf(src, "  {\n");
-		fprintf(src, "    return this.%s;\n", e->fieldName);
+		fprintf(src, "    return this.%s;\n", szFieldName);
 		fprintf(src, "  }\n");
 
 		fprintf(src, "  public void set%s(", tmpName);
@@ -343,9 +346,9 @@ static void PrintSeqJavaDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 		else
 			fprintf(src, "@NonNull ");
 		PrintJavaType(src, mods, mod, e->type);
-		fprintf(src, " %s)\n", e->fieldName);
+		fprintf(src, " %s)\n", szFieldName);
 		fprintf(src, "  {\n");
-		fprintf(src, "    this.%s = %s;\n", e->fieldName, e->fieldName);
+		fprintf(src, "    this.%s = %s;\n", szFieldName, szFieldName);
 		fprintf(src, "  }\n");
 		free(tmpName);
 	}
