@@ -641,6 +641,8 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 
 static void PrintSwiftEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* enumerated, int novolatilefuncs)
 {
+	PRINTDEBUGGING
+
 	fprintf(src, "public enum %s: Int\n", td->definedName);
 	fprintf(src, "{\n");
 
@@ -666,6 +668,8 @@ static void PrintSwiftEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 
 static void PrintSwiftSimpleRefDef(FILE* src, Module* m, TypeDef* td)
 {
+	PRINTDEBUGGING
+
 	fprintf(src, "open class %s: %s\n", td->definedName, td->type->cxxTypeRefInfo->className);
 	fprintf(src, "{\n");
 	fprintf(src, "    public required init(json: String)\n");
@@ -688,6 +692,8 @@ static void PrintSwiftSimpleDef(FILE* src, ModuleList* mods, Module* m, TypeDef*
 	}
 	else
 	{
+		PRINTDEBUGGING
+
 		fprintf(src, "public typealias %s = ", td->definedName);
 		// PrintSwiftType(src, NULL,m, NULL, NULL,td->type);
 		// PrintSwiftArrayType(src,td->cxxTypeDefInfo->a);
@@ -706,7 +712,7 @@ static void PrintSwiftSimpleDef(FILE* src, ModuleList* mods, Module* m, TypeDef*
 	fprintf(src, "\n");
 }
 
-static void PrintSwiftSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
+static void PrintSwiftSeqOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
 {
 	Type* innerType = td->type->basicType->a.sequenceOf;
 
@@ -730,6 +736,8 @@ static void PrintSwiftSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 			// class types, defined in a .ASN file
 			if (strcmp("AsnOptionalParam", innerType->cxxTypeRefInfo->className) == 0)
 				break; // is defined as custom class
+
+			PRINTDEBUGGING
 
 			if (!EndsWith(td->definedName, SEQOF_SUFFIX) && !EndsWith(td->definedName, SETOF_SUFFIX) && td->type->basicType->choiceId == BASICTYPE_SEQUENCEOF && innerType->basicType->choiceId == BASICTYPE_LOCALTYPEREF)
 			{
@@ -760,6 +768,8 @@ static void PrintSwiftChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 {
 	if (strcmp("AsnOptionalParamChoice", td->definedName) == 0)
 		return; // is defined as custom class
+
+	PRINTDEBUGGING
 
 	fprintf(src, "open class %s: JSONConvertable, JSONObjectConvertable\n", td->definedName);
 	fprintf(src, "{\n");
@@ -801,6 +811,8 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 	}
 	else
 	{
+		PRINTDEBUGGING
+
 		/* put class spec in src file */
 
 		// fprintf (src, "class %s %s\n", td->cxxTypeDefInfo->className);
@@ -847,8 +859,6 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 
 static void PrintSwiftTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs)
 {
-	PRINTDEBUGGING
-
 	printSequenceComment(src, m, td, COMMENTSTYLE_SWIFT);
 
 	switch (td->type->basicType->choiceId)
@@ -881,7 +891,7 @@ static void PrintSwiftTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 			break;
 		case BASICTYPE_SEQUENCEOF: /* list types */
 		case BASICTYPE_SETOF:
-			PrintSwiftSetOfDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
+			PrintSwiftSeqOfDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
 			break;
 		case BASICTYPE_IMPORTTYPEREF: /* type references */
 		case BASICTYPE_LOCALTYPEREF:
