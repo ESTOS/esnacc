@@ -646,8 +646,8 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 	{
 		fprintf(src, ",\n");
 		fprintf(src, "\t\t\"version\": \"0.0.1\",\n");
-		char* orig[] = {"\\n", "\\t", 0};
-		char* rep[] = {"\\n\\n", "", 0};
+		const char* orig[] = {"\\n", "\\t", 0};
+		const char* rep[] = {"\\n\\n", "", 0};
 		if (strlen(comment.szShort) != 0)
 		{
 
