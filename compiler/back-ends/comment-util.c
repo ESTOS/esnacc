@@ -153,7 +153,7 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 		bSucceeded = GetMemberComment_UTF8(m->moduleName, td->definedName, szElement, &comment) ? true : false;
 	if (bSucceeded)
 	{
-		if (strlen(comment.szShort) || comment.i64Deprecated || comment.iPrivate)
+		if (strlen(comment.szShort) || strlen(comment.szLinkedType) || comment.i64Deprecated || comment.iPrivate)
 		{
 			int iMultiline = 0;
 			if (comment.i64Deprecated)
@@ -165,6 +165,8 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 			if (strstr(comment.szShort, "\\n"))
 				iMultiline += 2;
 			else if (strlen(comment.szShort))
+				iMultiline += 1;
+			else if (strlen(comment.szLinkedType))
 				iMultiline += 1;
 			char szPrefix[128] = {0};
 			char szSuffix[128] = {0};
@@ -183,13 +185,15 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 
 			bool bAdded = printComment(src, szPrefix, comment.szShort, szSuffix);
 
-			if (comment.i64Deprecated || comment.iPrivate)
+			if (strlen(comment.szLinkedType) || comment.i64Deprecated || comment.iPrivate)
 			{
 				if (bAdded)
 				{
 					bAdded = false;
 					fprintf(src, "\n");
 				}
+				if (strlen(comment.szLinkedType))
+					fprintf(src, "%s (see %s)%s\n", szPrefix, comment.szLinkedType, szSuffix);
 				if (comment.i64Deprecated)
 				{
 					const char* szComment = getDeprecated(comment.szDeprecated, style);
