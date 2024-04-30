@@ -315,7 +315,7 @@ void PrintSwiftType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* p
 				break;
 			}
 		case BASICTYPE_ANY:
-			fprintf(src, "any");
+			fprintf(src, "AnyObject");
 			break;
 		case BASICTYPE_BITSTRING:
 			fprintf(src, "%s", t->cxxTypeRefInfo->className);
@@ -948,10 +948,10 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 				{
 					fprintf(src, "? = nil");
 				}
-				else if (pRootType->basicType->choiceId == BASICTYPE_ENUMERATED)
-				{
-					fprintf(src, " = %sArray.init()", szRootName);
-				}
+//				else if (pRootType->basicType->choiceId == BASICTYPE_ENUMERATED)
+//				{
+//					fprintf(src, " = %sArray.init()", szRootName);
+//				}
 				else
 				{
 					fprintf(src, " = ");
