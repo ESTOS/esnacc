@@ -409,7 +409,7 @@ export class TSConverter {
 	 * @param optional - set to true if the parameter is optional (if optional, the parameter might be missing)
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
-	public static validateParam(data: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "Date" | "Uint8Array" | "object", errors?: ConverterErrors, context?: IDecodeContext | IEncodeContext, optional?: boolean): boolean {
+	public static validateParam(data: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "Date" | "Uint8Array" | "object" | "null", errors?: ConverterErrors, context?: IDecodeContext | IEncodeContext, optional?: boolean): boolean {
 		if (!Object.prototype.hasOwnProperty.call(data, propertyName)) {
 			if (errors) {
 				if (!(optional === true)) {
@@ -420,6 +420,8 @@ export class TSConverter {
 		} else {
 			const property = (data as Record<string, unknown>)[propertyName];
 			if (property === undefined || property === null) {
+				if (property === null && expectedType === "null")
+					return true;
 				if (!optional && errors) {
 					const location = context?.context ? context.context + "::" : "";
 					errors.push(new ConverterError(ConverterErrorType.PROPERTY_NULLORUNDEFINED, location + propertyName, "property null or undefined"));
@@ -457,7 +459,7 @@ export class TSConverter {
 	 * @param optional - set to true if the parameter is optional (if optional, the parameter might be missing)
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
-	public static fillJSONParam(data: object, target: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "object" | "Date" | "Uint8Array", errors?: ConverterErrors, context?: DecodeContext | EncodeContext, optional?: boolean): boolean {
+	public static fillJSONParam(data: object, target: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "object" | "Date" | "Uint8Array" | "null", errors?: ConverterErrors, context?: DecodeContext | EncodeContext, optional?: boolean): boolean {
 		const result = this.validateParam(data, propertyName, expectedType, errors, context, optional);
 		if (result) {
 			const t = target as Record<string, unknown>;
@@ -534,7 +536,7 @@ export class TSConverter {
 	 * @param optional - set to true if the parameter is optional (if optional, the parameter might be missing)
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
-	public static validateParamType<T>(property: unknown, propertyName: string, expectedType: "boolean" | "number" | "object" | "string" | "Uint8Array" | "Date", errors?: ConverterErrors, context?: IContextBase, optional?: boolean): property is T {
+	public static validateParamType<T>(property: unknown, propertyName: string, expectedType: "boolean" | "number" | "object" | "string" | "Uint8Array" | "Date" | "null", errors?: ConverterErrors, context?: IContextBase, optional?: boolean): property is T {
 		if (property === undefined && !optional) {
 			if (errors) {
 				const location = context?.context ? context.context + "::" : "";
@@ -545,6 +547,9 @@ export class TSConverter {
 				return true;
 		} else if (expectedType === "Date") {
 			if (property instanceof Date)
+				return true;
+		} else if (expectedType === "null") {
+			if (typeof property === "object")
 				return true;
 		} else if (typeof property === expectedType)
 			return true;

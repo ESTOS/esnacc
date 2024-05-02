@@ -1,8 +1,8 @@
 import { format } from "date-fns";
-import { writeFileSync } from "fs";
-import heapdump from "heapdump";
+import fs from "fs";
 import path from "path";
 import { ILogData } from "uclogger";
+import { getHeapSnapshot } from "v8";
 
 import { Common } from "./common";
 import { theConfig, theClientConnectionManager, theServer, theLogger, theLogStorage } from "../globals";
@@ -45,23 +45,17 @@ const initExitHandler = function(): void {
 			const heapFile = path.join(theConfig.logDirectory, `dump_${timeStampString}_heapsnapshot.dmp`);
 
 			if (exitCauseError != null)
-				writeFileSync(stackFile, exitCauseError.stack || exitCauseError.message);
+				fs.writeFileSync(stackFile, exitCauseError.stack || exitCauseError.message);
 			else if (exitCauseReason && exitCauseReason instanceof Error)
-				writeFileSync(stackFile, exitCauseReason.stack || exitCauseReason.message);
+				fs.writeFileSync(stackFile, exitCauseReason.stack || exitCauseReason.message);
 			else if (exitCauseReason && typeof exitCauseReason === "object")
-				writeFileSync(stackFile, Common.stringify(exitCauseReason));
-
-			const createDump = new Promise<void>((resolve, reject): void => {
-				heapdump.writeSnapshot(heapFile, (error: Error | null, filename?: string) => {
-					if (error)
-						reject(error);
-					else
-						resolve();
-				});
-			});
+				fs.writeFileSync(stackFile, Common.stringify(exitCauseReason));
 
 			try {
-				await createDump;
+				const snapShot = getHeapSnapshot();
+				const fileStream = fs.createWriteStream(heapFile);
+				snapShot.pipe(fileStream);
+				fileStream.close();
 			} catch (error) {
 				theLogger.error("Failed to create dump", "perfomExit", exitHandler, undefined, error);
 			}
