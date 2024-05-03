@@ -172,6 +172,9 @@ int isInWithSyntax = 0;			  /* Deepak: 26/Mar/2003 */
 // ste 9.9.2016 - allow private declared symbols to be suppressed
 int gPrivateSymbols = 1;
 
+// Defines the node version the typescript stub will be generated for
+int gNodeVersion = 22;
+
 // jan 10.1.2023 - if set deprecated symbols are removed from the generated code
 //  The value contains a timestamp, either specified by the command line or set to 1 (if nodeprecated has been set!)
 //  The comment parser reads @deprecated flags in association to sequences, attributes and operations and stores them with the comment content
@@ -247,6 +250,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 #if IDL
 	fprintf(fp, "  -idl generate CORBA IDL\n");
 #endif
+	fprintf(fp, "  -node:21   Defines the node version the stub will be generated for. Defaults to 22\n");
 	fprintf(fp, "  -noprivate   do not generate code that is marked as private\n");
 	fprintf(fp, "  -nodeprecated   do not generate code that is marked as deprecated (any date)\n");
 	fprintf(fp, "  -nodeprecated:Day.Month.Year  do not generate code that has been marked deprecated prior to this date\n");
@@ -589,6 +593,13 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					else if (strcmp(argument + 1, "noprivate") == 0)
 					{
 						gPrivateSymbols = 0;
+						currArg++;
+					}
+					else if (strncmp(argument + 1, "node", 4) == 0)
+					{
+						gNodeVersion = atoi(argument + 6);
+						if (gNodeVersion == 0)
+							goto error;
 						currArg++;
 					}
 					else if (strncmp(argument + 1, "nodeprecated", 12) == 0)
@@ -1952,12 +1963,18 @@ void GenTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues
 		iCount = 0;
 		for (iCount = 0; iCount < 1000; iCount++)
 		{
+			// As - is an unsupported variable replace it with _
 			char* szModName = strings[iCount];
 			if (!szModName)
 				break;
-			fprintf(typesFile, "export * as %s from \"./%s%s\";\n", szModName, szModName, getCommonJSFileExtension());
+
+			char* varName = Asn1FieldName2CFieldName(szModName);
+
+			fprintf(typesFile, "export * as %s from \"./%s%s\";\n", varName, szModName, getCommonJSFileExtension());
 			if (genJSONEncDec)
-				fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter%s\";\n", szModName, szModName, getCommonJSFileExtension());
+				fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter%s\";\n", varName, szModName, getCommonJSFileExtension());
+
+			free(varName);
 			free(szModName);
 		}
 
@@ -2548,18 +2565,69 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
 	exit(200);
 }
 
+enum EDateFormat
+{
+	EDateFormat_EUROPEAN, // 31.1.2024
+	EDateFormat_US_SLASH, // 1/31/2024
+	EDateFormat_US_MINUS, // 1-31-2024
+	EDateFormat_LONG	  // 20240131
+};
+
 /**
- * Converts a date in notation day.month.year into the seconds based on unix time 1.1.1970
+ * Converts a date in different notations into the seconds based on unix time 1.1.1970
+ * DD.MM.YYYY
+ * MM/DD/YYYY
+ * MM-DD-YYYY
+ * YYYYMMDD
  *
  * Returns -1 on error
  */
 long long ConvertDateToUnixTime(const char* szDate)
 {
+	if (!szDate)
+		return -1;
+	if (!strlen(szDate))
+		return -1;
+
 	long long tmResult = -1;
+
+	enum EDateFormat format = EDateFormat_EUROPEAN;
+	if (strstr(szDate, "."))
+		format = EDateFormat_EUROPEAN;
+	else if (strstr(szDate, "-"))
+		format = EDateFormat_US_MINUS;
+	else if (strstr(szDate, "/"))
+		format = EDateFormat_US_SLASH;
+	else if (strlen(szDate) == 8)
+		format = EDateFormat_LONG;
+	else
+	{
+		assert(false);
+		fprintf(stderr, "Unknown date format %s", szDate);
+	}
+
 #ifdef _WIN32
 	SYSTEMTIME st;
 	memset(&st, 0x00, sizeof(SYSTEMTIME));
-	if (sscanf_s(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3)
+
+	bool bSucceeded = false;
+	switch (format)
+	{
+		case EDateFormat_EUROPEAN:
+			bSucceeded = sscanf_s(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3;
+			break;
+		case EDateFormat_US_MINUS:
+			bSucceeded = sscanf_s(szDate, "%hd-%hd-%hd", &st.wMonth, &st.wDay, &st.wYear) == 3;
+			break;
+		case EDateFormat_US_SLASH:
+			bSucceeded = sscanf_s(szDate, "%hd/%hd/%hd", &st.wMonth, &st.wDay, &st.wYear) == 3;
+			break;
+		case EDateFormat_LONG:
+			bSucceeded = sscanf_s(szDate, "%4hu%2hu%2hu", &st.wYear, &st.wMonth, &st.wDay) == 3;
+			break;
+	}
+
+	if (bSucceeded)
 	{
 		if (st.wDay < 1 || st.wDay > 31)
 			return tmResult;
@@ -2576,8 +2644,27 @@ long long ConvertDateToUnixTime(const char* szDate)
 	}
 #else
 	struct tm tm;
-	if (strptime(szDate, "%d.%m.%Y", &tm))
-		tmResult = mktime(&tm);
+
+	switch (format)
+	{
+		case EDateFormat_EUROPEAN:
+			if (strptime(szDate, "%d.%m.%Y", &tm))
+				tmResult = mktime(&tm);
+			break;
+		case EDateFormat_US_MINUS:
+			if (strptime(szDate, "%m-%d-%Y", &tm))
+				tmResult = mktime(&tm);
+			break;
+		case EDateFormat_US_SLASH:
+			if (strptime(szDate, "%m/%d/%Y", &tm))
+				tmResult = mktime(&tm);
+			break;
+		case EDateFormat_LONG:
+			if (strptime(szDate, "%Y%m%d", &tm))
+				tmResult = mktime(&tm);
+			break;
+	}
+
 #endif
 	return tmResult;
 }

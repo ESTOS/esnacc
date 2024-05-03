@@ -10,13 +10,13 @@ bool IsROSEValueDef(Module* mod, ValueDef* vd);
 // Resolves the argument, result and error value for a ROSE operation
 // if specified also resolves the types of these references
 // if bResolveToRoot is specified a local or imported type ref is resolved to the root, otherwise a type ref is only resolved one level
-bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszResult, char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot);
+bool GetROSEDetails(Module* mod, ValueDef* vd, const char** ppszArgument, const char** ppszResult, const char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot);
 // Wenn es sich um ein localtyperef oder importedtyperef handelt wandert es so lange nach oben bis es kein imported oder localtyperef mehr ist
 BasicType* ResolveBasicTypeReferences(BasicType* type, const char** szName);
 // Resolveds a type reference one level down (if imported or local type ref)
-Type* ResolveTypeReferencesOneLevel(Type* type, char** szName);
+Type* ResolveTypeReferencesOneLevel(Type* type, const char** szName);
 // Resolveds a type reference all levels down (until it's no longer imported or local type ref)
-Type* ResolveTypeReferencesToRoot(Type* type, char** szName);
+Type* ResolveTypeReferencesToRoot(Type* type, const char** szName);
 // Wenn es sich um ein localtyperef oder importedtyperef handelt wandert es so lange nach oben bis es kein imported oder localtyperef mehr ist
 Type* GetRootType(Type* type, const char** szName);
 
@@ -67,5 +67,9 @@ bool IsDeprecatedNoOutputModule(Module* mod);
 bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szElement);
 bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName);
 bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName);
+
+// Retrieves the context id of a type structure
+// Numbered choice or indexed optional (implicit)
+int GetContextID(struct Type* type);
 
 #endif

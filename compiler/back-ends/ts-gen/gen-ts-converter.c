@@ -66,6 +66,7 @@ const char* GetJSONType(enum BasicTypeChoiceId choiceId)
 		case BASICTYPE_OCTETCONTAINING:
 			return "Uint8Array";
 		case BASICTYPE_NULL:
+			return "null";
 		case BASICTYPE_ANY:
 			return "object";
 		case BASICTYPE_ASNSYSTEMTIME:
@@ -339,8 +340,6 @@ void Print_JSON_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 			bCurly = false;
 		}
 
-		fprintf(src, "%s (s.%s != null)", bFirst ? "if" : "else if", e->fieldName);
-
 		enum BasicTypeChoiceId choiceId = e->type->basicType->choiceId;
 		if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
 		{
@@ -353,6 +352,8 @@ void Print_JSON_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 					choiceId = baseType;
 			}
 		}
+
+		fprintf(src, "%s (s.%s %s null)", bFirst ? "if" : "else if", e->fieldName, choiceId == BASICTYPE_NULL ? "===" : "!=");
 
 		if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
 		{
@@ -990,15 +991,15 @@ void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTy
 		case BASICTYPE_ENUMERATED:
 		case BASICTYPE_REAL:
 		case BASICTYPE_UTF8_STR:
-			fprintf(src, "%sTSConverter.fillJSONParam(s, t, \"%s\", \"%s\", errors, context, %s);\n", szIndent, szAccessName, GetJSONType(choiceID), szOptional);
+			fprintf(src, "%sTSConverter.fillJSONParam(s, t, \"%s\", \"%s\", errors, newContext, %s);\n", szIndent, szAccessName, GetJSONType(choiceID), szOptional);
 			break;
 		case BASICTYPE_ASNSYSTEMTIME:
-			fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, context, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
+			fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, newContext, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
 			fprintf(src, "%s\tt.%s = new Date(s.%s);\n", szIndent, szAccessName, szAccessName);
 			break;
 		case BASICTYPE_OCTETSTRING:
 		case BASICTYPE_OCTETCONTAINING:
-			fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, context, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
+			fprintf(src, "%sif (TSConverter.validateParam(s, \"%s\", \"string\", errors, newContext, %s)%s%s)\n", szIndent, szAccessName, szOptional, szOptional2, szOptional3);
 			fprintf(src, "%s\tt.%s = TSConverter.decode64(s.%s as unknown as string);\n", szIndent, szAccessName, szAccessName);
 			break;
 		case BASICTYPE_LOCALTYPEREF:
@@ -1006,10 +1007,7 @@ void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTy
 			{
 				char* pBuffer = _strdup(szAccessName);
 				_strlwr_s(pBuffer, strlen(szAccessName) + 1);
-				if (bOptional)
-					fprintf(src, "%st.%s = ", szIndent, szAccessName);
-				else
-					fprintf(src, "%sconst _%s = ", szIndent, pBuffer);
+				fprintf(src, "%sconst _%s = ", szIndent, pBuffer);
 
 				if (choiceID == BASICTYPE_IMPORTTYPEREF)
 				{
@@ -1018,11 +1016,8 @@ void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTy
 				}
 
 				fprintf(src, "%s_Converter.fromJSON(s.%s, errors, newContext, \"%s\", %s);\n", szClassName, szAccessName, szAccessName, szOptional);
-				if (!bOptional)
-				{
-					fprintf(src, "%sif (_%s)\n", szIndent, pBuffer);
-					fprintf(src, "%s\tt.%s = _%s;\n", szIndent, szAccessName, pBuffer);
-				}
+				fprintf(src, "%sif (_%s)\n", szIndent, pBuffer);
+				fprintf(src, "%s\tt.%s = _%s;\n", szIndent, szAccessName, pBuffer);
 				free(pBuffer);
 			}
 			break;

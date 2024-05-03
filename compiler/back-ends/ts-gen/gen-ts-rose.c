@@ -168,9 +168,9 @@ void PrintTSROSEOperationDefines(FILE* src, Module* mod, ValueDefList* defs)
 
 void PrintTSROSEInterfaceEntry(FILE* src, ModuleList* mods, ValueDef* vd, bool bAsComment, Module* m)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 
 	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
 	{
@@ -215,9 +215,9 @@ void PrintTSROSEInterfaceEntry(FILE* src, ModuleList* mods, ValueDef* vd, bool b
  */
 bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, ValueDef* vd, bool bAsComment, bool bInvokes, bool bAddNewLine)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 
 	if (!GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
 		return bAddNewLine;
@@ -483,9 +483,9 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 
 void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents, ValueDef* vd, Module* m)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
 	{
 		Module* argumentMod = GetImportModuleRefByClassName(pszArgument, mods, m);
@@ -588,7 +588,7 @@ void PrintTSROSEOnInvokeswitchCase(FILE* src, ModuleList* mods, Module* m)
 				continue;
 			const char* pszFunction = vd->definedName;
 
-			char* pszResult = NULL;
+			const char* pszResult = NULL;
 			GetROSEDetails(m, vd, NULL, &pszResult, NULL, NULL, NULL, NULL, true);
 			if (!pszResult)
 			{
@@ -655,9 +655,9 @@ void PrintTSROSEOnEventSwitchCase(FILE* src, ModuleList* mods, Module* m)
 
 bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef* vd, Module* m)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
 	{
 		Module* argumentMod = GetImportModuleRefByClassName(pszArgument, mods, m);
@@ -841,7 +841,7 @@ bool hasEvents(Module* m)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
 		{
-			char* pszResult = NULL;
+			const char* pszResult = NULL;
 			GetROSEDetails(m, vd, NULL, &pszResult, NULL, NULL, NULL, NULL, true);
 			if (!pszResult)
 			{

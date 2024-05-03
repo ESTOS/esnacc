@@ -2,8 +2,7 @@
 
 #include <assert.h>
 #include "../../snacc.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "cpp_c_helper.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -38,6 +37,8 @@ void SaveIncBinToFile(const unsigned char* szData, const unsigned int size, cons
 }
 #endif
 
+extern int genTSESMCode;
+
 void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 {
 #ifdef _WIN32
@@ -48,58 +49,9 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 		HGLOBAL hMem = LoadResource(hInst, hRes);
 		if (hMem)
 		{
-			FILE* file = 0;
-			if (!fopen_s(&file, szFileName, "wb") == 0 && file)
-			{
-				fprintf(stderr, "Could not open file %s for writing", szFileName);
-				exit(1);
-			}
-
 			DWORD size = SizeofResource(hInst, hRes);
 			const char* buffer = (const char*)LockResource(hMem);
-			const char* szLastElement = buffer + size;
-			if (genTSESMCode)
-			{
-				const char* szInsert = ".js\";\r\n";
-				size_t iInsertLen = strlen(szInsert);
-
-				while (buffer && buffer < szLastElement)
-				{
-					const char* szLine = strstr(buffer, "\n");
-					if (!szLine) // Last line, no newline...
-						szLine = buffer;
-					size_t lineLength = szLine - buffer + 1;
-					// Reserve memory for an optional .js addon + 0 byte
-					const size_t iBufferSize = lineLength + 4;
-					char* szBuffer = malloc(iBufferSize);
-					memset(szBuffer, 0x00, iBufferSize);
-					memcpy(szBuffer, buffer, lineLength);
-
-					// We have an import, and the import is relative
-					if (strstr(szBuffer, "import") == szBuffer && strstr(szBuffer, "from \"."))
-					{
-						// We have an import statement, we now need to touch the filename
-						char* szEnd = strstr(szBuffer, "\";");
-						if (szEnd)
-						{
-							lineLength += 3;
-							memcpy(szEnd, szInsert, iInsertLen);
-						}
-					}
-
-					if (file)
-						fwrite(szBuffer, 1, lineLength, file);
-
-					buffer = szLine + 1;
-				}
-			}
-			else
-			{
-				if (file)
-					fwrite(buffer, 1, size, file);
-			}
-			if (file)
-				fclose(file);
+			writeFile(buffer, size, szFileName, genTSESMCode ? true : false, gNodeVersion);
 			FreeResource(hMem);
 		}
 		else
