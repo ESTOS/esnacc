@@ -69,6 +69,8 @@ extern "C"
 	// Get Comments for member of sequence (returns 1 for success)
 	extern int GetMemberComment_UTF8(const char* szModuleName, const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment);
 	extern int GetMemberComment_ASCII(const char* szModuleName, const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment);
+	// Retrieve the Version information for a module
+	extern int GetModuleVersion(const char* szModuleName, const int nMajorInterfaceVersion, char* szVersion, int nVersionLength);
 
 #ifdef __cplusplus
 }

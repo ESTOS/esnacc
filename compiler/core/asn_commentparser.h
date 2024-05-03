@@ -93,6 +93,10 @@ public:
 	std::vector<std::string> strLogFilter;
 	// Helper to get the LogFilters from the set in c
 	int iCounter = 0;
+	// Contains the version if the version has been evaluated for the module
+	int bModuleVersionEvaluated = 0;
+	long long i64ModuleVersion = 0;
+	char szModuleVersion[20] = {0};
 };
 
 void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType);

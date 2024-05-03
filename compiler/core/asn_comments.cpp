@@ -1,9 +1,34 @@
 #include "asn_comments.h"
 #include "asn_commentparser.h"
 #include "asn-stringconvert.h"
+#include <time.h>
 
 extern "C"
 {
+
+	/**
+	 * Converts a unix time into something readable
+	 *
+	 * Returns a pointer to a buffer that needs to get released with Free
+	 */
+	char* ConvertUnixTimeToReverseTimeString(const long long tmUnixTime)
+	{
+		char* szBuffer = (char*)malloc(128);
+		if (!szBuffer)
+			return szBuffer;
+
+#ifdef _WIN32
+		struct tm timeinfo;
+		localtime_s(&timeinfo, &tmUnixTime);
+		strftime(szBuffer, 128, "%Y%m%d", &timeinfo);
+#else
+		struct tm* timeinfo;
+		timeinfo = localtime((const time_t*)&tmUnixTime);
+		strftime(szBuffer, 128, "%Y%m%d", timeinfo);
+#endif
+
+		return szBuffer;
+	}
 
 	int ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type)
 	{
@@ -107,6 +132,53 @@ extern "C"
 		return 0;
 	}
 
+	int GetModuleVersion(const char* szModuleName, const int nMajorInterfaceVersion, char* szVersion, int nVersionLength)
+	{
+		if (!szModuleName)
+			return 0;
+
+		auto it = gComments.mapModules.find(szModuleName);
+		if (it != gComments.mapModules.end())
+		{
+			long long i64HighestVersion = 0;
+			if (!it->second.bModuleVersionEvaluated)
+			{
+				it->second.bModuleVersionEvaluated = true;
+				if (it->second.i64Added > i64HighestVersion)
+					i64HighestVersion = it->second.i64Added;
+				const auto iNameLength = strlen(szModuleName);
+				for (const auto& operationComments : gComments.mapOperations)
+				{
+					if (operationComments.first.substr(0, iNameLength) == szModuleName)
+					{
+						if (operationComments.second.i64Added > i64HighestVersion)
+							i64HighestVersion = operationComments.second.i64Added;
+					}
+				}
+				for (const auto& operationComments : gComments.mapSequences)
+				{
+					if (operationComments.first.substr(0, iNameLength) == szModuleName)
+					{
+						if (operationComments.second.i64Added > i64HighestVersion)
+							i64HighestVersion = operationComments.second.i64Added;
+					}
+				}
+				it->second.i64ModuleVersion = i64HighestVersion;
+				sprintf_s(it->second.szModuleVersion, 20, "%i.", nMajorInterfaceVersion);
+				if (i64HighestVersion == 0)
+					strcat_s(it->second.szModuleVersion, 20, "0");
+				else
+				{
+					char* szTime = ConvertUnixTimeToReverseTimeString(i64HighestVersion);
+					strcat_s(it->second.szModuleVersion, 20, szTime);
+					free(szTime);
+				}
+			}
+			strcpy_s(szVersion, nVersionLength, it->second.szModuleVersion);
+			return 1;
+		}
+		return 0;
+	}
 	int GetOperationComment_UTF8(const char* szModuleName, const char* szOpName, asnoperationcomment* pcomment)
 	{
 		if (!szModuleName || !szOpName)

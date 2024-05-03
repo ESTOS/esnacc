@@ -4471,6 +4471,7 @@ void PrintForwardDeclarationsCode(FILE* hdrForwardDecl, ModuleList* mods, Module
 
 	PrintHdrComment(hdrForwardDecl, m);
 	PrintConditionalIncludeOpen(hdrForwardDecl, m->ROSEHdrForwardDeclFileName);
+
 	fprintf(hdrForwardDecl, "\n");
 
 	// print Forward Declaration includes Imported files
@@ -4738,6 +4739,16 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 	PrintSrcComment(src, m);
 	PrintHdrComment(hdr, m);
 	PrintConditionalIncludeOpen(hdr, m->cxxHdrFileName);
+
+	char szVersion[20] = {0};
+	if (GetModuleVersion(m->moduleName, gMajorInterfaceVersion, szVersion, 20))
+	{
+		char szModuleNameUpper[512] = {0};
+		strcpy_s(szModuleNameUpper, 512, m->moduleName);
+		Str2UCase(szModuleNameUpper, 512);
+		Dash2Underscore(szModuleNameUpper, 512);
+		fprintf(hdr, "#define %s_VERSION = \"%s\"\n\n", szModuleNameUpper, szVersion);
+	}
 
 	if (genCodeCPPPrintStdAfxInclude)
 		fprintf(src, "#include \"stdafx.h\"\n");
