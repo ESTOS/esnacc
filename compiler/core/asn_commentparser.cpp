@@ -57,6 +57,13 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine)
 	}
 }
 
+void EAdded::handleAdded(const std::string& strParsedLine)
+{
+	i64Added = ConvertDateToUnixTime(strParsedLine.c_str());
+	if (i64Added == 0)
+		fprintf(stderr, "WARNING - @added flag is missing a timestamp. You need to add a timestamp to an @added flag in order to create a proper interface version");
+}
+
 void replaceAll(std::string& str, const char* szSearch, const char* szReplace)
 {
 	if (!szSearch)
@@ -190,6 +197,14 @@ void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType
 		{
 			nEmptyLines = 0;
 			pType->handleDeprecated(strLine.substr(11));
+			// We do not change the flags here, the keyword @deprecated may lead or follow any comment
+			// bInLong = false;
+			// bInBrief = false;
+		}
+		else if (strLine.substr(0, 6) == "@added")
+		{
+			nEmptyLines = 0;
+			pType->handleAdded(strLine.substr(6));
 			// We do not change the flags here, the keyword @deprecated may lead or follow any comment
 			// bInLong = false;
 			// bInBrief = false;

@@ -27,7 +27,17 @@ public:
 	std::string strDeprecated_ASCII;
 };
 
-class EStructMemberComment : public EDeprecated
+class EAdded
+{
+public:
+	void handleAdded(const std::string& strParsedLine);
+	// Type has been added, the value shows the time in unix time when the property was added to the interface
+
+	// @added 1.1.2023
+	long long i64Added = 0;
+};
+
+class EStructMemberComment : public EDeprecated, public EAdded
 {
 public:
 	// Short Description - must be stored json encoded
@@ -42,7 +52,7 @@ public:
 	bool m_bConvertedToAscii = false;
 };
 
-class ETypeComment : public EDeprecated
+class ETypeComment : public EDeprecated, public EAdded
 {
 public:
 	// Name of the strCategory
