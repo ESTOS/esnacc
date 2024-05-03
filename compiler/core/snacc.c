@@ -31,9 +31,7 @@ const char* gAlternateNamespaceString = 0;
  */
 char* bVDAGlobalDLLExport = (char*)0;
 
-#ifdef _WIN32
 #include <ctype.h>
-#endif // _WIN32
 
 #if TIME_WITH_SYS_TIME
 #include <sys/time.h>
@@ -868,11 +866,11 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 			char* szDirectory = getFilePath(file.filePath);
 			if (szDirectory)
 			{
-				char szPath[MAX_PATH] = {0};
-				strcpy_s(szPath, MAX_PATH, szDirectory);
-				strcat_s(szPath, MAX_PATH, "interfaceversion.txt");
+				char szPath[_MAX_PATH] = {0};
+				strcpy_s(szPath, _MAX_PATH, szDirectory);
+				strcat_s(szPath, _MAX_PATH, "interfaceversion.txt");
 				FILE* pFile = NULL;
-				if (fopen_s(&pFile, szPath, "r") == NO_ERROR && pFile)
+				if (fopen_s(&pFile, szPath, "r") == 0 && pFile)
 				{
 					while (true)
 					{
