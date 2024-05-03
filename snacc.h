@@ -142,5 +142,6 @@ extern long long gi64NoDeprecatedSymbols;
 extern int giValidationLevel;
 extern int giWriteComments;
 extern int genTSESMCode;
+extern int gNodeVersion;
 
 #endif /* _SNACC_H_ */
