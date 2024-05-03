@@ -288,7 +288,6 @@ void PrintSwiftType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* p
 			{
 				char* className = FixName(t->basicType->a.localTypeRef->link->definedName);
 				Type* referencedType = t->basicType->a.localTypeRef->link->type;
-				int typeIdOfReferencesType = referencedType->basicType->choiceId;
 
 				if (0 == strcmp(kS_UTF8StringList, className))
 				{
