@@ -32,4 +32,9 @@ extern "C"
 	{
 		return CPPHelper::CreateDirectories(szPath);
 	}
+
+	bool writeFile(const char* buffer, const unsigned long ulSize, const char* szFileName, const bool bWriteESM, const int nNodeVersion)
+	{
+		return CPPHelper::WriteFile(buffer, ulSize, szFileName, bWriteESM, nNodeVersion);
+	}
 }

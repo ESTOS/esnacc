@@ -6,7 +6,9 @@
 /* eslint-disable */
 
 import { TSASN1Client } from "./TSASN1Client";
+// IF NODE<22
 import fetch, { RequestInit as FetchInit } from "node-fetch";
+// ENDIF
 import WebSocket from "ws";
 import { ELogSeverity, IDualWebSocket, IDualWebSocketMessageEvent } from "./TSROSEBase";
 import { EASN1TransportEncoding } from "./TSInvokeContext";
@@ -177,7 +179,11 @@ export abstract class TSASN1NodeClient extends TSASN1Client {
 	 * @returns - A Promise resolving into the fetch response
 	 */
 	protected async fetch(input: string, init?: RequestInit): Promise<Response> {
+// IF NODE<22
 		return (await fetch(input, init as FetchInit)) as unknown as Response;
+// ELSE
+		return fetch(input, init);
+// ENDIF
 	}
 
 	/**

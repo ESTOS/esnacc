@@ -172,6 +172,9 @@ int isInWithSyntax = 0;			  /* Deepak: 26/Mar/2003 */
 // ste 9.9.2016 - allow private declared symbols to be suppressed
 int gPrivateSymbols = 1;
 
+// Defines the node version the typescript stub will be generated for
+int gNodeVersion = 22;
+
 // jan 10.1.2023 - if set deprecated symbols are removed from the generated code
 //  The value contains a timestamp, either specified by the command line or set to 1 (if nodeprecated has been set!)
 //  The comment parser reads @deprecated flags in association to sequences, attributes and operations and stores them with the comment content
@@ -247,6 +250,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 #if IDL
 	fprintf(fp, "  -idl generate CORBA IDL\n");
 #endif
+	fprintf(fp, "  -node:21   Defines the node version the stub will be generated for. Defaults to 22\n");
 	fprintf(fp, "  -noprivate   do not generate code that is marked as private\n");
 	fprintf(fp, "  -nodeprecated   do not generate code that is marked as deprecated (any date)\n");
 	fprintf(fp, "  -nodeprecated:Day.Month.Year  do not generate code that has been marked deprecated prior to this date\n");
@@ -589,6 +593,13 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					else if (strcmp(argument + 1, "noprivate") == 0)
 					{
 						gPrivateSymbols = 0;
+						currArg++;
+					}
+					else if (strncmp(argument + 1, "node", 4) == 0)
+					{
+						gNodeVersion = atoi(argument + 6);
+						if (gNodeVersion == 0)
+							goto error;
 						currArg++;
 					}
 					else if (strncmp(argument + 1, "nodeprecated", 12) == 0)
