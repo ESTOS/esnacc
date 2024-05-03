@@ -4747,7 +4747,7 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 		strcpy_s(szModuleNameUpper, 512, m->moduleName);
 		Str2UCase(szModuleNameUpper, 512);
 		Dash2Underscore(szModuleNameUpper, 512);
-		fprintf(hdr, "#define %s_VERSION = \"%s\"\n\n", szModuleNameUpper, szVersion);
+		fprintf(hdr, "#define %s_MODULE_VERSION = \"%s\"\n\n", szModuleNameUpper, szVersion);
 	}
 
 	if (genCodeCPPPrintStdAfxInclude)
