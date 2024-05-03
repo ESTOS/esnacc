@@ -2565,18 +2565,69 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
 	exit(200);
 }
 
+enum EDateFormat
+{
+	EDateFormat_EUROPEAN, // 31.1.2024
+	EDateFormat_US_SLASH, // 1/31/2024
+	EDateFormat_US_MINUS, // 1-31-2024
+	EDateFormat_LONG	  // 20240131
+};
+
 /**
- * Converts a date in notation day.month.year into the seconds based on unix time 1.1.1970
+ * Converts a date in different notations into the seconds based on unix time 1.1.1970
+ * DD.MM.YYYY
+ * MM/DD/YYYY
+ * MM-DD-YYYY
+ * YYYYMMDD
  *
  * Returns -1 on error
  */
 long long ConvertDateToUnixTime(const char* szDate)
 {
+	if (!szDate)
+		return -1;
+	if (!strlen(szDate))
+		return -1;
+
 	long long tmResult = -1;
+
+	enum EDateFormat format = EDateFormat_EUROPEAN;
+	if (strstr(szDate, "."))
+		format = EDateFormat_EUROPEAN;
+	else if (strstr(szDate, "-"))
+		format = EDateFormat_US_MINUS;
+	else if (strstr(szDate, "/"))
+		format = EDateFormat_US_SLASH;
+	else if (strlen(szDate) == 8)
+		format = EDateFormat_LONG;
+	else
+	{
+		assert(false);
+		fprintf(stderr, "Unknown date format %s", szDate);
+	}
+
 #ifdef _WIN32
 	SYSTEMTIME st;
 	memset(&st, 0x00, sizeof(SYSTEMTIME));
-	if (sscanf_s(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3)
+
+	bool bSucceeded = false;
+	switch (format)
+	{
+		case EDateFormat_EUROPEAN:
+			bSucceeded = sscanf_s(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3;
+			break;
+		case EDateFormat_US_MINUS:
+			bSucceeded = sscanf_s(szDate, "%hd-%hd-%hd", &st.wMonth, &st.wDay, &st.wYear) == 3;
+			break;
+		case EDateFormat_US_SLASH:
+			bSucceeded = sscanf_s(szDate, "%hd/%hd/%hd", &st.wMonth, &st.wDay, &st.wYear) == 3;
+			break;
+		case EDateFormat_LONG:
+			bSucceeded = sscanf_s(szDate, "%4hu%2hu%2hu", &st.wYear, &st.wMonth, &st.wDay) == 3;
+			break;
+	}
+
+	if (bSucceeded)
 	{
 		if (st.wDay < 1 || st.wDay > 31)
 			return tmResult;
@@ -2593,8 +2644,27 @@ long long ConvertDateToUnixTime(const char* szDate)
 	}
 #else
 	struct tm tm;
-	if (strptime(szDate, "%d.%m.%Y", &tm))
-		tmResult = mktime(&tm);
+
+	switch (format)
+	{
+		case EDateFormat_EUROPEAN:
+			if (strptime(szDate, "%d.%m.%Y", &tm))
+				tmResult = mktime(&tm);
+			break;
+		case EDateFormat_US_MINUS:
+			if (strptime(szDate, "%m-%d-%Y", &tm))
+				tmResult = mktime(&tm);
+			break;
+		case EDateFormat_US_SLASH:
+			if (strptime(szDate, "%m/%d/%Y", &tm))
+				tmResult = mktime(&tm);
+			break;
+		case EDateFormat_LONG:
+			if (strptime(szDate, "%Y%m%d", &tm))
+				tmResult = mktime(&tm);
+			break;
+	}
+
 #endif
 	return tmResult;
 }

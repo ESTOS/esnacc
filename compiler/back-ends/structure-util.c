@@ -55,7 +55,7 @@ bool IsROSEValueDef(Module* mod, ValueDef* vd)
 	return true;
 }
 
-bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszResult, char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot)
+bool GetROSEDetails(Module* mod, ValueDef* vd, const char** ppszArgument, const char** ppszResult, const char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot)
 {
 	if (ppszArgument)
 		*ppszArgument = NULL;
@@ -64,7 +64,7 @@ bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszR
 	if (ppszError)
 		*ppszError = NULL;
 
-	Type* (*resolver)(Type * type, char** szName) = NULL;
+	Type* (*resolver)(Type * type, const char** szName) = NULL;
 	// Depends on the caller we resolved any type to root or one level (just one local type ref or imported type ref is resolved)
 	if (bResolveToRoot)
 		resolver = &ResolveTypeReferencesToRoot;
@@ -128,7 +128,7 @@ bool GetROSEDetails(Module* mod, ValueDef* vd, char** ppszArgument, char** ppszR
 	return bRetVal;
 }
 
-BasicType* ResolveBasicTypeReferences(BasicType* type, char** szName)
+BasicType* ResolveBasicTypeReferences(BasicType* type, const char** szName)
 {
 	BasicType* returnType = type;
 	while (returnType->choiceId == BASICTYPE_LOCALTYPEREF || returnType->choiceId == BASICTYPE_IMPORTTYPEREF)
@@ -151,7 +151,7 @@ BasicType* ResolveBasicTypeReferences(BasicType* type, char** szName)
 	return returnType;
 }
 
-Type* ResolveTypeReferencesOneLevel(Type* type, char** szName)
+Type* ResolveTypeReferencesOneLevel(Type* type, const char** szName)
 {
 	Type* returnType = type;
 	if (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF)
@@ -171,7 +171,7 @@ Type* ResolveTypeReferencesOneLevel(Type* type, char** szName)
 	return returnType;
 }
 
-Type* ResolveTypeReferencesToRoot(Type* type, char** szName)
+Type* ResolveTypeReferencesToRoot(Type* type, const char** szName)
 {
 	Type* returnType = type;
 	while (returnType->basicType->choiceId == BASICTYPE_LOCALTYPEREF || returnType->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)

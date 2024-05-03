@@ -359,9 +359,9 @@ bool ValidateArgumentResultErrorAreSequencesOrChoices(ModuleList* allMods)
 					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
 						continue;
 
-					char* pszArgument = NULL;
-					char* pszResult = NULL;
-					char* pszError = NULL;
+					const char* pszArgument = NULL;
+					const char* pszResult = NULL;
+					const char* pszError = NULL;
 					Type* argumentType = NULL;
 					Type* resultType = NULL;
 					Type* errorType = NULL;
@@ -476,18 +476,15 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods)
 					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
 						continue;
 
-					char* pszError = NULL;
+					const char* pszError = NULL;
 					Type* errorType = NULL;
 					if (GetROSEDetails(currMod, vd, NULL, NULL, &pszError, NULL, NULL, &errorType, false))
 					{
 						struct BasicType* errorBasicType = NULL;
-						bool bErrorIssue = false;
 						if (errorType)
 						{
 							errorBasicType = ResolveBasicTypeReferences(errorType->basicType, NULL);
-							if (!errorBasicType)
-								bErrorIssue = true;
-							else
+							if (errorBasicType)
 							{
 								char szBuffer[512] = {0};
 								sprintf_s(szBuffer, 512, "%i:%s", errorBasicType->choiceId, pszError);
@@ -930,9 +927,9 @@ bool ValidateProperROSEArguments(ModuleList* allMods)
 					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
 						continue;
 
-					char* pszArgument = NULL;
-					char* pszResult = NULL;
-					char* pszError = NULL;
+					const char* pszArgument = NULL;
+					const char* pszResult = NULL;
+					const char* pszError = NULL;
 					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 					{
 						bool bMissingArgument = false;
@@ -1011,8 +1008,8 @@ bool ValidateOptionals(ModuleList* allMods)
 						if (!bIsImplicit)
 						{
 							BasicType* resolvedType = ResolveBasicTypeReferences(subType->type->basicType, NULL);
-							// If the typeref points to a choice the implicit flag is not be properly set (seems to be an issue in the yacc bison code)
-							if (resolvedType->choiceId == BASICTYPE_CHOICE)
+							// If the typeref points to a choice or any the implicit flag is not be properly set (seems to be an issue in the yacc bison code)
+							if (resolvedType->choiceId == BASICTYPE_CHOICE || resolvedType->choiceId == BASICTYPE_ANY)
 							{
 								// So in this case we look if we have a context ID (which also points out the implicit flag)
 								if (GetContextID(subType->type) >= 0)

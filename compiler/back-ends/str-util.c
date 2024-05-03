@@ -232,6 +232,27 @@ void Dash2Underscore PARAMS((str, len), char* str _AND_ size_t len)
 			str[i] = '_';
 } /* Dash2Underscore */
 
+char* Dash2UnderscoreEx(const char* str)
+{
+	if (!str)
+		return NULL;
+
+	size_t len = strlen(str);
+	char* szTarget = malloc(len + 1);
+	if (!szTarget)
+		return NULL;
+
+	memset(&szTarget[0], 0x00, len + 1);
+
+	for (size_t i = 0; i < len; i++)
+		if (str[i] == '-')
+			szTarget[i] = '_';
+		else
+			szTarget[i] = str[i];
+
+	return szTarget;
+} /* Dash2Underscore */
+
 /*
  * tacks on the ascii version of the given digit
  * at the end of the given str.

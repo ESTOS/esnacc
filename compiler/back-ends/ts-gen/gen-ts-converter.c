@@ -340,8 +340,6 @@ void Print_JSON_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 			bCurly = false;
 		}
 
-		fprintf(src, "%s (s.%s != null)", bFirst ? "if" : "else if", e->fieldName);
-
 		enum BasicTypeChoiceId choiceId = e->type->basicType->choiceId;
 		if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
 		{
@@ -354,6 +352,8 @@ void Print_JSON_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 					choiceId = baseType;
 			}
 		}
+
+		fprintf(src, "%s (s.%s %s null)", bFirst ? "if" : "else if", e->fieldName, choiceId == BASICTYPE_NULL ? "===" : "!=");
 
 		if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
 		{
@@ -1007,10 +1007,7 @@ void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTy
 			{
 				char* pBuffer = _strdup(szAccessName);
 				_strlwr_s(pBuffer, strlen(szAccessName) + 1);
-				if (bOptional)
-					fprintf(src, "%st.%s = ", szIndent, szAccessName);
-				else
-					fprintf(src, "%sconst _%s = ", szIndent, pBuffer);
+				fprintf(src, "%sconst _%s = ", szIndent, pBuffer);
 
 				if (choiceID == BASICTYPE_IMPORTTYPEREF)
 				{
@@ -1019,11 +1016,8 @@ void Print_JSON_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTy
 				}
 
 				fprintf(src, "%s_Converter.fromJSON(s.%s, errors, newContext, \"%s\", %s);\n", szClassName, szAccessName, szAccessName, szOptional);
-				if (!bOptional)
-				{
-					fprintf(src, "%sif (_%s)\n", szIndent, pBuffer);
-					fprintf(src, "%s\tt.%s = _%s;\n", szIndent, szAccessName, pBuffer);
-				}
+				fprintf(src, "%sif (_%s)\n", szIndent, pBuffer);
+				fprintf(src, "%s\tt.%s = _%s;\n", szIndent, szAccessName, pBuffer);
 				free(pBuffer);
 			}
 			break;

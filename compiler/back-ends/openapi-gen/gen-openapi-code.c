@@ -526,7 +526,7 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 			if (strlen(comment.szShort) != 0)
 			{
 
-				char* szShort = replace_multi(comment.szShort, orig, rep);
+				char* szShort = replace_multi(comment.szShort, &orig[0], &rep[0]);
 				if (szShort != NULL)
 				{
 					fprintf(src, "\t\t\t\t\"summary\": \"%s\",\n", szShort);
@@ -535,7 +535,7 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 			}
 			if (strlen(comment.szLong) != 0)
 			{
-				char* szLong = replace_multi(comment.szLong, orig, rep);
+				char* szLong = replace_multi(comment.szLong, &orig[0], &rep[0]);
 				if (szLong != NULL)
 				{
 					fprintf(src, "\t\t\t\t\"description\": \"%s\",\n", szLong);
@@ -646,12 +646,12 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 	{
 		fprintf(src, ",\n");
 		fprintf(src, "\t\t\"version\": \"0.0.1\",\n");
-		char* orig[] = {"\\n", "\\t", 0};
-		char* rep[] = {"\\n\\n", "", 0};
+		const char* orig[] = {"\\n", "\\t", 0};
+		const char* rep[] = {"\\n\\n", "", 0};
 		if (strlen(comment.szShort) != 0)
 		{
 
-			char* szShort = replace_multi(comment.szShort, orig, rep);
+			char* szShort = replace_multi(comment.szShort, &orig[0], &rep[0]);
 			if (szShort != NULL)
 			{
 				fprintf(src, "\t\t\"summary\": \"%s\",\n", szShort);
@@ -660,7 +660,7 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 		}
 		if (strlen(comment.szLong) != 0)
 		{
-			char* szLong = replace_multi(comment.szLong, orig, rep);
+			char* szLong = replace_multi(comment.szLong, &orig[0], &rep[0]);
 			if (szLong != NULL)
 			{
 				fprintf(src, "\t\t\"description\": \"%s\"\n", szLong);

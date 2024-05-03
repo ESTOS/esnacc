@@ -300,7 +300,7 @@ bool CPPHelper::CreateDirectories(const char* szPath)
 			if (last == '/' || last == '\\')
 				directoryPath = directoryPath.parent_path();
 
-			const char* szPrintablePath = directoryPath.generic_string().c_str();
+			auto printablePath = directoryPath.generic_string();
 			fs::file_status status = fs::status(directoryPath);
 			if (fs::exists(status))
 				return true;
@@ -308,9 +308,9 @@ bool CPPHelper::CreateDirectories(const char* szPath)
 			if (bCreated)
 				return true;
 			else if (iCount == 10)
-				printf("Creating folder %s finally failed after %i retires", szPrintablePath, iCount);
+				printf("Creating folder %s finally failed after %i retires", printablePath.c_str(), iCount);
 			else
-				printf("Creating folder %s failed for the %i. time", szPrintablePath, iCount);
+				printf("Creating folder %s failed for the %i. time", printablePath.c_str(), iCount);
 		}
 		catch (...)
 		{
