@@ -4,3 +4,4 @@ output/
 .cache
 dist/
 *.tsbuildinfo
+compiler/compiler.aps

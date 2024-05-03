@@ -143,5 +143,6 @@ extern int giValidationLevel;
 extern int giWriteComments;
 extern int genTSESMCode;
 extern int gNodeVersion;
+extern int gMajorInterfaceVersion;
 
 #endif /* _SNACC_H_ */
