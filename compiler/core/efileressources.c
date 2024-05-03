@@ -1,6 +1,7 @@
 #include "efileressources.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include "../../snacc.h"
 #include "cpp_c_helper.h"
 
@@ -26,14 +27,9 @@ INCBIN(BIN_EDELPHI_ASN1_YPES, "compiler/back-ends/delphi-gen/gluecode/DelphiAsn1
 #endif // _WIN32
 
 #ifndef _WIN32
-void SaveIncBinToFile(const unsigned char* szData, const unsigned int size, const char* szFileName)
+void SaveIncBinToFile(const char* szData, const unsigned int size, const char* szFileName)
 {
-	FILE* file = fopen(szFileName, "wb");
-	if (file)
-	{
-		fwrite(szData, 1, size, file);
-		fclose(file);
-	}
+	writeFile(szData, size, szFileName, genTSESMCode ? true : false, gNodeVersion);
 }
 #endif
 
