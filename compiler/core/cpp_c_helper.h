@@ -64,6 +64,19 @@ extern "C"
 	 */
 	bool createDirectories(const char* szPath);
 
+	/*
+	 * Writes the typescript file content to disc
+	 * Adopts the content for ESM and or specific node versions
+	 *
+	 * @param buffer - the buffer of the embedded ressource
+	 * @param ulSize - the size of the embedded ressource
+	 * @param szFileName - the filename the file shall be written to
+	 * @param bWriteESM - true to write esm files, or false for commonjs
+	 * @param nNodeVersion - the node version
+	 * @returns true on success
+	 */
+	bool writeFile(const char* buffer, const unsigned long ulSize, const char* szFileName, const bool bWriteESM, const int nNodeVersion);
+
 #ifdef __cplusplus
 }
 #endif

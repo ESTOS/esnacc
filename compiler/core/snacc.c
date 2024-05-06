@@ -31,9 +31,7 @@ const char* gAlternateNamespaceString = 0;
  */
 char* bVDAGlobalDLLExport = (char*)0;
 
-#ifdef _WIN32
 #include <ctype.h>
-#endif // _WIN32
 
 #if TIME_WITH_SYS_TIME
 #include <sys/time.h>
@@ -172,6 +170,13 @@ int isInWithSyntax = 0;			  /* Deepak: 26/Mar/2003 */
 // ste 9.9.2016 - allow private declared symbols to be suppressed
 int gPrivateSymbols = 1;
 
+// Defines the node version the typescript stub will be generated for
+int gNodeVersion = 22;
+
+// Defines the major interface version the interfaces are built with
+// The version is read from a file interfaceversion.txt when the first asn1 is read
+int gMajorInterfaceVersion = -1;
+
 // jan 10.1.2023 - if set deprecated symbols are removed from the generated code
 //  The value contains a timestamp, either specified by the command line or set to 1 (if nodeprecated has been set!)
 //  The comment parser reads @deprecated flags in association to sequences, attributes and operations and stores them with the comment content
@@ -247,6 +252,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 #if IDL
 	fprintf(fp, "  -idl generate CORBA IDL\n");
 #endif
+	fprintf(fp, "  -node:21   Defines the node version the stub will be generated for. Defaults to 22\n");
 	fprintf(fp, "  -noprivate   do not generate code that is marked as private\n");
 	fprintf(fp, "  -nodeprecated   do not generate code that is marked as deprecated (any date)\n");
 	fprintf(fp, "  -nodeprecated:Day.Month.Year  do not generate code that has been marked deprecated prior to this date\n");
@@ -591,6 +597,13 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						gPrivateSymbols = 0;
 						currArg++;
 					}
+					else if (strncmp(argument + 1, "node", 4) == 0)
+					{
+						gNodeVersion = atoi(argument + 6);
+						if (gNodeVersion == 0)
+							goto error;
+						currArg++;
+					}
 					else if (strncmp(argument + 1, "nodeprecated", 12) == 0)
 					{
 						// Shortest time would be -nodeprecated:1.1.2000 = + 9 charachters
@@ -841,9 +854,48 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	 */
 	allMods = (ModuleList*)AsnListNew(sizeof(void*));
 
+	bool bReadVersionFile = true;
+
 	SASN1File file;
 	while (getNextFile(&file, 0))
 	{
+
+		if (bReadVersionFile)
+		{
+			bReadVersionFile = false;
+			char* szDirectory = getFilePath(file.filePath);
+			if (szDirectory)
+			{
+				char szPath[_MAX_PATH] = {0};
+				strcpy_s(szPath, _MAX_PATH, szDirectory);
+				strcat_s(szPath, _MAX_PATH, "interfaceversion.txt");
+				FILE* pFile = NULL;
+				if (fopen_s(&pFile, szPath, "r") == 0 && pFile)
+				{
+					while (true)
+					{
+						char szLine[128] = {0};
+						if (fgets(szLine, sizeof(szLine), pFile))
+						{
+							// Trim leading whitespaces or empty lines (just \r \n)
+							int start = 0;
+							while (isspace((unsigned char)szLine[start]))
+								start++;
+
+							if (strlen(&szLine[start]) && szLine[start] != '#' && szLine[start] != '/')
+							{
+								gMajorInterfaceVersion = atoi(&szLine[start]);
+								break;
+							}
+						}
+						else
+							break;
+					}
+					fclose(pFile);
+				}
+			}
+		}
+
 		currMod = ParseAsn1File(file.filePath, file.bIsImportedFile, 1);
 
 		if (currMod == NULL)
