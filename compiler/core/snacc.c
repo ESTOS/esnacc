@@ -1344,52 +1344,8 @@ int GenCCode PARAMS((allMods, longJmpVal, genTypes, genValues, genEncoders, genD
  */
 void GenJAVACode(ModuleList* allMods, int genROSEJAVADecoders)
 {
-	Module* currMod;
-	AsnListNode* saveMods;
-	DefinedObj* fNames;
-	int fNameConflict = FALSE;
-
-	/*
-	 * Make names for each module's encoder/decoder src and hdr files
-	 * so import references can be made via include files
-	 * check for truncation --> name conflicts & exit if nec
-	 */
-	fNames = NewObjList();
-
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (ObjIsDefined(fNames, currMod->ROSESrcJAVAFileName, StrObjCmp))
-		{
-			fprintf(errFileG, "Ack! ERROR---file name conflict for generated source files with names `%s'.\n\n", currMod->ROSESrcJAVAFileName);
-			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
-			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
-			fprintf(errFileG, "This error can also be caused by 2 modules having the same name but different OBJECT IDENTIFIERs.");
-			fprintf(errFileG, "Try renaming the modules to correct this.\n");
-			fNameConflict = TRUE;
-		}
-		else
-		{
-			DefineObj(&fNames, currMod->ROSESrcJAVAFileName);
-		}
-
-		if (fNameConflict)
-			return;
-
-		FreeDefinedObjs(&fNames);
-	}
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (currMod->ImportedFlag == FALSE)
-		{
-			if (genROSEJAVADecoders) // JAVA
-			{
-				saveMods = allMods->curr;
-
-				PrintJAVACode(allMods, currMod);
-				allMods->curr = saveMods;
-			}
-		}
-	}
+	if (genROSEJAVADecoders)
+		PrintJAVACode(allMods);
 } /* GenJAVACode */
 
 /*
