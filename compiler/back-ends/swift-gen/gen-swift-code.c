@@ -941,16 +941,16 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 				fprintf(src, "    public final var %s: ", szFielName);
 				free(szFielName);
 				PrintSwiftType(src, mods, m, td, seq, e->type);
-//				const char* szRootName;
-//				Type* pRootType = GetRootType(e->type, &szRootName);
+				//				const char* szRootName;
+				//				Type* pRootType = GetRootType(e->type, &szRootName);
 				if (e->type->optional || e->type->basicType->choiceId == BASICTYPE_NULL)
 				{
 					fprintf(src, "? = nil");
 				}
-//				else if (pRootType->basicType->choiceId == BASICTYPE_ENUMERATED)
-//				{
-//					fprintf(src, " = %sArray.init()", szRootName);
-//				}
+				//				else if (pRootType->basicType->choiceId == BASICTYPE_ENUMERATED)
+				//				{
+				//					fprintf(src, " = %sArray.init()", szRootName);
+				//				}
 				else
 				{
 					fprintf(src, " = ");
@@ -1232,6 +1232,19 @@ void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int
 	printModuleComment(src, m->moduleName, COMMENTSTYLE_SWIFT);
 
 	fprintf(src, "import Foundation\n\n");
+
+	if (gMajorInterfaceVersion >= 0)
+	{
+		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
+		char szModuleNameUpper[512] = {0};
+		strcpy_s(szModuleNameUpper, 512, m->moduleName);
+		Str2LCase(szModuleNameUpper, 512);
+		Dash2Underscore(szModuleNameUpper, 512);
+		fprintf(src, "let %s_module_lastchange = \"%s\"\n", szModuleNameUpper, ConvertUnixTimeToReadable(lMinorModuleVersion));
+		fprintf(src, "let %s_module_major_version = %i\n", szModuleNameUpper, gMajorInterfaceVersion);
+		fprintf(src, "let %s_module_minor_version = %lld\n", szModuleNameUpper, lMinorModuleVersion);
+		fprintf(src, "let %s_module_version = \"%i.%lld\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, lMinorModuleVersion);
+	}
 
 	bool bFirst = true;
 	TypeDef* td;
