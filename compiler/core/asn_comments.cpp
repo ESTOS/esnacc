@@ -5,9 +5,8 @@
 
 extern "C"
 {
-	// Once evaluated this string contains the full interface version that consists of the gMajorInterfaceVersion
-	// and the highest @added timestamp from the parsed files
-	char szFullInterfaceVersion[100] = {0};
+	// Once evaluated this int64 contains the highest minor module version of all loaded modules
+	long long glMaxMinorModuleVersion = -1;
 
 	int ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type)
 	{
@@ -74,6 +73,7 @@ extern "C"
 			pcomment->szLong = comment.strLong_UTF8.c_str();
 			pcomment->szCategory = comment.strCategory_UTF8.c_str();
 			pcomment->iPrivate = comment.iPrivate;
+			pcomment->i64Added = comment.i64Added;
 			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 			return 1;
@@ -104,6 +104,7 @@ extern "C"
 			pcomment->szLong = comment.strLong_ASCII.c_str();
 			pcomment->szCategory = comment.strCategory_ASCII.c_str();
 			pcomment->iPrivate = comment.iPrivate;
+			pcomment->i64Added = comment.i64Added;
 			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
 			return 1;
@@ -111,22 +112,18 @@ extern "C"
 		return 0;
 	}
 
-	bool GetModuleVersion(const char* szModuleName, char* szVersion, const int nVersionLength)
+	long long GetModuleMinorVersion(const char* szModuleName)
 	{
-		if (!szModuleName || !szVersion || !nVersionLength)
-			return false;
-
 		auto it = gComments.mapModules.find(szModuleName);
 		if (it == gComments.mapModules.end())
-			return false;
+			return -1;
 
-		sprintf_s(szVersion, nVersionLength, "%i.%lld", gMajorInterfaceVersion, it->second.getModuleMinorVersion());
-		return true;
+		return it->second.getModuleMinorVersion();
 	}
 
-	const char* GetFullInterfaceVersion()
+	long long GetMaxModuleMinorVersion()
 	{
-		if (!strlen(szFullInterfaceVersion))
+		if (glMaxMinorModuleVersion == -1)
 		{
 			long long lHighestModuleMinorVersion = 0;
 			for (auto mod : gComments.mapModules)
@@ -135,10 +132,10 @@ extern "C"
 				if (lModuleMinorVersion > lHighestModuleMinorVersion)
 					lHighestModuleMinorVersion = lModuleMinorVersion;
 			}
-			sprintf_s(szFullInterfaceVersion, 100, "%i.%lld", gMajorInterfaceVersion, lHighestModuleMinorVersion);
+			glMaxMinorModuleVersion = lHighestModuleMinorVersion;
 		}
 
-		return szFullInterfaceVersion;
+		return glMaxMinorModuleVersion;
 	}
 
 	int GetOperationComment_UTF8(const char* szModuleName, const char* szOpName, asnoperationcomment* pcomment)
@@ -159,6 +156,7 @@ extern "C"
 			pcomment->szLong = comment.strLong_UTF8.c_str();
 			pcomment->szCategory = comment.strCategory_UTF8.c_str();
 			pcomment->iPrivate = comment.iPrivate;
+			pcomment->i64Added = comment.i64Added;
 			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 			return 1;
@@ -193,6 +191,7 @@ extern "C"
 			pcomment->szLong = comment.strLong_ASCII.c_str();
 			pcomment->szCategory = comment.strCategory_ASCII.c_str();
 			pcomment->iPrivate = comment.iPrivate;
+			pcomment->i64Added = comment.i64Added;
 			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
 			return 1;
@@ -219,6 +218,7 @@ extern "C"
 			pcomment->szLong = comment.strLong_UTF8.c_str();
 			pcomment->szCategory = comment.strCategory_UTF8.c_str();
 			pcomment->iPrivate = comment.iPrivate;
+			pcomment->i64Added = comment.i64Added;
 			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 			return 1;
@@ -253,6 +253,7 @@ extern "C"
 			pcomment->szLong = comment.strLong_ASCII.c_str();
 			pcomment->szCategory = comment.strCategory_ASCII.c_str();
 			pcomment->iPrivate = comment.iPrivate;
+			pcomment->i64Added = comment.i64Added;
 			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
 			return 1;
@@ -281,6 +282,7 @@ extern "C"
 				pcomment->szLinkedType = comment.strLinkedType_UTF8.c_str();
 				pcomment->iPrivate = comment.iPrivate;
 				pcomment->i64Deprecated = comment.i64Deprecated;
+				pcomment->i64Added = comment.i64Added;
 				pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 				return 1;
 			}
@@ -313,6 +315,7 @@ extern "C"
 				pcomment->szShort = comment.strShort_ASCII.c_str();
 				pcomment->szLinkedType = comment.strLinkedType_ASCII.c_str();
 				pcomment->iPrivate = comment.iPrivate;
+				pcomment->i64Added = comment.i64Added;
 				pcomment->i64Deprecated = comment.i64Deprecated;
 				pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
 				return 1;

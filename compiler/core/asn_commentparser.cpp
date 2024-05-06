@@ -307,7 +307,8 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 		_brief = 1,
 		_private = 2,
 		_deprecated = 3,
-		_linked = 4,
+		_added = 4,
+		_linked = 5,
 	};
 
 	eLast last = eLast::_unknown;
@@ -330,6 +331,11 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 		{
 			last = eLast::_deprecated;
 			pType->handleDeprecated(strLine.substr(11));
+		}
+		else if (strLine.substr(0, 6) == "@added")
+		{
+			last = eLast::_added;
+			pType->handleAdded(strLine.substr(6));
 		}
 		else if (strLine.substr(0, 7) == "@linked")
 		{
@@ -902,20 +908,23 @@ long long EModuleComment::getModuleMinorVersion()
 	{
 		const auto iNameLength = m_strModuleName.length();
 		long long i64HighestVersion = 0;
-		for (const auto& operationComments : gComments.mapOperations)
+		for (const auto& operationComment : gComments.mapOperations)
 		{
-			if (operationComments.first.substr(0, iNameLength) == m_strModuleName)
+			if (operationComment.first.substr(0, iNameLength) == m_strModuleName)
 			{
-				if (operationComments.second.i64Added > i64HighestVersion)
-					i64HighestVersion = operationComments.second.i64Added;
+				if (operationComment.second.i64Added > i64HighestVersion)
+					i64HighestVersion = operationComment.second.i64Added;
 			}
 		}
-		for (const auto& operationComments : gComments.mapSequences)
+		for (const auto& sequenceComment : gComments.mapSequences)
 		{
-			if (operationComments.first.substr(0, iNameLength) == m_strModuleName)
+			if (sequenceComment.first.substr(0, iNameLength) == m_strModuleName)
 			{
-				if (operationComments.second.i64Added > i64HighestVersion)
-					i64HighestVersion = operationComments.second.i64Added;
+				if (sequenceComment.second.i64Added > i64HighestVersion)
+					i64HighestVersion = sequenceComment.second.i64Added;
+				for (const auto& memberComment : sequenceComment.second.mapMembers)
+					if (memberComment.second.i64Added > i64HighestVersion)
+						i64HighestVersion = memberComment.second.i64Added;
 			}
 		}
 		m_i64ModuleVersion = i64HighestVersion;

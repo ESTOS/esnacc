@@ -93,6 +93,7 @@ int PrintROSEOperationRegistration(FILE* src, CxxRules* r, ValueDef* v)
 	fprintf(src, "%d, \"", v->value->basicValue->a.integer);
 	PrintCxxValueDefsName(src, r, v);
 	fprintf(src, "\", m_iid);\n");
+
 	return 1;
 }
 
