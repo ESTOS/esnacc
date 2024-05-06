@@ -3607,7 +3607,6 @@ static void PrintCxxSeqDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 		PrintCxxSeqDefCodeMeta_1(hdr, src, td, seq, m, e)
 #endif
 
-			//
 			PrintConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintCopyConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintDestructor(hdr, src, m, td->cxxTypeDefInfo->className);
@@ -4249,6 +4248,8 @@ static void PrintCxxListClass(FILE* hdr, FILE* src, TypeDef* td, Type* lst, Modu
 		return;
 
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
+
+	printSequenceComment(hdr, m, td, COMMENTSTYLE_CPP);
 
 	struct NamedType p_etemp;
 	NamedType* p_e;
