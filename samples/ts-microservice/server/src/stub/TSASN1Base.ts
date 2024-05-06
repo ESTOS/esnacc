@@ -234,6 +234,16 @@ export interface IASN1CallStackEntry {
 }
 
 /**
+ * Versioninformation for a loaded module (a module that has registered a handler for ROSE invoke calls)
+ */
+export interface IModuleVersionInformation {
+	moduleName: string;
+	majorVersion: number;
+	minorVersion: number;
+	version: string;
+}
+
+/**
  * Base class for the TASN1Server and the node and browser Client
  */
 export abstract class TSASN1Base implements IASN1Transport {
@@ -250,6 +260,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 	// Holds all registered invoke handlers
 	private handlersByID = new Map<number, Handler>();
 	private handlersByName = new Map<string, Handler>();
+	// Holds all loaded modules with their version information
+	private moduleVersionsByName = new Map<string, IModuleVersionInformation>();
 	// The Logger Callback which must be set with the SetLogger Method
 	protected logger?: IROSELogger;
 	// Logs the raw transport (inbound before decoding, outbound after encoding)
@@ -324,6 +336,34 @@ export abstract class TSASN1Base implements IASN1Transport {
 			this.handlersByID.set(operationID, handler);
 			this.handlersByName.set(operationName, handler);
 		}
+	}
+
+	/**
+	 * Method that collects all loaded modules with their versions
+	 * This allows the server to determine the interface version of a certain module that is loaded
+	 *
+	 * @param moduleName - name of the module that registers
+	 * @param majorVersion - major Version of the module
+	 * @param minorVersion - minor Version of the module
+	 */
+	public registerModuleVersion(moduleName: string, majorVersion: number, minorVersion: number): void {
+		const versionInformation: IModuleVersionInformation = {
+			moduleName,
+			majorVersion,
+			minorVersion,
+			version: `${majorVersion}.${minorVersion}`
+		}
+		this.moduleVersionsByName.set(moduleName, versionInformation);
+	}
+
+	/**
+	 * Retrieves version information for a loaded asn1 module (a module that has registere ROSE invoke handlers)
+	 *
+	 * @param moduleName - name of the module we want to get version information for
+	 * @returns the version information
+	 */
+	public getModuleVersion(moduleName: string): IModuleVersionInformation | undefined {
+		return this.moduleVersionsByName.get(moduleName);
 	}
 
 	/**

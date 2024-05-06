@@ -612,8 +612,9 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	}
 	fprintf(src, "\n\t\t\t]\n");
 	fprintf(src, "\t\t});\n");
-	fprintf(src, "\t}\n\n");
+	fprintf(src, "\t}\n");
 
+	bFirst = true;
 	/* Write out properties */
 	// fprintf(src, "\tprops: {\n");
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
@@ -624,6 +625,12 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 
 		if (IsDeprecatedNoOutputMember(m, td, e->fieldName))
 			continue;
+
+		if (bFirst)
+		{
+			bFirst = false;
+			fprintf(src, "\n");
+		}
 
 		printMemberComment(src, m, td, e->fieldName, "\t", COMMENTSTYLE_TYPESCRIPT);
 

@@ -106,7 +106,6 @@ export class AsnCreateFancyEventsResult {
 			]
 		});
 	}
-
 }
 
 // [PrintTSTypeDefCode]
