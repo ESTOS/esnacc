@@ -314,7 +314,7 @@ void PrintSwiftType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* p
 				break;
 			}
 		case BASICTYPE_ANY:
-			fprintf(src, "any");
+			fprintf(src, "AnyObject");
 			break;
 		case BASICTYPE_BITSTRING:
 			fprintf(src, "%s", t->cxxTypeRefInfo->className);
@@ -698,7 +698,7 @@ static void PrintSwiftEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 	fprintf(src, "    }\n\n");
 	fprintf(src, "    public func toJSONObject() -> AnyObject\n");
 	fprintf(src, "    {\n");
-	fprintf(src, "        return self.rawValue as AnyObject\n");
+	fprintf(src, "        return rawValue as AnyObject\n");
 	fprintf(src, "    }\n");
 	fflush(src);
 
@@ -941,16 +941,16 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 				fprintf(src, "    public final var %s: ", szFielName);
 				free(szFielName);
 				PrintSwiftType(src, mods, m, td, seq, e->type);
-				const char* szRootName;
-				Type* pRootType = GetRootType(e->type, &szRootName);
+//				const char* szRootName;
+//				Type* pRootType = GetRootType(e->type, &szRootName);
 				if (e->type->optional || e->type->basicType->choiceId == BASICTYPE_NULL)
 				{
 					fprintf(src, "? = nil");
 				}
-				else if (pRootType->basicType->choiceId == BASICTYPE_ENUMERATED)
-				{
-					fprintf(src, " = %sArray.init()", szRootName);
-				}
+//				else if (pRootType->basicType->choiceId == BASICTYPE_ENUMERATED)
+//				{
+//					fprintf(src, " = %sArray.init()", szRootName);
+//				}
 				else
 				{
 					fprintf(src, " = ");
