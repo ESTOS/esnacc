@@ -65,6 +65,7 @@
                 "-JT",
                 "-j",
                 "-RTS_CLIENT_BROWSER",
+                "-RTS_CLIENT_NODE",
                 "*.asn1"
             ],
             "cwd": "${workspaceFolder}/samples/interface",

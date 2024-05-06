@@ -89,14 +89,12 @@ std::vector<std::string> splitByNewline(const char* buffer, size_t length)
 	std::string line;
 
 	// Use std::getline to split the string by '\r\n'
-	while (std::getline(stream, line, '\r'))
+	while (std::getline(stream, line, '\n'))
 	{
-		// Remove '\n' if it's there
-		if (!line.empty() && line.back() == '\n')
+		// Remove '\r' if it's there
+		if (!line.empty() && line.back() == '\r')
 			line.pop_back();
 		lines.push_back(line);
-		// Skip the '\n' part after '\r'
-		stream.get();
 	}
 
 	return lines;
@@ -372,8 +370,7 @@ bool CPPHelper::WriteFile(const char* buffer, const unsigned long ulSize, const 
 						eAddlines = EADDLINE::SET;
 					else if (op == ECOMPAREOPERATOR::EQUAL && nNodeVersion == nVersion)
 						eAddlines = EADDLINE::SET;
-					else
-						bAddLines = false;
+					bAddLines = false;
 				}
 				else if (strCopy.substr(0, 4) == "ELSE")
 				{
