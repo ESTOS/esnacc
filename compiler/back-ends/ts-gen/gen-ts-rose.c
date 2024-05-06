@@ -694,15 +694,22 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 						printComment(src, "\t *", operationComment.szLong, "\n");
 					if (bHasShort || bHasLong)
 						fprintf(src, "\t *\n");
-					if (operationComment.i64Deprecated || operationComment.iPrivate)
+					if (operationComment.i64Deprecated || operationComment.i64Added || operationComment.iPrivate)
 					{
 						if (operationComment.i64Deprecated)
 						{
 							fprintf(src, "\t * @deprecated %s\n", getDeprecated(operationComment.szDeprecated, COMMENTSTYLE_TYPESCRIPT));
 							bDeprecated = true;
 						}
+						if (operationComment.i64Added)
+						{
+							char* szTime = ConvertUnixTimeToReadable(operationComment.i64Added);
+							fprintf(src, "\t * @added %s\n", szTime);
+							free(szTime);
+						}
 						if (operationComment.iPrivate)
 							fprintf(src, "\t * @private\n");
+						fprintf(src, "\t *\n");
 					}
 
 					fprintf(src, "\t * @param argument - An %s object containing all the relevant parameters for the call\n", pszArgument);

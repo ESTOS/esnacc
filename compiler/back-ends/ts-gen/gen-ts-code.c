@@ -470,6 +470,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		{
 			if (e->type->basicType->choiceId == BASICTYPE_EXTENSION || e->type->optional)
 				continue;
+
 			if (!bFirst)
 				fprintf(src, ",\n");
 

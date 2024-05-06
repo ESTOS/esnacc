@@ -153,10 +153,12 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 		bSucceeded = GetMemberComment_UTF8(m->moduleName, td->definedName, szElement, &comment) ? true : false;
 	if (bSucceeded)
 	{
-		if (strlen(comment.szShort) || strlen(comment.szLinkedType) || comment.i64Deprecated || comment.iPrivate)
+		if (strlen(comment.szShort) || strlen(comment.szLinkedType) || comment.i64Deprecated || comment.i64Added || comment.iPrivate)
 		{
 			int iMultiline = 0;
 			if (comment.i64Deprecated)
+				iMultiline++;
+			if (comment.i64Added)
 				iMultiline++;
 			if (strstr(comment.szDeprecated, "\\n"))
 				iMultiline += 1;
