@@ -85,10 +85,11 @@ export class ENetUC_Settings_ManagerROSE extends ROSEBase implements IInvokeHand
 				return undefined;
 		}
 	}
+
 	/**
 	 * Returns the operationID for an operationName
 	 *
-	 * @param id - the id we want to have the name for
+	 * @param name - the name we want to have the id for
 	 * @returns - the id or undefined if not found
 	 */
 	public getIDForOperationName(name: string): OperationIDs | undefined {
@@ -137,10 +138,11 @@ export class ENetUC_Settings_ManagerROSE extends ROSEBase implements IInvokeHand
 	 * operation is done the result (error) is encoded and handed back to the callee, embedded in the ROSE envelop and send
 	 * back to the other side. If a certain function is not register the function call will fail with not function not implemented
 	 */
-	public setHandler(handler: Partial<IENetUC_Settings_ManagerROSE_Handler>) {
+	public setHandler(handler: Partial<IENetUC_Settings_ManagerROSE_Handler>): void {
 		this.transport.registerOperation(this, handler, OperationIDs.OPID_asnGetSettings, "asnGetSettings");
 		this.transport.registerOperation(this, handler, OperationIDs.OPID_asnSetSettings, "asnSetSettings");
 		this.transport.registerOperation(this, handler, OperationIDs.OPID_asnSettingsChanged, "asnSettingsChanged");
+		this.transport.registerModuleVersion("ENetUC_Settings_Manager", 0, 1714953600);
 	}
 
 	// [PrintTSROSEInvokeMethods]

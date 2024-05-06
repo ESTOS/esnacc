@@ -106,7 +106,6 @@ export class AsnGetSettingsArgument {
 			]
 		});
 	}
-
 }
 
 // [PrintTSTypeDefCode]
@@ -139,7 +138,6 @@ export class AsnSetSettingsResult {
 			]
 		});
 	}
-
 }
 
 // [PrintTSTypeDefCode]

@@ -367,6 +367,29 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
+	 * Retrieves the highest loaded version to defined the over all interface version
+	 *
+	 * @returns the highest version information available
+	 */
+	public getHighestModuleVersion(): IModuleVersionInformation | undefined {
+		let module: IModuleVersionInformation | undefined;
+		let majorVersion = -1;
+		let minorVersion = -1;
+		for(const mod of this.moduleVersionsByName.values()) {
+			if(mod.majorVersion > majorVersion) {
+				majorVersion = mod.majorVersion;
+				minorVersion = mod.minorVersion;
+				module = mod;
+			} else if(mod.majorVersion == majorVersion && mod.minorVersion > minorVersion) {
+				majorVersion = mod.majorVersion;
+				minorVersion = mod.minorVersion;
+				module = mod;
+			}
+		}
+		return module;
+	}
+
+	/**
 	 * The client is requested to set a logger interface that will take care of processing log entries the stub is creating
 	 * The stub is trying to add log messages whereever possible. So setting the logger will not only provide errors and warning messages
 	 * but also debug messages for invokes, results, rejects etc.
