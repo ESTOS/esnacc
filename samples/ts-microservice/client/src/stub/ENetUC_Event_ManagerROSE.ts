@@ -62,7 +62,7 @@ export class ENetUC_Event_ManagerROSE extends ROSEBase implements IInvokeHandler
 	 */
 	public getLogData(): IASN1LogData {
 		return {
-			className: moduleName
+			className: MODULE_NAME
 		};
 	}
 

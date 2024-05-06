@@ -63,7 +63,7 @@ export class ENetUC_Settings_ManagerROSE extends ROSEBase implements IInvokeHand
 	 */
 	public getLogData(): IASN1LogData {
 		return {
-			className: moduleName
+			className: MODULE_NAME
 		};
 	}
 

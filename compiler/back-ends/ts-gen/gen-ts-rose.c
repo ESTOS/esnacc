@@ -878,7 +878,7 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t */\n");
 	fprintf(src, "\tpublic getLogData(): IASN1LogData {\n");
 	fprintf(src, "\t\treturn {\n");
-	fprintf(src, "\t\t\tclassName: moduleName\n");
+	fprintf(src, "\t\t\tclassName: MODULE_NAME\n");
 	fprintf(src, "\t\t};\n");
 	fprintf(src, "\t}\n\n");
 
