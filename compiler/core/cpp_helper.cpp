@@ -370,8 +370,7 @@ bool CPPHelper::WriteFile(const char* buffer, const unsigned long ulSize, const 
 						eAddlines = EADDLINE::SET;
 					else if (op == ECOMPAREOPERATOR::EQUAL && nNodeVersion == nVersion)
 						eAddlines = EADDLINE::SET;
-					else
-						bAddLines = false;
+					bAddLines = false;
 				}
 				else if (strCopy.substr(0, 4) == "ELSE")
 				{
