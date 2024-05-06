@@ -698,7 +698,7 @@ static void PrintSwiftEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 	fprintf(src, "    }\n\n");
 	fprintf(src, "    public func toJSONObject() -> AnyObject\n");
 	fprintf(src, "    {\n");
-	fprintf(src, "        return self.rawValue as AnyObject\n");
+	fprintf(src, "        return rawValue as AnyObject\n");
 	fprintf(src, "    }\n");
 	fflush(src);
 
