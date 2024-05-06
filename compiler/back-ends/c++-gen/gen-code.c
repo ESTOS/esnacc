@@ -4750,15 +4750,18 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 	PrintHdrComment(hdr, m);
 	PrintConditionalIncludeOpen(hdr, m->cxxHdrFileName);
 
-	long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
-	char szModuleNameUpper[512] = {0};
-	strcpy_s(szModuleNameUpper, 512, m->moduleName);
-	Str2UCase(szModuleNameUpper, 512);
-	Dash2Underscore(szModuleNameUpper, 512);
-	fprintf(hdr, "#define %s_MODULE_LASTCHANGE = \"%s\"\n", szModuleNameUpper, ConvertUnixTimeToReadable(lMinorModuleVersion));
-	fprintf(hdr, "#define %s_MODULE_MAJOR_VERSION = %i\n", szModuleNameUpper, gMajorInterfaceVersion);
-	fprintf(hdr, "#define %s_MODULE_MINOR_VERSION = %lld\n", szModuleNameUpper, lMinorModuleVersion);
-	fprintf(hdr, "#define %s_MODULE_VERSION = \"%i.%lld\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, lMinorModuleVersion);
+	if (gMajorInterfaceVersion >= 0)
+	{
+		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
+		char szModuleNameUpper[512] = {0};
+		strcpy_s(szModuleNameUpper, 512, m->moduleName);
+		Str2UCase(szModuleNameUpper, 512);
+		Dash2Underscore(szModuleNameUpper, 512);
+		fprintf(hdr, "#define %s_MODULE_LASTCHANGE = \"%s\"\n", szModuleNameUpper, ConvertUnixTimeToReadable(lMinorModuleVersion));
+		fprintf(hdr, "#define %s_MODULE_MAJOR_VERSION = %i\n", szModuleNameUpper, gMajorInterfaceVersion);
+		fprintf(hdr, "#define %s_MODULE_MINOR_VERSION = %lld\n", szModuleNameUpper, lMinorModuleVersion);
+		fprintf(hdr, "#define %s_MODULE_VERSION = \"%i.%lld\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, lMinorModuleVersion);
+	}
 
 	if (genCodeCPPPrintStdAfxInclude)
 		fprintf(src, "#include \"stdafx.h\"\n");

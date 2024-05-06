@@ -39,6 +39,7 @@ AsnSomeSettings ::= SEQUENCE
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -- @brief Argument for the asnGetSettings method
+-- @added 06.05.2024
 AsnGetSettingsArgument ::= SEQUENCE
 {
 	...
@@ -47,11 +48,13 @@ AsnGetSettingsArgument ::= SEQUENCE
 -- @brief Result for the asnGetSettings method
 AsnGetSettingsResult ::= SEQUENCE
 {
+	-- @added 06.05.2024
 	settings							AsnSomeSettings,
 	...
 }
 
 -- @brief Method to retrieve settings from the server side
+-- @added 06.05.2024
 asnGetSettings OPERATION
 	ARGUMENT	arg AsnGetSettingsArgument
 	RESULT		res AsnGetSettingsResult
