@@ -288,7 +288,7 @@ void PrintSwiftType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* p
 			{
 				char* className = FixName(t->basicType->a.localTypeRef->link->definedName);
 				Type* referencedType = t->basicType->a.localTypeRef->link->type;
-				int typeIdOfReferencesType = referencedType->basicType->choiceId;
+				//int typeIdOfReferencesType = referencedType->basicType->choiceId;
 
 				if (0 == strcmp(kS_UTF8StringList, className))
 				{
@@ -942,8 +942,8 @@ static void PrintSwiftSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef
 				fprintf(src, "    public final var %s: ", szFielName);
 				free(szFielName);
 				PrintSwiftType(src, mods, m, td, seq, e->type);
-				const char* szRootName;
-				Type* pRootType = GetRootType(e->type, &szRootName);
+//				const char* szRootName;
+//				Type* pRootType = GetRootType(e->type, &szRootName);
 				if (e->type->optional || e->type->basicType->choiceId == BASICTYPE_NULL)
 				{
 					fprintf(src, "? = nil");
