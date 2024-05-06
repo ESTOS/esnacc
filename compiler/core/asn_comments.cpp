@@ -1,34 +1,13 @@
 #include "asn_comments.h"
 #include "asn_commentparser.h"
 #include "asn-stringconvert.h"
-#include <time.h>
+#include "../../snacc.h"
 
 extern "C"
 {
-
-	/**
-	 * Converts a unix time into something readable
-	 *
-	 * Returns a pointer to a buffer that needs to get released with Free
-	 */
-	char* ConvertUnixTimeToReverseTimeString(const long long tmUnixTime)
-	{
-		char* szBuffer = (char*)malloc(128);
-		if (!szBuffer)
-			return szBuffer;
-
-#ifdef _WIN32
-		struct tm timeinfo;
-		localtime_s(&timeinfo, &tmUnixTime);
-		strftime(szBuffer, 128, "%Y%m%d", &timeinfo);
-#else
-		struct tm* timeinfo;
-		timeinfo = localtime((const time_t*)&tmUnixTime);
-		strftime(szBuffer, 128, "%Y%m%d", timeinfo);
-#endif
-
-		return szBuffer;
-	}
+	// Once evaluated this string contains the full interface version that consists of the gMajorInterfaceVersion
+	// and the highest @added timestamp from the parsed files
+	char szFullInterfaceVersion[100] = {0};
 
 	int ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type)
 	{
@@ -132,53 +111,36 @@ extern "C"
 		return 0;
 	}
 
-	int GetModuleVersion(const char* szModuleName, const int nMajorInterfaceVersion, char* szVersion, int nVersionLength)
+	bool GetModuleVersion(const char* szModuleName, char* szVersion, const int nVersionLength)
 	{
-		if (!szModuleName)
-			return 0;
+		if (!szModuleName || !szVersion || !nVersionLength)
+			return false;
 
 		auto it = gComments.mapModules.find(szModuleName);
-		if (it != gComments.mapModules.end())
-		{
-			long long i64HighestVersion = 0;
-			if (!it->second.bModuleVersionEvaluated)
-			{
-				it->second.bModuleVersionEvaluated = true;
-				if (it->second.i64Added > i64HighestVersion)
-					i64HighestVersion = it->second.i64Added;
-				const auto iNameLength = strlen(szModuleName);
-				for (const auto& operationComments : gComments.mapOperations)
-				{
-					if (operationComments.first.substr(0, iNameLength) == szModuleName)
-					{
-						if (operationComments.second.i64Added > i64HighestVersion)
-							i64HighestVersion = operationComments.second.i64Added;
-					}
-				}
-				for (const auto& operationComments : gComments.mapSequences)
-				{
-					if (operationComments.first.substr(0, iNameLength) == szModuleName)
-					{
-						if (operationComments.second.i64Added > i64HighestVersion)
-							i64HighestVersion = operationComments.second.i64Added;
-					}
-				}
-				it->second.i64ModuleVersion = i64HighestVersion;
-				sprintf_s(it->second.szModuleVersion, 20, "%i.", nMajorInterfaceVersion);
-				if (i64HighestVersion == 0)
-					strcat_s(it->second.szModuleVersion, 20, "0");
-				else
-				{
-					char* szTime = ConvertUnixTimeToReverseTimeString(i64HighestVersion);
-					strcat_s(it->second.szModuleVersion, 20, szTime);
-					free(szTime);
-				}
-			}
-			strcpy_s(szVersion, nVersionLength, it->second.szModuleVersion);
-			return 1;
-		}
-		return 0;
+		if (it == gComments.mapModules.end())
+			return false;
+
+		sprintf_s(szVersion, nVersionLength, "%i.%lld", gMajorInterfaceVersion, it->second.getModuleMinorVersion());
+		return true;
 	}
+
+	const char* GetFullInterfaceVersion()
+	{
+		if (!strlen(szFullInterfaceVersion))
+		{
+			long long lHighestModuleMinorVersion = 0;
+			for (auto mod : gComments.mapModules)
+			{
+				long long lModuleMinorVersion = mod.second.getModuleMinorVersion();
+				if (lModuleMinorVersion > lHighestModuleMinorVersion)
+					lHighestModuleMinorVersion = lModuleMinorVersion;
+			}
+			sprintf_s(szFullInterfaceVersion, 100, "%i.%lld", gMajorInterfaceVersion, lHighestModuleMinorVersion);
+		}
+
+		return szFullInterfaceVersion;
+	}
+
 	int GetOperationComment_UTF8(const char* szModuleName, const char* szOpName, asnoperationcomment* pcomment)
 	{
 		if (!szModuleName || !szOpName)

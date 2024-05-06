@@ -4740,8 +4740,8 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 	PrintHdrComment(hdr, m);
 	PrintConditionalIncludeOpen(hdr, m->cxxHdrFileName);
 
-	char szVersion[20] = {0};
-	if (GetModuleVersion(m->moduleName, gMajorInterfaceVersion, szVersion, 20))
+	char szVersion[50] = {0};
+	if (GetModuleVersion(m->moduleName, szVersion, 50))
 	{
 		char szModuleNameUpper[512] = {0};
 		strcpy_s(szModuleNameUpper, 512, m->moduleName);

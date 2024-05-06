@@ -88,15 +88,24 @@ public:
 class EModuleComment : public ETypeComment
 {
 public:
+	// Sets the module name once the parser has finished parsing the file when it is added to the map
+	void setModuleName(const char* szModuleName);
+
+	// Retrieve the module Version as number (the highest @added found in the corresponding asn1 file, returns 0 if nothing was found)
+	long long getModuleMinorVersion();
+
 	// These elements shall be filtered when logging (currently only in the typescript rose stubs)
 	// The elements are added through @logfilter in the beginning of the file ; delimited
 	std::vector<std::string> strLogFilter;
 	// Helper to get the LogFilters from the set in c
 	int iCounter = 0;
-	// Contains the version if the version has been evaluated for the module
-	int bModuleVersionEvaluated = 0;
-	long long i64ModuleVersion = 0;
-	char szModuleVersion[20] = {0};
+
+private:
+	// Contains the version if the version has been evaluated for the module (checks the comments for @added field values)
+	long long m_i64ModuleVersion = -1;
+
+	// Name of the module
+	std::string m_strModuleName;
 };
 
 void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType);
