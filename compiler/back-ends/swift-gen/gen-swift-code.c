@@ -25,6 +25,7 @@
 #include "../../../c-lib/include/asn-incl.h"
 #include "../../core/asn1module.h"
 #include "../../core/asn_comments.h"
+#include "../../core/time_helpers.h"
 #include "../comment-util.h"
 #include "../structure-util.h"
 #include <inttypes.h>
@@ -1223,7 +1224,7 @@ void PrintSwiftROSECode(FILE* src, ModuleList* mods, Module* m)
 	}
 }
 
-void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int novolatilefuncs)
+void PrintSwiftCodeOne(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int novolatilefuncs)
 {
 	PRINTDEBUGGING
 
@@ -1236,14 +1237,16 @@ void PrintSwiftCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int
 	if (gMajorInterfaceVersion >= 0)
 	{
 		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
-		char szModuleNameUpper[512] = {0};
-		strcpy_s(szModuleNameUpper, 512, m->moduleName);
-		Str2LCase(szModuleNameUpper, 512);
-		Dash2Underscore(szModuleNameUpper, 512);
-		fprintf(src, "let %s_module_lastchange = \"%s\"\n", szModuleNameUpper, ConvertUnixTimeToReadable(lMinorModuleVersion));
-		fprintf(src, "let %s_module_major_version = %i\n", szModuleNameUpper, gMajorInterfaceVersion);
-		fprintf(src, "let %s_module_minor_version = %lld\n", szModuleNameUpper, lMinorModuleVersion);
-		fprintf(src, "let %s_module_version = \"%i.%lld\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, lMinorModuleVersion);
+		char szModuleName[512] = {0};
+		strcpy_s(szModuleName, 512, m->moduleName);
+		Dash2Underscore(szModuleName, 512);
+		fprintf(src, "struct %s_Version\n", szModuleName);
+		fprintf(src, "{\n");
+		fprintf(src, "    let lastChange = Date(iso8601String:\"%s\")??.distantPast\n", ConvertUnixTimeToISO(lMinorModuleVersion));
+		fprintf(src, "    let majorVersion = %i\n", gMajorInterfaceVersion);
+		fprintf(src, "    let minorVersion = %lld\n", lMinorModuleVersion);
+		fprintf(src, "    let version = \"%i.%lld\"\n", gMajorInterfaceVersion, lMinorModuleVersion);
+		fprintf(src, "}\n\n");
 	}
 
 	bool bFirst = true;
@@ -1411,4 +1414,116 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 	fprintf(src, "    }\n");
 
 	fprintf(src, "}\n");
+}
+
+void PrintSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genFree, int novolatilefuncs, int genROSEDecoders)
+{
+	Module* currMod;
+	AsnListNode* saveMods;
+	FILE* srcFilePtr;
+	DefinedObj* fNames;
+	int fNameConflict = FALSE;
+
+	if (gMajorInterfaceVersion >= 0)
+	{
+		FILE* versionFile = NULL;
+		char szFileName[_MAX_PATH] = {0};
+		strcpy_s(szFileName, _MAX_PATH, gszOutputPath);
+		strcat_s(szFileName, _MAX_PATH, "Asn1InterfaceVersion.swift");
+		if (fopen_s(&versionFile, szFileName, "wt") != 0 || versionFile == NULL)
+			perror("fopen");
+		else
+		{
+			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
+			fprintf(versionFile, "struct Asn1InterfaceVersion\n");
+			fprintf(versionFile, "{\n");
+			fprintf(versionFile, "    let lastChange = Date(iso8601String:\"%s\")??.distantPast\n", ConvertUnixTimeToISO(lMaxMinorVersion));
+			fprintf(versionFile, "    let majorVersion = %i\n", gMajorInterfaceVersion);
+			fprintf(versionFile, "    let minorVersion = %lld\n", lMaxMinorVersion);
+			fprintf(versionFile, "    let version = \"%i.%lld\"\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			fprintf(versionFile, "}\n");
+			fclose(versionFile);
+		}
+	}
+
+	/*
+	 * Make names for each module's encoder/decoder src and hdr files
+	 * so import references can be made via include files
+	 * check for truncation --> name conflicts & exit if nec
+	 */
+	fNames = NewObjList();
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (ObjIsDefined(fNames, currMod->swiftFileName, StrObjCmp))
+		{
+			fprintf(errFileG, "Ack! ERROR---file name conflict for generated swift file with name `%s'.\n\n", currMod->swiftFileName);
+			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
+			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
+			fprintf(errFileG, "This error can also be caused by 2 modules having the same name but different OBJECT IDENTIFIERs.");
+			fprintf(errFileG, "Try renaming the modules to correct this.\n");
+			fNameConflict = TRUE;
+		}
+		else
+		{
+			DefineObj(&fNames, currMod->swiftFileName);
+		}
+
+		if (fNameConflict)
+			return;
+
+		FreeDefinedObjs(&fNames);
+	}
+
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+			if (fopen_s(&srcFilePtr, currMod->swiftFileName, "wt") != 0 || srcFilePtr == NULL)
+			{
+				perror("fopen");
+			}
+			else
+			{
+				saveMods = allMods->curr;
+				PrintSwiftCodeOne(srcFilePtr, allMods, currMod, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, novolatilefuncs);
+				allMods->curr = saveMods;
+				fclose(srcFilePtr);
+			}
+
+			if (genROSEDecoders)
+			{
+				if (HasROSEOperations(currMod))
+				{
+					if (fopen_s(&srcFilePtr, currMod->ROSESwiftInterfaceFileName, "wt") != 0 || srcFilePtr == NULL)
+					{
+						perror("fopen ROSE");
+					}
+					else
+					{
+						saveMods = allMods->curr;
+
+						PrintSwiftROSECode(srcFilePtr, allMods, currMod);
+						allMods->curr = saveMods;
+
+						fclose(srcFilePtr);
+					}
+				}
+			}
+		}
+	}
+
+	if (genROSEDecoders)
+	{
+		char* szFileName = MakeSwiftFileName("AsnOperationFactory");
+		if (fopen_s(&srcFilePtr, szFileName, "wt") != 0 || srcFilePtr == NULL)
+		{
+			perror("fopen ROSE");
+		}
+		else
+		{
+			PrintSwiftOperationFactory(srcFilePtr, allMods);
+			fclose(srcFilePtr);
+		}
+		free(szFileName);
+	}
 }

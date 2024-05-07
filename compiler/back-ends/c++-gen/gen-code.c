@@ -31,6 +31,7 @@
 #include "cxxconstraints.h"
 #include "cxxmultipleconstraints.h"
 #include "../../core/asn_comments.h"
+#include "../../core/time_helpers.h"
 #include <inttypes.h>
 
 #if META
@@ -4757,7 +4758,7 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 		strcpy_s(szModuleNameUpper, 512, m->moduleName);
 		Str2UCase(szModuleNameUpper, 512);
 		Dash2Underscore(szModuleNameUpper, 512);
-		fprintf(hdr, "#define %s_MODULE_LASTCHANGE = \"%s\"\n", szModuleNameUpper, ConvertUnixTimeToReadable(lMinorModuleVersion));
+		fprintf(hdr, "#define %s_MODULE_LASTCHANGE = \"%s\"\n", szModuleNameUpper, ConvertUnixTimeToISO(lMinorModuleVersion));
 		fprintf(hdr, "#define %s_MODULE_MAJOR_VERSION = %i\n", szModuleNameUpper, gMajorInterfaceVersion);
 		fprintf(hdr, "#define %s_MODULE_MINOR_VERSION = %lld\n", szModuleNameUpper, lMinorModuleVersion);
 		fprintf(hdr, "#define %s_MODULE_VERSION = \"%i.%lld\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, lMinorModuleVersion);

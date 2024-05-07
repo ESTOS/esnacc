@@ -19,4 +19,11 @@ long long ConvertDateToUnixTime(const char* szDate);
  */
 char* ConvertUnixTimeToReadable(const long long tmUnixTime);
 
+/**
+ * Converts a unix time into an ISO timestamp
+ *
+ * Returns a pointer to a buffer that needs to get released with Free
+ */
+char* ConvertUnixTimeToISO(const long long tmUnixTime);
+
 #endif

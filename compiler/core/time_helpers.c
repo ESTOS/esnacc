@@ -145,3 +145,27 @@ char* ConvertUnixTimeToReadable(const long long tmUnixTime)
 
 	return szBuffer;
 }
+
+/**
+ * Converts a unix time into an ISO timestamp
+ *
+ * Returns a pointer to a buffer that needs to get released with Free
+ */
+char* ConvertUnixTimeToISO(const long long tmUnixTime)
+{
+	char* szBuffer = malloc(128);
+	if (!szBuffer)
+		return NULL;
+
+#ifdef _WIN32
+	struct tm timeinfo;
+	localtime_s(&timeinfo, &tmUnixTime);
+	strftime(szBuffer, 128, "%Y-%m-%dT00:00:00Z", &timeinfo);
+#else
+	struct tm* timeinfo;
+	timeinfo = localtime((const time_t*)&tmUnixTime);
+	strftime(szBuffer, 128, "%Y-%m-%dT00:00:00Z", timeinfo);
+#endif
+
+	return szBuffer;
+}

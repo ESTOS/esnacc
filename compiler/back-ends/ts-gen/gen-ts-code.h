@@ -18,6 +18,6 @@
 #include "../../core/asn1module.h"
 #include "../../core/snacc-util.h"
 
-void PrintTSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printJSONEncDec, int novolatilefuncs);
+void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genJSONEncDec, int genTSROSEStubs, int genPrinters, int genPrintersXML, int genFree, int novolatilefuncs, int genROSEDecoders);
 
 #endif // TSGENCODE_H_INCLUDED

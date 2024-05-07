@@ -8,6 +8,7 @@
 
 #include "../../../c-lib/include/print.h"
 #include "../../core/asn_comments.h"
+#include "../../core/time_helpers.h"
 #include "../tag-util.h" /* get GetTags/FreeTags/CountTags/TagByteLen */
 #include "../str-util.h"
 #include "../structure-util.h"
@@ -761,7 +762,7 @@ void PrintJAVACode(ModuleList* allMods)
 		{
 			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
 			fprintf(src, "public class Asn1InterfaceVersion {\n");
-			fprintf(src, "\tpublic static final lastChange = \"%s\"\n", ConvertUnixTimeToReadable(lMaxMinorVersion));
+			fprintf(src, "\tpublic static final lastChange = \"%s\"\n", ConvertUnixTimeToISO(lMaxMinorVersion));
 			fprintf(src, "\tpublic static final majorVersion = %i\n", gMajorInterfaceVersion);
 			fprintf(src, "\tpublic static final minorVersion = %lld\n", lMaxMinorVersion);
 			fprintf(src, "\tpublic static final version = \"%i.%lld\"\n", gMajorInterfaceVersion, lMaxMinorVersion);
@@ -811,7 +812,7 @@ void PrintJAVACodeOneModule(ModuleList* mods, Module* m)
 		{
 			long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
 			fprintf(src, "public class %s_Version {\n", m->moduleName);
-			fprintf(src, "\tpublic static final lastChange = \"%s\"\n", ConvertUnixTimeToReadable(lMinorModuleVersion));
+			fprintf(src, "\tpublic static final lastChange = \"%s\"\n", ConvertUnixTimeToISO(lMinorModuleVersion));
 			fprintf(src, "\tpublic static final majorVersion = %i\n", gMajorInterfaceVersion);
 			fprintf(src, "\tpublic static final minorVersion = %lld\n", lMinorModuleVersion);
 			fprintf(src, "\tpublic static final version = \"%i.%lld\"\n", gMajorInterfaceVersion, lMinorModuleVersion);

@@ -4,6 +4,7 @@
 #include "../structure-util.h"
 #include "../../../snacc.h"
 #include "../../core/asn_comments.h"
+#include "../../core/time_helpers.h"
 #include <assert.h>
 #include <string.h>
 
@@ -60,7 +61,7 @@ void PrintTSRootTypes(FILE* src, Module* mod, const char* szSuffix)
 	if (gMajorInterfaceVersion >= 0)
 	{
 		long long lMinorModuleVersion = GetModuleMinorVersion(mod->moduleName);
-		fprintf(src, "export const MODULE_LASTCHANGE = \"%s\";\n", ConvertUnixTimeToReadable(lMinorModuleVersion));
+		fprintf(src, "export const MODULE_LASTCHANGE = \"%s\";\n", ConvertUnixTimeToISO(lMinorModuleVersion));
 		fprintf(src, "export const MODULE_MAJOR_VERSION = %i;\n", gMajorInterfaceVersion);
 		fprintf(src, "export const MODULE_MINOR_VERSION = %lld;\n", lMinorModuleVersion);
 		fprintf(src, "export const MODULE_VERSION = \"%i.%lld\";\n", gMajorInterfaceVersion, lMinorModuleVersion);

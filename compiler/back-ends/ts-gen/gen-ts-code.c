@@ -26,9 +26,19 @@
 #include "../structure-util.h"
 #include "../comment-util.h"
 #include "gen-ts-combined.h"
+#include "gen-ts-converter.h"
+#include "gen-ts-rose.h"
 #include "../../core/asn_comments.h"
+#include "../../core/time_helpers.h"
 #include <inttypes.h>
 #include <assert.h>
+
+int sortstring(const void* str1, const void* str2)
+{
+	const char* rec1 = *(char**)str1;
+	const char* rec2 = *(char**)str2;
+	return strcmp(rec1, rec2);
+}
 
 void PrintTSNativeType(FILE* hdr, BasicType* pBasicType)
 {
@@ -906,7 +916,7 @@ void PrintTSComments(FILE* src, Module* m)
 	printModuleComment(src, RemovePath(m->baseFileName), COMMENTSTYLE_TYPESCRIPT);
 }
 
-void PrintTSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printTSONEncDec, int novolatilefuncs)
+void PrintTSCodeOne(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printTSONEncDec, int novolatilefuncs)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
@@ -932,5 +942,379 @@ void PrintTSCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int pr
 	}
 
 } /* PrintTSCode */
+
+void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genJSONEncDec, int genTSROSEStubs, int genPrinters, int genPrintersXML, int genFree, int novolatilefuncs, int genROSEDecoders)
+{
+	Module* currMod;
+	AsnListNode* saveMods;
+	FILE* srcFilePtr = NULL;
+	FILE* encdecFilePtr = NULL;
+	// FILE		*hdrForwardDecl;
+	DefinedObj* fNames;
+	int fNameConflict = FALSE;
+
+	/*
+	 * Make names for each module's encoder/decoder src and hdr files
+	 * so import references can be made via include files
+	 * check for truncation --> name conflicts & exit if nec
+	 */
+	fNames = NewObjList();
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (ObjIsDefined(fNames, currMod->tsFileName, StrObjCmp) || ObjIsDefined(fNames, currMod->tsConverterFileName, StrObjCmp))
+		{
+			fprintf(errFileG, "Ack! ERROR---file name conflict for generated typescript files with names `%s' and `%s'.\n\n", currMod->tsFileName, currMod->tsConverterFileName);
+			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
+			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
+			fprintf(errFileG, "This error can also be caused by 2 modules with the same names but different OBJECT IDENTIFIERs.");
+			fprintf(errFileG, "Try renaming the modules to correct this.\n");
+			fNameConflict = TRUE;
+		}
+		else
+		{
+			DefineObj(&fNames, currMod->tsFileName);
+			DefineObj(&fNames, currMod->tsConverterFileName);
+		}
+
+		if (fNameConflict)
+			return;
+
+		FreeDefinedObjs(&fNames);
+	}
+
+	FILE* typesFile = NULL;
+	char* szTypes = MakeFileName("types.ts", "");
+	if (fopen_s(&typesFile, szTypes, "wt") != 0 || typesFile == NULL)
+		perror("fopen");
+	else
+	{
+		fprintf(typesFile, "/**\n");
+		fprintf(typesFile, " * This file combines exports from asn1 files under one name\n");
+		fprintf(typesFile, " *\n");
+		write_snacc_header(typesFile, " * ");
+		fprintf(typesFile, " */\n\n");
+
+		char* strings[1000];
+		memset(strings, 0x00, sizeof(strings));
+		int iCount = 0;
+
+		FOR_EACH_LIST_ELMT(currMod, allMods)
+		{
+			strings[iCount] = MakeFileNameWithoutOutputPath(currMod->baseFileName, "");
+			iCount++;
+		}
+
+		qsort(strings, iCount, sizeof(*strings), sortstring);
+
+		iCount = 0;
+		for (iCount = 0; iCount < 1000; iCount++)
+		{
+			// As - is an unsupported variable replace it with _
+			char* szModName = strings[iCount];
+			if (!szModName)
+				break;
+
+			char* varName = Asn1FieldName2CFieldName(szModName);
+
+			fprintf(typesFile, "export * as %s from \"./%s%s\";\n", varName, szModName, getCommonJSFileExtension());
+			if (genJSONEncDec)
+				fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter%s\";\n", varName, szModName, getCommonJSFileExtension());
+
+			free(varName);
+			free(szModName);
+		}
+
+		fclose(typesFile);
+	}
+	free(szTypes);
+
+	FILE* methodsFile = NULL;
+	char* szMethods = MakeFileName("methods.ts", "");
+	if (fopen_s(&methodsFile, szMethods, "wt") != 0 || methodsFile == NULL)
+		perror("fopen");
+	else
+	{
+		fprintf(methodsFile, "/**\n");
+		fprintf(methodsFile, " * This file exports all specified ROSE methods as arrays\n");
+		fprintf(methodsFile, " *\n");
+		write_snacc_header(methodsFile, " * ");
+		fprintf(methodsFile, " */\n\n");
+		fprintf(methodsFile, "export interface IROSEMethod {\n");
+		fprintf(methodsFile, "\tname: string;\n");
+		fprintf(methodsFile, "\tid: number;\n");
+		fprintf(methodsFile, "}\n\n");
+		fprintf(methodsFile, "export interface IROSEMethodOverview {\n");
+		fprintf(methodsFile, "\tname: string;\n");
+		fprintf(methodsFile, "\tmethods: IROSEMethod[];\n");
+		fprintf(methodsFile, "}\n\n");
+
+#define COUNT 5000
+		char* strings[COUNT];
+		memset(strings, 0x00, sizeof(strings));
+		int iCountStrings = 0;
+		char* interfaces[COUNT];
+		memset(interfaces, 0x00, sizeof(interfaces));
+		int iCountInterfaces = 0;
+
+		FOR_EACH_LIST_ELMT(currMod, allMods)
+		{
+			if (currMod->ImportedFlag == FALSE)
+			{
+				if (HasROSEOperations(currMod))
+				{
+					char* baseName = _strdup(currMod->moduleName);
+					{
+						char szBuffer[512] = {0};
+						char* szReadPos = currMod->moduleName;
+						int iPos = 0;
+						while (*szReadPos)
+						{
+							if (*szReadPos != '-' && *szReadPos != '_')
+							{
+								szBuffer[iPos] = *szReadPos;
+								iPos++;
+							}
+							szReadPos++;
+						}
+						szBuffer[iPos] = 0;
+
+						// Take into account that the length in bytes does not contain the terminating 0 byte
+						strcpy_s(baseName, strlen(baseName) + 1, szBuffer);
+
+						interfaces[iCountInterfaces] = baseName;
+						iCountInterfaces++;
+					}
+
+					size_t baseLen = strlen(baseName) + 3 + 10; // 2*space and null byte at the end + at least 4 digit operationID
+
+					ValueDef* vd;
+					FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
+					{
+						if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+						{
+							const char* pszFunction = vd->definedName;
+							size_t len = strlen(pszFunction) + baseLen;
+							char szOperationID[10] = {0};
+							int iValue = -1;
+							if (vd->value->basicValue->choiceId == BASICVALUE_INTEGER)
+								iValue = vd->value->basicValue->a.integer;
+							sprintf_s(szOperationID, 10, "%d", iValue);
+							char* szBuffer = malloc(len);
+							szBuffer[0] = 0;
+							strcat_s(szBuffer, len, baseName);
+							strcat_s(szBuffer, len, " ");
+							strcat_s(szBuffer, len, szOperationID);
+							strcat_s(szBuffer, len, " ");
+							strcat_s(szBuffer, len, pszFunction);
+							strings[iCountStrings] = szBuffer;
+							iCountStrings++;
+						}
+					}
+				}
+			}
+		}
+		free(szMethods);
+
+		qsort(strings, iCountStrings, sizeof(*strings), sortstring);
+
+		iCountStrings = 0;
+		char* szLastModule = NULL;
+		int bAddComma = FALSE;
+		for (iCountStrings = 0; iCountStrings < COUNT; iCountStrings++)
+		{
+			char* szData = strings[iCountStrings];
+			if (!szData)
+				break;
+
+#ifdef _WIN32
+			char* next_token = NULL;
+			char* szModule = strtok_s(szData, " ", &next_token);
+			char* szID = strtok_s(NULL, " ", &next_token);
+			char* szMethod = strtok_s(NULL, " ", &next_token);
+#else  // _WIN32
+			char* szModule = strtok(szData, " ");
+			char* szID = strtok(NULL, " ");
+			char* szMethod = strtok(NULL, " ");
+#endif // _WIN32
+
+			if (!szModule || !szID || !szMethod)
+				continue;
+
+			if (!szLastModule || strcmp(szLastModule, szModule) != 0)
+			{
+				if (szLastModule)
+					fprintf(methodsFile, "\n];\n\n");
+				fprintf(methodsFile, "export const methods%s: IROSEMethod[] = [\n", szModule);
+				szLastModule = szModule;
+				bAddComma = FALSE;
+			}
+			if (bAddComma)
+				fprintf(methodsFile, ",\n");
+			fprintf(methodsFile, "\t{ name: \"%s\", id: %s }", szMethod, szID);
+			bAddComma = TRUE;
+		}
+
+		if (szLastModule)
+			fprintf(methodsFile, "\n];\n\n");
+
+		if (iCountInterfaces)
+		{
+			qsort(interfaces, iCountInterfaces, sizeof(*interfaces), sortstring);
+
+			fprintf(methodsFile, "export const roseInterfaceMethods: IROSEMethodOverview[] = [\n");
+			bAddComma = FALSE;
+			for (iCountInterfaces = 0; iCountInterfaces < COUNT; iCountInterfaces++)
+			{
+				char* szInterface = interfaces[iCountInterfaces];
+				if (!szInterface)
+					break;
+				if (bAddComma)
+					fprintf(methodsFile, ",\n");
+				fprintf(methodsFile, "\t{ name: \"%s\", methods: methods%s }", szInterface, szInterface);
+				bAddComma = TRUE;
+			}
+
+			fprintf(methodsFile, "\n];\n");
+		}
+
+		for (iCountStrings = 0; iCountStrings < COUNT; iCountStrings++)
+		{
+			char* szData = strings[iCountStrings];
+			if (!szData)
+				break;
+			free(szData);
+		}
+
+		for (iCountInterfaces = 0; iCountInterfaces < COUNT; iCountInterfaces++)
+		{
+			char* szInterface = interfaces[iCountInterfaces];
+			if (!szInterface)
+				break;
+			free(szInterface);
+		}
+
+		fclose(methodsFile);
+	}
+
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+			if (fopen_s(&srcFilePtr, currMod->tsFileName, "wt") != 0 || srcFilePtr == NULL)
+				perror("fopen");
+			else
+			{
+				saveMods = allMods->curr;
+				PrintTSCodeOne(srcFilePtr, allMods, currMod, longJmpVal, genTypes, genValues, genJSONEncDec, genJSONEncDec, genJSONEncDec, novolatilefuncs);
+				allMods->curr = saveMods;
+				fclose(srcFilePtr);
+			}
+		}
+	}
+
+	if (genJSONEncDec)
+	{
+		SaveTSConverterFilesToOutputDirectory(gszOutputPath);
+
+		FOR_EACH_LIST_ELMT(currMod, allMods)
+		{
+			if (currMod->ImportedFlag == FALSE)
+			{
+				if (fopen_s(&encdecFilePtr, currMod->tsConverterFileName, "wt") != 0 || encdecFilePtr == NULL)
+				{
+					perror("fopen");
+				}
+				else
+				{
+					saveMods = allMods->curr;
+					PrintTSConverterCode(encdecFilePtr, allMods, currMod, longJmpVal, genTypes, genValues, genJSONEncDec, genJSONEncDec, genJSONEncDec, novolatilefuncs);
+					allMods->curr = saveMods;
+					fclose(encdecFilePtr);
+				}
+			}
+		}
+	}
+
+	SaveTSROSEFilesToOutputDirectory(genTSROSEStubs, gszOutputPath);
+
+	if (genTSROSEStubs)
+	{
+		FOR_EACH_LIST_ELMT(currMod, allMods)
+		{
+			if (currMod->ImportedFlag == FALSE)
+			{
+				if (HasROSEOperations(currMod))
+				{
+					if (IsDeprecatedNoOutputModule(currMod))
+						continue;
+
+					saveMods = allMods->curr;
+
+					char szStubFileName[_MAX_PATH];
+					strcpy_s(szStubFileName, _MAX_PATH, gszOutputPath);
+					strcat_s(szStubFileName, _MAX_PATH, currMod->ROSEClassName);
+					strcat_s(szStubFileName, _MAX_PATH, ".ts");
+					FILE* stubFilePtr = NULL;
+					if (fopen_s(&stubFilePtr, szStubFileName, "wt") != 0 || stubFilePtr == NULL)
+					{
+						perror("fopen tsROSEClientFileName");
+					}
+					else
+					{
+						allMods->curr = saveMods;
+						PrintTSROSECode(stubFilePtr, allMods, currMod);
+						fclose(stubFilePtr);
+					}
+
+					if (genTSROSEStubs & 0x06)
+					{
+						// Client Interfaces
+						char szClientInterfaceFileName[_MAX_PATH];
+						strcpy_s(szClientInterfaceFileName, _MAX_PATH, gszOutputPath);
+						strcat_s(szClientInterfaceFileName, _MAX_PATH, currMod->ROSEClassName);
+						strcat_s(szClientInterfaceFileName, _MAX_PATH, "_Interface.ts");
+
+						FILE* roseClientInterfaceFilePtr = NULL;
+
+						if (fopen_s(&roseClientInterfaceFilePtr, szClientInterfaceFileName, "wt") != 0 || roseClientInterfaceFilePtr == NULL)
+						{
+							perror("fopen tsROSEClientFileName");
+						}
+						else
+						{
+							allMods->curr = saveMods;
+							PrintTSROSEInterfaceCode(roseClientInterfaceFilePtr, allMods, currMod);
+							fclose(roseClientInterfaceFilePtr);
+						}
+					}
+
+					if (genTSROSEStubs & 0x01)
+					{
+						// Server (Node) stub
+						char szServerInterfaceFileName[_MAX_PATH];
+						strcpy_s(szServerInterfaceFileName, _MAX_PATH, gszOutputPath);
+						strcat_s(szServerInterfaceFileName, _MAX_PATH, currMod->ROSEClassName);
+						strcat_s(szServerInterfaceFileName, _MAX_PATH, "_Interface.ts");
+
+						FILE* roseServerInterfaceFilePtr = NULL;
+
+						if (fopen_s(&roseServerInterfaceFilePtr, szServerInterfaceFileName, "wt") != 0 || roseServerInterfaceFilePtr == NULL)
+						{
+							perror("fopen tsROSEClientFileName");
+						}
+						else
+						{
+							allMods->curr = saveMods;
+							PrintTSROSEInterfaceCode(roseServerInterfaceFilePtr, allMods, currMod);
+							fclose(roseServerInterfaceFilePtr);
+						}
+					}
+
+					allMods->curr = saveMods;
+				}
+			}
+		}
+	}
+}
 
 /* EOF gen-code.c (for back-ends/TS-gen) */
