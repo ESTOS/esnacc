@@ -4540,7 +4540,7 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(src, "#include <%sSNACCROSE.h>\n", szCppHeaderIncludePath);
 	fprintf(src, "#include <%sSNACCDeprecated.h>\n", szCppHeaderIncludePath);
 	if (gMajorInterfaceVersion >= 0)
-		fprintf(src, "#include <%ssSnaccModuleVersions.h>\n", szCppHeaderIncludePath);
+		fprintf(src, "#include <%sSnaccModuleVersions.h>\n", szCppHeaderIncludePath);
 
 	fprintf(hdr, "#include \"%s\"\n", RemovePath(m->ROSEHdrForwardDeclFileName));
 	fprintf(hdr, "\n");

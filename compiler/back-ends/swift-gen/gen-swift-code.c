@@ -1435,6 +1435,7 @@ void PrintSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 		else
 		{
 			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
+			fprintf(versionFile, "import Foundation\n\n");
 			fprintf(versionFile, "struct Asn1InterfaceVersion\n");
 			fprintf(versionFile, "{\n");
 			fprintf(versionFile, "    let lastChange = Date(iso8601String:\"%s\") ?? .distantPast\n", ConvertUnixTimeToISO(lMaxMinorVersion));
