@@ -471,13 +471,20 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 	fprintf(src, "\t * back to the other side. If a certain function is not register the function call will fail with not function not implemented\n");
 	fprintf(src, "\t */\n");
 
-	fprintf(src, "\tpublic setHandler(handler: Partial<I%s_Handler>) {\n", m->ROSEClassName);
+	fprintf(src, "\tpublic setHandler(handler: Partial<I%s_Handler>): void {\n", m->ROSEClassName);
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (IsROSEValueDef(m, vd))
 			fprintf(src, "\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\");\n", vd->definedName, vd->definedName);
 	}
+
+	if (gMajorInterfaceVersion >= 0)
+	{
+		long long lMinorVersion = GetModuleMinorVersion(m->moduleName);
+		fprintf(src, "\t\tthis.transport.registerModuleVersion(\"%s\", %i, %lld);\n", m->moduleName, gMajorInterfaceVersion, lMinorVersion);
+	}
+
 	fprintf(src, "\t}\n");
 }
 
@@ -694,15 +701,22 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 						printComment(src, "\t *", operationComment.szLong, "\n");
 					if (bHasShort || bHasLong)
 						fprintf(src, "\t *\n");
-					if (operationComment.i64Deprecated || operationComment.iPrivate)
+					if (operationComment.i64Deprecated || operationComment.i64Added || operationComment.iPrivate)
 					{
 						if (operationComment.i64Deprecated)
 						{
 							fprintf(src, "\t * @deprecated %s\n", getDeprecated(operationComment.szDeprecated, COMMENTSTYLE_TYPESCRIPT));
 							bDeprecated = true;
 						}
+						if (operationComment.i64Added)
+						{
+							char* szTime = ConvertUnixTimeToReadable(operationComment.i64Added);
+							fprintf(src, "\t * @added %s\n", szTime);
+							free(szTime);
+						}
 						if (operationComment.iPrivate)
 							fprintf(src, "\t * @private\n");
+						fprintf(src, "\t *\n");
 					}
 
 					fprintf(src, "\t * @param argument - An %s object containing all the relevant parameters for the call\n", pszArgument);
@@ -871,7 +885,7 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t */\n");
 	fprintf(src, "\tpublic getLogData(): IASN1LogData {\n");
 	fprintf(src, "\t\treturn {\n");
-	fprintf(src, "\t\t\tclassName: moduleName\n");
+	fprintf(src, "\t\t\tclassName: MODULE_NAME\n");
 	fprintf(src, "\t\t};\n");
 	fprintf(src, "\t}\n\n");
 
@@ -902,12 +916,12 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t\t\tdefault:\n");
 	fprintf(src, "\t\t\t\treturn undefined;\n");
 	fprintf(src, "\t\t}\n");
-	fprintf(src, "\t}\n");
+	fprintf(src, "\t}\n\n");
 
 	fprintf(src, "\t/**\n");
 	fprintf(src, "\t * Returns the operationID for an operationName\n");
 	fprintf(src, "\t *\n");
-	fprintf(src, "\t * @param id - the id we want to have the name for\n");
+	fprintf(src, "\t * @param name - the name we want to have the id for\n");
 	fprintf(src, "\t * @returns - the id or undefined if not found\n");
 	fprintf(src, "\t */\n");
 	fprintf(src, "\tpublic getIDForOperationName(name: string): OperationIDs | undefined {\n");

@@ -2,10 +2,12 @@
 #include "asn-stringconvert.h"
 #include "filetype.h"
 #include "../../snacc.h"
+#include "time_helpers.h"
 #include <sstream>
 #include <string>
 #include <list>
 #include <string.h>
+#include <time.h>
 #include <vector>
 
 const std::string WHITESPACE = " \n\r\t\f\v";
@@ -25,6 +27,30 @@ std::string rtrim(const std::string& s)
 std::string trim(const std::string& s)
 {
 	return rtrim(ltrim(s));
+}
+
+/**
+ * Converts a unix time into something readable
+ *
+ * Returns a pointer to a buffer that needs to get released with Free
+ */
+char* ConvertUnixTimeToReverseTimeString(const long long tmUnixTime)
+{
+	char* szBuffer = (char*)malloc(128);
+	if (!szBuffer)
+		return szBuffer;
+
+#ifdef _WIN32
+	struct tm timeinfo;
+	localtime_s(&timeinfo, &tmUnixTime);
+	strftime(szBuffer, 128, "%Y%m%d", &timeinfo);
+#else
+	struct tm* timeinfo;
+	timeinfo = localtime((const time_t*)&tmUnixTime);
+	strftime(szBuffer, 128, "%Y%m%d", timeinfo);
+#endif
+
+	return szBuffer;
 }
 
 void EDeprecated::handleDeprecated(const std::string& strParsedLine)
@@ -281,7 +307,8 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 		_brief = 1,
 		_private = 2,
 		_deprecated = 3,
-		_linked = 4,
+		_added = 4,
+		_linked = 5,
 	};
 
 	eLast last = eLast::_unknown;
@@ -304,6 +331,11 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 		{
 			last = eLast::_deprecated;
 			pType->handleDeprecated(strLine.substr(11));
+		}
+		else if (strLine.substr(0, 6) == "@added")
+		{
+			last = eLast::_added;
+			pType->handleAdded(strLine.substr(6));
 		}
 		else if (strLine.substr(0, 7) == "@linked")
 		{
@@ -412,6 +444,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		if (pos != std::string::npos)
 			strKey = strKey.substr(0, pos);
 
+		m_ModuleComment.setModuleName(strKey.c_str());
 		gComments.mapModules[strKey] = m_ModuleComment;
 
 		bElementEnd = true;
@@ -862,4 +895,40 @@ int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
 	}
 
 	return iResult;
+}
+
+void EModuleComment::setModuleName(const char* szModuleName)
+{
+	m_strModuleName = szModuleName;
+}
+
+long long EModuleComment::getModuleMinorVersion()
+{
+	if (m_i64ModuleVersion == -1)
+	{
+		const auto iNameLength = m_strModuleName.length();
+		long long i64HighestVersion = 0;
+		for (const auto& operationComment : gComments.mapOperations)
+		{
+			if (operationComment.first.substr(0, iNameLength) == m_strModuleName)
+			{
+				if (operationComment.second.i64Added > i64HighestVersion)
+					i64HighestVersion = operationComment.second.i64Added;
+			}
+		}
+		for (const auto& sequenceComment : gComments.mapSequences)
+		{
+			if (sequenceComment.first.substr(0, iNameLength) == m_strModuleName)
+			{
+				if (sequenceComment.second.i64Added > i64HighestVersion)
+					i64HighestVersion = sequenceComment.second.i64Added;
+				for (const auto& memberComment : sequenceComment.second.mapMembers)
+					if (memberComment.second.i64Added > i64HighestVersion)
+						i64HighestVersion = memberComment.second.i64Added;
+			}
+		}
+		m_i64ModuleVersion = i64HighestVersion;
+	}
+
+	return m_i64ModuleVersion;
 }

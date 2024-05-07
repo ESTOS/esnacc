@@ -3,6 +3,8 @@
 #include "../str-util.h"
 #include "../structure-util.h"
 #include "../../../snacc.h"
+#include "../../core/asn_comments.h"
+#include "../../core/time_helpers.h"
 #include <assert.h>
 #include <string.h>
 
@@ -54,7 +56,16 @@ void PrintTSEscaped(FILE* src, const char* szData)
 void PrintTSRootTypes(FILE* src, Module* mod, const char* szSuffix)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
-	fprintf(src, "export const moduleName = \"%s%s\";\n", mod->moduleName, szSuffix ? szSuffix : "");
+	fprintf(src, "export const MODULE_NAME = \"%s%s\";\n", mod->moduleName, szSuffix ? szSuffix : "");
+
+	if (gMajorInterfaceVersion >= 0)
+	{
+		long long lMinorModuleVersion = GetModuleMinorVersion(mod->moduleName);
+		fprintf(src, "export const MODULE_LASTCHANGE = \"%s\";\n", ConvertUnixTimeToISO(lMinorModuleVersion));
+		fprintf(src, "export const MODULE_MAJOR_VERSION = %i;\n", gMajorInterfaceVersion);
+		fprintf(src, "export const MODULE_MINOR_VERSION = %lld;\n", lMinorModuleVersion);
+		fprintf(src, "export const MODULE_VERSION = \"%i.%lld\";\n", gMajorInterfaceVersion, lMinorModuleVersion);
+	}
 }
 
 void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConverters, bool bIncludeasn1ts, bool bIncludeDeprecatedCallback)

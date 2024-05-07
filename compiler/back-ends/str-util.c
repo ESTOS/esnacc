@@ -202,8 +202,12 @@ void Str2UCase PARAMS((str, len), char* str _AND_ size_t len)
 {
 	size_t i;
 	for (i = 0; i < len; i++)
+	{
+		if (!str[i])
+			break;
 		if (islower(str[i]))
 			str[i] = (char)toupper(str[i]);
+	}
 } /* Str2UCase */
 
 /*
@@ -215,8 +219,12 @@ void Str2LCase PARAMS((str, len), char* str _AND_ size_t len)
 {
 	size_t i;
 	for (i = 0; i < len; i++)
+	{
+		if (!str[i])
+			break;
 		if (isupper(str[i]))
 			str[i] = (char)tolower(str[i]);
+	}
 } /* Str2LCase */
 
 /*
@@ -228,7 +236,9 @@ void Dash2Underscore PARAMS((str, len), char* str _AND_ size_t len)
 {
 	size_t i;
 	for (i = 0; i < len; i++)
-		if (str[i] == '-')
+		if (!str[i])
+			break;
+		else if (str[i] == '-')
 			str[i] = '_';
 } /* Dash2Underscore */
 

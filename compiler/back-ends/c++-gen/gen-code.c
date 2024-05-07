@@ -31,6 +31,7 @@
 #include "cxxconstraints.h"
 #include "cxxmultipleconstraints.h"
 #include "../../core/asn_comments.h"
+#include "../../core/time_helpers.h"
 #include <inttypes.h>
 
 #if META
@@ -3607,7 +3608,6 @@ static void PrintCxxSeqDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 		PrintCxxSeqDefCodeMeta_1(hdr, src, td, seq, m, e)
 #endif
 
-			//
 			PrintConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintCopyConstructor(hdr, src, m, td->cxxTypeDefInfo->className);
 	PrintDestructor(hdr, src, m, td->cxxTypeDefInfo->className);
@@ -4250,6 +4250,8 @@ static void PrintCxxListClass(FILE* hdr, FILE* src, TypeDef* td, Type* lst, Modu
 
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
 
+	printSequenceComment(hdr, m, td, COMMENTSTYLE_CPP);
+
 	struct NamedType p_etemp;
 	NamedType* p_e;
 	char typeNameStr[256];
@@ -4471,6 +4473,7 @@ void PrintForwardDeclarationsCode(FILE* hdrForwardDecl, ModuleList* mods, Module
 
 	PrintHdrComment(hdrForwardDecl, m);
 	PrintConditionalIncludeOpen(hdrForwardDecl, m->ROSEHdrForwardDeclFileName);
+
 	fprintf(hdrForwardDecl, "\n");
 
 	// print Forward Declaration includes Imported files
@@ -4536,6 +4539,8 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(src, "#include <%sSnaccROSEBase.h>\n", szCppHeaderIncludePath);
 	fprintf(src, "#include <%sSNACCROSE.h>\n", szCppHeaderIncludePath);
 	fprintf(src, "#include <%sSNACCDeprecated.h>\n", szCppHeaderIncludePath);
+	if (gMajorInterfaceVersion >= 0)
+		fprintf(src, "#include <%sSnaccModuleVersions.h>\n", szCppHeaderIncludePath);
 
 	fprintf(hdr, "#include \"%s\"\n", RemovePath(m->ROSEHdrForwardDeclFileName));
 	fprintf(hdr, "\n");
@@ -4592,6 +4597,13 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 			fprintf(hdr, "\tstatic const int m_iid = %d;\n", vd->value->basicValue->a.integer);
 		}
 	}
+
+	if (gMajorInterfaceVersion >= 0)
+	{
+		long long lMinorVersion = GetModuleMinorVersion(m->moduleName);
+		fprintf(src, "\tSnaccModuleVersions::addModuleVersion(\"%s\", %i, %lld);\n", m->moduleName, gMajorInterfaceVersion, lMinorVersion);
+	}
+
 	fprintf(src, "}\n\n");
 	fflush(src);
 	fflush(hdr);
@@ -4738,6 +4750,19 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 	PrintSrcComment(src, m);
 	PrintHdrComment(hdr, m);
 	PrintConditionalIncludeOpen(hdr, m->cxxHdrFileName);
+
+	if (gMajorInterfaceVersion >= 0)
+	{
+		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
+		char szModuleNameUpper[512] = {0};
+		strcpy_s(szModuleNameUpper, 512, m->moduleName);
+		Str2UCase(szModuleNameUpper, 512);
+		Dash2Underscore(szModuleNameUpper, 512);
+		fprintf(hdr, "#define %s_MODULE_LASTCHANGE = \"%s\"\n", szModuleNameUpper, ConvertUnixTimeToISO(lMinorModuleVersion));
+		fprintf(hdr, "#define %s_MODULE_MAJOR_VERSION = %i\n", szModuleNameUpper, gMajorInterfaceVersion);
+		fprintf(hdr, "#define %s_MODULE_MINOR_VERSION = %lld\n", szModuleNameUpper, lMinorModuleVersion);
+		fprintf(hdr, "#define %s_MODULE_VERSION = \"%i.%lld\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, lMinorModuleVersion);
+	}
 
 	if (genCodeCPPPrintStdAfxInclude)
 		fprintf(src, "#include \"stdafx.h\"\n");

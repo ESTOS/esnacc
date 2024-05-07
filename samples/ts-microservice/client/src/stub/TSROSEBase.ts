@@ -395,6 +395,7 @@ export interface IASN1Transport {
 	sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
 	sendEvent(data: IASN1InvokeData): undefined | boolean;
 	registerOperation(oninvokehandler: IInvokeHandler, requesthandler: unknown, operationID: number, operationName: string): void;
+	registerModuleVersion(moduleName: string, majorVersion: number, minorVersion: number): void;
 	getEncodeContext(): EncodeContext;
 	getDecodeContext(): DecodeContext;
 	getNextInvokeID(): number;

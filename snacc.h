@@ -2,6 +2,7 @@
 #define _SNACC_H_
 
 #include "version.h"
+#include "snacc_defines.h"
 
 #ifndef NULL
 #define NULL 0
@@ -27,57 +28,6 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
-#ifdef __cplusplus
-
-#ifdef VOLATILE_RETRUN
-#define RETURN_THIS_FOR_COMPILERS_WITHOUT_VOLATILE_FUNCTIONS return *this;
-#else
-#define RETURN_THIS_FOR_COMPILERS_WITHOUT_VOLATILE_FUNCTIONS
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#if !BOOL_BUILTIN
-#ifndef true
-/* enum bool { false, true }; */
-/* the above looks elegant, but leads to anachronisms (<, ==, !=, ... return value of type int, not enum bool), therefore: */
-typedef int bool;
-enum
-{
-	false,
-	true
-};
-#endif
-#endif
-
-#else /* !__cplusplus */
-
-/* Type Definitions */
-#ifndef bool
-typedef char bool;
-#endif
-
-#ifndef true
-#define true 1
-#endif
-#ifndef false
-#define false 0
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#endif /* __cplusplus */
 
 /*
  *  Inspired by gdb 4.0, for better or worse...
@@ -138,11 +88,20 @@ typedef char bool;
 #define if_TCL(code)
 #endif
 
-extern long long gi64NoDeprecatedSymbols;
-extern int giValidationLevel;
-extern int giWriteComments;
-extern int genTSESMCode;
-extern int gNodeVersion;
-extern int gMajorInterfaceVersion;
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+	extern long long gi64NoDeprecatedSymbols;
+	extern int giValidationLevel;
+	extern int giWriteComments;
+	extern int genTSESMCode;
+	extern int gNodeVersion;
+	extern int gMajorInterfaceVersion;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _SNACC_H_ */
