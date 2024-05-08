@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <locale>
 #include <chrono>
+#include <filesystem>
 
 using namespace SNACC;
 
@@ -1453,17 +1454,22 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 #define STRINGLEN(sz) strlen(sz)
 #endif
 
-int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = true */)
+int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, bool bAppend /*= true*/, const bool bFlushEveryWrite /* = true */)
 {
 	std::lock_guard<std::mutex> lock(m_mtxLogFile);
 
 	if (szPath && STRINGLEN(szPath) && !m_pAsnLogFile)
 	{
 		m_bFlushEveryWrite = bFlushEveryWrite;
+
+		std::filesystem::path filePath(szPath);
+		if (!std::filesystem::exists(filePath))
+			bAppend = false;
+
 #ifdef HAS_WCHAR_T
-		const wchar_t* szMode = bAppend ? L"ab" : L"wb";
+		const wchar_t* szMode = bAppend ? L"r+b" : L"wb";
 #else
-		const char* szMode = bAppend ? "ab" : "wb";
+		const char* szMode = bAppend ? "r+b" : "wb";
 #endif
 #ifdef _MSC_VER
 		m_pAsnLogFile = _wfsopen(szPath, szMode, _SH_DENYWR);
@@ -1527,7 +1533,7 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 
 		if (!m_bAsnLogFileContainsData)
 		{
-			fprintf(m_pAsnLogFile, "[\n");
+			fprintf(m_pAsnLogFile, "[");
 			m_bAsnLogFileContainsData = true;
 		}
 		else
