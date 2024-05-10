@@ -1479,7 +1479,7 @@ int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, bool bAppend
 		if (!m_pAsnLogFile)
 		{
 			int iErr = 0;
-#ifdef WIN32
+#ifdef _WIN32
 			_get_errno(&iErr);
 #else
 			iErr = errno;
@@ -1522,7 +1522,7 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 		auto duration = currentTime.time_since_epoch();
 		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration) % 1000;
 		std::tm timeInfo;
-#ifdef WIN32
+#ifdef _WIN32
 		gmtime_s(&timeInfo, &currentTimeT);
 #else
 		gmtime_r(&currentTimeT, &timeInfo);

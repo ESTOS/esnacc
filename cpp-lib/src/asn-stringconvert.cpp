@@ -118,7 +118,7 @@ std::wstring AsnStringConvert::AsciiToUTF16(const char* szASCII, const char* szC
 				if (size_needed != iConverted)
 				{
 					DWORD dwErr = GetLastError();
-					dwErr;
+					printf("Error in AsnStringConvert::AsciiToUTF16: %ld", dwErr);
 					assert(FALSE);
 				}
 #endif
@@ -159,7 +159,7 @@ std::string AsnStringConvert::UTF16ToAscii(const wchar_t* szUTF16, const char* s
 				if (size_needed != iConverted)
 				{
 					DWORD dwErr = GetLastError();
-					dwErr;
+					printf("Error in AsnStringConvert::UTF16ToAscii: %ld", dwErr);
 					assert(FALSE);
 				}
 #endif
@@ -199,7 +199,7 @@ std::wstring AsnStringConvert::UTF8ToUTF16(const char* szUTF8)
 				if (size_needed != iConverted)
 				{
 					DWORD dwErr = GetLastError();
-					dwErr;
+					printf("Error in AsnStringConvert::UTF8ToUTF16: %ld", dwErr);
 					assert(FALSE);
 				}
 #endif
@@ -239,7 +239,7 @@ std::string AsnStringConvert::UTF16ToUTF8(const wchar_t* szUTF16)
 				if (size_needed != iConverted)
 				{
 					DWORD dwErr = GetLastError();
-					dwErr;
+					printf("Error in AsnStringConvert::UTF16ToUTF8: %ld", dwErr);
 					assert(FALSE);
 				}
 #endif
