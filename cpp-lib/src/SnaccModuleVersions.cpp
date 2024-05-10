@@ -1,4 +1,5 @@
 #include "SnaccModuleVersions.h"
+#include "asn-config.h"
 
 SnaccModuleVersion::SnaccModuleVersion()
 {
@@ -54,7 +55,7 @@ bool SnaccModuleVersions::getHighestModuleVersion(SnaccModuleVersion& version)
 {
 	int iMajor = -1;
 	long long lMinor = -1;
-	for (const auto module : m_ModuleVersions)
+	for (const auto& module : m_ModuleVersions)
 	{
 		if (module.second.GetMajorVersion() > iMajor)
 		{

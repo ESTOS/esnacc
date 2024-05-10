@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <locale>
 #include <chrono>
+#include <filesystem>
 
 using namespace SNACC;
 
@@ -1453,17 +1454,22 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 #define STRINGLEN(sz) strlen(sz)
 #endif
 
-int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend /*= true*/, const bool bFlushEveryWrite /* = true */)
+int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, bool bAppend /*= true*/, const bool bFlushEveryWrite /* = true */)
 {
 	std::lock_guard<std::mutex> lock(m_mtxLogFile);
 
 	if (szPath && STRINGLEN(szPath) && !m_pAsnLogFile)
 	{
 		m_bFlushEveryWrite = bFlushEveryWrite;
+
+		std::filesystem::path filePath(szPath);
+		if (!std::filesystem::exists(filePath))
+			bAppend = false;
+
 #ifdef HAS_WCHAR_T
-		const wchar_t* szMode = bAppend ? L"ab" : L"wb";
+		const wchar_t* szMode = bAppend ? L"r+b" : L"wb";
 #else
-		const char* szMode = bAppend ? "ab" : "wb";
+		const char* szMode = bAppend ? "r+b" : "wb";
 #endif
 #ifdef _MSC_VER
 		m_pAsnLogFile = _wfsopen(szPath, szMode, _SH_DENYWR);
@@ -1473,7 +1479,7 @@ int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool b
 		if (!m_pAsnLogFile)
 		{
 			int iErr = 0;
-#ifdef WIN32
+#ifdef _WIN32
 			_get_errno(&iErr);
 #else
 			iErr = errno;
@@ -1516,7 +1522,7 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 		auto duration = currentTime.time_since_epoch();
 		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration) % 1000;
 		std::tm timeInfo;
-#ifdef WIN32
+#ifdef _WIN32
 		gmtime_s(&timeInfo, &currentTimeT);
 #else
 		gmtime_r(&currentTimeT, &timeInfo);
@@ -1527,7 +1533,7 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 
 		if (!m_bAsnLogFileContainsData)
 		{
-			fprintf(m_pAsnLogFile, "[\n");
+			fprintf(m_pAsnLogFile, "[");
 			m_bAsnLogFileContainsData = true;
 		}
 		else

@@ -1,9 +1,25 @@
 # Sets the Environmen for the compiler and the c-lib (possible c++-lib too)
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.20)
 project(esnacc_cmake) #  LANGUAGES CXX) - would interpret all files as C++
 
-set(CMAKE_CXX_STANDARD 20)
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") # GCC
+	# Ugly but i see no other option than specifying the compiler directly
+	# No matter what i do to tell cmake to use a newer standard than C89 itś
+    # always invoking the g89-gcc compiler which complains about -std=c99 -std=c11 etc as not supported
+    set(CMAKE_C_STANDARD 99)
+	set(CMAKE_C_COMPILER "/usr/bin/c99-gcc")
+else()
+    set(CMAKE_C_STANDARD 11)
+endif()
+set(CMAKE_C_STANDARD_REQUIRED True)
+set(CMAKE_C_EXTENSIONS OFF)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 set(CMAKE_DEBUG_POSTFIX "d")
+# set(CMAKE_VERBOSE_MAKEFILE ON)
 
 if(MSVC)
     # Ensures that the __cplusplus macro is set to the proper number correspoding to the cpp version beeing used (otherwise it points to CPP98)
@@ -21,6 +37,8 @@ endif()
 include_directories(.)
 
 # DEFINES to set
+add_compile_definitions(GNU_SOURCE)
+add_compile_definitions(_XOPEN_SOURCE=700)
 # for the compiler we should define these (see VS2022 Project):
 add_compile_definitions(COMPILER)
 # maybe these too? did compile without them yet

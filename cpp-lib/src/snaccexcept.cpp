@@ -128,7 +128,7 @@ FileException::FileException(const char* filename, enum FileErrType errType, con
 			strcpy_s(whatStr, 512, "Error writing file: ");
 			break;
 	}
-	strcat_s(whatStr, 512, filename);
+	strcat_s(whatStr, 511, filename);
 }
 
 const char* FileException::what() const noexcept

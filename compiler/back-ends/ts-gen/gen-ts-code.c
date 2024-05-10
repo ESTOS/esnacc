@@ -464,7 +464,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	{
 		asnsequencecomment comment;
 		GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment);
-		fprintf(src, "\t\tTSDeprecatedCallback.deprecatedObject(%" PRId64 ", moduleName, this);\n", comment.i64Deprecated);
+		fprintf(src, "\t\tTSDeprecatedCallback.deprecatedObject(%lld, moduleName, this);\n", comment.i64Deprecated);
 	}
 	fprintf(src, "\t\tObject.assign(this, that);\n");
 	fprintf(src, "\t}\n\n");

@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "../../snacc_defines.h"
 
 #if TIME_WITH_SYS_TIME

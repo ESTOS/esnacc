@@ -36,7 +36,7 @@ void handleDeprecatedSequence(FILE* src, Module* mod, TypeDef* td)
 		fprintf(src, "  {\n");
 		asnsequencecomment comment;
 		if (GetSequenceComment_UTF8(mod->moduleName, td->definedName, &comment))
-			fprintf(src, "    // CALL DeprecatedASN1Object(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, td->definedName, comment.szDeprecated);
+			fprintf(src, "    // CALL DeprecatedASN1Object(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, td->definedName, comment.szDeprecated);
 		fprintf(src, "  }\n\n");
 	}
 }
@@ -634,7 +634,7 @@ void PrintJavaOperationClass(Module* mod, ValueDef* vd)
 			fprintf(src, "  {\n");
 			asnoperationcomment comment;
 			if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment))
-				fprintf(src, "    // CALL DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, vd->definedName, comment.szDeprecated);
+				fprintf(src, "    // CALL DeprecatedASN1Method(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, vd->definedName, comment.szDeprecated);
 			fprintf(src, "  }\n\n");
 		}
 

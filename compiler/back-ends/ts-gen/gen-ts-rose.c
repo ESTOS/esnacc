@@ -516,7 +516,7 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 			{
 				asnoperationcomment comment;
 				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
 			}
 			fprintf(src, "\t\t\t\treturn await this.handleOnInvoke(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
@@ -540,7 +540,7 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 			{
 				asnoperationcomment comment;
 				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
 			}
 			fprintf(src, "\t\t\t\treturn await this.handleOnEvent(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
@@ -740,7 +740,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 				{
 					asnoperationcomment comment;
 					GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
 				}
 				fprintf(src, "\t\treturn this.handleInvoke(argument, ");
 				fprintf(src, "%s.%s, ", szResultNS, pszResult);
@@ -775,7 +775,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 				{
 					asnoperationcomment comment;
 					GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
 				}
 				fprintf(src, "\t\treturn this.handleEvent(argument, ");
 				fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
