@@ -1475,7 +1475,7 @@ AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBo
 
 void AsnInt::JEnc(SJson::Value& b) const
 {
-	b = SJson::Value(GetLongLong());
+	b = SJson::Value((SJson::Value::Int64)GetLongLong());
 }
 
 bool AsnInt::JDec(const SJson::Value& b)
@@ -1483,7 +1483,7 @@ bool AsnInt::JDec(const SJson::Value& b)
 	Clear();
 	if (b.isInt64() || b.isConvertibleTo(SJson::intValue))
 	{
-		Set(b.asInt64());
+		Set((long long)b.asInt64());
 		return true;
 	}
 	else if (b.isConvertibleTo(SJson::stringValue))
