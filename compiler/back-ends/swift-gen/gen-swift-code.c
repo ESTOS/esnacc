@@ -339,7 +339,7 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 		if (GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment))
 		{
 			fprintf(src, "\n");
-			fprintf(src, "        // CALL DeprecatedASN1Object(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, td->definedName, comment.szDeprecated);
+			fprintf(src, "        // CALL DeprecatedASN1Object(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, td->definedName, comment.szDeprecated);
 			fprintf(src, "    ");
 		}
 	}
@@ -1078,7 +1078,7 @@ static void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd
 			if (GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment))
 			{
 				fprintf(src, "\n");
-				fprintf(src, "        // CALL DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, vd->definedName, comment.szDeprecated);
+				fprintf(src, "        // CALL DeprecatedASN1Method(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, m->moduleName, vd->definedName, comment.szDeprecated);
 				fprintf(src, "    ");
 			}
 		}
