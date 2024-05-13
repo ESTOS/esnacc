@@ -392,7 +392,11 @@ bool CPPHelper::WriteFile(const char* buffer, const unsigned long ulSize, const 
 			if (bAddLines)
 			{
 				fwrite(strLine.c_str(), 1, strLine.length(), file);
+#ifdef _WIN32
 				fwrite("\r\n", 1, 2, file);
+#else
+				fwrite("\n", 1, 1, file);
+#endif
 			}
 			if (eAddlines == EADDLINE::SET)
 				bAddLines = true;
