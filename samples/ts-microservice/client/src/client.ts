@@ -9,7 +9,7 @@ import { EASN1TransportEncoding } from "./stub/TSInvokeContext";
 
 // These settings are provided by the .env file
 const name = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_NAME"] as string || "localhost";
-const port = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_PORT"] as string || "3010";
+const port = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_PORT"] as string || "3020";
 let wstarget = "ws";
 let resttarget = "http";
 if (import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_TLS"] === "1") {
