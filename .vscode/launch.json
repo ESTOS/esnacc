@@ -15,6 +15,7 @@
                 "-JT",
                 "-j",
                 "-RTS_SERVER",
+                "-comments",
                 "*.asn1"
             ],
             "cwd": "${workspaceFolder}/samples/interface",
@@ -32,6 +33,7 @@
                 "-JT",
                 "-j",
                 "-RTS_CLIENT_BROWSER",
+                "-comments",
                 "*.asn1"
             ],
             "cwd": "${workspaceFolder}/samples/interface",
@@ -49,6 +51,7 @@
                 "-JT",
                 "-j",
                 "-RTS_SERVER",
+                "-comments",
                 "*.asn1"
             ],
             "cwd": "${workspaceFolder}/samples/interface",
@@ -65,7 +68,7 @@
                 "-JT",
                 "-j",
                 "-RTS_CLIENT_BROWSER",
-                "-RTS_CLIENT_NODE",
+                "-comments",
                 "*.asn1"
             ],
             "cwd": "${workspaceFolder}/samples/interface",
@@ -80,6 +83,7 @@
                 "-o",
                 "${workspaceFolder}/output/openapi",
                 "-JO",
+                "-comments",
                 "${workspaceFolder}/samples/interface/*.asn1"
             ],
             "preLaunchTask": "CMake: build"
