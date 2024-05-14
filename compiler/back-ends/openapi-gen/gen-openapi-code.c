@@ -174,12 +174,20 @@ void PrintOpenApiSequence(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 	if (td != NULL && GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment))
 	{
 		fprintf(src, ",\n%s\t\"description\": \"", tabs);
-		fprintf(src, "### Category \\n%s\\n", comment.szCategory);
-		fprintf(src, "### Short \\n%s\\n", comment.szShort);
-		fprintf(src, "### Long \\n%s\\n", comment.szLong);
-		fprintf(src, "### Deprecated \\n%d\\n", comment.i64Deprecated ? 1 : 0);
+		if (comment.szCategory[0])
+			fprintf(src, "### Category \\n%s\\n", comment.szCategory);
+		if (comment.szShort[0])
+			fprintf(src, "### Short \\n%s\\n", comment.szShort);
+		if (comment.szLong[0])
+			fprintf(src, "### Long \\n%s\\n", comment.szLong);
+		if (comment.i64Deprecated)
+			fprintf(src, "### Deprecated \\n%d\\n", comment.i64Deprecated ? 1 : 0);
 		if (comment.i64Deprecated > 1)
-			fprintf(src, "### Deprecated_starting \\n%lld\\n", comment.i64Deprecated);
+			fprintf(src, "### deprecated_timestamp \\n%lld\\n", comment.i64Deprecated);
+		if (comment.szDeprecated[0])
+			fprintf(src, "### Deprecated_comment \\n%s\\n", comment.szDeprecated);
+		if (comment.i64Added)
+			fprintf(src, "### added_timestamp \\n%lld\\n", comment.i64Added);
 		fprintf(src, "### Private \\n%d\"", comment.iPrivate);
 	}
 
@@ -672,7 +680,7 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 		fprintf(src, "\t\t\"category\": \"%s\",\n", comment.szCategory);
 		fprintf(src, "\t\t\"deprecated\": %d,\n", comment.i64Deprecated ? 1 : 0);
 		if (comment.i64Deprecated > 1)
-			fprintf(src, "\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
+			fprintf(src, "\t\t\"deprecated_timestamp\": %lld,\n", comment.i64Deprecated);
 		fprintf(src, "\t\t\"private\": %d\n", comment.iPrivate);
 		*/
 	}

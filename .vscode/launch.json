@@ -41,6 +41,22 @@
             "console": "externalTerminal"
         },
         {
+            "name": "Visual Studio - ts-microservice-sample - generate jsdoc files",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [
+                "-o",
+                "${workspaceFolder}/samples/jsdoc",
+                "-JD",
+                "-comments",
+                "*.asn1"
+            ],
+            "cwd": "${workspaceFolder}/samples/interface",
+            "preLaunchTask": "CMake: build",
+            "console": "externalTerminal"
+        },        
+        {
             "name": "LLDB - ts-microservice-sample - server - compile asn1 files",
             "type": "lldb",
             "request": "launch",

@@ -1245,7 +1245,7 @@ void PrintSwiftCodeOne(FILE* src, ModuleList* mods, Module* m, long longJmpVal, 
 		fprintf(src, "    let lastChange = Date(iso8601String:\"%s\") ?? .distantPast\n", ConvertUnixTimeToISO(lMinorModuleVersion));
 		fprintf(src, "    let majorVersion = %i\n", gMajorInterfaceVersion);
 		fprintf(src, "    let minorVersion = %lld\n", lMinorModuleVersion);
-		fprintf(src, "    let version = \"%i.%lld\"\n", gMajorInterfaceVersion, lMinorModuleVersion);
+		fprintf(src, "    let version = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMinorModuleVersion);
 		fprintf(src, "}\n\n");
 	}
 
@@ -1441,7 +1441,7 @@ void PrintSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 			fprintf(versionFile, "    let lastChange = Date(iso8601String:\"%s\") ?? .distantPast\n", ConvertUnixTimeToISO(lMaxMinorVersion));
 			fprintf(versionFile, "    let majorVersion = %i\n", gMajorInterfaceVersion);
 			fprintf(versionFile, "    let minorVersion = %lld\n", lMaxMinorVersion);
-			fprintf(versionFile, "    let version = \"%i.%lld\"\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			fprintf(versionFile, "    let version = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMaxMinorVersion);
 			fprintf(versionFile, "}\n");
 			fclose(versionFile);
 		}

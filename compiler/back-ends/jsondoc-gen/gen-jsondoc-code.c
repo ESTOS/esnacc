@@ -23,6 +23,7 @@
 
 #include "gen-jsondoc-code.h"
 #include "../../core/asn_comments.h"
+#include "../../core/time_helpers.h"
 #include "../str-util.h"
 
 static Module* GetImportModuleRef(char* Impname, ModuleList* mods)
@@ -167,21 +168,28 @@ static void PrintJsonDocBitstringDefCode(FILE* src, ModuleList* mods, Module* m,
 			//	fprintf(src, ",");
 			// fprintf(src, "\n");
 			fprintf(src, "\t\t\t\t{\n");
-			fprintf(src, "\t\t\t\t\t\"name\" : \"%s\",\n", n->name);
+			fprintf(src, "\t\t\t\t\t\"name\" : \"%s\"", n->name);
 			// fprintf(src, "\t\t\t\t\t\"typeName\" : \"number\",\n"); bitstring contains only names, text and numbers(=value)
 			asnmembercomment comment;
 			if (GetMemberComment_UTF8(m->moduleName, td->definedName, n->name, &comment))
 			{
-				fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
-				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
+				if (comment.szShort[0])
+					fprintf(src, ",\n\t\t\t\t\t\"short\" : \"%s\"", comment.szShort);
+				if (comment.i64Deprecated)
+					fprintf(src, ",\n\t\t\t\t\t\"deprecated\" : %d", comment.i64Deprecated ? 1 : 0);
 				if (comment.i64Deprecated > 1)
-					fprintf(src, "\t\t\t\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
-				fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
+					fprintf(src, ",\n\t\t\t\t\t\"deprecated_timestamp\": %lld", comment.i64Deprecated);
+				if (comment.szDeprecated[0])
+					fprintf(src, ",\n\t\t\t\t\t\"deprecated_comment\": \"%s\"", comment.szDeprecated);
+				if (comment.i64Added)
+					fprintf(src, ",\n\t\t\t\t\t\"added_timestamp\": %lld", comment.i64Added);
+				if (comment.iPrivate)
+					fprintf(src, ",\n\t\t\t\t\t\"private\" : %d", comment.iPrivate);
 			}
 
-			fprintf(src, "\t\t\t\t\t\"value\" : %d\n", n->value);
+			fprintf(src, ",\n\t\t\t\t\t\"value\" : %d", n->value);
 
-			fprintf(src, "\t\t\t\t}");
+			fprintf(src, "\n\t\t\t\t}");
 
 			// fprintf(src, "\t\t\t\t\t\"%s\" : %d", n->name, n->value);
 			if (((td->type->cxxTypeRefInfo->namedElmts)->curr->next && ((td->type->cxxTypeRefInfo->namedElmts)->curr->next->data) != NULL))
@@ -198,28 +206,35 @@ static void PrintJsonDocEnumDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	//	enum BasicTypeChoiceId tmpTypeId;
 	CNamedElmt* n;
 
-	fprintf(src, "\t\t\t\"type\" : \"enum\",\n");
-	fprintf(src, "\t\t\t\"values\" : [\n");
+	fprintf(src, ",\n\t\t\t\"type\" : \"enum\"");
+	fprintf(src, ",\n\t\t\t\"values\" : [");
 	if (HasNamedElmts(td->type) != 0)
 	{
 		FOR_EACH_LIST_ELMT(n, td->type->cxxTypeRefInfo->namedElmts)
 		{
-			fprintf(src, "\t\t\t\t{\n");
-			fprintf(src, "\t\t\t\t\t\"name\" : \"%s\",\n", n->name);
-			fprintf(src, "\t\t\t\t\t\"typeName\" : \"number\",\n");
+			fprintf(src, "\n\t\t\t\t{");
+			fprintf(src, "\n\t\t\t\t\t\"name\" : \"%s\"", n->name);
+			fprintf(src, ",\n\t\t\t\t\t\"typeName\" : \"number\"");
 			asnmembercomment comment;
 			if (GetMemberComment_UTF8(m->moduleName, td->definedName, n->name, &comment))
 			{
-				fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
-				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
+				if (comment.szShort[0])
+					fprintf(src, ",\n\t\t\t\t\t\"short\" : \"%s\"", comment.szShort);
+				if (comment.i64Deprecated)
+					fprintf(src, ",\n\t\t\t\t\t\"deprecated\" : %d", comment.i64Deprecated ? 1 : 0);
 				if (comment.i64Deprecated > 1)
-					fprintf(src, "\t\t\t\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
-				fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
+					fprintf(src, ",\n\t\t\t\t\t\"deprecated_timestamp\": %lld", comment.i64Deprecated);
+				if (comment.szDeprecated[0])
+					fprintf(src, ",\n\t\t\t\t\t\"deprecated_comment\": \"%s\"", comment.szDeprecated);
+				if (comment.i64Added)
+					fprintf(src, ",\n\t\t\t\t\t\"added_timestamp\": %lld", comment.i64Added);
+				if (comment.iPrivate)
+					fprintf(src, ",\n\t\t\t\t\t\"private\" : %d", comment.iPrivate);
 			}
 
-			fprintf(src, "\t\t\t\t\t\"value\" : %d\n", n->value);
+			fprintf(src, ",\n\t\t\t\t\t\"value\" : %d", n->value);
 
-			fprintf(src, "\t\t\t\t}");
+			fprintf(src, "\n\t\t\t\t}");
 
 			// fprintf(src, "\t\t\t\t\t\"%s\" : %d", n->name, n->value);
 			if (((td->type->cxxTypeRefInfo->namedElmts)->curr->next && ((td->type->cxxTypeRefInfo->namedElmts)->curr->next->data) != NULL))
@@ -234,36 +249,37 @@ static void PrintJsonDocChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Ty
 {
 	NamedType* e;
 
-	fprintf(src, "\t\t\t\"type\" : \"choice\",\n");
-	fprintf(src, "\t\t\t\"values\" : [\n");
+	fprintf(src, ",\n\t\t\t\"type\" : \"choice\"");
+	fprintf(src, ",\n\t\t\t\"values\" : [\n");
 
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
 		fprintf(src, "\t\t\t\t{\n");
 
-		fprintf(src, "\t\t\t\t\t\"name\" : \"%s\",\n", e->fieldName);
+		fprintf(src, "\t\t\t\t\t\"name\" : \"%s\"", e->fieldName);
 
 		asnmembercomment comment;
 		if (GetMemberComment_UTF8(m->moduleName, td->definedName, e->fieldName, &comment))
 		{
-			fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
-			fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
+			if (comment.szShort[0])
+				fprintf(src, ",\n\t\t\t\t\t\"short\" : \"%s\"", comment.szShort);
+			if (comment.i64Deprecated)
+				fprintf(src, ",\n\t\t\t\t\t\"deprecated\" : %d", comment.i64Deprecated ? 1 : 0);
 			if (comment.i64Deprecated > 1)
-				fprintf(src, "\t\t\t\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
-			fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
+				fprintf(src, ",\n\t\t\t\t\t\"deprecated_timestamp\": %lld", comment.i64Deprecated);
+			if (comment.szDeprecated[0])
+				fprintf(src, ",\n\t\t\t\t\t\"deprecated_comment\": \"%s\"", comment.szDeprecated);
+			if (comment.i64Added)
+				fprintf(src, ",\n\t\t\t\t\t\"added_timestamp\": %lld", comment.i64Added);
+			if (comment.iPrivate)
+				fprintf(src, ",\n\t\t\t\t\t\"private\" : %d", comment.iPrivate);
 		}
 
-		fprintf(src, "\t\t\t\t\t\"typeName\" : \"");
+		fprintf(src, ",\n\t\t\t\t\t\"typeName\" : \"");
 		PrintJsonDocType(src, mods, m, td, choice, e->type);
-		fprintf(src, "\"\n");
+		fprintf(src, "\"");
 
-		// choice is never optional
-		// fprintf(src, "\t\t\t\t\t\"optional\" : %d\n", choice->optional ? 1 : 0);
-
-		fprintf(src, "\t\t\t\t}");
-		if (choice->basicType->a.sequence->curr->next)
-			fprintf(src, ",");
-		fprintf(src, "\n");
+		fprintf(src, "\n\t\t\t\t}");
 	}
 
 	fprintf(src, "\t\t\t]\n");
@@ -273,30 +289,39 @@ static void PrintJsonDocSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 {
 	NamedType* e;
 
-	fprintf(src, "\t\t\t\"type\" : \"sequence\",\n");
-	fprintf(src, "\t\t\t\"values\" : [\n");
+	fprintf(src, ",\n\t\t\t\"type\" : \"sequence\"");
+	fprintf(src, ",\n\t\t\t\"values\" : [");
+	bool bHadElements = false;
 
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
 		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 		{
-			fprintf(src, "\t\t\t\t{\n");
+			bHadElements = true;
+			fprintf(src, "\n\t\t\t\t{");
 
-			fprintf(src, "\t\t\t\t\t\"name\" : \"%s\",\n", e->fieldName);
-			fprintf(src, "\t\t\t\t\t\"typeName\" : \"");
+			fprintf(src, "\n\t\t\t\t\t\"name\" : \"%s\"", e->fieldName);
+			fprintf(src, ",\n\t\t\t\t\t\"typeName\" : \"");
 			PrintJsonDocType(src, mods, m, td, seq, e->type);
-			fprintf(src, "\",\n");
+			fprintf(src, "\"");
 
 			asnmembercomment comment;
 			if (GetMemberComment_UTF8(m->moduleName, td->definedName, e->fieldName, &comment))
 			{
-				fprintf(src, "\t\t\t\t\t\"short\" : \"%s\",\n", comment.szShort);
+				if (comment.szShort[0])
+					fprintf(src, ",\n\t\t\t\t\t\"short\" : \"%s\"", comment.szShort);
 				if (comment.szLinkedType[0])
-					fprintf(src, "\t\t\t\t\t\"linkedType\" : \"%s\",\n", comment.szLinkedType);
-				fprintf(src, "\t\t\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
+					fprintf(src, ",\n\t\t\t\t\t\"linkedType\" : \"%s\"", comment.szLinkedType);
+				if(comment.i64Deprecated)
+					fprintf(src, ",\n\t\t\t\t\t\"deprecated\" : %d", comment.i64Deprecated ? 1 : 0);
 				if (comment.i64Deprecated > 1)
-					fprintf(src, "\t\t\t\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
-				fprintf(src, "\t\t\t\t\t\"private\" : %d,\n", comment.iPrivate);
+					fprintf(src, ",\n\t\t\t\t\t\"deprecated_timestamp\": %lld", comment.i64Deprecated);
+				if (comment.szDeprecated[0])
+					fprintf(src, ",\n\t\t\t\t\t\"deprecated_comment\": \"%s\"", comment.szDeprecated);
+				if (comment.i64Added)
+					fprintf(src, ",\n\t\t\t\t\t\"added_timestamp\": %lld", comment.i64Added);
+				if (comment.iPrivate)
+					fprintf(src, ",\n\t\t\t\t\t\"private\" : %d", comment.iPrivate);
 			}
 			else
 			{
@@ -307,21 +332,21 @@ static void PrintJsonDocSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 			// default value ??
 			// PrintJsonDocDefaultValue(src, mods, m, td, seq, e->type);
 
-			// if (e->type->optional)
-			fprintf(src, "\t\t\t\t\t\"optional\" : %d\n", e->type->optional ? 1 : 0);
+			if (e->type->optional)
+				fprintf(src, ",\n\t\t\t\t\t\"optional\" : 1");
 
-			fprintf(src, "\t\t\t\t}");
+			fprintf(src, "\n\t\t\t\t}");
 			if (seq->basicType->a.sequence->curr->next)
 			{
 				NamedType* enext = (NamedType*)seq->basicType->a.sequence->curr->next->data;
 				if (enext->type->basicType->choiceId != BASICTYPE_EXTENSION)
 					fprintf(src, ",");
 			}
-			fprintf(src, "\n");
 		}
 	}
-
-	fprintf(src, "\t\t\t]\n");
+	if (bHadElements)
+		fprintf(src, "\n\t\t\t");
+	fprintf(src, "]\n");
 
 	// OptionalParams ...
 	/*
@@ -389,18 +414,27 @@ static void PrintJsonDocimpleDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 static void PrintJsonDocTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs)
 {
 	fprintf(src, "\t\t{\n");
-	fprintf(src, "\t\t\t\"typeName\" : \"%s\",\n", td->definedName);
+	fprintf(src, "\t\t\t\"typeName\" : \"%s\"", td->definedName);
 
 	asnsequencecomment comment;
 	if (GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment))
 	{
-		fprintf(src, "\t\t\t\"category\" : \"%s\",\n", comment.szCategory);
-		fprintf(src, "\t\t\t\"short\" : \"%s\",\n", comment.szShort);
-		fprintf(src, "\t\t\t\"long\" : \"%s\",\n", comment.szLong);
-		fprintf(src, "\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
+		if (comment.szCategory[0])
+			fprintf(src, ",\n\t\t\t\"category\" : \"%s\"", comment.szCategory);
+		if (comment.szShort[0])
+			fprintf(src, ",\n\t\t\t\"short\" : \"%s\"", comment.szShort);
+		if (comment.szLong[0])
+			fprintf(src, ",\n\t\t\t\"long\" : \"%s\"", comment.szLong);
+		if (comment.i64Deprecated)
+			fprintf(src, ",\n\t\t\t\"deprecated\" : %d", comment.i64Deprecated ? 1 : 0);
 		if (comment.i64Deprecated > 1)
-			fprintf(src, "\t\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
-		fprintf(src, "\t\t\t\"private\" : %d,\n", comment.iPrivate);
+			fprintf(src, ",\n\t\t\t\"deprecated_timestamp\": %lld", comment.i64Deprecated);
+		if (comment.szDeprecated[0])
+			fprintf(src, ",\n\t\t\t\"deprecated_comment\": \"%s\"", comment.szDeprecated);
+		if (comment.i64Added)
+			fprintf(src, ",\n\t\t\t\"added_timestamp\": %lld", comment.i64Added);
+		if(comment.iPrivate)
+			fprintf(src, ",\n\t\t\t\"private\" : %d", comment.iPrivate);
 	}
 
 	switch (td->type->basicType->choiceId)
@@ -441,19 +475,19 @@ static void PrintJsonDocTypeDefCode(FILE* src, ModuleList* mods, Module* m, Type
 			break;
 		case BASICTYPE_IMPORTTYPEREF: /* type references */
 
-			fprintf(src, "\t\t\t\"type\" : \"%s\",\n", "alias");
-			fprintf(src, "\t\t\t\"alias\" : \"%s\"\n", td->type->basicType->a.importTypeRef->typeName);
+			fprintf(src, ",\n\t\t\t\"type\" : \"%s\"", "alias");
+			fprintf(src, ",\n\t\t\t\"alias\" : \"%s\"", td->type->basicType->a.importTypeRef->typeName);
 
 			break;
 		case BASICTYPE_LOCALTYPEREF:
 
-			fprintf(src, "\t\t\t\"type\" : \"%s\",\n", "alias");
-			fprintf(src, "\t\t\t\"alias\" : \"%s\"\n", td->type->basicType->a.localTypeRef->typeName);
+			fprintf(src, ",\n\t\t\t\"type\" : \"%s\"", "alias");
+			fprintf(src, ",\n\t\t\t\"alias\" : \"%s\"", td->type->basicType->a.localTypeRef->typeName);
 
 			break;
 		case BASICTYPE_ANYDEFINEDBY: /* ANY types */
 		case BASICTYPE_ANY:
-			fprintf(src, "// [BASICTYPE_ANY]\n");
+			fprintf(src, "\n// [BASICTYPE_ANY]\n");
 			// PrintCxxAnyDefCode (src, hdr, mods, m, r, td, NULL, td->type);
 			break;
 		case BASICTYPE_CHOICE:
@@ -463,7 +497,7 @@ static void PrintJsonDocTypeDefCode(FILE* src, ModuleList* mods, Module* m, Type
 			PrintJsonDocEnumDefCode(src, mods, m, td, NULL, td->type, novolatilefuncs);
 			break;
 		case BASICTYPE_SET:
-			fprintf(src, "// [BASICTYPE_SET]\n");
+			fprintf(src, "\n// [BASICTYPE_SET]\n");
 			// PrintCxxSetDefCode (src, hdr, mods, m, r, td, NULL, td->type, novolatilefuncs);
 			break;
 		case BASICTYPE_SEQUENCE:
@@ -474,11 +508,11 @@ static void PrintJsonDocTypeDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		case BASICTYPE_UNKNOWN:
 		case BASICTYPE_MACRODEF:
 		case BASICTYPE_MACROTYPE:
-			fprintf(src, "// [SWITCH DO NOTHING]\n");
+			fprintf(src, "\n// [SWITCH DO NOTHING]\n");
 			/* do nothing */
 			break;
 		default:
-			fprintf(src, "// [UNKNOWN TYPE]\n");
+			fprintf(src, "\n// [UNKNOWN TYPE]\n");
 			/* TBD: print error? */
 			break;
 	}
@@ -574,15 +608,22 @@ static int PrintJsonDocOperation(FILE* src, Module* mod, ValueDef* vd)
 		asnoperationcomment comment;
 		if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment))
 		{
-			fprintf(src, "\t\t\t\"category\" : \"%s\",\n", comment.szCategory);
-			if (comment.szShort)
+			if (comment.szCategory[0])
+				fprintf(src, "\t\t\t\"category\" : \"%s\",\n", comment.szCategory);
+			if (comment.szShort[0])
 				fprintf(src, "\t\t\t\"short\" : \"%s\",\n", comment.szShort);
-			if (comment.szLong)
+			if (comment.szLong[0])
 				fprintf(src, "\t\t\t\"long\" : \"%s\",\n", comment.szLong);
-			fprintf(src, "\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
+			if (comment.i64Deprecated)
+				fprintf(src, "\t\t\t\"deprecated\" : %d,\n", comment.i64Deprecated ? 1 : 0);
 			if (comment.i64Deprecated > 1)
-				fprintf(src, "\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
-			fprintf(src, "\t\t\t\"private\" : %d,\n", comment.iPrivate);
+				fprintf(src, "\t\t\t\"deprecated_timestamp\": %lld,\n", comment.i64Deprecated);
+			if (comment.szDeprecated[0])
+				fprintf(src, "\t\t\t\"deprecated_comment\": \"%s\",\n", comment.szDeprecated);
+			if (comment.i64Added)
+				fprintf(src, "\t\t\t\"added_timestamp\": %lld,\n", comment.i64Added);
+			if (comment.iPrivate)
+				fprintf(src, "\t\t\t\"private\" : %d,\n", comment.iPrivate);
 			int opid = vd->value->basicValue->a.integer;
 			fprintf(src, "\t\t\t\"operationid\" : %d,\n", opid);
 		}
@@ -654,19 +695,35 @@ void PrintJsonDocModule(FILE* src, ModuleList* mods, Module* m)
 	asnmodulecomment comment;
 	if (GetModuleComment_UTF8(m->moduleName, &comment))
 	{
-		fprintf(src, ",\n");
-		fprintf(src, "\t\t\"short\": \"%s\",\n", comment.szShort);
-		fprintf(src, "\t\t\"long\": \"%s\",\n", comment.szLong);
-		fprintf(src, "\t\t\"category\" : \"%s\",\n", comment.szCategory);
-		fprintf(src, "\t\t\"deprecated\": %d,\n", comment.i64Deprecated ? 1 : 0);
+		if (comment.szCategory[0])
+			fprintf(src, ",\n\t\t\"category\" : \"%s\"", comment.szCategory);
+		if (comment.szShort[0])
+			fprintf(src, ",\n\t\t\"short\": \"%s\"", comment.szShort);
+		if (comment.szLong[0])
+			fprintf(src, ",\n\t\t\"long\": \"%s\"", comment.szLong);
+		if (comment.i64Deprecated)
+			fprintf(src, ",\n\t\t\"deprecated\": %d", comment.i64Deprecated ? 1 : 0);
 		if (comment.i64Deprecated > 1)
-			fprintf(src, "\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
-		fprintf(src, "\t\t\"private\": %d\n", comment.iPrivate);
+			fprintf(src, ",\n\t\t\"deprecated_timestamp\": %lld", comment.i64Deprecated);
+		if (comment.szDeprecated[0])
+			fprintf(src, ",\n\t\t\"deprecated_comment\": \"%s\"", comment.szDeprecated);
+		if (comment.i64Added)
+			fprintf(src, ",\n\t\t\"added_timestamp\": %lld", comment.i64Added);
+		if (comment.iPrivate)
+			fprintf(src, ",\n\t\t\"private\": %d", comment.iPrivate);
 	}
-	else
-		fprintf(src, "\n");
+	if (gMajorInterfaceVersion >= 0) {
 
-	fprintf(src, "\t},\n");
+		fprintf(src, ",\n\t\t\"version\": {");
+		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
+		fprintf(src, "\n\t\t\t\"lastChange\": \"%s\"", ConvertUnixTimeToISO(lMinorModuleVersion));
+		fprintf(src, ",\n\t\t\t\"majorVersion\": %i", gMajorInterfaceVersion);
+		fprintf(src, ",\n\t\t\t\"minorVersion\": %lld", lMinorModuleVersion);
+		fprintf(src, ",\n\t\t\t\"version\": \"%i.%lld.0\"", gMajorInterfaceVersion, lMinorModuleVersion);
+		fprintf(src, "\n\t\t}");
+	}
+
+	fprintf(src, "\n\t},\n");
 }
 
 void PrintJsonDocImports(FILE* src, ModuleList* mods, Module* m)
@@ -701,7 +758,7 @@ void PrintJsonDocImports(FILE* src, ModuleList* mods, Module* m)
 				FOR_EACH_LIST_ELMT(impElmt, impMod->importElmts)
 				{
 					/*
-					if (strcmp(impElmt->name, "AsnOptionalParameters") == 0
+					if (strcmp(impElmt->name, "AsnoptionalParameters") == 0
 						|| strcmp(impElmt->name, "UTF8StringList") == 0
 						|| strcmp(impElmt->name, "SEQInteger") == 0
 						|| strcmp(impElmt->name, "AsnContactIDs") == 0
@@ -756,14 +813,13 @@ void PrintJsonDocTypeDefinitions(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t]\n");
 }
 
-void PrintJsonDocCode(FILE* src, ModuleList* mods, Module* m)
+void PrintJsonDocCodeOne(FILE* src, ModuleList* mods, Module* m)
 {
 	// Top Open
 	fprintf(src, "{\n");
 
 	PrintJsonDocModule(src, mods, m);
 
-	// Includes
 	PrintJsonDocImports(src, mods, m);
 
 	PrintJsonDocOperations(src, m);
@@ -772,6 +828,64 @@ void PrintJsonDocCode(FILE* src, ModuleList* mods, Module* m)
 
 	fprintf(src, "}\n");
 
-} /* PrintJsonDocCode */
+} /* PrintJsonDocCodeOne */
+
+
+void PrintJsonDocCode(ModuleList* allMods) {
+	Module* currMod;
+	AsnListNode* saveMods;
+	FILE* srcFilePtr;
+	// FILE		*hdrInterfaceFilePtr;
+	// FILE		*hdrForwardDecl;
+	DefinedObj* fNames;
+	int fNameConflict = FALSE;
+
+	/*
+	 * Make names for each module's encoder/decoder src and hdr files
+	 * so import references can be made via include files
+	 * check for truncation --> name conflicts & exit if nec
+	 */
+	fNames = NewObjList();
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		currMod->jsFileName = MakeJsonDocFileName(currMod->baseFileName);
+
+		if (ObjIsDefined(fNames, currMod->jsFileName, StrObjCmp))
+		{
+			fprintf(errFileG, "Ack! ERROR---file name conflict for generated swift file with name `%s'.\n\n", currMod->jsFileName);
+			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
+			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
+			fprintf(errFileG, "This error can also be caused by 2 modules having the same name but different OBJECT IDENTIFIERs.");
+			fprintf(errFileG, "Try renaming the modules to correct this.\n");
+			fNameConflict = TRUE;
+		}
+		else
+		{
+			DefineObj(&fNames, currMod->jsFileName);
+		}
+
+		if (fNameConflict)
+			return;
+
+		FreeDefinedObjs(&fNames);
+	}
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+			if (fopen_s(&srcFilePtr, currMod->jsFileName, "wt") != 0 || srcFilePtr == NULL)
+			{
+				perror("fopen");
+			}
+			else
+			{
+				saveMods = allMods->curr;
+				PrintJsonDocCodeOne(srcFilePtr, allMods, currMod);
+				allMods->curr = saveMods;
+				fclose(srcFilePtr);
+			}
+		}
+	}
+}
 
 /* EOF gen-code.c (for back-ends/TS-gen) */

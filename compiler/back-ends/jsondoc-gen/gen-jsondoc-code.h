@@ -19,6 +19,6 @@
 #include "../../core/asn1module.h"
 #include "../../core/snacc-util.h"
 
-void PrintJsonDocCode(FILE* src, ModuleList* mods, Module* m);
+void PrintJsonDocCode(ModuleList* allMods);
 
 #endif // JSONDOCGENCODE_H_INCLUDED

@@ -4761,7 +4761,7 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 		fprintf(hdr, "#define %s_MODULE_LASTCHANGE = \"%s\"\n", szModuleNameUpper, ConvertUnixTimeToISO(lMinorModuleVersion));
 		fprintf(hdr, "#define %s_MODULE_MAJOR_VERSION = %i\n", szModuleNameUpper, gMajorInterfaceVersion);
 		fprintf(hdr, "#define %s_MODULE_MINOR_VERSION = %lld\n", szModuleNameUpper, lMinorModuleVersion);
-		fprintf(hdr, "#define %s_MODULE_VERSION = \"%i.%lld\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, lMinorModuleVersion);
+		fprintf(hdr, "#define %s_MODULE_VERSION = \"%i.%lld.0\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, lMinorModuleVersion);
 	}
 
 	if (genCodeCPPPrintStdAfxInclude)

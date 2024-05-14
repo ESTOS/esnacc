@@ -281,8 +281,8 @@ extern "C"
 				pcomment->szShort = comment.strShort_UTF8.c_str();
 				pcomment->szLinkedType = comment.strLinkedType_UTF8.c_str();
 				pcomment->iPrivate = comment.iPrivate;
-				pcomment->i64Deprecated = comment.i64Deprecated;
 				pcomment->i64Added = comment.i64Added;
+				pcomment->i64Deprecated = comment.i64Deprecated;
 				pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 				return 1;
 			}
