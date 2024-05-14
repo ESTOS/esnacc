@@ -592,13 +592,6 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						gPrivateSymbols = 0;
 						currArg++;
 					}
-					else if (strncmp(argument + 1, "node", 4) == 0)
-					{
-						gNodeVersion = atoi(argument + 6);
-						if (gNodeVersion == 0)
-							goto error;
-						currArg++;
-					}
 					else if (strncmp(argument + 1, "nodeprecated", 12) == 0)
 					{
 						// Shortest time would be -nodeprecated:1.1.2000 = + 9 charachters
@@ -625,6 +618,13 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						{
 							gi64NoDeprecatedSymbols = 1;
 						}
+						currArg++;
+					}
+					else if (strncmp(argument + 1, "node", 4) == 0)
+					{
+						gNodeVersion = atoi(argument + 6);
+						if (gNodeVersion == 0)
+							goto error;
 						currArg++;
 					}
 					else if (strcmp(argument + 1, "novolat") == 0)
