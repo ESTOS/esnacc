@@ -409,7 +409,7 @@ int EAsnStackElementFile::ProcessLine(const char* szModuleName, std::string& szL
 		if (strBegin == "BEGIN")
 		{
 			EAsnStackElementModule* el = new EAsnStackElementModule(m_pParser);
-			el->SetProperties(m_strModuleName.c_str(), m_strModuleName.c_str(), m_CollectComments);
+			el->SetModuleProperties(m_strModuleName.c_str(), m_strModuleName.c_str(), m_CollectComments);
 
 			m_CollectComments.clear();
 
@@ -427,7 +427,7 @@ int EAsnStackElementFile::ProcessLine(const char* szModuleName, std::string& szL
 	return 0;
 }
 
-void EAsnStackElementModule::SetProperties(const char* szTypeName, const char* szCategory, std::list<std::string>& listComments)
+void EAsnStackElementModule::SetModuleProperties(const char* szTypeName, const char* szCategory, std::list<std::string>& listComments)
 {
 	m_ModuleComment.strTypeName_UTF8 = szTypeName;
 	m_ModuleComment.strCategory_UTF8 = szCategory;
@@ -538,7 +538,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		else if (strBasicType1 == "SEQUENCE" && (strBasicType2 == "" || strBasicType2 == "{"))
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
+			el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
 
 			m_pParser->m_stack.push_back(el);
 
@@ -548,7 +548,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		else if (strBasicType1 == "ENUMERATED" && (strBasicType2 == "" || strBasicType2 == "{"))
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
+			el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
 
 			m_pParser->m_stack.push_back(el);
 
@@ -558,7 +558,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		else if (strBasicType1 == "BIT" && strBasicType2 == "STRING")
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
+			el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
 
 			m_pParser->m_stack.push_back(el);
 
@@ -568,7 +568,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		else if (strBasicType1 == "CHOICE" && (strBasicType2 == "" || strBasicType2 == "{"))
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
+			el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
 
 			m_pParser->m_stack.push_back(el);
 
@@ -605,7 +605,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		if (iterTokens != tokens.end() && *iterTokens == "OPERATION")
 		{
 			EAsnStackElementOperation* el = new EAsnStackElementOperation(m_pParser);
-			el->SetProperties(strType.c_str(), &m_ModuleComment, m_CollectComments);
+			el->SetOperationProperties(strType.c_str(), &m_ModuleComment, m_CollectComments);
 
 			m_pParser->m_stack.push_back(el);
 
@@ -623,13 +623,14 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 	return 0;
 }
 
-void EAsnStackElementSequence::SetProperties(bool bOpenBracket, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments)
+void EAsnStackElementSequence::SetSequenceProperties(bool bOpenBracket, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments)
 {
 	bOpenBracketFound = bOpenBracket;
 	m_comment.strTypeName_UTF8 = szTypeName;
 	m_comment.strCategory_UTF8 = pmodcomment->strCategory_UTF8;
 	m_comment.iPrivate = pmodcomment->iPrivate;
 	m_comment.i64Deprecated = pmodcomment->i64Deprecated;
+	m_comment.i64Added = pmodcomment->i64Added;
 	m_pmodcomment = pmodcomment;
 	convertCommentList(listComments, &m_comment);
 }
@@ -710,7 +711,7 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 			{
 				std::string strType = m_comment.strTypeName_UTF8 + "Seq";
 				EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-				el->SetProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
+				el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
 
 				m_pParser->m_stack.push_back(el);
 
@@ -721,7 +722,7 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 			{
 				std::string strType = m_comment.strTypeName_UTF8 + "Enum";
 				EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-				el->SetProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
+				el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
 
 				m_pParser->m_stack.push_back(el);
 
@@ -732,7 +733,7 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 			{
 				std::string strType = m_comment.strTypeName_UTF8 + "Choice";
 				EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-				el->SetProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
+				el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
 
 				m_pParser->m_stack.push_back(el);
 
@@ -784,13 +785,13 @@ int EAsnStackElementSequenceOf::ProcessLine(const char* szModuleName, std::strin
 	return 0;
 }
 
-void EAsnStackElementOperation::SetProperties(const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments)
+void EAsnStackElementOperation::SetOperationProperties(const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments)
 {
 	m_comment.strTypeName_UTF8 = szTypeName;
 	m_comment.strCategory_UTF8 = pmodcomment->strCategory_UTF8;
 	m_comment.iPrivate = pmodcomment->iPrivate;
 	m_comment.i64Deprecated = pmodcomment->i64Deprecated;
-
+	m_comment.i64Added = pmodcomment->i64Added;
 	convertCommentList(listComments, &m_comment);
 }
 

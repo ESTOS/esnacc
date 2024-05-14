@@ -183,11 +183,11 @@ void PrintOpenApiSequence(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 		if (comment.i64Deprecated)
 			fprintf(src, "### Deprecated \\n%d\\n", comment.i64Deprecated ? 1 : 0);
 		if (comment.i64Deprecated > 1)
-			fprintf(src, "### Deprecated_starting \\n%lld\\n", comment.i64Deprecated);
+			fprintf(src, "### deprecated_timestamp \\n%lld\\n", comment.i64Deprecated);
 		if (comment.szDeprecated[0])
 			fprintf(src, "### Deprecated_comment \\n%s\\n", comment.szDeprecated);
 		if (comment.i64Added)
-			fprintf(src, "### Added_starting \\n%lld\\n", comment.i64Added);
+			fprintf(src, "### added_timestamp \\n%lld\\n", comment.i64Added);
 		fprintf(src, "### Private \\n%d\"", comment.iPrivate);
 	}
 
@@ -680,7 +680,7 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 		fprintf(src, "\t\t\"category\": \"%s\",\n", comment.szCategory);
 		fprintf(src, "\t\t\"deprecated\": %d,\n", comment.i64Deprecated ? 1 : 0);
 		if (comment.i64Deprecated > 1)
-			fprintf(src, "\t\t\"deprecated_starting\": %lld,\n", comment.i64Deprecated);
+			fprintf(src, "\t\t\"deprecated_timestamp\": %lld,\n", comment.i64Deprecated);
 		fprintf(src, "\t\t\"private\": %d\n", comment.iPrivate);
 		*/
 	}

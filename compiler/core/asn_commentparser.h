@@ -176,7 +176,7 @@ public:
 
 	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
 
-	void SetProperties(const char* szTypeName, const char* szCategory, std::list<std::string>& listComments);
+	void SetModuleProperties(const char* szTypeName, const char* szCategory, std::list<std::string>& listComments);
 
 private:
 	bool m_bWaitForSemiColon = false;
@@ -200,7 +200,7 @@ public:
 	//{ has been found
 	bool bOpenBracketFound = false;
 
-	void SetProperties(bool bOpenBracket, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
+	void SetSequenceProperties(bool bOpenBracket, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
 
 	// collected comments during parsing
 	std::list<std::string> m_CollectComments;
@@ -237,7 +237,7 @@ public:
 
 	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
 
-	void SetProperties(const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
+	void SetOperationProperties(const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
 
 private:
 	EOperationComment m_comment;
