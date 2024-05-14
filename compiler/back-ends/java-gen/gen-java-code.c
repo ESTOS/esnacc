@@ -765,7 +765,7 @@ void PrintJAVACode(ModuleList* allMods)
 			fprintf(src, "\tpublic static final lastChange = \"%s\"\n", ConvertUnixTimeToISO(lMaxMinorVersion));
 			fprintf(src, "\tpublic static final majorVersion = %i\n", gMajorInterfaceVersion);
 			fprintf(src, "\tpublic static final minorVersion = %lld\n", lMaxMinorVersion);
-			fprintf(src, "\tpublic static final version = \"%i.%lld\"\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			fprintf(src, "\tpublic static final version = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMaxMinorVersion);
 			fprintf(src, "}\n");
 			fclose(src);
 		}
@@ -815,7 +815,7 @@ void PrintJAVACodeOneModule(ModuleList* mods, Module* m)
 			fprintf(src, "\tpublic static final lastChange = \"%s\"\n", ConvertUnixTimeToISO(lMinorModuleVersion));
 			fprintf(src, "\tpublic static final majorVersion = %i\n", gMajorInterfaceVersion);
 			fprintf(src, "\tpublic static final minorVersion = %lld\n", lMinorModuleVersion);
-			fprintf(src, "\tpublic static final version = \"%i.%lld\"\n", gMajorInterfaceVersion, lMinorModuleVersion);
+			fprintf(src, "\tpublic static final version = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMinorModuleVersion);
 			fprintf(src, "}\n");
 			fclose(src);
 		}

@@ -12,7 +12,7 @@ SnaccModuleVersion::SnaccModuleVersion(const char* szModuleName, const int iMajo
 	m_i64MinorVersion = lMinorVersion;
 
 	char szBuffer[100] = {0};
-	sprintf_s(szBuffer, 100, "%i.%lld", iMajorVersion, lMinorVersion);
+	sprintf_s(szBuffer, 100, "%i.%lld.0", iMajorVersion, lMinorVersion);
 	m_strFullVersion = szBuffer;
 }
 
