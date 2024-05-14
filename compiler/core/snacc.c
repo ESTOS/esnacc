@@ -369,6 +369,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		return 1;
 	}
 
+#ifndef _WIN32
+	/**
+	 * Ensure that time values are parsed as UTC and not using any other time zone
+	 */
+	setenv("TZ", "UTC", 1);
+	tzset();
+#endif
+
 	/*
 	 * parse cmd line args
 	 */

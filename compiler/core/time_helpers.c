@@ -98,6 +98,7 @@ long long ConvertDateToUnixTime(const char* szDate)
 	}
 #else
 	struct tm tm;
+	memset(&tm, 0x00, sizeof(tm));
 
 	switch (format)
 	{

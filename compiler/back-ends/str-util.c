@@ -566,7 +566,11 @@ char* MakeROSEHdrForwardDeclFileName(const char* refName)
 
 const char* RemovePath(const char* refName)
 {
+#ifdef _WIN32
 	const char* szFileNameWithoutPath = strrchr(refName, '\\');
+#else
+	const char* szFileNameWithoutPath = strrchr(refName, '/');
+#endif
 	if (szFileNameWithoutPath)
 		szFileNameWithoutPath++;
 	else
@@ -576,7 +580,11 @@ const char* RemovePath(const char* refName)
 
 char* RemovePathNonConst(char* refName)
 {
+#ifdef _WIN32
 	char* szFileNameWithoutPath = strrchr(refName, '\\');
+#else
+	char* szFileNameWithoutPath = strrchr(refName, '/');
+#endif
 	if (szFileNameWithoutPath)
 		szFileNameWithoutPath++;
 	else

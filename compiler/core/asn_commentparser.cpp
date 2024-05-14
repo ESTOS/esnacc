@@ -66,7 +66,7 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine)
 	{
 		// Okay, let's see if this is timestamp value...
 		std::string strDate = strComment.substr(0, pos);
-		long long i64UnixTime = ConvertDateToUnixTime(strDate.c_str());
+		long long i64UnixTime = ConvertDateToUnixTime(trim(strDate).c_str());
 		if (i64UnixTime > 0)
 		{
 			i64Deprecated = i64UnixTime;
@@ -85,7 +85,7 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine)
 
 void EAdded::handleAdded(const std::string& strParsedLine)
 {
-	i64Added = ConvertDateToUnixTime(strParsedLine.c_str());
+	i64Added = ConvertDateToUnixTime(trim(strParsedLine).c_str());
 	if (i64Added == 0)
 		fprintf(stderr, "WARNING - @added flag is missing a timestamp. You need to add a timestamp to an @added flag in order to create a proper interface version");
 }
