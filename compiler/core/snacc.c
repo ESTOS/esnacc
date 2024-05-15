@@ -1985,7 +1985,7 @@ void CreateNames(ModuleList* allMods)
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
 		currMod->baseFilePath = MakeBaseFileName(currMod->asn1SrcFileName);
-		currMod->baseFileName = RemovePath(currMod->baseFilePath);
+		currMod->baseFileName = RemovePathNonConst(currMod->baseFilePath);
 		currMod->moduleName = MakeModuleName(currMod->baseFilePath);
 		currMod->ROSEClassName = MakeROSEClassName(currMod->baseFilePath);
 		currMod->cHdrFileName = MakeCHdrFileName(currMod->baseFilePath);
