@@ -848,7 +848,7 @@ void PrintJsonDocCode(ModuleList* allMods) {
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		currMod->jsFileName = MakeJsonDocFileName(currMod->baseFileName);
+		currMod->jsFileName = MakeJsonDocFileName(currMod->baseFilePath);
 
 		if (ObjIsDefined(fNames, currMod->jsFileName, StrObjCmp))
 		{

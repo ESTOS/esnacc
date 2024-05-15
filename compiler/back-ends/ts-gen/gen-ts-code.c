@@ -913,7 +913,7 @@ void PrintTSComments(FILE* src, Module* m)
 	fprintf(src, "// prettier-ignore\n");
 	fprintf(src, ESLINT_DISABLE);
 
-	printModuleComment(src, RemovePath(m->baseFileName), COMMENTSTYLE_TYPESCRIPT);
+	printModuleComment(src, RemovePath(m->baseFilePath), COMMENTSTYLE_TYPESCRIPT);
 }
 
 void PrintTSCodeOne(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printTSONEncDec, int novolatilefuncs)
@@ -1000,7 +1000,7 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 
 		FOR_EACH_LIST_ELMT(currMod, allMods)
 		{
-			strings[iCount] = MakeFileNameWithoutOutputPath(currMod->baseFileName, "");
+			strings[iCount] = MakeFileNameWithoutOutputPath(currMod->baseFilePath, "");
 			iCount++;
 		}
 

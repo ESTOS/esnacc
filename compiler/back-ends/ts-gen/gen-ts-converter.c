@@ -43,7 +43,7 @@ void PrintTSConverterImports(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "import { ConverterError, ConverterErrorType, ConverterErrors, TSConverter, IDecodeContext, IEncodeContext, INamedType } from \"./%s%s\";\n", "TSConverterBase", getCommonJSFileExtension());
 
 	// Our own data structure file is not in the imports
-	fprintf(src, "import * as %s from \"./%s%s\";\n", GetNameSpace(mod), mod->moduleName, getCommonJSFileExtension());
+	fprintf(src, "import * as %s from \"./%s%s\";\n", GetNameSpace(mod), mod->baseFileName, getCommonJSFileExtension());
 	if (strcmp(mod->modId->name, "UC-Server-Access-Protocol-Common") == 0)
 		fprintf(src, "import { EAsnOptionalParametersConverter } from \"./TSOptionalParamConverter%s\";\n", getCommonJSFileExtension());
 

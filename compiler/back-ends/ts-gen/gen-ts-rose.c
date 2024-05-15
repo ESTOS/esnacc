@@ -19,9 +19,9 @@ void PrintTSROSEHeader(FILE* src, Module* m, const bool bInterface)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "/**\n");
 	if (bInterface)
-		fprintf(src, " * %sROSE_Interface\n", RemovePath(m->baseFileName));
+		fprintf(src, " * %sROSE_Interface\n", RemovePath(m->baseFilePath));
 	else
-		fprintf(src, " * %sROSE\n", RemovePath(m->baseFileName));
+		fprintf(src, " * %sROSE\n", RemovePath(m->baseFilePath));
 
 	if (bInterface)
 		fprintf(src, " * \"%s\" ASN.1 interfaces.\n", m->modId->name);
@@ -375,7 +375,7 @@ void PrintTSROSEServerCopyPasteInterface(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "/* Copy paste code for the import statement\n");
 	fprintf(src, "import { IReceiveInvokeContext } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
 	fprintf(src, "import * as ENetUC_Common from \"./ENetUC_Common%s\";\n", getCommonJSFileExtension());
-	fprintf(src, "import { %s } from \"./%s%s\";\n", GetNameSpace(m), RemovePath(m->baseFileName), getCommonJSFileExtension());
+	fprintf(src, "import { %s } from \"./%s%s\";\n", GetNameSpace(m), RemovePath(m->baseFilePath), getCommonJSFileExtension());
 	fprintf(src, "*/\n");
 
 	fprintf(src, "\n/**\n");
@@ -438,7 +438,7 @@ void PrintTSROSEConstructor(FILE* src, Module* m)
 
 	fprintf(src, "\n\t\tthis.logFilter = [");
 
-	const char* szBaseName = RemovePath(m->baseFileName);
+	const char* szBaseName = RemovePath(m->baseFilePath);
 	const char* szFilter = GetFirstModuleLogFileFilter(szBaseName);
 	if (szFilter)
 	{

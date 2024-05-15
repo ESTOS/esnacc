@@ -807,7 +807,7 @@ void PrintJAVACodeOneModule(ModuleList* mods, Module* m)
 {
 	if (gMajorInterfaceVersion >= 0)
 	{
-		FILE* src = getJavaFilePointer(m->baseFileName);
+		FILE* src = getJavaFilePointer(m->baseFilePath);
 		if (src)
 		{
 			long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
