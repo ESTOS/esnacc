@@ -1726,7 +1726,7 @@ void GenOpenApiCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		currMod->jsFileName = MakeJsonDocFileName(currMod->baseFileName);
+		currMod->jsFileName = MakeJsonDocFileName(currMod->baseFilePath);
 
 		if (ObjIsDefined(fNames, currMod->jsFileName, StrObjCmp))
 		{
@@ -1984,26 +1984,27 @@ void CreateNames(ModuleList* allMods)
 	Module* currMod;
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		currMod->baseFileName = MakeBaseFileName(currMod->asn1SrcFileName);
-		currMod->moduleName = MakeModuleName(currMod->baseFileName);
-		currMod->ROSEClassName = MakeROSEClassName(currMod->baseFileName);
-		currMod->cHdrFileName = MakeCHdrFileName(currMod->baseFileName);
-		currMod->cSrcFileName = MakeCSrcFileName(currMod->baseFileName);
-		currMod->cxxHdrFileName = MakeCxxHdrFileName(currMod->baseFileName);
-		currMod->cxxSrcFileName = MakeCxxSrcFileName(currMod->baseFileName);
-		currMod->swiftFileName = MakeSwiftFileName(currMod->baseFileName);
-		currMod->jsFileName = MakeJSFileName(currMod->baseFileName);
-		currMod->tsFileName = MakeTSFileName(currMod->baseFileName);
-		currMod->tsConverterFileName = MakeTSEncDecFileName(currMod->baseFileName);
-		currMod->idlFileName = MakeIDLFileName(currMod->baseFileName);
-		currMod->delphiFileName = MakeDelphiFileName(currMod->baseFileName);
-		currMod->ROSEHdrFileName = MakeROSEHdrFileName(currMod->baseFileName);
-		currMod->ROSESrcFileName = MakeROSESrcFileName(currMod->baseFileName);
-		currMod->ROSESrcCSFileName = MakeROSESrcCSFileName(currMod->baseFileName);
-		currMod->ROSEHdrInterfaceFileName = MakeROSEHdrInterfaceFileName(currMod->baseFileName);
-		currMod->ROSEHdrForwardDeclFileName = MakeROSEHdrForwardDeclFileName(currMod->baseFileName);
-		currMod->ROSESrcJAVAFileName = MakeROSESrcJAVAFileName(currMod->baseFileName);
-		currMod->ROSESwiftInterfaceFileName = MakeROSESwiftInterfaceFileName(currMod->baseFileName);
+		currMod->baseFilePath = MakeBaseFileName(currMod->asn1SrcFileName);
+		currMod->baseFileName = RemovePathNonConst(currMod->baseFilePath);
+		currMod->moduleName = MakeModuleName(currMod->baseFilePath);
+		currMod->ROSEClassName = MakeROSEClassName(currMod->baseFilePath);
+		currMod->cHdrFileName = MakeCHdrFileName(currMod->baseFilePath);
+		currMod->cSrcFileName = MakeCSrcFileName(currMod->baseFilePath);
+		currMod->cxxHdrFileName = MakeCxxHdrFileName(currMod->baseFilePath);
+		currMod->cxxSrcFileName = MakeCxxSrcFileName(currMod->baseFilePath);
+		currMod->swiftFileName = MakeSwiftFileName(currMod->baseFilePath);
+		currMod->jsFileName = MakeJSFileName(currMod->baseFilePath);
+		currMod->tsFileName = MakeTSFileName(currMod->baseFilePath);
+		currMod->tsConverterFileName = MakeTSEncDecFileName(currMod->baseFilePath);
+		currMod->idlFileName = MakeIDLFileName(currMod->baseFilePath);
+		currMod->delphiFileName = MakeDelphiFileName(currMod->baseFilePath);
+		currMod->ROSEHdrFileName = MakeROSEHdrFileName(currMod->baseFilePath);
+		currMod->ROSESrcFileName = MakeROSESrcFileName(currMod->baseFilePath);
+		currMod->ROSESrcCSFileName = MakeROSESrcCSFileName(currMod->baseFilePath);
+		currMod->ROSEHdrInterfaceFileName = MakeROSEHdrInterfaceFileName(currMod->baseFilePath);
+		currMod->ROSEHdrForwardDeclFileName = MakeROSEHdrForwardDeclFileName(currMod->baseFilePath);
+		currMod->ROSESrcJAVAFileName = MakeROSESrcJAVAFileName(currMod->baseFilePath);
+		currMod->ROSESwiftInterfaceFileName = MakeROSESwiftInterfaceFileName(currMod->baseFilePath);
 	}
 }
 

@@ -51,9 +51,6 @@ RemoveBracesLLVM: true
 # Pointer and reference always next to the type int*, std::wstring& strData
 PointerAlignment: Left
 
-# Constructor intialisierer
-BreakConstructorInitializers: BeforeComma
-
 # No unreadable single liners
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortBlocksOnASingleLine: false

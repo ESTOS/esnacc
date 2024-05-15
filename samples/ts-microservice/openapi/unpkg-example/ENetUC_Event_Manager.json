@@ -75,7 +75,7 @@
 			},
 			"AsnCreateFancyEventsArgument": {
 				"type": "object",
-				"description": "### Category \nEvent Manager\n### Short \nArgument to create fancy events on the server side\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
+				"description": "### Category \nEvent Manager\n### Short \nArgument to create fancy events on the server side\n\n### Private \n0",
 				"properties": {
 					"iEventDelay": {
 						"type": "integer"
@@ -91,11 +91,11 @@
 			},
 			"AsnCreateFancyEventsResult": {
 				"type": "object",
-				"description": "### Category \nEvent Manager\n### Short \nResult for the asnCreateFancyEvents method\n\n### Long \n\n### Deprecated \n0\n### Private \n0"
+				"description": "### Category \nEvent Manager\n### Short \nResult for the asnCreateFancyEvents method\n\n### Private \n0"
 			},
 			"AsnFancyEventArgument": {
 				"type": "object",
-				"description": "### Category \nEvent Manager\n### Short \nArgument for the AsnFancyEventArgument method\n\n### Long \n\n### Deprecated \n0\n### Private \n0",
+				"description": "### Category \nEvent Manager\n### Short \nArgument for the AsnFancyEventArgument method\n\n### Private \n0",
 				"properties": {
 					"iEventCounter": {
 						"type": "integer"

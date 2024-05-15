@@ -464,7 +464,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	{
 		asnsequencecomment comment;
 		GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment);
-		fprintf(src, "\t\tTSDeprecatedCallback.deprecatedObject(%lld, moduleName, this);\n", comment.i64Deprecated);
+		fprintf(src, "\t\tTSDeprecatedCallback.deprecatedObject(%lld, MODULE_NAME, this);\n", comment.i64Deprecated);
 	}
 	fprintf(src, "\t\tObject.assign(this, that);\n");
 	fprintf(src, "\t}\n\n");
@@ -913,7 +913,7 @@ void PrintTSComments(FILE* src, Module* m)
 	fprintf(src, "// prettier-ignore\n");
 	fprintf(src, ESLINT_DISABLE);
 
-	printModuleComment(src, RemovePath(m->baseFileName), COMMENTSTYLE_TYPESCRIPT);
+	printModuleComment(src, RemovePath(m->baseFilePath), COMMENTSTYLE_TYPESCRIPT);
 }
 
 void PrintTSCodeOne(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printTSONEncDec, int novolatilefuncs)
@@ -1000,7 +1000,7 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 
 		FOR_EACH_LIST_ELMT(currMod, allMods)
 		{
-			strings[iCount] = MakeFileNameWithoutOutputPath(currMod->baseFileName, "");
+			strings[iCount] = MakeFileNameWithoutOutputPath(currMod->baseFilePath, "");
 			iCount++;
 		}
 

@@ -73,6 +73,6 @@ export interface ISendInvokeContextParams extends IInvokeContextBaseParams {
 	bSendEventSynchronous?: boolean;
 
 	// We technically do not need the operationName in the ROSEInvoke message so adding it is optional
-	// by default the caller  is not sending the operationName as it is not really needed
+	// by default the caller is not sending the operationName as it is not really needed
 	bAddOperationName?: boolean;
 }
