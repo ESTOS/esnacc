@@ -253,7 +253,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				if (target.charAt(target.length - 1) !== "/")
 					target += "/";
 				target += data.invokeContext.operationName;
-				
+
 				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 				// Contains the encoded data for the transport
 				const body = encoded.payLoad;
@@ -295,12 +295,10 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				// The result is handled through the regular methods and completed in the background
 				this.logTransport(encoded.logData, "sendInvoke", "out", data.invokeContext);
 				this.fetch(target, requestdata).then(async (response: Response): Promise<boolean> => {
-					if (response.status < 200 || response.status > 299)
-					{
+					if (response.status < 200 || response.status > 299) {
 						const reject = createInvokeReject(data.invoke, response.status, response.statusText);
 						this.onROSEReject(reject, receiveInvokeContext);
-					}
-					else {
+					} else {
 						try {
 							// We received a result (Will this work for BER encoding as well?)
 							let message: Uint8Array | object;

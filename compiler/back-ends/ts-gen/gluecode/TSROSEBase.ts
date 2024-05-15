@@ -128,7 +128,6 @@ export interface ICachedEvent {
  */
 export type EHttpHeaders = IncomingHttpHeaders;
 
-
 /**
  * Base interface for the invoke context
  */
@@ -396,6 +395,7 @@ export interface IASN1Transport {
 	sendEvent(data: IASN1InvokeData): undefined | boolean;
 	registerOperation(oninvokehandler: IInvokeHandler, requesthandler: unknown, operationID: number, operationName: string): void;
 	registerModuleVersion(moduleName: string, majorVersion: number, minorVersion: number): void;
+	getInvokeContextParams(context: Partial<ISendInvokeContextParams> | undefined, operationID: number, operationName: string, event: boolean): ISendInvokeContextParams;
 	getEncodeContext(): EncodeContext;
 	getDecodeContext(): DecodeContext;
 	getNextInvokeID(): number;
@@ -704,11 +704,14 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param operationName - the operation Name that has been called
 	 * @param argumentConverter - the converter for the argument object into the different encodings
 	 * @param event - true, in case we are encoding an event, false for a regular invoke
-	 * @param context - the invokeContext which has already been prefilled with session related details
+	 * @param contextParams - the invokeContext which has already been prefilled with session related details
 	 * @returns undefined on success or an AsnInvokeProblem on error
 	 */
-	private encodeInvoke(argument: object, operationID: number, operationName: string, argumentConverter: IConverter, event: boolean, context?: Partial<ISendInvokeContext>): AsnInvokeProblem | IASN1InvokeData {
-		// The root ROSE message
+	private encodeInvoke(argument: object, operationID: number, operationName: string, argumentConverter: IConverter, event: boolean, contextParams?: Partial<ISendInvokeContext>): AsnInvokeProblem | IASN1InvokeData {
+		// Callback into the transport to get customized invokeContextParams
+		const context = this.transport.getInvokeContextParams(contextParams, operationID, operationName, event);
+
+		// The root ROSE message which is now fille with it´s own parameters
 		const message = new ROSEMessage();
 		const sessionID = this.transport.getSessionID();
 		const invokeID = event ? 99999 : this.transport.getNextInvokeID();
@@ -716,10 +719,10 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			invokeID,
 			...(sessionID && { sessionID }),
 			operationID,
-			...(context && context?.bAddOperationName && { operationName })
+			...(context.bAddOperationName && { operationName })
 		});
 
-		const encoding = context?.encoding || this.transport.getEncoding(context?.clientConnectionID);
+		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
 		const invokeContext = new SendInvokeContext({
 			...context,
 			encoding,
@@ -736,7 +739,6 @@ export abstract class ROSEBase implements IASN1LogCallback {
 
 		const converterErrors = new ConverterErrors();
 
-		let invokePayLoad: object | asn1ts.Sequence;
 		const encodeContext = this.transport.getEncodeContext();
 		{
 			// Encode the embedded invoke argument

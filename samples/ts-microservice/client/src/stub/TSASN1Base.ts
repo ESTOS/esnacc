@@ -11,8 +11,8 @@ import * as ENetUC_Common from "./ENetUC_Common";
 import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
 import { ROSEMessage_Converter } from "./SNACCROSE_Converter";
 import { DecodeContext, ConverterErrors, EncodeContext } from "./TSConverterBase";
-import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, ReceiveInvokeContext } from "./TSROSEBase";
-import { EASN1TransportEncoding } from "./TSInvokeContext";
+import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, ReceiveInvokeContext, SendInvokeContext } from "./TSROSEBase";
+import { EASN1TransportEncoding, ISendInvokeContextParams } from "./TSInvokeContext";
 
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
@@ -352,7 +352,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			majorVersion,
 			minorVersion,
 			version: `${majorVersion}.${minorVersion}`
-		}
+		};
 		this.moduleVersionsByName.set(moduleName, versionInformation);
 	}
 
@@ -375,12 +375,12 @@ export abstract class TSASN1Base implements IASN1Transport {
 		let module: IModuleVersionInformation | undefined;
 		let majorVersion = -1;
 		let minorVersion = -1;
-		for(const mod of this.moduleVersionsByName.values()) {
-			if(mod.majorVersion > majorVersion) {
+		for (const mod of this.moduleVersionsByName.values()) {
+			if (mod.majorVersion > majorVersion) {
 				majorVersion = mod.majorVersion;
 				minorVersion = mod.minorVersion;
 				module = mod;
-			} else if(mod.majorVersion == majorVersion && mod.minorVersion > minorVersion) {
+			} else if (mod.majorVersion == majorVersion && mod.minorVersion > minorVersion) {
 				majorVersion = mod.majorVersion;
 				minorVersion = mod.minorVersion;
 				module = mod;
@@ -502,7 +502,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 		const errors = new ConverterErrors();
 		const encoding = invokeContext.encoding;
 		let message = asn1Decode<ROSEMessage>(rawData, ROSEMessage_Converter, errors, this.getDecodeContext(), invokeContext);
-		
+
 		if (!message && invokeContext.url && this.instanceType === ASN1ClassInstanceType.TSASN1Server) {
 			// If the message was not decodable check if a URL was specified (rest like request), and if we are on the server side
 			// We allow HTTP POST requests without a ROSE envelop
@@ -512,7 +512,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			else
 				message = result;
 		}
-	
+
 		if (message) {
 			// Special for a websocket connection where we have just detected the encoding (for the first time)
 			// In case the handling method creates events, we need to set the encoding now so the handling finds the proper encoding when
@@ -604,7 +604,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 		const handler = this.handlersByName.get(operationName);
 		if (!handler) {
 			const payLoad = ROSEBase.getDebugPayload(rawData);
-			this.log(ELogSeverity.error, "There is no registered handler for this operation", "receive", this, { payLoad, errors, url: invokeContext.url, operationName});
+			this.log(ELogSeverity.error, "There is no registered handler for this operation", "receive", this, { payLoad, errors, url: invokeContext.url, operationName });
 			const result = createInvokeReject(0, InvokeProblemenum.unrecognisedOperation, "There is no registered handler for this operation");
 			return this.handleResult(result, invokeContext);
 		}
@@ -617,9 +617,9 @@ export abstract class TSASN1Base implements IASN1Transport {
 			else if (Object.keys(rawData).length === 0)
 				bEncodingFromHeader = true;
 			if (bEncodingFromHeader) {
-				let contentType = invokeContext.headers["content-type"]
+				let contentType = invokeContext.headers["content-type"];
 				if (!contentType)
-					contentType = invokeContext.headers.accept
+					contentType = invokeContext.headers.accept;
 				if (contentType) {
 					contentType = contentType.toLowerCase();
 					if (contentType === "application/octet-stream")
@@ -630,8 +630,6 @@ export abstract class TSASN1Base implements IASN1Transport {
 			}
 		}
 
-
-
 		// If we found an operationName and an associated handler for it we now need to create a matching ROSE envelop for the handling of the request
 		const message = new ROSEMessage({
 			invoke: new ROSEInvoke({
@@ -639,7 +637,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 				operationID: handler.operationID,
 				argument: rawData
 			})
-		})
+		});
 
 		return message;
 	}
@@ -686,9 +684,9 @@ export abstract class TSASN1Base implements IASN1Transport {
 			resultValue = 200;
 		else if (resultValue <= 200 || resultValue >= 600)
 			resultValue = 500;
-	
+
 		// Encode the ROSE message with the embedded result object
-		let encoded: object | asn1ts.Sequence | undefined = undefined;
+		let encoded: object | asn1ts.Sequence | undefined;
 
 		const encodeContext = this.getEncodeContext();
 		if (!invokeContext.noROSEEnvelop) {
@@ -762,6 +760,20 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
+	 * Getter for the invoke context
+	 * Allows to intercept the context that the caller has (oprovided
+	 *
+	 * @param context - the context the caller has provided with an invoke or event
+	 * @param operationID - the operation ID that has been called
+	 * @param operationName - the operation Name that has been called
+	 * @param event - true, in case we are encoding an event, false for a regular invoke
+	 * @returns - an updated context
+	 */
+	public getInvokeContextParams(context: Partial<ISendInvokeContextParams> | undefined, operationID: number, operationName: string, event: boolean): ISendInvokeContextParams {
+		return { ...context };
+	}
+
+	/**
 	 * Retrieves the next invokeID
 	 *
 	 * @returns - the incremented invokeID to be used for the next invoke
@@ -775,7 +787,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 
 	/**
 	 * Combines the logdata based on the callback and the context
-	 * 
+	 *
 	 * @param callback - the callback that provides additional contextual data
 	 * @param context - the context that is passed along with an invoke
 	 */
@@ -786,7 +798,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 				clientConnectionID: context.clientConnectionID,
 				invokeID: context.invokeID
 			}
-		}
+		};
 	}
 
 	/**
