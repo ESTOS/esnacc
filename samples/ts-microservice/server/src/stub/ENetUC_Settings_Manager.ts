@@ -151,7 +151,7 @@ export class AsnSetSettingsResult {
  */
 export class AsnGetSettingsArgumentOld {
 	public constructor(that?: AsnGetSettingsArgumentOld) {
-		TSDeprecatedCallback.deprecatedObject(1714953600, moduleName, this);
+		TSDeprecatedCallback.deprecatedObject(1714953600, MODULE_NAME, this);
 		Object.assign(this, that);
 	}
 
@@ -265,7 +265,7 @@ export class AsnSetSettingsArgument {
  */
 export class AsnGetSettingsResultOld {
 	public constructor(that: AsnGetSettingsResultOld) {
-		TSDeprecatedCallback.deprecatedObject(1714953600, moduleName, this);
+		TSDeprecatedCallback.deprecatedObject(1714953600, MODULE_NAME, this);
 		Object.assign(this, that);
 	}
 

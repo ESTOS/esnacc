@@ -9,7 +9,7 @@ import { ENetUC_Common, ENetUC_Settings_Manager } from "../stub/types";
 /**
  * This module implements the settings class that allows to get and set settings and creates events for settings that have changed
  */
-export class SettingsManager implements IENetUC_Settings_ManagerROSE_Invoke_Handler {
+export class SettingsManager implements Partial<IENetUC_Settings_ManagerROSE_Invoke_Handler> {
 	/** Interface to call the other side */
 	private rose: ENetUC_Settings_ManagerROSE;
 
