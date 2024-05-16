@@ -1,6 +1,8 @@
 #include "SnaccModuleVersions.h"
 #include "asn-config.h"
 
+std::map<std::string, SnaccModuleVersion> SnaccModuleVersions::m_ModuleVersions;
+
 SnaccModuleVersion::SnaccModuleVersion()
 {
 }
