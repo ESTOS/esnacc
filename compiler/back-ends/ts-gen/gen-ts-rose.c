@@ -154,7 +154,7 @@ bool PrintTSROSEOperationDefine(FILE* src, Module* m, ValueDef* v)
 void PrintTSROSEOperationDefines(FILE* src, Module* mod, ValueDefList* defs)
 {
 	fprintf(src, "\n// [%s]\n", __FUNCTION__);
-	fprintf(src, "enum OperationIDs {\n");
+	fprintf(src, "export enum OperationIDs {\n");
 	bool bElementAdded = false;
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, defs)
