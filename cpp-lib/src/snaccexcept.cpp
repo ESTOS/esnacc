@@ -25,7 +25,6 @@ SnaccException::SnaccException(long errorCode) noexcept
 
 SnaccException::SnaccException(const char* file, long line_number, const char* function, const char* whatStrIn, long errorCode) noexcept
 {
-
 	memset(&stack[0], 0, sizeof(CallStack) * STACK_DEPTH);
 
 	try
@@ -110,8 +109,7 @@ void SnaccException::getCallStack(std::ostream& os) const
 	}
 }
 
-FileException::FileException(const char* filename, enum FileErrType errType, const char* file, long line_number, const char* function) noexcept
-	: SnaccException(file, line_number, function, NULL, FILE_IO_ERROR)
+FileException::FileException(const char* filename, enum FileErrType errType, const char* file, long line_number, const char* function) noexcept : SnaccException(file, line_number, function, NULL, FILE_IO_ERROR)
 {
 	switch (errType)
 	{
@@ -136,8 +134,7 @@ const char* FileException::what() const noexcept
 	return &whatStr[0];
 }
 
-MemoryException::MemoryException(long memorySize, const char* variable, const char* file, long line_number, const char* function) noexcept
-	: SnaccException(file, line_number, function, "MemoryException", MEMORY_ERROR)
+MemoryException::MemoryException(long memorySize, const char* variable, const char* file, long line_number, const char* function) noexcept : SnaccException(file, line_number, function, "MemoryException", MEMORY_ERROR)
 {
 	sprintf_s(memoryInfo, 128, "Error allocating %ld bytes for ", memorySize);
 	int memUsed = (int)strlen(memoryInfo);
@@ -153,8 +150,7 @@ const char* MemoryException::what() const noexcept
 	return &memoryInfo[0];
 }
 
-InvalidTagException::InvalidTagException(const char* type, long tagId, const char* file, long line_number, const char* function) noexcept
-	: SnaccException(file, line_number, function, "InvalidTagException", INVALID_TAG)
+InvalidTagException::InvalidTagException(const char* type, long tagId, const char* file, long line_number, const char* function) noexcept : SnaccException(file, line_number, function, "InvalidTagException", INVALID_TAG)
 {
 	sprintf_s(wrongTagInfo, 128, "Tag [%ld] is invalid for type ", tagId);
 	int memUsed = (int)strlen(wrongTagInfo);
@@ -165,8 +161,7 @@ InvalidTagException::InvalidTagException(const char* type, long tagId, const cha
 	wrongTagInfo[memUsed + len2copy] = '\0';
 }
 
-InvalidTagException::InvalidTagException(const char* type, const char* elementName, const char* file, long line_number, const char* function) noexcept
-	: SnaccException(file, line_number, function, "InvalidTagException", INVALID_TAG)
+InvalidTagException::InvalidTagException(const char* type, const char* elementName, const char* file, long line_number, const char* function) noexcept : SnaccException(file, line_number, function, "InvalidTagException", INVALID_TAG)
 {
 	sprintf_s(wrongTagInfo, 128, "Json Error [%s] in ", elementName);
 	int memUsed = (int)strlen(wrongTagInfo);

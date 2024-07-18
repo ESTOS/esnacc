@@ -380,7 +380,7 @@ AsnLen AsnAny::PEnc(AsnBufBits& b) const
 		tmpAnyLoadOcts.Set((const char*)pBits, lAnyByteCount);
 		delete[] pBits;
 		lLength = tmpAnyLoadOcts.PEnc(b);
-	}						 // IF value
+	} // IF value
 	else if (anyBuf != NULL) // HANDLE the case with just a BLOB of data.
 	{
 		anyBuf->ResetMode();
@@ -392,7 +392,7 @@ AsnLen AsnAny::PEnc(AsnBufBits& b) const
 			lLength = tmpAnyLoadOcts.PEnc(b); // BIT count returned.
 			delete[] ptr;
 		} // END IF any data in ANY.
-	}	  // IF value/anyBuf
+	} // IF value/anyBuf
 	else
 		throw EXCEPT("Unknown any with no value", ENCODE_ERROR);
 
@@ -432,9 +432,9 @@ void AsnAny::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 				value->PDec(tmpBufBits, tmpBitsDecoded);
 				// DECODE actual known value.
 			} // END IF tmpBitsDecoded
-		}	  // END IF value == NULL
-	}		  // IF ai != NULL
-	else	  // JUST load BLOB of data in "anyBuf"
+		} // END IF value == NULL
+	} // IF ai != NULL
+	else // JUST load BLOB of data in "anyBuf"
 	{
 		tmpAnyLoadOcts.PDec(b, bitsDecoded); // OUTER OctetString
 		// OUTER "bitsDecoded" returned to caller.
@@ -444,7 +444,7 @@ void AsnAny::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 				delete this->anyBuf;
 			this->anyBuf = new AsnBuf((char*)tmpAnyLoadOcts.c_str(), tmpAnyLoadOcts.length());
 		} // END IF any data in ANY.
-	}	  // END IF ai != NULL
+	} // END IF ai != NULL
 } // END AsnAny::PDec(...)
 
 void AsnAny::JEnc(SJson::Value& b) const

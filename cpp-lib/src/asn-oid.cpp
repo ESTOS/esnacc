@@ -21,15 +21,13 @@
 
 _BEGIN_SNACC_NAMESPACE
 
-AsnOid::AsnOid()
-	: AsnRelativeOid()
+AsnOid::AsnOid() : AsnRelativeOid()
 {
 	m_isRelative = false;
 	Set("0.0");
 }
 
-AsnOid::AsnOid(const char* pszOID)
-	: AsnRelativeOid()
+AsnOid::AsnOid(const char* pszOID) : AsnRelativeOid()
 {
 	m_isRelative = false;
 	Set(pszOID);

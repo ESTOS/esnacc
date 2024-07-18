@@ -150,7 +150,6 @@ Table* InitHash()
  */
 static int SplitAndInsert(HashSlot* entry, void* element, Hash hash_value)
 {
-
 	if (((entry->table = NewTable()) == NULL) || !Insert(entry->table, entry->value, entry->hash >> INDEXSHIFT) || !Insert(entry->table, element, hash_value >> INDEXSHIFT))
 		return false;
 

@@ -318,7 +318,6 @@ AsnLen AsnString::Interpret(AsnBufBits& b, long offset) const
 
 AsnString& AsnString::operator=(const char* str)
 {
-
 	if (str == NULL)
 		erase();
 	else
@@ -497,7 +496,6 @@ void AsnString::PrintXML(std::ostream& os, const char* lpszTitle) const
 void AsnString::BDecConsString(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded)
 
 {
-
 	FUNC("AsnString::BDecConsString()");
 
 	AsnLen totalElmtsLen = 0;
@@ -509,7 +507,6 @@ void AsnString::BDecConsString(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDec
 
 		if ((innerTag == EOC_TAG_ID) && (elmtLen == INDEFINITE_LEN))
 		{
-
 			BDEC_2ND_EOC_OCTET(b, totalElmtsLen);
 
 			break;
@@ -547,13 +544,11 @@ WideAsnString::WideAsnString()
 {
 }
 
-WideAsnString::WideAsnString(const wchar_t* szUTF16)
-	: std::wstring(szUTF16)
+WideAsnString::WideAsnString(const wchar_t* szUTF16) : std::wstring(szUTF16)
 {
 }
 
-WideAsnString::WideAsnString(const std::wstring& strUTF16)
-	: std::wstring(strUTF16)
+WideAsnString::WideAsnString(const std::wstring& strUTF16) : std::wstring(strUTF16)
 {
 }
 
@@ -843,7 +838,6 @@ AsnLen WideAsnString::Interpret(AsnBufBits& b, long offset) const
 
 const char* WideAsnString::checkStringTypPermittedAlpha(const char* permittedAlphabet, long permittedAlphabetSize) const
 {
-
 	char* pError = NULL;
 	const char* cstr;
 	int found = 0;
@@ -1002,7 +996,6 @@ char* WideAsnString::checkStringTypSize(unsigned int m_LowerSize, unsigned int m
 
 const char* AsnString::checkStringTypPermittedAlpha(const char* permittedAlphabet, long permittedAlphabetSize) const
 {
-
 	const char* pError = NULL;
 	const char* cstr;
 	int found = 0;
@@ -1307,13 +1300,11 @@ UTF8String::UTF8String()
 {
 }
 
-UTF8String::UTF8String(const wchar_t* szUTF16)
-	: WideAsnString(szUTF16)
+UTF8String::UTF8String(const wchar_t* szUTF16) : WideAsnString(szUTF16)
 {
 }
 
-UTF8String::UTF8String(const std::wstring& strUTF16)
-	: WideAsnString(strUTF16)
+UTF8String::UTF8String(const std::wstring& strUTF16) : WideAsnString(strUTF16)
 {
 }
 

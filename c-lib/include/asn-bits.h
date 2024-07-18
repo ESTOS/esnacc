@@ -61,7 +61,7 @@ extern "C"
 	void PrintAsnBits PROTO((FILE * f, AsnBits* b, unsigned int indent));
 
 	/* Utility routines */
-#define TO_HEX(fourBits) (numToHexCharTblG[(fourBits)&0x0f])
+#define TO_HEX(fourBits) (numToHexCharTblG[(fourBits) & 0x0f])
 
 #define ASNBITS_PRESENT(abits) ((abits)->bits != NULL)
 

@@ -239,7 +239,6 @@ namespace SNACC
 	//
 	class SNACCDLL_API AsnRvsBuf : public std::streambuf
 	{
-
 	public:
 		AsnRvsBuf(char* preFilled, size_t segSize);
 		AsnRvsBuf(const char* seg, size_t segSize);

@@ -144,43 +144,37 @@ private:
 class SNACCDLL_API BoundsException : public SnaccException
 {
 public:
-	BoundsException(const char* whatStr, const char* file, long line_number, const char* function) noexcept
-		: SnaccException(file, line_number, function, whatStr, BOUNDS_ERROR){};
+	BoundsException(const char* whatStr, const char* file, long line_number, const char* function) noexcept : SnaccException(file, line_number, function, whatStr, BOUNDS_ERROR) {};
 };
 
 class SNACCDLL_API DecodeException : public SnaccException
 {
 public:
-	DecodeException(const char* file, long line_number, const char* function) noexcept
-		: SnaccException(file, line_number, function, "Decode past end of data", DECODE_ERROR){};
+	DecodeException(const char* file, long line_number, const char* function) noexcept : SnaccException(file, line_number, function, "Decode past end of data", DECODE_ERROR) {};
 };
 
 class SNACCDLL_API ParameterException : public SnaccException
 {
 public:
-	ParameterException(const char* whatStr, const char* file, long line_number, const char* function) noexcept
-		: SnaccException(file, line_number, function, whatStr, PARAMETER_ERROR){};
+	ParameterException(const char* whatStr, const char* file, long line_number, const char* function) noexcept : SnaccException(file, line_number, function, whatStr, PARAMETER_ERROR) {};
 };
 
 class SNACCDLL_API OidException : public SnaccException
 {
 public:
-	OidException(const char* whatStr, const char* file, long line_number, const char* function) noexcept
-		: SnaccException(file, line_number, function, whatStr, OID_ERROR){};
+	OidException(const char* whatStr, const char* file, long line_number, const char* function) noexcept : SnaccException(file, line_number, function, whatStr, OID_ERROR) {};
 };
 
 class SNACCDLL_API BufferException : public SnaccException
 {
 public:
-	BufferException(const char* whatStr, const char* file, long line_number, const char* function) noexcept
-		: SnaccException(file, line_number, function, whatStr, BUFFER_ERROR){};
+	BufferException(const char* whatStr, const char* file, long line_number, const char* function) noexcept : SnaccException(file, line_number, function, whatStr, BUFFER_ERROR) {};
 };
 
 class SNACCDLL_API ConstraintException : public SnaccException
 {
 public:
-	ConstraintException(const char* whatStr, const char* file, long line_number, const char* function) noexcept
-		: SnaccException(file, line_number, function, whatStr, CONSTRAINT_ERROR){};
+	ConstraintException(const char* whatStr, const char* file, long line_number, const char* function) noexcept : SnaccException(file, line_number, function, whatStr, CONSTRAINT_ERROR) {};
 };
 
 _END_SNACC_NAMESPACE

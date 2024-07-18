@@ -129,7 +129,6 @@ AsnLen SNACC::PEncTag(AsnBufBits& b, unsigned char ucClass, unsigned char form, 
 			b.PutBits((unsigned char*)&code, 8);
 		else // MUST be 3, 4, or 5
 		{
-
 			if (lByteCount >= 5)
 			{
 				ucChar = (unsigned char)(0x80 | (unsigned char)((code) >> 21));

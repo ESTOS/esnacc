@@ -223,7 +223,6 @@ AsnLen BDecLen(const AsnBuf& b, AsnLen& bytesDecoded)
  */
 AsnLen BEncEoc(AsnBuf& b)
 {
-
 	b.PutByteRvs(0);
 	b.PutByteRvs(0);
 	return 2;

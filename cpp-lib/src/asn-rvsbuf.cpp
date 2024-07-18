@@ -4,7 +4,6 @@ using namespace SNACC;
 
 AsnRvsBuf::AsnRvsBuf(char* preFilled, size_t segSize)
 {
-
 	m_segSize = (long)segSize;
 	m_buf = preFilled;
 	m_bDeleteable = false;
@@ -14,7 +13,6 @@ AsnRvsBuf::AsnRvsBuf(char* preFilled, size_t segSize)
 
 AsnRvsBuf::AsnRvsBuf(const char* seg, size_t segSize)
 {
-
 	m_segSize = (long)segSize;
 	m_buf = new char[segSize];
 	m_bDeleteable = true;
@@ -48,7 +46,6 @@ AsnRvsBuf::AsnRvsBuf(const AsnBuf& otherBuf)
 
 AsnRvsBuf::AsnRvsBuf(long segSize)
 {
-
 	m_segSize = segSize;
 	m_buf = new char[segSize];
 	m_bDeleteable = true;

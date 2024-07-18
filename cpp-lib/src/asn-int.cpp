@@ -483,7 +483,6 @@ AsnInt::AsnInt(AsnIntType val)
 
 AsnInt::AsnInt(const char* str, bool unsignedFlag)
 {
-
 	char radix = 0;
 	unsigned int length = (unsigned int)strlen(str);
 	unsigned int i = 0;
@@ -1299,7 +1298,6 @@ AsnLen AsnInt::PEnc(AsnBufBits& b) const
 /*PER encoding of an semi-constrained integer*/
 AsnLen AsnInt::PEncSemiConstrained(AsnBufBits& b, long lowerBound) const
 {
-
 	FUNC("AsnInt::PEnc(...Semi-Constrained Int...)");
 
 	AsnLen len = 0;
