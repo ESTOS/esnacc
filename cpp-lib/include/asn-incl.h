@@ -147,6 +147,7 @@ typedef enum BER_UNIV_CODE
  * tag has the constructed bit set.
  */
 #define TAG_IS_CONS(tag) ((tag) & (CONS << ((TB - 1) * 8)))
+#define TAG_IS_CNTX(tag) ((tag) & (CNTX << ((TB - 1) * 8)))
 
 #define EOC_TAG_ID 0
 
