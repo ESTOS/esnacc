@@ -18,6 +18,7 @@ UseTab: Always
 # Constructor und initializer should follow the same rules
 BreakInheritanceList: AfterColon
 BreakConstructorInitializers: AfterColon
+PackConstructorInitializers: Never
 
 # public private protected always moved left for clearer visibility
 AccessModifierOffset: -4

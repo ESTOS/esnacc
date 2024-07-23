@@ -544,11 +544,13 @@ WideAsnString::WideAsnString()
 {
 }
 
-WideAsnString::WideAsnString(const wchar_t* szUTF16) : std::wstring(szUTF16)
+WideAsnString::WideAsnString(const wchar_t* szUTF16) :
+	std::wstring(szUTF16)
 {
 }
 
-WideAsnString::WideAsnString(const std::wstring& strUTF16) : std::wstring(strUTF16)
+WideAsnString::WideAsnString(const std::wstring& strUTF16) :
+	std::wstring(strUTF16)
 {
 }
 
@@ -1300,11 +1302,13 @@ UTF8String::UTF8String()
 {
 }
 
-UTF8String::UTF8String(const wchar_t* szUTF16) : WideAsnString(szUTF16)
+UTF8String::UTF8String(const wchar_t* szUTF16) :
+	WideAsnString(szUTF16)
 {
 }
 
-UTF8String::UTF8String(const std::wstring& strUTF16) : WideAsnString(strUTF16)
+UTF8String::UTF8String(const std::wstring& strUTF16) :
+	WideAsnString(strUTF16)
 {
 }
 
