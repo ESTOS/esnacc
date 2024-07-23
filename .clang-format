@@ -16,8 +16,8 @@ TabWidth: 4
 UseTab: Always
 
 # Constructor und initializer should follow the same rules
-BreakInheritanceList: AfterColon
-BreakConstructorInitializers: AfterColon
+BreakInheritanceList: BeforeColon
+BreakConstructorInitializers: BeforeColon
 PackConstructorInitializers: Never
 
 # public private protected always moved left for clearer visibility

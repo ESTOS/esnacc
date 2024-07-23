@@ -135,8 +135,8 @@ public:
 		insequence
 	} m_state = undef;
 
-	EAsnStackElement(EAsnCommentParser* pParser) :
-		m_pParser(pParser)
+	EAsnStackElement(EAsnCommentParser* pParser)
+		: m_pParser(pParser)
 	{
 	}
 	virtual ~EAsnStackElement()
@@ -150,8 +150,8 @@ public:
 class EAsnStackElementFile : public EAsnStackElement
 {
 public:
-	EAsnStackElementFile(EAsnCommentParser* pParser, const char* szModuleName) :
-		EAsnStackElement(pParser)
+	EAsnStackElementFile(EAsnCommentParser* pParser, const char* szModuleName)
+		: EAsnStackElement(pParser)
 	{
 		m_state = infile;
 		m_strModuleName = szModuleName;
@@ -168,8 +168,8 @@ private:
 class EAsnStackElementModule : public EAsnStackElement
 {
 public:
-	EAsnStackElementModule(EAsnCommentParser* pParser) :
-		EAsnStackElement(pParser)
+	EAsnStackElementModule(EAsnCommentParser* pParser)
+		: EAsnStackElement(pParser)
 	{
 		m_state = inmodule;
 	}
@@ -188,8 +188,8 @@ private:
 class EAsnStackElementSequence : public EAsnStackElement
 {
 public:
-	EAsnStackElementSequence(EAsnCommentParser* pParser) :
-		EAsnStackElement(pParser)
+	EAsnStackElementSequence(EAsnCommentParser* pParser)
+		: EAsnStackElement(pParser)
 	{
 		m_state = insequence;
 		m_pmodcomment = 0;
@@ -212,8 +212,8 @@ public:
 class EAsnStackElementSequenceOf : public EAsnStackElement
 {
 public:
-	EAsnStackElementSequenceOf(EAsnCommentParser* pParser) :
-		EAsnStackElement(pParser)
+	EAsnStackElementSequenceOf(EAsnCommentParser* pParser)
+		: EAsnStackElement(pParser)
 	{
 		m_state = insequence;
 	}
@@ -229,8 +229,8 @@ public:
 class EAsnStackElementOperation : public EAsnStackElement
 {
 public:
-	EAsnStackElementOperation(EAsnCommentParser* pParser) :
-		EAsnStackElement(pParser)
+	EAsnStackElementOperation(EAsnCommentParser* pParser)
+		: EAsnStackElement(pParser)
 	{
 		m_state = insequence;
 	}

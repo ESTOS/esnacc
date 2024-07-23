@@ -605,16 +605,16 @@ public:
 	AsnStringOcts()
 	{
 	}
-	AsnStringOcts(const char* str) :
-		AsnOcts(str)
+	AsnStringOcts(const char* str)
+		: AsnOcts(str)
 	{
 	}
-	AsnStringOcts(const char* str, const size_t len) :
-		AsnOcts(str, len)
+	AsnStringOcts(const char* str, const size_t len)
+		: AsnOcts(str, len)
 	{
 	}
-	AsnStringOcts(const AsnStringOcts& o) :
-		AsnOcts(o)
+	AsnStringOcts(const AsnStringOcts& o)
+		: AsnOcts(o)
 	{
 	}
 	virtual ~AsnStringOcts()
@@ -937,8 +937,8 @@ public:
 template <typename T = int> class SNACCDLL_API AsnEnum : public AsnInt
 {
 public:
-	AsnEnum(T val) :
-		AsnInt((int)val)
+	AsnEnum(T val)
+		: AsnInt((int)val)
 	{
 	}
 
@@ -1102,12 +1102,12 @@ protected:
 	double value;
 
 public:
-	AsnReal() :
-		value(0.0)
+	AsnReal()
+		: value(0.0)
 	{
 	}
-	AsnReal(double val) :
-		value(val)
+	AsnReal(double val)
+		: value(val)
 	{
 	}
 
@@ -1166,12 +1166,12 @@ extern const AsnReal MINUS_INFINITY;
 class SNACCDLL_API AsnSystemTime : public AsnReal
 {
 public:
-	AsnSystemTime() :
-		AsnReal()
+	AsnSystemTime()
+		: AsnReal()
 	{
 	}
-	AsnSystemTime(double val) :
-		AsnReal(val)
+	AsnSystemTime(double val)
+		: AsnReal(val)
 	{
 	}
 
@@ -1321,8 +1321,8 @@ class SNACCDLL_API AsnOid : public AsnRelativeOid
 public:
 	AsnOid();
 	AsnOid(const char* pszOID);
-	AsnOid(const AsnOid& that) :
-		AsnRelativeOid(that)
+	AsnOid(const AsnOid& that)
+		: AsnRelativeOid(that)
 	{
 		m_isRelative = false;
 	}
@@ -1576,12 +1576,12 @@ private:
 class SNACCDLL_API NumericString : public AsnString
 {
 public:
-	NumericString(const char* str = NULL) :
-		AsnString(str)
+	NumericString(const char* str = NULL)
+		: AsnString(str)
 	{
 	}
-	NumericString(const std::string& str) :
-		AsnString(str)
+	NumericString(const std::string& str)
+		: AsnString(str)
 	{
 	}
 
@@ -1619,12 +1619,12 @@ public:
 class SNACCDLL_API PrintableString : public AsnString
 {
 public:
-	PrintableString(const char* str = NULL) :
-		AsnString(str)
+	PrintableString(const char* str = NULL)
+		: AsnString(str)
 	{
 	}
-	PrintableString(const std::string& str) :
-		AsnString(str)
+	PrintableString(const std::string& str)
+		: AsnString(str)
 	{
 	}
 
@@ -1666,12 +1666,12 @@ public:
 class SNACCDLL_API TeletexString : public AsnString
 {
 public:
-	TeletexString(const char* str = NULL) :
-		AsnString(str)
+	TeletexString(const char* str = NULL)
+		: AsnString(str)
 	{
 	}
-	TeletexString(const std::string& str) :
-		AsnString(str)
+	TeletexString(const std::string& str)
+		: AsnString(str)
 	{
 	}
 
@@ -1706,12 +1706,12 @@ typedef TeletexString T61String;
 class SNACCDLL_API VideotexString : public AsnString
 {
 public:
-	VideotexString(const char* str = NULL) :
-		AsnString(str)
+	VideotexString(const char* str = NULL)
+		: AsnString(str)
 	{
 	}
-	VideotexString(const std::string& str) :
-		AsnString(str)
+	VideotexString(const std::string& str)
+		: AsnString(str)
 	{
 	}
 
@@ -1743,12 +1743,12 @@ public:
 class SNACCDLL_API IA5String : public AsnString
 {
 public:
-	IA5String(const char* str = NULL) :
-		AsnString(str)
+	IA5String(const char* str = NULL)
+		: AsnString(str)
 	{
 	}
-	IA5String(const std::string& str) :
-		AsnString(str)
+	IA5String(const std::string& str)
+		: AsnString(str)
 	{
 	}
 
@@ -1789,12 +1789,12 @@ public:
 class SNACCDLL_API GraphicString : public AsnString
 {
 public:
-	GraphicString(const char* str = NULL) :
-		AsnString(str)
+	GraphicString(const char* str = NULL)
+		: AsnString(str)
 	{
 	}
-	GraphicString(const std::string& str) :
-		AsnString(str)
+	GraphicString(const std::string& str)
+		: AsnString(str)
 	{
 	}
 
@@ -1826,12 +1826,12 @@ public:
 class SNACCDLL_API VisibleString : public AsnString
 {
 public:
-	VisibleString(const char* str = NULL) :
-		AsnString(str)
+	VisibleString(const char* str = NULL)
+		: AsnString(str)
 	{
 	}
-	VisibleString(const std::string& str) :
-		AsnString(str)
+	VisibleString(const std::string& str)
+		: AsnString(str)
 	{
 	}
 
@@ -1875,12 +1875,12 @@ typedef VisibleString ISO646String;
 class SNACCDLL_API GeneralString : public AsnString
 {
 public:
-	GeneralString(const char* str = NULL) :
-		AsnString(str)
+	GeneralString(const char* str = NULL)
+		: AsnString(str)
 	{
 	}
-	GeneralString(const std::string& str) :
-		AsnString(str)
+	GeneralString(const std::string& str)
+		: AsnString(str)
 	{
 	}
 
@@ -2022,16 +2022,16 @@ protected:
 class SNACCDLL_API BMPString : public WideAsnString
 {
 public:
-	BMPString(const char* str = NULL) :
-		WideAsnString(str)
+	BMPString(const char* str = NULL)
+		: WideAsnString(str)
 	{
 	}
-	BMPString(const std::string& str) :
-		WideAsnString(str)
+	BMPString(const std::string& str)
+		: WideAsnString(str)
 	{
 	}
-	BMPString(const std::wstring& wstr) :
-		WideAsnString(wstr)
+	BMPString(const std::wstring& wstr)
+		: WideAsnString(wstr)
 	{
 	}
 
@@ -2072,16 +2072,16 @@ public:
 class SNACCDLL_API UniversalString : public WideAsnString
 {
 public:
-	UniversalString(const char* str = NULL) :
-		WideAsnString(str)
+	UniversalString(const char* str = NULL)
+		: WideAsnString(str)
 	{
 	}
-	UniversalString(const std::string& str) :
-		WideAsnString(str)
+	UniversalString(const std::string& str)
+		: WideAsnString(str)
 	{
 	}
-	UniversalString(const std::wstring& wstr) :
-		WideAsnString(wstr)
+	UniversalString(const std::wstring& wstr)
+		: WideAsnString(wstr)
 	{
 	}
 
@@ -2176,12 +2176,12 @@ public:
 class SNACCDLL_API UTCTime : public VisibleString
 {
 public:
-	UTCTime(const char* str = NULL) :
-		VisibleString(str)
+	UTCTime(const char* str = NULL)
+		: VisibleString(str)
 	{
 	}
-	UTCTime(const std::string& str) :
-		VisibleString(str)
+	UTCTime(const std::string& str)
+		: VisibleString(str)
 	{
 	}
 
@@ -2215,12 +2215,12 @@ public:
 class SNACCDLL_API GeneralizedTime : public VisibleString
 {
 public:
-	GeneralizedTime(const char* str = NULL) :
-		VisibleString(str)
+	GeneralizedTime(const char* str = NULL)
+		: VisibleString(str)
 	{
 	}
-	GeneralizedTime(const std::string& str) :
-		VisibleString(str)
+	GeneralizedTime(const std::string& str)
+		: VisibleString(str)
 	{
 	}
 
@@ -2253,12 +2253,12 @@ public:
 class SNACCDLL_API ObjectDescriptor : public GraphicString
 {
 public:
-	ObjectDescriptor(const char* str = NULL) :
-		GraphicString(str)
+	ObjectDescriptor(const char* str = NULL)
+		: GraphicString(str)
 	{
 	}
-	ObjectDescriptor(const std::string& str) :
-		GraphicString(str)
+	ObjectDescriptor(const std::string& str)
+		: GraphicString(str)
 	{
 	}
 
