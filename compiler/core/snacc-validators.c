@@ -359,9 +359,9 @@ bool ValidateArgumentResultErrorAreSequencesOrChoices(ModuleList* allMods)
 					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
 						continue;
 
-					char* pszArgument = NULL;
-					char* pszResult = NULL;
-					char* pszError = NULL;
+					const char* pszArgument = NULL;
+					const char* pszResult = NULL;
+					const char* pszError = NULL;
 					Type* argumentType = NULL;
 					Type* resultType = NULL;
 					Type* errorType = NULL;
@@ -476,18 +476,15 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods)
 					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
 						continue;
 
-					char* pszError = NULL;
+					const char* pszError = NULL;
 					Type* errorType = NULL;
 					if (GetROSEDetails(currMod, vd, NULL, NULL, &pszError, NULL, NULL, &errorType, false))
 					{
 						struct BasicType* errorBasicType = NULL;
-						bool bErrorIssue = false;
 						if (errorType)
 						{
 							errorBasicType = ResolveBasicTypeReferences(errorType->basicType, NULL);
-							if (!errorBasicType)
-								bErrorIssue = true;
-							else
+							if (errorBasicType)
 							{
 								char szBuffer[512] = {0};
 								sprintf_s(szBuffer, 512, "%i:%s", errorBasicType->choiceId, pszError);
@@ -896,8 +893,8 @@ bool ValidateOnlySupportedObjects(ModuleList* allMods)
 			TypeDef* vd;
 			FOR_EACH_LIST_ELMT(vd, currMod->typeDefs)
 			{
-				char szPath[128] = {0};
-				sprintf_s(szPath, 128, "%s ", currMod->asn1SrcFileName);
+				char szPath[_MAX_PATH] = {0};
+				sprintf_s(szPath, _MAX_PATH, "%s ", currMod->asn1SrcFileName);
 				if (recurseFindInvalid(currMod, vd->type, supportedTypes, szPath, vd->definedName))
 					nWeHaveErrors++;
 			}
@@ -930,9 +927,9 @@ bool ValidateProperROSEArguments(ModuleList* allMods)
 					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
 						continue;
 
-					char* pszArgument = NULL;
-					char* pszResult = NULL;
-					char* pszError = NULL;
+					const char* pszArgument = NULL;
+					const char* pszResult = NULL;
+					const char* pszError = NULL;
 					if (GetROSEDetails(currMod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 					{
 						bool bMissingArgument = false;
@@ -989,6 +986,8 @@ bool ValidateOptionals(ModuleList* allMods)
 					continue;
 
 				struct BasicType* type = td->type->basicType;
+				char* szFirstImplicitOptional = NULL;
+				char* szFirstExplicitOptional = NULL;
 				bool bContextSpecific_Implicit_Optional = false;
 				bool bNotContextSpecific_Explicit_Optional = false;
 				if (type->choiceId == BASICTYPE_SEQUENCE)
@@ -997,19 +996,45 @@ bool ValidateOptionals(ModuleList* allMods)
 					NamedType* subType;
 					FOR_EACH_LIST_ELMT(subType, typeList)
 					{
-						if (subType->type->optional)
+						enum BasicTypeChoiceId choice = subType->type->basicType->choiceId;
+
+						if (choice == BASICTYPE_EXTENSION)
+							continue;
+						if (!subType->type->optional)
+							continue;
+
+						bool bIsImplicit = subType->type->implicit;
+
+						if (!bIsImplicit)
 						{
-							if (subType->type->implicit)
+							BasicType* resolvedType = ResolveBasicTypeReferences(subType->type->basicType, NULL);
+							// If the typeref points to a choice or any the implicit flag is not be properly set (seems to be an issue in the yacc bison code)
+							if (resolvedType->choiceId == BASICTYPE_CHOICE || resolvedType->choiceId == BASICTYPE_ANY)
 							{
-								// param2		[0] UTF8String OPTIONAL,
-								bContextSpecific_Implicit_Optional = true;
-							}
-							else
-							{
-								// param2		UTF8String OPTIONAL,
-								bNotContextSpecific_Explicit_Optional = true;
+								// So in this case we look if we have a context ID (which also points out the implicit flag)
+								if (GetContextID(subType->type) >= 0)
+								{
+									// We have a context id, so this is an implicit element
+									bIsImplicit = true;
+								}
 							}
 						}
+
+						if (bIsImplicit)
+						{
+							// param2		[0] UTF8String OPTIONAL,
+							bContextSpecific_Implicit_Optional = true;
+							if (!szFirstImplicitOptional)
+								szFirstImplicitOptional = subType->fieldName;
+						}
+						else
+						{
+							// param2		UTF8String OPTIONAL,
+							bNotContextSpecific_Explicit_Optional = true;
+							if (!szFirstExplicitOptional)
+								szFirstExplicitOptional = subType->fieldName;
+						}
+
 						if (bContextSpecific_Implicit_Optional && bNotContextSpecific_Explicit_Optional)
 							break;
 					}
@@ -1049,7 +1074,7 @@ bool ValidateOptionals(ModuleList* allMods)
 				}
 
 				if (nError & VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS)
-					fprintf(stderr, "- %s contains explicit and implicit optionals, use only implicit (with number)\n", td->definedName);
+					fprintf(stderr, "- %s contains explicit (%s) and implicit (%s) optionals, use only implicit (with number)\n", szFirstExplicitOptional, szFirstImplicitOptional, td->definedName);
 				else if (nError & VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS)
 					fprintf(stderr, "- %s contains explicit optionals, use only implicit (with number)\n", td->definedName);
 

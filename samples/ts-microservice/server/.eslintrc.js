@@ -204,7 +204,7 @@ module.exports = {
 		"jsdoc/require-description": 1,
 		"jsdoc/require-param-type": 0,
 		"jsdoc/require-returns-type": 0,
-		"jsdoc/tag-lines": ["error", "any",{"startLines":1, "endLines":0}],
+		"jsdoc/tag-lines": ["error", "any", {"startLines":1, "tags":{"param":{"lines":"never"}}}],
 		"jsdoc/require-jsdoc": [1, {
 				"require": {
 					"ArrowFunctionExpression": false,
@@ -227,7 +227,7 @@ module.exports = {
 		'no-restricted-syntax': [
 			'error',
 			{
-			  message: "Please don't use initEmpty on SNACC objects. It´s for the ROSE stub only. Always provide all parameters to create SNACC stub objects",
+			  message: "Please don't use initEmpty on SNACC objects. Itï¿½s for the ROSE stub only. Always provide all parameters to create SNACC stub objects",
 			  selector:
 				'MemberExpression > Identifier[name="initEmpty"]'
 			}

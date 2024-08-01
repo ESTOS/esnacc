@@ -2,7 +2,8 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include "../../snacc.h"
+#include "cpp_c_helper.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -19,21 +20,20 @@ INCBIN(BIN_ASN1_SERVER, "compiler/back-ends/ts-gen/gluecode/TSASN1Server.ts");
 INCBIN(BIN_ROSE_BASE, "compiler/back-ends/ts-gen/gluecode/TSROSEBase.ts");
 INCBIN(BIN_SNACCROSE, "compiler/back-ends/ts-gen/gluecode/SNACCROSE.ts");
 INCBIN(BIN_SNACCROSE_CONVERTER, "compiler/back-ends/ts-gen/gluecode/SNACCROSE_Converter.ts");
+INCBIN(BIN_INVOKE_CONTEXT, "compiler/back-ends/ts-gen/gluecode/TSInvokeContext.ts");
 INCBIN(BIN_DEPRECATED_CALLBACK, "compiler/back-ends/ts-gen/gluecode/TSDeprecatedCallback.ts");
+
 INCBIN(BIN_EDELPHI_ASN1_YPES, "compiler/back-ends/delphi-gen/gluecode/DelphiAsn1Types.pas");
 #endif // _WIN32
 
 #ifndef _WIN32
 void SaveIncBinToFile(const unsigned char* szData, const unsigned int size, const char* szFileName)
 {
-	FILE* file = fopen(szFileName, "wb");
-	if (file)
-	{
-		fwrite(szData, 1, size, file);
-		fclose(file);
-	}
+	writeFile( (const char *)szData, size, szFileName, genTSESMCode ? true : false, gNodeVersion);
 }
 #endif
+
+extern int genTSESMCode;
 
 void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 {
@@ -46,14 +46,8 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 		if (hMem)
 		{
 			DWORD size = SizeofResource(hInst, hRes);
-			char* resText = (char*)LockResource(hMem);
-
-			FILE* file = 0;
-			if (fopen_s(&file, szFileName, "wb") == 0 && file)
-			{
-				fwrite(resText, 1, size, file);
-				fclose(file);
-			}
+			const char* buffer = (const char*)LockResource(hMem);
+			writeFile(buffer, size, szFileName, genTSESMCode ? true : false, gNodeVersion);
 			FreeResource(hMem);
 		}
 		else
@@ -101,6 +95,9 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 			break;
 		case ETS_DEPRECATED_CALLBACK:
 			SaveIncBinToFile(gBIN_DEPRECATED_CALLBACKData, gBIN_DEPRECATED_CALLBACKSize, szFileName);
+			break;
+		case ETS_INVOKE_CONTEXT:
+			SaveIncBinToFile(gBIN_INVOKE_CONTEXTData, gBIN_INVOKE_CONTEXTSize, szFileName);
 			break;
 		case EDELPHI_ASN1_TYPES:
 			SaveIncBinToFile(gBIN_EDELPHI_ASN1_YPESData, gBIN_EDELPHI_ASN1_YPESSize, szFileName);

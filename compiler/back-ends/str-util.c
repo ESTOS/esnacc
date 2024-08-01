@@ -202,8 +202,12 @@ void Str2UCase PARAMS((str, len), char* str _AND_ size_t len)
 {
 	size_t i;
 	for (i = 0; i < len; i++)
+	{
+		if (!str[i])
+			break;
 		if (islower(str[i]))
 			str[i] = (char)toupper(str[i]);
+	}
 } /* Str2UCase */
 
 /*
@@ -215,8 +219,12 @@ void Str2LCase PARAMS((str, len), char* str _AND_ size_t len)
 {
 	size_t i;
 	for (i = 0; i < len; i++)
+	{
+		if (!str[i])
+			break;
 		if (isupper(str[i]))
 			str[i] = (char)tolower(str[i]);
+	}
 } /* Str2LCase */
 
 /*
@@ -228,8 +236,31 @@ void Dash2Underscore PARAMS((str, len), char* str _AND_ size_t len)
 {
 	size_t i;
 	for (i = 0; i < len; i++)
-		if (str[i] == '-')
+		if (!str[i])
+			break;
+		else if (str[i] == '-')
 			str[i] = '_';
+} /* Dash2Underscore */
+
+char* Dash2UnderscoreEx(const char* str)
+{
+	if (!str)
+		return NULL;
+
+	size_t len = strlen(str);
+	char* szTarget = malloc(len + 1);
+	if (!szTarget)
+		return NULL;
+
+	memset(&szTarget[0], 0x00, len + 1);
+
+	for (size_t i = 0; i < len; i++)
+		if (str[i] == '-')
+			szTarget[i] = '_';
+		else
+			szTarget[i] = str[i];
+
+	return szTarget;
 } /* Dash2Underscore */
 
 /*
@@ -535,7 +566,11 @@ char* MakeROSEHdrForwardDeclFileName(const char* refName)
 
 const char* RemovePath(const char* refName)
 {
+#ifdef _WIN32
 	const char* szFileNameWithoutPath = strrchr(refName, '\\');
+#else
+	const char* szFileNameWithoutPath = strrchr(refName, '/');
+#endif
 	if (szFileNameWithoutPath)
 		szFileNameWithoutPath++;
 	else
@@ -545,7 +580,11 @@ const char* RemovePath(const char* refName)
 
 char* RemovePathNonConst(char* refName)
 {
+#ifdef _WIN32
 	char* szFileNameWithoutPath = strrchr(refName, '\\');
+#else
+	char* szFileNameWithoutPath = strrchr(refName, '/');
+#endif
 	if (szFileNameWithoutPath)
 		szFileNameWithoutPath++;
 	else

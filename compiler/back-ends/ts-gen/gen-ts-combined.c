@@ -2,6 +2,9 @@
 #include "../../core/snacc-util.h"
 #include "../str-util.h"
 #include "../structure-util.h"
+#include "../../../snacc.h"
+#include "../../core/asn_comments.h"
+#include "../../core/time_helpers.h"
 #include <assert.h>
 #include <string.h>
 
@@ -53,7 +56,16 @@ void PrintTSEscaped(FILE* src, const char* szData)
 void PrintTSRootTypes(FILE* src, Module* mod, const char* szSuffix)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
-	fprintf(src, "export const moduleName = \"%s%s\";\n", mod->moduleName, szSuffix ? szSuffix : "");
+	fprintf(src, "export const MODULE_NAME = \"%s%s\";\n", mod->moduleName, szSuffix ? szSuffix : "");
+
+	if (gMajorInterfaceVersion >= 0)
+	{
+		long long lMinorModuleVersion = GetModuleMinorVersion(mod->moduleName);
+		fprintf(src, "export const MODULE_LASTCHANGE = \"%s\";\n", ConvertUnixTimeToISO(lMinorModuleVersion));
+		fprintf(src, "export const MODULE_MAJOR_VERSION = %i;\n", gMajorInterfaceVersion);
+		fprintf(src, "export const MODULE_MINOR_VERSION = %lld;\n", lMinorModuleVersion);
+		fprintf(src, "export const MODULE_VERSION = \"%i.%lld.0\";\n", gMajorInterfaceVersion, lMinorModuleVersion);
+	}
 }
 
 void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConverters, bool bIncludeasn1ts, bool bIncludeDeprecatedCallback)
@@ -87,7 +99,7 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 			}
 		}
 		if (bContainsDeprecated)
-			fprintf(src, "import { TSDeprecatedCallback } from \"./TSDeprecatedCallback\";\n");
+			fprintf(src, "import { TSDeprecatedCallback } from \"./TSDeprecatedCallback%s\";\n", getCommonJSFileExtension());
 	}
 	if (bIncludeasn1ts)
 		fprintf(src, "import * as asn1ts from \"@estos/asn1ts\";\n");
@@ -107,7 +119,7 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 				if (strstr(szAlreadyAdded, szNameSpace) == NULL)
 				{
 					strcat_s(szAlreadyAdded, 4096, szNameSpace);
-					fprintf(src, "import * as %s from \"./%s\";\n", szNameSpace, referencedModule->moduleName);
+					fprintf(src, "import * as %s from \"./%s%s\";\n", szNameSpace, referencedModule->moduleName, getCommonJSFileExtension());
 				}
 			}
 		}
@@ -125,7 +137,7 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 					{
 						strcat_s(szAlreadyAdded, 4096, szNameSpace);
 						impMod->moduleRef = referencedModule;
-						fprintf(src, "import * as %s_Converter from \"./%s_Converter\";\n", szNameSpace, referencedModule->moduleName);
+						fprintf(src, "import * as %s_Converter from \"./%s_Converter%s\";\n", szNameSpace, referencedModule->moduleName, getCommonJSFileExtension());
 					}
 				}
 			}
@@ -170,6 +182,8 @@ const char* GetBERType(const enum BasicTypeChoiceId basicTypeChoiseId)
 			return "SequenceOf";
 		case BASICTYPE_SEQUENCEOF:
 			return "SetOf";
+		case BASICTYPE_EXTENSION:
+			return "Extension";
 		default:
 			assert(FALSE);
 	}
@@ -177,20 +191,10 @@ const char* GetBERType(const enum BasicTypeChoiceId basicTypeChoiseId)
 	exit(1);
 }
 
-int GetContextID(struct Type* type)
+const char* getCommonJSFileExtension()
 {
-	int iResult = -1;
-	if (type->tags->count)
-	{
-		Tag* pTag = NULL;
-		FOR_EACH_LIST_ELMT(pTag, type->tags)
-		{
-			if (pTag->tclass == CNTX)
-			{
-				iResult = pTag->code;
-				break;
-			}
-		}
-	}
-	return iResult;
+	if (genTSESMCode)
+		return ".js";
+	else
+		return "";
 }

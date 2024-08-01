@@ -7,7 +7,8 @@
 
 import { ROSEError, ROSEReject, ROSEResult } from "./SNACCROSE";
 import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base";
-import { EHttpHeaders, ELogSeverity, IASN1Transport, IDualWebSocket, EDualWebSocketState, IDualWebSocketCloseEvent, ISendInvokeContext, ReceiveInvokeContext, CustomInvokeProblemEnum, EASN1TransportEncoding, createInvokeReject, IASN1InvokeData, ROSEBase, IDualWebSocketMessageEvent } from "./TSROSEBase";
+import { EHttpHeaders, ELogSeverity, IASN1Transport, IDualWebSocket, EDualWebSocketState, IDualWebSocketCloseEvent, ISendInvokeContext, ReceiveInvokeContext, CustomInvokeProblemEnum, createInvokeReject, IASN1InvokeData, ROSEBase, IDualWebSocketMessageEvent } from "./TSROSEBase";
+import { EASN1TransportEncoding } from "./TSInvokeContext";
 import * as ENetUC_Common from "./ENetUC_Common";
 
 export interface IDualWebSocketOptions {
@@ -252,7 +253,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				if (target.charAt(target.length - 1) !== "/")
 					target += "/";
 				target += data.invokeContext.operationName;
-				
+
 				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 				// Contains the encoded data for the transport
 				const body = encoded.payLoad;
@@ -294,19 +295,24 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				// The result is handled through the regular methods and completed in the background
 				this.logTransport(encoded.logData, "sendInvoke", "out", data.invokeContext);
 				this.fetch(target, requestdata).then(async (response: Response): Promise<boolean> => {
-					try {
-						// We received a result (Will this work for BER encoding as well?)
-						let message: Uint8Array | object;
-						if (encoding === EASN1TransportEncoding.BER) {
-							const buffer = await response.arrayBuffer();
-							message = new Uint8Array(buffer);
-						} else
-							message = (await response.json()) as object;
-						await this.receive(message, receiveInvokeContext);
-					} catch (error) {
-						// We received something else -> create reject object and process it
-						const reject = createInvokeReject(data.invoke, CustomInvokeProblemEnum.missingResponse, "Exception while handling server response");
+					if (response.status < 200 || response.status > 299) {
+						const reject = createInvokeReject(data.invoke, response.status, response.statusText);
 						this.onROSEReject(reject, receiveInvokeContext);
+					} else {
+						try {
+							// We received a result (Will this work for BER encoding as well?)
+							let message: Uint8Array | object;
+							if (encoding === EASN1TransportEncoding.BER) {
+								const buffer = await response.arrayBuffer();
+								message = new Uint8Array(buffer);
+							} else
+								message = (await response.json()) as object;
+							await this.receive(message, receiveInvokeContext);
+						} catch (error) {
+							// We received something else -> create reject object and process it
+							const reject = createInvokeReject(data.invoke, CustomInvokeProblemEnum.missingResponse, "Exception while handling server response");
+							this.onROSEReject(reject, receiveInvokeContext);
+						}
 					}
 					return false; // We are not really interested in this result or handle it
 				}).catch((error) => {

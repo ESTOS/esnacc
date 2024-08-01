@@ -203,10 +203,10 @@ public:
 	 *  bFlushEveryWrite - true flushes every write operation (ideal for debugging), false to let the os decide when to flush
 	 *
 	 *  returns NO_ERROR on success (logfile opened, logfile closed, nothing to do) or an error value */
-	int ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend = true, const bool bFlushEveryWrite = false);
+	int ConfigureFileLogging(const LOG_CHARTYPE* szPath, const bool bAppend = true, const bool bFlushEveryWrite = true);
 
 	/* Retrieve the log level - do we need to log something */
-	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) = 0;
+	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) override = 0;
 
 	/*! Writes JSON encoded log messages to the log file
 		bOutbound = true in case the log entry is related to an outbound message
@@ -304,7 +304,7 @@ public:
 	 * pInvokeMessage - the invoke message as provided from the other side
 	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
 	 */
-	long DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument);
+	long DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) override;
 
 protected:
 	// ASN prefix with length prefix to build the JSON message
@@ -343,7 +343,7 @@ protected:
 	 *
 	 * @param pInvokeContext - the context that is about to get deleted
 	 */
-	virtual void OnInvokeContextRunsOutOfScope(SnaccInvokeContext* pInvokeContext){};
+	virtual void OnInvokeContextRunsOutOfScope(SnaccInvokeContext* pInvokeContext) {};
 
 private:
 	/*! The ROSE component messages.

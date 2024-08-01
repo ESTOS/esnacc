@@ -12,6 +12,7 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* m, bool bIncludeConvert
 void PrintTSRootTypes(FILE* src, Module* mod, const char* szSuffix);
 
 const char* GetBERType(const enum BasicTypeChoiceId basicTypeChoiseId);
-int GetContextID(struct Type* type);
+
+const char* getCommonJSFileExtension();
 
 #endif // TSCOMBINED_H_INCLUDED

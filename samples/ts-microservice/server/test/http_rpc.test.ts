@@ -9,7 +9,8 @@ import { AsnGetSettingsArgument_Converter, AsnGetSettingsResult_Converter, AsnSe
 import { ROSEReject } from "../src/stub/SNACCROSE";
 import { ROSEReject_Converter } from "../src/stub/SNACCROSE_Converter";
 import { ConverterErrors, DecodeContext, EncodeContext } from "../src/stub/TSConverterBase";
-import { EASN1TransportEncoding, ROSEBase, asn1Decode, asn1Encode } from "../src/stub/TSROSEBase";
+import { EASN1TransportEncoding } from "../src/stub/TSInvokeContext";
+import { ROSEBase, asn1Decode, asn1Encode } from "../src/stub/TSROSEBase";
 
 const theAxios = axios.default;
 

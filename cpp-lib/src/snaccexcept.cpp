@@ -25,7 +25,6 @@ SnaccException::SnaccException(long errorCode) noexcept
 
 SnaccException::SnaccException(const char* file, long line_number, const char* function, const char* whatStrIn, long errorCode) noexcept
 {
-
 	memset(&stack[0], 0, sizeof(CallStack) * STACK_DEPTH);
 
 	try
@@ -128,7 +127,7 @@ FileException::FileException(const char* filename, enum FileErrType errType, con
 			strcpy_s(whatStr, 512, "Error writing file: ");
 			break;
 	}
-	strcat_s(whatStr, 512, filename);
+	strcat_s(whatStr, 511, filename);
 }
 
 const char* FileException::what() const noexcept

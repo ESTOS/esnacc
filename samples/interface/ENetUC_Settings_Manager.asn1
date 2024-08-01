@@ -15,6 +15,7 @@
 -- Methods:
 -- 		4100 asnGetSettings					- Sample to get settings
 -- 		4101 asnSetSettings					- Sample to set settings
+-- 		4102 asnGetSettingsOld				- Sample for a deprecated flagged method
 
 -- Events:
 -- 		4150 asnSettingsChanged				- An event that the settings have changed
@@ -39,6 +40,7 @@ AsnSomeSettings ::= SEQUENCE
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -- @brief Argument for the asnGetSettings method
+-- @added 06.05.2024
 AsnGetSettingsArgument ::= SEQUENCE
 {
 	...
@@ -47,11 +49,13 @@ AsnGetSettingsArgument ::= SEQUENCE
 -- @brief Result for the asnGetSettings method
 AsnGetSettingsResult ::= SEQUENCE
 {
+	-- @added 06.05.2024
 	settings							AsnSomeSettings,
 	...
 }
 
 -- @brief Method to retrieve settings from the server side
+-- @added 06.05.2024
 asnGetSettings OPERATION
 	ARGUMENT	arg AsnGetSettingsArgument
 	RESULT		res AsnGetSettingsResult
@@ -82,6 +86,33 @@ asnSetSettings OPERATION
 	RESULT		res AsnSetSettingsResult
 	ERRORS		{AsnRequestError}
 ::= 4101
+
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~ FUNCTION ~~~~~~~~~~~~~~~ asnGetSettingsOld ~~~~~~~~~~~~~~~~~~~~~~
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-- @brief Argument for the asnGetSettingsOld method
+-- @deprecated 06.05.2024
+AsnGetSettingsArgumentOld ::= SEQUENCE
+{
+	...
+}
+
+-- @brief Result for the asnGetSettingsOld method
+-- @deprecated 06.05.2024
+AsnGetSettingsResultOld ::= SEQUENCE
+{
+	settings							AsnSomeSettings,
+	...
+}
+
+-- @brief Method to retrieve settings from the server side
+-- @deprecated 06.05.2024
+asnGetSettingsOld OPERATION
+	ARGUMENT	arg AsnGetSettingsArgumentOld
+	RESULT		res AsnGetSettingsResultOld
+	ERRORS		{AsnRequestError}
+::= 4102
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -- ~ EVENT ~~~~~~~~~~~~~~~~~~~~ asnSettingsChanged ~~~~~~~~~~~~~~~~~~~~~~~~

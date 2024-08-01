@@ -89,7 +89,6 @@ void AsnBuf::clear()
 
 void AsnBuf::PutByteRvs(char byte)
 {
-
 	// if empty add an AsnRvsBuf card
 	//
 	if (m_deck.empty())
@@ -389,85 +388,109 @@ char AsnBuf::GetByte() const
 	return (char)ch;
 }
 
-// FUNCTION: GrabAny()
+// FUNCTION: GrabAnyEx()
 // PURPOSE : copy the current sequence of bytes (i.e. Tag Length and associated data)
-//           into AsnBuf that was passed in.  This is useful for copying the raw encoding
+//           into AsnBuf that was passed in. This is useful for copying the raw encoding
 //           of any ANY out of an AsnBuf.
+//			 This method superseeds GrabAny and separates getting the tag and the len from the method
+// - anyBuf - the buffer to copy the data to (the data is the full object including tag, len and payload)
+// - headerLen - the len of the header elements (tag and len)
+// - payloadLen - the len of the payload after tag and len
+// - bytesDecoded - the current position of the reader (behind the header elements)
 //
-void AsnBuf::GrabAny(AsnBuf& anyBuf, AsnLen& bytesDecoded) const
+void AsnBuf::GrabAnyEx(const AsnBuf& anyBuf, AsnLen headerLen, AsnLen payloadLen, AsnLen& bytesDecoded) const
 {
-	FUNC("AsnBuf::GrabAny");
+	FUNC("AsnBuf::GrabAnyEx");
 
-	AsnLen len;
-	AsnLen tmpLen = bytesDecoded;
-	AsnBufLoc readLoc = GetReadLoc();
-	AsnLen lTmpbytesDecoded = 0;
-
-	// Decode tag of the ANY.  This will be encoded into AnyBuf after the length
-	//
-	// TBD: perform some simple check to make sure it's a valid tag.
-	//
-	BDecTag(*this, bytesDecoded);
-
-	// Decode length of the ANY.  This will be encoded into anyBuf after the data.
-	len = BDecLen(*this, bytesDecoded);
-
-	if (len == INDEFINITE_LEN)
+	// Our length
+	auto ourLength = this->length();
+	if (payloadLen == INDEFINITE_LEN)
 	{
 		ConsStringDeck deck(0);
+		AsnLen lTmpbytesDecoded = 0;
 		try
 		{
-			deck.Fill(*this, len, lTmpbytesDecoded);
+			deck.Fill(*this, payloadLen, lTmpbytesDecoded);
 		}
 		catch (... /*std::exception &e*/)
 		{
 			throw BufferException("deck.Fill(...) failed, unexpected exception (STACK?)", STACK_ENTRY);
 		}
-		len = lTmpbytesDecoded;
+		payloadLen = lTmpbytesDecoded;
 	}
-	else if (len > this->length())
+	else if (payloadLen > ourLength)
 	{
 		throw BufferException("len error from BDecLen call", STACK_ENTRY);
 	}
 
-	SetReadLoc(readLoc);
+	// Calculate the full length of the object including tag and len information
+	auto fullLength = headerLen + payloadLen;
 
-	// length is greater than the magic size and
-	// the m_card contains a file then store a
-	// AsnFileSeg object in output buf.
-	//
-	tmpLen = (bytesDecoded - tmpLen) + len;
+	// Reset our position which is currently past tag and header to the position of the tag element
+	UnGetBytes(headerLen);
 
-	/** PIERCE: Commented out until further testing is done
-   if (tmpLen > _MAGIC_SIZE && card().bufType() == FILE_TYPE)
-   {
-	  anyBuf.PutFileSeg(GetFileSeg(tmpLen));
-   }
-   else
-   {
-	  AsnRvsBuf *pRvsBuf = new AsnRvsBuf(tmpLen);
-	  GetSeg(pRvsBuf->m_buf, tmpLen);
-	  pRvsBuf->m_pStart = pRvsBuf->m_buf;
-	  anyBuf.m_card =
-		  anyBuf.m_deck.insert(anyBuf.m_deck.begin(), new Card(pRvsBuf));
-   }
-	**/
-	AsnRvsBuf* pRvsBuf = new AsnRvsBuf(tmpLen);
-	GetSeg(pRvsBuf->m_buf, tmpLen);
+	AsnRvsBuf* pRvsBuf = new AsnRvsBuf(fullLength);
+	GetSeg(pRvsBuf->m_buf, fullLength);
 
 	pRvsBuf->m_pStart = pRvsBuf->m_buf;
 	anyBuf.m_card = anyBuf.m_deck.insert(anyBuf.m_deck.begin(), new Card(pRvsBuf));
-	bytesDecoded += len;
 
-	/*
-	   #ifdef _DEBUG
-		  if (!anyBuf.m_deck.empty())
-		  {
-			 Card *tmpCard = *(anyBuf.m_deck.begin());
-		  (tmpCard);
-		  }
-	   #endif  // _DEBUG
-	*/
+	bytesDecoded += payloadLen;
+}
+
+// FUNCTION: GrabAny()
+// PURPOSE : copy the current sequence of bytes (i.e. Tag Length and associated data)
+//           into AsnBuf that was passed in.  This is useful for copying the raw encoding
+//           of any ANY out of an AsnBuf.
+//
+void AsnBuf::GrabAny(const AsnBuf& anyBuf, AsnLen& bytesDecoded) const
+{
+	FUNC("AsnBuf::GrabAny");
+
+	// Store the len where we are (this is the len of the whole object, including the type tag)
+	AsnLen tmpLen = bytesDecoded;
+	// Store the current reader location to restore it later
+	AsnBufLoc readLoc = GetReadLoc();
+	// Decode tag of the ANY.  This will be encoded into AnyBuf after the length
+	BDecTag(*this, bytesDecoded);
+	// Decode length of the ANY. This will be encoded into anyBuf after the data.
+	AsnLen payloadLen = BDecLen(*this, bytesDecoded);
+	// Length of the header information (tag and len part)
+	AsnLen headerLen = bytesDecoded - tmpLen;
+	// Our length
+	auto ourLength = this->length();
+
+	if (payloadLen == INDEFINITE_LEN)
+	{
+		ConsStringDeck deck(0);
+		AsnLen lTmpbytesDecoded = 0;
+		try
+		{
+			deck.Fill(*this, payloadLen, lTmpbytesDecoded);
+		}
+		catch (... /*std::exception &e*/)
+		{
+			throw BufferException("deck.Fill(...) failed, unexpected exception (STACK?)", STACK_ENTRY);
+		}
+		payloadLen = lTmpbytesDecoded;
+	}
+	else if (payloadLen > ourLength)
+	{
+		throw BufferException("len error from BDecLen call", STACK_ENTRY);
+	}
+
+	// Restore the reader location
+	SetReadLoc(readLoc);
+
+	// Calculate the full length of the object including tag and len information
+	auto fullLength = headerLen + payloadLen;
+
+	AsnRvsBuf* pRvsBuf = new AsnRvsBuf(fullLength);
+	GetSeg(pRvsBuf->m_buf, fullLength);
+
+	pRvsBuf->m_pStart = pRvsBuf->m_buf;
+	anyBuf.m_card = anyBuf.m_deck.insert(anyBuf.m_deck.begin(), new Card(pRvsBuf));
+	bytesDecoded += payloadLen;
 }
 
 char AsnBuf::PeekByte() const
@@ -495,12 +518,6 @@ AsnBufLoc AsnBuf::GetReadLoc() const
 	AsnBufLoc bl;
 	bl.m_card = m_card;
 	bl.m_offset = (long)(*m_card)->rdbuf()->pubseekoff(0, std::ios_base::cur, std::ios_base::in);
-	/*
- #ifdef _DEBUG
-	Card *pCard=*m_card;
-	(pCard);
- #endif
-	*/
 	if (bl.m_offset == -1)
 		bl.m_offset = 0;
 	return bl;
@@ -682,7 +699,6 @@ void AsnBuf::hexDump(std::ostream& os) const
 
 	while (!done)
 	{
-
 		try
 		{
 			ch = GetUByte();
@@ -692,7 +708,6 @@ void AsnBuf::hexDump(std::ostream& os) const
 		}
 		catch (...)
 		{
-
 			os.unsetf(std::ios_base::hex);
 			os.unsetf(std::ios_base::hex);
 			done = true;

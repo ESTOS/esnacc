@@ -55,7 +55,6 @@
 
 extern "C++"
 {
-
 	struct yy_buffer_state;
 	typedef int yy_state_type;
 
@@ -124,7 +123,6 @@ extern "C++"
 
 extern "C++"
 {
-
 	class yyFlexLexer : public FlexLexer
 	{
 	public:

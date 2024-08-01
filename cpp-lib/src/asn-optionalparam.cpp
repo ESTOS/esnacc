@@ -343,7 +343,7 @@ AsnOptionalParamChoice& AsnOptionalParamChoice::operator=(const AsnOptionalParam
 					integerdata = new AsnInt(*that.integerdata);
 					break;
 			} // end of switch
-		}	  // end of if
+		} // end of if
 	}
 
 	return *this;
@@ -351,7 +351,7 @@ AsnOptionalParamChoice& AsnOptionalParamChoice::operator=(const AsnOptionalParam
 
 AsnLen AsnOptionalParamChoice::BEncContent(AsnBuf& _b) const
 {
-	FUNC("AsnOptionalParamChoice::BEncContent (AsnBuf &_b)");
+	FUNC("AsnOptionalParamChoice::BEncContent(AsnBuf &_b)");
 	AsnLen l = 0;
 	switch (choiceId)
 	{

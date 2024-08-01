@@ -6,8 +6,9 @@
 /* eslint-disable */
 
 import { TSASN1Client } from "./TSASN1Client";
-import { EASN1TransportEncoding, ELogSeverity, IDualWebSocket } from "./TSROSEBase";
+import { ELogSeverity, IDualWebSocket } from "./TSROSEBase";
 import { ASN1ClassInstanceType } from "./TSASN1Base";
+import { EASN1TransportEncoding } from "./TSInvokeContext";
 /**
  * The ASN1 client side as required in the browser (different websocket and timer)
  */
@@ -35,8 +36,8 @@ export abstract class TSASN1BrowserClient extends TSASN1Client {
 	protected getWebSocket(address: string): IDualWebSocket | undefined {
 		if (typeof WebSocket !== "undefined")
 			this.socket = new WebSocket(address);
-		else if (typeof window !== "undefined")
-			this.socket = new window.WebSocket(address);
+		else if (typeof self !== "undefined")
+			this.socket = new self.WebSocket(address);
 
 		if (this.socket) {
 			this.socket.onclose = this.onclose.bind(this);
@@ -180,11 +181,11 @@ export abstract class TSASN1BrowserClient extends TSASN1Client {
 	 */
 	protected asn1ClientsetReconnectTimeout(timeout: number): void {
 		if (this.asn1ClientReconnectingTimeout) {
-			window.clearTimeout(this.asn1ClientReconnectingTimeout);
+			self.clearTimeout(this.asn1ClientReconnectingTimeout);
 			this.asn1ClientReconnectingTimeout = undefined;
 		}
 		if (timeout && this.autoreconnect)
-			this.asn1ClientReconnectingTimeout = window.setTimeout(this.asn1ClientReconnect.bind(this), timeout);
+			this.asn1ClientReconnectingTimeout = self.setTimeout(this.asn1ClientReconnect.bind(this), timeout);
 	}
 
 	/**

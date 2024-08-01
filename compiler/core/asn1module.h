@@ -220,7 +220,8 @@ typedef struct Module /* SEQUENCE */
 	MyString jsFileName;						/* MyString */
 	MyString tsFileName;						/* MyString */
 	MyString tsConverterFileName;				/* Filename of the typescript encoder decoders */
-	MyString baseFileName;						/* MyString filename without extension (for ts-gen) */
+	MyString baseFileName;						/* MyString filename without extension */
+	MyString baseFilePath;						/* MyString filepath without extension */
 	MyString delphiFileName;					/* MyString */
 	MyString ROSEHdrFileName;					/* Header for ROSE Handler */
 	MyString ROSESrcFileName;					/* cpp for ROSE Handler */

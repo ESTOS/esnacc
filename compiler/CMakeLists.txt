@@ -78,6 +78,8 @@ endif()
 if(MSVC)
 	# -wd4100 - do not complain about unreference parameters
 	target_compile_options(compiler PRIVATE -W4 -wd4100)
+	# Get rid of strange compiler warnings concerning interlocked functions the compiler is not usign anyway
+	add_definitions(-DMICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS=0)
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
     target_compile_options(compiler PRIVATE -Wall)
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")

@@ -8,6 +8,7 @@
 
 #include "../../../c-lib/include/print.h"
 #include "../../core/asn_comments.h"
+#include "../../core/time_helpers.h"
 #include "../tag-util.h" /* get GetTags/FreeTags/CountTags/TagByteLen */
 #include "../str-util.h"
 #include "../structure-util.h"
@@ -23,10 +24,11 @@
 
 #define PRINTDEBUGGING fprintf(src, "// [%s]\n", __FUNCTION__);
 
-static void PrintJavaType(FILE* hdr, ModuleList* mods, Module* mod, Type* t);
-static void PrintJavaTypeDefCode(ModuleList* mods, Module* mod, TypeDef* td);
+void PrintJavaType(FILE* hdr, ModuleList* mods, Module* mod, Type* t);
+void PrintJavaTypeDefCode(ModuleList* mods, Module* mod, TypeDef* td);
+void PrintJAVACodeOneModule(ModuleList* mods, Module* m);
 
-static void handleDeprecatedSequence(FILE* src, Module* mod, TypeDef* td)
+void handleDeprecatedSequence(FILE* src, Module* mod, TypeDef* td)
 {
 	if (IsDeprecatedFlaggedSequence(mod, td->definedName))
 	{
@@ -34,12 +36,12 @@ static void handleDeprecatedSequence(FILE* src, Module* mod, TypeDef* td)
 		fprintf(src, "  {\n");
 		asnsequencecomment comment;
 		if (GetSequenceComment_UTF8(mod->moduleName, td->definedName, &comment))
-			fprintf(src, "    // CALL DeprecatedASN1Object(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, td->definedName, comment.szDeprecated);
+			fprintf(src, "    // CALL DeprecatedASN1Object(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, td->definedName, comment.szDeprecated);
 		fprintf(src, "  }\n\n");
 	}
 }
 
-static FILE* getJavaFilePointer(char* pPrefix)
+FILE* getJavaFilePointer(char* pPrefix)
 {
 	char* fileName = MakeFileName(pPrefix, ".java");
 
@@ -49,11 +51,11 @@ static FILE* getJavaFilePointer(char* pPrefix)
 #else
 	p = fopen(fileName, "wt");
 #endif
-	free(fileName);
 
 	if (!p)
 	{
 		snacc_exit("File open failed %s", fileName);
+		free(fileName);
 		return p;
 	}
 
@@ -63,10 +65,11 @@ static FILE* getJavaFilePointer(char* pPrefix)
 	write_snacc_header(p, " * ");
 	fprintf(p, " */\n\n");
 
+	free(fileName);
 	return p;
 }
 
-static char* getJavaClassName(char* prefix, char* suffix)
+char* getJavaClassName(char* prefix, char* suffix)
 {
 	size_t size = strlen(prefix) + strlen(suffix) + 1;
 	char* className = malloc(size); // strlen + /0
@@ -82,7 +85,7 @@ static char* getJavaClassName(char* prefix, char* suffix)
 	return className;
 }
 
-static void PrintJavaNativeType(FILE* hdr, Type* type)
+void PrintJavaNativeType(FILE* hdr, Type* type)
 {
 	switch (type->basicType->choiceId)
 	{
@@ -119,7 +122,7 @@ static void PrintJavaNativeType(FILE* hdr, Type* type)
 	};
 }
 
-static void PrintJavaNativeTypeConstructor(FILE* hdr, Type* type)
+void PrintJavaNativeTypeConstructor(FILE* hdr, Type* type)
 {
 	switch (type->basicType->choiceId)
 	{
@@ -156,7 +159,7 @@ static void PrintJavaNativeTypeConstructor(FILE* hdr, Type* type)
 	};
 }
 
-static void PrintJavaTypeConstructor(FILE* hdr, ModuleList* mods, Module* mod, Type* t)
+void PrintJavaTypeConstructor(FILE* hdr, ModuleList* mods, Module* mod, Type* t)
 {
 	/*if(t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_SEQUENCEOF) {
 	  //PrintJavaArrayType(hdr, t->basicType->a.localTypeRef->link->type->basicType->a.sequence,t->basicType->a.localTypeRef->link);
@@ -195,7 +198,7 @@ static void PrintJavaTypeConstructor(FILE* hdr, ModuleList* mods, Module* mod, T
 	}
 }
 
-static void PrintJavaArrayType(FILE* hdr, ModuleList* mods, Module* mod, Type* t, TypeDef* innerType)
+void PrintJavaArrayType(FILE* hdr, ModuleList* mods, Module* mod, Type* t, TypeDef* innerType)
 {
 
 	fprintf(hdr, "ArrayList<");
@@ -221,7 +224,7 @@ static void PrintJavaArrayType(FILE* hdr, ModuleList* mods, Module* mod, Type* t
 			PrintJavaTypeDefCode(mods, mod, innerType);
 	}
 }
-static void PrintJavaType(FILE* hdr, ModuleList* mods, Module* mod, Type* t)
+void PrintJavaType(FILE* hdr, ModuleList* mods, Module* mod, Type* t)
 {
 	if (t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED)
 	{
@@ -254,7 +257,7 @@ static void PrintJavaType(FILE* hdr, ModuleList* mods, Module* mod, Type* t)
 	}
 }
 
-static void PrintSeqJavaDataSequenceOf(ModuleList* mods, Module* mod, TypeDef* td)
+void PrintSeqJavaDataSequenceOf(ModuleList* mods, Module* mod, TypeDef* td)
 {
 	char* name = getJavaClassName(td->definedName, "");
 	FILE* src = getJavaFilePointer(name);
@@ -281,7 +284,7 @@ static void PrintSeqJavaDataSequenceOf(ModuleList* mods, Module* mod, TypeDef* t
 	free(name);
 }
 
-static void PrintSeqJavaDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
+void PrintSeqJavaDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 {
 	NamedType* e;
 	char* name = getJavaClassName(td->definedName, "");
@@ -309,7 +312,9 @@ static void PrintSeqJavaDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 		printMemberComment(src, mod, td, e->fieldName, "  ", COMMENTSTYLE_JAVA);
 		fprintf(src, "  private ");
 		PrintJavaType(src, mods, mod, e->type);
-		fprintf(src, " %s = ", e->fieldName);
+		char* szFieldName = Dash2UnderscoreEx(e->fieldName);
+		fprintf(src, " %s = ", szFieldName);
+		free(szFieldName);
 		if (e->type->optional || e->type->basicType->choiceId == BASICTYPE_NULL)
 			fprintf(src, "null");
 		else
@@ -326,7 +331,8 @@ static void PrintSeqJavaDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 		if (e->type->optional || td->type->basicType->choiceId == BASICTYPE_CHOICE || td->type->basicType->choiceId == BASICTYPE_NULL)
 			isNullable = 1;
 
-		tmpName = getJavaClassName(e->fieldName, "");
+		char* szFieldName = Dash2UnderscoreEx(e->fieldName);
+		tmpName = getJavaClassName(szFieldName, "");
 		fprintf(src, "\n  ");
 		if (isNullable == 1)
 			fprintf(src, "@Nullable");
@@ -336,7 +342,7 @@ static void PrintSeqJavaDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 		PrintJavaType(src, mods, mod, e->type);
 		fprintf(src, " get%s()\n", tmpName);
 		fprintf(src, "  {\n");
-		fprintf(src, "    return this.%s;\n", e->fieldName);
+		fprintf(src, "    return this.%s;\n", szFieldName);
 		fprintf(src, "  }\n");
 
 		fprintf(src, "  public void set%s(", tmpName);
@@ -345,9 +351,9 @@ static void PrintSeqJavaDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 		else
 			fprintf(src, "@NonNull ");
 		PrintJavaType(src, mods, mod, e->type);
-		fprintf(src, " %s)\n", e->fieldName);
+		fprintf(src, " %s)\n", szFieldName);
 		fprintf(src, "  {\n");
-		fprintf(src, "    this.%s = %s;\n", e->fieldName, e->fieldName);
+		fprintf(src, "    this.%s = %s;\n", szFieldName, szFieldName);
 		fprintf(src, "  }\n");
 		free(tmpName);
 	}
@@ -356,7 +362,7 @@ static void PrintSeqJavaDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 	free(name);
 }
 
-static void PrintJavaChoiceDefCode(ModuleList* mods, Module* mod, TypeDef* td)
+void PrintJavaChoiceDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 {
 	NamedType* e;
 	char* name = getJavaClassName(td->definedName, "");
@@ -401,7 +407,7 @@ static void PrintJavaChoiceDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	fclose(src);
 	free(name);
 }
-static void PrintJavaSimpleRefDef(ModuleList* mods, Module* mod, TypeDef* td)
+void PrintJavaSimpleRefDef(ModuleList* mods, Module* mod, TypeDef* td)
 {
 
 	char* name = getJavaClassName(td->definedName, "");
@@ -416,7 +422,7 @@ static void PrintJavaSimpleRefDef(ModuleList* mods, Module* mod, TypeDef* td)
 	free(name);
 }
 
-static char* captalize(char* string)
+char* captalize(char* string)
 {
 	char* upper = calloc(sizeof(char), strlen(string) + 1);
 	if (!upper)
@@ -432,7 +438,7 @@ static char* captalize(char* string)
 
 	return upper;
 }
-static void PrintJavaEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
+void PrintJavaEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 {
 	char* name = getJavaClassName(td->definedName, "");
 	FILE* src = getJavaFilePointer(name);
@@ -474,7 +480,7 @@ static void PrintJavaEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	fclose(src);
 }
 
-static void PrintJavaSimpleDef(ModuleList* mods, Module* mod, TypeDef* td)
+void PrintJavaSimpleDef(ModuleList* mods, Module* mod, TypeDef* td)
 {
 
 	char* name = getJavaClassName(td->definedName, "");
@@ -511,7 +517,7 @@ static void PrintJavaSimpleDef(ModuleList* mods, Module* mod, TypeDef* td)
 	fclose(src);
 }
 
-static void PrintJavaTypeDefCode(ModuleList* mods, Module* mod, TypeDef* td)
+void PrintJavaTypeDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 {
 	if (IsDeprecatedNoOutputSequence(mod, td->definedName))
 		return;
@@ -585,14 +591,14 @@ static void PrintJavaTypeDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	}
 } /* PrintCxxTypeDefCode */
 
-static void PrintJavaOperationClass(Module* mod, ValueDef* vd)
+void PrintJavaOperationClass(Module* mod, ValueDef* vd)
 {
 	if (IsDeprecatedNoOutputOperation(mod, vd->definedName))
 		return;
 
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 
 	Type* argumentType = NULL;
 	Type* resultType = NULL;
@@ -630,7 +636,7 @@ static void PrintJavaOperationClass(Module* mod, ValueDef* vd)
 			fprintf(src, "  {\n");
 			asnoperationcomment comment;
 			if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment))
-				fprintf(src, "    // CALL DeprecatedASN1Method(%" PRId64 ", \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, vd->definedName, comment.szDeprecated);
+				fprintf(src, "    // CALL DeprecatedASN1Method(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, vd->definedName, comment.szDeprecated);
 			fprintf(src, "  }\n\n");
 		}
 
@@ -665,7 +671,7 @@ static void PrintJavaOperationClass(Module* mod, ValueDef* vd)
 	fclose(src);
 }
 
-static void PrintAbstractJavaOperation()
+void PrintAbstractJavaOperation()
 {
 	FILE* src = getJavaFilePointer("AbstractAsnOperation");
 	PRINTDEBUGGING
@@ -713,7 +719,7 @@ static void PrintAbstractJavaOperation()
 	fclose(src);
 }
 
-static void PrintSimpleJavaType()
+void PrintSimpleJavaType()
 {
 	FILE* src = getJavaFilePointer("SimpleJavaType");
 	PRINTDEBUGGING
@@ -734,8 +740,89 @@ static void PrintSimpleJavaType()
 	fclose(src);
 }
 
-void PrintJAVACode(ModuleList* mods, Module* m)
+void PrintJAVACode(ModuleList* allMods)
 {
+	Module* currMod;
+	AsnListNode* saveMods;
+	DefinedObj* fNames;
+	int fNameConflict = FALSE;
+
+	/*
+	 * Make names for each module's encoder/decoder src and hdr files
+	 * so import references can be made via include files
+	 * check for truncation --> name conflicts & exit if nec
+	 */
+	fNames = NewObjList();
+
+	if (gMajorInterfaceVersion >= 0)
+	{
+		char szFileName[_MAX_PATH] = {0};
+		strcpy_s(szFileName, _MAX_PATH, gszOutputPath);
+		strcat_s(szFileName, _MAX_PATH, "Asn1InterfaceVersion");
+		FILE* src = getJavaFilePointer(szFileName);
+		if (src)
+		{
+			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
+			fprintf(src, "public class Asn1InterfaceVersion {\n");
+			fprintf(src, "\tpublic static final lastChange = \"%s\"\n", ConvertUnixTimeToISO(lMaxMinorVersion));
+			fprintf(src, "\tpublic static final majorVersion = %i\n", gMajorInterfaceVersion);
+			fprintf(src, "\tpublic static final minorVersion = %lld\n", lMaxMinorVersion);
+			fprintf(src, "\tpublic static final version = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			fprintf(src, "}\n");
+			fclose(src);
+		}
+	}
+
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (ObjIsDefined(fNames, currMod->ROSESrcJAVAFileName, StrObjCmp))
+		{
+			fprintf(errFileG, "Ack! ERROR---file name conflict for generated source files with names `%s'.\n\n", currMod->ROSESrcJAVAFileName);
+			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
+			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
+			fprintf(errFileG, "This error can also be caused by 2 modules having the same name but different OBJECT IDENTIFIERs.");
+			fprintf(errFileG, "Try renaming the modules to correct this.\n");
+			fNameConflict = TRUE;
+		}
+		else
+		{
+			DefineObj(&fNames, currMod->ROSESrcJAVAFileName);
+		}
+
+		if (fNameConflict)
+			return;
+
+		FreeDefinedObjs(&fNames);
+	}
+	FOR_EACH_LIST_ELMT(currMod, allMods)
+	{
+		if (currMod->ImportedFlag == FALSE)
+		{
+			saveMods = allMods->curr;
+			PrintJAVACodeOneModule(allMods, currMod);
+			allMods->curr = saveMods;
+		}
+	}
+}
+
+void PrintJAVACodeOneModule(ModuleList* mods, Module* m)
+{
+	if (gMajorInterfaceVersion >= 0)
+	{
+		FILE* src = getJavaFilePointer(m->baseFilePath);
+		if (src)
+		{
+			long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
+			fprintf(src, "public class %s_Version {\n", m->moduleName);
+			fprintf(src, "\tpublic static final lastChange = \"%s\"\n", ConvertUnixTimeToISO(lMinorModuleVersion));
+			fprintf(src, "\tpublic static final majorVersion = %i\n", gMajorInterfaceVersion);
+			fprintf(src, "\tpublic static final minorVersion = %lld\n", lMinorModuleVersion);
+			fprintf(src, "\tpublic static final version = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMinorModuleVersion);
+			fprintf(src, "}\n");
+			fclose(src);
+		}
+	}
+
 	ValueDef* vd;
 	TypeDef* td;
 	PrintAbstractJavaOperation();

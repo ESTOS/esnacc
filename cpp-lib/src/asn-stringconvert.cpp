@@ -7,6 +7,14 @@
 #include <Windows.h>
 #endif
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 template <class Facet> struct deletable_facet : Facet
 {
 	template <class... Args>
@@ -110,7 +118,7 @@ std::wstring AsnStringConvert::AsciiToUTF16(const char* szASCII, const char* szC
 				if (size_needed != iConverted)
 				{
 					DWORD dwErr = GetLastError();
-					dwErr;
+					printf("Error in AsnStringConvert::AsciiToUTF16: %ld", dwErr);
 					assert(FALSE);
 				}
 #endif
@@ -151,7 +159,7 @@ std::string AsnStringConvert::UTF16ToAscii(const wchar_t* szUTF16, const char* s
 				if (size_needed != iConverted)
 				{
 					DWORD dwErr = GetLastError();
-					dwErr;
+					printf("Error in AsnStringConvert::UTF16ToAscii: %ld", dwErr);
 					assert(FALSE);
 				}
 #endif
@@ -191,7 +199,7 @@ std::wstring AsnStringConvert::UTF8ToUTF16(const char* szUTF8)
 				if (size_needed != iConverted)
 				{
 					DWORD dwErr = GetLastError();
-					dwErr;
+					printf("Error in AsnStringConvert::UTF8ToUTF16: %ld", dwErr);
 					assert(FALSE);
 				}
 #endif
@@ -231,7 +239,7 @@ std::string AsnStringConvert::UTF16ToUTF8(const wchar_t* szUTF16)
 				if (size_needed != iConverted)
 				{
 					DWORD dwErr = GetLastError();
-					dwErr;
+					printf("Error in AsnStringConvert::UTF16ToUTF8: %ld", dwErr);
 					assert(FALSE);
 				}
 #endif
@@ -249,3 +257,9 @@ std::string AsnStringConvert::UTF16ToUTF8(const wchar_t* szUTF16)
 	}
 	return strUTF8;
 }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif

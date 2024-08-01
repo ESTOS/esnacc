@@ -15,6 +15,7 @@
                 "-JT",
                 "-j",
                 "-RTS_SERVER",
+                "-comments",
                 "*.asn1"
             ],
             "cwd": "${workspaceFolder}/samples/interface",
@@ -32,6 +33,7 @@
                 "-JT",
                 "-j",
                 "-RTS_CLIENT_BROWSER",
+                "-comments",
                 "*.asn1"
             ],
             "cwd": "${workspaceFolder}/samples/interface",
@@ -39,8 +41,24 @@
             "console": "externalTerminal"
         },
         {
+            "name": "Visual Studio - ts-microservice-sample - generate jsdoc files",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [
+                "-o",
+                "${workspaceFolder}/samples/jsdoc",
+                "-JD",
+                "-comments",
+                "*.asn1"
+            ],
+            "cwd": "${workspaceFolder}/samples/interface",
+            "preLaunchTask": "CMake: build",
+            "console": "externalTerminal"
+        },        
+        {
             "name": "LLDB - ts-microservice-sample - server - compile asn1 files",
-            "type": "cppdbg",
+            "type": "lldb",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "args": [
@@ -49,6 +67,7 @@
                 "-JT",
                 "-j",
                 "-RTS_SERVER",
+                "-comments",
                 "*.asn1"
             ],
             "cwd": "${workspaceFolder}/samples/interface",
@@ -56,7 +75,7 @@
         },
         {
             "name": "LLDB - ts-microservice-sample - client - compile asn1 files",
-            "type": "cppdbg",
+            "type": "lldb",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "args": [
@@ -65,6 +84,7 @@
                 "-JT",
                 "-j",
                 "-RTS_CLIENT_BROWSER",
+                "-comments",
                 "*.asn1"
             ],
             "cwd": "${workspaceFolder}/samples/interface",
@@ -79,6 +99,7 @@
                 "-o",
                 "${workspaceFolder}/output/openapi",
                 "-JO",
+                "-comments",
                 "${workspaceFolder}/samples/interface/*.asn1"
             ],
             "preLaunchTask": "CMake: build"

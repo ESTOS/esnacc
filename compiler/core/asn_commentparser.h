@@ -27,7 +27,17 @@ public:
 	std::string strDeprecated_ASCII;
 };
 
-class EStructMemberComment : public EDeprecated
+class EAdded
+{
+public:
+	void handleAdded(const std::string& strParsedLine);
+	// Type has been added, the value shows the time in unix time when the property was added to the interface
+
+	// @added 1.1.2023
+	long long i64Added = 0;
+};
+
+class EStructMemberComment : public EDeprecated, public EAdded
 {
 public:
 	// Short Description - must be stored json encoded
@@ -42,7 +52,7 @@ public:
 	bool m_bConvertedToAscii = false;
 };
 
-class ETypeComment : public EDeprecated
+class ETypeComment : public EDeprecated, public EAdded
 {
 public:
 	// Name of the strCategory
@@ -78,11 +88,24 @@ public:
 class EModuleComment : public ETypeComment
 {
 public:
+	// Sets the module name once the parser has finished parsing the file when it is added to the map
+	void setModuleName(const char* szModuleName);
+
+	// Retrieve the module Version as number (the highest @added found in the corresponding asn1 file, returns 0 if nothing was found)
+	long long getModuleMinorVersion();
+
 	// These elements shall be filtered when logging (currently only in the typescript rose stubs)
 	// The elements are added through @logfilter in the beginning of the file ; delimited
 	std::vector<std::string> strLogFilter;
 	// Helper to get the LogFilters from the set in c
 	int iCounter = 0;
+
+private:
+	// Contains the version if the version has been evaluated for the module (checks the comments for @added field values)
+	long long m_i64ModuleVersion = -1;
+
+	// Name of the module
+	std::string m_strModuleName;
 };
 
 void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType);
@@ -153,7 +176,7 @@ public:
 
 	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
 
-	void SetProperties(const char* szTypeName, const char* szCategory, std::list<std::string>& listComments);
+	void SetModuleProperties(const char* szTypeName, const char* szCategory, std::list<std::string>& listComments);
 
 private:
 	bool m_bWaitForSemiColon = false;
@@ -177,7 +200,7 @@ public:
 	//{ has been found
 	bool bOpenBracketFound = false;
 
-	void SetProperties(bool bOpenBracket, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
+	void SetSequenceProperties(bool bOpenBracket, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
 
 	// collected comments during parsing
 	std::list<std::string> m_CollectComments;
@@ -214,7 +237,7 @@ public:
 
 	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
 
-	void SetProperties(const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
+	void SetOperationProperties(const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
 
 private:
 	EOperationComment m_comment;

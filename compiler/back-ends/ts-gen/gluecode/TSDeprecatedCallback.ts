@@ -5,7 +5,7 @@
 // prettier-ignore
 /* eslint-disable */
 
-import { IReceiveInvokeContextParams, ISendInvokeContextParams } from "./TSROSEBase";
+import { IReceiveInvokeContextParams, ISendInvokeContextParams } from "./TSInvokeContext";
 
 /**
  * This is the central deprecated callback

@@ -1,14 +1,15 @@
 import { TSASN1BrowserClient } from "./stub/TSASN1BrowserClient";
-import { AsnInvokeProblem, IASN1LogCallback, EASN1TransportEncoding, CustomInvokeProblemEnum, ELogSeverity, IASN1LogData } from "./stub/TSROSEBase";
+import { AsnInvokeProblem, IASN1LogCallback, CustomInvokeProblemEnum, ELogSeverity, IASN1LogData } from "./stub/TSROSEBase";
 import { IClientConnectionCallback } from "./stub/TSASN1Client";
 import { ENetUC_Common } from "./stub/types";
 import { EventManager } from "./handlers/eventManager";
 import { SettingsManager } from "./handlers/settingsManager";
 import { IErrorLogEntry, IInvokeLogEntry, IRejectLogEntry, IResultLogEntry, IROSELogEntryBase } from "./stub/TSASN1Base";
+import { EASN1TransportEncoding, ISendInvokeContextParams } from "./stub/TSInvokeContext";
 
 // These settings are provided by the .env file
 const name = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_NAME"] as string || "localhost";
-const port = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_PORT"] as string || "3010";
+const port = import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_PORT"] as string || "3020";
 let wstarget = "ws";
 let resttarget = "http";
 if (import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_TLS"] === "1") {
@@ -57,6 +58,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * Sets if we connect via REST or WebSocket
+	 *
 	 * @param transport - sets the transport mode to either REST or WEBSOCKET (with eventing)
 	 */
 	public setTransport(transport: "REST" | "WEBSOCKET"): void {
@@ -76,6 +78,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * The central log method for the whole stub
+	 *
 	 * @param severity - severity of the log entry (error, info, warn, debug)
 	 * @param message - The message for the log entry, do NOT add contextual data into this message, use the meta data for it
 	 * @param calling_method - name of the caller
@@ -112,6 +115,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * TODOC
+	 *
 	 * @param entry - the log message to set
 	 * @param css - the style to apply in case it´s needed
 	 */
@@ -132,6 +136,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * TODOC
+	 *
 	 * @returns - TODOC
 	 */
 	public getTime(): string {
@@ -159,6 +164,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * TODOC
+	 *
 	 * @param bReconnected - TODOC
 	 */
 	public async onClientConnected(bReconnected: boolean): Promise<void> {
@@ -170,6 +176,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * TODOC
+	 *
 	 * @param bShuttingDown - TODOC
 	 */
 	public async onClientDisconnected(bShuttingDown: boolean): Promise<void> {
@@ -181,7 +188,9 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 	/**
 	 * Template type guard method that ensures that we receive a result of type T
+	 *
 	 * @throws an ENetUC_Common.AsnRequestError object in case reject is undefined and an error occured
+	 *
 	 * @param response - The result as provided by the rose stub
 	 * @param className - The classname that we expect as result
 	 * @param reject - The reject method
@@ -204,6 +213,23 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 			reject(error);
 
 		throw error;
+	}
+
+	/**
+	 * Getter for the invoke context
+	 * Allows to intercept the context that the caller has (oprovided
+	 *
+	 * @param context - the context the caller has provided with an invoke or event
+	 * @param operationID - the operation ID that has been called
+	 * @param operationName - the operation Name that has been called
+	 * @param event - true, in case we are encoding an event, false for a regular invoke
+	 * @returns - an updated context
+	 */
+	public override getInvokeContextParams(context: Partial<ISendInvokeContextParams> | undefined, operationID: number, operationName: string, event: boolean): ISendInvokeContextParams {
+		return {
+			...context,
+			bAddOperationName: true
+		};
 	}
 }
 

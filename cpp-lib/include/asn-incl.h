@@ -16,6 +16,7 @@
 #include "asn-buf.h"
 #include "snaccexcept.h"
 #include "../jsoncpp/include/json.h"
+#include "assert.h"
 
 #ifdef _WIN32
 #include <string>
@@ -146,6 +147,7 @@ typedef enum BER_UNIV_CODE
  * tag has the constructed bit set.
  */
 #define TAG_IS_CONS(tag) ((tag) & (CONS << ((TB - 1) * 8)))
+#define TAG_IS_CNTX(tag) ((tag) & (CNTX << ((TB - 1) * 8)))
 
 #define EOC_TAG_ID 0
 
@@ -165,20 +167,20 @@ typedef enum BER_UNIV_CODE
 
 #define BEncTag3(b, class, form, code)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
 	3;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
-	b.PutByteRvs((code)&0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+	b.PutByteRvs((code) & 0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 7)));                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
 	b.PutByteRvs(static_cast<unsigned char>(static_cast<unsigned char>(class) | static_cast<unsigned char>(form) | static_cast<unsigned char>(31)))
 
 #define BEncTag4(b, class, form, code)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
 	4;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
-	b.PutByteRvs((code)&0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+	b.PutByteRvs((code) & 0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 7)));                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 14)));                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
 	b.PutByteRvs(static_cast<unsigned char>(static_cast<unsigned char>(class) | static_cast<unsigned char>(form) | static_cast<unsigned char>(31)))
 
 #define BEncTag5(b, class, form, code)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
 	5;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
-	b.PutByteRvs((code)&0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+	b.PutByteRvs((code) & 0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 7)));                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 14)));                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 21)));                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
@@ -232,6 +234,8 @@ void SNACCDLL_API BDecEoc(const AsnBuf& b, AsnLen& bytesDecoded);
 AsnLen SNACCDLL_API PEncDefLenTo127(AsnBufBits& b, int len);
 AsnLen SNACCDLL_API PEncLen_16kFragment(AsnBufBits& b, int len);
 AsnLen SNACCDLL_API PEncLen_1to16k(AsnBufBits& b, int len);
+
+bool SNACCDLL_API BDecValidateEnd(const AsnBuf& _b, AsnTag& tag1, AsnLen& bytesDecoded, AsnLen& seqBytesDecoded, const AsnLen elmtLen0);
 
 // Indent function used in Print() functions
 void SNACCDLL_API Indent(std::ostream& os, unsigned short i);
@@ -802,7 +806,7 @@ protected:
 
 extern SNACCDLL_API char numToHexCharTblG[];
 
-#define TO_HEX(fourBits) (numToHexCharTblG[(fourBits)&0x0F])
+#define TO_HEX(fourBits) (numToHexCharTblG[(fourBits) & 0x0F])
 
 // ########################################################################
 
@@ -862,11 +866,7 @@ public:
 
 	operator AsnIntType() const;
 
-#ifdef WIN32
 	long long GetLongLong() const;
-#else
-    SJson::Int64 GetLongLong() const;
-#endif
 
 	bool operator==(AsnIntType o) const;
 	bool operator!=(AsnIntType o) const
@@ -899,13 +899,6 @@ public:
 	void Set(AsnIntType i);
 
 	void Set(long long i);
-
-    #ifndef WIN32
-    #ifndef __APPLE__
-    // With Win32 SJson::Int64 is the same as long long
-    void Set(SJson::Int64 i);
-    #endif
-    #endif
 
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
@@ -941,36 +934,162 @@ public:
 
 // ########################################################################
 
-class SNACCDLL_API AsnEnum : public AsnInt
+template <typename T = int> class SNACCDLL_API AsnEnum : public AsnInt
 {
 public:
-	AsnEnum(int val = 0)
-		: AsnInt(val)
+	AsnEnum(T val)
+		: AsnInt((int)val)
 	{
 	}
 
-	AsnLen BEnc(AsnBuf& b) const override;
-	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
+	virtual AsnLen BEnc(AsnBuf& b) const override
+	{
+		AsnLen l;
+		l = BEncContent(b);
+		BEncDefLenTo127(b, l);
+		l++;
+		l += BEncTag1(b, UNIV, PRIM, ENUM_TAG_CODE);
+		return l;
+	}
+
+	virtual void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override
+	{
+		FUNC("AsnEnum::BDec");
+
+		AsnLen elmtLen;
+		AsnTag tagId;
+
+		tagId = BDecTag(b, bytesDecoded);
+		if (tagId != MAKE_TAG_ID(UNIV, PRIM, ENUM_TAG_CODE))
+			throw InvalidTagException(typeName(), tagId, STACK_ENTRY);
+
+		elmtLen = BDecLen(b, bytesDecoded);
+		BDecContent(b, MAKE_TAG_ID(UNIV, PRIM, ENUM_TAG_CODE), elmtLen, bytesDecoded);
+	}
 
 	virtual AsnEnum* Clone() const override
 	{
 		return new AsnEnum(*this);
 	}
-	const char* typeName() const override
+
+	virtual const char* typeName() const override
 	{
 		return "AsnEnum";
 	}
 
-	long IndexedVal(long* penumList, long numVals) const;
-	void SetIndex(long* penumList, long numVals, long index);
+	/*Takes the enumerated list, sorts them, and returns the index of the */
+	/*number that matches the value                                       */
+	long IndexedVal(long* penumList, long numVals) const
+	{
+		FUNC("AsnEnum::IndexedVal");
+		long* indexedList = penumList;
+		long temp = 0;
+		long count1 = 0;
+		long count2 = 0;
+		bool bValueNotInList = true;
+
+		if (m_len > 4)
+			throw EXCEPT("enumerated value is too big", INTEGER_ERROR);
+
+		for (count1 = 0; count1 < numVals; count1++)
+		{
+			for (count2 = 0; count2 < numVals; count2++)
+			{
+				if (indexedList[count2] < indexedList[count1])
+				{
+					temp = indexedList[count2];
+					indexedList[count2] = indexedList[count1];
+					indexedList[count1] = temp;
+				}
+			}
+		}
+
+		temp = (long)*this;
+		for (count1 = 0; count1 < numVals; count1++)
+		{
+			if (temp == indexedList[count1])
+			{
+				temp = count1;
+				count1 = numVals;
+				bValueNotInList = false;
+			}
+		}
+
+		if (bValueNotInList)
+			throw EXCEPT("value is not in enumerated List", INTEGER_ERROR);
+
+		return temp;
+	}
+
+	/*sorts the enumerated list and matches the decoded number with */
+	/*the associated indexed number in the list                     */
+	void SetIndex(long* penumList, long numVals, long index)
+	{
+		long* indexedList = penumList;
+		long temp = 0;
+		long count1 = 0;
+		long count2 = 0;
+
+		for (count1 = 0; count1 < numVals; count1++)
+		{
+			for (count2 = 0; count2 < numVals; count2++)
+			{
+				if (indexedList[count2] < indexedList[count1])
+				{
+					temp = indexedList[count2];
+					indexedList[count2] = indexedList[count1];
+					indexedList[count1] = temp;
+				}
+			}
+		}
+
+		Set((AsnIntType)indexedList[index]);
+	}
 
 #if META
-	static const AsnEnumTypeDesc _desc;
-	const AsnTypeDesc* _getdesc() const;
+	static const AsnEnumTypeDesc _desc(NULL, NULL, false, AsnTypeDesc::ENUMERATED, NULL, NULL);
+
+	const AsnTypeDesc* _getdesc() const
+	{
+		return &_desc;
+	}
 
 #if TCL
-	int TclGetVal(Tcl_Interp*) const;
-	int TclSetVal(Tcl_Interp*, const char* val);
+	int TclGetVal(Tcl_Interp* interp) const
+	{
+		const AsnNameDesc* n = _getdesc()->getnames();
+		if (n)
+		{
+			for (; n->name; n++)
+				if (n->value == value)
+				{
+					Tcl_SetResult(interp, (char*)n->name, TCL_STATIC);
+					return TCL_OK;
+				}
+		}
+		char valstr[80];
+		sprintf(valstr, "%d", value);
+		Tcl_AppendResult(interp, "illegal numeric enumeration value ", valstr, " for type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
+		Tcl_SetErrorCode(interp, "SNACC", "ILLENUM", NULL);
+		return TCL_ERROR;
+	}
+
+	int TclSetVal(Tcl_Interp* interp, const char* valstr)
+	{
+		const AsnNameDesc* n = _getdesc()->getnames();
+		if (n)
+		{
+			for (; n->name; n++)
+				if (!strcmp(n->name, valstr))
+				{
+					value = n->value;
+					return TCL_OK;
+				}
+		}
+		Tcl_SetErrorCode(interp, "SNACC", "ILLENUM", NULL);
+		Tcl_AppendResult(interp, "illegal symbolic enumeration value \"", valstr, "\" for type ", _getdesc()->getmodule()->name, ".", _getdesc()->getname(), NULL);
+		return TCL_ERROR;
+	}
 #endif /* TCL */
 #endif /* META */
 };
@@ -1335,11 +1454,10 @@ public:
 
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
+	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
 	void JEnc(SJson::Value& b) const override;
 	bool JDec(const SJson::Value& b) override;
-
-	void BDecContent(const AsnBuf& b, AsnTag tag, AsnLen len, AsnLen& bytesDecoded);
 
 	AsnLen PEnc(AsnBufBits& b) const override;
 	void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override;
@@ -1449,7 +1567,7 @@ protected:
 		return (long)length();
 	}
 	virtual void Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset) override;
-	virtual void Allocate(long size) override{};
+	virtual void Allocate(long size) override {};
 
 private:
 	void BDecConsString(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -1896,7 +2014,7 @@ protected:
 	virtual AsnLen Interpret(AsnBufBits& b, long offset) const override;
 
 	virtual void Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset) override;
-	virtual void Allocate(long size) override{};
+	virtual void Allocate(long size) override {};
 
 	AsnLen CombineConsString(const AsnBuf& b, AsnLen elmtLen, std::string& encStr);
 };
@@ -2192,6 +2310,51 @@ public:
 	{
 	}
 
+	/*
+	 * In case the buffer still contains data (elmtLen0 vs bytesDecoded) we try to read additional objects from the buffer into the extList
+	 * This is however only possible if we know the type of object as AsnAny requires type and len.
+	 * So if the objects are context (CNTX, schema) based we need to stop
+	 *
+	 * _b = the buffer we are reading
+	 * tag1 = the tag which was read before (the buffer already points to the len element)
+	 * elementLen0 = the length of the sequence we are currently reading elements from (the total len including type and len data)
+	 * bytesDecoded = the current byte position in the buffer
+	 */
+	void readFromBuffer(const AsnBuf& _b, AsnTag tag, const AsnLen elementLen, AsnLen& bytesDecoded)
+	{
+		if (bytesDecoded == elementLen || tag == 0)
+			return;
+
+		while (true)
+		{
+			if (elementLen == INDEFINITE_LEN)
+			{
+				auto bNext = _b.PeekByte();
+				if (bNext == EOC_TAG_ID)
+				{
+					BDecEoc(_b, bytesDecoded);
+					break;
+				}
+			}
+
+			const auto tagLen = BytesInTag(tag);
+			auto storedBytesDecoded = bytesDecoded;
+			auto payLoadLen = BDecLen(_b, bytesDecoded);
+			auto headerLen = tagLen + bytesDecoded - storedBytesDecoded;
+
+			// Grap the next any from the buffer
+			AsnAny extAny;
+			extAny.anyBuf = new AsnBuf();
+			_b.GrabAnyEx(*extAny.anyBuf, headerLen, payLoadLen, bytesDecoded);
+			extList.insert(extList.end(), extAny);
+
+			if (bytesDecoded >= elementLen)
+				break;
+
+			tag = BDecTag(_b, bytesDecoded);
+		}
+	}
+
 	virtual AsnExtension* Clone() const override
 	{
 		return new AsnExtension(*this);
@@ -2220,15 +2383,15 @@ public:
 	virtual void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override
 	{
 	}
-	
+
 	virtual void PDec(AsnBufBits& b, AsnLen& bitsDecoded) override
 	{
 	}
-	
+
 	virtual void JEnc(SJson::Value& b) const override
 	{
 	}
-	
+
 	virtual bool JDec(const SJson::Value& b) override
 	{
 		return true;

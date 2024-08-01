@@ -1,8 +1,8 @@
 # Centralized coding style defines for the esnacc compiler
 # The initial code uses pretty wierd coding style and did not enforce any dedicated style so this is the aim to achive a common same style for all the files
 #
-# The file requires a pretty new clang format, at least 15.
-# At the time of writing the document it is based on 15.0.7
+# The file requires a pretty new clang format, at least 18.
+# At the time of writing the document it is based on 18.1.8
 #
 # https://releases.llvm.org/download.html
 #
@@ -16,8 +16,9 @@ TabWidth: 4
 UseTab: Always
 
 # Constructor und initializer should follow the same rules
-BreakInheritanceList: AfterColon
-BreakConstructorInitializers: AfterColon
+BreakInheritanceList: BeforeColon
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: Never
 
 # public private protected always moved left for clearer visibility
 AccessModifierOffset: -4
@@ -46,13 +47,21 @@ BraceWrapping:
   BeforeCatch: true
   AfterControlStatement: true
   SplitEmptyFunction: true
+
+# Remove empty lines at the start of blocks and end of files
+KeepEmptyLinesAtEOF: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# Starting with Version 19 (not yet released we can use the following)
+# KeepEmptyLines:
+#  AtEndOfFile: false
+#  AtStartOfBlock: false
+#  AtStartOfFile: false
+
 RemoveBracesLLVM: true
 
 # Pointer and reference always next to the type int*, std::wstring& strData
 PointerAlignment: Left
-
-# Constructor intialisierer
-BreakConstructorInitializers: BeforeComma
 
 # No unreadable single liners
 AllowShortCaseLabelsOnASingleLine: false

@@ -223,7 +223,6 @@ AsnLen BDecLen(const AsnBuf& b, AsnLen& bytesDecoded)
  */
 AsnLen BEncEoc(AsnBuf& b)
 {
-
 	b.PutByteRvs(0);
 	b.PutByteRvs(0);
 	return 2;
@@ -291,6 +290,32 @@ AsnLen PEncLen_1to16k(AsnBufBits& b, int len)
 	b.PutBits(c, 8);
 
 	return l;
+}
+
+/*
+ * Validates whether we are at the end of an object and returns true if this is the case
+ * - tag1 contains the next tag in case we have further elements in the object
+ * - bytesDecoded is properly updated
+ */
+bool BDecValidateEnd(const AsnBuf& _b, AsnTag& tag1, AsnLen& bytesDecoded, AsnLen& seqBytesDecoded, const AsnLen elmtLen0)
+{
+	if (seqBytesDecoded == elmtLen0)
+	{
+		bytesDecoded += seqBytesDecoded;
+		return true;
+	}
+	else
+	{
+		tag1 = BDecTag(_b, seqBytesDecoded);
+		if (elmtLen0 == INDEFINITE_LEN && tag1 == EOC_TAG_ID)
+		{
+			BDEC_2ND_EOC_OCTET(_b, seqBytesDecoded);
+			bytesDecoded += seqBytesDecoded;
+			return true;
+		}
+	}
+
+	return false;
 }
 
 _END_SNACC_NAMESPACE

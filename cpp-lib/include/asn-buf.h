@@ -109,7 +109,8 @@ namespace SNACC
 
 		void UnGetBytes(long lBytesToPutBack) const;
 
-		void GrabAny(AsnBuf& anyBuf, SNACC::AsnLen& bytesDecoded) const;
+		void GrabAnyEx(const AsnBuf& anyBuf, AsnLen headerLen, AsnLen payloadLen, AsnLen& bytesDecoded) const;
+		void GrabAny(const AsnBuf& anyBuf, SNACC::AsnLen& bytesDecoded) const;
 		const Deck& deck() const
 		{
 			return m_deck;
@@ -238,7 +239,6 @@ namespace SNACC
 	//
 	class SNACCDLL_API AsnRvsBuf : public std::streambuf
 	{
-
 	public:
 		AsnRvsBuf(char* preFilled, size_t segSize);
 		AsnRvsBuf(const char* seg, size_t segSize);

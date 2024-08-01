@@ -193,7 +193,7 @@ export class ConverterErrors extends Array<ConverterError> {
 
 	/**
 	 * Checks whether the converter has detected errors
-	 * 
+	 *
 	 * @returns true if we hold errors or false if not
 	 */
 	public hasErrors(): boolean {
@@ -202,11 +202,11 @@ export class ConverterErrors extends Array<ConverterError> {
 
 	/**
 	 * Checks whether we have new errors since the last call of storeState()
-	 * 
+	 *
 	 * @returns true if we hold new errors or false if not
 	 */
 	public hasNewErrors(): boolean {
-		return this.length !== this.lastStoredErrorCount;
+		return this.length > this.lastStoredErrorCount;
 	}
 
 	/**
@@ -216,7 +216,6 @@ export class ConverterErrors extends Array<ConverterError> {
 	public storeState(): void {
 		this.lastStoredErrorCount = this.length;
 	}
-
 
 	/**
 	 * Clears the list of errors
@@ -369,9 +368,8 @@ export class TSConverter {
 						// Special, if the incoming data is empty, the schema validation will fail but we allow that for structures that have no mandatory attributes
 						if (schema instanceof asn1ts.Sequence) {
 							let bContainsMandatory = false;
-							for(const value of schema.valueBlock.value)
-							{
-								if(!value.optional) {
+							for (const value of schema.valueBlock.value) {
+								if (!value.optional) {
 									bContainsMandatory = true;
 									break;
 								}
@@ -411,17 +409,23 @@ export class TSConverter {
 	 * @param optional - set to true if the parameter is optional (if optional, the parameter might be missing)
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
-	public static validateParam(data: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "Date" | "Uint8Array" | "object", errors?: ConverterErrors, context?: IDecodeContext | IEncodeContext, optional?: boolean): boolean {
+	public static validateParam(data: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "Date" | "Uint8Array" | "object" | "null", errors?: ConverterErrors, context?: IDecodeContext | IEncodeContext, optional?: boolean): boolean {
 		if (!Object.prototype.hasOwnProperty.call(data, propertyName)) {
-			if (errors && context) {
-				if (!(optional === true))
-					errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, context.context + "::" + propertyName, "property missing"));
+			if (errors) {
+				if (!(optional === true)) {
+					const location = context?.context ? context.context + "::" : "";
+					errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, location + propertyName, "property missing"));
+				}
 			}
 		} else {
 			const property = (data as Record<string, unknown>)[propertyName];
 			if (property === undefined || property === null) {
-				if (!optional && errors && context)
-					errors.push(new ConverterError(ConverterErrorType.PROPERTY_NULLORUNDEFINED, context.context + "::" + propertyName, "property null or undefined"));
+				if (property === null && expectedType === "null")
+					return true;
+				if (!optional && errors) {
+					const location = context?.context ? context.context + "::" : "";
+					errors.push(new ConverterError(ConverterErrorType.PROPERTY_NULLORUNDEFINED, location + propertyName, "property null or undefined"));
+				}
 				return false;
 			}
 			const type = typeof property;
@@ -435,8 +439,10 @@ export class TSConverter {
 				else if (expectedType === "object")
 					return true;
 			}
-			if (errors && context)
-				errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, context.context + "::" + propertyName, "expected type was " + expectedType + ", effective type is " + typeof property));
+			if (errors) {
+				const location = context?.context ? context.context + "::" : "";
+				errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, location + propertyName, "expected type was " + expectedType + ", effective type is " + typeof property));
+			}
 		}
 		return false;
 	}
@@ -453,7 +459,7 @@ export class TSConverter {
 	 * @param optional - set to true if the parameter is optional (if optional, the parameter might be missing)
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
-	public static fillJSONParam(data: object, target: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "object" | "Date" | "Uint8Array", errors?: ConverterErrors, context?: DecodeContext | EncodeContext, optional?: boolean): boolean {
+	public static fillJSONParam(data: object, target: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "object" | "Date" | "Uint8Array" | "null", errors?: ConverterErrors, context?: DecodeContext | EncodeContext, optional?: boolean): boolean {
 		const result = this.validateParam(data, propertyName, expectedType, errors, context, optional);
 		if (result) {
 			const t = target as Record<string, unknown>;
@@ -530,21 +536,28 @@ export class TSConverter {
 	 * @param optional - set to true if the parameter is optional (if optional, the parameter might be missing)
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
-	public static validateParamType<T>(property: unknown, propertyName: string, expectedType: "boolean" | "number" | "object" | "string" | "Uint8Array" | "Date", errors?: ConverterErrors, context?: IContextBase, optional?: boolean): property is T {
+	public static validateParamType<T>(property: unknown, propertyName: string, expectedType: "boolean" | "number" | "object" | "string" | "Uint8Array" | "Date" | "null", errors?: ConverterErrors, context?: IContextBase, optional?: boolean): property is T {
 		if (property === undefined && !optional) {
-			if (errors && context)
-				errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, context.context + "::" + propertyName, "property missing"));
+			if (errors) {
+				const location = context?.context ? context.context + "::" : "";
+				errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, location + propertyName, "property missing"));
+			}
 		} else if (expectedType === "Uint8Array") {
 			if (property instanceof Uint8Array)
 				return true;
 		} else if (expectedType === "Date") {
 			if (property instanceof Date)
 				return true;
+		} else if (expectedType === "null") {
+			if (typeof property === "object")
+				return true;
 		} else if (typeof property === expectedType)
 			return true;
 
-		if (errors && context)
-			errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, context.context + "::" + propertyName, "expected type was " + expectedType + ", effective type is " + typeof property));
+		if (errors) {
+			const location = context?.context ? context.context + "::" : "";
+			errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, location + propertyName, "expected type was " + expectedType + ", effective type is " + typeof property));
+		}
 
 		return false;
 	}
@@ -561,21 +574,27 @@ export class TSConverter {
 	 */
 	public static validateAnyParam(data: object, propertyName: string, errors?: ConverterErrors, context?: DecodeContext, optional?: boolean): boolean {
 		if (!Object.prototype.hasOwnProperty.call(data, propertyName)) {
-			if (errors && context) {
-				if (!(optional === true))
-					errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, context.context + "::" + propertyName, "property missing"));
+			if (errors) {
+				if (!(optional === true)) {
+					const location = context?.context ? context.context + "::" : "";
+					errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, location + propertyName, "property missing"));
+				}
 			}
 		} else {
 			const property = (data as never)[propertyName];
 			if (property == null) {
-				if (errors && context)
-					errors.push(new ConverterError(ConverterErrorType.PROPERTY_NULLORUNDEFINED, context.context + "::" + propertyName, "property null or undefined"));
+				if (errors) {
+					const location = context?.context ? context.context + "::" : "";
+					errors.push(new ConverterError(ConverterErrorType.PROPERTY_NULLORUNDEFINED, location + propertyName, "property null or undefined"));
+				}
 			} else {
 				const type = typeof property;
 				if (type === "boolean" || type === "number" || type === "object" || type === "string")
 					return this.validateParam(data, propertyName, type, errors, context, optional);
-				else if (errors && context)
-					errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, context.context + "::" + propertyName, "expected type was not found, effective type is " + type));
+				else if (errors) {
+					const location = context?.context ? context.context + "::" : "";
+					errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, location + propertyName, "expected type was not found, effective type is " + type));
+				}
 			}
 		}
 		return false;
@@ -613,11 +632,15 @@ export class TSConverter {
 		if (Object.prototype.hasOwnProperty.call(data, propertyName)) {
 			const datanever = data as never;
 			if (datanever[propertyName] == null) {
-				if (errors && context)
-					errors.push(new ConverterError(ConverterErrorType.PROPERTY_NULLORUNDEFINED, context.context + "::" + propertyName, "property null or undefined"));
+				if (errors) {
+					const location = context?.context ? context.context + "::" : "";
+					errors.push(new ConverterError(ConverterErrorType.PROPERTY_NULLORUNDEFINED, location + propertyName, "property null or undefined"));
+				}
 			} else if (typeof datanever[propertyName] !== expectedType) {
-				if (errors && context)
-					errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, context.context + "::" + propertyName, "expected type was " + expectedType + ", effective type is " + typeof (datanever[propertyName])));
+				if (errors) {
+					const location = context?.context ? context.context + "::" : "";
+					errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, location + propertyName, "expected type was " + expectedType + ", effective type is " + typeof (datanever[propertyName])));
+				}
 			} else
 				return true;
 		}

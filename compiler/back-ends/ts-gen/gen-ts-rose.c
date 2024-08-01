@@ -19,9 +19,9 @@ void PrintTSROSEHeader(FILE* src, Module* m, const bool bInterface)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 	fprintf(src, "/**\n");
 	if (bInterface)
-		fprintf(src, " * %sROSE_Interface\n", RemovePath(m->baseFileName));
+		fprintf(src, " * %sROSE_Interface\n", RemovePath(m->baseFilePath));
 	else
-		fprintf(src, " * %sROSE\n", RemovePath(m->baseFileName));
+		fprintf(src, " * %sROSE\n", RemovePath(m->baseFilePath));
 
 	if (bInterface)
 		fprintf(src, " * \"%s\" ASN.1 interfaces.\n", m->modId->name);
@@ -103,6 +103,12 @@ void SaveTSROSEFilesToOutputDirectory(const int genRoseStubs, const char* szPath
 		strcat_s(szFileName, _MAX_PATH, "TSDeprecatedCallback.ts");
 		SaveResourceToFile(ETS_DEPRECATED_CALLBACK, szFileName);
 	}
+	{
+		char szFileName[_MAX_PATH] = {0};
+		strcpy_s(szFileName, _MAX_PATH, szPath);
+		strcat_s(szFileName, _MAX_PATH, "TSInvokeContext.ts");
+		SaveResourceToFile(ETS_INVOKE_CONTEXT, szFileName);
+	}
 }
 
 void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)
@@ -110,13 +116,14 @@ void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	fprintf(src, "// Global imports\n");
-	fprintf(src, "import { I%s, I%s_Handler } from \"./%s_Interface\";\n", mod->ROSEClassName, mod->ROSEClassName, mod->ROSEClassName);
-	fprintf(src, "import { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from \"./SNACCROSE\";\n");
-	fprintf(src, "import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, ISendInvokeContextParams, IInvokeHandler, ELogSeverity, ROSEBase } from \"./TSROSEBase\";\n");
+	fprintf(src, "import { I%s, I%s_Handler } from \"./%s_Interface%s\";\n", mod->ROSEClassName, mod->ROSEClassName, mod->ROSEClassName, getCommonJSFileExtension());
+	fprintf(src, "import { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from \"./SNACCROSE%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, IInvokeHandler, ELogSeverity, ROSEBase } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { ISendInvokeContextParams } from \"./TSInvokeContext%s\";\n", getCommonJSFileExtension());
 
 	fprintf(src, "// Local imports\n");
-	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
-	fprintf(src, "import * as Converter from \"./%s_Converter\";\n", mod->moduleName);
+	fprintf(src, "import * as %s from \"./%s%s\";\n", GetNameSpace(mod), mod->moduleName, getCommonJSFileExtension());
+	fprintf(src, "import * as Converter from \"./%s_Converter%s\";\n", mod->moduleName, getCommonJSFileExtension());
 
 	PrintTSImports(src, mods, mod, true, false, true);
 }
@@ -147,7 +154,7 @@ bool PrintTSROSEOperationDefine(FILE* src, Module* m, ValueDef* v)
 void PrintTSROSEOperationDefines(FILE* src, Module* mod, ValueDefList* defs)
 {
 	fprintf(src, "\n// [%s]\n", __FUNCTION__);
-	fprintf(src, "enum OperationIDs {\n");
+	fprintf(src, "export enum OperationIDs {\n");
 	bool bElementAdded = false;
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, defs)
@@ -161,9 +168,9 @@ void PrintTSROSEOperationDefines(FILE* src, Module* mod, ValueDefList* defs)
 
 void PrintTSROSEInterfaceEntry(FILE* src, ModuleList* mods, ValueDef* vd, bool bAsComment, Module* m)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 
 	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
 	{
@@ -208,9 +215,9 @@ void PrintTSROSEInterfaceEntry(FILE* src, ModuleList* mods, ValueDef* vd, bool b
  */
 bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, ValueDef* vd, bool bAsComment, bool bInvokes, bool bAddNewLine)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 
 	if (!GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
 		return bAddNewLine;
@@ -295,9 +302,10 @@ void PrintTSROSEImport(FILE* src, ModuleList* mods, Module* mod)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	fprintf(src, "import { IReceiveInvokeContext, ISendInvokeContextParams, AsnInvokeProblem } from \"./TSROSEBase\";\n");
+	fprintf(src, "import { IReceiveInvokeContext, AsnInvokeProblem } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { ISendInvokeContextParams } from \"./TSInvokeContext%s\";\n", getCommonJSFileExtension());
 	fprintf(src, "// Local imports\n");
-	fprintf(src, "import * as %s from \"./%s\";\n", GetNameSpace(mod), mod->moduleName);
+	fprintf(src, "import * as %s from \"./%s%s\";\n", GetNameSpace(mod), mod->moduleName, getCommonJSFileExtension());
 
 	PrintTSImports(src, mods, mod, false, false, false);
 }
@@ -365,9 +373,9 @@ void PrintTSROSEServerCopyPasteInterface(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	fprintf(src, "/* Copy paste code for the import statement\n");
-	fprintf(src, "import { IReceiveInvokeContext } from \"./TSROSEBase\";\n");
-	fprintf(src, "import * as ENetUC_Common from \"./ENetUC_Common\";\n");
-	fprintf(src, "import { %s } from \"./%s\";\n", GetNameSpace(m), RemovePath(m->baseFileName));
+	fprintf(src, "import { IReceiveInvokeContext } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import * as ENetUC_Common from \"./ENetUC_Common%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { %s } from \"./%s%s\";\n", GetNameSpace(m), RemovePath(m->baseFilePath), getCommonJSFileExtension());
 	fprintf(src, "*/\n");
 
 	fprintf(src, "\n/**\n");
@@ -430,7 +438,7 @@ void PrintTSROSEConstructor(FILE* src, Module* m)
 
 	fprintf(src, "\n\t\tthis.logFilter = [");
 
-	const char* szBaseName = RemovePath(m->baseFileName);
+	const char* szBaseName = RemovePath(m->baseFilePath);
 	const char* szFilter = GetFirstModuleLogFileFilter(szBaseName);
 	if (szFilter)
 	{
@@ -463,21 +471,28 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 	fprintf(src, "\t * back to the other side. If a certain function is not register the function call will fail with not function not implemented\n");
 	fprintf(src, "\t */\n");
 
-	fprintf(src, "\tpublic setHandler(handler: Partial<I%s_Handler>) {\n", m->ROSEClassName);
+	fprintf(src, "\tpublic setHandler(handler: Partial<I%s_Handler>): void {\n", m->ROSEClassName);
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (IsROSEValueDef(m, vd))
 			fprintf(src, "\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\");\n", vd->definedName, vd->definedName);
 	}
+
+	if (gMajorInterfaceVersion >= 0)
+	{
+		long long lMinorVersion = GetModuleMinorVersion(m->moduleName);
+		fprintf(src, "\t\tthis.transport.registerModuleVersion(\"%s\", %i, %lld);\n", m->moduleName, gMajorInterfaceVersion, lMinorVersion);
+	}
+
 	fprintf(src, "\t}\n");
 }
 
 void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents, ValueDef* vd, Module* m)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
 	{
 		Module* argumentMod = GetImportModuleRefByClassName(pszArgument, mods, m);
@@ -501,7 +516,7 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 			{
 				asnoperationcomment comment;
 				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
 			}
 			fprintf(src, "\t\t\t\treturn await this.handleOnInvoke(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
@@ -525,7 +540,7 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 			{
 				asnoperationcomment comment;
 				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
 			}
 			fprintf(src, "\t\t\t\treturn await this.handleOnEvent(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
@@ -580,7 +595,7 @@ void PrintTSROSEOnInvokeswitchCase(FILE* src, ModuleList* mods, Module* m)
 				continue;
 			const char* pszFunction = vd->definedName;
 
-			char* pszResult = NULL;
+			const char* pszResult = NULL;
 			GetROSEDetails(m, vd, NULL, &pszResult, NULL, NULL, NULL, NULL, true);
 			if (!pszResult)
 			{
@@ -647,9 +662,9 @@ void PrintTSROSEOnEventSwitchCase(FILE* src, ModuleList* mods, Module* m)
 
 bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef* vd, Module* m)
 {
-	char* pszArgument = NULL;
-	char* pszResult = NULL;
-	char* pszError = NULL;
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
 	if (GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
 	{
 		Module* argumentMod = GetImportModuleRefByClassName(pszArgument, mods, m);
@@ -686,15 +701,22 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 						printComment(src, "\t *", operationComment.szLong, "\n");
 					if (bHasShort || bHasLong)
 						fprintf(src, "\t *\n");
-					if (operationComment.i64Deprecated || operationComment.iPrivate)
+					if (operationComment.i64Deprecated || operationComment.i64Added || operationComment.iPrivate)
 					{
 						if (operationComment.i64Deprecated)
 						{
 							fprintf(src, "\t * @deprecated %s\n", getDeprecated(operationComment.szDeprecated, COMMENTSTYLE_TYPESCRIPT));
 							bDeprecated = true;
 						}
+						if (operationComment.i64Added)
+						{
+							char* szTime = ConvertUnixTimeToReadable(operationComment.i64Added);
+							fprintf(src, "\t * @added %s\n", szTime);
+							free(szTime);
+						}
 						if (operationComment.iPrivate)
 							fprintf(src, "\t * @private\n");
+						fprintf(src, "\t *\n");
 					}
 
 					fprintf(src, "\t * @param argument - An %s object containing all the relevant parameters for the call\n", pszArgument);
@@ -718,7 +740,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 				{
 					asnoperationcomment comment;
 					GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
 				}
 				fprintf(src, "\t\treturn this.handleInvoke(argument, ");
 				fprintf(src, "%s.%s, ", szResultNS, pszResult);
@@ -753,7 +775,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 				{
 					asnoperationcomment comment;
 					GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%" PRId64 ", this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
 				}
 				fprintf(src, "\t\treturn this.handleEvent(argument, ");
 				fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
@@ -833,7 +855,7 @@ bool hasEvents(Module* m)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
 		{
-			char* pszResult = NULL;
+			const char* pszResult = NULL;
 			GetROSEDetails(m, vd, NULL, &pszResult, NULL, NULL, NULL, NULL, true);
 			if (!pszResult)
 			{
@@ -863,7 +885,7 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t */\n");
 	fprintf(src, "\tpublic getLogData(): IASN1LogData {\n");
 	fprintf(src, "\t\treturn {\n");
-	fprintf(src, "\t\t\tclassName: moduleName\n");
+	fprintf(src, "\t\t\tclassName: MODULE_NAME\n");
 	fprintf(src, "\t\t};\n");
 	fprintf(src, "\t}\n\n");
 
@@ -894,12 +916,12 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t\t\tdefault:\n");
 	fprintf(src, "\t\t\t\treturn undefined;\n");
 	fprintf(src, "\t\t}\n");
-	fprintf(src, "\t}\n");
+	fprintf(src, "\t}\n\n");
 
 	fprintf(src, "\t/**\n");
 	fprintf(src, "\t * Returns the operationID for an operationName\n");
 	fprintf(src, "\t *\n");
-	fprintf(src, "\t * @param id - the id we want to have the name for\n");
+	fprintf(src, "\t * @param name - the name we want to have the id for\n");
 	fprintf(src, "\t * @returns - the id or undefined if not found\n");
 	fprintf(src, "\t */\n");
 	fprintf(src, "\tpublic getIDForOperationName(name: string): OperationIDs | undefined {\n");

@@ -483,7 +483,6 @@ AsnInt::AsnInt(AsnIntType val)
 
 AsnInt::AsnInt(const char* str, bool unsignedFlag)
 {
-
 	char radix = 0;
 	unsigned int length = (unsigned int)strlen(str);
 	unsigned int i = 0;
@@ -686,11 +685,7 @@ AsnInt::operator AsnIntType() const
 	return iResult;
 }
 
-#ifdef WIN32
 long long AsnInt::GetLongLong() const
-#else
-SJson::Int64 AsnInt::GetLongLong() const
-#endif
 {
 	FUNC("AsnInt::operator long long");
 
@@ -740,15 +735,6 @@ void AsnInt::Set(AsnIntType iIn)
 
 	storeDERInteger(cTmp, sizeof(iIn), (iIn >= 0));
 }
-
-#ifndef WIN32
-#ifndef __APPLE__
-void AsnInt::Set(SJson::Int64 iIn)
-{
-    Set((long long)iIn);
-}
-#endif
-#endif
 
 void AsnInt::Set(long long iIn)
 {
@@ -1312,7 +1298,6 @@ AsnLen AsnInt::PEnc(AsnBufBits& b) const
 /*PER encoding of an semi-constrained integer*/
 AsnLen AsnInt::PEncSemiConstrained(AsnBufBits& b, long lowerBound) const
 {
-
 	FUNC("AsnInt::PEnc(...Semi-Constrained Int...)");
 
 	AsnLen len = 0;
@@ -1488,7 +1473,7 @@ AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBo
 
 void AsnInt::JEnc(SJson::Value& b) const
 {
-	b = SJson::Value(GetLongLong());
+	b = SJson::Value((SJson::Value::Int64)GetLongLong());
 }
 
 bool AsnInt::JDec(const SJson::Value& b)
@@ -1496,7 +1481,7 @@ bool AsnInt::JDec(const SJson::Value& b)
 	Clear();
 	if (b.isInt64() || b.isConvertibleTo(SJson::intValue))
 	{
-		Set(b.asInt64());
+		Set((long long)b.asInt64());
 		return true;
 	}
 	else if (b.isConvertibleTo(SJson::stringValue))

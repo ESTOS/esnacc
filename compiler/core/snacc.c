@@ -31,20 +31,7 @@ const char* gAlternateNamespaceString = 0;
  */
 char* bVDAGlobalDLLExport = (char*)0;
 
-#ifdef _WIN32
 #include <ctype.h>
-#endif // _WIN32
-
-#if TIME_WITH_SYS_TIME
-#include <sys/time.h>
-#include <time.h>
-#else
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#else
-#include <time.h>
-#endif
-#endif
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -71,6 +58,7 @@ char* bVDAGlobalDLLExport = (char*)0;
 #include "../back-ends/str-util.h"
 #include "efileressources.h"
 #include "cpp_c_helper.h"
+#include "time_helpers.h"
 #if META
 #include "meta.h"
 #endif
@@ -90,9 +78,6 @@ char* bVDAGlobalDLLExport = (char*)0;
 #include "../back-ends/swift-gen/gen-swift-code.h"
 #include "../back-ends/js-gen/gen-js-code.h"
 #include "../back-ends/ts-gen/gen-ts-code.h"
-#include "../back-ends/ts-gen/gen-ts-converter.h"
-#include "../back-ends/ts-gen/gen-ts-rose.h"
-#include "../back-ends/ts-gen/gen-ts-combined.h"
 #include "../back-ends/delphi-gen/gen-delphi-code.h"
 #include "../back-ends/jsondoc-gen/gen-jsondoc-code.h"
 #include "../back-ends/openapi-gen/gen-openapi-code.h"
@@ -123,7 +108,7 @@ int yyparse();
 void CreateNames(ModuleList* allMods);
 static int GenCCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genPrinters, int genValues, int genFree);
 
-static void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta COMMA MetaPDU* meta_pdus COMMA) if_TCL(int genTcl COMMA) int novolatilefuncs, int genROSEDecoders);
+static void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta COMMA MetaPDU* meta_pdus COMMA) if_TCL(int genTcl COMMA) int novolatilefuncs, int genROSEDecoders, const int genCxxCode_EnumClasses);
 
 static void GenSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, int novolatilefuncs, int genROSEDecoders);
 
@@ -172,6 +157,13 @@ int isInWithSyntax = 0;			  /* Deepak: 26/Mar/2003 */
 // ste 9.9.2016 - allow private declared symbols to be suppressed
 int gPrivateSymbols = 1;
 
+// Defines the node version the typescript stub will be generated for
+int gNodeVersion = 22;
+
+// Defines the major interface version the interfaces are built with
+// The version is read from a file interfaceversion.txt when the first asn1 is read
+int gMajorInterfaceVersion = -1;
+
 // jan 10.1.2023 - if set deprecated symbols are removed from the generated code
 //  The value contains a timestamp, either specified by the command line or set to 1 (if nodeprecated has been set!)
 //  The comment parser reads @deprecated flags in association to sequences, attributes and operations and stores them with the comment content
@@ -190,6 +182,9 @@ int giValidationLevel = 0xffffffff;
 
 // Write comments to the target files on true (parsing is always enabled)
 int giWriteComments = 0;
+
+// Defines whether we write commonsJS or ESM typescript code
+int genTSESMCode = FALSE;
 
 #ifdef WIN_SNACC /* Deepak: 14/Feb/2003 */
 #define main Win_Snacc_Main
@@ -220,13 +215,15 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "            <ASN.1 file list>\n\n");
 	fprintf(fp, "  -c   generate C encoders and decoders (default)\n");
 	fprintf(fp, "  -C   generate C++ encoders and decoders\n");
+	fprintf(fp, "  -Ce  Uses dedicated enum classes for enums instead of burried enums inside a class\n");
 	fprintf(fp, "  -Ch  <path> header prefix for the generated cpp files (defaults to cpp-lib/include/ but you may e.g. define libs/snacclib5/cpp-lib/include/)\n");
 	fprintf(fp, "  -S   generate Swift code\n");
 	fprintf(fp, "  -j   generate JSON encoders/decoders. Use with -J or -JT.\n");
 	fprintf(fp, "  -J   generate plain JavaScript code. For Java see -RJ.\n");
-	fprintf(fp, "  -JT  generate Javascript - Typescript code.\n");
+	fprintf(fp, "  -JT  generate Typescript CommonJS code.\n");
 	fprintf(fp, "  -JD  generate JSON Documentation files.\n");
 	fprintf(fp, "  -JO  generate OpenApi Documentation files.\n");
+	fprintf(fp, "  -JTE  generate Typescript ES Module code.\n");
 	fprintf(fp, "  -T   <filename> write a type table file for the ASN.1 modules to file filename\n");
 	fprintf(fp, "  -O   <filename> writes the type table file in the original (<1.3b2) format\n");
 	fprintf(fp, "  -O   <filename> writes the type table file in the original (<1.3b2) format\n");
@@ -242,6 +239,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 #if IDL
 	fprintf(fp, "  -idl generate CORBA IDL\n");
 #endif
+	fprintf(fp, "  -node:21   Defines the node version the stub will be generated for. Defaults to 22\n");
 	fprintf(fp, "  -noprivate   do not generate code that is marked as private\n");
 	fprintf(fp, "  -nodeprecated   do not generate code that is marked as deprecated (any date)\n");
 	fprintf(fp, "  -nodeprecated:Day.Month.Year  do not generate code that has been marked deprecated prior to this date\n");
@@ -347,6 +345,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 #endif
 	int genCCode = FALSE; /* defaults to C if neither specified */
 	int genCxxCode = FALSE;
+	int genCxxCode_EnumClasses = FALSE;
 	int genIDLCode = FALSE;
 	int genJAVACode = FALSE;   // JAVA
 	int genDelphiCode = FALSE; // Delphi
@@ -354,7 +353,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	int genSwiftCode = FALSE;
 	int genJSCode = FALSE;
 	int genOpenApiCode = FALSE;
-	int genTSCode = FALSE;
+	int genTSCommonJSCode = FALSE;
 	int genJsonDocCode = FALSE;
 	long longJmpVal = -100;
 	int novolatilefuncs = FALSE;
@@ -369,6 +368,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		Usage(argv[0], stderr);
 		return 1;
 	}
+
+#ifndef _WIN32
+	/**
+	 * Ensure that time values are parsed as UTC and not using any other time zone
+	 */
+	setenv("TZ", "UTC", 1);
+	tzset();
+#endif
 
 	/*
 	 * parse cmd line args
@@ -536,6 +543,8 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						if (szCppHeaderIncludePath == 0 || strlen(szCppHeaderIncludePath) == 0)
 							goto error;
 					}
+					else if (strcmp(argument + 1, "Ce") == 0)
+						genCxxCode_EnumClasses = TRUE;
 					else if (strcmp(argument + 1, "C") == 0)
 						genCxxCode = TRUE;
 					else
@@ -550,7 +559,9 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					if (strcmp(argument + 1, "JD") == 0)
 						genJsonDocCode = TRUE;
 					else if (strcmp(argument + 1, "JT") == 0)
-						genTSCode = TRUE;
+						genTSCommonJSCode = TRUE;
+					else if (strcmp(argument + 1, "JTE") == 0)
+						genTSESMCode = TRUE;
 					else if (strcmp(argument + 1, "JO") == 0)
 						genOpenApiCode = TRUE;
 					else
@@ -607,6 +618,13 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						{
 							gi64NoDeprecatedSymbols = 1;
 						}
+						currArg++;
+					}
+					else if (strncmp(argument + 1, "node", 4) == 0)
+					{
+						gNodeVersion = atoi(argument + 6);
+						if (gNodeVersion == 0)
+							goto error;
 						currArg++;
 					}
 					else if (strcmp(argument + 1, "novolat") == 0)
@@ -808,14 +826,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		genPrintCode = TRUE;
 		genPrintCodeXML = FALSE;
 	}
-	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCode + genDelphiCode + genOpenApiCode > 1 + genJsonDocCode)
+	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCommonJSCode + genTSESMCode + genDelphiCode + genOpenApiCode > 1 + genJsonDocCode)
 	{
 		fprintf(stderr, "%s: ERROR---Choose only one of the -c -C or -D or -T or -RCS or -RJ or -OA or -J or -JD options\n", argv[0]);
 		Usage(argv[0], stderr);
 		return 1;
 	}
 
-	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCode && !genJsonDocCode && !genOpenApiCode)
+	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCommonJSCode && !genTSESMCode && !genJsonDocCode && !genOpenApiCode)
 		genCCode = TRUE; /* default to C if neither specified */
 
 	/* Set the encoding rules to BER if not set */
@@ -831,9 +849,48 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	 */
 	allMods = (ModuleList*)AsnListNew(sizeof(void*));
 
+	bool bReadVersionFile = true;
+
 	SASN1File file;
 	while (getNextFile(&file, 0))
 	{
+
+		if (bReadVersionFile)
+		{
+			bReadVersionFile = false;
+			char* szDirectory = getFilePath(file.filePath);
+			if (szDirectory)
+			{
+				char szPath[_MAX_PATH] = {0};
+				strcpy_s(szPath, _MAX_PATH, szDirectory);
+				strcat_s(szPath, _MAX_PATH, "interfaceversion.txt");
+				FILE* pFile = NULL;
+				if (fopen_s(&pFile, szPath, "r") == 0 && pFile)
+				{
+					while (true)
+					{
+						char szLine[128] = {0};
+						if (fgets(szLine, sizeof(szLine), pFile))
+						{
+							// Trim leading whitespaces or empty lines (just \r \n)
+							int start = 0;
+							while (isspace((unsigned char)szLine[start]))
+								start++;
+
+							if (strlen(&szLine[start]) && szLine[start] != '#' && szLine[start] != '/')
+							{
+								gMajorInterfaceVersion = atoi(&szLine[start]);
+								break;
+							}
+						}
+						else
+							break;
+					}
+					fclose(pFile);
+				}
+			}
+		}
+
 		currMod = ParseAsn1File(file.filePath, file.bIsImportedFile, 1);
 
 		if (currMod == NULL)
@@ -988,7 +1045,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	if (genCCode)
 		FillCTypeInfo(&cRulesG, allMods);
 
-	else if (genCxxCode || genJAVACode || genCSCode || genSwiftCode || genJSCode || genDelphiCode || genTSCode || genJsonDocCode || genOpenApiCode)
+	else if (genCxxCode || genJAVACode || genCSCode || genSwiftCode || genJSCode || genDelphiCode || genTSCommonJSCode || genTSESMCode || genJsonDocCode || genOpenApiCode)
 		FillCxxTypeInfo(&cxxRulesG, allMods);
 
 #if IDL
@@ -1043,7 +1100,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		GenCCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genPrintCode, genFreeCode);
 
 	if (genCxxCode)
-		GenCxxCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, szCppHeaderIncludePath, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
+		GenCxxCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, szCppHeaderIncludePath, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders, genCxxCode_EnumClasses);
 
 	if (genSwiftCode)
 		GenSwiftCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
@@ -1054,7 +1111,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	if (genOpenApiCode)
 		GenOpenApiCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
 
-	if (genTSCode)
+	if (genTSCommonJSCode || genTSESMCode)
 		GenTSCode(allMods, longJmpVal, genTypeCode, genValueCode, genJSONEncDec, genTSRoseStubs, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
 
 	if (genJsonDocCode)
@@ -1292,52 +1349,8 @@ int GenCCode PARAMS((allMods, longJmpVal, genTypes, genValues, genEncoders, genD
  */
 void GenJAVACode(ModuleList* allMods, int genROSEJAVADecoders)
 {
-	Module* currMod;
-	AsnListNode* saveMods;
-	DefinedObj* fNames;
-	int fNameConflict = FALSE;
-
-	/*
-	 * Make names for each module's encoder/decoder src and hdr files
-	 * so import references can be made via include files
-	 * check for truncation --> name conflicts & exit if nec
-	 */
-	fNames = NewObjList();
-
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (ObjIsDefined(fNames, currMod->ROSESrcJAVAFileName, StrObjCmp))
-		{
-			fprintf(errFileG, "Ack! ERROR---file name conflict for generated source files with names `%s'.\n\n", currMod->ROSESrcJAVAFileName);
-			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
-			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
-			fprintf(errFileG, "This error can also be caused by 2 modules having the same name but different OBJECT IDENTIFIERs.");
-			fprintf(errFileG, "Try renaming the modules to correct this.\n");
-			fNameConflict = TRUE;
-		}
-		else
-		{
-			DefineObj(&fNames, currMod->ROSESrcJAVAFileName);
-		}
-
-		if (fNameConflict)
-			return;
-
-		FreeDefinedObjs(&fNames);
-	}
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (currMod->ImportedFlag == FALSE)
-		{
-			if (genROSEJAVADecoders) // JAVA
-			{
-				saveMods = allMods->curr;
-
-				PrintJAVACode(allMods, currMod);
-				allMods->curr = saveMods;
-			}
-		}
-	}
+	if (genROSEJAVADecoders)
+		PrintJAVACode(allMods);
 } /* GenJAVACode */
 
 /*
@@ -1413,7 +1426,7 @@ void GenCSCode(ModuleList* allMods, int genROSECSDecoders)
  * gets 2 source files, one .h for data struct and prototypes, the other .C
  * for the enc/dec/print/free routine code.
  */
-void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta _AND_) if_META(MetaPDU* meta_pdus _AND_) if_TCL(int genTcl _AND_) int novolatilefuncs, int genROSEDecoders)
+void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genFree, const char* szCppHeaderIncludePath, if_META(MetaNameStyle genMeta _AND_) if_META(MetaPDU* meta_pdus _AND_) if_TCL(int genTcl _AND_) int novolatilefuncs, int genROSEDecoders, const int genCxxCode_EnumClasses)
 {
 	Module* currMod;
 	AsnListNode* saveMods;
@@ -1513,7 +1526,7 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 			else
 			{
 				saveMods = allMods->curr;
-				PrintCxxCode(srcFilePtr, hdrFilePtr, if_META(genMeta COMMA & meta COMMA meta_pdus COMMA) allMods, currMod, &cxxRulesG, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, genPrinters, genPrintersXML, genFree, if_TCL(genTcl COMMA) novolatilefuncs, szCppHeaderIncludePath);
+				PrintCxxCode(srcFilePtr, hdrFilePtr, if_META(genMeta COMMA & meta COMMA meta_pdus COMMA) allMods, currMod, &cxxRulesG, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, genPrinters, genPrintersXML, genFree, if_TCL(genTcl COMMA) novolatilefuncs, szCppHeaderIncludePath, genCxxCode_EnumClasses);
 				allMods->curr = saveMods;
 				fclose(hdrFilePtr);
 				fclose(srcFilePtr);
@@ -1622,114 +1635,7 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
  */
 void GenSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genFree, int novolatilefuncs, int genROSEDecoders)
 {
-	Module* currMod;
-	AsnListNode* saveMods;
-	FILE* srcFilePtr;
-	// FILE		*hdrInterfaceFilePtr;
-	// FILE		*hdrForwardDecl;
-	DefinedObj* fNames;
-	int fNameConflict = FALSE;
-
-	genROSEDecoders = 1;
-
-	/*
-	 * Make names for each module's encoder/decoder src and hdr files
-	 * so import references can be made via include files
-	 * check for truncation --> name conflicts & exit if nec
-	 */
-	fNames = NewObjList();
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (ObjIsDefined(fNames, currMod->swiftFileName, StrObjCmp))
-		{
-			fprintf(errFileG, "Ack! ERROR---file name conflict for generated swift file with name `%s'.\n\n", currMod->swiftFileName);
-			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
-			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
-			fprintf(errFileG, "This error can also be caused by 2 modules having the same name but different OBJECT IDENTIFIERs.");
-			fprintf(errFileG, "Try renaming the modules to correct this.\n");
-			fNameConflict = TRUE;
-		}
-		else
-		{
-			DefineObj(&fNames, currMod->swiftFileName);
-		}
-
-		if (fNameConflict)
-			return;
-
-		FreeDefinedObjs(&fNames);
-	}
-
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (currMod->ImportedFlag == FALSE)
-		{
-			if (fopen_s(&srcFilePtr, currMod->swiftFileName, "wt") != 0 || srcFilePtr == NULL)
-			{
-				perror("fopen");
-			}
-			else
-			{
-				saveMods = allMods->curr;
-				PrintSwiftCode(srcFilePtr, allMods, currMod, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, novolatilefuncs);
-				allMods->curr = saveMods;
-				fclose(srcFilePtr);
-			}
-
-			if (genROSEDecoders)
-			{
-				// Print Forward Declarations
-				/*
-				hdrForwardDecl = fopen (currMod->ROSEHdrForwardDeclFileName, "wt");
-				if ((hdrForwardDecl == NULL))
-				{
-				perror ("fopen ROSE");
-				}
-				else
-				{
-				saveMods = allMods->curr;
-
-				PrintForwardDeclarationsCode(hdrForwardDecl, allMods, currMod);
-				allMods->curr = saveMods;
-
-				fclose (hdrForwardDecl);
-				}
-				*/
-
-				if (HasROSEOperations(currMod))
-				{
-					if (fopen_s(&srcFilePtr, currMod->ROSESwiftInterfaceFileName, "wt") != 0 || srcFilePtr == NULL)
-					{
-						perror("fopen ROSE");
-					}
-					else
-					{
-						saveMods = allMods->curr;
-
-						PrintSwiftROSECode(srcFilePtr, allMods, currMod);
-						allMods->curr = saveMods;
-
-						fclose(srcFilePtr);
-					}
-				}
-			}
-		}
-	}
-
-	if (genROSEDecoders)
-	{
-		char* szFileName = MakeSwiftFileName("AsnOperationFactory");
-		if (fopen_s(&srcFilePtr, szFileName, "wt") != 0 || srcFilePtr == NULL)
-		{
-			perror("fopen ROSE");
-		}
-		else
-		{
-			PrintSwiftOperationFactory(srcFilePtr, allMods);
-			fclose(srcFilePtr);
-		}
-		free(szFileName);
-	}
+	PrintSwiftCode(allMods, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, genPrinters, genPrintersXML, genFree, novolatilefuncs, genROSEDecoders);
 } /* GenSwiftCode */
 
 /*
@@ -1820,7 +1726,7 @@ void GenOpenApiCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		currMod->jsFileName = MakeJsonDocFileName(currMod->baseFileName);
+		currMod->jsFileName = MakeJsonDocFileName(currMod->baseFilePath);
 
 		if (ObjIsDefined(fNames, currMod->jsFileName, StrObjCmp))
 		{
@@ -1860,12 +1766,6 @@ void GenOpenApiCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 	}
 } /* GenOpenAPICode */
 
-int sortstring(const void* str1, const void* str2)
-{
-	const char* rec1 = *(char**)str1;
-	const char* rec2 = *(char**)str2;
-	return strcmp(rec1, rec2);
-}
 /*
  * Given the list of parsed, linked, normalized, error-checked and sorted
  * modules, and some code generation flags, generates Swift code and
@@ -1876,372 +1776,7 @@ int sortstring(const void* str1, const void* str2)
 #endif
 void GenTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues, int genJSONEncDec, int genTSROSEStubs, int genPrinters, int genPrintersXML, int genFree, int novolatilefuncs, int genROSEDecoders)
 {
-	Module* currMod;
-	AsnListNode* saveMods;
-	FILE* srcFilePtr = NULL;
-	FILE* encdecFilePtr = NULL;
-	// FILE		*hdrForwardDecl;
-	DefinedObj* fNames;
-	int fNameConflict = FALSE;
-
-	genROSEDecoders = 1;
-
-	/*
-	 * Make names for each module's encoder/decoder src and hdr files
-	 * so import references can be made via include files
-	 * check for truncation --> name conflicts & exit if nec
-	 */
-	fNames = NewObjList();
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (ObjIsDefined(fNames, currMod->tsFileName, StrObjCmp) || ObjIsDefined(fNames, currMod->tsConverterFileName, StrObjCmp))
-		{
-			fprintf(errFileG, "Ack! ERROR---file name conflict for generated typescript files with names `%s' and `%s'.\n\n", currMod->tsFileName, currMod->tsConverterFileName);
-			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
-			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
-			fprintf(errFileG, "This error can also be caused by 2 modules with the same names but different OBJECT IDENTIFIERs.");
-			fprintf(errFileG, "Try renaming the modules to correct this.\n");
-			fNameConflict = TRUE;
-		}
-		else
-		{
-			DefineObj(&fNames, currMod->tsFileName);
-			DefineObj(&fNames, currMod->tsConverterFileName);
-		}
-
-		if (fNameConflict)
-			return;
-
-		FreeDefinedObjs(&fNames);
-	}
-
-	FILE* typesFile = NULL;
-	char* szTypes = MakeFileName("types.ts", "");
-	if (fopen_s(&typesFile, szTypes, "wt") != 0 || typesFile == NULL)
-		perror("fopen");
-	else
-	{
-		fprintf(typesFile, "/**\n");
-		fprintf(typesFile, " * This file combines exports from asn1 files under one name\n");
-		fprintf(typesFile, " *\n");
-		write_snacc_header(typesFile, " * ");
-		fprintf(typesFile, " */\n\n");
-
-		char* strings[1000];
-		memset(strings, 0x00, sizeof(strings));
-		int iCount = 0;
-
-		FOR_EACH_LIST_ELMT(currMod, allMods)
-		{
-			strings[iCount] = MakeFileNameWithoutOutputPath(currMod->baseFileName, "");
-			iCount++;
-		}
-
-		qsort(strings, iCount, sizeof(*strings), sortstring);
-
-		iCount = 0;
-		for (iCount = 0; iCount < 1000; iCount++)
-		{
-			char* szModName = strings[iCount];
-			if (!szModName)
-				break;
-			fprintf(typesFile, "export * as %s from \"./%s\";\n", szModName, szModName);
-			if (genJSONEncDec)
-				fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter\";\n", szModName, szModName);
-			free(szModName);
-		}
-
-		fclose(typesFile);
-	}
-	free(szTypes);
-
-	FILE* methodsFile = NULL;
-	char* szMethods = MakeFileName("methods.ts", "");
-	if (fopen_s(&methodsFile, szMethods, "wt") != 0 || methodsFile == NULL)
-		perror("fopen");
-	else
-	{
-		fprintf(methodsFile, "/**\n");
-		fprintf(methodsFile, " * This file exports all specified ROSE methods as arrays\n");
-		fprintf(methodsFile, " *\n");
-		write_snacc_header(methodsFile, " * ");
-		fprintf(methodsFile, " */\n\n");
-		fprintf(methodsFile, "export interface IROSEMethod {\n");
-		fprintf(methodsFile, "\tname: string;\n");
-		fprintf(methodsFile, "\tid: number;\n");
-		fprintf(methodsFile, "}\n\n");
-		fprintf(methodsFile, "export interface IROSEMethodOverview {\n");
-		fprintf(methodsFile, "\tname: string;\n");
-		fprintf(methodsFile, "\tmethods: IROSEMethod[];\n");
-		fprintf(methodsFile, "}\n\n");
-
-#define COUNT 5000
-		char* strings[COUNT];
-		memset(strings, 0x00, sizeof(strings));
-		int iCountStrings = 0;
-		char* interfaces[COUNT];
-		memset(interfaces, 0x00, sizeof(interfaces));
-		int iCountInterfaces = 0;
-
-		FOR_EACH_LIST_ELMT(currMod, allMods)
-		{
-			if (currMod->ImportedFlag == FALSE)
-			{
-				if (HasROSEOperations(currMod))
-				{
-					char* baseName = _strdup(currMod->moduleName);
-					{
-						char szBuffer[512] = {0};
-						char* szReadPos = currMod->moduleName;
-						int iPos = 0;
-						while (*szReadPos)
-						{
-							if (*szReadPos != '-' && *szReadPos != '_')
-							{
-								szBuffer[iPos] = *szReadPos;
-								iPos++;
-							}
-							szReadPos++;
-						}
-						szBuffer[iPos] = 0;
-
-						// Take into account that the length in bytes does not contain the terminating 0 byte
-						strcpy_s(baseName, strlen(baseName) + 1, szBuffer);
-
-						interfaces[iCountInterfaces] = baseName;
-						iCountInterfaces++;
-					}
-
-					size_t baseLen = strlen(baseName) + 3 + 10; // 2*space and null byte at the end + at least 4 digit operationID
-
-					ValueDef* vd;
-					FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
-					{
-						if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
-						{
-							const char* pszFunction = vd->definedName;
-							size_t len = strlen(pszFunction) + baseLen;
-							char szOperationID[10] = {0};
-							int iValue = -1;
-							if (vd->value->basicValue->choiceId == BASICVALUE_INTEGER)
-								iValue = vd->value->basicValue->a.integer;
-							sprintf_s(szOperationID, 10, "%d", iValue);
-							char* szBuffer = malloc(len);
-							szBuffer[0] = 0;
-							strcat_s(szBuffer, len, baseName);
-							strcat_s(szBuffer, len, " ");
-							strcat_s(szBuffer, len, szOperationID);
-							strcat_s(szBuffer, len, " ");
-							strcat_s(szBuffer, len, pszFunction);
-							strings[iCountStrings] = szBuffer;
-							iCountStrings++;
-						}
-					}
-				}
-			}
-		}
-		free(szMethods);
-
-		qsort(strings, iCountStrings, sizeof(*strings), sortstring);
-
-		iCountStrings = 0;
-		char* szLastModule = NULL;
-		int bAddComma = FALSE;
-		for (iCountStrings = 0; iCountStrings < COUNT; iCountStrings++)
-		{
-			char* szData = strings[iCountStrings];
-			if (!szData)
-				break;
-
-#ifdef _WIN32
-			char* next_token = NULL;
-			char* szModule = strtok_s(szData, " ", &next_token);
-			char* szID = strtok_s(NULL, " ", &next_token);
-			char* szMethod = strtok_s(NULL, " ", &next_token);
-#else  // _WIN32
-			char* szModule = strtok(szData, " ");
-			char* szID = strtok(NULL, " ");
-			char* szMethod = strtok(NULL, " ");
-#endif // _WIN32
-
-			if (!szModule || !szID || !szMethod)
-				continue;
-
-			if (!szLastModule || strcmp(szLastModule, szModule) != 0)
-			{
-				if (szLastModule)
-					fprintf(methodsFile, "\n];\n\n");
-				fprintf(methodsFile, "export const methods%s: IROSEMethod[] = [\n", szModule);
-				szLastModule = szModule;
-				bAddComma = FALSE;
-			}
-			if (bAddComma)
-				fprintf(methodsFile, ",\n");
-			fprintf(methodsFile, "\t{ name: \"%s\", id: %s }", szMethod, szID);
-			bAddComma = TRUE;
-		}
-
-		if (szLastModule)
-			fprintf(methodsFile, "\n];\n\n");
-
-		if (iCountInterfaces)
-		{
-			qsort(interfaces, iCountInterfaces, sizeof(*interfaces), sortstring);
-
-			fprintf(methodsFile, "export const roseInterfaceMethods: IROSEMethodOverview[] = [\n");
-			bAddComma = FALSE;
-			for (iCountInterfaces = 0; iCountInterfaces < COUNT; iCountInterfaces++)
-			{
-				char* szInterface = interfaces[iCountInterfaces];
-				if (!szInterface)
-					break;
-				if (bAddComma)
-					fprintf(methodsFile, ",\n");
-				fprintf(methodsFile, "\t{ name: \"%s\", methods: methods%s }", szInterface, szInterface);
-				bAddComma = TRUE;
-			}
-
-			fprintf(methodsFile, "\n];\n");
-		}
-
-		for (iCountStrings = 0; iCountStrings < COUNT; iCountStrings++)
-		{
-			char* szData = strings[iCountStrings];
-			if (!szData)
-				break;
-			free(szData);
-		}
-
-		for (iCountInterfaces = 0; iCountInterfaces < COUNT; iCountInterfaces++)
-		{
-			char* szInterface = interfaces[iCountInterfaces];
-			if (!szInterface)
-				break;
-			free(szInterface);
-		}
-
-		fclose(methodsFile);
-	}
-
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (currMod->ImportedFlag == FALSE)
-		{
-			if (fopen_s(&srcFilePtr, currMod->tsFileName, "wt") != 0 || srcFilePtr == NULL)
-				perror("fopen");
-			else
-			{
-				saveMods = allMods->curr;
-				PrintTSCode(srcFilePtr, allMods, currMod, longJmpVal, genTypes, genValues, genJSONEncDec, genJSONEncDec, genJSONEncDec, novolatilefuncs);
-				allMods->curr = saveMods;
-				fclose(srcFilePtr);
-			}
-		}
-	}
-
-	if (genJSONEncDec)
-	{
-		SaveTSConverterFilesToOutputDirectory(gszOutputPath);
-
-		FOR_EACH_LIST_ELMT(currMod, allMods)
-		{
-			if (currMod->ImportedFlag == FALSE)
-			{
-				if (fopen_s(&encdecFilePtr, currMod->tsConverterFileName, "wt") != 0 || encdecFilePtr == NULL)
-				{
-					perror("fopen");
-				}
-				else
-				{
-					saveMods = allMods->curr;
-					PrintTSConverterCode(encdecFilePtr, allMods, currMod, longJmpVal, genTypes, genValues, genJSONEncDec, genJSONEncDec, genJSONEncDec, novolatilefuncs);
-					allMods->curr = saveMods;
-					fclose(encdecFilePtr);
-				}
-			}
-		}
-	}
-
-	SaveTSROSEFilesToOutputDirectory(genTSROSEStubs, gszOutputPath);
-
-	if (genTSROSEStubs)
-	{
-		FOR_EACH_LIST_ELMT(currMod, allMods)
-		{
-			if (currMod->ImportedFlag == FALSE)
-			{
-				if (HasROSEOperations(currMod))
-				{
-					if (IsDeprecatedNoOutputModule(currMod))
-						continue;
-
-					saveMods = allMods->curr;
-
-					char szStubFileName[_MAX_PATH];
-					strcpy_s(szStubFileName, _MAX_PATH, gszOutputPath);
-					strcat_s(szStubFileName, _MAX_PATH, currMod->ROSEClassName);
-					strcat_s(szStubFileName, _MAX_PATH, ".ts");
-					FILE* stubFilePtr = NULL;
-					if (fopen_s(&stubFilePtr, szStubFileName, "wt") != 0 || stubFilePtr == NULL)
-					{
-						perror("fopen tsROSEClientFileName");
-					}
-					else
-					{
-						allMods->curr = saveMods;
-						PrintTSROSECode(stubFilePtr, allMods, currMod);
-						fclose(stubFilePtr);
-					}
-
-					if (genTSROSEStubs & 0x06)
-					{
-						// Client Interfaces
-						char szClientInterfaceFileName[_MAX_PATH];
-						strcpy_s(szClientInterfaceFileName, _MAX_PATH, gszOutputPath);
-						strcat_s(szClientInterfaceFileName, _MAX_PATH, currMod->ROSEClassName);
-						strcat_s(szClientInterfaceFileName, _MAX_PATH, "_Interface.ts");
-
-						FILE* roseClientInterfaceFilePtr = NULL;
-
-						if (fopen_s(&roseClientInterfaceFilePtr, szClientInterfaceFileName, "wt") != 0 || roseClientInterfaceFilePtr == NULL)
-						{
-							perror("fopen tsROSEClientFileName");
-						}
-						else
-						{
-							allMods->curr = saveMods;
-							PrintTSROSEInterfaceCode(roseClientInterfaceFilePtr, allMods, currMod);
-							fclose(roseClientInterfaceFilePtr);
-						}
-					}
-
-					if (genTSROSEStubs & 0x01)
-					{
-						// Server (Node) stub
-						char szServerInterfaceFileName[_MAX_PATH];
-						strcpy_s(szServerInterfaceFileName, _MAX_PATH, gszOutputPath);
-						strcat_s(szServerInterfaceFileName, _MAX_PATH, currMod->ROSEClassName);
-						strcat_s(szServerInterfaceFileName, _MAX_PATH, "_Interface.ts");
-
-						FILE* roseServerInterfaceFilePtr = NULL;
-
-						if (fopen_s(&roseServerInterfaceFilePtr, szServerInterfaceFileName, "wt") != 0 || roseServerInterfaceFilePtr == NULL)
-						{
-							perror("fopen tsROSEClientFileName");
-						}
-						else
-						{
-							allMods->curr = saveMods;
-							PrintTSROSEInterfaceCode(roseServerInterfaceFilePtr, allMods, currMod);
-							fclose(roseServerInterfaceFilePtr);
-						}
-					}
-
-					allMods->curr = saveMods;
-				}
-			}
-		}
-	}
+	PrintTSCode(allMods, longJmpVal, genTypes, genValues, genJSONEncDec, genTSROSEStubs, genPrinters, genPrintersXML, genFree, novolatilefuncs, genROSEDecoders);
 } /* GenTSCode */
 #if defined(_MSC_VER)
 #pragma warning(default : 6262)
@@ -2254,61 +1789,7 @@ void GenTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues
  */
 void GenJsonDocCode(ModuleList* allMods)
 {
-	Module* currMod;
-	AsnListNode* saveMods;
-	FILE* srcFilePtr;
-	// FILE		*hdrInterfaceFilePtr;
-	// FILE		*hdrForwardDecl;
-	DefinedObj* fNames;
-	int fNameConflict = FALSE;
-
-	/*
-	 * Make names for each module's encoder/decoder src and hdr files
-	 * so import references can be made via include files
-	 * check for truncation --> name conflicts & exit if nec
-	 */
-	fNames = NewObjList();
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		currMod->jsFileName = MakeJsonDocFileName(currMod->baseFileName);
-
-		if (ObjIsDefined(fNames, currMod->jsFileName, StrObjCmp))
-		{
-			fprintf(errFileG, "Ack! ERROR---file name conflict for generated swift file with name `%s'.\n\n", currMod->jsFileName);
-			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
-			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
-			fprintf(errFileG, "This error can also be caused by 2 modules having the same name but different OBJECT IDENTIFIERs.");
-			fprintf(errFileG, "Try renaming the modules to correct this.\n");
-			fNameConflict = TRUE;
-		}
-		else
-		{
-			DefineObj(&fNames, currMod->jsFileName);
-		}
-
-		if (fNameConflict)
-			return;
-
-		FreeDefinedObjs(&fNames);
-	}
-	FOR_EACH_LIST_ELMT(currMod, allMods)
-	{
-		if (currMod->ImportedFlag == FALSE)
-		{
-			if (fopen_s(&srcFilePtr, currMod->jsFileName, "wt") != 0 || srcFilePtr == NULL)
-			{
-				perror("fopen");
-			}
-			else
-			{
-				saveMods = allMods->curr;
-				PrintJsonDocCode(srcFilePtr, allMods, currMod);
-				allMods->curr = saveMods;
-				fclose(srcFilePtr);
-			}
-		}
-	}
-
+	PrintJsonDocCode(allMods);
 } /* GenJsonDocCode */
 
 /*
@@ -2503,26 +1984,27 @@ void CreateNames(ModuleList* allMods)
 	Module* currMod;
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		currMod->baseFileName = MakeBaseFileName(currMod->asn1SrcFileName);
-		currMod->moduleName = MakeModuleName(currMod->baseFileName);
-		currMod->ROSEClassName = MakeROSEClassName(currMod->baseFileName);
-		currMod->cHdrFileName = MakeCHdrFileName(currMod->baseFileName);
-		currMod->cSrcFileName = MakeCSrcFileName(currMod->baseFileName);
-		currMod->cxxHdrFileName = MakeCxxHdrFileName(currMod->baseFileName);
-		currMod->cxxSrcFileName = MakeCxxSrcFileName(currMod->baseFileName);
-		currMod->swiftFileName = MakeSwiftFileName(currMod->baseFileName);
-		currMod->jsFileName = MakeJSFileName(currMod->baseFileName);
-		currMod->tsFileName = MakeTSFileName(currMod->baseFileName);
-		currMod->tsConverterFileName = MakeTSEncDecFileName(currMod->baseFileName);
-		currMod->idlFileName = MakeIDLFileName(currMod->baseFileName);
-		currMod->delphiFileName = MakeDelphiFileName(currMod->baseFileName);
-		currMod->ROSEHdrFileName = MakeROSEHdrFileName(currMod->baseFileName);
-		currMod->ROSESrcFileName = MakeROSESrcFileName(currMod->baseFileName);
-		currMod->ROSESrcCSFileName = MakeROSESrcCSFileName(currMod->baseFileName);
-		currMod->ROSEHdrInterfaceFileName = MakeROSEHdrInterfaceFileName(currMod->baseFileName);
-		currMod->ROSEHdrForwardDeclFileName = MakeROSEHdrForwardDeclFileName(currMod->baseFileName);
-		currMod->ROSESrcJAVAFileName = MakeROSESrcJAVAFileName(currMod->baseFileName);
-		currMod->ROSESwiftInterfaceFileName = MakeROSESwiftInterfaceFileName(currMod->baseFileName);
+		currMod->baseFilePath = MakeBaseFileName(currMod->asn1SrcFileName);
+		currMod->baseFileName = RemovePathNonConst(currMod->baseFilePath);
+		currMod->moduleName = MakeModuleName(currMod->baseFilePath);
+		currMod->ROSEClassName = MakeROSEClassName(currMod->baseFilePath);
+		currMod->cHdrFileName = MakeCHdrFileName(currMod->baseFilePath);
+		currMod->cSrcFileName = MakeCSrcFileName(currMod->baseFilePath);
+		currMod->cxxHdrFileName = MakeCxxHdrFileName(currMod->baseFilePath);
+		currMod->cxxSrcFileName = MakeCxxSrcFileName(currMod->baseFilePath);
+		currMod->swiftFileName = MakeSwiftFileName(currMod->baseFilePath);
+		currMod->jsFileName = MakeJSFileName(currMod->baseFilePath);
+		currMod->tsFileName = MakeTSFileName(currMod->baseFilePath);
+		currMod->tsConverterFileName = MakeTSEncDecFileName(currMod->baseFilePath);
+		currMod->idlFileName = MakeIDLFileName(currMod->baseFilePath);
+		currMod->delphiFileName = MakeDelphiFileName(currMod->baseFilePath);
+		currMod->ROSEHdrFileName = MakeROSEHdrFileName(currMod->baseFilePath);
+		currMod->ROSESrcFileName = MakeROSESrcFileName(currMod->baseFilePath);
+		currMod->ROSESrcCSFileName = MakeROSESrcCSFileName(currMod->baseFilePath);
+		currMod->ROSEHdrInterfaceFileName = MakeROSEHdrInterfaceFileName(currMod->baseFilePath);
+		currMod->ROSEHdrForwardDeclFileName = MakeROSEHdrForwardDeclFileName(currMod->baseFilePath);
+		currMod->ROSESrcJAVAFileName = MakeROSESrcJAVAFileName(currMod->baseFilePath);
+		currMod->ROSESwiftInterfaceFileName = MakeROSESwiftInterfaceFileName(currMod->baseFilePath);
 	}
 }
 
@@ -2536,62 +2018,4 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
 	fprintf(stderr, "\n");
 	assert(false);
 	exit(200);
-}
-
-/**
- * Converts a date in notation day.month.year into the seconds based on unix time 1.1.1970
- *
- * Returns -1 on error
- */
-long long ConvertDateToUnixTime(const char* szDate)
-{
-	long long tmResult = -1;
-#ifdef _WIN32
-	SYSTEMTIME st;
-	memset(&st, 0x00, sizeof(SYSTEMTIME));
-	if (sscanf_s(szDate, "%hd.%hd.%hd", &st.wDay, &st.wMonth, &st.wYear) == 3)
-	{
-		if (st.wDay < 1 || st.wDay > 31)
-			return tmResult;
-		if (st.wMonth < 1 || st.wMonth > 12)
-			return tmResult;
-		if (st.wYear < 1970)
-			return tmResult;
-		FILETIME ft;
-		SystemTimeToFileTime(&st, &ft);
-		ULARGE_INTEGER uli;
-		uli.LowPart = ft.dwLowDateTime;
-		uli.HighPart = ft.dwHighDateTime;
-		tmResult = (long long)((uli.QuadPart / 10000000ULL) - 11644473600ULL);
-	}
-#else
-	struct tm tm;
-	if (strptime(szDate, "%d.%m.%Y", &tm))
-		tmResult = mktime(&tm);
-#endif
-	return tmResult;
-}
-
-/**
- * Converts a unix time into something readable
- *
- * Returns a pointer to a buffer that needs to get released with Free
- */
-char* ConvertUnixTimeToReadable(const long long tmUnixTime)
-{
-	char* szBuffer = malloc(128);
-	if (!szBuffer)
-		snacc_exit("Out of memory");
-
-#ifdef _WIN32
-	struct tm timeinfo;
-	localtime_s(&timeinfo, &tmUnixTime);
-	strftime(szBuffer, 128, "%d.%m.%Y", &timeinfo);
-#else
-	struct tm* timeinfo;
-	timeinfo = localtime((const time_t*)&tmUnixTime);
-	strftime(szBuffer, 128, "%d.%m.%Y", timeinfo);
-#endif
-
-	return szBuffer;
 }

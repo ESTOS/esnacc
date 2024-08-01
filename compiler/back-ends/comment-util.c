@@ -153,10 +153,12 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 		bSucceeded = GetMemberComment_UTF8(m->moduleName, td->definedName, szElement, &comment) ? true : false;
 	if (bSucceeded)
 	{
-		if (strlen(comment.szShort) || comment.i64Deprecated || comment.iPrivate)
+		if (strlen(comment.szShort) || strlen(comment.szLinkedType) || comment.i64Deprecated || comment.i64Added || comment.iPrivate)
 		{
 			int iMultiline = 0;
 			if (comment.i64Deprecated)
+				iMultiline++;
+			if (comment.i64Added)
 				iMultiline++;
 			if (strstr(comment.szDeprecated, "\\n"))
 				iMultiline += 1;
@@ -165,6 +167,8 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 			if (strstr(comment.szShort, "\\n"))
 				iMultiline += 2;
 			else if (strlen(comment.szShort))
+				iMultiline += 1;
+			else if (strlen(comment.szLinkedType))
 				iMultiline += 1;
 			char szPrefix[128] = {0};
 			char szSuffix[128] = {0};
@@ -183,13 +187,15 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 
 			bool bAdded = printComment(src, szPrefix, comment.szShort, szSuffix);
 
-			if (comment.i64Deprecated || comment.iPrivate)
+			if (strlen(comment.szLinkedType) || comment.i64Deprecated || comment.i64Added || comment.iPrivate)
 			{
 				if (bAdded)
 				{
 					bAdded = false;
 					fprintf(src, "\n");
 				}
+				if (strlen(comment.szLinkedType))
+					fprintf(src, "%s (see %s)%s\n", szPrefix, comment.szLinkedType, szSuffix);
 				if (comment.i64Deprecated)
 				{
 					const char* szComment = getDeprecated(comment.szDeprecated, style);
@@ -200,6 +206,12 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 					if (szComment)
 						fprintf(src, " %s", szComment);
 					fprintf(src, "%s\n", szSuffix);
+					free(szTime);
+				}
+				if (comment.i64Added)
+				{
+					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
+					fprintf(src, "%s @added %s%s\n", szPrefix, szTime, szSuffix);
 					free(szTime);
 				}
 				if (comment.iPrivate)
@@ -232,14 +244,14 @@ void printModuleComment(FILE* src, const char* szModuleName, enum COMMENTSTYLE s
 	{
 		bool bHasShort = strlen(comment.szShort) ? true : false;
 		bool bHasLong = strlen(comment.szLong) ? true : false;
-		if (bHasShort || bHasLong || comment.i64Deprecated || comment.iPrivate)
+		if (bHasShort || bHasLong || comment.i64Deprecated || comment.i64Added || comment.iPrivate)
 		{
 			fprintf(src, "/**\n");
 			if (bHasShort)
 				printComment(src, " *", comment.szShort, "\n");
 			if (bHasLong)
 				printComment(src, " *", comment.szLong, "\n");
-			if (comment.i64Deprecated || comment.iPrivate)
+			if (comment.i64Deprecated || comment.i64Added || comment.iPrivate)
 			{
 				if (bHasShort || bHasLong)
 					fprintf(src, " *\n");
@@ -253,6 +265,12 @@ void printModuleComment(FILE* src, const char* szModuleName, enum COMMENTSTYLE s
 					if (szComment)
 						fprintf(src, " %s", szComment);
 					fprintf(src, "\n");
+					free(szTime);
+				}
+				if (comment.i64Added)
+				{
+					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
+					fprintf(src, " * @added %s\n", szTime);
 					free(szTime);
 				}
 				if (comment.iPrivate)
@@ -297,7 +315,7 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 				printComment(src, szPrefix, comment.szShort, "\n");
 			if (bHasLong)
 				printComment(src, szPrefix, comment.szLong, "\n");
-			if (comment.i64Deprecated || comment.iPrivate)
+			if (comment.i64Deprecated || comment.i64Added || comment.iPrivate)
 			{
 				if ((bHasShort || bHasLong) && style != COMMENTSTYLE_CPP)
 					fprintf(src, "%s\n", szPrefix);
@@ -311,6 +329,12 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 					if (szComment)
 						fprintf(src, " %s", szComment);
 					fprintf(src, "\n");
+					free(szTime);
+				}
+				if (comment.i64Added)
+				{
+					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
+					fprintf(src, "%s @added %s\n", szPrefix, szTime);
 					free(szTime);
 				}
 				if (comment.iPrivate)
@@ -346,7 +370,7 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum CO
 	{
 		bool bHasShort = strlen(comment.szShort) ? true : false;
 		bool bHasLong = strlen(comment.szLong) ? true : false;
-		if (bHasShort || bHasLong || comment.i64Deprecated || comment.iPrivate)
+		if (bHasShort || bHasLong || comment.i64Deprecated || comment.i64Added || comment.iPrivate)
 		{
 			const char* szPrefix = "";
 			if (style == COMMENTSTYLE_CPP)
@@ -362,7 +386,7 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum CO
 				printComment(src, szPrefix, comment.szShort, "\n");
 			if (bHasLong)
 				printComment(src, szPrefix, comment.szLong, "\n");
-			if (comment.i64Deprecated || comment.iPrivate)
+			if (comment.i64Deprecated || comment.i64Added || comment.iPrivate)
 			{
 				if (bHasShort || bHasLong)
 					fprintf(src, "%s\n", szPrefix);
@@ -376,6 +400,12 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum CO
 					if (szComment)
 						fprintf(src, " %s", szComment);
 					fprintf(src, "\n");
+					free(szTime);
+				}
+				if (comment.i64Added)
+				{
+					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
+					fprintf(src, "%s @added %s\n", szPrefix, szTime);
 					free(szTime);
 				}
 				if (comment.iPrivate)

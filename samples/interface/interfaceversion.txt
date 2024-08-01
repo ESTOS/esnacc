@@ -1,0 +1,5 @@
+# This defines the major interface for the asn1 files in this repo
+# Do NOT change this value as long as the interface stays compatible 
+# Increment it by one if you change the interface version incompatible (remove functions or incompatible change functions)
+
+0

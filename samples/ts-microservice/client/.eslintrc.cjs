@@ -15,9 +15,10 @@ module.exports = {
 		"*.png",
 		"*.sample",
 		"*.woff2",
+		"*.json",
 		"*.buildagent",
-		"*.eslintrc.js",
-		"*.eslintrc.precommit.js"
+		"*.eslintrc.cjs",
+		"*.eslintrc.precommit.cjs"
 	],
 	"extends": [
 		"standard",
@@ -210,6 +211,7 @@ module.exports = {
 		"jsdoc/check-indentation": 1,
 		"jsdoc/check-syntax": 1,
 		"jsdoc/no-types": 1,
+		"jsdoc/tag-lines": ["error", "any", {"startLines":1, "tags":{"param":{"lines":"never"}}}],
 		"jsdoc/require-description": 1,
 		"jsdoc/require-param-type": 0,
 		"jsdoc/require-returns-type": 0,

@@ -271,7 +271,7 @@ public:
      */
     virtual CharReader* newCharReader() const = 0;
   }; // Factory
-};   // CharReader
+}; // CharReader
 
 /** \brief Build a CharReader implementation.
  *
