@@ -380,7 +380,7 @@ AsnLen AsnAny::PEnc(AsnBufBits& b) const
 		tmpAnyLoadOcts.Set((const char*)pBits, lAnyByteCount);
 		delete[] pBits;
 		lLength = tmpAnyLoadOcts.PEnc(b);
-	}						 // IF value
+	} // IF value
 	else if (anyBuf != NULL) // HANDLE the case with just a BLOB of data.
 	{
 		anyBuf->ResetMode();
@@ -392,7 +392,7 @@ AsnLen AsnAny::PEnc(AsnBufBits& b) const
 			lLength = tmpAnyLoadOcts.PEnc(b); // BIT count returned.
 			delete[] ptr;
 		} // END IF any data in ANY.
-	}	  // IF value/anyBuf
+	} // IF value/anyBuf
 	else
 		throw EXCEPT("Unknown any with no value", ENCODE_ERROR);
 
@@ -432,9 +432,9 @@ void AsnAny::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 				value->PDec(tmpBufBits, tmpBitsDecoded);
 				// DECODE actual known value.
 			} // END IF tmpBitsDecoded
-		}	  // END IF value == NULL
-	}		  // IF ai != NULL
-	else	  // JUST load BLOB of data in "anyBuf"
+		} // END IF value == NULL
+	} // IF ai != NULL
+	else // JUST load BLOB of data in "anyBuf"
 	{
 		tmpAnyLoadOcts.PDec(b, bitsDecoded); // OUTER OctetString
 		// OUTER "bitsDecoded" returned to caller.
@@ -444,7 +444,7 @@ void AsnAny::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 				delete this->anyBuf;
 			this->anyBuf = new AsnBuf((char*)tmpAnyLoadOcts.c_str(), tmpAnyLoadOcts.length());
 		} // END IF any data in ANY.
-	}	  // END IF ai != NULL
+	} // END IF ai != NULL
 } // END AsnAny::PDec(...)
 
 void AsnAny::JEnc(SJson::Value& b) const
@@ -559,6 +559,15 @@ void AsnAny::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 
 void AsnAny::BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded)
 {
+	if (TAG_IS_CNTX(tag) && elmtLen > 2)
+	{
+		// Special
+		// If we have an indexed optional any, we cannot determine the type using the schema (The type is any)
+		// In this case the details about the structure (is it a sequence a string etc) are burried within
+		// the object and the reader is now on the position of the any. So we need to read the following tag and len information
+		tag = BDecTag(b, bytesDecoded);
+		elmtLen = BDecLen(b, bytesDecoded);
+	}
 	const auto tagLen = BytesInTag(tag);
 	const auto elementLen = BytesInLen(elmtLen);
 	const auto headerLen = tagLen + elementLen;

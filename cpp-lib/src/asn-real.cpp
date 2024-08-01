@@ -943,7 +943,6 @@ AsnLen AsnReal::PEnc(AsnBufBits& b) const
 
 	if (templen > 0)
 	{
-
 		templen *= 8;
 
 		len += b.OctetAlignWrite();
@@ -1020,7 +1019,6 @@ void AsnReal::PrintXML(std::ostream& os, const char* lpszTitle) const
 
 char* AsnReal::checkRealValRange(const double m_Lower, const double m_Upper) const
 {
-
 	double ltemp;
 	char* pError = NULL;
 	char cTmperr[200];
@@ -1051,7 +1049,6 @@ char* AsnReal::checkRealValRange(const double m_Lower, const double m_Upper) con
 
 char* AsnReal::checkRealSingleVal(const double m_SingleVal) const
 {
-
 	double ltemp;
 	char* pError = NULL;
 	char cTmperr[200];

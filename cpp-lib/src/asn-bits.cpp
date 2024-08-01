@@ -245,7 +245,6 @@ AsnLen AsnBits::BEncContent(AsnBuf& b) const
 	// IF bitstring is a NamedBitList
 	if (nblFlag)
 	{
-
 		// Calculate last octet.
 		//
 		size_t finalOctet;
@@ -392,7 +391,6 @@ size_t AsnBits::encLen() const
 	// IF bitstring is a NamedBitList
 	if (nblFlag)
 	{
-
 		// Calculate last octet.
 		//
 		size_t finalOctet;

@@ -89,7 +89,6 @@ void AsnBuf::clear()
 
 void AsnBuf::PutByteRvs(char byte)
 {
-
 	// if empty add an AsnRvsBuf card
 	//
 	if (m_deck.empty())
@@ -700,7 +699,6 @@ void AsnBuf::hexDump(std::ostream& os) const
 
 	while (!done)
 	{
-
 		try
 		{
 			ch = GetUByte();
@@ -710,7 +708,6 @@ void AsnBuf::hexDump(std::ostream& os) const
 		}
 		catch (...)
 		{
-
 			os.unsetf(std::ios_base::hex);
 			os.unsetf(std::ios_base::hex);
 			done = true;

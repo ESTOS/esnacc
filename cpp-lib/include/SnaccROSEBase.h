@@ -343,7 +343,7 @@ protected:
 	 *
 	 * @param pInvokeContext - the context that is about to get deleted
 	 */
-	virtual void OnInvokeContextRunsOutOfScope(SnaccInvokeContext* pInvokeContext){};
+	virtual void OnInvokeContextRunsOutOfScope(SnaccInvokeContext* pInvokeContext) {};
 
 private:
 	/*! The ROSE component messages.

@@ -25,7 +25,6 @@ SnaccException::SnaccException(long errorCode) noexcept
 
 SnaccException::SnaccException(const char* file, long line_number, const char* function, const char* whatStrIn, long errorCode) noexcept
 {
-
 	memset(&stack[0], 0, sizeof(CallStack) * STACK_DEPTH);
 
 	try

@@ -63,7 +63,7 @@ public:
      */
     virtual StreamWriter* newStreamWriter() const = 0;
   }; // Factory
-};   // StreamWriter
+}; // StreamWriter
 
 /** \brief Write into stringstream, then return string, for convenience.
  * A StreamWriter will be created from the factory, used, and then deleted.

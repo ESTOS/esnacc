@@ -147,6 +147,7 @@ typedef enum BER_UNIV_CODE
  * tag has the constructed bit set.
  */
 #define TAG_IS_CONS(tag) ((tag) & (CONS << ((TB - 1) * 8)))
+#define TAG_IS_CNTX(tag) ((tag) & (CNTX << ((TB - 1) * 8)))
 
 #define EOC_TAG_ID 0
 
@@ -166,20 +167,20 @@ typedef enum BER_UNIV_CODE
 
 #define BEncTag3(b, class, form, code)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
 	3;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
-	b.PutByteRvs((code)&0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+	b.PutByteRvs((code) & 0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 7)));                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
 	b.PutByteRvs(static_cast<unsigned char>(static_cast<unsigned char>(class) | static_cast<unsigned char>(form) | static_cast<unsigned char>(31)))
 
 #define BEncTag4(b, class, form, code)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
 	4;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
-	b.PutByteRvs((code)&0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+	b.PutByteRvs((code) & 0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 7)));                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 14)));                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
 	b.PutByteRvs(static_cast<unsigned char>(static_cast<unsigned char>(class) | static_cast<unsigned char>(form) | static_cast<unsigned char>(31)))
 
 #define BEncTag5(b, class, form, code)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
 	5;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
-	b.PutByteRvs((code)&0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+	b.PutByteRvs((code) & 0x7F);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 7)));                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 14)));                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
 	b.PutByteRvs((char)(0x80 | (char)((code) >> 21)));                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
@@ -805,7 +806,7 @@ protected:
 
 extern SNACCDLL_API char numToHexCharTblG[];
 
-#define TO_HEX(fourBits) (numToHexCharTblG[(fourBits)&0x0F])
+#define TO_HEX(fourBits) (numToHexCharTblG[(fourBits) & 0x0F])
 
 // ########################################################################
 
@@ -1566,7 +1567,7 @@ protected:
 		return (long)length();
 	}
 	virtual void Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset) override;
-	virtual void Allocate(long size) override{};
+	virtual void Allocate(long size) override {};
 
 private:
 	void BDecConsString(const AsnBuf& b, AsnLen elmtLen, AsnLen& bytesDecoded);
@@ -2013,7 +2014,7 @@ protected:
 	virtual AsnLen Interpret(AsnBufBits& b, long offset) const override;
 
 	virtual void Deterpret(AsnBufBits& b, AsnLen& bitsDecoded, long offset) override;
-	virtual void Allocate(long size) override{};
+	virtual void Allocate(long size) override {};
 
 	AsnLen CombineConsString(const AsnBuf& b, AsnLen elmtLen, std::string& encStr);
 };
@@ -2349,7 +2350,7 @@ public:
 
 			if (bytesDecoded >= elementLen)
 				break;
-			
+
 			tag = BDecTag(_b, bytesDecoded);
 		}
 	}
