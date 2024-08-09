@@ -32,12 +32,10 @@ void handleDeprecatedSequence(FILE* src, Module* mod, TypeDef* td)
 {
 	if (IsDeprecatedFlaggedSequence(mod, td->definedName))
 	{
-		fprintf(src, "  public %s()\n", td->definedName);
-		fprintf(src, "  {\n");
 		asnsequencecomment comment;
 		if (GetSequenceComment_UTF8(mod->moduleName, td->definedName, &comment))
-			fprintf(src, "    // CALL DeprecatedASN1Object(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, td->definedName, comment.szDeprecated);
-		fprintf(src, "  }\n\n");
+			fprintf(src, "  // CALL DeprecatedASN1Object(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, td->definedName, comment.szDeprecated);
+		fprintf(src, "\n\n");
 	}
 }
 
@@ -634,12 +632,12 @@ void PrintJavaOperationClass(Module* mod, ValueDef* vd)
 
 		if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
 		{
-			fprintf(src, "  public %s()\n", name);
-			fprintf(src, "  {\n");
+//			fprintf(src, "  public %s()\n", name);
+//			fprintf(src, "  {\n");
 			asnoperationcomment comment;
 			if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment))
-				fprintf(src, "    // CALL DeprecatedASN1Method(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, vd->definedName, comment.szDeprecated);
-			fprintf(src, "  }\n\n");
+				fprintf(src, "  // CALL DeprecatedASN1Method(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, vd->definedName, comment.szDeprecated);
+			fprintf(src, "\n\n");
 		}
 
 		fprintf(src, "  public Class<?> getAsnArgumentType()\n");
