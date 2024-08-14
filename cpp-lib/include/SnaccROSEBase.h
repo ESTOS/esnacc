@@ -176,13 +176,13 @@ public:
 		First call this function to complete pending invokes and if not processed
 		call OnBinaryDataBlock.
 		The data should be pure ASN.1 data without header.
-		The must be one call for each ROSEMessage. */
-	bool OnBinaryDataBlockResult(const char* lpBytes, unsigned long lSize);
+		There must be one call for each ROSEMessage.*/
+	bool OnBinaryDataBlockResult(const char* lpBytes, unsigned long lSize, bool bLogTransportData = true);
 
 	/*! Input of the binary data.
 		The data should be pure ASN.1 data without header.
-		The must be one call for each ROSEMessage. */
-	void OnBinaryDataBlock(const char* lpBytes, unsigned long lSize);
+		There must be one call for each ROSEMessage. */
+	void OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, bool bLogTransportData = true);
 
 	/* Output of the binary data.
 		Override this function to send the data to the transport layer.

@@ -223,7 +223,7 @@ bool SnaccROSEBase::CompletePendingOperation(int invokeID, SNACC::ROSEMessage* p
 	return false;
 }
 
-bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long lSize)
+bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long lSize, bool bLogTransportData /*= true */)
 {
 	if (!lSize)
 		return false;
@@ -244,7 +244,8 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 					}
 					catch (const SnaccException& ex)
 					{
-						LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+						if (bLogTransportData)
+							LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 						SJson::Value error;
 						error["exception"] = ex.what();
@@ -272,7 +273,9 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 						delete pmessage;
 						return true;
 					}
-					LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+
+					if (bLogTransportData)
+						LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 					// pmessage will be deleted inside
 					bReturn = OnROSEMessage(pmessage, false);
@@ -296,7 +299,8 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 						}
 						catch (const SnaccException& ex)
 						{
-							LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+							if (bLogTransportData)
+								LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 							SJson::Value error;
 							error["exception"] = ex.what();
@@ -329,14 +333,16 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 							return true;
 						}
 
-						LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, pmessage, &value);
+						if (bLogTransportData)
+							LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, pmessage, &value);
 
 						// pmessage will be deleted inside
 						bReturn = OnROSEMessage(pmessage, false);
 					}
 					else
 					{
-						LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+						if (bLogTransportData)
+							LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 #ifdef _DEBUG
 						std::string strPayLoad;
@@ -423,7 +429,7 @@ std::string SnaccROSEBase::GetEncoded(const SNACC::TransportEncoding encoding, A
 	return strData;
 }
 
-void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
+void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, bool bLogTransportData /*= true*/)
 {
 	if (!lSize)
 		return;
@@ -444,7 +450,8 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 			}
 			catch (const SnaccException& ex)
 			{
-				LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+				if (bLogTransportData)
+					LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 				SJson::Value error;
 				error["exception"] = ex.what();
@@ -473,7 +480,9 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 				delete pmessage;
 				return;
 			}
-			LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, lpBytes, lSize, nullptr, nullptr);
+
+			if (bLogTransportData)
+				LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 			// pmessage will be deleted inside
 			OnROSEMessage(pmessage, true);
@@ -503,7 +512,8 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 				}
 				catch (const SnaccException& ex)
 				{
-					LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+					if (bLogTransportData)
+						LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 					SJson::Value error;
 					error["exception"] = ex.what();
@@ -537,14 +547,17 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 					delete pmessage;
 					return;
 				}
-				LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, pmessage, &value);
+
+				if (bLogTransportData)
+					LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, pmessage, &value);
 
 				// pmessage will be deleted inside
 				OnROSEMessage(pmessage, true);
 			}
 			else
 			{
-				LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+				if (bLogTransportData)
+					LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 				SJson::Value error;
 				error["exception"] = reader.getFormattedErrorMessages();
@@ -569,8 +582,8 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize)
 		}
 		else
 		{
-			LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
-
+			if (bLogTransportData)
+				LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 			OnRoseDecodeError(lpBytes, lSize, "unknown encoding");
 		}
 	}
