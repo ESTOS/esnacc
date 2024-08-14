@@ -32,12 +32,10 @@ void handleDeprecatedSequence(FILE* src, Module* mod, TypeDef* td)
 {
 	if (IsDeprecatedFlaggedSequence(mod, td->definedName))
 	{
-		fprintf(src, "  public %s()\n", td->definedName);
-		fprintf(src, "  {\n");
 		asnsequencecomment comment;
 		if (GetSequenceComment_UTF8(mod->moduleName, td->definedName, &comment))
-			fprintf(src, "    // CALL DeprecatedASN1Object(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, td->definedName, comment.szDeprecated);
-		fprintf(src, "  }\n\n");
+			fprintf(src, "  // CALL DeprecatedASN1Object(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, td->definedName, comment.szDeprecated);
+		fprintf(src, "\n\n");
 	}
 }
 
@@ -274,8 +272,11 @@ void PrintSeqJavaDataSequenceOf(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "  private static final long serialVersionUID = 1L;\n");
 	fprintf(src, "  public %s(List<", name);
 	PrintJavaType(src, mods, mod, td->type->basicType->a.setOf);
-	fprintf(src, "> values){\n\n");
+	fprintf(src, "> values){\n");
 	fprintf(src, "    super(values);\n");
+	fprintf(src, "  }\n\n");
+	fprintf(src, "  public %s(){\n", name);
+	fprintf(src, "    super();\n");
 	fprintf(src, "  }\n");
 	fprintf(src, "}\n");
 	fclose(src);
@@ -444,6 +445,7 @@ void PrintJavaEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	char* enumValue;
 	CNamedElmt* n;
 	fprintf(src, "package com.estos.asn;\n\n");
+	fprintf(src, "import javax.annotation.Generated;\n\n");
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
 	fprintf(src, "public enum %s{\n", name);
 
@@ -468,7 +470,7 @@ void PrintJavaEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "  {\n");
 	fprintf(src, "    this.value = value;\n");
 	fprintf(src, "  }\n");
-	fprintf(src, "  private int getValue()\n");
+	fprintf(src, "  public int getValue()\n");
 	fprintf(src, "  {\n");
 	fprintf(src, "    return value;\n");
 	fprintf(src, "  }\n");
@@ -488,12 +490,12 @@ void PrintJavaSimpleDef(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "import javax.annotation.Generated;\n\n");
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
 	fprintf(src, "public class %s extends SimpleJavaType<", name);
-	handleDeprecatedSequence(src, mod, td);
 	if (strcmp("AsnSystemTime", name) == 0)
 		fprintf(src, "String");
 	else
 		PrintJavaNativeType(src, td->type);
 	fprintf(src, ">{\n\n");
+	handleDeprecatedSequence(src, mod, td);
 	fprintf(src, "  public %s() {\n", name);
 	fprintf(src, "    super(");
 	if (strcmp("AsnSystemTime", name) == 0)
@@ -630,12 +632,12 @@ void PrintJavaOperationClass(Module* mod, ValueDef* vd)
 
 		if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
 		{
-			fprintf(src, "  public %s()\n", name);
-			fprintf(src, "  {\n");
+//			fprintf(src, "  public %s()\n", name);
+//			fprintf(src, "  {\n");
 			asnoperationcomment comment;
 			if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment))
-				fprintf(src, "    // CALL DeprecatedASN1Method(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, vd->definedName, comment.szDeprecated);
-			fprintf(src, "  }\n\n");
+				fprintf(src, "  // CALL DeprecatedASN1Method(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, vd->definedName, comment.szDeprecated);
+			fprintf(src, "\n\n");
 		}
 
 		fprintf(src, "  public Class<?> getAsnArgumentType()\n");
@@ -762,10 +764,10 @@ void PrintJAVACode(ModuleList* allMods)
 		{
 			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
 			fprintf(src, "public class Asn1InterfaceVersion {\n");
-			fprintf(src, "\tpublic static final lastChange = \"%s\"\n", ConvertUnixTimeToISO(lMaxMinorVersion));
-			fprintf(src, "\tpublic static final majorVersion = %i\n", gMajorInterfaceVersion);
-			fprintf(src, "\tpublic static final minorVersion = %lld\n", lMaxMinorVersion);
-			fprintf(src, "\tpublic static final version = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			fprintf(src, "\tpublic static final String lastChange = \"%s\";\n", ConvertUnixTimeToISO(lMaxMinorVersion));
+			fprintf(src, "\tpublic static final int majorVersion = %i;\n", gMajorInterfaceVersion);
+			fprintf(src, "\tpublic static final long minorVersion = %lld;\n", lMaxMinorVersion);
+			fprintf(src, "\tpublic static final String version = \"%i.%lld.0\";\n", gMajorInterfaceVersion, lMaxMinorVersion);
 			fprintf(src, "}\n");
 			fclose(src);
 		}
@@ -811,11 +813,11 @@ void PrintJAVACodeOneModule(ModuleList* mods, Module* m)
 		if (src)
 		{
 			long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
-			fprintf(src, "public class %s_Version {\n", m->moduleName);
-			fprintf(src, "\tpublic static final lastChange = \"%s\"\n", ConvertUnixTimeToISO(lMinorModuleVersion));
-			fprintf(src, "\tpublic static final majorVersion = %i\n", gMajorInterfaceVersion);
-			fprintf(src, "\tpublic static final minorVersion = %lld\n", lMinorModuleVersion);
-			fprintf(src, "\tpublic static final version = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMinorModuleVersion);
+			fprintf(src, "public class %s {\n", m->moduleName);
+			fprintf(src, "\tpublic static final String lastChange = \"%s\";\n", ConvertUnixTimeToISO(lMinorModuleVersion));
+			fprintf(src, "\tpublic static final int majorVersion = %i;\n", gMajorInterfaceVersion);
+			fprintf(src, "\tpublic static final long minorVersion = %lld;\n", lMinorModuleVersion);
+			fprintf(src, "\tpublic static final String version = \"%i.%lld.0\";\n", gMajorInterfaceVersion, lMinorModuleVersion);
 			fprintf(src, "}\n");
 			fclose(src);
 		}
