@@ -16,17 +16,17 @@ The server is node based
 ## Running the sample
 * Have at least node 18 and VSCode installed.
 * Server:
-  * Navigate into the server folder and call npm ci to install the dependencies
+  * Navigate into the server folder and call `npm ci` to install the dependencies
   * Adopt .env.sample and save it as .env
     * The listen port of the server is required on the client side 
-  * Call npm run build which compiles the TypeScript into JavaScript
-  * Call nom run start to start the example server
+  * Call `npm run build` which compiles the TypeScript into JavaScript
+  * Call `npm run start` to start the example server
 
 * Client:
-  * Navigate into the client folder and call npm ci to install the dependencies
+  * Navigate into the client folder and call `npm ci` to install the dependencies
   * Adopt .env.sample and save it as .env
   * Open the microservicetemplate_client.code-workspace in VSCode
-  * Call npm start in the console of VSCode
+  * Call `npm start` in the console of VSCode
   * In Run and Debug select the appropriate client and http:// or https:// depending on your configuration
 
 # OpenApi
