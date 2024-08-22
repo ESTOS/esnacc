@@ -39,9 +39,9 @@ enum EDateFormat
 long long ConvertDateToUnixTime(const char* szDate)
 {
 	if (!szDate)
-		return -1;
+		return 0;
 	if (!strlen(szDate))
-		return -1;
+		return 0;
 
 	long long tmResult = -1;
 
