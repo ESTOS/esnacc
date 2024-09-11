@@ -946,7 +946,7 @@ int EAsnCommentParser::ParseFileForComments(FILE* fp, const char* szModuleName, 
 					auto strElements = explode(strData, '\n', false);
 					for (auto& strElement : strElements)
 					{
-						if (strElement.substr(0, 4) == "-- ~" && strElement.substr(0, 5) != "-- ~~")
+						if (strElement.length() > 4 && strElement.substr(0, 5) == "-- ~ " || strElement.length() == 4 && strElement.substr(0, 4) == "-- ~")
 							continue;
 						strElement += "\n";
 						if (type == ASCII)
