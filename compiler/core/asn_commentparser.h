@@ -8,6 +8,15 @@
 #include "filetype.h"
 
 std::string escapeJsonString(const std::string& input);
+enum class EElementState
+{
+	// Element has not yet ended
+	not_yet_ended = 0,
+	// Element has ended
+	end = 1,
+	// Element has ended and is filtered (leading comment shall not get added to the filtered output)
+	end_and_filtered = 2
+};
 
 class EDeprecated
 {
@@ -144,7 +153,13 @@ public:
 	}
 
 	EAsnCommentParser* m_pParser;
-	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) = 0;
+	virtual int ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state) = 0;
+
+	// Incremental data which is added while parsing the file
+	std::string m_strRawSourceFileIncrement;
+
+	// Once an element is completed (no matter what element) the data is added to m_strFilteredFileContent if not filtered
+	std::string m_strFilteredFileContent;
 };
 
 class EAsnStackElementFile : public EAsnStackElement
@@ -157,7 +172,7 @@ public:
 		m_strModuleName = szModuleName;
 	}
 
-	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
+	virtual int ProcessLine(const char* szModuleName, const char* szSourceLine, std::string& szLine, std::string& szComment, EElementState& state) override;
 
 	std::string m_strModuleName;
 
@@ -174,9 +189,11 @@ public:
 		m_state = inmodule;
 	}
 
-	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
+	virtual int ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state) override;
 
 	void SetModuleProperties(const char* szTypeName, const char* szCategory, std::list<std::string>& listComments);
+
+	bool isModuleFiltered() const;
 
 private:
 	bool m_bWaitForSemiColon = false;
@@ -195,7 +212,7 @@ public:
 		m_pmodcomment = 0;
 	}
 
-	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
+	virtual int ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state) override;
 
 	//{ has been found
 	bool bOpenBracketFound = false;
@@ -218,7 +235,7 @@ public:
 		m_state = insequence;
 	}
 
-	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
+	virtual int ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state) override;
 
 	// List of comment lines before the element
 	std::list<std::string> commentsBefore;
@@ -235,7 +252,7 @@ public:
 		m_state = insequence;
 	}
 
-	virtual int ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd) override;
+	virtual int ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state) override;
 
 	void SetOperationProperties(const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
 

@@ -103,5 +103,3 @@ char* MakeIDLFileName PROTO((const char* moduleName));
 #endif
 
 #define UNUSED_ALWAYS(x) x
-
-extern char gszOutputPath[];

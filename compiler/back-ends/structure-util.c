@@ -64,7 +64,7 @@ bool GetROSEDetails(Module* mod, ValueDef* vd, const char** ppszArgument, const 
 	if (ppszError)
 		*ppszError = NULL;
 
-	Type* (*resolver)(Type * type, const char** szName) = NULL;
+	Type* (*resolver)(Type* type, const char** szName) = NULL;
 	// Depends on the caller we resolved any type to root or one level (just one local type ref or imported type ref is resolved)
 	if (bResolveToRoot)
 		resolver = &ResolveTypeReferencesToRoot;

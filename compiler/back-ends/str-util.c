@@ -86,8 +86,6 @@
 
 #define DIGIT_TO_ASCII(d) (((d) % 10) + '0')
 
-char gszOutputPath[100] = {0};
-
 int IsCKeyWord PROTO((char* str));
 int IsCxxKeyWord PROTO((char* str));
 
