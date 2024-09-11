@@ -509,6 +509,9 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 		if (szLine.find(";") != std::string::npos)
 			m_bWaitForSemiColon = false;
 
+		m_strFilteredFileContent += m_strRawSourceFileIncrement;
+		m_strRawSourceFileIncrement.clear();
+
 		return 0;
 	}
 
@@ -638,6 +641,9 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 		}
 		else
 		{
+			m_strFilteredFileContent += m_strRawSourceFileIncrement;
+			m_strRawSourceFileIncrement.clear();
+
 			m_CollectComments.clear();
 		}
 
