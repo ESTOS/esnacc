@@ -364,7 +364,6 @@ void NormalizeBasicType PARAMS((m, td, parent, e, type, bt), Module* m _AND_ Typ
 
 	switch (bt->choiceId)
 	{
-
 		case BASICTYPE_COMPONENTSOF:
 			/*
 			 * copy elmts of COMPONENTS OF type into this type
@@ -639,7 +638,7 @@ TypeDef* AddListElmtTypeDef PARAMS((m, td, t, bt), Module* m _AND_ TypeDef* td _
 	 * Foo ::=  SET OF FooListElmt
 	 */
 	size_t size = strlen(td->definedName) + strlen(LIST_ELMT_SUFFIX) + 4;
-	newDef->definedName = Malloc(size);
+	newDef->definedName = Malloc(size + 1);
 
 	strcpy_s(newDef->definedName, size, td->definedName);
 	strcat_s(newDef->definedName, size, LIST_ELMT_SUFFIX);
@@ -708,7 +707,7 @@ TypeDef* AddConsTypeDef PARAMS((m, td, t, bt, suffix), Module* m _AND_ TypeDef* 
 	 * Foo ::=  SEQUENCE { .., bar FooChoice, .. }
 	 */
 	size_t size = strlen(td->definedName) + strlen(suffix) + 4;
-	newDef->definedName = Malloc(size);
+	newDef->definedName = Malloc(size + 1);
 
 	strcpy_s(newDef->definedName, size, td->definedName);
 	strcat_s(newDef->definedName, size, suffix);
@@ -811,7 +810,7 @@ TypeDef* // Deepak: 14/Mar/2003
 	 * Foo ::=  SEQUENCE { .., bar FooChoice, .. }
 	 */
 	size_t size = strlen(oa->objectName) + strlen(suffix) + 4;
-	newDef->definedName = Malloc(size);
+	newDef->definedName = Malloc(size + 1);
 
 	strcpy_s(newDef->definedName, size, oa->objectName);
 	strcat_s(newDef->definedName, size, suffix);

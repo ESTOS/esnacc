@@ -1235,7 +1235,7 @@ void PrintSwiftCodeOne(FILE* src, ModuleList* mods, Module* m, long longJmpVal, 
 	if (gMajorInterfaceVersion >= 0)
 	{
 		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
-		char szModuleName[512] = {0};
+		char szModuleName[513] = {0};
 		strcpy_s(szModuleName, 512, m->moduleName);
 		Dash2Underscore(szModuleName, 512);
 		fprintf(src, "struct %s_Version\n", szModuleName);

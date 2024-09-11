@@ -112,7 +112,7 @@ void PrintCAnyEnum PARAMS((hdr, m, r), FILE* hdr _AND_ Module* m _AND_ CRules* r
 	/* REN -- 1/13/98 */
 	ValueDef* vd;
 	Type* t;
-	char anyId[256];
+	char anyId[257];
 	/* REN -- end */
 
 	modName = Asn1TypeName2CTypeName(m->modId->name);

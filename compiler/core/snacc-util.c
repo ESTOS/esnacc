@@ -119,7 +119,6 @@ void SetupType PARAMS((t, typeId, lineNum), Type** t _AND_ enum BasicTypeChoiceI
  */
 void SetupMacroType PARAMS((t, macroTypeId, lineNum), Type** t _AND_ enum MacroTypeChoiceId macroTypeId _AND_ unsigned long lineNum)
 {
-
 	(*t) = MT(Type);
 	(*t)->lineNo = lineNum;
 	(*t)->basicType = MT(BasicType);
@@ -160,12 +159,12 @@ void AddPrivateImportElmt PARAMS((m, name, refdModuleName, lineNo), Module* m _A
 		impMod = MT(ImportModule);
 		impMod->modId = MT(ModuleId);
 		size_t size = strlen(refdModuleName) + 1;
-		impMod->modId->name = Malloc(size);
+		impMod->modId->name = Malloc(size + 1);
 		strcpy_s(impMod->modId->name, size, refdModuleName);
 
 		newElmt = MT(ImportElmt);
 		size_t size2 = strlen(name) + 1;
-		newElmt->name = Malloc(size2);
+		newElmt->name = Malloc(size2 + 1);
 		strcpy_s(newElmt->name, size2, name);
 		newElmt->privateScope = TRUE;
 
@@ -180,7 +179,7 @@ void AddPrivateImportElmt PARAMS((m, name, refdModuleName, lineNo), Module* m _A
 		{
 			newElmt = MT(ImportElmt);
 			size_t size = strlen(name) + 1;
-			newElmt->name = Malloc(size);
+			newElmt->name = Malloc(size + 1);
 			strcpy_s(newElmt->name, size, name);
 			APPEND(newElmt, impMod->importElmts);
 		}
@@ -524,7 +523,6 @@ Module* LookupModule PARAMS((moduleList, modName, oid), ModuleList* moduleList _
 	retVal = NULL;
 	FOR_EACH_LIST_ELMT(currMod, moduleList)
 	{
-
 		/*
 		 *  may fail due to unresolved int or oid value ref
 		 *  so try name match anyway.

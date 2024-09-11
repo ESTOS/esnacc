@@ -907,7 +907,13 @@ int EAsnCommentParser::ParseFileForComments(FILE* fp, const char* szModuleName, 
 		if (gFilterASN1Files)
 		{
 			if (pFile->m_strFilteredFileContent.empty())
+			{
+#ifdef _WIN32
 				_unlink(strFileName.c_str());
+#else
+				unlink(strFileName.c_str());
+#endif
+			}
 			else
 			{
 				// Add lines at the end of the file which haven´t had a element association

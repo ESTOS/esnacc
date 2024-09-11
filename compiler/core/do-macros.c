@@ -166,7 +166,7 @@ void AddAnyRefByOid PARAMS((arl, enumId, oid), AnyRefList** arl _AND_ char* enum
 	*anyRefHndl = MT(AnyRef);
 
 	size_t size = strlen(enumId) + 1;
-	(*anyRefHndl)->anyIdName = Malloc(size);
+	(*anyRefHndl)->anyIdName = Malloc(size + 1);
 	strcpy_s((*anyRefHndl)->anyIdName, size, enumId);
 
 	(*anyRefHndl)->id = MT(OidOrInt);
@@ -193,7 +193,7 @@ void AddAnyRefByInt PARAMS((arl, enumId, intId), AnyRefList** arl _AND_ char* en
 	*anyRefHndl = MT(AnyRef);
 
 	size_t size = strlen(enumId) + 1;
-	(*anyRefHndl)->anyIdName = Malloc(size);
+	(*anyRefHndl)->anyIdName = Malloc(size + 1);
 	strcpy_s((*anyRefHndl)->anyIdName, size, enumId);
 	(*anyRefHndl)->id = MT(OidOrInt);
 	(*anyRefHndl)->id->choiceId = OIDORINT_INTID;
@@ -243,7 +243,6 @@ void ProcessMacrosInElmtTypes PARAMS((m, td, e, v), Module* m _AND_ TypeDef* td 
 
 void ProcessMacrosInBasicType PARAMS((m, td, type, bt, v), Module* m _AND_ TypeDef* td _AND_ Type* type _AND_ BasicType* bt _AND_ ValueDef* v)
 {
-
 	if (bt == NULL)
 		return;
 
@@ -364,7 +363,7 @@ void DefineType PARAMS((m, td, t, name), Module* m _AND_ TypeDef* td _AND_ Type*
 		memcpy(newDef->type, t, sizeof(Type));
 
 		size_t size = strlen(name) + 4;
-		newDef->definedName = Malloc(size);
+		newDef->definedName = Malloc(size + 1);
 		strcpy_s(newDef->definedName, size, name);
 
 		if (islower(newDef->definedName[0]))
@@ -458,7 +457,6 @@ void ProcessMtsasTokenDataMacroType PARAMS((m, td, t, bt, tok, v), Module* m _AN
 
 void ProcessMtsasSecurityCategoryMacroType PARAMS((m, td, t, bt, sec, v), Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasSecurityCategoryMacroType* sec _AND_ ValueDef* v)
 {
-
 } /* ProcessMtsasSecurityCategoryMacroType */
 
 void ProcessAsnObjectMacroType PARAMS((m, td, t, bt, obj, v), Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ BasicType* bt _AND_ AsnObjectMacroType* obj _AND_ ValueDef* v)
@@ -481,7 +479,7 @@ void ProcessSnmpObjectTypeMacroType PARAMS((m, td, t, bt, ot, v), Module* m _AND
 		return;
 	}
 
-	char anyId[256];
+	char anyId[257];
 	AnyRefList** arlHndl;
 
 	if (ot->syntax != NULL)

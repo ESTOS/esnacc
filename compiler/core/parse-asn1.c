@@ -551,7 +551,7 @@ typedef short int yytype_int16;
 #endif
 #endif
 
-#define YYSIZE_MAXIMUM ((YYSIZE_T)-1)
+#define YYSIZE_MAXIMUM ((YYSIZE_T) - 1)
 
 #ifndef YY_
 #if defined YYENABLE_NLS && YYENABLE_NLS
@@ -650,7 +650,7 @@ void* malloc(YYSIZE_T); /* INFRINGES ON USER NAME SPACE */
 #ifndef YYFREE
 #define YYFREE free
 #if !defined free && !defined EXIT_SUCCESS && (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus || defined _MSC_VER)
-void free(void*);		/* INFRINGES ON USER NAME SPACE */
+void free(void*); /* INFRINGES ON USER NAME SPACE */
 #endif
 #endif
 #endif
@@ -1829,7 +1829,6 @@ YYSTYPE* yyvaluep;
 
 	switch (yytype)
 	{
-
 		default:
 			break;
 	}
@@ -2375,7 +2374,7 @@ yyreduce:
 				 * like idents and typeref
 				 */
 				size_t size = strlen((yyvsp[(1) - (1)].charPtr)) + 1;
-				(yyval.charPtr) = Malloc(size);
+				(yyval.charPtr) = Malloc(size + 1);
 				strcpy_s((yyval.charPtr), size, (yyvsp[(1) - (1)].charPtr));
 			}
 			break;
@@ -2504,7 +2503,7 @@ yyreduce:
 				tmpTypeDef->definedName = (yyvsp[(1) - (5)].charPtr);
 
 				size_t size = strlen((yyvsp[(3) - (5)].charPtr)) + strlen((yyvsp[(5) - (5)].charPtr)) + 2;
-				tmpTypeDef->type->basicType->a.macroDef = (MyString)Malloc(size);
+				tmpTypeDef->type->basicType->a.macroDef = (MyString)Malloc(size + 1);
 
 				strcpy_s(tmpTypeDef->type->basicType->a.macroDef, size, (yyvsp[(3) - (5)].charPtr));
 				strcat_s(tmpTypeDef->type->basicType->a.macroDef, size, ".");

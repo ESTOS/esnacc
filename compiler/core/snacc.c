@@ -685,7 +685,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					if (argv[currArg + 1] != NULL)
 					{
 						strcpy_s(gszOutputPath, 100, argv[currArg + 1]);
-						getDirectoryWithDelimiterFromPath(gszOutputPath, 100);
+						getDirectoryWithDelimiterFromPath(gszOutputPath, 99);
 						if (!createDirectories(gszOutputPath))
 							snacc_exit("Failed to create directory %s", gszOutputPath);
 						currArg++;

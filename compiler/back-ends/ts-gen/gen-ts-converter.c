@@ -572,7 +572,7 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 			case BASICTYPE_SET:
 				{
 					size_t size = strlen(e->fieldName) + 1;
-					char* pBuffer = malloc(size);
+					char* pBuffer = malloc(size + 1);
 					if (!pBuffer)
 					{
 						snacc_exit("Out of memory");

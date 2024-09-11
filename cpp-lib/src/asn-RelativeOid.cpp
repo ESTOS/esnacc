@@ -170,7 +170,7 @@ void AsnRelativeOid::Set(const char* szOidCopy)
 
 	// Copy the string value
 	size_t size = strlen(szOidCopy) + 1;
-	m_lpszOidString = new char[size];
+	m_lpszOidString = new char[size + 1];
 	if (m_lpszOidString == NULL)
 		throw SNACC_MEMORY_EXCEPT((long)strlen(szOidCopy) + 1, "m_lpszOidString");
 	strcpy_s(m_lpszOidString, size, szOidCopy);
@@ -201,7 +201,7 @@ void AsnRelativeOid::Set(const AsnRelativeOid& o)
 		if (o.m_lpszOidString != NULL)
 		{
 			size_t size = strlen(o.m_lpszOidString) + 1;
-			m_lpszOidString = new char[size];
+			m_lpszOidString = new char[size + 1];
 			if (m_lpszOidString == NULL)
 				throw SNACC_MEMORY_EXCEPT((long)strlen(o.m_lpszOidString) + 1, "AsnRelativeOid::m_lpszOidString");
 			strcpy_s(m_lpszOidString, size, o.m_lpszOidString);
@@ -535,7 +535,7 @@ void AsnRelativeOid::createDottedOidStr() const
 	}
 
 	size_t size = tempBuf.length() + 1;
-	m_lpszOidString = new char[size];
+	m_lpszOidString = new char[size + 1];
 	strcpy_s(m_lpszOidString, size, tempBuf.c_str());
 }
 

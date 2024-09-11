@@ -294,7 +294,6 @@ void PrintInit(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 	}
 	else if (t->basicType->choiceId == BASICTYPE_SEQUENCE || t->basicType->choiceId == BASICTYPE_SET)
 	{
-
 		NamedTypeList* pList = NULL;
 		if (t->basicType->choiceId == BASICTYPE_SET)
 			pList = t->basicType->a.set;
@@ -1254,7 +1253,6 @@ static void PrintAllForwardDeclarations(FILE* hdr, Module* m)
 
 		if (!IsNewType(td->type))
 		{
-
 			if (IsPrimitiveByDefOrRef(td->type) && gAlternateNamespaceString != 0)
 				fprintf(hdr, "class SNACC::%s;\n", td->type->cxxTypeRefInfo->className);
 			else
@@ -1743,7 +1741,6 @@ static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, Type
 	}
 	else /* isomorphic with referenced type, so just to a typedef */
 	{
-
 #if META
 		if (printMetaG)
 			PrintCxxSimpleDefMeta_2(hdr, src, td, hasNamedElmts, n, m, r);
@@ -4754,7 +4751,7 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 	if (gMajorInterfaceVersion >= 0)
 	{
 		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
-		char szModuleNameUpper[512] = {0};
+		char szModuleNameUpper[513] = {0};
 		strcpy_s(szModuleNameUpper, 512, m->moduleName);
 		Str2UCase(szModuleNameUpper, 512);
 		Dash2Underscore(szModuleNameUpper, 512);
@@ -5157,8 +5154,8 @@ char* LookupNamespace(Type* t, ModuleList* mods)
 			ptTmp = LookupType(mTmp->typeDefs,
 							   pbtTmp2->a.importTypeRef->typeName); // WHAT we are looking for...
 			if (ptTmp != NULL)
-				break;											   // FOUND the MODULE that contains our defninition...
-		}														   // END FOR each module.
+				break; // FOUND the MODULE that contains our defninition...
+		} // END FOR each module.
 		if (ptTmp != NULL && mTmp != NULL && mTmp->namespaceToUse) // FOUND our MODULE...
 
 			pszNamespace = mTmp->namespaceToUse; // DO NOT DELETE...
@@ -5388,7 +5385,7 @@ static void PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, T
 				fprintf(src, "\tif (%s != NULL)\n", e->type->cxxTypeRefInfo->fieldName);
 				fprintf(src, "\t\tSnaccOptionalDefaultBits.SetBit(%d);\n", iOptional_Default_ElementIndex++);
 			} /* END IF OPTIONAL/DEFAULT */
-		}	  /* END FOR each element. */
+		} /* END FOR each element. */
 		fprintf(src, "\t_b.PutBits(SnaccOptionalDefaultBits.data(), %ld);\n", lOptional_Default_ElmtCount);
 		fprintf(src, "\tl += %ld;\n", lOptional_Default_ElmtCount);
 
@@ -5401,7 +5398,6 @@ static void PrintCxxDefCode_SetSeqPEREncode(FILE* src, FILE* hdr, CxxRules* r, T
 		e = pSetElementNamedType[ii];
 		if (!e->type->extensionAddition)
 		{
-
 			if ((e->type->optional || e->type->defaultVal != NULL) && (!e->type->extensionAddition))
 			{
 				fprintf(src, "\tif (%s != NULL)\t// Optional OR Default\n", e->type->cxxTypeRefInfo->fieldName);
@@ -5597,7 +5593,7 @@ static void PrintCxxDefCode_SetSeqPERDecode(FILE* src, FILE* hdr, CxxRules* r, T
 					fprintf(src, "\t}\n\n");
 			}
 		} /* for each elmt */
-	}	  /* if not empty set clause */
+	} /* if not empty set clause */
 
 	fprintf(src, "} // %s::P%s()\n\n", td->cxxTypeDefInfo->className, r->decodeBaseName);
 
@@ -5682,7 +5678,7 @@ static void PrintCxxDefCode_PERSort(NamedType*** pppElementNamedType, /* OUT, ar
 				pElementNamedType[iii] = pnamedTypeTmp;
 			}
 		} // END for remaining elements (for sorting)
-	}	  // END FOR each element
+	} // END FOR each element
 } /* END PrintCxxDefCode_PERSort(...) */
 
 void PrintCxxSimpleDefMeta_1(FILE* hdr, FILE* src, TypeDef* td, int hasNamedElmts, CNamedElmt* n, Module* m)
