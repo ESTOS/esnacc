@@ -633,17 +633,19 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 		{
 			EAsnStackElementOperation* el = new EAsnStackElementOperation(m_pParser);
 			el->SetOperationProperties(strType.c_str(), &m_ModuleComment, m_CollectComments);
-
 			m_pParser->m_stack.push_back(el);
-
 			m_CollectComments.clear();
 			return 0;
 		}
 		else
 		{
-			m_strFilteredFileContent += m_strRawSourceFileIncrement;
-			m_strRawSourceFileIncrement.clear();
-
+			ESequenceComment comment;
+			convertCommentList(m_CollectComments, &comment);
+			if (!isFiltered(comment))
+			{
+				m_strFilteredFileContent += m_strRawSourceFileIncrement;
+				m_strRawSourceFileIncrement.clear();
+			}
 			m_CollectComments.clear();
 		}
 
