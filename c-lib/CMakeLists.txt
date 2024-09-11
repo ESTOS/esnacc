@@ -2,11 +2,12 @@
 # lib name: esnacc_clib
 
 # gather all c files
-file(GLOB src_files src/*.c boot/*.cpp)
+file(GLOB src_files src/*.c)
+file(GLOB header_files include/*.h)
 # build all files with a C++ compiler
 SET_SOURCE_FILES_PROPERTIES(${src_files} PROPERTIES LANGUAGE C)
 # set the build target for the files
-add_library(c-lib STATIC ${src_files})
+add_library(c-lib STATIC ${src_files} ${header_files})
 # set the name for the library (the d addon for debug has been specified in the root CMakeLists.txt)
 if(C_LIBRARY_OUTPUT_NAME)
 	set_target_properties(c-lib PROPERTIES OUTPUT_NAME ${C_LIBRARY_OUTPUT_NAME})
