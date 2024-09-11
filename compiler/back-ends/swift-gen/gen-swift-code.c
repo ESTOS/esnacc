@@ -382,7 +382,6 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.sequence)
 		{
-
 			if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 			{
 				char* szFielName = Dash2UnderscoreEx(e->fieldName);
@@ -461,7 +460,6 @@ static void PrintSwiftEncoderDecoder(FILE* src, ModuleList* mods, Module* m, Typ
 			{
 				if (e->type->basicType->choiceId == BASICTYPE_LOCALTYPEREF || e->type->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
 				{
-
 					int typeIdOfReferencesType = e->type->basicType->a.localTypeRef->link->type->basicType->choiceId;
 
 					if (typeIdOfReferencesType == BASICTYPE_SEQUENCE || typeIdOfReferencesType == BASICTYPE_CHOICE)
@@ -1285,7 +1283,6 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 	{
 		if (currMod->ImportedFlag == FALSE)
 		{
-
 			FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
 			{
 				if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
@@ -1428,8 +1425,8 @@ void PrintSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 	{
 		FILE* versionFile = NULL;
 		char szFileName[_MAX_PATH] = {0};
-		strcpy_s(szFileName, _MAX_PATH, gszOutputPath);
-		strcat_s(szFileName, _MAX_PATH, "Asn1InterfaceVersion.swift");
+		strcpy_s(szFileName, _MAX_PATH - 1, gszOutputPath);
+		strcat_s(szFileName, _MAX_PATH - 1, "Asn1InterfaceVersion.swift");
 		if (fopen_s(&versionFile, szFileName, "wt") != 0 || versionFile == NULL)
 			perror("fopen");
 		else

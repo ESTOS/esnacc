@@ -1251,9 +1251,9 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 					saveMods = allMods->curr;
 
 					char szStubFileName[_MAX_PATH];
-					strcpy_s(szStubFileName, _MAX_PATH, gszOutputPath);
-					strcat_s(szStubFileName, _MAX_PATH, currMod->ROSEClassName);
-					strcat_s(szStubFileName, _MAX_PATH, ".ts");
+					strcpy_s(szStubFileName, _MAX_PATH - 1, gszOutputPath);
+					strcat_s(szStubFileName, _MAX_PATH - 1, currMod->ROSEClassName);
+					strcat_s(szStubFileName, _MAX_PATH - 1, ".ts");
 					FILE* stubFilePtr = NULL;
 					if (fopen_s(&stubFilePtr, szStubFileName, "wt") != 0 || stubFilePtr == NULL)
 					{
@@ -1270,9 +1270,9 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 					{
 						// Client Interfaces
 						char szClientInterfaceFileName[_MAX_PATH];
-						strcpy_s(szClientInterfaceFileName, _MAX_PATH, gszOutputPath);
-						strcat_s(szClientInterfaceFileName, _MAX_PATH, currMod->ROSEClassName);
-						strcat_s(szClientInterfaceFileName, _MAX_PATH, "_Interface.ts");
+						strcpy_s(szClientInterfaceFileName, _MAX_PATH - 1, gszOutputPath);
+						strcat_s(szClientInterfaceFileName, _MAX_PATH - 1, currMod->ROSEClassName);
+						strcat_s(szClientInterfaceFileName, _MAX_PATH - 1, "_Interface.ts");
 
 						FILE* roseClientInterfaceFilePtr = NULL;
 
@@ -1292,9 +1292,9 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 					{
 						// Server (Node) stub
 						char szServerInterfaceFileName[_MAX_PATH];
-						strcpy_s(szServerInterfaceFileName, _MAX_PATH, gszOutputPath);
-						strcat_s(szServerInterfaceFileName, _MAX_PATH, currMod->ROSEClassName);
-						strcat_s(szServerInterfaceFileName, _MAX_PATH, "_Interface.ts");
+						strcpy_s(szServerInterfaceFileName, _MAX_PATH - 1, gszOutputPath);
+						strcat_s(szServerInterfaceFileName, _MAX_PATH - 1, currMod->ROSEClassName);
+						strcat_s(szServerInterfaceFileName, _MAX_PATH - 1, "_Interface.ts");
 
 						FILE* roseServerInterfaceFilePtr = NULL;
 

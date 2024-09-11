@@ -874,8 +874,8 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 			if (szDirectory)
 			{
 				char szPath[_MAX_PATH] = {0};
-				strcpy_s(szPath, _MAX_PATH, szDirectory);
-				strcat_s(szPath, _MAX_PATH, "interfaceversion.txt");
+				strcpy_s(szPath, _MAX_PATH - 1, szDirectory);
+				strcat_s(szPath, _MAX_PATH - 1, "interfaceversion.txt");
 				FILE* pFile = NULL;
 				if (fopen_s(&pFile, szPath, "r") == 0 && pFile)
 				{
@@ -906,17 +906,17 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					{
 						char szTarget[_MAX_PATH] = {0};
 						if (gszOutputPath)
-							strcat_s(szTarget, _MAX_PATH, gszOutputPath);
-						strcat_s(szTarget, _MAX_PATH, "interfaceversion.txt");
+							strcat_s(szTarget, _MAX_PATH - 1, gszOutputPath);
+						strcat_s(szTarget, _MAX_PATH - 1, "interfaceversion.txt");
 						copy_file(szPath, szTarget);
 					}
 					{
 						char szTarget[_MAX_PATH] = {0};
 						if (gszOutputPath)
-							strcat_s(szTarget, _MAX_PATH, gszOutputPath);
-						strcat_s(szTarget, _MAX_PATH, "esnacc_whitelist.txt");
-						strcpy_s(szPath, _MAX_PATH, szDirectory);
-						strcat_s(szPath, _MAX_PATH, "esnacc_whitelist.txt");
+							strcat_s(szTarget, _MAX_PATH - 1, gszOutputPath);
+						strcat_s(szTarget, _MAX_PATH - 1, "esnacc_whitelist.txt");
+						strcpy_s(szPath, _MAX_PATH - 1, szDirectory);
+						strcat_s(szPath, _MAX_PATH - 1, "esnacc_whitelist.txt");
 						copy_file(szPath, szTarget);
 					}
 				}

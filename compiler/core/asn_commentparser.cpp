@@ -3,6 +3,7 @@
 #include "filetype.h"
 #include "../../snacc.h"
 #include "time_helpers.h"
+#include <stdio.h>
 #include <sstream>
 #include <string>
 #include <list>

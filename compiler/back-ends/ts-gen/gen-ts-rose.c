@@ -40,73 +40,73 @@ void SaveTSROSEFilesToOutputDirectory(const int genRoseStubs, const char* szPath
 	{
 		{
 			char szFileName[_MAX_PATH] = {0};
-			strcpy_s(szFileName, _MAX_PATH, szPath);
-			strcat_s(szFileName, _MAX_PATH, "TSASN1Base.ts");
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "TSASN1Base.ts");
 			SaveResourceToFile(ETS_ASN1_BASE, szFileName);
 		}
 		if (genRoseStubs & 0x01)
 		{
 			char szFileName[_MAX_PATH] = {0};
-			strcpy_s(szFileName, _MAX_PATH, szPath);
-			strcat_s(szFileName, _MAX_PATH, "TSASN1Server.ts");
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "TSASN1Server.ts");
 			SaveResourceToFile(ETS_ASN1_SERVER, szFileName);
 		}
 		if (genRoseStubs & 0x02 || genRoseStubs & 0x04)
 		{
 			char szFileName[_MAX_PATH] = {0};
-			strcpy_s(szFileName, _MAX_PATH, szPath);
-			strcat_s(szFileName, _MAX_PATH, "TSASN1Client.ts");
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "TSASN1Client.ts");
 			SaveResourceToFile(ETS_ASN1_CLIENT, szFileName);
 		}
 		if (genRoseStubs & 0x02)
 		{
 			char szFileName[_MAX_PATH] = {0};
-			strcpy_s(szFileName, _MAX_PATH, szPath);
-			strcat_s(szFileName, _MAX_PATH, "TSASN1NodeClient.ts");
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "TSASN1NodeClient.ts");
 			SaveResourceToFile(ETS_ASN1_NODE_CLIENT, szFileName);
 		}
 		if (genRoseStubs & 0x04)
 		{
 			char szFileName[_MAX_PATH] = {0};
-			strcpy_s(szFileName, _MAX_PATH, szPath);
-			strcat_s(szFileName, _MAX_PATH, "TSASN1BrowserClient.ts");
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "TSASN1BrowserClient.ts");
 			SaveResourceToFile(ETS_ASN1_BROWSER_CLIENT, szFileName);
 		}
 		{
 			char szFileName[_MAX_PATH] = {0};
-			strcpy_s(szFileName, _MAX_PATH, szPath);
-			strcat_s(szFileName, _MAX_PATH, "TSROSEBase.ts");
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "TSROSEBase.ts");
 			SaveResourceToFile(ETS_ROSE_BASE, szFileName);
 		}
 		{
 			char szFileName[_MAX_PATH] = {0};
-			strcpy_s(szFileName, _MAX_PATH, szPath);
-			strcat_s(szFileName, _MAX_PATH, "SNACCROSE.ts");
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "SNACCROSE.ts");
 			SaveResourceToFile(ETS_SNACCROSE, szFileName);
 		}
 		{
 			char szFileName[_MAX_PATH] = {0};
-			strcpy_s(szFileName, _MAX_PATH, szPath);
-			strcat_s(szFileName, _MAX_PATH, "SNACCROSE_Converter.ts");
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "SNACCROSE_Converter.ts");
 			SaveResourceToFile(ETS_SNACCROSE_CONVERTER, szFileName);
 		}
 	}
 	{
 		char szFileName[_MAX_PATH] = {0};
-		strcpy_s(szFileName, _MAX_PATH, szPath);
-		strcat_s(szFileName, _MAX_PATH, "TSOptionalParamConverter.ts");
+		strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+		strcat_s(szFileName, _MAX_PATH - 1, "TSOptionalParamConverter.ts");
 		SaveResourceToFile(ETS_OPTIONALPARAM_CONVERTER, szFileName);
 	}
 	{
 		char szFileName[_MAX_PATH] = {0};
-		strcpy_s(szFileName, _MAX_PATH, szPath);
-		strcat_s(szFileName, _MAX_PATH, "TSDeprecatedCallback.ts");
+		strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+		strcat_s(szFileName, _MAX_PATH - 1, "TSDeprecatedCallback.ts");
 		SaveResourceToFile(ETS_DEPRECATED_CALLBACK, szFileName);
 	}
 	{
 		char szFileName[_MAX_PATH] = {0};
-		strcpy_s(szFileName, _MAX_PATH, szPath);
-		strcat_s(szFileName, _MAX_PATH, "TSInvokeContext.ts");
+		strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+		strcat_s(szFileName, _MAX_PATH - 1, "TSInvokeContext.ts");
 		SaveResourceToFile(ETS_INVOKE_CONTEXT, szFileName);
 	}
 }

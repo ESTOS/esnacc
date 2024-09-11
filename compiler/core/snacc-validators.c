@@ -894,7 +894,7 @@ bool ValidateOnlySupportedObjects(ModuleList* allMods)
 			FOR_EACH_LIST_ELMT(vd, currMod->typeDefs)
 			{
 				char szPath[_MAX_PATH] = {0};
-				sprintf_s(szPath, _MAX_PATH, "%s ", currMod->asn1SrcFileName);
+				sprintf_s(szPath, _MAX_PATH - 1, "%s ", currMod->asn1SrcFileName);
 				if (recurseFindInvalid(currMod, vd->type, supportedTypes, szPath, vd->definedName))
 					nWeHaveErrors++;
 			}

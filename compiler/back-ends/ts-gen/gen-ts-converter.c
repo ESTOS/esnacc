@@ -18,8 +18,8 @@ void SaveTSConverterFilesToOutputDirectory(const char* szPath)
 {
 	{
 		char szFileName[_MAX_PATH] = {0};
-		strcpy_s(szFileName, _MAX_PATH, szPath);
-		strcat_s(szFileName, _MAX_PATH, "TSConverterBase.ts");
+		strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+		strcat_s(szFileName, _MAX_PATH - 1, "TSConverterBase.ts");
 		SaveResourceToFile(ETS_CONVERTER_BASE, szFileName);
 	}
 }
