@@ -37,6 +37,7 @@ if(WIN32)
 else()
     file(GLOB src_files core/*.c core/*.cpp back-ends/*.c back-ends/**/*.c)
 endif()
+file(GLOB header_files core/*.h back-ends/*.h back-ends/**/*.h)
 
 # Set the compiler (binary) output path
 if(COMPILER_OUTPUT_PATH)
@@ -48,7 +49,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 # build executable and link it with c-static-lib and back-end
-add_executable(compiler ${src_files} )
+add_executable(compiler ${src_files} ${header_files})
 target_link_libraries (compiler LINK_PUBLIC c-lib)
 
 # Get include paths the compiler needs

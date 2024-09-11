@@ -103,6 +103,7 @@ void PrintIDLCode PROTO((FILE * idl, ModuleList* mods, Module* m, IDLRules* r, l
 void ProcessMacros PROTO((Module * m));
 void SortAllDependencies PROTO((ModuleList * m));
 int yyparse();
+int copy_file(const char* source, const char* destination);
 
 /* Internal routines */
 void CreateNames(ModuleList* allMods);
@@ -186,6 +187,9 @@ int giWriteComments = 0;
 // Defines whether we write commonsJS or ESM typescript code
 int genTSESMCode = FALSE;
 
+int gFilterASN1Files = FALSE;
+char gszOutputPath[100] = {0};
+
 #ifdef WIN_SNACC /* Deepak: 14/Feb/2003 */
 #define main Win_Snacc_Main
 #endif
@@ -239,6 +243,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 #if IDL
 	fprintf(fp, "  -idl generate CORBA IDL\n");
 #endif
+	fprintf(fp, "  -filter Filters the asn1 files (needs no private and or nodeprecated flags beeign set)\n");
 	fprintf(fp, "  -node:21   Defines the node version the stub will be generated for. Defaults to 22\n");
 	fprintf(fp, "  -noprivate   do not generate code that is marked as private\n");
 	fprintf(fp, "  -nodeprecated   do not generate code that is marked as deprecated (any date)\n");
@@ -532,8 +537,16 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					currArg++;
 					break;
 				case 'f':
-					genFreeCode = TRUE;
-					currArg++;
+					if (strcmp(argument + 1, "filter") == 0)
+					{
+						gFilterASN1Files = TRUE;
+						currArg++;
+					}
+					else
+					{
+						genFreeCode = TRUE;
+						currArg++;
+					}
 					break;
 				case 'C': /* produce C++ code */
 					if (strcmp(argument + 1, "Ch") == 0)
@@ -672,7 +685,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					if (argv[currArg + 1] != NULL)
 					{
 						strcpy_s(gszOutputPath, 100, argv[currArg + 1]);
-						getDirectoryWithDelimiterFromPath(gszOutputPath, 100);
+						getDirectoryWithDelimiterFromPath(gszOutputPath, 99);
 						if (!createDirectories(gszOutputPath))
 							snacc_exit("Failed to create directory %s", gszOutputPath);
 						currArg++;
@@ -826,14 +839,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		genPrintCode = TRUE;
 		genPrintCodeXML = FALSE;
 	}
-	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCommonJSCode + genTSESMCode + genDelphiCode + genOpenApiCode > 1 + genJsonDocCode)
+	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCommonJSCode + genTSESMCode + genDelphiCode + genOpenApiCode + gFilterASN1Files > 1 + genJsonDocCode)
 	{
-		fprintf(stderr, "%s: ERROR---Choose only one of the -c -C or -D or -T or -RCS or -RJ or -OA or -J or -JD options\n", argv[0]);
+		fprintf(stderr, "%s: ERROR---Choose only one of the -c -C or -D or -T or -RCS or -RJ or -OA or -J or -JD or -filter options\n", argv[0]);
 		Usage(argv[0], stderr);
 		return 1;
 	}
 
-	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCommonJSCode && !genTSESMCode && !genJsonDocCode && !genOpenApiCode)
+	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCommonJSCode && !genTSESMCode && !genJsonDocCode && !genOpenApiCode && !gFilterASN1Files)
 		genCCode = TRUE; /* default to C if neither specified */
 
 	/* Set the encoding rules to BER if not set */
@@ -854,7 +867,6 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	SASN1File file;
 	while (getNextFile(&file, 0))
 	{
-
 		if (bReadVersionFile)
 		{
 			bReadVersionFile = false;
@@ -862,8 +874,8 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 			if (szDirectory)
 			{
 				char szPath[_MAX_PATH] = {0};
-				strcpy_s(szPath, _MAX_PATH, szDirectory);
-				strcat_s(szPath, _MAX_PATH, "interfaceversion.txt");
+				strcpy_s(szPath, _MAX_PATH - 1, szDirectory);
+				strcat_s(szPath, _MAX_PATH - 1, "interfaceversion.txt");
 				FILE* pFile = NULL;
 				if (fopen_s(&pFile, szPath, "r") == 0 && pFile)
 				{
@@ -888,6 +900,26 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					}
 					fclose(pFile);
 				}
+				if (gFilterASN1Files)
+				{
+					// We have the folder path. We need to copy the esnacc_whitelist.txt nd the interfaceversion.txt
+					{
+						char szTarget[_MAX_PATH] = {0};
+						if (gszOutputPath)
+							strcat_s(szTarget, _MAX_PATH - 1, gszOutputPath);
+						strcat_s(szTarget, _MAX_PATH - 1, "interfaceversion.txt");
+						copy_file(szPath, szTarget);
+					}
+					{
+						char szTarget[_MAX_PATH] = {0};
+						if (gszOutputPath)
+							strcat_s(szTarget, _MAX_PATH - 1, gszOutputPath);
+						strcat_s(szTarget, _MAX_PATH - 1, "esnacc_whitelist.txt");
+						strcpy_s(szPath, _MAX_PATH - 1, szDirectory);
+						strcat_s(szPath, _MAX_PATH - 1, "esnacc_whitelist.txt");
+						copy_file(szPath, szTarget);
+					}
+				}
 			}
 		}
 
@@ -902,6 +934,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		 */
 		tmpModHndl = (Module**)AsnListAppend(allMods);
 		*tmpModHndl = currMod;
+	}
+
+	// If we are filtering we now just need to write the contents of the file parser
+	if (gFilterASN1Files)
+	{
+		free(allMods);
+		printf("Now exiting...\n");
+		return 0;
 	}
 
 	/*
@@ -1122,6 +1162,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 
 	if (genJAVACode)
 		GenJAVACode(allMods, genROSEDecoders);
+
 	if (genDelphiCode)
 		GenDelphiCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
 
@@ -2018,4 +2059,56 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
 	fprintf(stderr, "\n");
 	assert(false);
 	exit(200);
+}
+
+int copy_file(const char* source, const char* destination)
+{
+	// Open the source file in binary read mode
+	FILE* src = fopen(source, "rb");
+	if (src == NULL)
+	{
+		perror("Error opening source file");
+		return 1;
+	}
+
+	// Open the destination file in binary write mode
+	FILE* dest = fopen(destination, "wb");
+	if (dest == NULL)
+	{
+		perror("Error opening destination file");
+		fclose(src);
+		return 1;
+	}
+
+	// Buffer to hold file data during copying
+	char buffer[4096];
+	size_t bytesRead;
+
+	// Copy the contents of the source file to the destination file
+	while ((bytesRead = fread(buffer, 1, sizeof(buffer), src)) > 0)
+	{
+		size_t bytesWritten = fwrite(buffer, 1, bytesRead, dest);
+		if (bytesWritten != bytesRead)
+		{
+			perror("Error writing to destination file");
+			fclose(src);
+			fclose(dest);
+			return 1;
+		}
+	}
+
+	// Check if reading from the source file failed
+	if (ferror(src))
+	{
+		perror("Error reading source file");
+		fclose(src);
+		fclose(dest);
+		return 1;
+	}
+
+	// Close both files
+	fclose(src);
+	fclose(dest);
+
+	return 0;
 }

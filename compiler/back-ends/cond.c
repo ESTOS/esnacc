@@ -40,7 +40,7 @@
 
 void PrintConditionalIncludeOpen(FILE* f, char* fileName)
 {
-	char hdrFileDefSym[256];
+	char hdrFileDefSym[257];
 	int i;
 
 	strcpy_s(hdrFileDefSym, 256, RemovePath(fileName));

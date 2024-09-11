@@ -18,8 +18,8 @@ void SaveTSConverterFilesToOutputDirectory(const char* szPath)
 {
 	{
 		char szFileName[_MAX_PATH] = {0};
-		strcpy_s(szFileName, _MAX_PATH, szPath);
-		strcat_s(szFileName, _MAX_PATH, "TSConverterBase.ts");
+		strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+		strcat_s(szFileName, _MAX_PATH - 1, "TSConverterBase.ts");
 		SaveResourceToFile(ETS_CONVERTER_BASE, szFileName);
 	}
 }
@@ -572,7 +572,7 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 			case BASICTYPE_SET:
 				{
 					size_t size = strlen(e->fieldName) + 1;
-					char* pBuffer = malloc(size);
+					char* pBuffer = malloc(size + 1);
 					if (!pBuffer)
 					{
 						snacc_exit("Out of memory");

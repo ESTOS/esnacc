@@ -86,8 +86,6 @@
 
 #define DIGIT_TO_ASCII(d) (((d) % 10) + '0')
 
-char gszOutputPath[100] = {0};
-
 int IsCKeyWord PROTO((char* str));
 int IsCxxKeyWord PROTO((char* str));
 
@@ -102,7 +100,7 @@ char* Asn1TypeName2CTypeName PARAMS((aName), const char* aName)
 		return NULL;
 
 	size_t size = strlen(aName) + 1;
-	retVal = Malloc(size);
+	retVal = Malloc(size + 1);
 	strcpy_s(retVal, size, aName);
 	Dash2Underscore(retVal, strlen(retVal));
 
@@ -120,7 +118,7 @@ char* Asn1FieldName2CFieldName PARAMS((aName), char* aName)
 		return NULL;
 
 	size_t size = strlen(aName) + 1;
-	retVal = Malloc(size);
+	retVal = Malloc(size + 1);
 	strcpy_s(retVal, size, aName);
 	Dash2Underscore(retVal, strlen(retVal));
 
@@ -138,7 +136,7 @@ char* Asn1ValueName2CValueName PARAMS((aName), char* aName)
 		return NULL;
 
 	size_t size = strlen(aName) + 1;
-	retVal = Malloc(size);
+	retVal = Malloc(size + 1);
 	strcpy_s(retVal, size, aName);
 	Dash2Underscore(retVal, strlen(retVal));
 
@@ -434,7 +432,7 @@ char* MakeBaseFileName PARAMS((refName), const char* refName)
 	pathLen = strlen(gszOutputPath);
 
 	size_t size = pathLen + stublen + 1;
-	stub = Malloc(size);
+	stub = Malloc(size + 1);
 	strcpy_s(stub, size, gszOutputPath);
 	memcpy(stub + pathLen, base, stublen);
 	stub[pathLen + stublen] = '\0';
@@ -471,7 +469,7 @@ char* MakeFileName PARAMS((refName, suffix), const char* refName _AND_ const cha
 	size_t sufflen = strlen(suffix);
 	size_t pathLen = strlen(gszOutputPath);
 	size_t size = pathLen + baselen + sufflen + 1;
-	char* filename = Malloc(size);
+	char* filename = Malloc(size + 1);
 
 	strcpy_s(filename, size, gszOutputPath);
 	strcat_s(filename, size, fn);
@@ -487,7 +485,7 @@ char* MakeFileNameWithoutOutputPath PARAMS((refName, suffix), const char* refNam
 	size_t baselen = strlen(fn);
 	size_t sufflen = strlen(suffix);
 	size_t size = baselen + sufflen + 1;
-	char* filename = Malloc(size);
+	char* filename = Malloc(size + 1);
 
 	strcpy_s(filename, size, fn);
 	strcat_s(filename, size, suffix);
@@ -736,7 +734,7 @@ char* getFilePath(const char* filename)
 	if (lastSlash != NULL)
 	{
 		size_t pathLength = lastSlash - filename;
-		path = malloc(strlen(filename) + 1);
+		path = malloc(strlen(filename) + 2);
 		if (path == NULL)
 		{
 			snacc_exit("Out of memory");

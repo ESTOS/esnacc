@@ -491,7 +491,7 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods)
 								if (!szErrorTypes)
 								{
 									size_t stLen = strlen(szBuffer) + 1;
-									szErrorTypes = malloc(stLen);
+									szErrorTypes = malloc(stLen + 1);
 									if (!szErrorTypes)
 									{
 										snacc_exit("Out of memory 1");
@@ -499,7 +499,7 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods)
 									}
 									strcpy_s(szErrorTypes, stLen, szBuffer);
 									stLen = strlen(pszError) + 1;
-									szFirstName = malloc(stLen);
+									szFirstName = malloc(stLen + 1);
 									if (!szFirstName)
 									{
 										snacc_exit("Out of memory 2");
@@ -648,7 +648,7 @@ bool recurseFindInvalid(Module* mod, Type* type, int* supportedTypes, const char
 	}
 
 	bool bFoundInvalid = false;
-	char szCurrentPath[BUFFERSIZE] = {0};
+	char szCurrentPath[BUFFERSIZE + 1] = {0};
 	strcpy_s(szCurrentPath, BUFFERSIZE, szPath);
 
 	if (choiceId != BASICTYPE_LOCALTYPEREF && choiceId != BASICTYPE_IMPORTTYPEREF)
@@ -675,7 +675,7 @@ bool recurseFindInvalid(Module* mod, Type* type, int* supportedTypes, const char
 	{
 		if (choiceId == BASICTYPE_SEQUENCE && IsDeprecatedFlaggedSequence(mod, szElementName))
 			return false;
-		char szNewName[TESTBUFFERSIZE] = {0};
+		char szNewName[TESTBUFFERSIZE + 1] = {0};
 		strcat_s(szNewName, TESTBUFFERSIZE, "::");
 		strcat_s(szNewName, TESTBUFFERSIZE, szElementName);
 		if ((choiceId == BASICTYPE_SEQUENCE || choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF) && type->cxxTypeRefInfo->className)
@@ -894,7 +894,7 @@ bool ValidateOnlySupportedObjects(ModuleList* allMods)
 			FOR_EACH_LIST_ELMT(vd, currMod->typeDefs)
 			{
 				char szPath[_MAX_PATH] = {0};
-				sprintf_s(szPath, _MAX_PATH, "%s ", currMod->asn1SrcFileName);
+				sprintf_s(szPath, _MAX_PATH - 1, "%s ", currMod->asn1SrcFileName);
 				if (recurseFindInvalid(currMod, vd->type, supportedTypes, szPath, vd->definedName))
 					nWeHaveErrors++;
 			}

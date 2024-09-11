@@ -4,8 +4,9 @@
 add_compile_definitions("SNACCDLL_NONE")
 
 file(GLOB src_files src/*.cpp src/tkAppInit.c jsoncpp/*.cpp)
+file(GLOB header_files **/*.h)
 
-add_library(cpp-lib STATIC ${src_files})
+add_library(cpp-lib STATIC ${src_files} ${header_files})
 
 target_include_directories(cpp-lib PUBLIC "include")
 target_compile_definitions(cpp-lib PRIVATE SNACCDLL_NONE)

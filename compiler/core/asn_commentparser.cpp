@@ -3,14 +3,34 @@
 #include "filetype.h"
 #include "../../snacc.h"
 #include "time_helpers.h"
+#include <stdio.h>
 #include <sstream>
 #include <string>
 #include <list>
 #include <string.h>
 #include <time.h>
 #include <vector>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 const std::string WHITESPACE = " \n\r\t\f\v";
+
+bool isFiltered(const ETypeComment& comment)
+{
+	if (!gPrivateSymbols && comment.iPrivate)
+		return true;
+
+	if (comment.i64Deprecated && gi64NoDeprecatedSymbols)
+	{
+		if (gi64NoDeprecatedSymbols == 1)
+			return true;
+		else if (gi64NoDeprecatedSymbols >= comment.i64Deprecated)
+			return true;
+	}
+
+	return false;
+}
 
 std::string ltrim(const std::string& s)
 {
@@ -379,18 +399,10 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 	}
 }
 
-/*
-int EAsnStackElement::ProcessLine(std::string& szLine, std::string& szComment, bool& bElementEnd)
+int EAsnStackElementFile::ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state)
 {
-	szLine;
-	szComment;
-	bElementEnd;
-	return 1;
-}
-*/
+	m_strRawSourceFileIncrement += szRawSourceLine;
 
-int EAsnStackElementFile::ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd)
-{
 	if (szLine.empty())
 	{
 		if (!szComment.empty())
@@ -410,9 +422,7 @@ int EAsnStackElementFile::ProcessLine(const char* szModuleName, std::string& szL
 		{
 			EAsnStackElementModule* el = new EAsnStackElementModule(m_pParser);
 			el->SetModuleProperties(m_strModuleName.c_str(), m_strModuleName.c_str(), m_CollectComments);
-
 			m_CollectComments.clear();
-
 			m_pParser->m_stack.push_back(el);
 
 			return 0;
@@ -434,8 +444,10 @@ void EAsnStackElementModule::SetModuleProperties(const char* szTypeName, const c
 	convertCommentList(listComments, &m_ModuleComment);
 }
 
-int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd)
+int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state)
 {
+	m_strRawSourceFileIncrement += szRawSourceLine;
+
 	if (szLine == "END")
 	{
 		// end of module
@@ -447,7 +459,15 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 		m_ModuleComment.setModuleName(strKey.c_str());
 		gComments.mapModules[strKey] = m_ModuleComment;
 
-		bElementEnd = true;
+		if (isFiltered(m_ModuleComment))
+			state = EElementState::end_and_filtered;
+		else
+		{
+			m_strFilteredFileContent += m_strRawSourceFileIncrement;
+			state = EElementState::end;
+		}
+		m_strRawSourceFileIncrement.clear();
+
 		return 0;
 	}
 
@@ -526,8 +546,12 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 			el->commentsBefore = m_CollectComments;
 
 			szLine.clear();
-			bool bElEnd = false;
-			el->ProcessLine(szModuleName, szLine, szComment, bElEnd);
+			EElementState elementState = EElementState::not_yet_ended;
+			el->ProcessLine(szModuleName, m_strRawSourceFileIncrement.c_str(), szLine, szComment, elementState);
+
+			if (!isFiltered(el->m_comment))
+				m_strFilteredFileContent += m_strRawSourceFileIncrement;
+			m_strRawSourceFileIncrement.clear();
 			// we assume the element has ended
 			// m_pParser->m_stack.push_back(el);
 			delete el;
@@ -623,6 +647,11 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, std::string& s
 	return 0;
 }
 
+bool EAsnStackElementModule::isModuleFiltered() const
+{
+	return isFiltered(m_ModuleComment);
+}
+
 void EAsnStackElementSequence::SetSequenceProperties(bool bOpenBracket, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments)
 {
 	bOpenBracketFound = bOpenBracket;
@@ -635,8 +664,10 @@ void EAsnStackElementSequence::SetSequenceProperties(bool bOpenBracket, const ch
 	convertCommentList(listComments, &m_comment);
 }
 
-int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd)
+int EAsnStackElementSequence::ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state)
 {
+	m_strRawSourceFileIncrement += szRawSourceLine;
+
 	if (bOpenBracketFound == false)
 	{
 		if (szLine.empty())
@@ -759,14 +790,23 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, std::string&
 		strKey += m_comment.strTypeName_UTF8;
 		gComments.mapSequences[strKey] = m_comment;
 
-		bElementEnd = true;
+		if (isFiltered(m_comment))
+			state = EElementState::end_and_filtered;
+		else
+		{
+			m_strFilteredFileContent += m_strRawSourceFileIncrement;
+			state = EElementState::end;
+		}
+		m_strRawSourceFileIncrement.clear();
 	}
 
 	return 0;
 }
 
-int EAsnStackElementSequenceOf::ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd)
+int EAsnStackElementSequenceOf::ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state)
 {
+	m_strRawSourceFileIncrement += szRawSourceLine;
+
 	// sequence of is complete on the next line anyway
 	// add comments before the sequence...
 	convertCommentList(commentsBefore, &m_comment);
@@ -781,7 +821,15 @@ int EAsnStackElementSequenceOf::ProcessLine(const char* szModuleName, std::strin
 
 	gComments.mapSequences[strKey] = m_comment;
 
-	bElementEnd = true;
+	if (isFiltered(m_comment))
+		state = EElementState::end_and_filtered;
+	else
+	{
+		m_strFilteredFileContent += m_strRawSourceFileIncrement;
+		state = EElementState::end;
+	}
+	m_strRawSourceFileIncrement.clear();
+
 	return 0;
 }
 
@@ -795,8 +843,10 @@ void EAsnStackElementOperation::SetOperationProperties(const char* szTypeName, E
 	convertCommentList(listComments, &m_comment);
 }
 
-int EAsnStackElementOperation::ProcessLine(const char* szModuleName, std::string& szLine, std::string& szComment, bool& bElementEnd)
+int EAsnStackElementOperation::ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state)
 {
+	m_strRawSourceFileIncrement += szRawSourceLine;
+
 	if (szLine.find("::=") != std::string::npos)
 	{
 		std::string strKey = szModuleName;
@@ -806,7 +856,15 @@ int EAsnStackElementOperation::ProcessLine(const char* szModuleName, std::string
 		strKey += "::";
 		strKey += m_comment.strTypeName_UTF8;
 		gComments.mapOperations[strKey.c_str()] = m_comment;
-		bElementEnd = true;
+
+		if (isFiltered(m_comment))
+			state = EElementState::end_and_filtered;
+		else
+		{
+			m_strFilteredFileContent += m_strRawSourceFileIncrement;
+			state = EElementState::end;
+		}
+		m_strRawSourceFileIncrement.clear();
 	}
 	return 0;
 }
@@ -841,6 +899,57 @@ int EAsnCommentParser::ParseFileForComments(FILE* fp, const char* szModuleName, 
 	// clear stack
 	if (m_stack.size() > 1)
 		fprintf(errFileG, "WARNING - EAsnCommentParser inconsistent file syntax\n");
+	else if (m_stack.size() == 1)
+	{
+		std::string strFileName;
+		if (gszOutputPath)
+			strFileName = gszOutputPath;
+		strFileName += szModuleName;
+
+		auto pFile = m_stack.back();
+		if (gFilterASN1Files)
+		{
+			if (pFile->m_strFilteredFileContent.empty())
+			{
+#ifdef _WIN32
+				_unlink(strFileName.c_str());
+#else
+				unlink(strFileName.c_str());
+#endif
+			}
+			else
+			{
+				// Add lines at the end of the file which haven´t had a element association
+				pFile->m_strFilteredFileContent += pFile->m_strRawSourceFileIncrement;
+				FILE* filteredFile = nullptr;
+#ifdef _WIN32
+				errno_t err = fopen_s(&filteredFile, strFileName.c_str(), "w");
+				if (err != 0)
+					filteredFile = NULL;
+#else
+				filteredFile = fopen(strFileName.c_str(), "w");
+#endif
+				if (filteredFile)
+				{
+					const auto& strData = pFile->m_strFilteredFileContent;
+					if (type == UTF8WITHBOM)
+					{
+						unsigned char bom[] = {0xEF, 0xBB, 0xBF};
+						fwrite(bom, sizeof(unsigned char), 3, filteredFile);
+					}
+					if (type == ASCII)
+					{
+						auto strASCII = AsnStringConvert::UTF8ToAscii(strData.c_str());
+						fwrite(strASCII.c_str(), sizeof(char), strASCII.length(), filteredFile);
+					}
+					else
+						fwrite(strData.c_str(), sizeof(char), strData.length(), filteredFile);
+					fclose(filteredFile);
+				}
+			}
+		}
+	}
+
 	while (!m_stack.empty())
 	{
 		delete m_stack.back();
@@ -887,11 +996,30 @@ int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
 	replaceAll(strLine, "  ", " ");
 
 	EAsnStackElement* el = m_stack.back();
-	bool bElementEnd = false;
-	iResult = el->ProcessLine(szModuleName, strLine, strComment, bElementEnd);
-	if (bElementEnd)
+	EElementState elementState = EElementState::not_yet_ended;
+	iResult = el->ProcessLine(szModuleName, szLine, strLine, strComment, elementState);
+	if (elementState != EElementState::not_yet_ended)
 	{
 		m_stack.pop_back();
+		EAsnStackElement* elBefor = m_stack.back();
+		if (elementState == EElementState::end)
+		{
+			elBefor->m_strFilteredFileContent += elBefor->m_strRawSourceFileIncrement;
+			el->m_strRawSourceFileIncrement.clear();
+			elBefor->m_strFilteredFileContent += el->m_strFilteredFileContent;
+		}
+
+		if (m_stack.size() == 1)
+		{
+			auto pModule = dynamic_cast<EAsnStackElementModule*>(el);
+			if (pModule && pModule->isModuleFiltered())
+				elBefor->m_strFilteredFileContent.clear();
+			else
+				elBefor->m_strRawSourceFileIncrement += elBefor->m_strFilteredFileContent;
+		}
+
+		elBefor->m_strRawSourceFileIncrement.clear();
+
 		delete el;
 	}
 

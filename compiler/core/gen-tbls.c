@@ -234,7 +234,7 @@ int GenTblModule PARAMS((tbl, m, newTblMod), TBL* tbl _AND_ Module* m _AND_ TBLM
 	/* copy the name */
 	tblMod->name.octetLen = strlen(m->modId->name);
 	size_t size = tblMod->name.octetLen + 1;
-	tblMod->name.octs = Malloc(size);
+	tblMod->name.octs = Malloc(size + 1);
 	strcpy_s(tblMod->name.octs, size, m->modId->name);
 	tbl->totalNumStrings++;
 	tbl->totalLenStrings += (AsnInt)tblMod->name.octetLen;
@@ -290,7 +290,7 @@ int GenTblTypeDefs PARAMS((tbl, m, tblMod), TBL* tbl _AND_ Module* m _AND_ TBLMo
 		/* copy type def name */
 		tblTd->typeName.octetLen = strlen(td->definedName);
 		size_t size = tblTd->typeName.octetLen + 1;
-		tblTd->typeName.octs = Malloc(size);
+		tblTd->typeName.octs = Malloc(size + 1);
 		strcpy_s(tblTd->typeName.octs, size, td->definedName);
 		tbl->totalNumStrings++;
 		tbl->totalLenStrings += (AsnInt)tblTd->typeName.octetLen;
@@ -460,7 +460,7 @@ TBLType* GenTblTypesRec PARAMS((tbl, m, tblMod, td, tblTd, t), TBL* tbl _AND_ Mo
 				{
 					(**tblTHndl).fieldName.octetLen = strlen(e->fieldName);
 					size_t size = (**tblTHndl).fieldName.octetLen + 1;
-					(**tblTHndl).fieldName.octs = Malloc(size);
+					(**tblTHndl).fieldName.octs = Malloc(size + 1);
 					strcpy_s((**tblTHndl).fieldName.octs, size, e->fieldName);
 					tblStringsTotalG++;
 					tblStringLenTotalG += (int)((**tblTHndl).fieldName.octetLen);
@@ -487,7 +487,7 @@ TBLType* GenTblTypesRec PARAMS((tbl, m, tblMod, td, tblTd, t), TBL* tbl _AND_ Mo
 				{
 					(**tblTHndl).fieldName.octetLen = strlen(e->fieldName);
 					size_t size = (**tblTHndl).fieldName.octetLen + 1;
-					(**tblTHndl).fieldName.octs = Malloc(size);
+					(**tblTHndl).fieldName.octs = Malloc(size + 1);
 					strcpy_s((**tblTHndl).fieldName.octs, size, e->fieldName);
 					tblStringsTotalG++;
 					tblStringLenTotalG += (int)((**tblTHndl).fieldName.octetLen);
@@ -533,7 +533,7 @@ TBLType* GenTblTypesRec PARAMS((tbl, m, tblMod, td, tblTd, t), TBL* tbl _AND_ Mo
 				{
 					(**tblTHndl).fieldName.octetLen = strlen(e->fieldName);
 					size_t size = (**tblTHndl).fieldName.octetLen + 1;
-					(**tblTHndl).fieldName.octs = Malloc(size);
+					(**tblTHndl).fieldName.octs = Malloc(size + 1);
 					strcpy_s((**tblTHndl).fieldName.octs, size, e->fieldName);
 					tblStringsTotalG++;
 					tblStringLenTotalG += (int)((**tblTHndl).fieldName.octetLen);

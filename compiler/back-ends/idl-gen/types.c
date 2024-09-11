@@ -212,7 +212,7 @@ static void FillIDLTypeRefInfo PARAMS((r, m, td, parent, t), IDLRules* r _AND_ M
 			elmtName = Asn1ValueName2CValueName(namedElmt->definedName);
 			len = strlen(elmtName);
 			size_t size = len + 1 + r->maxDigitsToAppend;
-			cne->name = Malloc(size);
+			cne->name = Malloc(size + 1);
 			strcpy_s(cne->name, size, elmtName);
 			Free(elmtName); /* not very efficient */
 
@@ -380,7 +380,7 @@ static void FillIDLChoiceElmts PARAMS((r, m, td, parent, elmts), IDLRules* r _AN
 
 		len = strlen(td->idlTypeDefInfo->typeName) + strlen(idltri->fieldName);
 		size_t size = len + 6 + 1;
-		idltri->choiceIdSymbol = Malloc(size);
+		idltri->choiceIdSymbol = Malloc(size + 1);
 		strcpy_s(idltri->choiceIdSymbol, size, td->idlTypeDefInfo->typeName);
 		strcat_s(idltri->choiceIdSymbol, size, "Choice_");
 		strcat_s(idltri->choiceIdSymbol, size, idltri->fieldName);
@@ -434,7 +434,7 @@ static void FillIDLFieldNames PARAMS((r, elmts), IDLRules* r _AND_ NamedTypeList
 			asn1FieldName = et->fieldName;
 			tmpName = Asn1FieldName2CFieldName(asn1FieldName);
 			size_t size = strlen(tmpName) + 1 + r->maxDigitsToAppend;
-			idltri->fieldName = Malloc(size);
+			idltri->fieldName = Malloc(size + 1);
 			strcpy_s(idltri->fieldName, size, tmpName);
 			Free(tmpName);
 
@@ -464,7 +464,7 @@ static void FillIDLFieldNames PARAMS((r, elmts), IDLRules* r _AND_ NamedTypeList
 				tmpName = et->type->basicType->a.localTypeRef->link->idlTypeDefInfo->typeName;
 				tmpName = Asn1TypeName2CTypeName(tmpName);
 				size = strlen(tmpName) + r->maxDigitsToAppend + 1;
-				cFieldName = Malloc(size);
+				cFieldName = Malloc(size + 1);
 				strcpy_s(cFieldName, size, tmpName);
 				Free(tmpName);
 				if (isupper(cFieldName[0]))
@@ -477,7 +477,7 @@ static void FillIDLFieldNames PARAMS((r, elmts), IDLRules* r _AND_ NamedTypeList
 				 */
 				tmpName = r->typeConvTbl[et->type->basicType->choiceId].defaultFieldName;
 				size = strlen(tmpName) + r->maxDigitsToAppend + 1;
-				cFieldName = Malloc(size);
+				cFieldName = Malloc(size + 1);
 				strcpy_s(cFieldName, size, tmpName);
 
 				if (cFieldName && isupper(cFieldName[0]))
@@ -554,7 +554,7 @@ void FillIDLTDIDefaults PARAMS((r, idltdi, td), IDLRules* r _AND_ IDLTDI* idltdi
 	/* make sure class name is unique wrt to previously defined classes */
 	tmpName = Asn1TypeName2CTypeName(td->definedName);
 	size_t size = strlen(tmpName) + 2 + r->maxDigitsToAppend + 1;
-	idltdi->typeName = Malloc(size);
+	idltdi->typeName = Malloc(size + 1);
 	strcpy_s(idltdi->typeName, size, tmpName);
 	if (tblidltdi->asn1TypeId != BASICTYPE_CHOICE)
 		strcat_s(idltdi->typeName, size, "_T");

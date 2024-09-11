@@ -139,7 +139,7 @@ typedef unsigned int flex_uint32_t;
  * to BEGIN to return to the state.  The YYSTATE alias is for lex
  * compatibility.
  */
-#define YY_START (((yy_start)-1) / 2)
+#define YY_START (((yy_start) - 1) / 2)
 #define YYSTATE YY_START
 
 /* Action number for EOF rule of a given start state. */
@@ -2156,7 +2156,7 @@ YY_DECL
 				YY_RULE_SETUP
 #line 440 "core/lex-asn1.l"
 				{
-					yylval.charPtr = (char*)Malloc(yyleng + 1);
+					yylval.charPtr = (char*)Malloc(yyleng + 2);
 					strcpy_s(yylval.charPtr, yyleng + 1, yytext);
 					yylval.charPtr[yyleng] = '\0';
 					return UCASEFIRST_IDENT_SYM;
@@ -2166,7 +2166,7 @@ YY_DECL
 				YY_RULE_SETUP
 #line 447 "core/lex-asn1.l"
 				{
-					yylval.charPtr = (char*)Malloc(yyleng + 1);
+					yylval.charPtr = (char*)Malloc(yyleng + 2);
 					strcpy_s(yylval.charPtr, yyleng + 1, yytext);
 					yylval.charPtr[yyleng] = '\0';
 					return LCASEFIRST_IDENT_SYM;
@@ -2187,7 +2187,7 @@ YY_DECL
 							return NUMBER_SYM;
 						}
 					}
-					yylval.charPtr = (char*)Malloc(yyleng + 1);
+					yylval.charPtr = (char*)Malloc(yyleng + 2);
 					strcpy_s(yylval.charPtr, yyleng + 1, yytext);
 					yylval.charPtr[yyleng] = '\0';
 					return NUMBER_ERANGE;
@@ -2770,7 +2770,7 @@ YY_DECL
 			default:
 				YY_FATAL_ERROR("fatal flex scanner internal error--no action found");
 		} /* end of action switch */
-	}	  /* end of scanning one token */
+	} /* end of scanning one token */
 } /* end of yylex */
 
 /* yy_get_next_buffer - try to read in a new buffer
@@ -3077,7 +3077,6 @@ static int input(void)
  */
 void yyrestart(FILE* input_file)
 {
-
 	if (!YY_CURRENT_BUFFER)
 	{
 		yyensure_buffer_stack();
@@ -3094,7 +3093,6 @@ void yyrestart(FILE* input_file)
  */
 void yy_switch_to_buffer(YY_BUFFER_STATE new_buffer)
 {
-
 	/* TODO. We should be able to replace this entire function body
 	 * with
 	 *		yypop_buffer_state();
@@ -3167,7 +3165,6 @@ YY_BUFFER_STATE yy_create_buffer(FILE* file, int size)
  */
 void yy_delete_buffer(YY_BUFFER_STATE b)
 {
-
 	if (!b)
 		return;
 
@@ -3298,7 +3295,6 @@ static void yyensure_buffer_stack(void)
 
 	if (!(yy_buffer_stack))
 	{
-
 		/* First allocation is just for 2 elements, since we don't know if this
 		 * scanner will even need a stack. We use 2 instead of 1 to avoid an
 		 * immediate realloc on the next call.
@@ -3320,7 +3316,6 @@ static void yyensure_buffer_stack(void)
 
 	if ((yy_buffer_stack_top) >= ((yy_buffer_stack_max)) - 1)
 	{
-
 		/* Increase the buffer to prepare for a possible push. */
 		int grow_size = 8 /* arbitrary grow size */;
 
@@ -3381,7 +3376,6 @@ YY_BUFFER_STATE yy_scan_buffer(char* base, yy_size_t size)
  */
 YY_BUFFER_STATE yy_scan_string(yyconst char* yystr)
 {
-
 	return yy_scan_bytes(yystr, strlen(yystr));
 }
 
@@ -3455,7 +3449,6 @@ static void yy_fatal_error(yyconst char* msg)
  */
 int yyget_lineno(void)
 {
-
 	return yylineno;
 }
 
@@ -3498,7 +3491,6 @@ char* yyget_text(void)
  */
 void yyset_lineno(int line_number)
 {
-
 	yylineno = line_number;
 }
 
@@ -3559,7 +3551,6 @@ static int yy_init_globals(void)
 /* yylex_destroy is for both reentrant and non-reentrant scanners. */
 int yylex_destroy(void)
 {
-
 	/* Pop the buffer stack, destroying each element. */
 	while (YY_CURRENT_BUFFER)
 	{

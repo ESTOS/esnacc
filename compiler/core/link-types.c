@@ -183,7 +183,7 @@ int LinkTypeRefs PARAMS((m), ModuleList* m)
 		FOR_EACH_LIST_ELMT(td, currMod->typeDefs) // Deepak: all typedefs are processed here
 		{
 			TypeLinkTypeDef(m, currMod, td); // Deepak: all the major types e.g. sequence, objectclass
-		}									 // are linked here, subtypes in further functions.
+		} // are linked here, subtypes in further functions.
 
 		/*
 		 *  go through each value in valueList and link as nec
@@ -667,7 +667,7 @@ void TypeLinkBasicType PARAMS((m, currMod, head, type, bt), ModuleList* m _AND_ 
 					// Deepak: changed from malloc to Malloc
 					// char* name2 = Malloc(sizeof(bt->a.localTypeRef->typeName + 1));
 					size_t size = strlen(bt->a.localTypeRef->typeName) + 1;
-					char* name2 = Malloc(size);
+					char* name2 = Malloc(size + 1);
 					strcpy_s(name2, size, bt->a.localTypeRef->typeName);
 					name2[pos] = '\0'; // Name of CLASS
 					tmpTypeDef = LookupType(currMod->typeDefs, name2);
@@ -1190,7 +1190,6 @@ void TypeLinkValueDef PARAMS((m, currMod, v), ModuleList* m _AND_ Module* currMo
  */
 void TypeLinkValue PARAMS((m, currMod, head, valuesType, v), ModuleList* m _AND_ Module* currMod _AND_ ValueDef* head _AND_ Type* valuesType _AND_ Value* v)
 {
-
 	if (v == NULL)
 		return;
 
@@ -1328,7 +1327,6 @@ void TypeLinkMtsasExtensionMacroType PARAMS((m, currMod, head, t, bt, ext), Modu
  */
 void TypeLinkMtsasExtensionAttributeMacroType PARAMS((m, currMod, head, t, bt, ext), ModuleList* m _AND_ Module* currMod _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasExtensionAttributeMacroType* ext)
 {
-
 	if (ext != NULL)
 		TypeLinkType(m, currMod, head, ext->type);
 } /* TypeLinkMtsasExtensionAttributeMacroType */
@@ -1356,7 +1354,6 @@ void TypeLinkMtsasTokenDataMacroType PARAMS((m, currMod, head, t, bt, tok), Modu
  */
 void TypeLinkMtsasSecurityCategoryMacroType PARAMS((m, currMod, head, t, bt, sec), ModuleList* m _AND_ Module* currMod _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasSecurityCategoryMacroType* sec)
 {
-
 	if (sec != NULL)
 		TypeLinkType(m, currMod, head, sec->type);
 } /* TypeLinkMtsasSecurityCategoryMacroType */

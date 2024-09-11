@@ -94,11 +94,14 @@ extern "C"
 #endif
 
 	extern long long gi64NoDeprecatedSymbols;
+	extern int gPrivateSymbols;
+	extern int gFilterASN1Files;
 	extern int giValidationLevel;
 	extern int giWriteComments;
 	extern int genTSESMCode;
 	extern int gNodeVersion;
 	extern int gMajorInterfaceVersion;
+	extern char gszOutputPath[];
 
 #ifdef __cplusplus
 }

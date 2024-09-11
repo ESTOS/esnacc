@@ -109,7 +109,6 @@ extern int anyEnumValG;
 
 void PrintCxxAnyCode PARAMS((src, hdr, r, mods, m), FILE* src _AND_ FILE* hdr _AND_ CxxRules* r _AND_ ModuleList* mods _AND_ Module* m)
 {
-
 	if (!m->hasAnys)
 		return;
 
@@ -129,7 +128,7 @@ void PrintCxxAnyEnum PARAMS((hdr, m, r), FILE* hdr _AND_ Module* m _AND_ CxxRule
 		int i; */
 	ValueDef* vd;
 	Type* t;
-	char anyId[512];
+	char anyId[513];
 	/* REN -- end */
 
 	modName = Asn1TypeName2CTypeName(m->modId->name);
