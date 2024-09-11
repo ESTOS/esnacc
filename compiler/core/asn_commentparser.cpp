@@ -10,6 +10,9 @@
 #include <string.h>
 #include <time.h>
 #include <vector>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 
