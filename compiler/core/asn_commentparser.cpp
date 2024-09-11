@@ -922,7 +922,14 @@ int EAsnCommentParser::ParseFileForComments(FILE* fp, const char* szModuleName, 
 				// Add lines at the end of the file which haven´t had a element association
 				pFile->m_strFilteredFileContent += pFile->m_strRawSourceFileIncrement;
 				FILE* filteredFile = nullptr;
-				if (fopen_s(&filteredFile, strFileName.c_str(), "w") == 0)
+#ifdef _WIN32
+				errno_t err = fopen_s(&filteredFile, strFileName.c_str(), "w");
+				if (err != 0)
+					filteredFile = NULL;
+#else
+				filteredFile = fopen(strFileName.c_str(), "w");
+#endif
+				if (filteredFile)
 				{
 					const auto& strData = pFile->m_strFilteredFileContent;
 					if (type == UTF8WITHBOM)
