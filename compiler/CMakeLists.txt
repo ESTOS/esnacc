@@ -37,7 +37,7 @@ if(WIN32)
 else()
     file(GLOB src_files core/*.c core/*.cpp back-ends/*.c back-ends/**/*.c)
 endif()
-file(GLOB header_files core/*.h back-ends/*.h back-ends/**/*.h)
+file(GLOB header_files *.h core/*.h back-ends/*.h back-ends/**/*.h)
 
 # Set the compiler (binary) output path
 if(COMPILER_OUTPUT_PATH)
