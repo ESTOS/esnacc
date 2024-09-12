@@ -1550,6 +1550,43 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 #endif
 	}
 
+	if (gMajorInterfaceVersion >= 0)
+	{
+		FILE* versionFile = NULL;
+		char* szVersionFile = MakeFileName("Asn1InterfaceVersion.h", "");
+		if (fopen_s(&versionFile, szVersionFile, "wt") != 0 || versionFile == NULL)
+			perror("fopen");
+		else
+		{
+			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
+			write_snacc_header(versionFile, "// ");
+			fprintf(versionFile, "\n");
+			fprintf(versionFile, "// clang-format off\n\n");
+			fprintf(versionFile, "#ifndef ASN1_INTERFACE_VERSION_H\n");
+			fprintf(versionFile, "#define ASN1_INTERFACE_VERSION_H\n\n");
+			fprintf(versionFile, "#ifndef NO_NAMESPACE\n");
+			fprintf(versionFile, "namespace SNACC\n");
+			fprintf(versionFile, "{\n");
+			fprintf(versionFile, "#endif\n\n");
+
+			fprintf(versionFile, "struct Asn1InterfaceVersion\n");
+			fprintf(versionFile, "{\n");
+			fprintf(versionFile, "\tstatic constexpr const char* lastChange = \"%s\";\n", ConvertUnixTimeToISO(lMaxMinorVersion));
+			fprintf(versionFile, "\tstatic constexpr int majorVersion = %i;\n", gMajorInterfaceVersion);
+			fprintf(versionFile, "\tstatic constexpr long long minorVersion = %lld;\n", lMaxMinorVersion);
+			fprintf(versionFile, "\tstatic constexpr const char* version = \"%i.%lld.0\";\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			fprintf(versionFile, "};\n\n");
+
+			fprintf(versionFile, "#ifndef NO_NAMESPACE\n");
+			fprintf(versionFile, "}\n");
+			fprintf(versionFile, "#endif\n\n");
+
+			fprintf(versionFile, "#endif");
+			fclose(versionFile);
+		}
+		free(szVersionFile);
+	}
+
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
 		if (currMod->ImportedFlag == FALSE)
