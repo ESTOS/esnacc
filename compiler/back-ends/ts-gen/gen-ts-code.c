@@ -989,12 +989,17 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 			perror("fopen");
 		else
 		{
+			fprintf(versionFile, "/*\n");
+			write_snacc_header(versionFile, " * ");
+			fprintf(versionFile, "*/\n\n");
+			fprintf(versionFile, "// prettier-ignore\n");
+			fprintf(versionFile, "/* eslint-disable */\n\n");
 			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
-			fprintf(versionFile, "export const Asn1InterfaceVersion = {\n");
-			fprintf(versionFile, "\tlastChange = \"%s\";\n", ConvertUnixTimeToISO(lMaxMinorVersion));
-			fprintf(versionFile, "\tmajorVersion = %i;\n", gMajorInterfaceVersion);
-			fprintf(versionFile, "\tminorVersion = %lld;\n", lMaxMinorVersion);
-			fprintf(versionFile, "\tversion = \"%i.%lld.0\";\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			fprintf(versionFile, "export class Asn1InterfaceVersion {\n");
+			fprintf(versionFile, "\tpublic static lastChange = \"%s\";\n", ConvertUnixTimeToISO(lMaxMinorVersion));
+			fprintf(versionFile, "\tpublic static majorVersion = %i;\n", gMajorInterfaceVersion);
+			fprintf(versionFile, "\tpublic static minorVersion = %lld;\n", lMaxMinorVersion);
+			fprintf(versionFile, "\tpublic static version = \"%i.%lld.0\";\n", gMajorInterfaceVersion, lMaxMinorVersion);
 			fprintf(versionFile, "}\n");
 			fclose(versionFile);
 		}
