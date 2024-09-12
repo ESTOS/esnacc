@@ -184,6 +184,9 @@ int giValidationLevel = 0xffffffff;
 // Write comments to the target files on true (parsing is always enabled)
 int giWriteComments = 0;
 
+// Write a combined version file
+int genVersionFile = FALSE;
+
 // Defines whether we write commonsJS or ESM typescript code
 int genTSESMCode = FALSE;
 
@@ -258,6 +261,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "   32 Ensure that invokes are specified with argument, result and error where events only consists of an argument (@deprecated are not validated)\n");
 	fprintf(fp, "   64 Ensure that optional parameters are not encoded implicit (context specific, with number) and explicit (without) in the same object (@deprecated are not validated)\n");
 	fprintf(fp, "   128 Ensure that optional parameters are always encoded implicit and never explicit (@deprecated are not validated)\n");
+	fprintf(fp, "  -versionfile - the compiler writes a version file for the highest version found (requires interfaceversion.txt)\n");
 	fprintf(fp, "  -h   prints this msg\n");
 	fprintf(fp, "  -P   print the parsed ASN.1 modules to stdout from their parse trees\n");
 	fprintf(fp, "       (helpful debugging)\n");
@@ -484,8 +488,18 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					}
 					break;
 				case 'v':
-					genValueCode = TRUE;
-					currArg++;
+					if (strcmp(argument + 1, "versionfile") == 0)
+					{
+						genVersionFile = 1;
+						currArg++;
+					}
+					else if (strcmp(argument + 1, "v") == 0)
+					{
+						genValueCode = TRUE;
+						currArg++;
+					}
+					else
+						goto error;
 					break;
 #if IDL
 				case 'i':
@@ -1550,7 +1564,7 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 #endif
 	}
 
-	if (gMajorInterfaceVersion >= 0)
+	if (gMajorInterfaceVersion >= 0 && genVersionFile)
 	{
 		FILE* versionFile = NULL;
 		char* szVersionFile = MakeFileName("Asn1InterfaceVersion.h", "");
