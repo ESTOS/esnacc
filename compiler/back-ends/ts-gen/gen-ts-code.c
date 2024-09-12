@@ -589,7 +589,6 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 			fprintf(src, "new asn1ts.%s({ name: \"%s\"%s })", GetBERType(e->type->basicType->choiceId), szConverted2, szOptionalParam);
 		else if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
 		{
-
 			const char* szModuleName = "";
 			const char* szModuleNameDelimiter = "";
 			if (choiceId == BASICTYPE_IMPORTTYPEREF)
@@ -980,6 +979,31 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 			return;
 
 		FreeDefinedObjs(&fNames);
+	}
+
+	if (gMajorInterfaceVersion >= 0)
+	{
+		FILE* versionFile = NULL;
+		char* szVersionFile = MakeFileName("Asn1InterfaceVersion.ts", "");
+		if (fopen_s(&versionFile, szVersionFile, "wt") != 0 || versionFile == NULL)
+			perror("fopen");
+		else
+		{
+			fprintf(versionFile, "/*\n");
+			write_snacc_header(versionFile, " * ");
+			fprintf(versionFile, "*/\n\n");
+			fprintf(versionFile, "// prettier-ignore\n");
+			fprintf(versionFile, "/* eslint-disable */\n\n");
+			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
+			fprintf(versionFile, "export class Asn1InterfaceVersion {\n");
+			fprintf(versionFile, "\tpublic static lastChange = \"%s\";\n", ConvertUnixTimeToISO(lMaxMinorVersion));
+			fprintf(versionFile, "\tpublic static majorVersion = %i;\n", gMajorInterfaceVersion);
+			fprintf(versionFile, "\tpublic static minorVersion = %lld;\n", lMaxMinorVersion);
+			fprintf(versionFile, "\tpublic static version = \"%i.%lld.0\";\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			fprintf(versionFile, "}\n");
+			fclose(versionFile);
+		}
+		free(szVersionFile);
 	}
 
 	FILE* typesFile = NULL;

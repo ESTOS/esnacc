@@ -138,7 +138,7 @@ extern "C"
 }
 
 // std::set SORTIERT, das darf aber bei dem explode nicht sein!
-std::vector<std::string> explode(std::string const& s, char delim)
+std::vector<std::string> explode(std::string const& s, char delim, const bool bSkipEmpty = true)
 {
 	std::vector<std::string> result;
 	std::istringstream iss(s);
@@ -147,7 +147,7 @@ std::vector<std::string> explode(std::string const& s, char delim)
 	{
 		// leere tokens auslassen, brauchen wir nicht
 		auto element = trim(token);
-		if (element.size())
+		if (!bSkipEmpty || element.size())
 			result.push_back(element);
 	}
 
@@ -633,17 +633,19 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 		{
 			EAsnStackElementOperation* el = new EAsnStackElementOperation(m_pParser);
 			el->SetOperationProperties(strType.c_str(), &m_ModuleComment, m_CollectComments);
-
 			m_pParser->m_stack.push_back(el);
-
 			m_CollectComments.clear();
 			return 0;
 		}
 		else
 		{
-			m_strFilteredFileContent += m_strRawSourceFileIncrement;
-			m_strRawSourceFileIncrement.clear();
-
+			ESequenceComment comment;
+			convertCommentList(m_CollectComments, &comment);
+			if (!isFiltered(comment))
+			{
+				m_strFilteredFileContent += m_strRawSourceFileIncrement;
+				m_strRawSourceFileIncrement.clear();
+			}
 			m_CollectComments.clear();
 		}
 
@@ -937,19 +939,26 @@ int EAsnCommentParser::ParseFileForComments(FILE* fp, const char* szModuleName, 
 #endif
 				if (filteredFile)
 				{
-					const auto& strData = pFile->m_strFilteredFileContent;
 					if (type == UTF8WITHBOM)
 					{
 						unsigned char bom[] = {0xEF, 0xBB, 0xBF};
 						fwrite(bom, sizeof(unsigned char), 3, filteredFile);
 					}
-					if (type == ASCII)
+					const auto& strData = pFile->m_strFilteredFileContent;
+					auto strElements = explode(strData, '\n', false);
+					for (auto& strElement : strElements)
 					{
-						auto strASCII = AsnStringConvert::UTF8ToAscii(strData.c_str());
-						fwrite(strASCII.c_str(), sizeof(char), strASCII.length(), filteredFile);
+						if (strElement.length() > 4 && strElement.substr(0, 5) == "-- ~ " || strElement.length() == 4 && strElement.substr(0, 4) == "-- ~")
+							continue;
+						strElement += "\n";
+						if (type == ASCII)
+						{
+							auto strASCII = AsnStringConvert::UTF8ToAscii(strElement.c_str());
+							fwrite(strASCII.c_str(), sizeof(char), strASCII.length(), filteredFile);
+						}
+						else
+							fwrite(strElement.c_str(), sizeof(char), strElement.length(), filteredFile);
 					}
-					else
-						fwrite(strData.c_str(), sizeof(char), strData.length(), filteredFile);
 					fclose(filteredFile);
 				}
 			}
