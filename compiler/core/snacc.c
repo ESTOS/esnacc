@@ -2115,16 +2115,16 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
 int copy_file(const char* source, const char* destination)
 {
 	// Open the source file in binary read mode
-	FILE* src = fopen(source, "rb");
-	if (src == NULL)
+	FILE* src = 0;
+	if (!fopen_s(&src, source, "rb") || !src)
 	{
 		perror("Error opening source file");
 		return 1;
 	}
 
 	// Open the destination file in binary write mode
-	FILE* dest = fopen(destination, "wb");
-	if (dest == NULL)
+	FILE* dest = 0;
+	if (!fopen_s(&dest, destination, "rb") || !dest)
 	{
 		perror("Error opening destination file");
 		fclose(src);
