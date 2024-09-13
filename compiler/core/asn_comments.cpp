@@ -7,11 +7,16 @@ extern "C"
 {
 	// Once evaluated this int64 contains the highest minor module version of all loaded modules
 	long long glMaxMinorModuleVersion = -1;
+	EAsnCommentParser parser;
 
 	int ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type)
 	{
-		EAsnCommentParser parser;
 		return parser.ParseFileForComments(fp, szModuleName, type);
+	}
+
+	void FilterFiles()
+	{
+		parser.FilterFiles();
 	}
 
 	const char* GetFirstModuleLogFileFilter(const char* szModuleName)

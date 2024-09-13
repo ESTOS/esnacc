@@ -953,6 +953,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	// If we are filtering we now just need to write the contents of the file parser
 	if (gFilterASN1Files)
 	{
+		FilterFiles();
 		free(allMods);
 		printf("Now exiting...\n");
 		return 0;

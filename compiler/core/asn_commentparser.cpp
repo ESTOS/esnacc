@@ -10,6 +10,7 @@
 #include <string.h>
 #include <time.h>
 #include <vector>
+#include <assert.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -30,6 +31,28 @@ bool isFiltered(const ETypeComment& comment)
 	}
 
 	return false;
+}
+
+bool isFiltered(const EStructMemberComment& comment)
+{
+	if (!gPrivateSymbols && comment.iPrivate)
+		return true;
+
+	if (comment.i64Deprecated && gi64NoDeprecatedSymbols)
+	{
+		if (gi64NoDeprecatedSymbols == 1)
+			return true;
+		else if (gi64NoDeprecatedSymbols >= comment.i64Deprecated)
+			return true;
+	}
+
+	return false;
+}
+
+std::string ltrimspace(const std::string& s)
+{
+	size_t start = s.find_first_not_of(" ");
+	return (start == std::string::npos) ? "" : s.substr(start);
 }
 
 std::string ltrim(const std::string& s)
@@ -140,7 +163,7 @@ extern "C"
 }
 
 // std::set SORTIERT, das darf aber bei dem explode nicht sein!
-std::vector<std::string> explode(std::string const& s, char delim, const bool bSkipEmpty = true)
+std::vector<std::string> explode(std::string const& s, char delim, const bool bSkipEmpty = true, const bool bTrim = true)
 {
 	std::vector<std::string> result;
 	std::istringstream iss(s);
@@ -148,7 +171,7 @@ std::vector<std::string> explode(std::string const& s, char delim, const bool bS
 	for (std::string token; std::getline(iss, token, delim);)
 	{
 		// leere tokens auslassen, brauchen wir nicht
-		auto element = trim(token);
+		auto element = bTrim ? trim(token) : token;
 		if (!bSkipEmpty || element.size())
 			result.push_back(element);
 	}
@@ -417,13 +440,16 @@ int EAsnStackElementFile::ProcessLine(const char* szModuleName, const char* szRa
 		return 0;
 	}
 
+	if (m_strModuleASN1Name.empty())
+		m_strModuleASN1Name = trim(szLine);
+
 	if (szLine.length() >= 5)
 	{
 		std::string strBegin = szLine.substr(szLine.length() - 5);
 		if (strBegin == "BEGIN")
 		{
 			EAsnStackElementModule* el = new EAsnStackElementModule(m_pParser);
-			el->SetModuleProperties(m_strModuleName.c_str(), m_strModuleName.c_str(), m_CollectComments);
+			el->SetModuleProperties(m_strModuleName.c_str(), m_strModuleName.c_str(), m_strModuleASN1Name.c_str(), m_CollectComments);
 			m_CollectComments.clear();
 			m_pParser->m_stack.push_back(el);
 
@@ -439,10 +465,11 @@ int EAsnStackElementFile::ProcessLine(const char* szModuleName, const char* szRa
 	return 0;
 }
 
-void EAsnStackElementModule::SetModuleProperties(const char* szTypeName, const char* szCategory, std::list<std::string>& listComments)
+void EAsnStackElementModule::SetModuleProperties(const char* szTypeName, const char* szCategory, const char* szASN1ModuleName, std::list<std::string>& listComments)
 {
 	m_ModuleComment.strTypeName_UTF8 = szTypeName;
 	m_ModuleComment.strCategory_UTF8 = szCategory;
+	m_ModuleComment.m_strASN1ModuleName = szASN1ModuleName;
 	convertCommentList(listComments, &m_ModuleComment);
 }
 
@@ -722,6 +749,10 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, const char* 
 			convertMemberCommentList(m_CollectComments, &member);
 			m_comment.mapMembers[strMember] = member;
 
+			if (!isFiltered(member))
+				m_strFilteredFileContent += m_strRawSourceFileIncrement;
+			m_strRawSourceFileIncrement.clear();
+
 			std::string strBasicType1 = "";
 			if (iter != tokens.end())
 			{
@@ -800,11 +831,15 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, const char* 
 		strKey += m_comment.strTypeName_UTF8;
 		gComments.mapSequences[strKey] = m_comment;
 
+		m_strFilteredFileContent += m_strRawSourceFileIncrement;
+
 		if (isFiltered(m_comment))
+		{
+			m_strFilteredFileContent.clear();
 			state = EElementState::end_and_filtered;
+		}
 		else
 		{
-			m_strFilteredFileContent += m_strRawSourceFileIncrement;
 			state = EElementState::end;
 		}
 		m_strRawSourceFileIncrement.clear();
@@ -911,59 +946,15 @@ int EAsnCommentParser::ParseFileForComments(FILE* fp, const char* szModuleName, 
 		fprintf(errFileG, "WARNING - EAsnCommentParser inconsistent file syntax\n");
 	else if (m_stack.size() == 1)
 	{
-		std::string strFileName;
-		if (gszOutputPath)
-			strFileName = gszOutputPath;
-		strFileName += szModuleName;
-
-		auto pFile = m_stack.back();
+		// Put the filtered content into the map
+		// The files have now been filtered in a first iteration
+		// We need to clean the imports after having parsed all files
 		if (gFilterASN1Files)
 		{
-			if (pFile->m_strFilteredFileContent.empty())
-			{
-#ifdef _WIN32
-				_unlink(strFileName.c_str());
-#else
-				unlink(strFileName.c_str());
-#endif
-			}
-			else
-			{
-				// Add lines at the end of the file which haven´t had a element association
-				pFile->m_strFilteredFileContent += pFile->m_strRawSourceFileIncrement;
-				FILE* filteredFile = nullptr;
-#ifdef _WIN32
-				errno_t err = fopen_s(&filteredFile, strFileName.c_str(), "w");
-				if (err != 0)
-					filteredFile = NULL;
-#else
-				filteredFile = fopen(strFileName.c_str(), "w");
-#endif
-				if (filteredFile)
-				{
-					if (type == UTF8WITHBOM)
-					{
-						unsigned char bom[] = {0xEF, 0xBB, 0xBF};
-						fwrite(bom, sizeof(unsigned char), 3, filteredFile);
-					}
-					const auto& strData = pFile->m_strFilteredFileContent;
-					auto strElements = explode(strData, '\n', false);
-					for (auto& strElement : strElements)
-					{
-						if (strElement.length() > 4 && strElement.substr(0, 5) == "-- ~ " || strElement.length() == 4 && strElement.substr(0, 4) == "-- ~")
-							continue;
-						strElement += "\n";
-						if (type == ASCII)
-						{
-							auto strASCII = AsnStringConvert::UTF8ToAscii(strElement.c_str());
-							fwrite(strASCII.c_str(), sizeof(char), strASCII.length(), filteredFile);
-						}
-						else
-							fwrite(strElement.c_str(), sizeof(char), strElement.length(), filteredFile);
-					}
-					fclose(filteredFile);
-				}
-			}
+			auto pFile = m_stack.back();
+			// Add lines at the end of the file which haven´t had a element association
+			pFile->m_strFilteredFileContent += pFile->m_strRawSourceFileIncrement;
+			m_FilteredFileContents.push_back(EFilteredAsnFile(szModuleName, pFile->m_strFilteredFileContent, type));
 		}
 	}
 
@@ -977,6 +968,186 @@ int EAsnCommentParser::ParseFileForComments(FILE* fp, const char* szModuleName, 
 	fseek(fp, type == UTF8WITHBOM ? 3 : 0, SEEK_SET);
 
 	return 0; // NO Error
+}
+
+class ImportSegment
+{
+public:
+	ImportSegment(const std::string& strModuleText, const std::vector<std::string>& strImports)
+	{
+		m_strModuleText = strModuleText;
+		m_strASN1ModuleName = trim(strModuleText.substr(5));
+		m_strImports = strImports;
+	}
+	std::string m_strModuleText;
+	std::string m_strASN1ModuleName;
+	std::vector<std::string> m_strImports;
+};
+
+std::string EAsnCommentParser::FilterImports(const std::string& strImports)
+{
+	// Separate it based on the " FROM ModuleName"
+	std::list<ImportSegment> imports;
+
+	// Split the blob into the segments that define the imports per source
+	size_t lastPos = 0;
+	while (true)
+	{
+		auto posBegin = strImports.find("FROM ", lastPos);
+		if (posBegin == -1)
+			break;
+		auto posEnd = strImports.find_first_of("\n;", posBegin);
+		if (posEnd == -1)
+			posEnd = strImports.length();
+		else
+			posEnd++;
+		auto strModule = strImports.substr(posBegin, posEnd - posBegin);
+		auto strImportedText = strImports.substr(lastPos, posBegin - lastPos);
+		auto strImportElements = explode(strImportedText, ',', false, false);
+		imports.push_back(ImportSegment(strModule, strImportElements));
+		lastPos = posEnd;
+	}
+
+	// Iterate over the imports and check which are filtered
+	for (auto& imp : imports)
+	{
+		// Get the comment module name (We use the filename, instead of the ASN1 Module name)
+		// So we need to find the internal module name (filename) based on the longer asn 1 module name
+		std::string strModuleName;
+		for (const auto& [strName, module] : gComments.mapModules)
+		{
+			if (module.m_strASN1ModuleName == imp.m_strASN1ModuleName)
+			{
+				// if the import module is filtered remove the whole import list -> removes the import statement in the end
+				if (isFiltered(module))
+					imp.m_strImports.clear();
+				strModuleName = strName;
+				break;
+			}
+		}
+		if (strModuleName.empty())
+		{
+			// The system could not find the internal module name for the asn1 module name
+			assert(FALSE);
+			continue;
+		}
+
+		// iterate over the imports and remove the ones that are filtered
+		auto iterImport = imp.m_strImports.begin();
+		while (iterImport != imp.m_strImports.end())
+		{
+			std::string strLookupName = strModuleName;
+			strLookupName += "::";
+			strLookupName += trim(*iterImport);
+
+			auto iterSequence = gComments.mapSequences.find(strLookupName);
+			if (iterSequence == gComments.mapSequences.end())
+			{
+				assert(FALSE);
+				continue;
+			}
+
+			if (isFiltered(iterSequence->second))
+				iterImport = imp.m_strImports.erase(iterImport);
+			else
+				iterImport++;
+		}
+	}
+
+	// now reassemle the import statements
+	std::string strResult;
+	for (auto& imp : imports)
+	{
+		if (imp.m_strImports.empty())
+			continue;
+		std::string strFilteredImport;
+		for (const auto& imp2 : imp.m_strImports)
+		{
+			if (!strFilteredImport.empty())
+				strFilteredImport += ",";
+			strFilteredImport += imp2;
+		}
+		if (!strFilteredImport.empty() && strFilteredImport.back() != ' ')
+			strFilteredImport += ' ';
+		strResult += ltrimspace(strFilteredImport);
+		strResult += imp.m_strModuleText;
+	}
+
+	return strResult;
+}
+
+void EAsnCommentParser::FilterFiles()
+{
+	if (!gFilterASN1Files)
+		return;
+
+	for (const auto& filteredFile : m_FilteredFileContents)
+	{
+		std::string strFileName;
+		if (gszOutputPath)
+			strFileName = gszOutputPath;
+		strFileName += filteredFile.m_strModuleName;
+
+		if (filteredFile.m_strFileContent.empty())
+		{
+#ifdef _WIN32
+			_unlink(strFileName.c_str());
+#else
+			unlink(strFileName.c_str());
+#endif
+			continue;
+		}
+
+		FILE* targtFile = nullptr;
+#ifdef _WIN32
+		errno_t err = fopen_s(&targtFile, strFileName.c_str(), "w");
+		if (err != 0)
+			targtFile = NULL;
+#else
+		targtFile = fopen(strFileName.c_str(), "w");
+#endif
+		if (targtFile)
+		{
+			if (filteredFile.m_eFileType == UTF8WITHBOM)
+			{
+				unsigned char bom[] = {0xEF, 0xBB, 0xBF};
+				fwrite(bom, sizeof(unsigned char), 3, targtFile);
+			}
+
+			std::string strFileContent = filteredFile.m_strFileContent;
+			auto posBegin = strFileContent.find("\nIMPORTS");
+			if (posBegin != std::string::npos)
+			{
+				posBegin += 8;
+				auto posEnd = strFileContent.find(";", posBegin);
+				if (posEnd != std::string::npos)
+				{
+					posEnd--;
+					size_t posLast = posEnd - posBegin;
+					auto strImports = strFileContent.substr(posBegin, posLast);
+					strImports = FilterImports(strImports);
+					strFileContent.replace(posBegin, posLast, strImports.c_str());
+				}
+			}
+
+			auto strElements = explode(strFileContent, '\n', false, false);
+			for (auto& strElement : strElements)
+			{
+				if (strElement.length() > 4 && strElement.substr(0, 5) == "-- ~ " || strElement.length() == 4 && strElement.substr(0, 4) == "-- ~")
+					continue;
+
+				strElement += "\n";
+				if (filteredFile.m_eFileType == ASCII)
+				{
+					auto strASCII = AsnStringConvert::UTF8ToAscii(strElement.c_str());
+					fwrite(strASCII.c_str(), sizeof(char), strASCII.length(), targtFile);
+				}
+				else
+					fwrite(strElement.c_str(), sizeof(char), strElement.length(), targtFile);
+			}
+			fclose(targtFile);
+		}
+	}
 }
 
 int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
