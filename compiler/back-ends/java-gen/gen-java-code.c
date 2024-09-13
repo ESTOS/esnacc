@@ -198,7 +198,6 @@ void PrintJavaTypeConstructor(FILE* hdr, ModuleList* mods, Module* mod, Type* t)
 
 void PrintJavaArrayType(FILE* hdr, ModuleList* mods, Module* mod, Type* t, TypeDef* innerType)
 {
-
 	fprintf(hdr, "ArrayList<");
 	PrintJavaType(hdr, mods, mod, t);
 	fprintf(hdr, ">");
@@ -408,7 +407,6 @@ void PrintJavaChoiceDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 }
 void PrintJavaSimpleRefDef(ModuleList* mods, Module* mod, TypeDef* td)
 {
-
 	char* name = getJavaClassName(td->definedName, "");
 	FILE* src = getJavaFilePointer(name);
 	PRINTDEBUGGING
@@ -481,7 +479,6 @@ void PrintJavaEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 
 void PrintJavaSimpleDef(ModuleList* mods, Module* mod, TypeDef* td)
 {
-
 	char* name = getJavaClassName(td->definedName, "");
 
 	FILE* src = getJavaFilePointer(name);
@@ -632,8 +629,8 @@ void PrintJavaOperationClass(Module* mod, ValueDef* vd)
 
 		if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
 		{
-//			fprintf(src, "  public %s()\n", name);
-//			fprintf(src, "  {\n");
+			//			fprintf(src, "  public %s()\n", name);
+			//			fprintf(src, "  {\n");
 			asnoperationcomment comment;
 			if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment))
 				fprintf(src, "  // CALL DeprecatedASN1Method(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, vd->definedName, comment.szDeprecated);
@@ -754,7 +751,7 @@ void PrintJAVACode(ModuleList* allMods)
 	 */
 	fNames = NewObjList();
 
-	if (gMajorInterfaceVersion >= 0)
+	if (gMajorInterfaceVersion >= 0 && genVersionFile)
 	{
 		char szFileName[_MAX_PATH] = {0};
 		strcpy_s(szFileName, _MAX_PATH - 1, gszOutputPath);

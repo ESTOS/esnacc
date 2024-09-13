@@ -131,6 +131,9 @@ long long ConvertDateToUnixTime(const char* szDate)
  */
 char* ConvertUnixTimeToReadable(const long long tmUnixTime)
 {
+	if (tmUnixTime <= 0)
+		return NULL;
+
 	char* szBuffer = malloc(128);
 	if (!szBuffer)
 		return NULL;

@@ -1,5 +1,13 @@
 #!/bin/bash
 
+if ! command -v cmake &> /dev/null
+then
+    echo "Could not find cmake in PATH"
+    echo "Ensure that cmake is in PATH before calling this script"
+    sleep 5
+    exit 1
+fi
+
 # Minimum requirement for CMake version
 REQUIRED_CMAKE_VERSION="3.20"
 
@@ -25,13 +33,13 @@ mkdir -p build/release
 
 # Debug build
 cd build/debug
-cmake -DCMAKE_BUILD_TYPE=Debug ../..
-cmake --build .
+cmake -DCMAKE_BUILD_TYPE=debug ../..
+cmake --build . --config debug
 
 # Release build
 cd ../release
-cmake -DCMAKE_BUILD_TYPE=Release ../..
-cmake --build .
+cmake -DCMAKE_BUILD_TYPE=release ../..
+cmake --build . --config release
 
 # back to the roots
 cd ../..

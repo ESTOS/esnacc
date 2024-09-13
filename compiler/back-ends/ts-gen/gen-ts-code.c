@@ -981,7 +981,7 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 		FreeDefinedObjs(&fNames);
 	}
 
-	if (gMajorInterfaceVersion >= 0)
+	if (gMajorInterfaceVersion >= 0 && genVersionFile)
 	{
 		FILE* versionFile = NULL;
 		char* szVersionFile = MakeFileName("Asn1InterfaceVersion.ts", "");

@@ -1421,7 +1421,7 @@ void PrintSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 	DefinedObj* fNames;
 	int fNameConflict = FALSE;
 
-	if (gMajorInterfaceVersion >= 0)
+	if (gMajorInterfaceVersion >= 0 && genVersionFile)
 	{
 		FILE* versionFile = NULL;
 		char szFileName[_MAX_PATH] = {0};
