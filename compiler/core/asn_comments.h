@@ -57,6 +57,7 @@ extern "C"
 
 	// Parse for Comments
 	extern int ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type);
+	extern void FilterFiles();
 
 	// Get LogFilter Attributes (if any) call recurring until it returns 0
 	extern const char* GetFirstModuleLogFileFilter(const char* szModuleName);

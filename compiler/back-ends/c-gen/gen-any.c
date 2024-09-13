@@ -229,7 +229,7 @@ void PrintCAnyHashInitRoutine(FILE* src, FILE* hdr, ModuleList* mods, Module* m,
 	ValueDef* vd;
 	Type* t;
 	BasicValue* bv;
-	char anyId[256];
+	char anyId[257];
 	char* typeName = NULL;
 	/* REN -- end */
 

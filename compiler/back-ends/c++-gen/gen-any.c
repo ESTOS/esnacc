@@ -216,7 +216,7 @@ void PrintCxxAnyHashInitRoutine PARAMS((src, hdr, mods, m, r), FILE* src _AND_ F
 	ValueDef* vd;
 	Type* t;
 	BasicValue* bv;
-	char anyId[512];
+	char anyId[513];
 	char* typeName = NULL;
 	/* REN -- end */
 

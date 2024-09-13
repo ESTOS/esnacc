@@ -191,7 +191,7 @@ int genVersionFile = FALSE;
 int genTSESMCode = FALSE;
 
 int gFilterASN1Files = FALSE;
-char gszOutputPath[100] = {0};
+char gszOutputPath[_MAX_PATH] = {0};
 
 #ifdef WIN_SNACC /* Deepak: 14/Feb/2003 */
 #define main Win_Snacc_Main
@@ -698,8 +698,8 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 				case 'o':
 					if (argv[currArg + 1] != NULL)
 					{
-						strcpy_s(gszOutputPath, 100, argv[currArg + 1]);
-						getDirectoryWithDelimiterFromPath(gszOutputPath, 99);
+						strcpy_s(gszOutputPath, _MAX_PATH - 1, argv[currArg + 1]);
+						getDirectoryWithDelimiterFromPath(gszOutputPath, _MAX_PATH - 1);
 						if (!createDirectories(gszOutputPath))
 							snacc_exit("Failed to create directory %s", gszOutputPath);
 						currArg++;
@@ -919,15 +919,13 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					// We have the folder path. We need to copy the esnacc_whitelist.txt nd the interfaceversion.txt
 					{
 						char szTarget[_MAX_PATH] = {0};
-						if (gszOutputPath)
-							strcat_s(szTarget, _MAX_PATH - 1, gszOutputPath);
+						strcat_s(szTarget, _MAX_PATH - 1, gszOutputPath);
 						strcat_s(szTarget, _MAX_PATH - 1, "interfaceversion.txt");
 						copy_file(szPath, szTarget);
 					}
 					{
 						char szTarget[_MAX_PATH] = {0};
-						if (gszOutputPath)
-							strcat_s(szTarget, _MAX_PATH - 1, gszOutputPath);
+						strcat_s(szTarget, _MAX_PATH - 1, gszOutputPath);
 						strcat_s(szTarget, _MAX_PATH - 1, "esnacc_whitelist.txt");
 						strcpy_s(szPath, _MAX_PATH - 1, szDirectory);
 						strcat_s(szPath, _MAX_PATH - 1, "esnacc_whitelist.txt");
@@ -953,6 +951,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	// If we are filtering we now just need to write the contents of the file parser
 	if (gFilterASN1Files)
 	{
+		FilterFiles();
 		free(allMods);
 		printf("Now exiting...\n");
 		return 0;
@@ -1251,17 +1250,18 @@ Module* ParseAsn1File(const char* fileName, short ImportFlag, int parseComments)
 			return NULL;
 		}
 		unsigned char szFileType[3] = {0};
+		size_t readBytes = 0;
 #ifdef _WIN32
 #ifdef _MSC_VER
-		fread_s(szFileType, 3, sizeof(char), 3, fPtr);
+		readBytes = fread_s(szFileType, 3, sizeof(char), 3, fPtr);
 #else
 		// MingW, Clang, GCC
-		fread(szFileType, sizeof(char), 3, fPtr);
+		readBytes = fread(szFileType, sizeof(char), 3, fPtr);
 #endif
 #else
-		fread(szFileType, sizeof(char), 3, fPtr);
+		readBytes = fread(szFileType, sizeof(char), 3, fPtr);
 #endif
-		if (szFileType[0] == 0xef && szFileType[1] == 0xbb && szFileType[2] == 0xbf) // UTF8
+		if (readBytes == 3 && szFileType[0] == 0xef && szFileType[1] == 0xbb && szFileType[2] == 0xbf) // UTF8
 			fileType = UTF8WITHBOM;
 		else
 		{

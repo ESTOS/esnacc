@@ -106,8 +106,12 @@ public:
 	// These elements shall be filtered when logging (currently only in the typescript rose stubs)
 	// The elements are added through @logfilter in the beginning of the file ; delimited
 	std::vector<std::string> strLogFilter;
+
 	// Helper to get the LogFilters from the set in c
 	int iCounter = 0;
+
+	// The ASN1 Mdoule name (first line of the module)
+	std::string m_strASN1ModuleName;
 
 private:
 	// Contains the version if the version has been evaluated for the module (checks the comments for @added field values)
@@ -121,15 +125,38 @@ void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType
 
 class EAsnStackElement;
 
+class EFilteredAsnFile
+{
+public:
+	EFilteredAsnFile(const std::string& strModuleName, const std::string& strFileContent, const EFILETYPE eFileType)
+	{
+		m_strModuleName = strModuleName;
+		m_strFileContent = strFileContent;
+		m_eFileType = eFileType;
+	}
+	std::string m_strModuleName;
+	std::string m_strFileContent;
+	enum EFILETYPE m_eFileType;
+};
+
 class EAsnCommentParser
 {
 public:
+	// Parses a single file for comments
 	int ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type);
+	// Handles the second step in filtering files (remove the imports)
+	void FilterFiles();
 
 	std::list<EAsnStackElement*> m_stack;
 
 private:
 	int ProcessLine(const char* szModuleName, const char* szLine);
+	std::string FilterImports(const std::string& strImports);
+
+	// Filtering of files is a two step process
+	// In the first approach we filter all the elements that are flagged filtered
+	// In the second approach we filter all imports that point to a private or deprecated object
+	std::list<EFilteredAsnFile> m_FilteredFileContents;
 };
 
 // Element on the Parser Stack
@@ -175,6 +202,7 @@ public:
 	virtual int ProcessLine(const char* szModuleName, const char* szSourceLine, std::string& szLine, std::string& szComment, EElementState& state) override;
 
 	std::string m_strModuleName;
+	std::string m_strModuleASN1Name;
 
 private:
 	std::list<std::string> m_CollectComments;
@@ -191,7 +219,7 @@ public:
 
 	virtual int ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state) override;
 
-	void SetModuleProperties(const char* szTypeName, const char* szCategory, std::list<std::string>& listComments);
+	void SetModuleProperties(const char* szTypeName, const char* szCategory, const char* szASN1ModuleName, std::list<std::string>& listComments);
 
 	bool isModuleFiltered() const;
 
