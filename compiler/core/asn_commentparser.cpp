@@ -994,10 +994,10 @@ std::string EAsnCommentParser::FilterImports(const std::string& strImports)
 	while (true)
 	{
 		auto posBegin = strImports.find("FROM ", lastPos);
-		if (posBegin == -1)
+		if (posBegin == std::string::npos)
 			break;
 		auto posEnd = strImports.find_first_of("\n;", posBegin);
-		if (posEnd == -1)
+		if (posEnd == std::string::npos)
 			posEnd = strImports.length();
 		else
 			posEnd++;
@@ -1084,8 +1084,7 @@ void EAsnCommentParser::FilterFiles()
 	for (const auto& filteredFile : m_FilteredFileContents)
 	{
 		std::string strFileName;
-		if (gszOutputPath)
-			strFileName = gszOutputPath;
+		strFileName = gszOutputPath;
 		strFileName += filteredFile.m_strModuleName;
 
 		if (filteredFile.m_strFileContent.empty())
@@ -1133,7 +1132,7 @@ void EAsnCommentParser::FilterFiles()
 			auto strElements = explode(strFileContent, '\n', false, false);
 			for (auto& strElement : strElements)
 			{
-				if (strElement.length() > 4 && strElement.substr(0, 5) == "-- ~ " || strElement.length() == 4 && strElement.substr(0, 4) == "-- ~")
+				if ((strElement.length() > 4 && strElement.substr(0, 5) == "-- ~ ") || (strElement.length() == 4 && strElement.substr(0, 4) == "-- ~"))
 					continue;
 
 				strElement += "\n";
