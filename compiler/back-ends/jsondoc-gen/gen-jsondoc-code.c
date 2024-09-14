@@ -157,7 +157,7 @@ static void PrintJsonDocBitstringDefCode(FILE* src, ModuleList* mods, Module* m,
 	//	enum BasicTypeChoiceId tmpTypeId;
 	CNamedElmt* n;
 
-	fprintf(src, "\t\t\t\"type\" : \"bitstring\",\n");
+	fprintf(src, "\n,\t\t\t\"type\" : \"bitstring\",\n");
 	fprintf(src, "\t\t\t\"values\" : [\n");
 	if (HasNamedElmts(td->type) != 0)
 	{
@@ -197,7 +197,7 @@ static void PrintJsonDocBitstringDefCode(FILE* src, ModuleList* mods, Module* m,
 			fprintf(src, "\n");
 		}
 	}
-	fprintf(src, "\t\t\t]\n");
+	fprintf(src, "\t\t\t]");
 } /* PrintJsonDocBitstringDefCode */
 
 static void PrintJsonDocEnumDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* enumerated, int novolatilefuncs)
@@ -239,10 +239,9 @@ static void PrintJsonDocEnumDefCode(FILE* src, ModuleList* mods, Module* m, Type
 			// fprintf(src, "\t\t\t\t\t\"%s\" : %d", n->name, n->value);
 			if (((td->type->cxxTypeRefInfo->namedElmts)->curr->next && ((td->type->cxxTypeRefInfo->namedElmts)->curr->next->data) != NULL))
 				fprintf(src, ",");
-			fprintf(src, "\n");
 		}
 	}
-	fprintf(src, "\t\t\t]\n");
+	fprintf(src, "\n\t\t\t]\n");
 } /* PrintJsonDocEnumDefCode */
 
 static void PrintJsonDocChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* choice, int novolatilefuncs)
@@ -251,13 +250,15 @@ static void PrintJsonDocChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Ty
 
 	fprintf(src, ",\n\t\t\t\"type\" : \"choice\"");
 	fprintf(src, ",\n\t\t\t\"values\" : [\n");
+	bool bFirst = true;
 
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
+		if (!bFirst)
+			fprintf(src, ",\n");
+		bFirst = false;
 		fprintf(src, "\t\t\t\t{\n");
-
 		fprintf(src, "\t\t\t\t\t\"name\" : \"%s\"", e->fieldName);
-
 		asnmembercomment comment;
 		if (GetMemberComment_UTF8(m->moduleName, td->definedName, e->fieldName, &comment))
 		{
@@ -282,7 +283,7 @@ static void PrintJsonDocChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Ty
 		fprintf(src, "\n\t\t\t\t}");
 	}
 
-	fprintf(src, "\t\t\t]\n");
+	fprintf(src, "\n\t\t\t]\n");
 } /* PrintJsonDocChoiceDefCode */
 
 static void PrintJsonDocSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* seq, int novolatilefuncs)
@@ -312,7 +313,7 @@ static void PrintJsonDocSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 					fprintf(src, ",\n\t\t\t\t\t\"short\" : \"%s\"", comment.szShort);
 				if (comment.szLinkedType[0])
 					fprintf(src, ",\n\t\t\t\t\t\"linkedType\" : \"%s\"", comment.szLinkedType);
-				if(comment.i64Deprecated)
+				if (comment.i64Deprecated)
 					fprintf(src, ",\n\t\t\t\t\t\"deprecated\" : %d", comment.i64Deprecated ? 1 : 0);
 				if (comment.i64Deprecated > 1)
 					fprintf(src, ",\n\t\t\t\t\t\"deprecated_timestamp\": %lld", comment.i64Deprecated);
@@ -375,8 +376,8 @@ static void PrintJsonDocListClass(FILE* src, TypeDef* td, Type* lst, Module* m, 
 		case BASICTYPE_UTCTIME:
 		case BASICTYPE_UNKNOWN:
 		case BASICTYPE_NULL:
-			fprintf(src, "\t\t\t\"type\" : \"array\",\n");
-			fprintf(src, "\t\t\t\"elementType\" : \"");
+			fprintf(src, ",\n\t\t\t\"type\" : \"array\"");
+			fprintf(src, ",\n\t\t\t\"elementType\" : \"");
 			PrintJsonDocNativeType(src, lst->basicType->a.setOf->basicType->choiceId);
 			fprintf(src, "\"\n");
 
@@ -385,8 +386,8 @@ static void PrintJsonDocListClass(FILE* src, TypeDef* td, Type* lst, Module* m, 
 			break;
 	}
 
-	fprintf(src, "\t\t\t\"type\" : \"array\",\n");
-	fprintf(src, "\t\t\t\"elementType\" : \"%s\"\n", p_e->type->cxxTypeRefInfo->className);
+	fprintf(src, ",\n\t\t\t\"type\" : \"array\"");
+	fprintf(src, ",\n\t\t\t\"elementType\" : \"%s\"\n", p_e->type->cxxTypeRefInfo->className);
 }
 
 static void PrintJsonDocSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
@@ -406,9 +407,9 @@ static void PrintJsonDocSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 
 static void PrintJsonDocimpleDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* setOf, int novolatilefuncs)
 {
-	fprintf(src, "\t\t\t\"type\" : \"");
+	fprintf(src, ",\n\t\t\t\"type\" : \"");
 	PrintJsonDocNativeType(src, td->type->basicType->choiceId);
-	fprintf(src, "\"\n");
+	fprintf(src, "\"");
 }
 
 static void PrintJsonDocTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs)
@@ -433,7 +434,7 @@ static void PrintJsonDocTypeDefCode(FILE* src, ModuleList* mods, Module* m, Type
 			fprintf(src, ",\n\t\t\t\"deprecated_comment\": \"%s\"", comment.szDeprecated);
 		if (comment.i64Added)
 			fprintf(src, ",\n\t\t\t\"added_timestamp\": %lld", comment.i64Added);
-		if(comment.iPrivate)
+		if (comment.iPrivate)
 			fprintf(src, ",\n\t\t\t\"private\" : %d", comment.iPrivate);
 	}
 
@@ -712,8 +713,8 @@ void PrintJsonDocModule(FILE* src, ModuleList* mods, Module* m)
 		if (comment.iPrivate)
 			fprintf(src, ",\n\t\t\"private\": %d", comment.iPrivate);
 	}
-	if (gMajorInterfaceVersion >= 0) {
-
+	if (gMajorInterfaceVersion >= 0)
+	{
 		fprintf(src, ",\n\t\t\"version\": {");
 		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
 		fprintf(src, "\n\t\t\t\"lastChange\": \"%s\"", ConvertUnixTimeToISO(lMinorModuleVersion));
@@ -830,8 +831,8 @@ void PrintJsonDocCodeOne(FILE* src, ModuleList* mods, Module* m)
 
 } /* PrintJsonDocCodeOne */
 
-
-void PrintJsonDocCode(ModuleList* allMods) {
+void PrintJsonDocCode(ModuleList* allMods)
+{
 	Module* currMod;
 	AsnListNode* saveMods;
 	FILE* srcFilePtr;
