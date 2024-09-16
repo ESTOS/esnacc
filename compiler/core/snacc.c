@@ -2116,7 +2116,7 @@ int copy_file(const char* source, const char* destination)
 {
 	// Open the source file in binary read mode
 	FILE* src = 0;
-	if (fopen_s(&src, source, "rb") != NO_ERROR || !src)
+	if (fopen_s(&src, source, "rb") != 0 || !src)
 	{
 		perror("Error opening source file");
 		perror(source);
@@ -2125,7 +2125,7 @@ int copy_file(const char* source, const char* destination)
 
 	// Open the destination file in binary write mode
 	FILE* dest = 0;
-	if (fopen_s(&dest, destination, "wb") != NO_ERROR || !dest)
+	if (fopen_s(&dest, destination, "wb") != 0 || !dest)
 	{
 		perror("Error opening destination file");
 		fclose(src);
