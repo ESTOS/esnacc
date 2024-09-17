@@ -1344,8 +1344,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 	// brauchen keinen Encoder Decoder
 
 	enum BasicTypeChoiceId type = td->type->basicType->choiceId;
-
-	if (!IsSimpleType(type))
+	if (!IsSimpleType(type) && ResolveTypeReferencesToRoot(td->type, NULL)->basicType->choiceId != BASICTYPE_ENUMERATED)
 	{
 		fprintf(src, "\n// [%s]\n", __FUNCTION__);
 		fprintf(src, "export class %s_Converter {", szConverted);
@@ -1519,6 +1518,24 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 		fprintf(src, "}\n");
 	}
 	free(szConverted);
+}
+
+bool ContainsConverters(Module* m)
+{
+	bool bContainsConverters = false;
+	TypeDef* td;
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+	{
+		if (IsDeprecatedNoOutputSequence(m, td->definedName))
+			continue;
+		enum BasicTypeChoiceId type = td->type->basicType->choiceId;
+		if (!IsSimpleType(type) && ResolveTypeReferencesToRoot(td->type, NULL)->basicType->choiceId != BASICTYPE_ENUMERATED)
+		{
+			bContainsConverters = true;
+			break;
+		}
+	}
+	return bContainsConverters;
 }
 
 void PrintTSConverterCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printTSONEncDec, int novolatilefuncs)
