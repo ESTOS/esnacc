@@ -54,6 +54,8 @@ void PrintTSNativeType(FILE* hdr, BasicType* pBasicType)
 			break;
 		case BASICTYPE_INTEGER:
 		case BASICTYPE_REAL:
+			fprintf(hdr, "number");
+			break;
 		case BASICTYPE_ENUMERATED:
 			fprintf(hdr, "number");
 			break;
@@ -97,36 +99,33 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 	}
 	else
 	{
-		BasicType* pBasicType = t->basicType;
-		enum BasicTypeChoiceId choiceId = pBasicType->choiceId;
+		Type* baset = t;
+		Module* mod = NULL;
+		enum BasicTypeChoiceId choiceId = t->basicType->choiceId;
 		if (choiceId == BASICTYPE_IMPORTTYPEREF || choiceId == BASICTYPE_LOCALTYPEREF)
 		{
 			if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
 				choiceId = BASICTYPE_UTCTIME;
-			else if (choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link)
+			else if (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
 			{
 				if (IsSimpleType(t->basicType->a.importTypeRef->link->type->basicType->choiceId))
 				{
-					pBasicType = t->basicType->a.importTypeRef->link->type->basicType;
-					choiceId = pBasicType->choiceId;
+					mod = GetImportModuleRefByClassName(t->cxxTypeRefInfo->className, mods, m);
+					t = t->basicType->a.importTypeRef->link->type;
+					choiceId = t->basicType->choiceId;
 				}
 			}
-			else if (choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link)
+			else if (t->basicType->choiceId == BASICTYPE_LOCALTYPEREF)
 			{
 				if (IsSimpleType(t->basicType->a.localTypeRef->link->type->basicType->choiceId))
 				{
-					pBasicType = t->basicType->a.localTypeRef->link->type->basicType;
-					choiceId = pBasicType->choiceId;
+					t = t->basicType->a.importTypeRef->link->type;
+					choiceId = t->basicType->choiceId;
 				}
-			}
-			else
-			{
-				snacc_exit("Invalid parameter, choiceID is %i but the associated link is NULL", choiceId);
-				return;
 			}
 		}
 
-		if (choiceId == BASICTYPE_OCTETCONTAINING && pBasicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+		if (choiceId == BASICTYPE_OCTETCONTAINING && t->basicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
 			choiceId = BASICTYPE_UTF8_STR;
 
 		switch (choiceId)
@@ -135,8 +134,13 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 				fprintf(hdr, "false");
 				break;
 			case BASICTYPE_INTEGER:
-			case BASICTYPE_ENUMERATED:
 				fprintf(hdr, "0");
+				break;
+			case BASICTYPE_ENUMERATED:
+				if (mod)
+					fprintf(hdr, "%s.", mod->moduleName);
+				ValueDef* e = FIRST_LIST_ELMT(t->basicType->a.enumerated);
+				fprintf(hdr, "%s.%s", baset->cxxTypeRefInfo->className, e->definedName);
 				break;
 			case BASICTYPE_OCTETSTRING:
 			case BASICTYPE_OCTETCONTAINING:
@@ -153,7 +157,7 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
 				break;
 			case BASICTYPE_IMPORTTYPEREF:
 				{
-					Module* mod = GetImportModuleRefByClassName(t->cxxTypeRefInfo->className, mods, m);
+					mod = GetImportModuleRefByClassName(t->cxxTypeRefInfo->className, mods, m);
 					if (mod)
 					{
 						const char* szNameSpace = GetNameSpace(mod);
@@ -206,9 +210,9 @@ void PrintTS_JSON_DefaultValue(FILE* hdr, ModuleList* mods, Module* m, TypeDef* 
  */
 void PrintTSType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* parent, Type* t)
 {
-	BasicType* basicType = t->basicType;
-	enum BasicTypeChoiceId choiceId = basicType->choiceId;
-
+	Type* baset = t;
+	Module* mod = NULL;
+	enum BasicTypeChoiceId choiceId = t->basicType->choiceId;
 	if (choiceId == BASICTYPE_IMPORTTYPEREF || choiceId == BASICTYPE_LOCALTYPEREF)
 	{
 		if (strcmp(t->cxxTypeRefInfo->className, "AsnSystemTime") == 0)
@@ -217,56 +221,61 @@ void PrintTSType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* pare
 		{
 			if (IsSimpleType(t->basicType->a.importTypeRef->link->type->basicType->choiceId))
 			{
-				basicType = t->basicType->a.importTypeRef->link->type->basicType;
-				choiceId = basicType->choiceId;
+				mod = GetImportModuleRefByClassName(t->cxxTypeRefInfo->className, mods, m);
+				t = t->basicType->a.importTypeRef->link->type;
+				choiceId = t->basicType->choiceId;
 			}
 		}
 		else if (choiceId == BASICTYPE_LOCALTYPEREF)
 		{
 			if (IsSimpleType(t->basicType->a.localTypeRef->link->type->basicType->choiceId))
 			{
-				basicType = t->basicType->a.localTypeRef->link->type->basicType;
-				choiceId = basicType->choiceId;
+				t = t->basicType->a.importTypeRef->link->type;
+				choiceId = t->basicType->choiceId;
 			}
 		}
 	}
-
-	if (choiceId == BASICTYPE_OCTETCONTAINING && basicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+	if (choiceId == BASICTYPE_OCTETCONTAINING && t->basicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
 		choiceId = BASICTYPE_UTF8_STR;
 
+	fprintf(hdr, ": ");
 	switch (choiceId)
 	{
 		case BASICTYPE_BOOLEAN:
-			fprintf(hdr, ": boolean");
+			fprintf(hdr, "boolean");
 			break;
 		case BASICTYPE_INTEGER:
 		case BASICTYPE_REAL:
+			fprintf(hdr, "number");
+			break;
 		case BASICTYPE_ENUMERATED:
-			fprintf(hdr, ": number");
+			if (mod)
+				fprintf(hdr, "%s.", mod->moduleName);
+			fprintf(hdr, "%s", baset->cxxTypeRefInfo->className);
 			break;
 		case BASICTYPE_UTF8_STR:
-			fprintf(hdr, ": string");
+			fprintf(hdr, "string");
 			break;
 		case BASICTYPE_OCTETSTRING:
 		case BASICTYPE_OCTETCONTAINING:
-			fprintf(hdr, ": Uint8Array");
+			fprintf(hdr, "Uint8Array");
 			break;
 		case BASICTYPE_SEQUENCEOF:
-			fprintf(hdr, ": %s[]", t->cxxTypeRefInfo->className);
+			fprintf(hdr, "%s[]", t->cxxTypeRefInfo->className);
 			break;
 		case BASICTYPE_NULL:
-			fprintf(hdr, ": null");
+			fprintf(hdr, "null");
 			break;
 		case BASICTYPE_UTCTIME:
-			fprintf(hdr, ": Date"); // AsnSystemTime is defined as REAL in the Asn1 file, but is transmitted as a string in the TS.
+			fprintf(hdr, "Date"); // AsnSystemTime is defined as REAL in the Asn1 file, but is transmitted as a string in the TS.
 			break;
 		case BASICTYPE_IMPORTTYPEREF:
 			{
-				Module* mod = GetImportModuleRefByClassName(t->cxxTypeRefInfo->className, mods, m);
+				mod = GetImportModuleRefByClassName(t->cxxTypeRefInfo->className, mods, m);
 				if (mod)
 				{
 					char* szConverted = FixName(t->cxxTypeRefInfo->className);
-					fprintf(hdr, ": %s.%s", GetNameSpace(mod), szConverted);
+					fprintf(hdr, "%s.%s", GetNameSpace(mod), szConverted);
 					free(szConverted);
 				}
 				break;
@@ -274,12 +283,12 @@ void PrintTSType(FILE* hdr, ModuleList* mods, Module* m, TypeDef* td, Type* pare
 		case BASICTYPE_LOCALTYPEREF:
 			{
 				char* szConverted = FixName(t->basicType->a.localTypeRef->link->definedName);
-				fprintf(hdr, ": %s", szConverted);
+				fprintf(hdr, "%s", szConverted);
 				free(szConverted);
 				break;
 			}
 		case BASICTYPE_ANY:
-			fprintf(hdr, ": any");
+			fprintf(hdr, "any");
 			break;
 		default:
 			snacc_exit("Unknown choiceId %d", choiceId);
@@ -1042,7 +1051,18 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 
 			fprintf(typesFile, "export * as %s from \"./%s%s\";\n", varName, szModName, getCommonJSFileExtension());
 			if (genJSONEncDec)
-				fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter%s\";\n", varName, szModName, getCommonJSFileExtension());
+			{
+				char szFileName[_MAX_PATH] = {0};
+				strcat_s(szFileName, _MAX_PATH - 1, szModName);
+				strcat_s(szFileName, _MAX_PATH - 1, "_Converter.ts");
+				char* szConverterFileName = MakeFileName(szFileName, "");
+				FILE* exists = NULL;
+				if (fopen_s(&exists, szConverterFileName, "r") == 0)
+				{
+					fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter%s\";\n", varName, szModName, getCommonJSFileExtension());
+					fclose(exists);
+				}
+			}
 
 			free(varName);
 			free(szModName);
