@@ -1244,6 +1244,8 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 		{
 			if (currMod->ImportedFlag == FALSE)
 			{
+				if (!ContainsConverters(currMod))
+					continue;
 				if (fopen_s(&encdecFilePtr, currMod->tsConverterFileName, "wt") != 0 || encdecFilePtr == NULL)
 				{
 					perror("fopen");
