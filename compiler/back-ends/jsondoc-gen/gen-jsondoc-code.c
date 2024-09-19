@@ -717,10 +717,12 @@ void PrintJsonDocModule(FILE* src, ModuleList* mods, Module* m)
 	{
 		fprintf(src, ",\n\t\t\"version\": {");
 		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
+		long long lMaxModuleVersion = GetMaxModuleMinorVersion();
 		fprintf(src, "\n\t\t\t\"lastChange\": \"%s\"", ConvertUnixTimeToISO(lMinorModuleVersion));
 		fprintf(src, ",\n\t\t\t\"majorVersion\": %i", gMajorInterfaceVersion);
 		fprintf(src, ",\n\t\t\t\"minorVersion\": %lld", lMinorModuleVersion);
 		fprintf(src, ",\n\t\t\t\"version\": \"%i.%lld.0\"", gMajorInterfaceVersion, lMinorModuleVersion);
+		fprintf(src, ",\n\t\t\t\"interfaceversion\": \"%i.%lld.0\"", gMajorInterfaceVersion, lMaxModuleVersion);
 		fprintf(src, "\n\t\t}");
 	}
 
