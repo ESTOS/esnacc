@@ -639,6 +639,10 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 			comment.strCategory_UTF8 = m_ModuleComment.strCategory_UTF8;
 			convertCommentList(m_CollectComments, &comment);
 
+			if (!isFiltered(comment))
+				m_strFilteredFileContent += m_strRawSourceFileIncrement;
+			m_strRawSourceFileIncrement.clear();
+
 			std::string strKey = szModuleName;
 			const auto pos = strKey.find_first_of(".");
 			if (pos != std::string::npos)
