@@ -127,7 +127,7 @@ long long ConvertDateToUnixTime(const char* szDate)
 /**
  * Converts a unix time into something readable
  *
- * Returns a pointer to a buffer that needs to get released with Free
+ * Returns a pointer to a buffer that needs to get released with Free "20.09.2024"
  */
 char* ConvertUnixTimeToReadable(const long long tmUnixTime)
 {
@@ -137,6 +137,8 @@ char* ConvertUnixTimeToReadable(const long long tmUnixTime)
 	char* szBuffer = malloc(128);
 	if (!szBuffer)
 		return NULL;
+
+	memset(szBuffer, 127, 0x00);
 
 #ifdef _WIN32
 	struct tm timeinfo;
@@ -154,7 +156,7 @@ char* ConvertUnixTimeToReadable(const long long tmUnixTime)
 /**
  * Converts a unix time into a numeric readable date in sorted notation (20240920)
  *
- * Returns a pointer to a buffer that needs to get released with Free
+ * Returns a pointer to a buffer that needs to get released with Free "20240920" or "0"
  */
 char* ConvertUnixTimeToNumericDate(const long long tmUnixTime)
 {
@@ -164,6 +166,8 @@ char* ConvertUnixTimeToNumericDate(const long long tmUnixTime)
 	char* szBuffer = malloc(128);
 	if (!szBuffer)
 		return NULL;
+
+	memset(szBuffer, 127, 0x00);
 
 	if (tmUnixTime == 0)
 		strcpy_s(szBuffer, 127, "0");
@@ -193,6 +197,8 @@ char* ConvertUnixTimeToISO(const long long tmUnixTime)
 	char* szBuffer = malloc(128);
 	if (!szBuffer)
 		return NULL;
+
+	memset(szBuffer, 127, 0x00);
 
 #ifdef _WIN32
 	struct tm timeinfo;
