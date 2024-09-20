@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "../../snacc_defines.h"
+#include "../../c-lib/include/asn-config.h"
 
 #if TIME_WITH_SYS_TIME
 #include <sys/time.h>
@@ -135,7 +136,7 @@ char* ConvertUnixTimeToReadable(const long long tmUnixTime)
 	if (!szBuffer)
 		return NULL;
 
-	memset(szBuffer, 127, 0x00);
+	memset(szBuffer, 0x00, 127);
 
 	if (tmUnixTime == 0)
 		strcpy_s(szBuffer, 127, "0");
@@ -166,7 +167,7 @@ char* ConvertUnixTimeToNumericDate(const long long tmUnixTime)
 	if (!szBuffer)
 		return NULL;
 
-	memset(szBuffer, 127, 0x00);
+	memset(szBuffer, 0x00, 127);
 
 	if (tmUnixTime == 0)
 		strcpy_s(szBuffer, 127, "0");
@@ -197,7 +198,7 @@ char* ConvertUnixTimeToISO(const long long tmUnixTime)
 	if (!szBuffer)
 		return NULL;
 
-	memset(szBuffer, 127, 0x00);
+	memset(szBuffer, 0x00, 127);
 
 #ifdef _WIN32
 	struct tm timeinfo;
