@@ -1005,10 +1005,14 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 			fprintf(versionFile, "/* eslint-disable */\n\n");
 			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
 			fprintf(versionFile, "export class Asn1InterfaceVersion {\n");
-			fprintf(versionFile, "\tpublic static lastChange = \"%s\";\n", ConvertUnixTimeToISO(lMaxMinorVersion));
+			char* szISODate = ConvertUnixTimeToISO(lMaxMinorVersion);
+			fprintf(versionFile, "\tpublic static lastChange = \"%s\";\n", szISODate);
+			free(szISODate);
 			fprintf(versionFile, "\tpublic static majorVersion = %i;\n", gMajorInterfaceVersion);
-			fprintf(versionFile, "\tpublic static minorVersion = %lld;\n", lMaxMinorVersion);
-			fprintf(versionFile, "\tpublic static version = \"%i.%lld.0\";\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxMinorVersion);
+			fprintf(versionFile, "\tpublic static minorVersion = %s;\n", szNumericDate);
+			fprintf(versionFile, "\tpublic static version = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
+			free(szNumericDate);
 			fprintf(versionFile, "}\n");
 			fclose(versionFile);
 		}

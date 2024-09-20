@@ -717,12 +717,14 @@ void PrintJsonDocModule(FILE* src, ModuleList* mods, Module* m)
 	{
 		fprintf(src, ",\n\t\t\"version\": {");
 		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
-		long long lMaxModuleVersion = GetMaxModuleMinorVersion();
-		fprintf(src, "\n\t\t\t\"lastChange\": \"%s\"", ConvertUnixTimeToISO(lMinorModuleVersion));
+		char* szISODate = ConvertUnixTimeToISO(lMinorModuleVersion);
+		fprintf(src, "\n\t\t\t\"lastChange\": \"%s\"", szISODate);
+		free(szISODate);
 		fprintf(src, ",\n\t\t\t\"majorVersion\": %i", gMajorInterfaceVersion);
-		fprintf(src, ",\n\t\t\t\"minorVersion\": %lld", lMinorModuleVersion);
-		fprintf(src, ",\n\t\t\t\"version\": \"%i.%lld.0\"", gMajorInterfaceVersion, lMinorModuleVersion);
-		fprintf(src, ",\n\t\t\t\"interfaceversion\": \"%i.%lld.0\"", gMajorInterfaceVersion, lMaxModuleVersion);
+		char* szNumericDate = ConvertUnixTimeToNumericDate(lMinorModuleVersion);
+		fprintf(src, ",\n\t\t\t\"minorVersion\": %s", szNumericDate);
+		fprintf(src, ",\n\t\t\t\"version\": \"%i.0.%s\"", gMajorInterfaceVersion, szNumericDate);
+		free(szNumericDate);
 		fprintf(src, "\n\t\t}");
 	}
 
@@ -842,6 +844,24 @@ void PrintJsonDocCode(ModuleList* allMods)
 	// FILE		*hdrForwardDecl;
 	DefinedObj* fNames;
 	int fNameConflict = FALSE;
+
+	{
+		char* szFileName = MakeFileName("interfaceversion", ".txt");
+		FILE* src = NULL;
+		if (fopen_s(&src, szFileName, "wt") != 0 || src == NULL)
+		{
+			perror("fopen");
+		}
+		else
+		{
+			const long long lMaxModuleVersion = GetMaxModuleMinorVersion();
+			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxModuleVersion);
+			fprintf(src, "%i.0.%s", gMajorInterfaceVersion, szNumericDate);
+			free(szNumericDate);
+			fclose(src);
+		}
+		free(szFileName);
+	}
 
 	/*
 	 * Make names for each module's encoder/decoder src and hdr files

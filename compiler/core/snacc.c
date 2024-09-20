@@ -1585,10 +1585,14 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 
 			fprintf(versionFile, "struct Asn1InterfaceVersion\n");
 			fprintf(versionFile, "{\n");
-			fprintf(versionFile, "\tstatic constexpr const char* lastChange = \"%s\";\n", ConvertUnixTimeToISO(lMaxMinorVersion));
+			char* szISODate = ConvertUnixTimeToISO(lMaxMinorVersion);
+			fprintf(versionFile, "\tstatic constexpr const char* lastChange = \"%s\";\n", szISODate);
+			free(szISODate);
 			fprintf(versionFile, "\tstatic constexpr int majorVersion = %i;\n", gMajorInterfaceVersion);
-			fprintf(versionFile, "\tstatic constexpr long long minorVersion = %lld;\n", lMaxMinorVersion);
-			fprintf(versionFile, "\tstatic constexpr const char* version = \"%i.%lld.0\";\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxMinorVersion);
+			fprintf(versionFile, "\tstatic constexpr long long minorVersion = %s;\n", szNumericDate);
+			fprintf(versionFile, "\tstatic constexpr const char* version = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
+			free(szNumericDate);
 			fprintf(versionFile, "};\n\n");
 
 			fprintf(versionFile, "#ifndef NO_NAMESPACE\n");

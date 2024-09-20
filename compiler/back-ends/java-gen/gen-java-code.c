@@ -761,10 +761,15 @@ void PrintJAVACode(ModuleList* allMods)
 		{
 			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
 			fprintf(src, "public class Asn1InterfaceVersion {\n");
-			fprintf(src, "\tpublic static final String lastChange = \"%s\";\n", ConvertUnixTimeToISO(lMaxMinorVersion));
+
+			char* szISODate = ConvertUnixTimeToISO(lMaxMinorVersion);
+			fprintf(src, "\tpublic static final String lastChange = \"%s\";\n", szISODate);
+			free(szISODate);
 			fprintf(src, "\tpublic static final int majorVersion = %i;\n", gMajorInterfaceVersion);
-			fprintf(src, "\tpublic static final long minorVersion = %lld;\n", lMaxMinorVersion);
-			fprintf(src, "\tpublic static final String version = \"%i.%lld.0\";\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxMinorVersion);
+			fprintf(src, "\tpublic static final long minorVersion = %s;\n", szNumericDate);
+			fprintf(src, "\tpublic static final String version = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
+			free(szNumericDate);
 			fprintf(src, "}\n");
 			fclose(src);
 		}
@@ -811,10 +816,15 @@ void PrintJAVACodeOneModule(ModuleList* mods, Module* m)
 		{
 			long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
 			fprintf(src, "public class %s {\n", m->moduleName);
-			fprintf(src, "\tpublic static final String lastChange = \"%s\";\n", ConvertUnixTimeToISO(lMinorModuleVersion));
+
+			char* szISODate = ConvertUnixTimeToISO(lMinorModuleVersion);
+			fprintf(src, "\tpublic static final String lastChange = \"%s\";\n", szISODate);
+			free(szISODate);
 			fprintf(src, "\tpublic static final int majorVersion = %i;\n", gMajorInterfaceVersion);
-			fprintf(src, "\tpublic static final long minorVersion = %lld;\n", lMinorModuleVersion);
-			fprintf(src, "\tpublic static final String version = \"%i.%lld.0\";\n", gMajorInterfaceVersion, lMinorModuleVersion);
+			char* szNumericDate = ConvertUnixTimeToNumericDate(lMinorModuleVersion);
+			fprintf(src, "\tpublic static final long minorVersion = %s;\n", szNumericDate);
+			fprintf(src, "\tpublic static final String version = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
+			free(szNumericDate);
 			fprintf(src, "}\n");
 			fclose(src);
 		}

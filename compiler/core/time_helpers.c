@@ -152,6 +152,38 @@ char* ConvertUnixTimeToReadable(const long long tmUnixTime)
 }
 
 /**
+ * Converts a unix time into a numeric readable date in sorted notation (20240920)
+ *
+ * Returns a pointer to a buffer that needs to get released with Free
+ */
+char* ConvertUnixTimeToNumericDate(const long long tmUnixTime)
+{
+	if (tmUnixTime <= 0)
+		return NULL;
+
+	char* szBuffer = malloc(128);
+	if (!szBuffer)
+		return NULL;
+
+	if (tmUnixTime == 0)
+		strcpy_s(szBuffer, 127, "0");
+	else
+	{
+#ifdef _WIN32
+		struct tm timeinfo;
+		localtime_s(&timeinfo, &tmUnixTime);
+		strftime(szBuffer, 128, "%Y%m%d", &timeinfo);
+#else
+		struct tm* timeinfo;
+		timeinfo = localtime((const time_t*)&tmUnixTime);
+		strftime(szBuffer, 128, "%Y%m%d", timeinfo);
+#endif
+	}
+
+	return szBuffer;
+}
+
+/**
  * Converts a unix time into an ISO timestamp
  *
  * Returns a pointer to a buffer that needs to get released with Free

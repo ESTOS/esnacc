@@ -20,6 +20,13 @@ long long ConvertDateToUnixTime(const char* szDate);
 char* ConvertUnixTimeToReadable(const long long tmUnixTime);
 
 /**
+ * Converts a unix time into a numeric readable date in sorted notation (20240920)
+ *
+ * Returns a pointer to a buffer that needs to get released with Free
+ */
+char* ConvertUnixTimeToNumericDate(const long long tmUnixTime);
+
+/**
  * Converts a unix time into an ISO timestamp
  *
  * Returns a pointer to a buffer that needs to get released with Free
