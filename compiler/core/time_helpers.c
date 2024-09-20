@@ -131,24 +131,26 @@ long long ConvertDateToUnixTime(const char* szDate)
  */
 char* ConvertUnixTimeToReadable(const long long tmUnixTime)
 {
-	if (tmUnixTime <= 0)
-		return NULL;
-
 	char* szBuffer = malloc(128);
 	if (!szBuffer)
 		return NULL;
 
 	memset(szBuffer, 127, 0x00);
 
+	if (tmUnixTime == 0)
+		strcpy_s(szBuffer, 127, "0");
+	else
+	{
 #ifdef _WIN32
-	struct tm timeinfo;
-	localtime_s(&timeinfo, &tmUnixTime);
-	strftime(szBuffer, 128, "%d.%m.%Y", &timeinfo);
+		struct tm timeinfo;
+		localtime_s(&timeinfo, &tmUnixTime);
+		strftime(szBuffer, 128, "%d.%m.%Y", &timeinfo);
 #else
-	struct tm* timeinfo;
-	timeinfo = localtime((const time_t*)&tmUnixTime);
-	strftime(szBuffer, 128, "%d.%m.%Y", timeinfo);
+		struct tm* timeinfo;
+		timeinfo = localtime((const time_t*)&tmUnixTime);
+		strftime(szBuffer, 128, "%d.%m.%Y", timeinfo);
 #endif
+	}
 
 	return szBuffer;
 }
@@ -160,9 +162,6 @@ char* ConvertUnixTimeToReadable(const long long tmUnixTime)
  */
 char* ConvertUnixTimeToNumericDate(const long long tmUnixTime)
 {
-	if (tmUnixTime <= 0)
-		return NULL;
-
 	char* szBuffer = malloc(128);
 	if (!szBuffer)
 		return NULL;
