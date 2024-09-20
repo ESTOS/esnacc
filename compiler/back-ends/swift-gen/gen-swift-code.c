@@ -1240,10 +1240,14 @@ void PrintSwiftCodeOne(FILE* src, ModuleList* mods, Module* m, long longJmpVal, 
 		Dash2Underscore(szModuleName, 512);
 		fprintf(src, "struct %s_Version\n", szModuleName);
 		fprintf(src, "{\n");
-		fprintf(src, "    let lastChange = Date(iso8601String:\"%s\") ?? .distantPast\n", ConvertUnixTimeToISO(lMinorModuleVersion));
+		char* szISODate = ConvertUnixTimeToISO(lMinorModuleVersion);
+		fprintf(src, "    let lastChange = Date(iso8601String:\"%s\") ?? .distantPast\n", szISODate);
+		free(szISODate);
 		fprintf(src, "    let majorVersion = %i\n", gMajorInterfaceVersion);
-		fprintf(src, "    let minorVersion = %lld\n", lMinorModuleVersion);
-		fprintf(src, "    let version = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMinorModuleVersion);
+		char* szNumericDate = ConvertUnixTimeToNumericDate(lMinorModuleVersion);
+		fprintf(src, "    let minorVersion = %s\n", szNumericDate);
+		fprintf(src, "    let version = \"%i.0.%s\"\n", gMajorInterfaceVersion, szNumericDate);
+		free(szNumericDate);
 		fprintf(src, "}\n\n");
 	}
 
@@ -1435,10 +1439,14 @@ void PrintSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 			fprintf(versionFile, "import Foundation\n\n");
 			fprintf(versionFile, "struct Asn1InterfaceVersion\n");
 			fprintf(versionFile, "{\n");
-			fprintf(versionFile, "    let lastChange = Date(iso8601String:\"%s\") ?? .distantPast\n", ConvertUnixTimeToISO(lMaxMinorVersion));
+			char* szISODate = ConvertUnixTimeToISO(lMaxMinorVersion);
+			fprintf(versionFile, "    let lastChange = Date(iso8601String:\"%s\") ?? .distantPast\n", szISODate);
+			free(szISODate);
 			fprintf(versionFile, "    let majorVersion = %i\n", gMajorInterfaceVersion);
-			fprintf(versionFile, "    let minorVersion = %lld\n", lMaxMinorVersion);
-			fprintf(versionFile, "    let version = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxMinorVersion);
+			fprintf(versionFile, "    let minorVersion = %s\n", szNumericDate);
+			fprintf(versionFile, "    let version = \"%i.0.%s\"\n", gMajorInterfaceVersion, szNumericDate);
+			free(szNumericDate);
 			fprintf(versionFile, "}\n");
 			fclose(versionFile);
 		}

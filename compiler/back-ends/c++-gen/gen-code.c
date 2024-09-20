@@ -4755,10 +4755,15 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 		strcpy_s(szModuleNameUpper, 512, m->moduleName);
 		Str2UCase(szModuleNameUpper, 512);
 		Dash2Underscore(szModuleNameUpper, 512);
-		fprintf(hdr, "#define %s_MODULE_LASTCHANGE = \"%s\"\n", szModuleNameUpper, ConvertUnixTimeToISO(lMinorModuleVersion));
+
+		char* szISODate = ConvertUnixTimeToISO(lMinorModuleVersion);
+		fprintf(hdr, "#define %s_MODULE_LASTCHANGE = \"%s\"\n", szModuleNameUpper, szISODate);
+		free(szISODate);
 		fprintf(hdr, "#define %s_MODULE_MAJOR_VERSION = %i\n", szModuleNameUpper, gMajorInterfaceVersion);
-		fprintf(hdr, "#define %s_MODULE_MINOR_VERSION = %lld\n", szModuleNameUpper, lMinorModuleVersion);
-		fprintf(hdr, "#define %s_MODULE_VERSION = \"%i.%lld.0\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, lMinorModuleVersion);
+		char* szNumericDate = ConvertUnixTimeToNumericDate(lMinorModuleVersion);
+		fprintf(hdr, "#define %s_MODULE_MINOR_VERSION = %s\n", szModuleNameUpper, szNumericDate);
+		fprintf(hdr, "#define %s_MODULE_VERSION = \"%i.0.%s\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, szNumericDate);
+		free(szNumericDate);
 	}
 
 	if (genCodeCPPPrintStdAfxInclude)

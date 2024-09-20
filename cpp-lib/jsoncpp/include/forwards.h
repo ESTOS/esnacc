@@ -38,6 +38,6 @@ class ValueIteratorBase;
 class ValueIterator;
 class ValueConstIterator;
 
-} // namespace SJson
+} // namespace Json
 
 #endif // JSON_FORWARDS_H_INCLUDED

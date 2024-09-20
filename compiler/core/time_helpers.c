@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "../../snacc_defines.h"
+#include "../../c-lib/include/asn-config.h"
 
 #if TIME_WITH_SYS_TIME
 #include <sys/time.h>
@@ -127,26 +128,61 @@ long long ConvertDateToUnixTime(const char* szDate)
 /**
  * Converts a unix time into something readable
  *
- * Returns a pointer to a buffer that needs to get released with Free
+ * Returns a pointer to a buffer that needs to get released with Free "20.09.2024"
  */
 char* ConvertUnixTimeToReadable(const long long tmUnixTime)
 {
-	if (tmUnixTime <= 0)
-		return NULL;
-
 	char* szBuffer = malloc(128);
 	if (!szBuffer)
 		return NULL;
 
+	memset(szBuffer, 0x00, 127);
+
+	if (tmUnixTime == 0)
+		strcpy_s(szBuffer, 127, "0");
+	else
+	{
 #ifdef _WIN32
-	struct tm timeinfo;
-	localtime_s(&timeinfo, &tmUnixTime);
-	strftime(szBuffer, 128, "%d.%m.%Y", &timeinfo);
+		struct tm timeinfo;
+		localtime_s(&timeinfo, &tmUnixTime);
+		strftime(szBuffer, 128, "%d.%m.%Y", &timeinfo);
 #else
-	struct tm* timeinfo;
-	timeinfo = localtime((const time_t*)&tmUnixTime);
-	strftime(szBuffer, 128, "%d.%m.%Y", timeinfo);
+		struct tm* timeinfo;
+		timeinfo = localtime((const time_t*)&tmUnixTime);
+		strftime(szBuffer, 128, "%d.%m.%Y", timeinfo);
 #endif
+	}
+
+	return szBuffer;
+}
+
+/**
+ * Converts a unix time into a numeric readable date in sorted notation (20240920)
+ *
+ * Returns a pointer to a buffer that needs to get released with Free "20240920" or "0"
+ */
+char* ConvertUnixTimeToNumericDate(const long long tmUnixTime)
+{
+	char* szBuffer = malloc(128);
+	if (!szBuffer)
+		return NULL;
+
+	memset(szBuffer, 0x00, 127);
+
+	if (tmUnixTime == 0)
+		strcpy_s(szBuffer, 127, "0");
+	else
+	{
+#ifdef _WIN32
+		struct tm timeinfo;
+		localtime_s(&timeinfo, &tmUnixTime);
+		strftime(szBuffer, 128, "%Y%m%d", &timeinfo);
+#else
+		struct tm* timeinfo;
+		timeinfo = localtime((const time_t*)&tmUnixTime);
+		strftime(szBuffer, 128, "%Y%m%d", timeinfo);
+#endif
+	}
 
 	return szBuffer;
 }
@@ -161,6 +197,8 @@ char* ConvertUnixTimeToISO(const long long tmUnixTime)
 	char* szBuffer = malloc(128);
 	if (!szBuffer)
 		return NULL;
+
+	memset(szBuffer, 0x00, 127);
 
 #ifdef _WIN32
 	struct tm timeinfo;
