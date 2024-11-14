@@ -2831,23 +2831,23 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	NamedType* e;
-	char* classStr;
-	char* formStr;
-	const char* codeStr;
+	NamedType* e = NULL;
+	char* classStr = NULL;
+	char* formStr = NULL;
+	const char* codeStr = NULL;
 	int i = 0;
-	Tag* tag;
-	TagList* tags;
-	char* varName;
+	Tag* tag = NULL;
+	TagList* tags = NULL;
+	char* varName = NULL;
 	CxxTRI* cxxtri = NULL;
 	int elmtLevel = 0;
-	int varCount, tmpVarCount;
-	int stoleChoiceTags;
-	int inTailOptElmts;
-	bool bHaveLength;
-	enum BasicTypeChoiceId tmpTypeId;
-	NamedType* defByNamedType;
-	NamedType* tmpElmt;
+	int varCount = 0, tmpVarCount = 0;
+	int stoleChoiceTags = 0;
+	int inTailOptElmts = 0;
+	bool bHaveLength = false;
+	enum BasicTypeChoiceId tmpTypeId = 0;
+	NamedType* defByNamedType = NULL;
+	NamedType* tmpElmt = NULL;
 	int extensionAdditionFound = FALSE;
 
 	fprintf(hdr, "\tvoid B%s(const %s& _b, %s tag, %s elmtLen, %s& bytesDecoded);\n", r->decodeContentBaseName, bufTypeNameG, tagTypeNameG, lenTypeNameG, lenTypeNameG);									   //, envTypeNameG);
@@ -3153,16 +3153,24 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 					}
 				}
 
-				/*
-				 * if this seq element is CHOICE &&
-				 * we didn't steal its tags then we must grab
-				 * the key tag out of the contained CHOICE
-				 */
-				if (!stoleChoiceTags && (GetBuiltinType(e->type) == BASICTYPE_CHOICE))
+				/* decode content */
+				tmpTypeId = GetBuiltinType(e->type);
+
+				if (!stoleChoiceTags && GetBuiltinType(e->type) == BASICTYPE_CHOICE)
 				{
+					// if this seq element is CHOICE &&
+					// we didn't steal its tags then we must grab
+					// the key tag out of the contained CHOICE
 					fprintf(src, "\t\ttag1 = BDecTag(_b, seqBytesDecoded);\n");
 					fprintf(src, "\t\telmtLen%d = BDecLen(_b, seqBytesDecoded);\n", ++elmtLevel);
 					bHaveLength = true;
+				}
+				else if (cxxtri->isPtr && tmpTypeId == BASICTYPE_ANY && tag && tag->tclass == CNTX && tag->form == CONS)
+				{
+					// If the seq element is an indexed ANY (Constructed) we need to remove the context attributes
+					// and hand over just the payload to the any object
+					fprintf(src, "\t\ttag1 = BDecTag(_b, seqBytesDecoded);\n");
+					fprintf(src, "\t\telmtLen%d = BDecLen(_b, seqBytesDecoded);\n", elmtLevel);
 				}
 
 				/* decode content */
@@ -3176,8 +3184,6 @@ void PrintSeqDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRules* 
 					fprintf(src, "\t\t%s = new %s();\n", varName, cxxtri->className);
 				}
 
-				/* decode content */
-				tmpTypeId = GetBuiltinType(e->type);
 				if (tmpTypeId == BASICTYPE_ANYDEFINEDBY)
 				{
 					/*

@@ -559,15 +559,6 @@ void AsnAny::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 
 void AsnAny::BDecContent(const AsnBuf& b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded)
 {
-	if (TAG_IS_CNTX(tag) && elmtLen > 2)
-	{
-		// Special
-		// If we have an indexed optional any, we cannot determine the type using the schema (The type is any)
-		// In this case the details about the structure (is it a sequence a string etc) are burried within
-		// the object and the reader is now on the position of the any. So we need to read the following tag and len information
-		tag = BDecTag(b, bytesDecoded);
-		elmtLen = BDecLen(b, bytesDecoded);
-	}
 	const auto tagLen = BytesInTag(tag);
 	const auto elementLen = BytesInLen(elmtLen);
 	const auto headerLen = tagLen + elementLen;
