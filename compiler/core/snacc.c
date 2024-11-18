@@ -74,6 +74,7 @@ char* bVDAGlobalDLLExport = (char*)0;
 
 #include "../back-ends/c++-gen/gen-code.h"
 #include "../back-ends/java-gen/gen-java-code.h"
+#include "../back-ends/kotlin-gen/gen-kotlin-code.h"
 #include "../back-ends/cs-gen/gen-code.h"
 #include "../back-ends/swift-gen/gen-swift-code.h"
 #include "../back-ends/js-gen/gen-js-code.h"
@@ -124,6 +125,7 @@ static void GenJsonDocCode(ModuleList* allMods);
 static void GenCSCode(ModuleList* allMods, int genROSECSDecoders);
 
 static void GenJAVACode(ModuleList* allMods, int genROSEJAVADecoders);
+static void GenKotlinCode(ModuleList* allMods, int genROSEJAVADecoders);
 static void GenDelphiCode(ModuleList* allMods, long longJmpVal, int genTypes, int genEncoders, int genDecoders, int genJSONEncDec, int genPrinters, int genPrintersXML, int genValues, int genFree, int novolatilefuncs, int genROSEDecoders);
 
 static void GenIDLCode(ModuleList* allMods, long longJmpVal, int genTypes, int genPrinters, int genValues, int genFree);
@@ -239,6 +241,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "  -R   generate c++ ROSE stub code\n");
 	fprintf(fp, "  -RCS generate c# ROSE stub code\n");
 	fprintf(fp, "  -RJ  generate JAVA ROSE stub code. For JavaScript see -J.\n");
+	fprintf(fp, "  -RK  generate Kotlin code.\n");
 	fprintf(fp, "  -RTS_SERVER   generate Typescript ROSE server stub code.\n");
 	fprintf(fp, "  -RTS_CLIENT_NODE   generate Typescript ROSE client stub code for node.\n");
 	fprintf(fp, "  -RTS_CLIENT_BROWSER   generate Typescript ROSE client stub code for a browser.\n");
@@ -357,6 +360,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	int genCxxCode_EnumClasses = FALSE;
 	int genIDLCode = FALSE;
 	int genJAVACode = FALSE;   // JAVA
+	int genKotlinCode = FALSE;   // Kotlin
 	int genDelphiCode = FALSE; // Delphi
 	int genCSCode = FALSE;	   // c#
 	int genSwiftCode = FALSE;
@@ -454,6 +458,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						/* stm --added */
 						genCxxCode = FALSE;
 						genJAVACode = TRUE;
+						genROSEDecoders = TRUE;
+						currArg++;
+					}
+					else if (strcmp(argument + 1, "RK") == 0)
+					{
+						/* stm --added */
+						genCxxCode = FALSE;
+						genKotlinCode = TRUE;
 						genROSEDecoders = TRUE;
 						currArg++;
 					}
@@ -853,14 +865,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		genPrintCode = TRUE;
 		genPrintCodeXML = FALSE;
 	}
-	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genCSCode + genJSCode + genSwiftCode + genTSCommonJSCode + genTSESMCode + genDelphiCode + genOpenApiCode + gFilterASN1Files > 1 + genJsonDocCode)
+	else if (genCCode + genCxxCode + genTypeTbls + genIDLCode + genJAVACode + genKotlinCode + genCSCode + genJSCode + genSwiftCode + genTSCommonJSCode + genTSESMCode + genDelphiCode + genOpenApiCode + gFilterASN1Files > 1 + genJsonDocCode)
 	{
 		fprintf(stderr, "%s: ERROR---Choose only one of the -c -C or -D or -T or -RCS or -RJ or -OA or -J or -JD or -filter options\n", argv[0]);
 		Usage(argv[0], stderr);
 		return 1;
 	}
 
-	if (!genCCode && !genCxxCode && !genJAVACode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCommonJSCode && !genTSESMCode && !genJsonDocCode && !genOpenApiCode && !gFilterASN1Files)
+	if (!genCCode && !genCxxCode && !genJAVACode && !genKotlinCode && !genCSCode && !genTypeTbls && !genIDLCode && !genSwiftCode && !genJSCode && !genDelphiCode && !genTSCommonJSCode && !genTSESMCode && !genJsonDocCode && !genOpenApiCode && !gFilterASN1Files)
 		genCCode = TRUE; /* default to C if neither specified */
 
 	/* Set the encoding rules to BER if not set */
@@ -1098,7 +1110,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	if (genCCode)
 		FillCTypeInfo(&cRulesG, allMods);
 
-	else if (genCxxCode || genJAVACode || genCSCode || genSwiftCode || genJSCode || genDelphiCode || genTSCommonJSCode || genTSESMCode || genJsonDocCode || genOpenApiCode)
+	else if (genCxxCode || genJAVACode || genKotlinCode || genCSCode || genSwiftCode || genJSCode || genDelphiCode || genTSCommonJSCode || genTSESMCode || genJsonDocCode || genOpenApiCode)
 		FillCxxTypeInfo(&cxxRulesG, allMods);
 
 #if IDL
@@ -1175,6 +1187,9 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 
 	if (genJAVACode)
 		GenJAVACode(allMods, genROSEDecoders);
+
+	if (genKotlinCode)
+		GenKotlinCode(allMods, genROSEDecoders);
 
 	if (genDelphiCode)
 		GenDelphiCode(allMods, longJmpVal, genTypeCode, genValueCode, genEncodeCode, genDecodeCode, genJSONEncDec, genPrintCode, genPrintCodeXML, genFreeCode, if_META(genMetaCode COMMA meta_pdus COMMA) if_TCL(genTclCode COMMA) novolatilefuncs, genROSEDecoders);
@@ -1407,6 +1422,12 @@ void GenJAVACode(ModuleList* allMods, int genROSEJAVADecoders)
 	if (genROSEJAVADecoders)
 		PrintJAVACode(allMods);
 } /* GenJAVACode */
+
+void GenKotlinCode(ModuleList* allMods, int genROSEJAVADecoders)
+{
+	if (genROSEJAVADecoders)
+		PrintKotlinCode(allMods);
+} /* GenKotlinCode */
 
 /*
  * Given the list of parsed, linked, normalized, error-checked and sorted
