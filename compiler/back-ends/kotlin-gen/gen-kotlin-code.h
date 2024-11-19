@@ -1,5 +1,5 @@
-#if !defined(JAVAGENCODE_H_INCLUDED)
-#define JAVAGENCODE_H_INCLUDED
+#if !defined(KOTLINGENCODE_H_INCLUDED)
+#define KOTLINGENCODE_H_INCLUDED
 
 #include "../../../snacc.h"
 #include <string.h>
@@ -9,4 +9,4 @@
 
 void PrintKotlinCode(ModuleList* mods);
 
-#endif // JAVAGENCODE_H_INCLUDED
+#endif // KOTLINGENCODE_H_INCLUDED
