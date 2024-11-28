@@ -360,9 +360,9 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 		printMemberComment(src, mod, td, e->fieldName, "  ", COMMENTSTYLE_JAVA);
 		if (e->type->basicType->choiceId == BASICTYPE_UNKNOWN || e->type->basicType->choiceId == BASICTYPE_NULL)
 			fprintf(src, "  @Contextual\n");
-		fprintf(src, "  var ");
+		fprintf(src, "  var");
 		char* szFieldName = Dash2UnderscoreEx(e->fieldName);
-		fprintf(src, " %s:", szFieldName);
+		fprintf(src, " %s: ", szFieldName);
 		PrintKotlinType(src, mods, mod, e->type);	
 		if (isNullable == 1)
 			fprintf(src, "?");
@@ -375,7 +375,7 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 		fprintf(src, "\n");
 	}
 	fprintf(src, "  companion object {\n");
-	fprintf(src, "      private const val serialVersionUID = 1L\n");
+	fprintf(src, "      private const val serialVersionUID = 2L\n");
 	fprintf(src, "  }\n");
 	fprintf(src, "}\n");
 	fclose(src);
@@ -406,6 +406,9 @@ void PrintKotlinChoiceDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 		fprintf(src, "? = null\n");
 	}
 	fprintf(src, "\n");
+	fprintf(src, "  companion object {\n");
+	fprintf(src, "      private const val serialVersionUID = 2L\n");
+	fprintf(src, "  }\n");
 	fprintf(src, "}\n");
 	fclose(src);
 	free(name);
@@ -539,7 +542,7 @@ void PrintKotlinSimpleDef(ModuleList* mods, Module* mod, TypeDef* td)
 		PrintKotlinNativeTypeConstructor(src, td->type);
 
 	fprintf(src, ")\n\n");
-	fprintf(src, "  constructor(value:");
+	fprintf(src, "  constructor(value: ");
 	if (strcmp("AsnSystemTime", name) == 0)
 		fprintf(src, "String?");
 	else
