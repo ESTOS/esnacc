@@ -159,6 +159,11 @@ SnaccROSEBase::SnaccROSEBase(void)
 {
 }
 
+SnaccROSEBase::SnaccROSEBase(const std::set<int>& multithreadInvokeIDs)
+	: m_multithreadInvokeIDs(multithreadInvokeIDs)
+{
+}
+
 SnaccROSEBase::~SnaccROSEBase(void)
 {
 	ConfigureFileLogging(nullptr);
@@ -607,7 +612,7 @@ bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllIn
 		case ROSEMessage::invokeCid:
 			if (pmessage->invoke)
 			{
-				if (bAllowAllInvokes || m_mapMultithreadInvokeIDs.find(pmessage->invoke->operationID) != m_mapMultithreadInvokeIDs.end())
+				if (bAllowAllInvokes || m_multithreadInvokeIDs.find(pmessage->invoke->operationID) != m_multithreadInvokeIDs.end())
 				{
 					if (pmessage->invoke->operationID != 0 || pmessage->invoke->operationName != nullptr)
 						OnInvokeMessage(pmessage);
@@ -898,7 +903,7 @@ long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperatio
 bool SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szOperationName, const char* szData, const size_t size, const SNACC::ROSEMessage* pMsg, const SJson::Value* pParsedValue)
 {
 	bool bTransportDataWasLogged = false;
-	
+
 	int level = (int)GetLogLevel(bOutbound);
 	if (level != (int)EAsnLogLevel::DISABLED)
 	{
@@ -1235,11 +1240,6 @@ long SnaccROSEBase::SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 	error.error->value = 0;
 
 	return lRoseResult;
-}
-
-void SnaccROSEBase::SetMultithreadInvokeIds(std::map<int, int> mapIds)
-{
-	m_mapMultithreadInvokeIDs = mapIds;
 }
 
 long SnaccROSEBase::SendBinaryDataBlockEx(const char* lpBytes, unsigned long lSize, SnaccInvokeContext* pCtx)

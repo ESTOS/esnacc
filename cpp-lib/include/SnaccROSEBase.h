@@ -2,6 +2,7 @@
 #define _SnaccROSEBase_h_
 
 /*! Requires std::map */
+#include <set>
 #include <map>
 #include <functional>
 #include <string>
@@ -152,6 +153,7 @@ class SnaccROSEBase : public SnaccROSESender
 {
 public:
 	SnaccROSEBase(void);
+	SnaccROSEBase(const std::set<int>& multithreadInvokeIDs);
 	virtual ~SnaccROSEBase(void);
 
 	/*! Set timeout for function invokes.
@@ -163,12 +165,6 @@ public:
 		All pending operations will be completed and new function calls will be blocked.
 		All Functions return a ROSE_TE_SHUTDOWN */
 	void StopProcessing(bool bStop = true);
-
-	/*! Set OperationsIDs of Invokes, that will be processed by OnBinaryDataBlockResult.
-		Allows special Invokes to be processed Multi threaded even if SingleThread Operation is selected
-		This is only allowed to be set once during initialization!
-		member map is not protected by locks! */
-	void SetMultithreadInvokeIds(std::map<int, int> mapIds);
 
 	/*! Input of the binary data
 		This processes results and Invokes that are in the list of MultiThreadedInvokeIDs.
@@ -390,7 +386,9 @@ private:
 
 	SnaccROSEPendingOperationMap m_PendingOperations;
 
-	std::map<int, int> m_mapMultithreadInvokeIDs;
+	// Operations that are handled multithreaded, event the application itself is single threaded
+	// This member has to be set while initializing the class as it is not thread save
+	const std::set<int> m_multithreadInvokeIDs;
 
 	// Outbound Data Interface (optional)
 	ISnaccROSETransport* m_pTransport = NULL;
