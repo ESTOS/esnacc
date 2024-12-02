@@ -159,6 +159,11 @@ SnaccROSEBase::SnaccROSEBase(void)
 {
 }
 
+SnaccROSEBase::SnaccROSEBase(const std::set<int>& multithreadInvokeIDs)
+	: m_multithreadInvokeIDs(multithreadInvokeIDs)
+{
+}
+
 SnaccROSEBase::~SnaccROSEBase(void)
 {
 	ConfigureFileLogging(nullptr);
@@ -451,7 +456,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, 
 			catch (const SnaccException& ex)
 			{
 				if (bLogTransportData)
-					LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+					bLogTransportData = LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 				SJson::Value error;
 				error["exception"] = ex.what();
@@ -460,7 +465,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, 
 				std::string strError = getPrettyPrinted(error);
 				PrintJSONToLog(false, true, nullptr, strError.c_str(), strError.length());
 
-				OnRoseDecodeError(lpBytes, lSize, ex.what());
+				OnRoseDecodeError(bLogTransportData, SNACC::TransportEncoding::BER, lpBytes, lSize, ex.what());
 
 				if (pmessage->choiceId == ROSEMessage::invokeCid && pmessage->invoke)
 				{
@@ -513,7 +518,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, 
 				catch (const SnaccException& ex)
 				{
 					if (bLogTransportData)
-						LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+						bLogTransportData = LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 					SJson::Value error;
 					error["exception"] = ex.what();
@@ -522,7 +527,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, 
 					std::string strError = getPrettyPrinted(error);
 					PrintJSONToLog(false, true, nullptr, strError.c_str(), strError.length());
 
-					OnRoseDecodeError(lpBytes, lSize, ex.what());
+					OnRoseDecodeError(bLogTransportData, m_eTransportEncoding, lpBytes, lSize, ex.what());
 
 					if (pmessage->choiceId == ROSEMessage::invokeCid && pmessage->invoke)
 					{
@@ -557,7 +562,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, 
 			else
 			{
 				if (bLogTransportData)
-					LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+					bLogTransportData = LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 				SJson::Value error;
 				error["exception"] = reader.getFormattedErrorMessages();
@@ -565,7 +570,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, 
 				std::string strError = getPrettyPrinted(error);
 				PrintJSONToLog(false, true, nullptr, strError.c_str(), strError.length());
 
-				OnRoseDecodeError(lpBytes, lSize, reader.getFormattedErrorMessages());
+				OnRoseDecodeError(bLogTransportData, m_eTransportEncoding, lpBytes, lSize, reader.getFormattedErrorMessages());
 
 				ROSEReject reject;
 				reject.invokedID.choiceId = ROSERejectChoice::invokednullCid;
@@ -582,9 +587,10 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, 
 		}
 		else
 		{
+			// if we don´t know the encoding, we need to log it binary to ensure proper readability in the logs (ensure payload is hex converted)
 			if (bLogTransportData)
-				LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
-			OnRoseDecodeError(lpBytes, lSize, "unknown encoding");
+				bLogTransportData = LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, lpBytes, lSize, nullptr, nullptr);
+			OnRoseDecodeError(bLogTransportData, SNACC::TransportEncoding::BER, lpBytes, lSize, "unknown encoding");
 		}
 	}
 	catch (const SnaccException& ex)
@@ -606,7 +612,7 @@ bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllIn
 		case ROSEMessage::invokeCid:
 			if (pmessage->invoke)
 			{
-				if (bAllowAllInvokes || m_mapMultithreadInvokeIDs.find(pmessage->invoke->operationID) != m_mapMultithreadInvokeIDs.end())
+				if (bAllowAllInvokes || m_multithreadInvokeIDs.find(pmessage->invoke->operationID) != m_multithreadInvokeIDs.end())
 				{
 					if (pmessage->invoke->operationID != 0 || pmessage->invoke->operationName != nullptr)
 						OnInvokeMessage(pmessage);
@@ -894,8 +900,10 @@ long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperatio
 	return Send(pinvoke, szOperationName, pCtx);
 }
 
-void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szOperationName, const char* szData, const size_t size, const SNACC::ROSEMessage* pMsg, const SJson::Value* pParsedValue)
+bool SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szOperationName, const char* szData, const size_t size, const SNACC::ROSEMessage* pMsg, const SJson::Value* pParsedValue)
 {
+	bool bTransportDataWasLogged = false;
+
 	int level = (int)GetLogLevel(bOutbound);
 	if (level != (int)EAsnLogLevel::DISABLED)
 	{
@@ -928,11 +936,11 @@ void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 					if (pParsedValue && (level & (int)EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED) && strstr_limited(szData, "\n", size) == nullptr)
 					{
 						std::string strLogData = getPrettyPrinted(*pParsedValue);
-						PrintJSONToLog(bOutbound, false, szOperationName, strLogData.c_str(), strLogData.length());
+						bTransportDataWasLogged = PrintJSONToLog(bOutbound, false, szOperationName, strLogData.c_str(), strLogData.length());
 					}
 					else
 					{
-						PrintJSONToLog(bOutbound, false, szOperationName, szData, size);
+						bTransportDataWasLogged = PrintJSONToLog(bOutbound, false, szOperationName, szData, size);
 					}
 				}
 			}
@@ -943,7 +951,7 @@ void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 				SJson::Value value;
 				pMsg->JEnc(value);
 				std::string strLogData = getPrettyPrinted(value);
-				PrintJSONToLog(bOutbound, false, szOperationName, strLogData.c_str(), strLogData.length());
+				bTransportDataWasLogged = PrintJSONToLog(bOutbound, false, szOperationName, strLogData.c_str(), strLogData.length());
 			}
 		}
 		if (bLogBER && szData)
@@ -970,10 +978,12 @@ void SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 				}
 				if (bLogJSON)
 					strLogData += "\"";
-				PrintJSONToLog(bOutbound, false, nullptr, strLogData.c_str(), strLogData.length());
+				bTransportDataWasLogged = PrintJSONToLog(bOutbound, false, nullptr, strLogData.c_str(), strLogData.length());
 			}
 		}
 	}
+
+	return bTransportDataWasLogged;
 }
 
 long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, const char* szOperationName = nullptr, int iTimeout /*= -1*/, SnaccInvokeContext* pCtx /*= nullptr*/)
@@ -1230,11 +1240,6 @@ long SnaccROSEBase::SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 	error.error->value = 0;
 
 	return lRoseResult;
-}
-
-void SnaccROSEBase::SetMultithreadInvokeIds(std::map<int, int> mapIds)
-{
-	m_mapMultithreadInvokeIDs = mapIds;
 }
 
 long SnaccROSEBase::SendBinaryDataBlockEx(const char* lpBytes, unsigned long lSize, SnaccInvokeContext* pCtx)
@@ -1514,10 +1519,10 @@ int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, bool bAppend
 	return 0;
 }
 
-void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, const char* szOperationName, const char* szData, const size_t stLength)
+bool SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, const char* szOperationName, const char* szData, const size_t stLength)
 {
 	if (!m_pAsnLogFile || !szData)
-		return;
+		return false;
 
 	// Die ASN.1-Funktionen k�nnen auch aus verschiedenen Threads gerufen werden.
 	// Das Schreiben in die roseout.log muss aber damit serialisiert werden.
@@ -1526,7 +1531,7 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 
 	// Securly check the logfile pointer once more after aquiring the lock
 	if (!m_pAsnLogFile)
-		return;
+		return false;
 
 	try
 	{
@@ -1613,9 +1618,12 @@ void SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 
 		if (m_bFlushEveryWrite)
 			fflush(m_pAsnLogFile);
+
+		return true;
 	}
 	catch (...)
 	{
 		assert(false);
 	}
+	return false;
 }
