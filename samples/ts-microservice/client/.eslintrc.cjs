@@ -40,7 +40,7 @@ module.exports = {
 		"browser": true
 	},
 	"parserOptions": {
-		"ecmaVersion": 2020,
+		"ecmaVersion": 11,
 		"sourceType" : "module",
 		"project": "./tsconfig.json",
 		"tsconfigRootDir": __dirname,
