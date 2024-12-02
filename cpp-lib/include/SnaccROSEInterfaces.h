@@ -134,8 +134,9 @@ public:
 	 * size = the size of the plain transport data
 	 * pMSg = the asn1 message that was encoded or decoded from the transport payload
 	 * pParsedValue = only for inboud data, the parsed json object (required if the logging shall get pretty printed, saves another parsing of the payload), only available inbound and if the transport is using json
+	 * returns true if data was logged
 	 */
-	virtual void LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szOperationName, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue = nullptr) = 0;
+	virtual bool LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szOperationName, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue = nullptr) = 0;
 
 	/** An invoke that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
