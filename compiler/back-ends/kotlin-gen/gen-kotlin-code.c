@@ -336,16 +336,23 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "package com.estos.asn\n\n");
 	if (strcmp("AsnRequestError", name) == 0)
 		fprintf(src, "import com.estos.asnconnector.util.kserialize.AsnRequestErrorSerializer\n");
+	if (strcmp("AsnOptionalParam", name) == 0)
+		fprintf(src, "import com.estos.asnconnector.util.kserialize.AsnOptionalParamSerializer\n");
 	fprintf(src, "import kotlinx.serialization.Contextual\n");
 	fprintf(src, "import kotlinx.serialization.Serializable\n");
 	fprintf(src, "import javax.annotation.Generated\n");
 	fprintf(src, "\n");
 
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
-	if (strcmp("AsnRequestError", name) == 0)
+	if (strcmp("AsnRequestError", name) == 0) {
 		fprintf(src, "@Serializable(with = AsnRequestErrorSerializer::class)\n");
-	else
+	}
+	else if (strcmp("AsnOptionalParam", name) == 0) {
+		fprintf(src, "@Serializable(with = AsnOptionalParamSerializer::class)\n");
+	}
+	else {
 		fprintf(src, "@Serializable\n");
+	}
 	fprintf(src, "open class %s : java.io.Serializable {\n", name);
 	handleDeprecatedSequenceKotlin(src, mod, td);
 	FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
