@@ -656,7 +656,6 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 		fprintf(src, "import kotlinx.serialization.InternalSerializationApi\n");
 		fprintf(src, "import kotlinx.serialization.Polymorphic\n");
 		fprintf(src, "import kotlinx.serialization.Serializable\n");
-		fprintf(src, "import kotlinx.serialization.json.Json\n");
 		fprintf(src, "import kotlinx.serialization.json.JsonObject\n");
 		fprintf(src, "import kotlinx.serialization.json.JsonPrimitive\n");
 		fprintf(src, "import kotlinx.serialization.json.jsonObject\n");
@@ -723,7 +722,7 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 		if (pszArgument) {
 			fprintf(src, "    if (asnArgument != null) {\n");
 			fprintf(src, "      val localArg: %s = asnArgument!!\n", pszArgument);
-			fprintf(src, "      val element = Json.encodeToJsonElement<%s>(%s.serializer(), localArg)\n", pszArgument, pszArgument);
+			fprintf(src, "      val element = kJson.encodeToJsonElement<%s>(%s.serializer(), localArg)\n", pszArgument, pszArgument);
 			fprintf(src, "      return JsonObject(element.jsonObject.toMutableMap().apply { put(\"_type\", JsonPrimitive(\"%s\")) })\n", pszArgument);
 			fprintf(src, "    } else {\n");
 			fprintf(src, "      return JsonObject(mapOf())\n");
@@ -748,11 +747,15 @@ void PrintAbstractKotlinOperation()
 	fprintf(src, "package com.estos.asn\n\n");
 	fprintf(src, "import kotlinx.serialization.SerialName\n");
 	fprintf(src, "import kotlinx.serialization.Serializable\n");
+	fprintf(src, "import kotlinx.serialization.Transient\n");
+	fprintf(src, "import kotlinx.serialization.json.Json\n");
 	fprintf(src, "import kotlinx.serialization.json.JsonObject\n");
 	fprintf(src, "import kotlin.reflect.KClass\n");
 	fprintf(src, "import java.util.Locale\n\n");
 	fprintf(src, "@Serializable\n");
 	fprintf(src, "abstract class AbstractAsnOperation<ARGUMENT_TYPE, RESULT_TYPE, ERROR_TYPE> {\n\n");
+	fprintf(src, "  @Transient\n");
+	fprintf(src, "  protected val kJson = Json { explicitNulls = false; encodeDefaults = true }\n\n");
 	fprintf(src, "  @SerialName(\"argument\")\n  var asnArgument: ARGUMENT_TYPE? = null\n\n");
 	fprintf(src, "  @SerialName(\"result\")\n  var asnResult: RESULT_TYPE? = null\n\n");
 	fprintf(src, "  @SerialName(\"error\")\n  var asnError: ERROR_TYPE? = null\n\n");
