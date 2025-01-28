@@ -198,7 +198,6 @@ void PrintKotlinTypeConstructor(FILE* hdr, ModuleList* mods, Module* mod, Type* 
 
 void PrintKotlinArrayType(FILE* hdr, ModuleList* mods, Module* mod, Type* t, TypeDef* innerType)
 {
-
 	fprintf(hdr, "ArrayList<");
 	PrintKotlinType(hdr, mods, mod, t);
 	fprintf(hdr, ">");
@@ -259,17 +258,17 @@ void PrintSeqKotlinDataSequenceOf(ModuleList* mods, Module* mod, TypeDef* td)
 {
 	char* name = getKotlinClassName(td->definedName, "");
 	char* serializerName = getKotlinClassName(td->definedName, "Serializer");
-	
+
 	int isCustomSerializer = 0;
 	if (strcmp("AsnOptionalParameters", name) == 0)
-			isCustomSerializer = 1;
-	
+		isCustomSerializer = 1;
+
 	FILE* src = getKotlinFilePointer(name);
 	PRINTDEBUGGING
-	//printing main file
+	// printing main file
 	fprintf(src, "package com.estos.asn\n\n");
 	if (isCustomSerializer == 1)
-			fprintf(src, "import com.estos.asnconnector.util.kserialize.AsnOptionalParametersSerializer\n");
+		fprintf(src, "import com.estos.asnconnector.util.kserialize.AsnOptionalParametersSerializer\n");
 	fprintf(src, "import kotlinx.serialization.Serializable\n");
 	fprintf(src, "import javax.annotation.Generated\n\n");
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
@@ -283,45 +282,46 @@ void PrintSeqKotlinDataSequenceOf(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, ">) : super(values)\n");
 	fprintf(src, "  constructor() : super()\n");
 	fprintf(src, "}\n");
-	
-	if (isCustomSerializer == 0) {
-	//printing serializer for file
-	FILE* serializerSrc = getKotlinFilePointer(serializerName);
-	fprintf(serializerSrc, "package com.estos.asn\n\n");
-	fprintf(serializerSrc, "import kotlinx.serialization.KSerializer\n");
-	fprintf(serializerSrc, "import kotlinx.serialization.SerializationException\n");
-	fprintf(serializerSrc, "import kotlinx.serialization.builtins.ListSerializer\n");
-	fprintf(serializerSrc, "import kotlinx.serialization.builtins.serializer\n");
-	fprintf(serializerSrc, "import kotlinx.serialization.descriptors.SerialDescriptor\n");
-	fprintf(serializerSrc, "import kotlinx.serialization.encoding.Decoder\n");
-	fprintf(serializerSrc, "import kotlinx.serialization.encoding.Encoder\n");
-	fprintf(serializerSrc, "import kotlinx.serialization.json.JsonDecoder\n");
-	fprintf(serializerSrc, "import kotlinx.serialization.json.jsonArray\n\n");
-	fprintf(serializerSrc, "class %s : KSerializer<", serializerName);
-	fprintf(serializerSrc, "%s> {\n", name);
-	fprintf(serializerSrc, "    private val elementSerializer: KSerializer<");
-	PrintKotlinType(serializerSrc, mods, mod, td->type->basicType->a.setOf);
-	fprintf(serializerSrc, "> = ");
-	PrintKotlinType(serializerSrc, mods, mod, td->type->basicType->a.setOf);
-	fprintf(serializerSrc, ".serializer()\n");
-	fprintf(serializerSrc, "    private val listSerializer = ListSerializer(elementSerializer)\n");
-	fprintf(serializerSrc, "    override val descriptor: SerialDescriptor = listSerializer.descriptor\n\n");
-	fprintf(serializerSrc, "    override fun serialize(encoder: Encoder, value: %s) {\n", name);
-	fprintf(serializerSrc, "        listSerializer.serialize(encoder, value)\n");
-	fprintf(serializerSrc, "    }\n\n");
-	fprintf(serializerSrc, "    @Throws(SerializationException::class)\n");
-	fprintf(serializerSrc, "    override fun deserialize(decoder: Decoder): %s {\n", name);
-	fprintf(serializerSrc, "        val result = ArrayList(with(decoder as JsonDecoder) {\n");
-	fprintf(serializerSrc, "           decodeJsonElement().jsonArray.mapNotNull {\n");
-	fprintf(serializerSrc, "              json.decodeFromJsonElement(elementSerializer, it)\n");
-	fprintf(serializerSrc, "           }\n");
-	fprintf(serializerSrc, "        })\n");
-	fprintf(serializerSrc, "        return %s(result)\n", name);
-	fprintf(serializerSrc, "     }\n\n");
-	fprintf(serializerSrc, "}\n");
-	fclose(serializerSrc);
+
+	if (isCustomSerializer == 0)
+	{
+		// printing serializer for file
+		FILE* serializerSrc = getKotlinFilePointer(serializerName);
+		fprintf(serializerSrc, "package com.estos.asn\n\n");
+		fprintf(serializerSrc, "import kotlinx.serialization.KSerializer\n");
+		fprintf(serializerSrc, "import kotlinx.serialization.SerializationException\n");
+		fprintf(serializerSrc, "import kotlinx.serialization.builtins.ListSerializer\n");
+		fprintf(serializerSrc, "import kotlinx.serialization.builtins.serializer\n");
+		fprintf(serializerSrc, "import kotlinx.serialization.descriptors.SerialDescriptor\n");
+		fprintf(serializerSrc, "import kotlinx.serialization.encoding.Decoder\n");
+		fprintf(serializerSrc, "import kotlinx.serialization.encoding.Encoder\n");
+		fprintf(serializerSrc, "import kotlinx.serialization.json.JsonDecoder\n");
+		fprintf(serializerSrc, "import kotlinx.serialization.json.jsonArray\n\n");
+		fprintf(serializerSrc, "class %s : KSerializer<", serializerName);
+		fprintf(serializerSrc, "%s> {\n", name);
+		fprintf(serializerSrc, "    private val elementSerializer: KSerializer<");
+		PrintKotlinType(serializerSrc, mods, mod, td->type->basicType->a.setOf);
+		fprintf(serializerSrc, "> = ");
+		PrintKotlinType(serializerSrc, mods, mod, td->type->basicType->a.setOf);
+		fprintf(serializerSrc, ".serializer()\n");
+		fprintf(serializerSrc, "    private val listSerializer = ListSerializer(elementSerializer)\n");
+		fprintf(serializerSrc, "    override val descriptor: SerialDescriptor = listSerializer.descriptor\n\n");
+		fprintf(serializerSrc, "    override fun serialize(encoder: Encoder, value: %s) {\n", name);
+		fprintf(serializerSrc, "        listSerializer.serialize(encoder, value)\n");
+		fprintf(serializerSrc, "    }\n\n");
+		fprintf(serializerSrc, "    @Throws(SerializationException::class)\n");
+		fprintf(serializerSrc, "    override fun deserialize(decoder: Decoder): %s {\n", name);
+		fprintf(serializerSrc, "        val result = ArrayList(with(decoder as JsonDecoder) {\n");
+		fprintf(serializerSrc, "           decodeJsonElement().jsonArray.mapNotNull {\n");
+		fprintf(serializerSrc, "              json.decodeFromJsonElement(elementSerializer, it)\n");
+		fprintf(serializerSrc, "           }\n");
+		fprintf(serializerSrc, "        })\n");
+		fprintf(serializerSrc, "        return %s(result)\n", name);
+		fprintf(serializerSrc, "     }\n\n");
+		fprintf(serializerSrc, "}\n");
+		fclose(serializerSrc);
 	}
-	
+
 	free(serializerName);
 	fclose(src);
 	free(name);
@@ -356,14 +356,14 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 		int isNullable = 0;
 		if (e->type->optional || td->type->basicType->choiceId == BASICTYPE_CHOICE || td->type->basicType->choiceId == BASICTYPE_NULL)
 			isNullable = 1;
-			
+
 		printMemberComment(src, mod, td, e->fieldName, "  ", COMMENTSTYLE_JAVA);
 		if (e->type->basicType->choiceId == BASICTYPE_UNKNOWN || e->type->basicType->choiceId == BASICTYPE_NULL)
 			fprintf(src, "  @Contextual\n");
 		fprintf(src, "  var");
 		char* szFieldName = Dash2UnderscoreEx(e->fieldName);
 		fprintf(src, " %s: ", szFieldName);
-		PrintKotlinType(src, mods, mod, e->type);	
+		PrintKotlinType(src, mods, mod, e->type);
 		if (isNullable == 1)
 			fprintf(src, "?");
 		fprintf(src, " = ");
@@ -415,7 +415,6 @@ void PrintKotlinChoiceDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 }
 void PrintKotlinSimpleRefDef(ModuleList* mods, Module* mod, TypeDef* td)
 {
-
 	char* name = getKotlinClassName(td->definedName, "");
 	FILE* src = getKotlinFilePointer(name);
 	PRINTDEBUGGING
@@ -485,8 +484,8 @@ void PrintKotlinEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "      fun fromInt(value: Int) = %s.values().first { it.value == value }\n", name);
 	fprintf(src, "  }\n");
 	fprintf(src, "}\n");
-	
-	//printing serializer for file
+
+	// printing serializer for file
 	fprintf(serializerSrc, "package com.estos.asn\n\n");
 	fprintf(serializerSrc, "import kotlinx.serialization.KSerializer\n");
 	fprintf(serializerSrc, "import kotlinx.serialization.descriptors.PrimitiveKind\n");
@@ -504,7 +503,7 @@ void PrintKotlinEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(serializerSrc, "        return %s.fromInt(decoder.decodeInt())\n", name);
 	fprintf(serializerSrc, "    }\n\n");
 	fprintf(serializerSrc, "}\n");
-	
+
 	fclose(serializerSrc);
 	free(serializerName);
 	free(name);
@@ -513,7 +512,6 @@ void PrintKotlinEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 
 void PrintKotlinSimpleDef(ModuleList* mods, Module* mod, TypeDef* td)
 {
-
 	char* name = getKotlinClassName(td->definedName, "");
 
 	FILE* src = getKotlinFilePointer(name);
@@ -671,8 +669,8 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 
 		if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
 		{
-//			fprintf(src, "  public %s()\n", name);
-//			fprintf(src, "  {\n");
+			//			fprintf(src, "  public %s()\n", name);
+			//			fprintf(src, "  {\n");
 			asnoperationcomment comment;
 			if (GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment))
 				fprintf(src, "  // CALL DeprecatedASN1Method(%lld, \"%s\", \"%s\", \"%s\")\n", comment.i64Deprecated, mod->moduleName, vd->definedName, comment.szDeprecated);
@@ -680,27 +678,33 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 		}
 
 		// Class Type definititon
-		if (pszArgument) {
+		if (pszArgument)
+		{
 			fprintf(src, "  override val asnArgumentType: KClass<%s>\n", pszArgument);
 			fprintf(src, "    get() = %s::class\n\n", pszArgument);
 		}
-		else {
+		else
+		{
 			fprintf(src, "  override val asnArgumentType: KClass<SerialVoid>\n");
 			fprintf(src, "    get() = SerialVoid::class\n\n");
 		}
-		if (pszResult) {
+		if (pszResult)
+		{
 			fprintf(src, "  override val asnResultType: KClass<%s>\n", pszResult);
 			fprintf(src, "    get() = %s::class\n\n", pszResult);
 		}
-		else {
+		else
+		{
 			fprintf(src, "  override val asnResultType: KClass<SerialVoid>\n");
 			fprintf(src, "    get() = SerialVoid::class\n\n");
 		}
-		if (pszError) {
+		if (pszError)
+		{
 			fprintf(src, "  override val asnErrorType: KClass<%s>\n", pszError);
 			fprintf(src, "    get() = %s::class\n\n", pszError);
 		}
-		else {
+		else
+		{
 			fprintf(src, "  override val asnErrorType: KClass<SerialVoid>\n");
 			fprintf(src, "    get() = SerialVoid::class\n\n");
 		}
@@ -735,7 +739,7 @@ void PrintAbstractKotlinOperation()
 	fprintf(src, "  abstract val asnArgumentType: KClass<*>?\n\n");
 	fprintf(src, "  abstract val asnResultType: KClass<*>?\n\n");
 	fprintf(src, "  abstract val asnErrorType: KClass<*>?\n\n");
-	
+
 	fprintf(src, "  fun setArgument(arg: Any) {\n");
 	fprintf(src, "    asnArgument = arg as ARGUMENT_TYPE\n");
 	fprintf(src, "  }\n\n");
@@ -794,12 +798,13 @@ void PrintKotlinCode(ModuleList* allMods)
 		FILE* src = getKotlinFilePointer(szFileName);
 		if (src)
 		{
-			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
+			long long lMaxPatchVersion = GetMaxModulePatchVersion();
 			fprintf(src, "object Asn1InterfaceVersion {\n");
-			fprintf(src, "\tconst val lastChange: String = \"%s\"\n", ConvertUnixTimeToISO(lMaxMinorVersion));
+			fprintf(src, "\tconst val lastChange: String = \"%s\"\n", ConvertUnixTimeToISO(lMaxPatchVersion));
 			fprintf(src, "\tconst val majorVersion: Int = %i\n", gMajorInterfaceVersion);
-			fprintf(src, "\tconst val minorVersion: Long = %lld\n", lMaxMinorVersion);
-			fprintf(src, "\tconst val version: String = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMaxMinorVersion);
+			fprintf(src, "\tconst val minorVersion: Int = 0\n");
+			fprintf(src, "\tconst val patchVersion: Long = %lld\n", lMaxPatchVersion);
+			fprintf(src, "\tconst val version: String = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMaxPatchVersion);
 			fprintf(src, "}\n");
 			fclose(src);
 		}
@@ -844,12 +849,13 @@ void PrintKotlinCodeOneModule(ModuleList* mods, Module* m)
 		FILE* src = getKotlinFilePointer(m->baseFilePath);
 		if (src)
 		{
-			long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
+			long long lModulePatchVersion = GetModulePatchVersion(m->moduleName);
 			fprintf(src, "object %s {\n", m->moduleName);
-			fprintf(src, "\tconst val lastChange: String = \"%s\"\n", ConvertUnixTimeToISO(lMinorModuleVersion));
+			fprintf(src, "\tconst val lastChange: String = \"%s\"\n", ConvertUnixTimeToISO(lModulePatchVersion));
 			fprintf(src, "\tconst val majorVersion: Int = %i\n", gMajorInterfaceVersion);
-			fprintf(src, "\tconst val minorVersion: Long = %lld\n", lMinorModuleVersion);
-			fprintf(src, "\tconst val version: String = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMinorModuleVersion);
+			fprintf(src, "\tconst val minorVersion: Int = 0\n");
+			fprintf(src, "\tconst val patchVersion: Long = %lld\n", lModulePatchVersion);
+			fprintf(src, "\tconst val version: String = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lModulePatchVersion);
 			fprintf(src, "}\n");
 			fclose(src);
 		}

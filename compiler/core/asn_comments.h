@@ -75,9 +75,9 @@ extern "C"
 	extern int GetMemberComment_UTF8(const char* szModuleName, const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment);
 	extern int GetMemberComment_ASCII(const char* szModuleName, const char* szTypeName, const char* szMemberName, asnmembercomment* pcomment);
 	// Retrieve the minor Version of a module
-	extern long long GetModuleMinorVersion(const char* szModuleName);
+	extern long long GetModulePatchVersion(const char* szModuleName);
 	// Retrieve the highest minor Version of all module
-	extern long long GetMaxModuleMinorVersion();
+	extern long long GetMaxModulePatchVersion();
 
 #ifdef __cplusplus
 }

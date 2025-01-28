@@ -16,10 +16,10 @@
  * for the asn1 module
  *
  * The full version is build using
- * majorversion.minorversion
+ * majorversion.0.patchversion
  *
  * majorversion is a simple integer
- * minorversion is the unix time in seconds for the @added dd.mm.yyyy information
+ * patchversion is the reverse date representation as numbers e.g. 31.12.2024 would be 20241231
  */
 
 /*
@@ -29,21 +29,17 @@ class SnaccModuleVersion
 {
 public:
 	SnaccModuleVersion();
-	SnaccModuleVersion(const char* szModuleName, const int iMajorVersion, long long lMinorVersion);
-	// Retrieve the full version of the interface -> "major.minor"
-	const char* GetVersion() const;
+	SnaccModuleVersion(const char* szModuleName, const int iMajorVersion, long long llPatchVersion);
 	// Retrieve the major version of the interface -> major
 	int GetMajorVersion() const;
-	// Retrieve the minor version of the interface -> minor
-	long long GetMinorVersion() const;
+	// Retrieve the patch version of the interface -> patch
+	long long GetPatchVersion() const;
 
 private:
 	// Name of the module
 	std::string m_strModuleName;
-	// The full version of the module (major.minor)
-	std::string m_strFullVersion;
-	// The minor version as __int64 value (value of the @added timestamp, so unix time since 1970)
-	long long m_i64MinorVersion = 0;
+	// The patch version as __int64 value (value of the @added timestamp, so unix time since 1970)
+	long long m_llPatchVersion = 0;
 	// The major version of the interface (as defined by the interfaceversion.txt)
 	int m_iMajorVersion = 0;
 };
@@ -54,7 +50,7 @@ private:
 class SnaccModuleVersions
 {
 public:
-	static bool addModuleVersion(const char* szModuleName, int iMajorVersion, long long i64MinorVersion);
+	static bool addModuleVersion(const char* szModuleName, int iMajorVersion, long long i64PatchVersion);
 	static bool getModuleVersion(const char* szModuleName, SnaccModuleVersion& version);
 	static bool getHighestModuleVersion(SnaccModuleVersion& version);
 

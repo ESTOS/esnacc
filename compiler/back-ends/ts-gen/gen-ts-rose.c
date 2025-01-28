@@ -481,8 +481,8 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 
 	if (gMajorInterfaceVersion >= 0)
 	{
-		long long lMinorVersion = GetModuleMinorVersion(m->moduleName);
-		fprintf(src, "\t\tthis.transport.registerModuleVersion(\"%s\", %i, %lld);\n", m->moduleName, gMajorInterfaceVersion, lMinorVersion);
+		long long lPatchVersion = GetModulePatchVersion(m->moduleName);
+		fprintf(src, "\t\tthis.transport.registerModuleVersion(\"%s\", %i, %lld);\n", m->moduleName, gMajorInterfaceVersion, lPatchVersion);
 	}
 
 	fprintf(src, "\t}\n");

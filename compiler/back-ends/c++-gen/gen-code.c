@@ -4603,8 +4603,8 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 
 	if (gMajorInterfaceVersion >= 0)
 	{
-		long long lMinorVersion = GetModuleMinorVersion(m->moduleName);
-		fprintf(src, "\tSnaccModuleVersions::addModuleVersion(\"%s\", %i, %lld);\n", m->moduleName, gMajorInterfaceVersion, lMinorVersion);
+		long long lPatchVersion = GetModulePatchVersion(m->moduleName);
+		fprintf(src, "\tSnaccModuleVersions::addModuleVersion(\"%s\", %i, %lld);\n", m->moduleName, gMajorInterfaceVersion, lPatchVersion);
 	}
 
 	fprintf(src, "}\n\n");
@@ -4756,7 +4756,7 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 
 	if (gMajorInterfaceVersion >= 0)
 	{
-		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
+		long long lMinorModuleVersion = GetModulePatchVersion(m->moduleName);
 		char szModuleNameUpper[513] = {0};
 		strcpy_s(szModuleNameUpper, 512, m->moduleName);
 		Str2UCase(szModuleNameUpper, 512);
@@ -4766,8 +4766,9 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 		fprintf(hdr, "#define %s_MODULE_LASTCHANGE = \"%s\"\n", szModuleNameUpper, szISODate);
 		free(szISODate);
 		fprintf(hdr, "#define %s_MODULE_MAJOR_VERSION = %i\n", szModuleNameUpper, gMajorInterfaceVersion);
+		fprintf(hdr, "#define %s_MODULE_MINOR_VERSION = 0\n", szModuleNameUpper);
 		char* szNumericDate = ConvertUnixTimeToNumericDate(lMinorModuleVersion);
-		fprintf(hdr, "#define %s_MODULE_MINOR_VERSION = %s\n", szModuleNameUpper, szNumericDate);
+		fprintf(hdr, "#define %s_MODULE_PATCH_VERSION = %s\n", szModuleNameUpper, szNumericDate);
 		fprintf(hdr, "#define %s_MODULE_VERSION = \"%i.0.%s\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, szNumericDate);
 		free(szNumericDate);
 	}

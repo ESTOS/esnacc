@@ -1234,18 +1234,19 @@ void PrintSwiftCodeOne(FILE* src, ModuleList* mods, Module* m, long longJmpVal, 
 
 	if (gMajorInterfaceVersion >= 0)
 	{
-		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
+		long long lModulePatchVersion = GetModulePatchVersion(m->moduleName);
 		char szModuleName[513] = {0};
 		strcpy_s(szModuleName, 512, m->moduleName);
 		Dash2Underscore(szModuleName, 512);
 		fprintf(src, "struct %s_Version\n", szModuleName);
 		fprintf(src, "{\n");
-		char* szISODate = ConvertUnixTimeToISO(lMinorModuleVersion);
+		char* szISODate = ConvertUnixTimeToISO(lModulePatchVersion);
 		fprintf(src, "    let lastChange = Date(iso8601String:\"%s\") ?? .distantPast\n", szISODate);
 		free(szISODate);
 		fprintf(src, "    let majorVersion = %i\n", gMajorInterfaceVersion);
-		char* szNumericDate = ConvertUnixTimeToNumericDate(lMinorModuleVersion);
-		fprintf(src, "    let minorVersion = %s\n", szNumericDate);
+		fprintf(src, "    let minorVersion = 0\n");
+		char* szNumericDate = ConvertUnixTimeToNumericDate(lModulePatchVersion);
+		fprintf(src, "    let patchVersion = %s\n", szNumericDate);
 		fprintf(src, "    let version = \"%i.0.%s\"\n", gMajorInterfaceVersion, szNumericDate);
 		free(szNumericDate);
 		fprintf(src, "}\n\n");
@@ -1435,16 +1436,17 @@ void PrintSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 			perror("fopen");
 		else
 		{
-			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
+			long long lMaxPatchVersion = GetMaxModulePatchVersion();
 			fprintf(versionFile, "import Foundation\n\n");
 			fprintf(versionFile, "struct Asn1InterfaceVersion\n");
 			fprintf(versionFile, "{\n");
-			char* szISODate = ConvertUnixTimeToISO(lMaxMinorVersion);
+			char* szISODate = ConvertUnixTimeToISO(lMaxPatchVersion);
 			fprintf(versionFile, "    let lastChange = Date(iso8601String:\"%s\") ?? .distantPast\n", szISODate);
 			free(szISODate);
 			fprintf(versionFile, "    let majorVersion = %i\n", gMajorInterfaceVersion);
-			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxMinorVersion);
-			fprintf(versionFile, "    let minorVersion = %s\n", szNumericDate);
+			fprintf(versionFile, "    let minorVersion = 0\n");
+			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxPatchVersion);
+			fprintf(versionFile, "    let patchVersion = %s\n", szNumericDate);
 			fprintf(versionFile, "    let version = \"%i.0.%s\"\n", gMajorInterfaceVersion, szNumericDate);
 			free(szNumericDate);
 			fprintf(versionFile, "}\n");

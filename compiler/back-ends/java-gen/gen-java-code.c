@@ -759,15 +759,16 @@ void PrintJAVACode(ModuleList* allMods)
 		FILE* src = getJavaFilePointer(szFileName);
 		if (src)
 		{
-			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
+			long long lMaxPatchVersion = GetMaxModulePatchVersion();
 			fprintf(src, "public class Asn1InterfaceVersion {\n");
 
-			char* szISODate = ConvertUnixTimeToISO(lMaxMinorVersion);
+			char* szISODate = ConvertUnixTimeToISO(lMaxPatchVersion);
 			fprintf(src, "\tpublic static final String lastChange = \"%s\";\n", szISODate);
 			free(szISODate);
 			fprintf(src, "\tpublic static final int majorVersion = %i;\n", gMajorInterfaceVersion);
-			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxMinorVersion);
-			fprintf(src, "\tpublic static final long minorVersion = %s;\n", szNumericDate);
+			fprintf(src, "\tpublic static final int minorVersion = 0;\n");
+			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxPatchVersion);
+			fprintf(src, "\tpublic static final long patchVersion = %s;\n", szNumericDate);
 			fprintf(src, "\tpublic static final String version = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
 			free(szNumericDate);
 			fprintf(src, "}\n");
@@ -814,15 +815,16 @@ void PrintJAVACodeOneModule(ModuleList* mods, Module* m)
 		FILE* src = getJavaFilePointer(m->baseFilePath);
 		if (src)
 		{
-			long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
+			long long lModulePatchVersion = GetModulePatchVersion(m->moduleName);
 			fprintf(src, "public class %s {\n", m->moduleName);
 
-			char* szISODate = ConvertUnixTimeToISO(lMinorModuleVersion);
+			char* szISODate = ConvertUnixTimeToISO(lModulePatchVersion);
 			fprintf(src, "\tpublic static final String lastChange = \"%s\";\n", szISODate);
 			free(szISODate);
 			fprintf(src, "\tpublic static final int majorVersion = %i;\n", gMajorInterfaceVersion);
-			char* szNumericDate = ConvertUnixTimeToNumericDate(lMinorModuleVersion);
-			fprintf(src, "\tpublic static final long minorVersion = %s;\n", szNumericDate);
+			fprintf(src, "\tpublic static final int minorVersion = 0;\n");
+			char* szNumericDate = ConvertUnixTimeToNumericDate(lModulePatchVersion);
+			fprintf(src, "\tpublic static final long patchVersion = %s;\n", szNumericDate);
 			fprintf(src, "\tpublic static final String version = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
 			free(szNumericDate);
 			fprintf(src, "}\n");

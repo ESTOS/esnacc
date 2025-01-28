@@ -7,20 +7,11 @@ SnaccModuleVersion::SnaccModuleVersion()
 {
 }
 
-SnaccModuleVersion::SnaccModuleVersion(const char* szModuleName, const int iMajorVersion, long long lMinorVersion)
+SnaccModuleVersion::SnaccModuleVersion(const char* szModuleName, const int iMajorVersion, long long llPatchVersion)
 {
 	m_strModuleName = szModuleName;
 	m_iMajorVersion = iMajorVersion;
-	m_i64MinorVersion = lMinorVersion;
-
-	char szBuffer[100] = {0};
-	sprintf_s(szBuffer, 100, "%i.%lld.0", iMajorVersion, lMinorVersion);
-	m_strFullVersion = szBuffer;
-}
-
-const char* SnaccModuleVersion::GetVersion() const
-{
-	return m_strFullVersion.c_str();
+	m_llPatchVersion = llPatchVersion;
 }
 
 int SnaccModuleVersion::GetMajorVersion() const
@@ -28,17 +19,17 @@ int SnaccModuleVersion::GetMajorVersion() const
 	return m_iMajorVersion;
 }
 
-long long SnaccModuleVersion::GetMinorVersion() const
+long long SnaccModuleVersion::GetPatchVersion() const
 {
-	return m_i64MinorVersion;
+	return m_llPatchVersion;
 }
 
-bool SnaccModuleVersions::addModuleVersion(const char* szModuleName, int iMajorVersion, long long i64MinorVersion)
+bool SnaccModuleVersions::addModuleVersion(const char* szModuleName, int iMajorVersion, long long llPatchVersion)
 {
 	if (m_ModuleVersions.find(szModuleName) != m_ModuleVersions.end())
 		return false;
 
-	m_ModuleVersions[szModuleName] = SnaccModuleVersion(szModuleName, iMajorVersion, iMajorVersion);
+	m_ModuleVersions[szModuleName] = SnaccModuleVersion(szModuleName, iMajorVersion, llPatchVersion);
 	return true;
 }
 
@@ -56,19 +47,19 @@ bool SnaccModuleVersions::getModuleVersion(const char* szModuleName, SnaccModule
 bool SnaccModuleVersions::getHighestModuleVersion(SnaccModuleVersion& version)
 {
 	int iMajor = -1;
-	long long lMinor = -1;
+	long long llPatch = -1;
 	for (const auto& module : m_ModuleVersions)
 	{
 		if (module.second.GetMajorVersion() > iMajor)
 		{
 			iMajor = module.second.GetMajorVersion();
-			lMinor = module.second.GetMinorVersion();
+			llPatch = module.second.GetPatchVersion();
 			version = module.second;
 		}
-		else if (module.second.GetMajorVersion() == iMajor && module.second.GetMinorVersion() > lMinor)
+		else if (module.second.GetMajorVersion() == iMajor && module.second.GetPatchVersion() > llPatch)
 		{
 			iMajor = module.second.GetMajorVersion();
-			lMinor = module.second.GetMinorVersion();
+			llPatch = module.second.GetPatchVersion();
 			version = module.second;
 		}
 	}
