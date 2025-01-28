@@ -1222,7 +1222,7 @@ void EModuleComment::setModuleName(const char* szModuleName)
 	m_strModuleName = szModuleName;
 }
 
-long long EModuleComment::getModuleMinorVersion()
+long long EModuleComment::GetModulePatchVersion()
 {
 	if (m_i64ModuleVersion == -1)
 	{

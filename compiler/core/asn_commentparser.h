@@ -101,7 +101,7 @@ public:
 	void setModuleName(const char* szModuleName);
 
 	// Retrieve the module Version as number (the highest @added found in the corresponding asn1 file, returns 0 if nothing was found)
-	long long getModuleMinorVersion();
+	long long GetModulePatchVersion();
 
 	// These elements shall be filtered when logging (currently only in the typescript rose stubs)
 	// The elements are added through @logfilter in the beginning of the file ; delimited

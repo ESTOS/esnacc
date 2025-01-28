@@ -360,7 +360,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 	int genCxxCode_EnumClasses = FALSE;
 	int genIDLCode = FALSE;
 	int genJAVACode = FALSE;   // JAVA
-	int genKotlinCode = FALSE;   // Kotlin
+	int genKotlinCode = FALSE; // Kotlin
 	int genDelphiCode = FALSE; // Delphi
 	int genCSCode = FALSE;	   // c#
 	int genSwiftCode = FALSE;
@@ -1593,7 +1593,7 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 			perror("fopen");
 		else
 		{
-			long long lMaxMinorVersion = GetMaxModuleMinorVersion();
+			long long lMaxPatchVersion = GetMaxModulePatchVersion();
 			write_snacc_header(versionFile, "// ");
 			fprintf(versionFile, "\n");
 			fprintf(versionFile, "// clang-format off\n\n");
@@ -1606,12 +1606,13 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 
 			fprintf(versionFile, "struct Asn1InterfaceVersion\n");
 			fprintf(versionFile, "{\n");
-			char* szISODate = ConvertUnixTimeToISO(lMaxMinorVersion);
+			char* szISODate = ConvertUnixTimeToISO(lMaxPatchVersion);
 			fprintf(versionFile, "\tstatic constexpr const char* lastChange = \"%s\";\n", szISODate);
 			free(szISODate);
 			fprintf(versionFile, "\tstatic constexpr int majorVersion = %i;\n", gMajorInterfaceVersion);
-			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxMinorVersion);
-			fprintf(versionFile, "\tstatic constexpr long long minorVersion = %s;\n", szNumericDate);
+			fprintf(versionFile, "\tstatic constexpr int minorVersion = 0;\n");
+			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxPatchVersion);
+			fprintf(versionFile, "\tstatic constexpr long long patchVersion = %s;\n", szNumericDate);
 			fprintf(versionFile, "\tstatic constexpr const char* version = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
 			free(szNumericDate);
 			fprintf(versionFile, "};\n\n");

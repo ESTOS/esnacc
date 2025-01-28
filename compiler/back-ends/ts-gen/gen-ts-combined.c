@@ -60,7 +60,7 @@ void PrintTSRootTypes(FILE* src, Module* mod, const char* szSuffix)
 
 	if (gMajorInterfaceVersion >= 0)
 	{
-		long long lMinorModuleVersion = GetModuleMinorVersion(mod->moduleName);
+		long long lMinorModuleVersion = GetModulePatchVersion(mod->moduleName);
 		char* szISODate = ConvertUnixTimeToISO(lMinorModuleVersion);
 		fprintf(src, "export const MODULE_LASTCHANGE = \"%s\";\n", szISODate);
 		free(szISODate);

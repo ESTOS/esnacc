@@ -6,7 +6,7 @@
 extern "C"
 {
 	// Once evaluated this int64 contains the highest minor module version of all loaded modules
-	long long glMaxMinorModuleVersion = -1;
+	long long glMaxModulePatchVersion = -1;
 	EAsnCommentParser parser;
 
 	int ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type)
@@ -117,30 +117,30 @@ extern "C"
 		return 0;
 	}
 
-	long long GetModuleMinorVersion(const char* szModuleName)
+	long long GetModulePatchVersion(const char* szModuleName)
 	{
 		auto it = gComments.mapModules.find(szModuleName);
 		if (it == gComments.mapModules.end())
 			return -1;
 
-		return it->second.getModuleMinorVersion();
+		return it->second.GetModulePatchVersion();
 	}
 
-	long long GetMaxModuleMinorVersion()
+	long long GetMaxModulePatchVersion()
 	{
-		if (glMaxMinorModuleVersion == -1)
+		if (glMaxModulePatchVersion == -1)
 		{
-			long long lHighestModuleMinorVersion = 0;
+			long long lHighestModulePatchVersion = 0;
 			for (auto mod : gComments.mapModules)
 			{
-				long long lModuleMinorVersion = mod.second.getModuleMinorVersion();
-				if (lModuleMinorVersion > lHighestModuleMinorVersion)
-					lHighestModuleMinorVersion = lModuleMinorVersion;
+				long long lModulePatchVersion = mod.second.GetModulePatchVersion();
+				if (lModulePatchVersion > lHighestModulePatchVersion)
+					lHighestModulePatchVersion = lModulePatchVersion;
 			}
-			glMaxMinorModuleVersion = lHighestModuleMinorVersion;
+			glMaxModulePatchVersion = lHighestModulePatchVersion;
 		}
 
-		return glMaxMinorModuleVersion;
+		return glMaxModulePatchVersion;
 	}
 
 	int GetOperationComment_UTF8(const char* szModuleName, const char* szOpName, asnoperationcomment* pcomment)

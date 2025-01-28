@@ -716,13 +716,14 @@ void PrintJsonDocModule(FILE* src, ModuleList* mods, Module* m)
 	if (gMajorInterfaceVersion >= 0)
 	{
 		fprintf(src, ",\n\t\t\"version\": {");
-		long long lMinorModuleVersion = GetModuleMinorVersion(m->moduleName);
-		char* szISODate = ConvertUnixTimeToISO(lMinorModuleVersion);
+		long long lModulePatchVersion = GetModulePatchVersion(m->moduleName);
+		char* szISODate = ConvertUnixTimeToISO(lModulePatchVersion);
 		fprintf(src, "\n\t\t\t\"lastChange\": \"%s\"", szISODate);
 		free(szISODate);
 		fprintf(src, ",\n\t\t\t\"majorVersion\": %i", gMajorInterfaceVersion);
-		char* szNumericDate = ConvertUnixTimeToNumericDate(lMinorModuleVersion);
-		fprintf(src, ",\n\t\t\t\"minorVersion\": %s", szNumericDate);
+		fprintf(src, ",\n\t\t\t\"minorVersion\": 0");
+		char* szNumericDate = ConvertUnixTimeToNumericDate(lModulePatchVersion);
+		fprintf(src, ",\n\t\t\t\"patchVersion\": %s", szNumericDate);
 		fprintf(src, ",\n\t\t\t\"version\": \"%i.0.%s\"", gMajorInterfaceVersion, szNumericDate);
 		free(szNumericDate);
 		fprintf(src, "\n\t\t}");
@@ -854,7 +855,7 @@ void PrintJsonDocCode(ModuleList* allMods)
 		}
 		else
 		{
-			const long long lMaxModuleVersion = GetMaxModuleMinorVersion();
+			const long long lMaxModuleVersion = GetMaxModulePatchVersion();
 			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxModuleVersion);
 			fprintf(src, "%i.0.%s", gMajorInterfaceVersion, szNumericDate);
 			free(szNumericDate);
