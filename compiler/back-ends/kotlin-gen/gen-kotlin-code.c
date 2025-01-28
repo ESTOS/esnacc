@@ -336,16 +336,23 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "package com.estos.asn\n\n");
 	if (strcmp("AsnRequestError", name) == 0)
 		fprintf(src, "import com.estos.asnconnector.util.kserialize.AsnRequestErrorSerializer\n");
+	if (strcmp("AsnOptionalParam", name) == 0)
+		fprintf(src, "import com.estos.asnconnector.util.kserialize.AsnOptionalParamSerializer\n");
 	fprintf(src, "import kotlinx.serialization.Contextual\n");
 	fprintf(src, "import kotlinx.serialization.Serializable\n");
 	fprintf(src, "import javax.annotation.Generated\n");
 	fprintf(src, "\n");
 
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
-	if (strcmp("AsnRequestError", name) == 0)
+	if (strcmp("AsnRequestError", name) == 0) {
 		fprintf(src, "@Serializable(with = AsnRequestErrorSerializer::class)\n");
-	else
+	}
+	else if (strcmp("AsnOptionalParam", name) == 0) {
+		fprintf(src, "@Serializable(with = AsnOptionalParamSerializer::class)\n");
+	}
+	else {
 		fprintf(src, "@Serializable\n");
+	}
 	fprintf(src, "open class %s : java.io.Serializable {\n", name);
 	handleDeprecatedSequenceKotlin(src, mod, td);
 	FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
@@ -644,8 +651,13 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 	fprintf(src, "package com.estos.asn\n\n");
 	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, false))
 	{
+		fprintf(src, "import kotlinx.serialization.InternalSerializationApi\n");
 		fprintf(src, "import kotlinx.serialization.Polymorphic\n");
 		fprintf(src, "import kotlinx.serialization.Serializable\n");
+		fprintf(src, "import kotlinx.serialization.json.JsonObject\n");
+		fprintf(src, "import kotlinx.serialization.json.JsonPrimitive\n");
+		fprintf(src, "import kotlinx.serialization.json.jsonObject\n");
+		fprintf(src, "import kotlinx.serialization.serializer\n");
 		fprintf(src, "import kotlin.reflect.KClass\n\n");
 		printOperationComment(src, mod, vd->definedName, COMMENTSTYLE_JAVA);
 		fprintf(src, "@Serializable\n");
@@ -708,6 +720,23 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 			fprintf(src, "  override val asnErrorType: KClass<SerialVoid>\n");
 			fprintf(src, "    get() = SerialVoid::class\n\n");
 		}
+		
+		fprintf(src, "  @OptIn(InternalSerializationApi::class)\n");
+		fprintf(src, "  override fun getArgumentJson(): JsonObject {\n");
+		if (pszArgument) {
+			fprintf(src, "    if (asnArgument != null) {\n");
+			fprintf(src, "      val localArg: %s = asnArgument!!\n", pszArgument);
+			fprintf(src, "      val element = kJson.encodeToJsonElement<%s>(%s.serializer(), localArg)\n", pszArgument, pszArgument);
+			fprintf(src, "      return JsonObject(element.jsonObject.toMutableMap().apply { put(\"_type\", JsonPrimitive(\"%s\")) })\n", pszArgument);
+			fprintf(src, "    } else {\n");
+			fprintf(src, "      return JsonObject(mapOf())\n");
+			fprintf(src, "    }\n");
+			fprintf(src, "  }\n");
+		}
+		else {
+			fprintf(src, "    return JsonObject(mapOf())\n");
+			fprintf(src, "  }\n");
+		}
 		fprintf(src, "}\n");
 	}
 
@@ -722,10 +751,15 @@ void PrintAbstractKotlinOperation()
 	fprintf(src, "package com.estos.asn\n\n");
 	fprintf(src, "import kotlinx.serialization.SerialName\n");
 	fprintf(src, "import kotlinx.serialization.Serializable\n");
+	fprintf(src, "import kotlinx.serialization.Transient\n");
+	fprintf(src, "import kotlinx.serialization.json.Json\n");
+	fprintf(src, "import kotlinx.serialization.json.JsonObject\n");
 	fprintf(src, "import kotlin.reflect.KClass\n");
 	fprintf(src, "import java.util.Locale\n\n");
 	fprintf(src, "@Serializable\n");
 	fprintf(src, "abstract class AbstractAsnOperation<ARGUMENT_TYPE, RESULT_TYPE, ERROR_TYPE> {\n\n");
+	fprintf(src, "  @Transient\n");
+	fprintf(src, "  protected val kJson = Json { explicitNulls = false; encodeDefaults = true }\n\n");
 	fprintf(src, "  @SerialName(\"argument\")\n  var asnArgument: ARGUMENT_TYPE? = null\n\n");
 	fprintf(src, "  @SerialName(\"result\")\n  var asnResult: RESULT_TYPE? = null\n\n");
 	fprintf(src, "  @SerialName(\"error\")\n  var asnError: ERROR_TYPE? = null\n\n");
@@ -749,6 +783,7 @@ void PrintAbstractKotlinOperation()
 	fprintf(src, "  fun setError(arg: Any) {\n");
 	fprintf(src, "    asnError = arg as ERROR_TYPE\n");
 	fprintf(src, "  }\n\n");
+	fprintf(src, "  abstract fun getArgumentJson(): JsonObject \n\n");
 
 	fprintf(src, "}\n");
 	fclose(src);
