@@ -65,8 +65,9 @@ void PrintTSRootTypes(FILE* src, Module* mod, const char* szSuffix)
 		fprintf(src, "export const MODULE_LASTCHANGE = \"%s\";\n", szISODate);
 		free(szISODate);
 		fprintf(src, "export const MODULE_MAJOR_VERSION = %i;\n", gMajorInterfaceVersion);
+		fprintf(src, "export const MODULE_MINOR_VERSION = 0;\n");
 		char* szNumericDate = ConvertUnixTimeToNumericDate(lMinorModuleVersion);
-		fprintf(src, "export const MODULE_MINOR_VERSION = %s;\n", szNumericDate);
+		fprintf(src, "export const MODULE_PATCH_VERSION = %s;\n", szNumericDate);
 		fprintf(src, "export const MODULE_VERSION = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
 		free(szNumericDate);
 	}
