@@ -666,17 +666,17 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 		if (pszArgument)
 			fprintf(src, "%s?, ", pszArgument);
 		else
-			fprintf(src, "SerialVoid?, ");
+			fprintf(src, "Unit, ");
 
 		if (pszResult)
 			fprintf(src, "%s?, ", pszResult);
 		else
-			fprintf(src, "SerialVoid?, ");
+			fprintf(src, "Unit, ");
 
 		if (pszError)
 			fprintf(src, "%s?>()", pszError);
 		else
-			fprintf(src, "SerialVoid?>()");
+			fprintf(src, "Unit>()");
 		fprintf(src, " {\n");
 
 		if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
@@ -697,8 +697,8 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 		}
 		else
 		{
-			fprintf(src, "  override val asnArgumentType: KClass<SerialVoid>\n");
-			fprintf(src, "    get() = SerialVoid::class\n\n");
+			fprintf(src, "  override val asnArgumentType: KClass<Unit>\n");
+			fprintf(src, "    get() = Unit::class\n\n");
 		}
 		if (pszResult)
 		{
@@ -707,8 +707,8 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 		}
 		else
 		{
-			fprintf(src, "  override val asnResultType: KClass<SerialVoid>\n");
-			fprintf(src, "    get() = SerialVoid::class\n\n");
+			fprintf(src, "  override val asnResultType: KClass<Unit>\n");
+			fprintf(src, "    get() = Unit::class\n\n");
 		}
 		if (pszError)
 		{
@@ -717,10 +717,10 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 		}
 		else
 		{
-			fprintf(src, "  override val asnErrorType: KClass<SerialVoid>\n");
-			fprintf(src, "    get() = SerialVoid::class\n\n");
+			fprintf(src, "  override val asnErrorType: KClass<Unit>\n");
+			fprintf(src, "    get() = Unit::class\n\n");
 		}
-		
+
 		fprintf(src, "  @OptIn(InternalSerializationApi::class)\n");
 		fprintf(src, "  override fun getArgumentJson(): JsonObject {\n");
 		if (pszArgument) {
@@ -797,17 +797,6 @@ void PrintSimpleKotlinType()
 	fprintf(src, "import kotlinx.serialization.Serializable\n\n");
 	fprintf(src, "@Serializable\n");
 	fprintf(src, "abstract class SimpleJavaType<T>(val value: T) : java.io.Serializable \n\n");
-	fclose(src);
-}
-
-void PrintSerialVoid()
-{
-	FILE* src = getKotlinFilePointer("SerialVoid");
-	PRINTDEBUGGING
-	fprintf(src, "package com.estos.asn\n\n");
-	fprintf(src, "import kotlinx.serialization.Serializable\n\n");
-	fprintf(src, "@Serializable\n");
-	fprintf(src, "class SerialVoid \n\n");
 	fclose(src);
 }
 
@@ -900,7 +889,6 @@ void PrintKotlinCodeOneModule(ModuleList* mods, Module* m)
 	TypeDef* td;
 	PrintAbstractKotlinOperation();
 	PrintSimpleKotlinType();
-	PrintSerialVoid();
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
