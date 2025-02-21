@@ -548,7 +548,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 				else {
 					// In case the client did not provide an operationName, look it up
 					// This only works if we have a registered handler for the operation
-					const handler = this.getHandler(invokeContext.operationID);
+					const handler = this.getHandlerById(invokeContext.operationID);
 					if (handler)
 						invokeContext.operationName = handler.operationName;
 				}
@@ -914,8 +914,18 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param operationID - the operationID for which we want to find a handler
 	 * @returns - a handler if we found one or undefined
 	 */
-	protected getHandler(operationID: number): Handler | undefined {
+	protected getHandlerById(operationID: number): Handler | undefined {
 		return this.handlersByID.get(operationID);
+	}
+
+	/**
+	 * Searches for a handler in the registered operations (see registerOperation)
+	 *
+	 * @param operationName - the operationName for which we want to find a handler
+	 * @returns - a handler if we found one or undefined
+	 */
+	protected getHandlerByName(operationName: string): Handler | undefined {
+		return this.handlersByName.get(operationName);
 	}
 
 	/**
@@ -929,7 +939,12 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 */
 	protected async onROSEInvoke(invoke: ROSEInvoke, invokeContext: IReceiveInvokeContext): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
 		try {
-			const handler = this.getHandler(invoke.operationID);
+			let handler = this.getHandlerById(invoke.operationID);
+			if (handler === undefined && invoke.operationName) {
+				handler = this.getHandlerByName(invoke.operationName);
+				if (handler)
+					invoke.operationID = handler.operationID;
+			}
 			if (handler === undefined)
 				return createInvokeReject(invoke, InvokeProblemenum.unrecognisedOperation, `There is no registered handler for operation ${invoke.operationName} (${invoke.operationID})`);
 			else
@@ -1060,7 +1075,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @returns - the stack that allows to see where a call has come from
 	 */
 	private static getCallStack(back = 1): IASN1CallStackEntry[] {
-		const result: IASN1CallStackEntry [] = [];
+		const result: IASN1CallStackEntry[] = [];
 		const stack = new Error().stack;
 		if (stack) {
 			const elements = stack.split("\n");
