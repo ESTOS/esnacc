@@ -921,7 +921,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	/**
 	 * Searches for a handler in the registered operations (see registerOperation)
 	 *
-	 * @param operationName - the operationID for which we want to find a handler
+	 * @param operationName - the operationName for which we want to find a handler
 	 * @returns - a handler if we found one or undefined
 	 */
 	protected getHandlerByName(operationName: string): Handler | undefined {
