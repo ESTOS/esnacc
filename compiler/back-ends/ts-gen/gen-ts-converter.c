@@ -32,7 +32,7 @@ void PrintTSConverterComments(FILE* src, Module* m)
 	fprintf(src, " * \"%s\" ASN.1 stubs.\n", m->modId->name);
 	write_snacc_header(src, " * ");
 	fprintf(src, " */\n\n");
-	fprintf(src, "// prettier-ignore\n");
+	fprintf(src, DPRINT_DISABLE);
 	fprintf(src, ESLINT_DISABLE);
 }
 

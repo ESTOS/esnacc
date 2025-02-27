@@ -918,7 +918,7 @@ void PrintTSComments(FILE* src, Module* m)
 	write_snacc_header(src, " * ");
 	fprintf(src, " */\n\n");
 
-	fprintf(src, "// prettier-ignore\n");
+	fprintf(src, DPRINT_DISABLE);
 	fprintf(src, ESLINT_DISABLE);
 
 	printModuleComment(src, RemovePath(m->baseFilePath), COMMENTSTYLE_TYPESCRIPT);
@@ -1001,8 +1001,9 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 			fprintf(versionFile, "/*\n");
 			write_snacc_header(versionFile, " * ");
 			fprintf(versionFile, "*/\n\n");
-			fprintf(versionFile, "// prettier-ignore\n");
-			fprintf(versionFile, "/* eslint-disable */\n\n");
+			fprintf(versionFile, DPRINT_DISABLE);
+			fprintf(versionFile, ESLINT_DISABLE);
+			fprintf(versionFile, "\n");
 			long long lMaxPatchVersion = GetMaxModulePatchVersion();
 			fprintf(versionFile, "export class Asn1InterfaceVersion {\n");
 			char* szISODate = ConvertUnixTimeToISO(lMaxPatchVersion);
@@ -1031,6 +1032,9 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 		fprintf(typesFile, " *\n");
 		write_snacc_header(typesFile, " * ");
 		fprintf(typesFile, " */\n\n");
+		fprintf(typesFile, DPRINT_DISABLE);
+		fprintf(typesFile, ESLINT_DISABLE);
+		fprintf(typesFile, "\n");
 
 		char* strings[1000];
 		memset(strings, 0x00, sizeof(strings));
@@ -1088,6 +1092,11 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 		fprintf(methodsFile, " *\n");
 		write_snacc_header(methodsFile, " * ");
 		fprintf(methodsFile, " */\n\n");
+
+		fprintf(methodsFile, DPRINT_DISABLE);
+		fprintf(methodsFile, ESLINT_DISABLE);
+		fprintf(methodsFile, "\n");
+
 		fprintf(methodsFile, "export interface IROSEMethod {\n");
 		fprintf(methodsFile, "\tname: string;\n");
 		fprintf(methodsFile, "\tid: number;\n");
