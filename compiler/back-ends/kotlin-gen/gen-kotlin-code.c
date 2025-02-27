@@ -336,8 +336,6 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "package com.estos.asn\n\n");
 	if (strcmp("AsnRequestError", name) == 0)
 		fprintf(src, "import com.estos.asnconnector.util.kserialize.AsnRequestErrorSerializer\n");
-	if (strcmp("AsnOptionalParam", name) == 0)
-		fprintf(src, "import com.estos.asnconnector.util.kserialize.AsnOptionalParamSerializer\n");
 	fprintf(src, "import kotlinx.serialization.Contextual\n");
 	fprintf(src, "import kotlinx.serialization.Serializable\n");
 	fprintf(src, "import javax.annotation.Generated\n");
@@ -346,9 +344,6 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
 	if (strcmp("AsnRequestError", name) == 0) {
 		fprintf(src, "@Serializable(with = AsnRequestErrorSerializer::class)\n");
-	}
-	else if (strcmp("AsnOptionalParam", name) == 0) {
-		fprintf(src, "@Serializable(with = AsnOptionalParamSerializer::class)\n");
 	}
 	else {
 		fprintf(src, "@Serializable\n");
