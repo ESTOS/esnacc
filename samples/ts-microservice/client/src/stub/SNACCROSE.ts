@@ -8,7 +8,7 @@
  * NOTE: This is a machine generated file - editing not recommended
  */
 
-// prettier-ignore
+// dprint-ignore-file
 /* eslint-disable */
 // [PrintTSImports]
 import * as asn1ts from "@estos/asn1ts";

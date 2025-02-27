@@ -2,7 +2,7 @@
 // Do NOT edit or modify this code as it is machine generated
 // and will be overwritten with every code generation of the esnacc.exe
 
-// prettier-ignore
+// dprint-ignore-file
 /* eslint-disable */
 
 import { IReceiveInvokeContextParams, ISendInvokeContextParams } from "./TSInvokeContext";
