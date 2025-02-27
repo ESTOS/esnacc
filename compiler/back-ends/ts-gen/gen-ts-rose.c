@@ -30,7 +30,7 @@ void PrintTSROSEHeader(FILE* src, Module* m, const bool bInterface)
 
 	write_snacc_header(src, " * ");
 	fprintf(src, " */\n\n");
-	fprintf(src, "// prettier-ignore\n");
+	fprintf(src, DPRINT_DISABLE);
 	fprintf(src, ESLINT_DISABLE);
 }
 

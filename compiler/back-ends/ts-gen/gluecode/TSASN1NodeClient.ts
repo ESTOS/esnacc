@@ -2,7 +2,7 @@
 // This file is embedded as resource file in the esnacc.exe ASN1 Compiler
 // Do not directly edit or modify the code as it is machine generated and will be overwritten with every compilation
 
-// prettier-ignore
+// dprint-ignore-file
 /* eslint-disable */
 
 import { TSASN1Client } from "./TSASN1Client";
