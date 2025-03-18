@@ -53,9 +53,12 @@ bool VariantTimeToSystemTimeWithMilliseconds(const DATE& dVariantTime, SYSTEMTIM
 
 std::string DateToISO8601(DATE dt)
 {
+	// This is absolutly wierd to discard values based on a random chosen value.
+	// We convert everything into a matching string no matter which value it has!
+	//
 	// we discard such old data immediately
-	if (dt < 10)
-		return "";
+	// if (dt < 10)
+	//	return "";
 
 	// 2012-04-23T18:25:43.511Z
 	// 2012-04-23T18:25:43.500Z		// Zeros at the end are technically superfluous, but make them easier to read.
