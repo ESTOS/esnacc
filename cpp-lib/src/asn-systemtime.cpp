@@ -60,6 +60,14 @@ std::string DateToISO8601(DATE dt)
 	// if (dt < 10)
 	//	return "";
 
+	// We need to discard 0 as this is, within the outer code, an empty date and needs to get converted to an empty string
+	// Otherwise this gets converted to 1899-12-30T00:00:01Z
+	// This will get removed as soon as all date values in the asn1 files have been set to optional which are acutally optionals
+	// Technically this is SUPER ugly as it breaks basically the concept of asn1. If i define a date that values should be filled with a date and not with an empty string!
+	if (dt == 0)
+		return "";
+	
+
 	// 2012-04-23T18:25:43.511Z
 	// 2012-04-23T18:25:43.500Z		// Zeros at the end are technically superfluous, but make them easier to read.
 	char szDateTime[40] = {0};
