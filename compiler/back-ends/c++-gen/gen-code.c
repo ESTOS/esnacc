@@ -160,6 +160,7 @@ void PrintMemberAttributes(FILE* hdr, FILE* src, CxxRules* r, TypeDef* td, Modul
 
 		fprintf(hdr, "\tenum %s\n", r->choiceIdEnumName);
 		fprintf(hdr, "\t{\n");
+		fprintf(hdr, "\t\tnotinitialized = -1,\n");
 		FOR_EACH_LIST_ELMT(e, t->basicType->a.choice)
 		{
 			if (IsDeprecatedNoOutputMember(m, td, e->type->cxxTypeRefInfo->fieldName))
@@ -285,12 +286,12 @@ void PrintInit(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 	fprintf(src, "{\n");
 	if (t->basicType->choiceId == BASICTYPE_CHOICE)
 	{
-		fprintf(src, "\t// initialize choice to no choiceId to first choice and set pointer to NULL\n");
+		fprintf(src, "\t// initialize choice to notinitialized and pointer to nullptr\n");
 		NamedType* e = FIRST_LIST_ELMT(t->basicType->a.choice);
 		if (!e)
 			exit(3);
-		fprintf(src, "\tchoiceId = %sCid;\n", e->type->cxxTypeRefInfo->fieldName);
-		fprintf(src, "\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+		fprintf(src, "\tchoiceId = notinitialized;\n");
+		fprintf(src, "\t%s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 	}
 	else if (t->basicType->choiceId == BASICTYPE_SEQUENCE || t->basicType->choiceId == BASICTYPE_SET)
 	{
@@ -406,8 +407,11 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 			fprintf(src, "\t\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
 			if (e->type->cxxTypeRefInfo->isPtr)
 			{
-				fprintf(src, "\t\t\tdelete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "\t\t\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\tif (%s)\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\t{\n");
+				fprintf(src, "\t\t\t\tdelete %s;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\t\t%s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\t}\n");
 			}
 			else if (!e->type->cxxTypeRefInfo->isPtr && ((tmpTypeId == BASICTYPE_CHOICE) || (tmpTypeId == BASICTYPE_SET) || (tmpTypeId == BASICTYPE_SEQUENCE)))
 			{
@@ -415,7 +419,8 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 			}
 			fprintf(src, "\t\t\tbreak;\n");
 		}
-		fprintf(src, "\t\t}\n");
+		fprintf(src, "\t}\n");
+		fprintf(src, "\tchoiceId = notinitialized;\n");
 	}
 	else if (t->basicType->choiceId == BASICTYPE_SEQUENCE)
 	{
