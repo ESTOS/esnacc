@@ -31,7 +31,7 @@ set_target_properties(c-lib PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${OUTPUT
 # - warning levels
 if(MSVC)
 	# -wd4100 - do not complain about unreference parameters
-	target_compile_options(c-lib PRIVATE -W4 -wd4100)
+	target_compile_options(c-lib PRIVATE -W4 -wd4100 -wd5287)
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
 	target_compile_options(c-lib PRIVATE -Wall)
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
