@@ -35,7 +35,7 @@ set_target_properties(cpp-lib PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${OUTP
 # - warning levels
 if(MSVC)
 	# -wd4100 - do not complain about unreference parameters
-	target_compile_options(cpp-lib PRIVATE -W4 -wd4100)
+	target_compile_options(cpp-lib PRIVATE -W4 -wd4100 -wd5287)
 	if(MSVC_STATIC_RUNTIME)
 		target_compile_options(cpp-lib PRIVATE "/MT$<$<CONFIG:Debug>:d>")
 	endif()
