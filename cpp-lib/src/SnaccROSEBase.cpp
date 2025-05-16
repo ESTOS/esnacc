@@ -602,6 +602,22 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, 
 		std::string strError = getPrettyPrinted(error);
 		PrintJSONToLog(false, true, nullptr, strError.c_str(), strError.length());
 	}
+	catch (const std::exception& ex)
+	{
+		SJson::Value error;
+		error["exception"] = ex.what();
+		error["method"] = __FUNCTION__;
+		std::string strError = getPrettyPrinted(error);
+		PrintJSONToLog(false, true, nullptr, strError.c_str(), strError.length());
+	}
+	catch (...)
+	{
+		SJson::Value error;
+		error["exception"] = L"...";
+		error["method"] = __FUNCTION__;
+		std::string strError = getPrettyPrinted(error);
+		PrintJSONToLog(false, true, nullptr, strError.c_str(), strError.length());
+	}
 }
 
 bool SnaccROSEBase::OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowAllInvokes)
@@ -1406,7 +1422,7 @@ long SnaccROSEBase::DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnT
 	{
 		if (pInvokeMessage->invoke->argument->anyBuf)
 		{
-			AsnLen len;
+			AsnLen len = 0;
 			argument->BDec(*pInvokeMessage->invoke->argument->anyBuf, len);
 			// Special to log the *full* ROSE Message in json
 			// While for JSON Transport we can simply decode the full message on BER we need to decode the envelop and the payload
