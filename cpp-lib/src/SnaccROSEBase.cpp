@@ -1317,6 +1317,10 @@ SNACC::TransportEncoding SnaccROSEBase::GetTransportEncoding() const
 
 long SnaccROSEBase::HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* pCtx)
 {
+	// In case of transport errors, we hand that value back as we have no response to parse
+	if (ISROSE_TE(lRoseResult))
+		return lRoseResult;
+
 	SNACC::ROSEError* pError = nullptr;
 	SNACC::ROSEResult* pResult = nullptr;
 	lRoseResult = DecodeResponse(pResponseMsg, &pResult, &pError, pCtx);
