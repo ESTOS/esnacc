@@ -70,6 +70,8 @@ const long ROSE_NOERROR = 0;
 const long ROSE_TE_TRANSPORTFAILED = 0x00000001;
 const long ROSE_TE_SHUTDOWN = 0x00000002;
 const long ROSE_TE_TIMEOUT = 0x00000003;
+// Encode has failed (e.g. JSON encoding and the message was large than possible in the J0000123 header (in case the stub uses a length prefix))
+const long ROSE_TE_ENCODE_FAILED = 0x00000004;
 
 //! Errors for ROSE (invalid answer or decoding failed)
 //! Check for ROSE Error:
