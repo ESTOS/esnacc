@@ -305,8 +305,9 @@ public:
 	long DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) override;
 
 protected:
-	// ASN prefix with length prefix to build the JSON message
-	std::string GetJsonAsnPrefix(std::string& strJson);
+	// Get the length prefix for a given strJson payload
+	// In case the message is longer than 9999999 which is the longest possible length returns ROSE_TE_ENCODE_FAILED
+	long GetJsonLengthPrefix(std::string_view strJson, std::string& strLenghtPrefix) const;
 
 	/*! Die functions and events.
 		The implementation of this functions is contained in the generated code from the

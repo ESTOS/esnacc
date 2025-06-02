@@ -714,12 +714,16 @@ long SnaccROSEBase::SendReject(SNACC::ROSEReject* preject)
 			strData = writer.write(value);
 		}
 
-		LogTransportData(true, m_eTransportEncoding, nullptr, strData.c_str(), strData.length(), &rejectMsg, nullptr);
-
+		std::string strPrefix;
 		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
-			strData = GetJsonAsnPrefix(strData) + strData;
-
-		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), nullptr);
+			lRoseResult = GetJsonLengthPrefix(strData, strPrefix);
+		if (lRoseResult == ROSE_NOERROR)
+		{
+			LogTransportData(true, m_eTransportEncoding, nullptr, strData.c_str(), strData.length(), &rejectMsg, nullptr);
+			if (!strPrefix.empty())
+				strData.insert(0, strPrefix);
+			lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), nullptr);
+		}
 	}
 	else
 	{
@@ -732,8 +736,12 @@ long SnaccROSEBase::SendReject(SNACC::ROSEReject* preject)
 	return lRoseResult;
 }
 
-std::string SnaccROSEBase::GetJsonAsnPrefix(std::string& strJson)
+long SnaccROSEBase::GetJsonLengthPrefix(std::string_view strJson, std::string& strLenghtPrefix) const
 {
+	const auto len = strJson.length();
+	if (len > 9999999)
+		return ROSE_TE_ENCODE_FAILED;
+
 	// Calc prefix z.B. (J1234567)
 	char szPrefix[10] = {0};
 #if _WIN32
@@ -746,7 +754,9 @@ std::string SnaccROSEBase::GetJsonAsnPrefix(std::string& strJson)
 	snprintf(szPrefix, 10, "J%07zd", strJson.length());
 #endif
 
-	return std::string((char*)szPrefix);
+	strLenghtPrefix = std::string(szPrefix);
+
+	return ROSE_NOERROR;
 }
 
 long SnaccROSEBase::SendRejectInvoke(int invokeID, SNACC::InvokeProblem problem, const char* szError /*=NULL*/, const wchar_t* szSessionID /*= 0*/, SNACC::ROSEAuthResult* pAuthHeader /*=0*/)
@@ -833,8 +843,14 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEMessage* pMsg)
 			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::authenticationFailed, "serverBusy", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0, invokeContext.pRejectAuth);
 		else if (lRoseResult == ROSE_REJECT_ARGUMENT_MISSING)
 			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::mistypedArgument, "argumentMissing", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
+		else if (lRoseResult == ROSE_TE_ENCODE_FAILED)
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::resourceLimitation, "responseIsTooBig", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
 		else
-			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::unrecognisedOperation, "otherError", pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
+		{
+			std::stringstream ss;
+			ss << "otherError: 0x" << std::hex << lRoseResult;
+			SendRejectInvoke(pInvoke->invokeID, InvokeProblem::unrecognisedOperation, ss.str().c_str(), pInvoke->sessionID ? pInvoke->sessionID->c_str() : 0);
+		}
 	}
 	if (invokeContext.funcAfterResult)
 		invokeContext.funcAfterResult();
@@ -893,12 +909,17 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 			pInvoke->operationName = UTF8String::CreateNewFromASCII(szOperationName);
 
 		std::string strData = GetEncoded(m_eTransportEncoding, &invokeMsg);
-		LogTransportData(true, m_eTransportEncoding, szOperationName, strData.c_str(), strData.length(), &invokeMsg, nullptr);
 
+		std::string strPrefix;
 		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
-			strData = GetJsonAsnPrefix(strData) + strData;
-
-		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), pCtx);
+			lRoseResult = GetJsonLengthPrefix(strData, strPrefix);
+		if (lRoseResult == ROSE_NOERROR)
+		{
+			LogTransportData(true, m_eTransportEncoding, nullptr, strData.c_str(), strData.length(), &invokeMsg, nullptr);
+			if (!strPrefix.empty())
+				strData.insert(0, strPrefix);
+			lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), nullptr);
+		}
 	}
 	else
 	{
@@ -1146,12 +1167,16 @@ long SnaccROSEBase::SendResult(SNACC::ROSEResult* presult)
 			strData = writer.write(value);
 		}
 
-		LogTransportData(true, m_eTransportEncoding, nullptr, strData.c_str(), strData.length(), &ResultMsg, nullptr);
-
+		std::string strPrefix;
 		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
-			strData = GetJsonAsnPrefix(strData) + strData;
-
-		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), nullptr);
+			lRoseResult = GetJsonLengthPrefix(strData, strPrefix);
+		if (lRoseResult == ROSE_NOERROR)
+		{
+			LogTransportData(true, m_eTransportEncoding, nullptr, strData.c_str(), strData.length(), &ResultMsg, nullptr);
+			if (!strPrefix.empty())
+				strData.insert(0, strPrefix);
+			lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), nullptr);
+		}
 	}
 	else
 	{
@@ -1221,11 +1246,16 @@ long SnaccROSEBase::SendError(SNACC::ROSEError* perror)
 			strData = writer.write(value);
 		}
 
-		LogTransportData(true, m_eTransportEncoding, nullptr, strData.c_str(), strData.length(), &errorMsg, nullptr);
-
+		std::string strPrefix;
 		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
-			strData = GetJsonAsnPrefix(strData) + strData;
-		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), nullptr);
+			lRoseResult = GetJsonLengthPrefix(strData, strPrefix);
+		if (lRoseResult == ROSE_NOERROR)
+		{
+			LogTransportData(true, m_eTransportEncoding, nullptr, strData.c_str(), strData.length(), &errorMsg, nullptr);
+			if (!strPrefix.empty())
+				strData.insert(0, strPrefix);
+			lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), nullptr);
+		}
 	}
 	else
 	{
@@ -1287,6 +1317,10 @@ SNACC::TransportEncoding SnaccROSEBase::GetTransportEncoding() const
 
 long SnaccROSEBase::HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* pCtx)
 {
+	// In case of transport errors, we hand that value back as we have no response to parse
+	if (ISROSE_TE(lRoseResult))
+		return lRoseResult;
+
 	SNACC::ROSEError* pError = nullptr;
 	SNACC::ROSEResult* pResult = nullptr;
 	lRoseResult = DecodeResponse(pResponseMsg, &pResult, &pError, pCtx);
