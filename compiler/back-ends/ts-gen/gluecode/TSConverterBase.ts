@@ -410,7 +410,12 @@ export class TSConverter {
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
 	public static validateParam(data: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "Date" | "Uint8Array" | "object" | "null", errors?: ConverterErrors, context?: IDecodeContext | IEncodeContext, optional?: boolean): boolean {
-		if (!Object.prototype.hasOwnProperty.call(data, propertyName)) {
+		if (data == null) {
+			if (errors) {
+				const location = context?.context ? context.context + "::" : "";
+				errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, location + propertyName, "object missing"));
+			}
+		} else if (!Object.prototype.hasOwnProperty.call(data, propertyName)) {
 			if (errors) {
 				if (!(optional === true)) {
 					const location = context?.context ? context.context + "::" : "";
