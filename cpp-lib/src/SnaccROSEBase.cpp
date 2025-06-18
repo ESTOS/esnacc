@@ -918,7 +918,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 			LogTransportData(true, m_eTransportEncoding, nullptr, strData.c_str(), strData.length(), &invokeMsg, nullptr);
 			if (!strPrefix.empty())
 				strData.insert(0, strPrefix);
-			lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), nullptr);
+			lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), pCtx);
 		}
 	}
 	else
