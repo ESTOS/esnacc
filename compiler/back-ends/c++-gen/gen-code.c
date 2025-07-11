@@ -4321,6 +4321,7 @@ static void PrintCxxListClass(FILE* hdr, FILE* src, TypeDef* td, Type* lst, Modu
 			break;
 	}
 	fprintf(hdr, "{\n");
+	fprintf(hdr, "public:\n");
 
 	PrintClone(hdr, src, td);
 	PrintTypeName(hdr, src, className, 0);
