@@ -1,10 +1,10 @@
 import { Request } from "express";
-import path from "path";
+import path from "node:path";
 import { ILogData } from "uclogger";
-import url from "url";
+import url from "node:url";
 import { v4 as uuidv4 } from "uuid";
 
-import { theConfig } from "../globals";
+import { theConfig } from "../globals.js";
 
 /**
  * Class with different static helper methods
@@ -12,7 +12,6 @@ import { theConfig } from "../globals";
 export class Common {
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
-	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public static getLogData(): ILogData {
@@ -23,7 +22,6 @@ export class Common {
 
 	/**
 	 * Generates a uuidv4
-	 *
 	 * @returns - the uuidv4
 	 */
 	public static generateGUID(): string {
@@ -32,7 +30,6 @@ export class Common {
 
 	/**
 	 * Adds a platform specific directory seperator if the string is not empty and not closed with the approrpriate one
-	 *
 	 * @param dir - Directory path where to add the separator
 	 * @returns - the directory with the seperator
 	 */
@@ -44,7 +41,6 @@ export class Common {
 
 	/**
 	 * Adds a linux directory seperator if the string is not empty and not closed with the approrpriate one
-	 *
 	 * @param dir - Directory path where to add the separator
 	 * @returns - the directory with the seperator
 	 */
@@ -56,7 +52,6 @@ export class Common {
 
 	/**
 	 * Retrieve a random string A-Z, a-z, 0-9, of a given length
-	 *
 	 * @param length - the length we want to retrieve
 	 * @returns - the random string
 	 */
@@ -70,7 +65,6 @@ export class Common {
 
 	/**
 	 * Retreive a random number as string with a given length
-	 *
 	 * @param length - the length we want to retrieve
 	 * @returns - the random string
 	 */
@@ -84,7 +78,6 @@ export class Common {
 
 	/**
 	 * Retrieve a random integer value between 0 and max
-	 *
 	 * @param max - the maximum value we want to retrieve (exclusive this value - 2 returns 1 or 0)
 	 * @returns - the integer value
 	 */
@@ -94,7 +87,6 @@ export class Common {
 
 	/**
 	 * Get the time as 00:00:00:000 value
-	 *
 	 * @returns - the time
 	 */
 	public static getTime(): string {
@@ -122,7 +114,6 @@ export class Common {
 
 	/**
 	 * Get the URL from the Request object
-	 *
 	 * @param req - the Request to parse
 	 * @returns - the url to hand back
 	 */
@@ -139,7 +130,6 @@ export class Common {
 
 	/**
 	 * Rounds a value to roundto values
-	 *
 	 * @param value - the value to round
 	 * @param roundto - the modulo integer we want to round to (e.g. 5) : 7.5 will be rounded to 5
 	 * @returns - the rounded value
@@ -151,7 +141,6 @@ export class Common {
 	/**
 	 * Converts a JavaScript value to a JavaScript Object Notation (JSON) string.
 	 * In dev mode we do it pretty printed, in prod or staging we do it plain
-	 *
 	 * @param value - A JavaScript value, usually an object or array, to be converted.
 	 * @returns - the converted JSON as string
 	 */
@@ -164,7 +153,6 @@ export class Common {
 
 	/**
 	 * Exits the process and writes that info as error to the console
-	 *
 	 * @param text - text for the console output
 	 * @param code - the code to exit
 	 */
@@ -182,7 +170,6 @@ export class Common {
 	 * due to the await it´s not guaranteed if you call the method multiple times at ones.
 	 *
 	 * So we use this method to check whether the object is really filled or not
-	 *
 	 * @param element - the element to check
 	 * @returns - true if element is defined, otherwise false
 	 */

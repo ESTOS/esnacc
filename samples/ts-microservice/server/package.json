@@ -1,6 +1,7 @@
 {
 	"name": "microservice_server",
 	"version": "1.0.1",
+	"type": "module",
 	"engines": {
 		"npm": ">=9.0.0",
 		"node": ">=18.0.0"
@@ -10,15 +11,16 @@
 	"scripts": {
 		"check": "npx madge --circular --extensions ts --exclude \"\\.d\\.ts$|globals|dist\" ./",
 		"clean": "npx rimraf dist",
-		"lint": "eslint --cache --fix -c .eslintrc.precommit.js src/**/*.{js,ts,tsx}",
+		"lint": "eslint --cache --fix -c .eslint.config.js src/**/*.{js,ts,tsx}",
 		"lintclear": "del /s .eslintcache",
 		"relint": "run-s lintclear lint",
-		"lintnocache": "eslint --fix -c .eslintrc.precommit.js src/**/*.{js,ts,tsx}",
+		"lintnocache": "eslint --fix -c .eslint.config.js src/**/*.{js,ts,tsx}",
 		"start": "node --trace-warnings index.js",
 		"start:debug": "node --inspect index.js --runInBand",
 		"start:watch": "tsc-watch --onSuccess \"node index.js\"",
 		"start:debugwatch": "tsc-watch --onSuccess \"node --inspect index.js --runInBand\"",
 		"build": "tsc -p .",
+		"updateall" : "npx npm-check-updates -u",
 		"depcheck": "npx depcheck"
 	},
 	"repository": {
@@ -27,44 +29,36 @@
 	},
 	"lint-staged": {
 		"src/**/*.{ts,tsx}": [
-			"eslint --cache --fix -c .eslintrc.precommit.js"
+			"eslint --cache --fix -c .eslint.config.js"
 		]
 	},
 	"license": "UNLICENSED",
 	"dependencies": {
-		"@estos/asn1ts": "^3.1.12",
+		"@estos/asn1ts": "^3.2.3",
 		"cors": "^2.8.5",
 		"cross-env": "^7.0.3",
 		"date-fns": "^4.1.0",
-		"dotenv": "^16.0.3",
-		"express": "^4.18.2",
-		"typescript": "^5.1.6",
+		"dotenv": "^17.2.1",
+		"express": "^5.1.0",
+		"typescript": "^5.8.3",
 		"ucconfig": "github:estos/ucconfig#0.0/0.0.3",
 		"uclogger": "github:estos/uclogger#0.0/0.0.21",
-		"uuid": "^11.0.3",
-		"ws": "^8.11.0"
+		"uuid": "^11.1.0",
+		"ws": "^8.18.3"
 	},
 	"devDependencies": {
-		"@types/cors": "^2.8.13",
-		"@types/express": "^5.0.0",
-		"@types/jest": "^29.5.5",
-		"@types/node": "^22.10.1",
+		"@estos/config-eslint": "1.0.7",
+		"@types/cors": "^2.8.19",
+		"@types/express": "^5.0.3",
+		"@types/jest": "^30.0.0",
+		"@types/node": "^24.1.0",
 		"@types/uuid": "^10.0.0",
-		"@types/ws": "^8.5.3",
-		"@typescript-eslint/eslint-plugin": "^7.1.1",
-		"@typescript-eslint/parser": "^7.1.1",
-		"axios": "^1.5.1",
-		"eslint": "^8.29.0",
-		"eslint-config-standard": "^17.0.0",
-		"eslint-plugin-deprecation": "^2.0.0",
-		"eslint-plugin-github": "^4.10.1",
-		"eslint-plugin-import": "^2.26.0",
-		"eslint-plugin-jsdoc": "^48.0.2",
-		"eslint-plugin-node": "^11.1.0",
-		"eslint-plugin-promise": "^6.1.1",
-		"jest": "^29.7.0",
-		"lint-staged": "^15.0.2",
+		"@types/ws": "^8.18.1",
+		"axios": "^1.11.0",
+		"eslint": "^9.31.0",
+		"jest": "^30.0.5",
+		"lint-staged": "^16.1.2",
 		"npm-run-all": "^4.1.5",
-		"ts-jest": "^29.1.1"
+		"ts-jest": "^29.4.0"
 	}
 }

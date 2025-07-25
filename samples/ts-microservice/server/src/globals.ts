@@ -6,10 +6,10 @@
 
 import { ELogger } from "uclogger";
 
-import { LogLocalStorage } from "./singletons/asyncLocalStorage";
-import { ClientConnectionManager } from "./singletons/clientConnectionManager";
-import { Config, IConfig } from "./singletons/config";
-import { Server } from "./singletons/server";
+import { LogLocalStorage } from "./singletons/asyncLocalStorage.js";
+import { ClientConnectionManager } from "./singletons/clientConnectionManager.js";
+import { Config, IConfig } from "./singletons/config.js";
+import { Server } from "./singletons/server.js";
 
 export const theConfig: IConfig = new Config().config;
 export const theClientConnectionManager = ClientConnectionManager.getInstance();

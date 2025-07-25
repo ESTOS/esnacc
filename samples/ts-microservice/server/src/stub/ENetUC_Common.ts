@@ -9,7 +9,7 @@
  */
 
 // dprint-ignore-file
-/* eslint-disable */
+ 
 /**
  * Common interface definitions
  * ## Module description

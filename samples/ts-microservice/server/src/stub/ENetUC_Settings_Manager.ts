@@ -23,9 +23,9 @@
  * 4150 asnSettingsChanged				- An event that the settings have changed
  */
 // [PrintTSImports]
-import { TSDeprecatedCallback } from "./TSDeprecatedCallback";
+import { TSDeprecatedCallback } from "./TSDeprecatedCallback.js";
 import * as asn1ts from "@estos/asn1ts";
-import * as ENetUC_Common from "./ENetUC_Common";
+import * as ENetUC_Common from "./ENetUC_Common.js";
 // [PrintTSRootTypes]
 export const MODULE_NAME = "ENetUC_Settings_Manager";
 export const MODULE_LASTCHANGE = "2024-05-06T00:00:00Z";

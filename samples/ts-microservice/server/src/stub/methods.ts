@@ -7,7 +7,7 @@
  */
 
 // dprint-ignore-file
-/* eslint-disable */
+ 
 
 export interface IROSEMethod {
 	name: string;

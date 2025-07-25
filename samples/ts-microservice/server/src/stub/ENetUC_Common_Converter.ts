@@ -12,9 +12,9 @@
 /* eslint-disable */
 
 // [PrintTSConverterImports]
-import { ConverterError, ConverterErrorType, ConverterErrors, TSConverter, IDecodeContext, IEncodeContext, INamedType } from "./TSConverterBase";
-import * as ENetUC_Common from "./ENetUC_Common";
-import { EAsnOptionalParametersConverter } from "./TSOptionalParamConverter";
+import { ConverterError, ConverterErrorType, ConverterErrors, TSConverter, IDecodeContext, IEncodeContext, INamedType } from "./TSConverterBase.js";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import { EAsnOptionalParametersConverter } from "./TSOptionalParamConverter.js";
 // [PrintTSImports]
 import * as asn1ts from "@estos/asn1ts";
 // [PrintTSRootTypes]

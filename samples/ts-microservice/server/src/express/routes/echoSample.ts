@@ -1,6 +1,6 @@
 import * as express from "express";
 
-import { IEModule } from "../expressRouter";
+import { IEModule } from "../expressRouter.js";
 
 /**
  * The express echo sample route
@@ -8,7 +8,6 @@ import { IEModule } from "../expressRouter";
 class Echo implements IEModule {
 	/**
 	 * TODOC
-	 *
 	 * @param router - TODOC
 	 */
 	public init(router: express.Router): void {
@@ -17,7 +16,6 @@ class Echo implements IEModule {
 
 	/**
 	 * TODOC
-	 *
 	 * @param req - TODOC
 	 * @param res - TODOC
 	 */
@@ -30,4 +28,4 @@ class Echo implements IEModule {
 	}
 }
 
-export = new Echo();
+export default new Echo();

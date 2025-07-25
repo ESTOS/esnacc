@@ -11,16 +11,16 @@
 /* eslint-disable */
 // [PrintTSROSEImports]
 // Global imports
-import { IENetUC_Event_ManagerROSE, IENetUC_Event_ManagerROSE_Handler } from "./ENetUC_Event_ManagerROSE_Interface";
-import { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from "./SNACCROSE";
-import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, IInvokeHandler, ELogSeverity, ROSEBase } from "./TSROSEBase";
-import { ISendInvokeContextParams } from "./TSInvokeContext";
+import { IENetUC_Event_ManagerROSE, IENetUC_Event_ManagerROSE_Handler } from "./ENetUC_Event_ManagerROSE_Interface.js";
+import { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from "./SNACCROSE.js";
+import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, IInvokeHandler, ELogSeverity, ROSEBase } from "./TSROSEBase.js";
+import { ISendInvokeContextParams } from "./TSInvokeContext.js";
 // Local imports
-import * as ENetUC_Event_Manager from "./ENetUC_Event_Manager";
-import * as Converter from "./ENetUC_Event_Manager_Converter";
+import * as ENetUC_Event_Manager from "./ENetUC_Event_Manager.js";
+import * as Converter from "./ENetUC_Event_Manager_Converter.js";
 // [PrintTSImports]
-import * as ENetUC_Common from "./ENetUC_Common";
-import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter.js";
 // [PrintTSRootTypes]
 export const MODULE_NAME = "ENetUC_Event_ManagerROSE";
 export const MODULE_LASTCHANGE = "1970-01-01T00:00:00Z";

@@ -2,9 +2,9 @@
 import * as dotenv from "dotenv";
 import { IELoggerSettings } from "uclogger";
 
-import expressInit from "./express/expressInit";
-import { theConfig, theClientConnectionManager, theLogger, theServer, theLogStorage } from "./globals";
-import { setDecoratorLogger } from "./lib/loggerdecorators";
+import expressInit from "./express/expressInit.js";
+import { theConfig, theClientConnectionManager, theLogger, theServer, theLogStorage } from "./globals.js";
+import { setDecoratorLogger } from "./lib/loggerdecorators.js";
 
 dotenv.config();
 

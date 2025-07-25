@@ -5,7 +5,7 @@
 */
 
 // prettier-ignore
-/* eslint-disable */
+ 
 
 export class Asn1InterfaceVersion {
 	public static lastChange = "2024-05-06T00:00:00Z";

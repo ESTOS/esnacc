@@ -5,8 +5,8 @@
 // dprint-ignore-file
 /* eslint-disable */
 
-import * as ENetUC_Common from "./ENetUC_Common";
-import { TSConverter, DecodeContext, EncodeContext, ConverterErrors, ConverterError, ConverterErrorType, INamedType } from "./TSConverterBase";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import { TSConverter, DecodeContext, EncodeContext, ConverterErrors, ConverterError, ConverterErrorType, INamedType } from "./TSConverterBase.js";
 
 /**
  * Sadly someone added custom written encoders decoders for the custom parameters in the UCServer

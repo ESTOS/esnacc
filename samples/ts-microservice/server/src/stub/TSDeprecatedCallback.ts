@@ -5,7 +5,7 @@
 // dprint-ignore-file
 /* eslint-disable */
 
-import { IReceiveInvokeContextParams, ISendInvokeContextParams } from "./TSInvokeContext";
+import { IReceiveInvokeContextParams, ISendInvokeContextParams } from "./TSInvokeContext.js";
 
 /**
  * This is the central deprecated callback

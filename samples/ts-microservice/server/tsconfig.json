@@ -10,10 +10,11 @@
     "incremental": true,
     "inlineSources": true,
     "lib": [
-      "ES2020"
+      "ES2022"
     ],
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
     "noImplicitOverride": true,
@@ -29,7 +30,6 @@
     "strictFunctionTypes": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    "target": "ES2020",
     "useUnknownInCatchVariables": true
   },
   "exclude": [

@@ -1,6 +1,6 @@
 import * as express from "express";
-import http from "http";
-import WebSocket from "ws";
+import http from "node:http";
+import { WebSocketServer } from 'ws';
 
 export interface IVerifyClientOptions {
 	origin: string;
@@ -14,15 +14,14 @@ export type VerifyClientFunction = (res: boolean, code?: number, message?: strin
  * The base websocket implementation
  */
 export abstract class WebSocketRoute {
-	protected webSocketServer?: WebSocket.Server;
+	protected webSocketServer?: WebSocketServer;
 
 	/**
 	 * Initializes the websocket route object
-	 *
 	 * @param router - parent router
 	 */
 	public init(router: express.Router): void {
-		this.webSocketServer = 	new WebSocket.Server({
+		this.webSocketServer = 	new WebSocketServer({
 			noServer: true,
 			verifyClient: this.verifyClient.bind(this)
 		});

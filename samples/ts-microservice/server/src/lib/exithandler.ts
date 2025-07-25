@@ -1,11 +1,11 @@
 import { format } from "date-fns";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import { ILogData } from "uclogger";
-import { getHeapSnapshot } from "v8";
+import { getHeapSnapshot } from "node:v8";
 
-import { Common } from "./common";
-import { theConfig, theClientConnectionManager, theServer, theLogger, theLogStorage } from "../globals";
+import { Common } from "./common.js";
+import { theConfig, theClientConnectionManager, theServer, theLogger, theLogStorage } from "../globals.js";
 
 enum CONF_EXIT_CODES {
 	EXIT_CODE_UNHANDLED_PROMISE = 64,
@@ -85,7 +85,7 @@ const initExitHandler = function(): void {
 	 *
 	 * Details: https://nodejs.org/docs/latest-v12.x/api/process.html#process_event_unhandledrejection
 	 */
-	process.once("unhandledRejection", async (reason: {} | null | undefined, promise: Promise<unknown>) => {
+	process.once("unhandledRejection", async (reason: unknown | null | undefined, promise: Promise<unknown>) => {
 		debugger;
 		if (shuttingDown)
 			Common.exit("EXIT_CODE_UNHANDLED_PROMISE", CONF_EXIT_CODES.EXIT_CODE_UNHANDLED_PROMISE);

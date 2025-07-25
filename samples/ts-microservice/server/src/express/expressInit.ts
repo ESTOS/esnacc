@@ -1,13 +1,13 @@
 import cors from "cors";
 import express from "express";
-import fs from "fs";
-import http from "http";
-import https from "https";
+import fs from "node:fs";
+import http from "node:http";
+import https from "node:https";
 import { ILogData } from "uclogger";
 
-import { ERouter } from "./expressRouter";
-import { theConfig, theLogger } from "../globals";
-import { CONF_EXIT_CODES } from "../lib/exithandler";
+import { ERouter } from "./expressRouter.js";
+import { theConfig, theLogger } from "../globals.js";
+import { CONF_EXIT_CODES } from "../lib/exithandler.js";
 
 const expressInit = async (): Promise<boolean> => {
 	const app = express();
@@ -16,7 +16,7 @@ const expressInit = async (): Promise<boolean> => {
 	app.use(express.json());
 	app.use(express.urlencoded({ extended: false }));
 	app.use(cors());
-	app.use("/", ERouter.getRoutes());
+	app.use("/", await ERouter.getRoutes());
 
 	const promises: Promise<boolean>[] = [];
 	const global: ILogData = { className: "global" };
@@ -70,4 +70,4 @@ const expressInit = async (): Promise<boolean> => {
 	return true;
 };
 
-export = expressInit;
+export default expressInit;

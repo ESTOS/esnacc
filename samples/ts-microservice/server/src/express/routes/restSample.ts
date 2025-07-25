@@ -1,9 +1,9 @@
 import express from "express";
 import { ILogData } from "uclogger";
 
-import { theLogger, theServer } from "../../globals";
-import { ReceiveInvokeContext } from "../../stub/TSROSEBase";
-import { IEModule } from "../expressRouter";
+import { theLogger, theServer } from "../../globals.js";
+import { ReceiveInvokeContext } from "../../stub/TSROSEBase.js";
+import { IEModule } from "../expressRouter.js";
 
 /**
  * The express rest function call sample route
@@ -11,7 +11,6 @@ import { IEModule } from "../expressRouter";
 class RestSample implements IEModule {
 	/**
 	 * Add specific routings
-	 *
 	 * @param router - parent router
 	 */
 	public init(router: express.Router): void {
@@ -20,7 +19,6 @@ class RestSample implements IEModule {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
-	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
@@ -29,7 +27,6 @@ class RestSample implements IEModule {
 
 	/**
 	 * Takes any client request and forwards it to the asn theServer instance
-	 *
 	 * @param req - http request from client
 	 * @param res - http response to client
 	 */
@@ -68,4 +65,4 @@ class RestSample implements IEModule {
 	}
 }
 
-export = new RestSample();
+export default new RestSample();

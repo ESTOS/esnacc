@@ -1,7 +1,7 @@
 import { ILogCallback, ILogData } from "uclogger";
 import WebSocket from "ws";
 
-import { EOwnInterval, EOwnTimeout } from "./common_timers";
+import { EOwnInterval, EOwnTimeout } from "./common_timers.js";
 
 // Loglevels we support
 export type LogLevels = "error" | "warn" | "info" | "debug";
@@ -19,13 +19,12 @@ export interface ILogger {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type logany = any
 
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+ 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /**
  * This function removes rather large objects from a log object which bring no benefit to the log output
  * e.g. a websocket requires 100k json log, but has no sense to be logged, same for the timer objects
- *
  * @param obj - the object to parse
  * @param levelstoprocess - a counter that is used to only process a certain level (deepness in the object)
  * @param id - in recursion the id of the parent element we are currently handling
@@ -99,14 +98,14 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 				break;
 			default:
 				// die we miss something?
-				// eslint-disable-next-line no-debugger
+				 
 				debugger;
 				break;
 		}
 
 		return result;
 	} catch (error) {
-		// eslint-disable-next-line no-debugger
+		console.error(error);
 		debugger;
 		return obj;
 	}
@@ -115,7 +114,6 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 /**
  * This function removes rather large objects from a log object which bring no benefit to the log output
  * e.g. a websocket requires 100k json log, but has no sense to be logged, same for the timer objects
- *
  * @param obj - the object to parse
  * @param levelstoprocess - a counter that is used to only process a certain level (deepness in the object)
  * @returns - the cleaned object

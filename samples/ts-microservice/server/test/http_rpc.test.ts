@@ -3,14 +3,14 @@
 import { Sequence } from "@estos/asn1ts";
 import * as axios from "axios";
 
-import { theConfig } from "../src/globals";
-import { AsnGetSettingsArgument, AsnGetSettingsResult, AsnSetSettingsArgument, AsnSetSettingsResult } from "../src/stub/ENetUC_Settings_Manager";
-import { AsnGetSettingsArgument_Converter, AsnGetSettingsResult_Converter, AsnSetSettingsArgument_Converter, AsnSetSettingsResult_Converter } from "../src/stub/ENetUC_Settings_Manager_Converter";
-import { ROSEReject } from "../src/stub/SNACCROSE";
-import { ROSEReject_Converter } from "../src/stub/SNACCROSE_Converter";
-import { ConverterErrors, DecodeContext, EncodeContext } from "../src/stub/TSConverterBase";
-import { EASN1TransportEncoding } from "../src/stub/TSInvokeContext";
-import { ROSEBase, asn1Decode, asn1Encode } from "../src/stub/TSROSEBase";
+import { theConfig } from "../src/globals.js";
+import { AsnGetSettingsArgument, AsnGetSettingsResult, AsnSetSettingsArgument, AsnSetSettingsResult } from "../src/stub/ENetUC_Settings_Manager.js";
+import { AsnGetSettingsArgument_Converter, AsnGetSettingsResult_Converter, AsnSetSettingsArgument_Converter, AsnSetSettingsResult_Converter } from "../src/stub/ENetUC_Settings_Manager_Converter.js";
+import { ROSEReject } from "../src/stub/SNACCROSE.js";
+import { ROSEReject_Converter } from "../src/stub/SNACCROSE_Converter.js";
+import { ConverterErrors, DecodeContext, EncodeContext } from "../src/stub/TSConverterBase.js";
+import { EASN1TransportEncoding } from "../src/stub/TSInvokeContext.js";
+import { ROSEBase, asn1Decode, asn1Encode } from "../src/stub/TSROSEBase.js";
 
 const theAxios = axios.default;
 
