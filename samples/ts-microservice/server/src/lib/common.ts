@@ -1,7 +1,7 @@
 import { Request } from "express";
 import path from "node:path";
-import { ILogData } from "uclogger";
 import url from "node:url";
+import { ILogData } from "uclogger";
 import { v4 as uuidv4 } from "uuid";
 
 import { theConfig } from "../globals.js";
@@ -15,9 +15,7 @@ export class Common {
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public static getLogData(): ILogData {
-		return {
-			className: this.constructor.name
-		};
+		return { className: this.constructor.name };
 	}
 
 	/**
@@ -118,13 +116,7 @@ export class Common {
 	 * @returns - the url to hand back
 	 */
 	public static getURLFromRequest(req: Request): URL {
-		const path = url.format(
-			{
-				protocol: req.protocol,
-				host: req.get("host"),
-				pathname: req.originalUrl
-			}
-		);
+		const path = url.format({ protocol: req.protocol, host: req.get("host"), pathname: req.originalUrl });
 		return new URL(path);
 	}
 
@@ -173,7 +165,7 @@ export class Common {
 	 * @param element - the element to check
 	 * @returns - true if element is defined, otherwise false
 	 */
-	public static getDefined<T>(element: T | undefined, className: { new(...args: any[]): T }): T | undefined {
+	public static getDefined<T>(element: T | undefined, className: { new(...args: any[]): T; }): T | undefined {
 		return element;
 	}
 }

@@ -27,9 +27,7 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
-		return {
-			className: this.constructor.name
-		};
+		return { className: this.constructor.name };
 	}
 
 	/**
@@ -40,12 +38,16 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 	 * @param invokeContext - Invokecontext from the asn.1 lib (containing invoke related data)
 	 * @returns - AsnCreateFancyEventsResult on success, AsnRequestError on error or undefined if the function is not implemented
 	 */
-	public async onInvoke_asnCreateFancyEvents(argument: ENetUC_Event_Manager.AsnCreateFancyEventsArgument, invokeContext: IReceiveInvokeContext): Promise<ENetUC_Event_Manager.AsnCreateFancyEventsResult | ENetUC_Common.AsnRequestError | undefined> {
+	public async onInvoke_asnCreateFancyEvents(
+		argument: ENetUC_Event_Manager.AsnCreateFancyEventsArgument,
+		invokeContext: IReceiveInvokeContext,
+	): Promise<ENetUC_Event_Manager.AsnCreateFancyEventsResult | ENetUC_Common.AsnRequestError | undefined> {
 		// Check if the request comes from a websocket connection
 		if (!invokeContext.clientConnectionID) {
 			return new ENetUC_Common.AsnRequestError({
-				u8sErrorString: "It is not possible to create events through a rest like request. Please use it via a websocket connection.",
-				iErrorDetail: 1
+				u8sErrorString:
+					"It is not possible to create events through a rest like request. Please use it via a websocket connection.",
+				iErrorDetail: 1,
 			});
 		}
 
@@ -68,10 +70,7 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 		const connectionIDs = theClientConnectionManager.getClientConnectionIDs();
 		if (connectionIDs.length) {
 			// If we have connected clients, create the event argument and dispatch to all connected clients
-			const argument = new ENetUC_Event_Manager.AsnFancyEventArgument({
-				iEventCounter: counter,
-				iEventsLeft: left
-			});
+			const argument = new ENetUC_Event_Manager.AsnFancyEventArgument({ iEventCounter: counter, iEventsLeft: left });
 			for (const connectionID of connectionIDs)
 				this.rose.event_asnFancyEvent(argument, { clientConnectionID: connectionID });
 		}

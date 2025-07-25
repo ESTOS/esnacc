@@ -54,15 +54,14 @@ class WebSocketSample extends WebSocketRoute implements IEModule {
 		try {
 			if (request.url.substring(0, this.path.length) === this.path && this.webSocketServer) {
 				this.webSocketServer.handleUpgrade(request, socket, head, async (ws: WebSocket) => {
-					const args: IClientConnectionConstructorArguments = {
-						request
-					};
+					const args: IClientConnectionConstructorArguments = { request };
 					const con = theClientConnectionManager.createClientConnection(args);
 					con.setWebSocket(ws);
 					return true;
 				});
 			}
-		} catch (error) {
+		}
+		catch (error) {
 			theLogger.error("Upgrading connection failed", "onUpgrade", this, { request }, error);
 		}
 		return false;

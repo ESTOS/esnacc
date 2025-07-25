@@ -1,6 +1,6 @@
 import * as express from "express";
 import http from "node:http";
-import { WebSocketServer } from 'ws';
+import { WebSocketServer } from "ws";
 
 export interface IVerifyClientOptions {
 	origin: string;
@@ -8,7 +8,12 @@ export interface IVerifyClientOptions {
 	req: http.IncomingMessage;
 }
 
-export type VerifyClientFunction = (res: boolean, code?: number, message?: string, headers?: http.OutgoingHttpHeaders) => void
+export type VerifyClientFunction = (
+	res: boolean,
+	code?: number,
+	message?: string,
+	headers?: http.OutgoingHttpHeaders,
+) => void;
 
 /**
  * The base websocket implementation
@@ -21,10 +26,7 @@ export abstract class WebSocketRoute {
 	 * @param router - parent router
 	 */
 	public init(router: express.Router): void {
-		this.webSocketServer = 	new WebSocketServer({
-			noServer: true,
-			verifyClient: this.verifyClient.bind(this)
-		});
+		this.webSocketServer = new WebSocketServer({ noServer: true, verifyClient: this.verifyClient.bind(this) });
 	}
 
 	protected abstract verifyClient(options: IVerifyClientOptions, func: VerifyClientFunction): void;

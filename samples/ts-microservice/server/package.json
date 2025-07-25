@@ -11,16 +11,16 @@
 	"scripts": {
 		"check": "npx madge --circular --extensions ts --exclude \"\\.d\\.ts$|globals|dist\" ./",
 		"clean": "npx rimraf dist",
-		"lint": "eslint --cache --fix -c .eslint.config.js src/**/*.{js,ts,tsx}",
+		"lint": "dprint fmt && eslint --cache --fix src/**/*.{js,ts,tsx}",
 		"lintclear": "del /s .eslintcache",
 		"relint": "run-s lintclear lint",
-		"lintnocache": "eslint --fix -c .eslint.config.js src/**/*.{js,ts,tsx}",
+		"lintnocache": "eslint --fix src/**/*.{js,ts,tsx}",
 		"start": "node --trace-warnings index.js",
 		"start:debug": "node --inspect index.js --runInBand",
 		"start:watch": "tsc-watch --onSuccess \"node index.js\"",
 		"start:debugwatch": "tsc-watch --onSuccess \"node --inspect index.js --runInBand\"",
 		"build": "tsc -p .",
-		"updateall" : "npx npm-check-updates -u",
+		"updateall": "npx npm-check-updates -u",
 		"depcheck": "npx depcheck"
 	},
 	"repository": {
@@ -39,6 +39,7 @@
 		"cross-env": "^7.0.3",
 		"date-fns": "^4.1.0",
 		"dotenv": "^17.2.1",
+		"dprint": "^0.50.1",
 		"express": "^5.1.0",
 		"typescript": "^5.8.3",
 		"ucconfig": "github:estos/ucconfig#0.0/0.0.3",

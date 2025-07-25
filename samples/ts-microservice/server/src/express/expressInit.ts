@@ -5,9 +5,9 @@ import http from "node:http";
 import https from "node:https";
 import { ILogData } from "uclogger";
 
-import { ERouter } from "./expressRouter.js";
 import { theConfig, theLogger } from "../globals.js";
 import { CONF_EXIT_CODES } from "../lib/exithandler.js";
+import { ERouter } from "./expressRouter.js";
 
 const expressInit = async (): Promise<boolean> => {
 	const app = express();
@@ -26,10 +26,7 @@ const expressInit = async (): Promise<boolean> => {
 		const certFile = theConfig.econfServerCertfile;
 		const keyFile = theConfig.econfServerKeyfile;
 		const prom: Promise<boolean> = new Promise((resolve, reject): void => {
-			const options = {
-				cert: fs.readFileSync(certFile),
-				key: fs.readFileSync(keyFile)
-			};
+			const options = { cert: fs.readFileSync(certFile), key: fs.readFileSync(keyFile) };
 			const server = https.createServer(options, app);
 			server.on("error", (e) => {
 				theLogger.error("failed to create https server", "expressInit", global, undefined, e);
@@ -37,7 +34,11 @@ const expressInit = async (): Promise<boolean> => {
 			});
 			ERouter.setServer(server);
 			server.listen(theConfig.econfServerListenPortTLS, theConfig.econfServerListenIP, (): void => {
-				theLogger.info(`Server is running https://${theConfig.econfServerListenIP}:${theConfig.econfServerListenPortTLS}...`, "expressInit", global);
+				theLogger.info(
+					`Server is running https://${theConfig.econfServerListenIP}:${theConfig.econfServerListenPortTLS}...`,
+					"expressInit",
+					global,
+				);
 				listening = true;
 				resolve(true);
 			});
@@ -53,7 +54,11 @@ const expressInit = async (): Promise<boolean> => {
 			});
 			ERouter.setServer(server);
 			server.listen(theConfig.econfServerListenPortTCP, theConfig.econfServerListenIP, (): void => {
-				theLogger.info(`Server is running http://${theConfig.econfServerListenIP}:${theConfig.econfServerListenPortTCP}...`, "expressInit", global);
+				theLogger.info(
+					`Server is running http://${theConfig.econfServerListenIP}:${theConfig.econfServerListenPortTCP}...`,
+					"expressInit",
+					global,
+				);
 				listening = true;
 				resolve(true);
 			});

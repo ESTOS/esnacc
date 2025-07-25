@@ -4,8 +4,8 @@ import http from "node:http";
 import https from "node:https";
 import net from "node:net";
 import path from "node:path";
-import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ILogData } from "uclogger";
 import { theLogger } from "../globals.js";
 
@@ -41,9 +41,7 @@ class ERouter {
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public static getLogData(): ILogData {
-		return {
-			className: "ERouter"
-		};
+		return { className: "ERouter" };
 	}
 
 	/**
@@ -52,10 +50,10 @@ class ERouter {
 	 */
 	public static async getRoutes(): Promise<express.Router> {
 		for (const file of this.getFiles()) {
-			const { default: mod } = await import("./routes/" + file) as {default: IEModule};
+			const { default: mod } = await import("./routes/" + file) as { default: IEModule; };
 			if (mod) {
 				if (mod.init)
-					mod.init(router); 
+					mod.init(router);
 				this.modules.push(mod);
 			}
 		}
@@ -73,7 +71,8 @@ class ERouter {
 					if (module.onUpgrade && module.onUpgrade(request, socket, head))
 						break;
 				}
-			} catch (error) {
+			}
+			catch (error) {
 				theLogger.error("Upgrading connection failed", "setServer", this, { request }, error);
 			}
 		});

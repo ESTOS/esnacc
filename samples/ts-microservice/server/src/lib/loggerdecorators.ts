@@ -9,7 +9,13 @@ const defaultNoArgumentsAndResult = true;
 let gCallCounter = 0;
 
 // This is the interface to a logger call (debug, error etc.)
-type loggerinterface = (msg: string, calling_method: string, logData_or_Callback?: ILogData | ILogCallback, meta?: unknown, exception?: never) => void;
+type loggerinterface = (
+	msg: string,
+	calling_method: string,
+	logData_or_Callback?: ILogData | ILogCallback,
+	meta?: unknown,
+	exception?: never,
+) => void;
 let bSetDecoratorLoggerCalled = false;
 let gLogError: loggerinterface | undefined;
 let gLogWarn: loggerinterface | undefined;
@@ -62,7 +68,13 @@ interface ILogInternal {
  * @param args - the variadic argument list the original call was handed over
  * @returns the interface for the requested logger method (error, debug etc)
  */
-function logCall(level: LogLevels | "special", methodName: string, bNoArgumentValues: boolean, logCallback: unknown, args: unknown[]): ILogInternal {
+function logCall(
+	level: LogLevels | "special",
+	methodName: string,
+	bNoArgumentValues: boolean,
+	logCallback: unknown,
+	args: unknown[],
+): ILogInternal {
 	if (!bSetDecoratorLoggerCalled) {
 		// If you reach this you did call theLogger before it has been initialized.
 		// Check the call stack
@@ -77,7 +89,9 @@ function logCall(level: LogLevels | "special", methodName: string, bNoArgumentVa
 		// You must ensure that the function you call is bound to the class .bind(this);
 
 		debugger;
-		throw new Error("Decorator functions must be bound to the class. Otherwise the decorator cannot call the member function!");
+		throw new Error(
+			"Decorator functions must be bound to the class. Otherwise the decorator cannot call the member function!",
+		);
 	}
 
 	let logger: loggerinterface | undefined;
@@ -104,9 +118,7 @@ function logCall(level: LogLevels | "special", methodName: string, bNoArgumentVa
 		throw new Error(`unhandled loglevel ${level} was specific`);
 	}
 
-	const calldata: ICallData = {
-		callCounter: ++gCallCounter
-	};
+	const calldata: ICallData = { callCounter: ++gCallCounter };
 
 	if (!bNoArgumentValues && args.length) {
 		const arg = args.length === 1 ? args[0] : args;
@@ -114,14 +126,14 @@ function logCall(level: LogLevels | "special", methodName: string, bNoArgumentVa
 			calldata.data = omitForLogging(arg, 3);
 	}
 
-	logger("call", methodName, (logCallback as ILogCallback), calldata);
+	logger("call", methodName, logCallback as ILogCallback, calldata);
 
 	return {
 		logger,
 		callCounter: calldata.callCounter,
 		methodName,
 		logCallback: (logCallback as ILogCallback),
-		now: Date.now()
+		now: Date.now(),
 	};
 }
 
@@ -140,11 +152,7 @@ function logResult(logInternal: ILogInternal, bNoResultValues: boolean, result: 
 			originalResult.then((res: unknown) => {
 				const duration = Date.now() - logInternal.now;
 				if (duration > 100) {
-					const resultdata: IResultData = {
-						callCounter: logInternal.callCounter,
-						promise: true,
-						duration
-					};
+					const resultdata: IResultData = { callCounter: logInternal.callCounter, promise: true, duration };
 					if (!bNoResultValues && res)
 						resultdata.result = omitForLogging(res, 2);
 					logInternal.logger("return", logInternal.methodName, logInternal.logCallback, resultdata);
@@ -155,19 +163,17 @@ function logResult(logInternal: ILogInternal, bNoResultValues: boolean, result: 
 					callCounter: logInternal.callCounter,
 					promise: true,
 					reject: rej,
-					duration: Date.now() - logInternal.now
+					duration: Date.now() - logInternal.now,
 				};
 				logInternal.logger("return", logInternal.methodName, logInternal.logCallback, resultdata);
 				reject(rej);
 			});
 		});
-	} else {
+	}
+	else {
 		const duration = Date.now() - logInternal.now;
 		if (duration > 100) {
-			const resultdata: IResultData = {
-				callCounter: logInternal.callCounter,
-				duration
-			};
+			const resultdata: IResultData = { callCounter: logInternal.callCounter, duration };
 			if (!bNoResultValues && result)
 				resultdata.result = omitForLogging(result, 2);
 
@@ -193,7 +199,8 @@ function logMethod(
 	propertyDesciptor: PropertyDescriptor,
 	type: LogLevels | "special",
 	bNoArgumentValues = defaultNoArgumentsAndResult,
-	bNoResultValues = defaultNoArgumentsAndResult): PropertyDescriptor {
+	bNoResultValues = defaultNoArgumentsAndResult,
+): PropertyDescriptor {
 	/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 	const method = propertyDesciptor.value;
 
@@ -203,7 +210,7 @@ function logMethod(
 	 * @returns - the methods result property descriptor
 	 */
 	propertyDesciptor.value = function(...args: unknown[]): unknown {
-		const logInternal = logCall(type, methodName, bNoArgumentValues, (this as ILogCallback), args);
+		const logInternal = logCall(type, methodName, bNoArgumentValues, this as ILogCallback, args);
 
 		// Here the original function is beeing called...
 		/* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */
@@ -225,7 +232,8 @@ function logMethod(
 export function logNothing(
 	target: Record<string, unknown>,
 	methodName: string,
-	propertyDesciptor: PropertyDescriptor): PropertyDescriptor {
+	propertyDesciptor: PropertyDescriptor,
+): PropertyDescriptor {
 	return propertyDesciptor;
 }
 
@@ -241,7 +249,8 @@ export function logNothing(
 export function logDebug(
 	target: Record<string, unknown>,
 	methodName: string,
-	propertyDesciptor: PropertyDescriptor): PropertyDescriptor {
+	propertyDesciptor: PropertyDescriptor,
+): PropertyDescriptor {
 	return logMethod(target, methodName, propertyDesciptor, "debug");
 }
 
@@ -252,7 +261,11 @@ export function logDebug(
  * @returns - The Property Descriptor for the method
  */
 export function logDebugEx(noArgument: boolean, noResult: boolean) {
-	return function(target: Record<string, unknown>, methodName: string, propertyDesciptor: PropertyDescriptor): PropertyDescriptor {
+	return function(
+		target: Record<string, unknown>,
+		methodName: string,
+		propertyDesciptor: PropertyDescriptor,
+	): PropertyDescriptor {
 		return logMethod(target, methodName, propertyDesciptor, "debug", noArgument, noResult);
 	};
 }
@@ -268,7 +281,8 @@ export function logDebugEx(noArgument: boolean, noResult: boolean) {
 export function logError(
 	target: Record<string, unknown>,
 	methodName: string,
-	propertyDesciptor: PropertyDescriptor): PropertyDescriptor {
+	propertyDesciptor: PropertyDescriptor,
+): PropertyDescriptor {
 	return logMethod(target, methodName, propertyDesciptor, "error");
 }
 
@@ -279,7 +293,11 @@ export function logError(
  * @returns - The Property Descriptor for the method
  */
 export function logErrorEx(noArgument: boolean, noResult: boolean) {
-	return function(target: Record<string, unknown>, methodName: string, propertyDesciptor: PropertyDescriptor): PropertyDescriptor {
+	return function(
+		target: Record<string, unknown>,
+		methodName: string,
+		propertyDesciptor: PropertyDescriptor,
+	): PropertyDescriptor {
 		return logMethod(target, methodName, propertyDesciptor, "error", noArgument, noResult);
 	};
 }
@@ -296,7 +314,8 @@ export function logErrorEx(noArgument: boolean, noResult: boolean) {
 export function logInfo(
 	target: Record<string, unknown>,
 	methodName: string,
-	propertyDesciptor: PropertyDescriptor): PropertyDescriptor {
+	propertyDesciptor: PropertyDescriptor,
+): PropertyDescriptor {
 	return logMethod(target, methodName, propertyDesciptor, "info");
 }
 
@@ -307,7 +326,11 @@ export function logInfo(
  * @returns - The Property Descriptor for the method
  */
 export function logInfoEx(noArgument: boolean, noResult: boolean) {
-	return function(target: Record<string, unknown>, methodName: string, propertyDesciptor: PropertyDescriptor): PropertyDescriptor {
+	return function(
+		target: Record<string, unknown>,
+		methodName: string,
+		propertyDesciptor: PropertyDescriptor,
+	): PropertyDescriptor {
 		return logMethod(target, methodName, propertyDesciptor, "info", noArgument, noResult);
 	};
 }
@@ -323,7 +346,8 @@ export function logInfoEx(noArgument: boolean, noResult: boolean) {
 export function logWarn(
 	target: Record<string, unknown>,
 	methodName: string,
-	propertyDesciptor: PropertyDescriptor): PropertyDescriptor {
+	propertyDesciptor: PropertyDescriptor,
+): PropertyDescriptor {
 	return logMethod(target, methodName, propertyDesciptor, "warn");
 }
 
@@ -334,7 +358,11 @@ export function logWarn(
  * @returns - The Property Descriptor for the method
  */
 export function logWarnEx(noArgument: boolean, noResult: boolean) {
-	return function(target: Record<string, unknown>, methodName: string, propertyDesciptor: PropertyDescriptor): PropertyDescriptor {
+	return function(
+		target: Record<string, unknown>,
+		methodName: string,
+		propertyDesciptor: PropertyDescriptor,
+	): PropertyDescriptor {
 		return logMethod(target, methodName, propertyDesciptor, "warn", noArgument, noResult);
 	};
 }
@@ -351,6 +379,7 @@ export function logWarnEx(noArgument: boolean, noResult: boolean) {
 export function logSpecial(
 	target: Record<string, unknown>,
 	methodName: string,
-	propertyDesciptor: PropertyDescriptor): PropertyDescriptor {
+	propertyDesciptor: PropertyDescriptor,
+): PropertyDescriptor {
 	return logMethod(target, methodName, propertyDesciptor, "special");
 }

@@ -3,26 +3,16 @@ import * as dotenv from "dotenv";
 import { IELoggerSettings } from "uclogger";
 
 import expressInit from "./express/expressInit.js";
-import { theConfig, theClientConnectionManager, theLogger, theServer, theLogStorage } from "./globals.js";
+import { theClientConnectionManager, theConfig, theLogger, theLogStorage, theServer } from "./globals.js";
 import { setDecoratorLogger } from "./lib/loggerdecorators.js";
 
 dotenv.config();
 
 const eLoggerSettings: IELoggerSettings = {
-	fileLog: {
-		logFilename: "microservicetemplate.log",
-		logDirectory: theConfig.logDirectory
-	},
-	consoleLog: {
-		logConsole: true
-	},
-	infrastructure: {
-		environment: "dev",
-		servername: "localhost",
-		role: "microservicetemplate",
-		role_instance: 0
-	},
-	logLevel: "debug"
+	fileLog: { logFilename: "microservicetemplate.log", logDirectory: theConfig.logDirectory },
+	consoleLog: { logConsole: true },
+	infrastructure: { environment: "dev", servername: "localhost", role: "microservicetemplate", role_instance: 0 },
+	logLevel: "debug",
 };
 
 theLogger.init(eLoggerSettings);

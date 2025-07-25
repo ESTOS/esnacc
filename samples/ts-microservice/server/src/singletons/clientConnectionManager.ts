@@ -1,8 +1,8 @@
 import { ILogData } from "uclogger";
 
 import { theLogger } from "../globals.js";
-import { IClientConnectionConstructorArguments } from "../lib/IClientConnection.js";
 import { ClientConnection, ClientConnections } from "../lib/clientConnection.js";
+import { IClientConnectionConstructorArguments } from "../lib/IClientConnection.js";
 import { IASN1ClientConnectionHandler } from "../stub/TSASN1Server.js";
 
 /**
@@ -55,9 +55,7 @@ export class ClientConnectionManager implements IASN1ClientConnectionHandler {
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
-		return {
-			className: "ClientConnectionManager"
-		};
+		return { className: "ClientConnectionManager" };
 	}
 
 	/**
@@ -114,8 +112,10 @@ export class ClientConnectionManager implements IASN1ClientConnectionHandler {
 			this.clientConnections.delete(sessionID);
 			this.fire_OnClientDisconnected(con);
 			return true;
-		} else
+		}
+		else {
 			theLogger.error("client connection not found", "removeConnection", this, { key: sessionID });
+		}
 
 		return false;
 	}

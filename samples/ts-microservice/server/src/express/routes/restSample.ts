@@ -35,28 +35,26 @@ class RestSample implements IEModule {
 			res.send("");
 		else {
 			try {
-				const invokeContext = new ReceiveInvokeContext({
-					clientIP: req.ip,
-					headers: req.headers,
-					url: req.url
-				});
+				const invokeContext = new ReceiveInvokeContext({ clientIP: req.ip, headers: req.headers, url: req.url });
 				const response = await theServer.receive(req.body, invokeContext);
 				if (response) {
 					if (typeof response.payLoad === "string") {
 						res.writeHead(response.httpStatusCode, {
 							"Content-Type": "application/json",
-							"Content-Length": response.payLoad.length
+							"Content-Length": response.payLoad.length,
 						});
 						res.end(response.payLoad, "ascii");
-					} else {
+					}
+					else {
 						res.writeHead(response.httpStatusCode, {
 							"Content-Type": "application/octet-stream",
-							"Content-Length": response.payLoad.length
+							"Content-Length": response.payLoad.length,
 						});
 						res.end(response.payLoad, "binary");
 					}
 				}
-			} catch (error) {
+			}
+			catch (error) {
 				debugger;
 				theLogger.error("exception", "restRequest", this, undefined, error);
 				res.status(500).send("Catched an unhandled exception while processing request");

@@ -5,34 +5,38 @@
 # Introduction
 
 estos NodeJS server template is a typescript template to ease implementing NodeJS servers that offer:
+
 - full typescript support
 - ready to use eslinting (preconfigured ruleset) with typescript support
 - express based web service interface for clients using http-post (function calling only) or websocket (event supporting) interface
 - An asn1-based, generated server and client interface/stub (supporting websocket and post requests)
 
 # How to start
-- Call ```npm install``` in the root directory of this project and the sampleclient directory
+
+- Call `npm install` in the root directory of this project and the sampleclient directory
 - Open two visual studio code instances:
-  - ```code sampleclient\sampleclient.code-workspace```
-  - ```code microservicetemplate.code-workspace```
+  - `code sampleclient\sampleclient.code-workspace`
+  - `code microservicetemplate.code-workspace`
 - Create [default configuration](#"default-configuration")
-- Press ```F5```
+- Press `F5`
 
 # Global managers
-Similar to *ProcallServer* there are several Singleton manager classes with the prefix *the* ready to use in */src/lib/globals.ts*.
+
+Similar to _ProcallServer_ there are several Singleton manager classes with the prefix _the_ ready to use in _/src/lib/globals.ts_.
 
 E.g.:
+
 ```typescript
 import {
-	theConfig, // Access project specific configurations
 	theClientConnectionManager, // Managing client connections
-	theServers, // Server handling asn routing
+	theConfig, // Access project specific configurations
 	theLogger, // Logger, supports Console, File and GreyLog
-} from 'globals';
+	theServers, // Server handling asn routing
+} from "globals";
 ```
 
-
 # Project structure
+
 Layout of the project (where to find what).
 Starting point is the /src directory which contains all the typescript files
 
@@ -61,19 +65,21 @@ Starting point is the /src directory which contains all the typescript files
 # Examples
 
 ## WebSocket
-For the websocket connecting client the sample creates a clientConnection which is held by ```theClientConnectionManager```. This clientConnection has a sessionID which is used to identify a connected client and to be able to send events to this client. ```theClientConnectionManager``` provides a notify interface that is called whenever a client connects or disconnects.
 
-Thus other singletons in ```theServer``` can be notified about new or dying clients.
+For the websocket connecting client the sample creates a clientConnection which is held by `theClientConnectionManager`. This clientConnection has a sessionID which is used to identify a connected client and to be able to send events to this client. `theClientConnectionManager` provides a notify interface that is called whenever a client connects or disconnects.
+
+Thus other singletons in `theServer` can be notified about new or dying clients.
 
 ## Sample client
+
 The sample client contains a simple website to invoke calls towards the server. In order to get the client running type
 
-	npm start
+    npm start
 
 in the terminal in VSCode.
 
 As soon as the package has been build by webpack
-```(｢wdm｣: Compiled successfully.)``` you can launch a browser with F5.
+`(｢wdm｣: Compiled successfully.)` you can launch a browser with F5.
 (Firefox, Chrome and Edge have been configured as debug applications in VSCode)
 
 MicroService Template:
@@ -81,32 +87,35 @@ Be sure to setup an .env file in the root directory according to ## Default conf
 In VSCode press F5 to launch the server process.
 
 # SSL Key and Certificate
+
 If you want to use SSL please provide a proper certificate as key.pem and cert.pem file.
 You can, however, also just run the plain TCP server.
 
 Hint for OpenSSL
 
-	$ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+    $ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
 
 # Behind the curtains
-* Initialise singletons in (globals.ts) within app.ts.
-* Constructing and initializing the routes in */src/express/routes/*. Mounting the the asn1 based stubs. To handle The incoming invoke (Rest or Websocket) in the express routes restSample.ts or webSocketSample.ts.
-* The webSocketSample creates a ClientConnection object for the connecting webSocket client. Receiving data is therefore not handled in the webSocketSample but in the ClientConnection.
 
-Just place a breakpoing in *RestSample.restRequest*,  *ClientConnection.wsClientMessage();* and  *SampleHandler.OnInvoke_asnLetSomethingHappen();*.
+- Initialise singletons in (globals.ts) within app.ts.
+- Constructing and initializing the routes in _/src/express/routes/_. Mounting the the asn1 based stubs. To handle The incoming invoke (Rest or Websocket) in the express routes restSample.ts or webSocketSample.ts.
+- The webSocketSample creates a ClientConnection object for the connecting webSocket client. Receiving data is therefore not handled in the webSocketSample but in the ClientConnection.
 
-You can then step through the code and see how the message is processed through the stub and in the end handled in *SampleHandler.OnInvoke_asnLetSomethingHappen()*.
+Just place a breakpoing in _RestSample.restRequest_, _ClientConnection.wsClientMessage();_ and _SampleHandler.OnInvoke_asnLetSomethingHappen();_.
+
+You can then step through the code and see how the message is processed through the stub and in the end handled in _SampleHandler.OnInvoke_asnLetSomethingHappen()_.
 
 The incoming invoke creates an appropriate answer right away and starts two timers for events and server side invokes if it is beeing called via a websocket connection.
 
-The *IInvokeContext* in the handling method hand over the used websocket and sessionID if beeing called via websockets.
+The _IInvokeContext_ in the handling method hand over the used websocket and sessionID if beeing called via websockets.
 
 Adding new functions and events is pretty simple.
-- Open the *interface\ENetUC_Sample.asn1* file and add methods and or events like the two already in the file.
-- Call ```create_stubs.bat``` to create the stub with the esnacc4.exe.
+
+- Open the _interface\ENetUC_Sample.asn1_ file and add methods and or events like the two already in the file.
+- Call `create_stubs.bat` to create the stub with the esnacc4.exe.
 
 The estos globals (https://git.estos.de/projects/WGL/repos/global/browse) repository must be available and checked out to
-	X:\dev\global
+X:\dev\global
 in order to be able to compile using the esnacc4.exe
 
 # Default configuration

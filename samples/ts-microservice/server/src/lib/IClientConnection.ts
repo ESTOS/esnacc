@@ -1,9 +1,9 @@
 import { IncomingMessage } from "node:http";
 import WebSocket from "ws";
 
-import { IClientDetails } from "./IClientDetails.js";
 import { ILogContextData, ILogContextStaticData } from "../singletons/asyncLocalStorage.js";
 import { IASN1ClientConnection } from "../stub/TSASN1Server.js";
+import { IClientDetails } from "./IClientDetails.js";
 
 /**
  * Custom Invoke Data we add to the receive invoke context as customData (void*)

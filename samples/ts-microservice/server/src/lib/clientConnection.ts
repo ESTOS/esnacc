@@ -2,15 +2,19 @@ import { EventEmitter } from "node:events";
 import { ILogData } from "uclogger";
 import WebSocket from "ws";
 
-import { IClientConnection, IClientConnectionConstructorArguments, ICustomReceiveInvokeContext } from "./IClientConnection.js";
-import { IClientDetails } from "./IClientDetails.js";
-import { ClientConnectionNotifies } from "./clientConnectionNotify.js";
-import { Common } from "./common.js";
-import { EOwnTimeout, EOwnInterval } from "./common_timers.js";
-import { theConfig, theServer, theLogger, theLogStorage } from "../globals.js";
+import { theConfig, theLogger, theLogStorage, theServer } from "../globals.js";
 import { ILogContextStaticData, LogContextStaticData } from "../singletons/asyncLocalStorage.js";
 import { EASN1TransportEncoding } from "../stub/TSInvokeContext.js";
 import { ReceiveInvokeContext } from "../stub/TSROSEBase.js";
+import { ClientConnectionNotifies } from "./clientConnectionNotify.js";
+import { Common } from "./common.js";
+import { EOwnInterval, EOwnTimeout } from "./common_timers.js";
+import {
+	IClientConnection,
+	IClientConnectionConstructorArguments,
+	ICustomReceiveInvokeContext,
+} from "./IClientConnection.js";
+import { IClientDetails } from "./IClientDetails.js";
 
 /**
  * A Helper class to get the RTT times of a client
@@ -59,9 +63,7 @@ class RTTPingPongHelper {
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
-		return {
-			className: this.constructor.name
-		};
+		return { className: this.constructor.name };
 	}
 
 	/**
@@ -150,13 +152,9 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 		else
 			clientIP = "unknown";
 
-		this.clientDetails = {
-			clientIP
-		};
+		this.clientDetails = { clientIP };
 
-		this.logContext = new LogContextStaticData({
-			clientConnectionID: this.clientConnectionID
-		});
+		this.logContext = new LogContextStaticData({ clientConnectionID: this.clientConnectionID });
 
 		this.wsClientClose = this.wsClientClose.bind(this);
 		this.wsClientMessage = this.wsClientMessage.bind(this);
@@ -218,12 +216,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
-		return {
-			className: this.constructor.name,
-			classProps: {
-				...this.logContext
-			}
-		};
+		return { className: this.constructor.name, classProps: { ...this.logContext } };
 	}
 
 	/**
@@ -271,7 +264,11 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 	 * @param message - the closing message
 	 */
 	public wsClientClose(code: number, message: WebSocket.Data): void {
-		theLogger.info("websocket was closed", "wsClientClose", this, { code, message: message.toString(), clientDetails: this.clientDetails });
+		theLogger.info("websocket was closed", "wsClientClose", this, {
+			code,
+			message: message.toString(),
+			clientDetails: this.clientDetails,
+		});
 		this.cleanUp();
 		this.emit("destroyed", this);
 	}
@@ -282,15 +279,12 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 	 * @param isBinary - data is binary
 	 */
 	public async wsClientMessage(data: WebSocket.RawData, isBinary: boolean): Promise<void> {
-		const customData: ICustomReceiveInvokeContext = {
-			logContext: this.logContext,
-			clientDetails: this.clientDetails
-		};
+		const customData: ICustomReceiveInvokeContext = { logContext: this.logContext, clientDetails: this.clientDetails };
 		const invokeContext = new ReceiveInvokeContext({
 			clientConnectionID: this.clientConnectionID,
 			clientIP: this.clientDetails.clientIP,
 			encoding: this.encoding,
-			customData
+			customData,
 		});
 
 		// Set the logContext for our invoke to have it available everywhere we then go within our code
@@ -312,7 +306,10 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 			const result = await theServer.receive(message, invokeContext);
 			if (this.encoding !== invokeContext.encoding) {
 				debugger;
-				theLogger.error("Client wants to change encoding on a websocket connection", "wsClientMessage", this, { encoding: this.encoding, invokeContext });
+				theLogger.error("Client wants to change encoding on a websocket connection", "wsClientMessage", this, {
+					encoding: this.encoding,
+					invokeContext,
+				});
 			}
 			if (result) {
 				this.send(result.payLoad);
@@ -324,7 +321,8 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 					}
 				}
 			}
-		} catch (err) {
+		}
+		catch (err) {
 			theLogger.error("exception theServer.receive", "wsClientMessage", this, undefined, err);
 		}
 	}

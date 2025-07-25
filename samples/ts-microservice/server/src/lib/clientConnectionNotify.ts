@@ -1,7 +1,7 @@
 import { ILogData } from "uclogger";
 
-import { IClientConnection, IClientConnectionNotify } from "./IClientConnection.js";
 import { theLogger } from "../globals.js";
+import { IClientConnection, IClientConnectionNotify } from "./IClientConnection.js";
 
 /**
  * Handles the notifies as beeing exposed by IConferenceControllerNotify
@@ -12,9 +12,7 @@ export class ClientConnectionNotifies extends Set<IClientConnectionNotify> {
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
-		return {
-			className: this.constructor.name
-		};
+		return { className: this.constructor.name };
 	}
 
 	/**

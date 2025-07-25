@@ -26,9 +26,7 @@ export class SettingsManager implements Partial<IENetUC_Settings_ManagerROSE_Inv
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
-		return {
-			className: this.constructor.name
-		};
+		return { className: this.constructor.name };
 	}
 
 	/**
@@ -37,10 +35,11 @@ export class SettingsManager implements Partial<IENetUC_Settings_ManagerROSE_Inv
 	 * @param invokeContext - Invokecontext from the asn.1 lib (containing invoke related data)
 	 * @returns - AsnGetSettingsResult on success, AsnRequestError on error or undefined if the function is not implemented
 	 */
-	public async onInvoke_asnGetSettings(argument: ENetUC_Settings_Manager.AsnGetSettingsArgument, invokeContext: IReceiveInvokeContext): Promise<ENetUC_Settings_Manager.AsnGetSettingsResult | ENetUC_Common.AsnRequestError | undefined> {
-		return new ENetUC_Settings_Manager.AsnGetSettingsResult({
-			settings: this.settings
-		});
+	public async onInvoke_asnGetSettings(
+		argument: ENetUC_Settings_Manager.AsnGetSettingsArgument,
+		invokeContext: IReceiveInvokeContext,
+	): Promise<ENetUC_Settings_Manager.AsnGetSettingsResult | ENetUC_Common.AsnRequestError | undefined> {
+		return new ENetUC_Settings_Manager.AsnGetSettingsResult({ settings: this.settings });
 	}
 
 	/**
@@ -51,7 +50,10 @@ export class SettingsManager implements Partial<IENetUC_Settings_ManagerROSE_Inv
 	 * @param invokeContext - Invokecontext from the asn.1 lib (containing invoke related data)
 	 * @returns - AsnSetSettingsResult on success, AsnRequestError on error or undefined if the function is not implemented
 	 */
-	public async onInvoke_asnSetSettings(argument: ENetUC_Settings_Manager.AsnSetSettingsArgument, invokeContext: IReceiveInvokeContext): Promise<ENetUC_Settings_Manager.AsnSetSettingsResult | ENetUC_Common.AsnRequestError | undefined> {
+	public async onInvoke_asnSetSettings(
+		argument: ENetUC_Settings_Manager.AsnSetSettingsArgument,
+		invokeContext: IReceiveInvokeContext,
+	): Promise<ENetUC_Settings_Manager.AsnSetSettingsResult | ENetUC_Common.AsnRequestError | undefined> {
 		let bChanged = false;
 		const changedSettings = new ENetUC_Settings_Manager.AsnSomeSettings();
 		if (this.settings.bEnabled !== argument.settings.bEnabled) {
