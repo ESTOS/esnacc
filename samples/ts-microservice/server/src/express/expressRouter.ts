@@ -4,8 +4,8 @@ import http from "node:http";
 import https from "node:https";
 import net from "node:net";
 import path from "node:path";
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 import { ILogData } from "uclogger";
 import { theLogger } from "../globals.js";
 
@@ -50,19 +50,16 @@ class ERouter {
 	 * Fetches the available Routes to add them to the express routing table
 	 * @returns - the router which is a static in this scope to be handed over to the express app.use
 	 */
-	public static getRoutes(): Promise<express.Router> {
-		const prom: Promise<express.Router> = new Promise(async (resolve, reject): Promise<void> => {
-			for (const file of this.getFiles()) {
-				const { default: mod } = await import("./routes/" + file);
-				if (mod) {
-					if (mod.init)
-						mod.init(router); 
-					this.modules.push(mod);
-				}
+	public static async getRoutes(): Promise<express.Router> {
+		for (const file of this.getFiles()) {
+			const { default: mod } = await import("./routes/" + file) as {default: IEModule};
+			if (mod) {
+				if (mod.init)
+					mod.init(router); 
+				this.modules.push(mod);
 			}
-			resolve(router);
-		});
-		return prom;
+		}
+		return router;
 	}
 
 	/**
@@ -88,9 +85,8 @@ class ERouter {
 	 */
 	private static getFiles(): string[] {
 		const routes = new Array<string>(0);
-		const __filename = fileURLToPath(import.meta.url);
-		const __dirname = dirname(__filename);
-		const normalizedPath = path.join(__dirname, "routes");
+		const filename = fileURLToPath(import.meta.url);
+		const normalizedPath = path.join(dirname(filename), "routes");
 		const files = fs.readdirSync(normalizedPath);
 		for (const file of files) {
 			const ext = path.extname(file).toLowerCase();
