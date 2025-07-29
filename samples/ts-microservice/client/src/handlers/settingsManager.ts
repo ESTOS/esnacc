@@ -6,8 +6,10 @@ import { ENetUC_Settings_Manager } from "../stub/types";
 
 /**
  * This module sends requests to the server to receive events
+ * 
+ * This is a *SAMPLE* implementation how to use the rose stub with classes and inheritance
  */
-export class SettingsManager implements IENetUC_Settings_ManagerROSE_Event_Handler {
+class SettingsManager implements IENetUC_Settings_ManagerROSE_Event_Handler {
 	private server: ENetUC_Settings_ManagerROSE;
 
 	/**

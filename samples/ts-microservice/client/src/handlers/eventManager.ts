@@ -6,8 +6,10 @@ import { IENetUC_Event_ManagerROSE_Event_Handler } from "../stub/ENetUC_Event_Ma
 
 /**
  * This module sends requests to the server to receive events
+ *
+ * This is a *SAMPLE* implementation how to use the rose stub with classes and inheritance
  */
-export class EventManager implements IENetUC_Event_ManagerROSE_Event_Handler {
+class EventManager implements IENetUC_Event_ManagerROSE_Event_Handler {
 	// The networking layer that allows to send events to the server side
 	private server: ENetUC_Event_ManagerROSE;
 

@@ -9,7 +9,27 @@
     <script type="module" src="/@vite/client"></script>
     <script type="module" src="/src/client.ts"></script>
     <script type="module">
-      import { theClient } from "/src/client.ts";
+      import { theClient, settingsManager, eventManager } from "/src/client.ts";
+      import { AsnCreateFancyEventsArgument, AsnCreateFancyEventsResult } from "/src/stub/ENetUC_Event_Manager.ts";
+      import { AsnGetSettingsArgument, AsnGetSettingsResult, AsnSetSettingsArgument, AsnSetSettingsResult } from "/src/stub/ENetUC_Settings_Manager.ts";
+      
+      settingsManager.onEvent_asnSettingsChanged = (argument, invokeContext) => {
+        console.log("onEvent_asnSettingsChanged:", argument);
+        if (argument.settings.bEnabled !== undefined) {
+          const enabled = document.getElementById("enabled")
+          if (enabled)
+            enabled.checked = argument.settings.bEnabled;
+        }
+        if (argument.settings.u8sUsername !== undefined) {
+          const username = document.getElementById("username")
+          if (username)
+            username.value = argument.settings.u8sUsername;
+        }
+      }
+
+      eventManager.onEvent_asnFancyEvent = (argument, invokeContext) => {
+        console.log("onEvent_asnFancyEvent:", argument);
+      }
 
       function encoding_changed() {
         const encoding = document.getElementById("encoding");
@@ -23,29 +43,44 @@
           updateTarget()
         }
       }
-      function getEvents() {
+      async function getEvents() {
         const amount = document.getElementById("amount");
         const delay = document.getElementById("delay");
         if(amount && delay)
-          theClient.eventManager.getEvents(parseInt(amount.value, 10), parseInt(delay.value, 10));
-          console.log("fullydone");
+        {
+          const argument = new AsnCreateFancyEventsArgument({
+            iEventCount: parseInt(amount.value, 10),
+            iEventDelay: parseInt(delay.value, 10)
+          });
+          const response = await eventManager.invoke_asnCreateFancyEvents(argument);
+          theClient.getResult(response, AsnCreateFancyEventsResult);
+        }
       }
       async function getSettings() {
-        const result = await theClient.settingsManager.getSettings();
-        if (!result)
-          return;
+        const argument = new AsnGetSettingsArgument();
+        const response = await settingsManager.invoke_asnGetSettings(argument);
+        const result = theClient.getResult(response, AsnGetSettingsResult);
         const enabled = document.getElementById("enabled");
         if(enabled)
-          enabled.checked = result.enabled;
+          enabled.checked = result.settings.bEnabled;
         const username = document.getElementById("username");
         if(username)
-          username.value = result.username;
+          username.value = result.settings.u8sUsername;
       }
-      function setSettings() {
+      async function setSettings() {
         const enabled = document.getElementById("enabled");
         const username = document.getElementById("username");
         if(enabled && username)
-          theClient.settingsManager.setSettings(enabled.checked, username.value);
+        {
+          const argument = new AsnSetSettingsArgument({
+            settings: {
+              bEnabled: enabled.checked,
+              u8sUsername: username.value
+            }
+          });
+          const response = await settingsManager.invoke_asnSetSettings(argument);
+          theClient.getResult(response, AsnSetSettingsResult);
+        }
       }
       function clearLog() {
         theClient.clearLog();
