@@ -125,7 +125,7 @@ export class ROSEResultSeq {
 	}
 
 	public resultValue!: number;
-	 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public result!: any;
 }
 
@@ -214,7 +214,7 @@ export class ROSEError {
 	public sessionID?: string;
 	public invokedID!: number;
 	public error_value!: number;
-	 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public error?: any;
 }
 
@@ -363,7 +363,7 @@ export class ROSEInvoke {
 	public operationName?: string;
 	public authentication?: ROSEAuthRequest;
 	public operationID!: number;
-	 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public argument?: any;
 }
 

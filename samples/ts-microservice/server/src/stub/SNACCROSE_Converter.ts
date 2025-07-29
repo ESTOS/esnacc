@@ -158,7 +158,7 @@ export class ROSEResultSeq_Converter {
 			// [Print_JSON_DecoderSeqDefCode]
 			TSConverter.fillJSONParam(s, t, "resultValue", "number", errors, newContext, false);
 			if (TSConverter.validateAnyParam(s, "result", errors, newContext, false))
-				 
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				t.result = s.result;
 		}
 
@@ -343,7 +343,7 @@ export class ROSEError_Converter {
 			TSConverter.fillJSONParam(s, t, "invokedID", "number", errors, newContext, false);
 			TSConverter.fillJSONParam(s, t, "error_value", "number", errors, newContext, false);
 			if (TSConverter.validateAnyParam(s, "error", errors, newContext, true))
-				 
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				t.error = s.error;
 		}
 
@@ -757,7 +757,7 @@ export class ROSEInvoke_Converter {
 				t.authentication = _authentication;
 			TSConverter.fillJSONParam(s, t, "operationID", "number", errors, newContext, false);
 			if (TSConverter.validateAnyParam(s, "argument", errors, newContext, true))
-				 
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				t.argument = s.argument;
 		}
 
