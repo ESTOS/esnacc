@@ -1,7 +1,7 @@
 import { ILogCallback, ILogData } from "uclogger";
 import WebSocket from "ws";
 
-import { EOwnInterval, EOwnTimeout } from "./common_timers";
+import { EOwnInterval, EOwnTimeout } from "./common_timers.js";
 
 // Loglevels we support
 export type LogLevels = "error" | "warn" | "info" | "debug";
@@ -10,22 +10,44 @@ export type LogLevels = "error" | "warn" | "info" | "debug";
  * Interface to access theLogger
  */
 export interface ILogger {
-	error(msg: string, calling_method: string, logdata_or_callback?: ILogData | ILogCallback, meta?: unknown, exception?: unknown): void;
-	warn(msg: string, calling_method: string, logdata_or_callback?: ILogData | ILogCallback, meta?: unknown, exception?: unknown): void;
-	info(msg: string, calling_method: string, logdata_or_callback?: ILogData | ILogCallback, meta?: unknown, exception?: unknown): void;
-	debug(msg: string, calling_method: string, logdata_or_callback?: ILogData | ILogCallback, meta?: unknown, exception?: unknown): void;
+	error(
+		msg: string,
+		calling_method: string,
+		logdata_or_callback?: ILogData | ILogCallback,
+		meta?: unknown,
+		exception?: unknown,
+	): void;
+	warn(
+		msg: string,
+		calling_method: string,
+		logdata_or_callback?: ILogData | ILogCallback,
+		meta?: unknown,
+		exception?: unknown,
+	): void;
+	info(
+		msg: string,
+		calling_method: string,
+		logdata_or_callback?: ILogData | ILogCallback,
+		meta?: unknown,
+		exception?: unknown,
+	): void;
+	debug(
+		msg: string,
+		calling_method: string,
+		logdata_or_callback?: ILogData | ILogCallback,
+		meta?: unknown,
+		exception?: unknown,
+	): void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type logany = any
+type logany = any;
 
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /**
  * This function removes rather large objects from a log object which bring no benefit to the log output
  * e.g. a websocket requires 100k json log, but has no sense to be logged, same for the timer objects
- *
  * @param obj - the object to parse
  * @param levelstoprocess - a counter that is used to only process a certain level (deepness in the object)
  * @param id - in recursion the id of the parent element we are currently handling
@@ -36,7 +58,7 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 	try {
 		let result: logany | undefined;
 
-		const type = typeof (obj);
+		const type = typeof obj;
 		switch (type) {
 			case "boolean":
 			case "number":
@@ -52,9 +74,7 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 			case "object":
 				if (obj instanceof Date)
 					result = obj;
-				else if (obj instanceof WebSocket ||
-                        obj instanceof EOwnTimeout ||
-                        obj instanceof EOwnInterval)
+				else if (obj instanceof WebSocket || obj instanceof EOwnTimeout || obj instanceof EOwnInterval)
 					result = omitForLoggingInternal(obj, 0, id, cache);
 				else if (obj === null)
 					result = obj;
@@ -89,7 +109,8 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 										result[key] = element;
 								}
 								counter++;
-							} else if (counter === 20) {
+							}
+							else if (counter === 20) {
 								result.truncated = true;
 								counter++;
 							}
@@ -99,14 +120,15 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 				break;
 			default:
 				// die we miss something?
-				// eslint-disable-next-line no-debugger
+
 				debugger;
 				break;
 		}
 
 		return result;
-	} catch (error) {
-		// eslint-disable-next-line no-debugger
+	}
+	catch (error) {
+		console.error(error);
 		debugger;
 		return obj;
 	}
@@ -115,7 +137,6 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 /**
  * This function removes rather large objects from a log object which bring no benefit to the log output
  * e.g. a websocket requires 100k json log, but has no sense to be logged, same for the timer objects
- *
  * @param obj - the object to parse
  * @param levelstoprocess - a counter that is used to only process a certain level (deepness in the object)
  * @returns - the cleaned object

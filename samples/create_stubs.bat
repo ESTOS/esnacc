@@ -33,7 +33,7 @@ POPD
 rem Building node server stubs...
 echo Building node server stubs...
 PUSHD ts-microservice\server\src\stub
-SET COMMAND=-JT -j -RTS_SERVER -node:%NODEVERSION% -comments %FILES%
+SET COMMAND=-JTE -j -RTS_SERVER -node:%NODEVERSION% -comments %FILES%
 echo %COMPILER% %COMMAND%
 %COMPILER% %COMMAND%
 echo.

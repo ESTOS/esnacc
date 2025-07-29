@@ -7,12 +7,12 @@
 
 import * as asn1ts from "@estos/asn1ts";
 
-import * as ENetUC_Common from "./ENetUC_Common";
-import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
-import { ROSEMessage_Converter } from "./SNACCROSE_Converter";
-import { DecodeContext, ConverterErrors, EncodeContext } from "./TSConverterBase";
-import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, ReceiveInvokeContext, SendInvokeContext } from "./TSROSEBase";
-import { EASN1TransportEncoding, ISendInvokeContextParams } from "./TSInvokeContext";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE.js";
+import { ROSEMessage_Converter } from "./SNACCROSE_Converter.js";
+import { DecodeContext, ConverterErrors, EncodeContext } from "./TSConverterBase.js";
+import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, ReceiveInvokeContext, SendInvokeContext } from "./TSROSEBase.js";
+import { EASN1TransportEncoding, ISendInvokeContextParams } from "./TSInvokeContext.js";
 
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {

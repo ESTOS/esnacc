@@ -1,16 +1,14 @@
 import dotenv from "dotenv";
-import { EConfigTemplate, validators, ICoreConfig } from "ucconfig";
+import { EConfigTemplate, ICoreConfig, validators } from "ucconfig";
 
-import { Common } from "../lib/common";
-import { EASN1TransportEncoding } from "../stub/TSInvokeContext";
+import { Common } from "../lib/common.js";
+import { EASN1TransportEncoding } from "../stub/TSInvokeContext.js";
 
 /**
  * The static config of our server
  */
 class StaticConfig {
-	public readonly clientConnection = {
-		client_keepalive: 30000
-	};
+	public readonly clientConnection = { client_keepalive: 30000 };
 
 	public readonly bPrettyPrintMessages = true;
 	public readonly logStatisticsOnConsole = false;
@@ -38,11 +36,9 @@ interface IEconfConfig extends StaticConfig {
 	econfDefaultEncoding: EASN1TransportEncoding;
 }
 
-export type IConfig = IEconfConfig & ICoreConfig
+export type IConfig = IEconfConfig & ICoreConfig;
 
-/**
- *
- */
+/** */
 export class Config extends EConfigTemplate {
 	private _config: IEconfConfig;
 
@@ -59,7 +55,6 @@ export class Config extends EConfigTemplate {
 
 	/**
 	 * Getter for the main config
-	 *
 	 * @returns - IConfig object
 	 */
 	public get config(): IConfig {
@@ -68,7 +63,6 @@ export class Config extends EConfigTemplate {
 
 	/**
 	 * Inits all configurations/settings from given environment variables
-	 *
 	 * @returns - Instance of this config
 	 */
 	private init(): IEconfConfig {
@@ -76,13 +70,30 @@ export class Config extends EConfigTemplate {
 			...new StaticConfig(),
 			instanceID: Common.generateGUID(),
 			logDirectory: this.newProperty<string>("LOG_DIRECTORY", validators.validateFolderExists()),
-			econfServerFDQN: this.newEnvProperty<string>("SERVER_FQDN", validators.validateStringNotEmpty("tolower"), undefined, true),
+			econfServerFDQN: this.newEnvProperty<string>(
+				"SERVER_FQDN",
+				validators.validateStringNotEmpty("tolower"),
+				undefined,
+				true,
+			),
 			econfServerListenPortTCP: this.newProperty<number>("SERVER_LISTEN_PORT_TCP", validators.validatePort(), 0),
 			econfServerListenPortTLS: this.newProperty<number>("SERVER_LISTEN_PORT_TLS", validators.validatePort(), 0),
 			econfServerListenIP: this.newProperty<string>("SERVER_LISTEN_IP", validators.validateIPv4(), "0.0.0.0"),
-			econfServerCertfile: this.newProperty<string | undefined>("SERVER_CERTFILE", validators.validateFileExists(), undefined),
-			econfServerKeyfile: this.newProperty<string | undefined>("SERVER_KEYFILE", validators.validateFileExists(), undefined),
-			econfDefaultEncoding: this.newProperty<EASN1TransportEncoding>("SERVER_DEFAULTENCODING", validators.validateInteger(EASN1TransportEncoding.JSON, EASN1TransportEncoding.BER), EASN1TransportEncoding.BER)
+			econfServerCertfile: this.newProperty<string | undefined>(
+				"SERVER_CERTFILE",
+				validators.validateFileExists(),
+				undefined,
+			),
+			econfServerKeyfile: this.newProperty<string | undefined>(
+				"SERVER_KEYFILE",
+				validators.validateFileExists(),
+				undefined,
+			),
+			econfDefaultEncoding: this.newProperty<EASN1TransportEncoding>(
+				"SERVER_DEFAULTENCODING",
+				validators.validateInteger(EASN1TransportEncoding.JSON, EASN1TransportEncoding.BER),
+				EASN1TransportEncoding.BER,
+			),
 		};
 
 		return config;
@@ -90,7 +101,6 @@ export class Config extends EConfigTemplate {
 
 	/**
 	 * Current working directory of the Node.js process
-	 *
 	 * @returns - current working directory of the Node.js process
 	 */
 	public get rootdir(): string {

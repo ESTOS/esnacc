@@ -1,8 +1,8 @@
-import { AsyncLocalStorage } from "async_hooks";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { IFinalLogData, ILogData } from "uclogger";
 
-import { theConfig, theLogger } from "../globals";
-import { Common } from "../lib/common";
+import { theConfig, theLogger } from "../globals.js";
+import { Common } from "../lib/common.js";
 
 /**
  * These are static properties we store in the client connection as they are static in association to the client connection
@@ -32,7 +32,6 @@ export class LogContextStaticData implements ILogContextStaticData {
 	public clientConnectionID?: string;
 	/**
 	 * Constructs the LogContextData object
-	 *
 	 * @param args - Arguments the object will be initialized with, if a mandatory one is missing we prefill with default values
 	 */
 	public constructor(args?: Partial<ILogContextStaticData>) {
@@ -73,7 +72,6 @@ export class LogLocalStorage {
 
 	/**
 	 * Gets instance of LogLocalStorage to use as singleton.
-	 *
 	 * @returns - an instance of this class.
 	 */
 	public static getInstance(): LogLocalStorage {
@@ -97,18 +95,14 @@ export class LogLocalStorage {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
-	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
-		return {
-			className: this.constructor.name
-		};
+		return { className: this.constructor.name };
 	}
 
 	/**
 	 * Add data to the storage
-	 *
 	 * @param store - the data to add to the store
 	 */
 	public enterWith(store: ILogContextData): void {
@@ -117,7 +111,6 @@ export class LogLocalStorage {
 
 	/**
 	 * A callback from theLogger that adds data from the LogLocalStorage to the log request
-	 *
 	 * @param logData - the logData as provided by theLogger
 	 * @returns - enriched logData
 	 */
@@ -126,12 +119,8 @@ export class LogLocalStorage {
 		if (store) {
 			if (!logData.classProps)
 				logData.classProps = { store };
-			else {
-				logData.classProps = {
-					...store,
-					...logData.classProps
-				};
-			}
+			else
+				logData.classProps = { ...store, ...logData.classProps };
 		}
 
 		if (theConfig.environment === "development") {
@@ -171,7 +160,8 @@ export class LogLocalStorage {
 			let datalen = 0;
 			try {
 				datalen = Common.stringify(logData).length;
-			} catch (error) {
+			}
+			catch (error) {
 				debugger;
 				// If we hit this line we likely have a circular dependency in the logData that needs to be resolved/removed
 				// Check especially the meta data for timer objects
@@ -194,13 +184,21 @@ export class LogLocalStorage {
 						total_data: number;
 					}
 					const elements: ISortElement[] = [];
-					for (const [key, caller] of this.callers)
-						elements.push({ method: key, count: caller.count, avg_data: Math.round(caller.totalSize / caller.count), total_data: caller.totalSize });
+					for (const [key, caller] of this.callers) {
+						elements.push({
+							method: key,
+							count: caller.count,
+							avg_data: Math.round(caller.totalSize / caller.count),
+							total_data: caller.totalSize,
+						});
+					}
 
 					con.log("------------------------------");
 					con.log(`Status after ${this.iLogCounter} log calls:`);
 					con.log("---\nmost called:");
-					elements.sort((a: ISortElement, b: ISortElement): number => { return b.count - a.count; });
+					elements.sort((a: ISortElement, b: ISortElement): number => {
+						return b.count - a.count;
+					});
 					let iCount = 0;
 					for (const element of elements) {
 						con.log(`${element.count}x -> ${element.method}`);
@@ -210,7 +208,9 @@ export class LogLocalStorage {
 					}
 
 					con.log("---\nhighest average payload:");
-					elements.sort((a: ISortElement, b: ISortElement): number => { return b.avg_data - a.avg_data; });
+					elements.sort((a: ISortElement, b: ISortElement): number => {
+						return b.avg_data - a.avg_data;
+					});
 					iCount = 0;
 					for (const element of elements) {
 						con.log(`${element.avg_data} bytes -> ${element.method}`);
@@ -220,7 +220,9 @@ export class LogLocalStorage {
 					}
 
 					con.log("---\nhighest total payload:");
-					elements.sort((a: ISortElement, b: ISortElement): number => { return b.total_data - a.total_data; });
+					elements.sort((a: ISortElement, b: ISortElement): number => {
+						return b.total_data - a.total_data;
+					});
 					iCount = 0;
 					for (const element of elements) {
 						con.log(`${element.total_data} bytes -> ${element.method}`);

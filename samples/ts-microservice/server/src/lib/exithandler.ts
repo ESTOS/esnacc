@@ -1,11 +1,11 @@
 import { format } from "date-fns";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
+import { getHeapSnapshot } from "node:v8";
 import { ILogData } from "uclogger";
-import { getHeapSnapshot } from "v8";
 
-import { Common } from "./common";
-import { theConfig, theClientConnectionManager, theServer, theLogger, theLogStorage } from "../globals";
+import { theClientConnectionManager, theConfig, theLogger, theLogStorage, theServer } from "../globals.js";
+import { Common } from "./common.js";
 
 enum CONF_EXIT_CODES {
 	EXIT_CODE_UNHANDLED_PROMISE = 64,
@@ -16,7 +16,7 @@ enum CONF_EXIT_CODES {
 	EXIT_CODE_REDIS_INIT_FAILED = 69,
 	EXIT_CODE_DETECT_MAIN_NETWORKINTERFACE_FAILED = 70,
 	EXIT_CODE_CONFIGURATION_ERROR = 71,
-	EXIT_CODE_NOT_LISTENING = 72
+	EXIT_CODE_NOT_LISTENING = 72,
 }
 
 const exitHandler: ILogData = { className: "exitHandler" };
@@ -31,7 +31,11 @@ const initExitHandler = function(): void {
 	// In case an error happens during shutdown ignore
 	let shuttingDown = false;
 
-	const performExit = async (dump = false, exitCauseError: Error | undefined = undefined, exitCauseReason: unknown | null | undefined = undefined): Promise<void> => {
+	const performExit = async (
+		dump = false,
+		exitCauseError: Error | undefined = undefined,
+		exitCauseReason: unknown | null | undefined = undefined,
+	): Promise<void> => {
 		if (shuttingDown)
 			return;
 		shuttingDown = true;
@@ -56,7 +60,8 @@ const initExitHandler = function(): void {
 				const fileStream = fs.createWriteStream(heapFile);
 				snapShot.pipe(fileStream);
 				fileStream.close();
-			} catch (error) {
+			}
+			catch (error) {
 				theLogger.error("Failed to create dump", "perfomExit", exitHandler, undefined, error);
 			}
 		}
@@ -68,7 +73,8 @@ const initExitHandler = function(): void {
 		cleaned = true;
 		try {
 			await theLogger.exit();
-		} catch (error) {
+		}
+		catch (error) {
 			(console as Console).error(`Failed to flush logger ${error}`);
 		}
 	};
@@ -85,7 +91,7 @@ const initExitHandler = function(): void {
 	 *
 	 * Details: https://nodejs.org/docs/latest-v12.x/api/process.html#process_event_unhandledrejection
 	 */
-	process.once("unhandledRejection", async (reason: {} | null | undefined, promise: Promise<unknown>) => {
+	process.once("unhandledRejection", async (reason: unknown | null | undefined, promise: Promise<unknown>) => {
 		debugger;
 		if (shuttingDown)
 			Common.exit("EXIT_CODE_UNHANDLED_PROMISE", CONF_EXIT_CODES.EXIT_CODE_UNHANDLED_PROMISE);
@@ -95,7 +101,8 @@ const initExitHandler = function(): void {
 		try {
 			await performExit(true, undefined, reason);
 			Common.exit("EXIT_CODE_UNHANDLED_EXCEPTION", CONF_EXIT_CODES.EXIT_CODE_UNHANDLED_EXCEPTION);
-		} catch (error) {
+		}
+		catch (error) {
 			theLogger.error("Unhandled rejection cleanup failed", "unhandledRejection", exitHandler, undefined, error);
 			Common.exit("EXIT_CODE_UNHANDLED_PROMISE", CONF_EXIT_CODES.EXIT_CODE_UNHANDLED_PROMISE);
 		}
@@ -124,7 +131,8 @@ const initExitHandler = function(): void {
 		try {
 			await performExit(true, error);
 			Common.exit("EXIT_CODE_UNHANDLED_EXCEPTION", CONF_EXIT_CODES.EXIT_CODE_UNHANDLED_EXCEPTION);
-		} catch (error) {
+		}
+		catch (error) {
 			theLogger.error("Unhandled rejection cleanup failed", "unhandledRejection", exitHandler, undefined, error);
 			Common.exit("EXIT_CODE_UNHANDLED_EXCEPTION", CONF_EXIT_CODES.EXIT_CODE_UNHANDLED_EXCEPTION);
 		}
@@ -156,9 +164,7 @@ const initExitHandler = function(): void {
 		Common.exit("SIGTERM", 15);
 	});
 
-	/**
-	 *
-	 */
+	/** */
 	process.on("SIGHUP", async (signal: NodeJS.Signals): Promise<void> => {
 		theLogger.error(`ECS exit`, "SIGHUP", exitHandler, { signal: "SIGHUP" });
 		await performExit();
@@ -176,7 +182,4 @@ const initExitHandler = function(): void {
 	});
 };
 
-export {
-	initExitHandler,
-	CONF_EXIT_CODES
-};
+export { CONF_EXIT_CODES, initExitHandler };

@@ -1,12 +1,14 @@
 import express from "express";
-import fs from "fs";
-import http from "http";
-import https from "https";
-import net from "net";
-import path from "path";
+import fs from "node:fs";
+import http from "node:http";
+import https from "node:https";
+import net from "node:net";
+import path from "node:path";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ILogData } from "uclogger";
+import { theLogger } from "../globals.js";
 
-import { theLogger } from "../globals";
 const router = express.Router();
 
 // Routes add themselves to the router.
@@ -36,24 +38,19 @@ class ERouter {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
-	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public static getLogData(): ILogData {
-		return {
-			className: "ERouter"
-		};
+		return { className: "ERouter" };
 	}
 
 	/**
 	 * Fetches the available Routes to add them to the express routing table
-	 *
 	 * @returns - the router which is a static in this scope to be handed over to the express app.use
 	 */
-	public static getRoutes(): express.Router {
+	public static async getRoutes(): Promise<express.Router> {
 		for (const file of this.getFiles()) {
-			// eslint-disable-next-line @typescript-eslint/no-var-requires
-			const mod = require("./routes/" + file) as IEModule;
+			const { default: mod } = await import("./routes/" + file) as { default: IEModule; };
 			if (mod) {
 				if (mod.init)
 					mod.init(router);
@@ -65,7 +62,6 @@ class ERouter {
 
 	/**
 	 * Allows to handle server related stuff in the Module (e.g. upgrade to websocket)
-	 *
 	 * @param server - the express server object to add the upgrade callback to
 	 */
 	public static setServer(server: http.Server | https.Server): void {
@@ -75,7 +71,8 @@ class ERouter {
 					if (module.onUpgrade && module.onUpgrade(request, socket, head))
 						break;
 				}
-			} catch (error) {
+			}
+			catch (error) {
 				theLogger.error("Upgrading connection failed", "setServer", this, { request }, error);
 			}
 		});
@@ -83,12 +80,12 @@ class ERouter {
 
 	/**
 	 * Retrieves the available modules in the same path
-	 *
 	 * @returns - the list of modules in the path
 	 */
 	private static getFiles(): string[] {
 		const routes = new Array<string>(0);
-		const normalizedPath = path.join(__dirname, "routes");
+		const filename = fileURLToPath(import.meta.url);
+		const normalizedPath = path.join(dirname(filename), "routes");
 		const files = fs.readdirSync(normalizedPath);
 		for (const file of files) {
 			const ext = path.extname(file).toLowerCase();

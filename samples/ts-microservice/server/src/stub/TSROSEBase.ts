@@ -8,17 +8,17 @@
 import * as asn1ts from "@estos/asn1ts";
 import { IncomingHttpHeaders } from "http";
 
-import * as ENetUC_Common from "./ENetUC_Common";
-import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter";
-import { InvokeProblemenum, RejectProblem, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSERejectChoice, ROSEResult, ROSEResultSeq } from "./SNACCROSE";
-import { ROSEMessage_Converter, ROSEReject_Converter } from "./SNACCROSE_Converter";
-import { ConverterErrors, DecodeContext, IConverter, EncodeContext, IEncodeContext } from "./TSConverterBase";
-import { EASN1TransportEncoding, IInvokeContextBaseParams, IReceiveInvokeContextParams, ISendInvokeContextParams } from "./TSInvokeContext";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter.js";
+import { InvokeProblemenum, RejectProblem, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSERejectChoice, ROSEResult, ROSEResultSeq } from "./SNACCROSE.js";
+import { ROSEMessage_Converter, ROSEReject_Converter } from "./SNACCROSE_Converter.js";
+import { ConverterErrors, DecodeContext, IConverter, EncodeContext, IEncodeContext } from "./TSConverterBase.js";
+import { EASN1TransportEncoding, IInvokeContextBaseParams, IReceiveInvokeContextParams, ISendInvokeContextParams } from "./TSInvokeContext.js";
 
 /**
  * The websocket is different between the node and the browser implemenation, thus we cast it to any
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type IOriginalWebSocket = any
 
 // Special Custom Invoke Problems for internal usage (used in Error Responses)
@@ -78,9 +78,9 @@ export interface IDualWebSocket {
 	close(code?: number, reason?: string): void;
 	// Also supports blob but we use either string or Uint8Array internally
 	send(data: string | Uint8Array /* | Blob */): void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	 
 	addEventListener(type: string, listener?: (event: any) => unknown): void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	 
 	removeEventListener(type: string, listener?: (event: any) => unknown): void;
 }
 
@@ -418,9 +418,9 @@ interface IASN1HandlerClass {
 	setLogContext?(argument: unknown, invokeContext: IReceiveInvokeContext): void;
 }
 // Type declares for methods that are handling a request
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type IOnInvokeMethod = (argument: any, invokeContext: IReceiveInvokeContext) => Promise<object | ENetUC_Common.AsnRequestError | undefined>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type IOnEventMethod = (argument: any, invokeContext: IReceiveInvokeContext) => void;
 
 // Reference to the encoded ROSE message data (allows the function to fill in the encoded and hand it back to the caller)

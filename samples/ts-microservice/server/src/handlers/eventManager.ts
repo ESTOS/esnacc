@@ -1,10 +1,10 @@
 import { ILogData } from "uclogger";
 
-import { theClientConnectionManager } from "../globals";
-import { ENetUC_Event_ManagerROSE } from "../stub/ENetUC_Event_ManagerROSE";
-import { IENetUC_Event_ManagerROSE_Invoke_Handler } from "../stub/ENetUC_Event_ManagerROSE_Interface";
-import { IASN1Transport, IReceiveInvokeContext } from "../stub/TSROSEBase";
-import { ENetUC_Common, ENetUC_Event_Manager } from "../stub/types";
+import { theClientConnectionManager } from "../globals.js";
+import { ENetUC_Event_ManagerROSE } from "../stub/ENetUC_Event_ManagerROSE.js";
+import { IENetUC_Event_ManagerROSE_Invoke_Handler } from "../stub/ENetUC_Event_ManagerROSE_Interface.js";
+import { IASN1Transport, IReceiveInvokeContext } from "../stub/TSROSEBase.js";
+import { ENetUC_Common, ENetUC_Event_Manager } from "../stub/types.js";
 
 /**
  * This module creates events for clients
@@ -15,7 +15,6 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 
 	/**
 	 * Creates the SettingsManager object
-	 *
 	 * @param transport - the transport layer (the TSASN1Server instance that holds the hole ROSE ASN1 stuff)
 	 */
 	public constructor(transport: IASN1Transport) {
@@ -25,30 +24,30 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
-	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
-		return {
-			className: this.constructor.name
-		};
+		return { className: this.constructor.name };
 	}
 
 	/**
 	 * Method that will create some events the server will then dispatch to the clients
 	 *
 	 * It´s not possible to call this method through rest as the client won´t receive these events
-	 *
 	 * @param argument - Argument to create fancy events on the server side
 	 * @param invokeContext - Invokecontext from the asn.1 lib (containing invoke related data)
 	 * @returns - AsnCreateFancyEventsResult on success, AsnRequestError on error or undefined if the function is not implemented
 	 */
-	public async onInvoke_asnCreateFancyEvents(argument: ENetUC_Event_Manager.AsnCreateFancyEventsArgument, invokeContext: IReceiveInvokeContext): Promise<ENetUC_Event_Manager.AsnCreateFancyEventsResult | ENetUC_Common.AsnRequestError | undefined> {
+	public async onInvoke_asnCreateFancyEvents(
+		argument: ENetUC_Event_Manager.AsnCreateFancyEventsArgument,
+		invokeContext: IReceiveInvokeContext,
+	): Promise<ENetUC_Event_Manager.AsnCreateFancyEventsResult | ENetUC_Common.AsnRequestError | undefined> {
 		// Check if the request comes from a websocket connection
 		if (!invokeContext.clientConnectionID) {
 			return new ENetUC_Common.AsnRequestError({
-				u8sErrorString: "It is not possible to create events through a rest like request. Please use it via a websocket connection.",
-				iErrorDetail: 1
+				u8sErrorString:
+					"It is not possible to create events through a rest like request. Please use it via a websocket connection.",
+				iErrorDetail: 1,
 			});
 		}
 
@@ -61,7 +60,6 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 
 	/**
 	 * Sends an event to all currently connected clients
-	 *
 	 * @param counter - the Counter that is increased with every event
 	 * @param left - The amount of eveets that are left to be send
 	 * @param delay - the delay for the next trigger
@@ -72,10 +70,7 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 		const connectionIDs = theClientConnectionManager.getClientConnectionIDs();
 		if (connectionIDs.length) {
 			// If we have connected clients, create the event argument and dispatch to all connected clients
-			const argument = new ENetUC_Event_Manager.AsnFancyEventArgument({
-				iEventCounter: counter,
-				iEventsLeft: left
-			});
+			const argument = new ENetUC_Event_Manager.AsnFancyEventArgument({ iEventCounter: counter, iEventsLeft: left });
 			for (const connectionID of connectionIDs)
 				this.rose.event_asnFancyEvent(argument, { clientConnectionID: connectionID });
 		}
