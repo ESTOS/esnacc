@@ -17,7 +17,7 @@ import { ASN1ClassInstanceType } from "./TSASN1Base";
 /**
  * The ASN1 client side as required in node (different websocket and timer)
  */
-export abstract class TSASN1NodeClient extends TSASN1Client {
+export class TSASN1NodeClient extends TSASN1Client {
 	private idual: IDualWebSocket | null = null;
 	private socket?: WebSocket;
 	// The reconnecting timer
@@ -28,7 +28,7 @@ export abstract class TSASN1NodeClient extends TSASN1Client {
 	 *
 	 * @param encoding - sets the encoding for outbound calls
 	 */
-	protected constructor(encoding: EASN1TransportEncoding.JSON | EASN1TransportEncoding.BER) {
+	public constructor(encoding: EASN1TransportEncoding.JSON | EASN1TransportEncoding.BER) {
 		super(encoding, ASN1ClassInstanceType.TSASN1NodeClient);
 	}
 

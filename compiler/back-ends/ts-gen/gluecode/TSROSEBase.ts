@@ -418,10 +418,8 @@ interface IASN1HandlerClass {
 	setLogContext?(argument: unknown, invokeContext: IReceiveInvokeContext): void;
 }
 // Type declares for methods that are handling a request
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type IOnInvokeMethod = (argument: any, invokeContext: IReceiveInvokeContext) => Promise<object | ENetUC_Common.AsnRequestError | undefined>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type IOnEventMethod = (argument: any, invokeContext: IReceiveInvokeContext) => void;
+type IOnInvokeMethod<T> = (argument: T, invokeContext: IReceiveInvokeContext) => Promise<object | ENetUC_Common.AsnRequestError | undefined>;
+type IOnEventMethod<T> = (argument: T, invokeContext: IReceiveInvokeContext) => void;
 
 // Reference to the encoded ROSE message data (allows the function to fill in the encoded and hand it back to the caller)
 export interface IASN1InvokeData {
@@ -854,7 +852,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param invokeContext - the invokeContext which has already been prefilled with session related details
 	 * @returns the answer for the other side (either the result on succes or a ROSEError or ROSEReject
 	 */
-	public async handleOnEvent(invoke: ROSEInvoke, operationID: number, argumentClass: IASN1DataClass, argumentConverter: IConverter, handler: IASN1HandlerClass, method: IOnEventMethod | undefined, invokeContext: IReceiveInvokeContext): Promise<ROSEReject | undefined> {
+	public async handleOnEvent(invoke: ROSEInvoke, operationID: number, argumentClass: IASN1DataClass, argumentConverter: IConverter, handler: IASN1HandlerClass, method: IOnEventMethod<any> | undefined, invokeContext: IReceiveInvokeContext): Promise<ROSEReject | undefined> {
 		let result: ROSEReject;
 
 		const converterErrors = new ConverterErrors();
@@ -901,7 +899,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param invokeContext - the invokeContext which has already been prefilled with session related details
 	 * @returns the answer for the other side (either the result on succes or a ROSEError or ROSEReject
 	 */
-	public async handleOnInvoke(invoke: ROSEInvoke, operationID: number, argumentClass: IASN1DataClass, argumentConverter: IConverter, resultConverter: IConverter, handler: IASN1HandlerClass, method: IOnInvokeMethod | undefined, invokeContext: IReceiveInvokeContext): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
+	public async handleOnInvoke(invoke: ROSEInvoke, operationID: number, argumentClass: IASN1DataClass, argumentConverter: IConverter, resultConverter: IConverter, handler: IASN1HandlerClass, method: IOnInvokeMethod<any> | undefined, invokeContext: IReceiveInvokeContext): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
 		let result: ROSEReject | ROSEResult | ROSEError | undefined;
 
 		const converterErrors = new ConverterErrors();

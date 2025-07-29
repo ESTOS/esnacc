@@ -12,7 +12,7 @@ import { EASN1TransportEncoding } from "./TSInvokeContext";
 /**
  * The ASN1 client side as required in the browser (different websocket and timer)
  */
-export abstract class TSASN1BrowserClient extends TSASN1Client {
+export class TSASN1BrowserClient extends TSASN1Client {
 	private idual: IDualWebSocket | null = null;
 	private socket?: WebSocket;
 	// The reconnecting timer
@@ -23,7 +23,7 @@ export abstract class TSASN1BrowserClient extends TSASN1Client {
 	 *
 	 * @param encoding - sets the encoding for outbound calls
 	 */
-	protected constructor(encoding: EASN1TransportEncoding.JSON | EASN1TransportEncoding.BER) {
+	public constructor(encoding: EASN1TransportEncoding.JSON | EASN1TransportEncoding.BER) {
 		super(encoding, ASN1ClassInstanceType.TSASN1BrowserClient);
 	}
 
