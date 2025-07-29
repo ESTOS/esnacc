@@ -29,16 +29,16 @@ export interface IASN1ClientConnectionHandler {
 /**
  * The TSASN1Server implements the ROSE server side
  */
-export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport {
+export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 	// The Client connection handler that is capable of providing a client connection based on the id of that client
 	private connectionhandler?: IASN1ClientConnectionHandler = undefined;
 
 	/**
-	 * Constructs the Client
+	 * Constructs the server
 	 *
 	 * @param encoding - sets the encoding for outbound calls
 	 */
-	protected constructor(encoding: EASN1TransportEncoding.JSON | EASN1TransportEncoding.BER) {
+	public constructor(encoding: EASN1TransportEncoding.JSON | EASN1TransportEncoding.BER) {
 		super(encoding, ASN1ClassInstanceType.TSASN1Server);
 	}
 

@@ -399,7 +399,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @param newTarget - The target we want to connect to. Prefix with ws or http to specify the connection mode
 	 */
-	protected setTarget(newTarget: string): void {
+	public setTarget(newTarget: string): void {
 		const oldTarget = this.target;
 		try {
 			if (this.target !== newTarget) {
