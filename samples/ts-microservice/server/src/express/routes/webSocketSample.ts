@@ -17,6 +17,7 @@ class WebSocketSample extends WebSocketRoute implements IEModule {
 
 	/**
 	 * Add specific routings
+	 *
 	 * @param router - parent router
 	 */
 	public override init(router: express.Router): void {
@@ -25,6 +26,7 @@ class WebSocketSample extends WebSocketRoute implements IEModule {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
+	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public getLogData(): ILogData {
@@ -33,6 +35,7 @@ class WebSocketSample extends WebSocketRoute implements IEModule {
 
 	/**
 	 * Verifies if a client is allowed to connect this route
+	 *
 	 * @param options - the verfiy context object that is handed over from the caller
 	 * @param func - the function to be called to signal that the connection is allowed or not
 	 * @returns a Promis resolving to void
@@ -45,6 +48,7 @@ class WebSocketSample extends WebSocketRoute implements IEModule {
 	 * This handler is called if the servers onupgrade is called.
 	 * Each route is then asked if it wants to handle the request
 	 * If we handle it we return true, otherwise false to let the next handler check it
+	 *
 	 * @param request - the express request
 	 * @param socket - the associated socket
 	 * @param head - the head object

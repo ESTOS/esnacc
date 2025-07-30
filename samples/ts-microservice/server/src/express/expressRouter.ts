@@ -38,6 +38,7 @@ class ERouter {
 
 	/**
 	 * The Loggers getLogData callback (used in all the log methods called in this class, add the classname to every log entry)
+	 *
 	 * @returns - an ILogData log data object provided additional data for all the logger calls in this class
 	 */
 	public static getLogData(): ILogData {
@@ -46,6 +47,7 @@ class ERouter {
 
 	/**
 	 * Fetches the available Routes to add them to the express routing table
+	 *
 	 * @returns - the router which is a static in this scope to be handed over to the express app.use
 	 */
 	public static async getRoutes(): Promise<express.Router> {
@@ -62,6 +64,7 @@ class ERouter {
 
 	/**
 	 * Allows to handle server related stuff in the Module (e.g. upgrade to websocket)
+	 *
 	 * @param server - the express server object to add the upgrade callback to
 	 */
 	public static setServer(server: http.Server | https.Server): void {
@@ -80,6 +83,7 @@ class ERouter {
 
 	/**
 	 * Retrieves the available modules in the same path
+	 *
 	 * @returns - the list of modules in the path
 	 */
 	private static getFiles(): string[] {

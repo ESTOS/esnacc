@@ -23,6 +23,7 @@ export abstract class WebSocketRoute {
 
 	/**
 	 * Initializes the websocket route object
+	 *
 	 * @param router - parent router
 	 */
 	public init(router: express.Router): void {
