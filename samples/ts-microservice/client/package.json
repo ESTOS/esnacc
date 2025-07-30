@@ -14,10 +14,9 @@
 		"build": "tsc && vite build",
 		"preview": "vite preview",
 		"check": "npx madge --circular --extensions ts ./",
-		"lint": "eslint --cache --fix -c .eslintrc.precommit.cjs src/**/*.{js,ts,tsx}",
+		"lint": "dprint fmt && eslint --cache --fix src/**/*.{js,ts,tsx}",
 		"lintclear": "del /s .eslintcache",
 		"relint": "run-s lintclear lint",
-		"lintnocache": "eslint --fix -c .eslintrc.precommit.cjs src/**/*.{js,ts,tsx}",
 		"depcheck": "npx depcheck"
 	},
 	"browserslist": [
@@ -31,21 +30,14 @@
 	"dependencies": {
 		"@estos/asn1ts": "^3.1.12",
 		"ts-loader": "^9.4.2",
-		"typescript": "^5.1.6"
+		"typescript": "^5.8.3"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.1",
-		"@typescript-eslint/eslint-plugin": "^7.1.1",
-		"@typescript-eslint/parser": "^7.1.1",
-		"eslint": "^8.29.0",
-		"eslint-config-standard": "^17.0.0",
-		"eslint-plugin-compat": "^4.0.2",
-		"eslint-plugin-import": "^2.26.0",
-		"eslint-plugin-jsdoc": "^48.0.2",
-		"eslint-plugin-node": "^11.1.0",
-		"eslint-plugin-promise": "^6.1.1",
-		"eslint-plugin-tsdoc": "^0.2.17",
+		"@estos/config-eslint": "^1.0.8",
+		"@types/node": "^24.1.0",
+		"dprint": "^0.50.1",
+		"eslint": "^9.31.0",
 		"npm-run-all": "^4.1.5",
-		"vite": "^6.0.2"
+		"vite": "^7.0.6"
 	}
 }

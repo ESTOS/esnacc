@@ -1,23 +1,23 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "tscwatcher",
-            "type": "typescript",
-            "tsconfig": "tsconfig.json",
-            "option": "watch",
-            "problemMatcher": [
-                "$tsc-watch"
-            ],
-            "dependsOn": "deploystaticfiles"
-        },
-        {
-            "label": "deploystaticfiles",
-            "type": "npm",
-            "script": "deploystaticfiles",
-            "problemMatcher": []
-        }
-    ]
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "tscwatcher",
+			"type": "typescript",
+			"tsconfig": "tsconfig.json",
+			"option": "watch",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"dependsOn": "deploystaticfiles"
+		},
+		{
+			"label": "deploystaticfiles",
+			"type": "npm",
+			"script": "deploystaticfiles",
+			"problemMatcher": []
+		}
+	]
 }
