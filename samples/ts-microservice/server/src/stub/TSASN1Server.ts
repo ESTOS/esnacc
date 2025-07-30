@@ -5,10 +5,18 @@
 // dprint-ignore-file
 /* eslint-disable */
 
-import { ROSEError, ROSEMessage, ROSEReject, ROSEResult, InvokeProblemenum } from "./SNACCROSE.js";
-import { TSASN1Base, PendingInvoke, ASN1ClassInstanceType } from "./TSASN1Base.js";
-import { ELogSeverity, IASN1Transport, createInvokeReject, ReceiveInvokeContext, CustomInvokeProblemEnum, IASN1InvokeData, ROSEBase } from "./TSROSEBase.js";
+import { InvokeProblemenum, ROSEError, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE.js";
+import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base.js";
 import { EASN1TransportEncoding } from "./TSInvokeContext.js";
+import {
+	createInvokeReject,
+	CustomInvokeProblemEnum,
+	ELogSeverity,
+	IASN1InvokeData,
+	IASN1Transport,
+	ReceiveInvokeContext,
+	ROSEBase,
+} from "./TSROSEBase.js";
 
 /**
  * Interface a client connection object has to provide to be able to send an event based on the id of a client to this client
@@ -29,16 +37,16 @@ export interface IASN1ClientConnectionHandler {
 /**
  * The TSASN1Server implements the ROSE server side
  */
-export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport {
+export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 	// The Client connection handler that is capable of providing a client connection based on the id of that client
 	private connectionhandler?: IASN1ClientConnectionHandler = undefined;
 
 	/**
-	 * Constructs the Client
+	 * Constructs the server
 	 *
 	 * @param encoding - sets the encoding for outbound calls
 	 */
-	protected constructor(encoding: EASN1TransportEncoding.JSON | EASN1TransportEncoding.BER) {
+	public constructor(encoding: EASN1TransportEncoding.JSON | EASN1TransportEncoding.BER) {
 		super(encoding, ASN1ClassInstanceType.TSASN1Server);
 	}
 
@@ -107,9 +115,11 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 	public override setEncoding(encoding: EASN1TransportEncoding, clientConnectionID?: string): void {
 		if (clientConnectionID)
 			this.connectionhandler?.getClientConnection(clientConnectionID)?.setTransportEncoding(encoding);
-		else
-			return super.setEncoding(encoding);
-	}	
+		else {
+			super.setEncoding(encoding);
+			return;
+		}
+	}
 
 	/**
 	 * Sends a message towards the client
@@ -125,14 +135,29 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 	 */
 	public async sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
 		const clientConnectionID = data.invokeContext.clientConnectionID || data.invoke.sessionID;
-		if (!clientConnectionID)
-			return createInvokeReject(data.invoke.invokeID, InvokeProblemenum.invalidSessionID, "SendInvoke no sessionID specified");
-		else if (!this.connectionhandler)
-			return createInvokeReject(data.invoke.invokeID, InvokeProblemenum.unrecognisedOperation, "SendInvoke connectionhandler not set. Call setClientConnectionHandler");
+		if (!clientConnectionID) {
+			return createInvokeReject(
+				data.invoke.invokeID,
+				InvokeProblemenum.invalidSessionID,
+				"SendInvoke no sessionID specified",
+			);
+		}
+		else if (!this.connectionhandler) {
+			return createInvokeReject(
+				data.invoke.invokeID,
+				InvokeProblemenum.unrecognisedOperation,
+				"SendInvoke connectionhandler not set. Call setClientConnectionHandler",
+			);
+		}
 
 		const client = this.connectionhandler.getClientConnection(clientConnectionID);
-		if (!client)
-			return createInvokeReject(data.invoke.invokeID, InvokeProblemenum.invalidSessionID, `SendInvoke no client for sessionID ${clientConnectionID}`);
+		if (!client) {
+			return createInvokeReject(
+				data.invoke.invokeID,
+				InvokeProblemenum.invalidSessionID,
+				`SendInvoke no client for sessionID ${clientConnectionID}`,
+			);
+		}
 
 		return new Promise((resolve, reject): void => {
 			let resolveUndefined = true;
@@ -143,7 +168,9 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 					const timeout = data.invokeContext?.timeout || this.defaultTimeout;
 					// Create a timer if a timeout was provided
 					const id = data.invoke.invokeID;
-					const timerid = setTimeout((): void => { this.onROSETimeout(id); }, timeout);
+					const timerid = setTimeout((): void => {
+						this.onROSETimeout(id);
+					}, timeout);
 					const pending = new PendingInvoke(data.invoke, resolve, reject, timerid);
 					this.pendingInvokes.set(id, pending);
 					resolveUndefined = false;
@@ -154,20 +181,24 @@ export abstract class TSASN1Server extends TSASN1Base implements IASN1Transport 
 				if (!client.send(encoded.payLoad)) {
 					const msg = new ROSEMessage();
 					msg.reject = {
-						invokedID: {
-							invokedID: data.invoke.invokeID
-						},
+						invokedID: { invokedID: data.invoke.invokeID },
 						sessionID: data.invoke.sessionID,
-						reject: {
-							invokeProblem: CustomInvokeProblemEnum.serviceUnavailable
-						},
-						details: `SendInvoke to client with sessionID ${data.invoke.sessionID} failed`
+						reject: { invokeProblem: CustomInvokeProblemEnum.serviceUnavailable },
+						details: `SendInvoke to client with sessionID ${data.invoke.sessionID} failed`,
 					};
 					this.onROSEReject(msg.reject, receiveInvokeContext);
 					this.log(ELogSeverity.error, "sending failed", "sendInvoke", this, msg.reject);
 				}
-			} catch (error) {
-				resolve(createInvokeReject(data.invoke.invokeID, InvokeProblemenum.resourceLimitation, `SendInvoke catched an unhandled exception ${data.invoke.sessionID}`));
+			}
+			catch (error) {
+				this.log(ELogSeverity.error, "sending failed with exception", "sendInvoke", this, undefined, error);
+				resolve(
+					createInvokeReject(
+						data.invoke.invokeID,
+						InvokeProblemenum.resourceLimitation,
+						`SendInvoke catched an unhandled exception ${data.invoke.sessionID}`,
+					),
+				);
 			}
 			if (resolveUndefined)
 				resolve(undefined);

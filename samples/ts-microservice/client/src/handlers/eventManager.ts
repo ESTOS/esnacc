@@ -1,13 +1,16 @@
-import { IASN1Transport, IReceiveInvokeContext } from "../stub/TSROSEBase";
 import { theClient } from "../client";
-import { ENetUC_Event_Manager } from "../stub/types";
 import { ENetUC_Event_ManagerROSE } from "../stub/ENetUC_Event_ManagerROSE";
 import { IENetUC_Event_ManagerROSE_Event_Handler } from "../stub/ENetUC_Event_ManagerROSE_Interface";
+import { IASN1Transport, IReceiveInvokeContext } from "../stub/TSROSEBase";
+import { ENetUC_Event_Manager } from "../stub/types";
 
 /**
  * This module sends requests to the server to receive events
+ *
+ * This is a *SAMPLE* implementation how to use the rose stub with classes and inheritance
  */
-export class EventManager implements IENetUC_Event_ManagerROSE_Event_Handler {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+class EventManager implements IENetUC_Event_ManagerROSE_Event_Handler {
 	// The networking layer that allows to send events to the server side
 	private server: ENetUC_Event_ManagerROSE;
 
@@ -27,10 +30,7 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Event_Handler {
 	 * @param delay - the delay between the events
 	 */
 	public async getEvents(count: number, delay: number): Promise<void> {
-		const argument = new ENetUC_Event_Manager.AsnCreateFancyEventsArgument({
-			iEventCount: count,
-			iEventDelay: delay
-		});
+		const argument = new ENetUC_Event_Manager.AsnCreateFancyEventsArgument({ iEventCount: count, iEventDelay: delay });
 		const response = await this.server.invoke_asnCreateFancyEvents(argument);
 		theClient.getResult(response, ENetUC_Event_Manager.AsnCreateFancyEventsResult);
 	}
@@ -41,6 +41,9 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Event_Handler {
 	 * @param argument - Argument for the AsnFancyEventArgument method
 	 * @param invokeContext - Invokecontext from the asn.1 lib (containing invoke related data)
 	 */
-	public onEvent_asnFancyEvent(argument: ENetUC_Event_Manager.AsnFancyEventArgument, invokeContext: IReceiveInvokeContext): void {
+	public onEvent_asnFancyEvent(
+		argument: ENetUC_Event_Manager.AsnFancyEventArgument,
+		invokeContext: IReceiveInvokeContext,
+	): void {
 	}
 }

@@ -1,4 +1,3 @@
-// place your settings in this file to overwrite default and user settings.
 {
 	"files.exclude": {
 		"**/.DS_Store": true,
@@ -7,10 +6,38 @@
 			"when": "$(basename).ts"
 		},
 		"**/*.js.map": true,
+		"**/node_modules": true,
 		"**/dist": true
 	},
-	"eslint.alwaysShowStatus": true,
+	// ###############################
+	// formatter
+	"editor.defaultFormatter": "dprint.dprint",
+	"editor.formatOnPaste": false, // required
+	"editor.formatOnType": false, // required
+	"editor.formatOnSave": true, // optional
+	"editor.formatOnSaveMode": "file", // required to format on save
+	"[typescript]": {
+		"editor.defaultFormatter": "dprint.dprint"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "dprint.dprint"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "dprint.dprint"
+	},
+	// ###############################
+	// Eslint settings
+	"eslint.useFlatConfig": true,
+	"eslint.validate": [
+		"javascript",
+		"javascriptreact",
+		"typescriptreact",
+		"typescript"
+	],
 	"editor.codeActionsOnSave": {
 		"source.fixAll.eslint": "explicit"
-	}
+	},
+	// ###############################
+	// dprint
+	"dprint.path": "./node_modules/.bin/dprint"
 }

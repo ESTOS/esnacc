@@ -14,7 +14,6 @@
 		"lint": "dprint fmt && eslint --cache --fix src/**/*.{js,ts,tsx}",
 		"lintclear": "del /s .eslintcache",
 		"relint": "run-s lintclear lint",
-		"lintnocache": "eslint --fix src/**/*.{js,ts,tsx}",
 		"start": "node --trace-warnings index.js",
 		"start:debug": "node --inspect index.js --runInBand",
 		"start:watch": "tsc-watch --onSuccess \"node index.js\"",
@@ -36,10 +35,9 @@
 	"dependencies": {
 		"@estos/asn1ts": "^3.2.3",
 		"cors": "^2.8.5",
-		"cross-env": "^7.0.3",
+		"cross-env": "^10.0.0",
 		"date-fns": "^4.1.0",
 		"dotenv": "^17.2.1",
-		"dprint": "^0.50.1",
 		"express": "^5.1.0",
 		"typescript": "^5.8.3",
 		"ucconfig": "github:estos/ucconfig#0.0/0.0.3",
@@ -48,7 +46,7 @@
 		"ws": "^8.18.3"
 	},
 	"devDependencies": {
-		"@estos/config-eslint": "1.0.7",
+		"@estos/config-eslint": "^1.0.8",
 		"@types/cors": "^2.8.19",
 		"@types/express": "^5.0.3",
 		"@types/jest": "^30.0.0",
@@ -56,6 +54,7 @@
 		"@types/uuid": "^10.0.0",
 		"@types/ws": "^8.18.1",
 		"axios": "^1.11.0",
+		"dprint": "^0.50.1",
 		"eslint": "^9.31.0",
 		"jest": "^30.0.5",
 		"lint-staged": "^16.1.2",

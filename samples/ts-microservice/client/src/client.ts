@@ -1,10 +1,27 @@
 import { TSASN1BrowserClient } from "./stub/TSASN1BrowserClient";
-import { AsnInvokeProblem, IASN1LogCallback, CustomInvokeProblemEnum, ELogSeverity, IASN1LogData } from "./stub/TSROSEBase";
 import { IClientConnectionCallback } from "./stub/TSASN1Client";
+import {
+	AsnInvokeProblem,
+	CustomInvokeProblemEnum,
+	ELogSeverity,
+	IASN1LogCallback,
+	IASN1LogData,
+} from "./stub/TSROSEBase";
 import { ENetUC_Common } from "./stub/types";
-import { EventManager } from "./handlers/eventManager";
-import { SettingsManager } from "./handlers/settingsManager";
-import { IErrorLogEntry, IInvokeLogEntry, IRejectLogEntry, IResultLogEntry, IROSELogEntryBase } from "./stub/TSASN1Base";
+// Uncomment these in case you want to use the handlers as classes
+// import { EventManager } from "./handlers/eventManager";
+// import { SettingsManager } from "./handlers/settingsManager";
+import { ENetUC_Event_ManagerROSE } from "./stub/ENetUC_Event_ManagerROSE";
+import { IENetUC_Event_ManagerROSE_Handler } from "./stub/ENetUC_Event_ManagerROSE_Interface";
+import { ENetUC_Settings_ManagerROSE } from "./stub/ENetUC_Settings_ManagerROSE";
+import { IENetUC_Settings_ManagerROSE_Handler } from "./stub/ENetUC_Settings_ManagerROSE_Interface";
+import {
+	IErrorLogEntry,
+	IInvokeLogEntry,
+	IRejectLogEntry,
+	IResultLogEntry,
+	IROSELogEntryBase,
+} from "./stub/TSASN1Base";
 import { EASN1TransportEncoding, ISendInvokeContextParams } from "./stub/TSInvokeContext";
 
 // These settings are provided by the .env file
@@ -19,13 +36,26 @@ if (import.meta.env["VITE_MICROSERVICE_SERVER_LISTEN_TLS"] === "1") {
 wstarget += `://${name}:${port}/ws`;
 resttarget += `://${name}:${port}/rest`;
 
+/*
+	Basically you have two different options in where to hold the different asn1 rose interfaces
+	Either embedded in theClient or looosen and use theClient only as transport layer
+
+	This basically depends on personal preference whether you want to use it class based or more function based
+
+	Any invoke or event the server calls towards the client is either a method inside a class
+	OR some method you implement where you need it
+*/
+
 /**
  * Sample client that supports a rest request mode and a websocket connection mode
  */
 class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	// The different managers for the rose interfaces
-	public readonly eventManager: EventManager;
-	public readonly settingsManager: SettingsManager;
+
+	// Uncomment these in case you want to use the handlers as classes
+	// public readonly eventManager: EventManager;
+	// public readonly settingsManager: SettingsManager;
+
 	// Log entries
 	private results: string[] = new Array<string>(0);
 
@@ -35,10 +65,13 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	public constructor() {
 		super(EASN1TransportEncoding.JSON);
 		this.encodeContext.bPrettyPrint = true;
+
 		// These are the handling modules the client is offering
 		// The modules hold the rose implementation capsuled as member but use this class as transport layer
-		this.eventManager = new EventManager(this);
-		this.settingsManager = new SettingsManager(this);
+		// Uncomment these in case you want to use the handlers as classes
+		// this.eventManager = new EventManager(this);
+		// this.settingsManager = new SettingsManager(this);
+
 		this.addConnectionCallback(this);
 		this.setTarget(wstarget);
 		this.encodeContext.bAddTypes = false;
@@ -86,25 +119,43 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	 * @param meta - Meta data you want to have logged with the message (arguments, results, intermediate data, anything that might be usefull later)
 	 * @param exception - In case of an exception pass it here.
 	 */
-	public override log(severity: ELogSeverity, message: string, calling_method: string, cbOrLogData: IASN1LogCallback | IASN1LogData, meta?: unknown, exception?: unknown): void {
+	public override log(
+		severity: ELogSeverity,
+		message: string,
+		calling_method: string,
+		cbOrLogData: IASN1LogCallback | IASN1LogData,
+		meta?: unknown,
+		exception?: unknown,
+	): void {
 		if (meta) {
 			const logEntry = meta as IROSELogEntryBase;
 			let color = logEntry.isOutbound ? "green" : "orange";
 			const direction = logEntry.isOutbound ? "OUT" : "IN";
 			if (logEntry._type === "IInvokeLogEntry") {
 				const invoke = meta as IInvokeLogEntry;
-				this.addLogEntry(`${this.getTime()} - ${invoke.isEvent ? "Event" : "Invoke"} - ${direction} - ${invoke.operationName} - ${invoke.argumentName}`, `color:${color};font-weight:bold`);
+				this.addLogEntry(
+					`${this.getTime()} - ${
+						invoke.isEvent ? "Event" : "Invoke"
+					} - ${direction} - ${invoke.operationName} - ${invoke.argumentName}`,
+					`color:${color};font-weight:bold`,
+				);
 				this.addLogEntry(`<pre>${JSON.stringify(invoke.argument, null, 2)}</pre>`);
-			} else if (logEntry._type === "IResultLogEntry") {
+			}
+			else if (logEntry._type === "IResultLogEntry") {
 				const result = meta as IResultLogEntry;
-				this.addLogEntry(`${this.getTime()} - Result - ${direction} - ${result.operationName} - ${result.resultName}`, `color:${color}`);
+				this.addLogEntry(
+					`${this.getTime()} - Result - ${direction} - ${result.operationName} - ${result.resultName}`,
+					`color:${color}`,
+				);
 				this.addLogEntry(`<pre>${JSON.stringify(result.result, null, 2)}</pre>`);
-			} else if (logEntry._type === "IRejectLogEntry") {
+			}
+			else if (logEntry._type === "IRejectLogEntry") {
 				const reject = meta as IRejectLogEntry;
 				color = "orange";
 				this.addLogEntry(`${this.getTime()} - Reject - ${direction} - ${reject.operationName}`, `color:${color}`);
 				this.addLogEntry(`<pre>${JSON.stringify(reject.reject, null, 2)}</pre>`);
-			} else if (logEntry._type === "IErrorLogEntry") {
+			}
+			else if (logEntry._type === "IErrorLogEntry") {
 				const error = meta as IErrorLogEntry;
 				color = "red";
 				this.addLogEntry(`${this.getTime()} - Error - ${direction} - ${error.operationName}`, `color:${color}`);
@@ -196,7 +247,11 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	 * @param reject - The reject method
 	 * @returns - an object of type T
 	 */
-	public getResult<T>(response: T | ENetUC_Common.AsnRequestError | AsnInvokeProblem, className: { new(...args: any[]): T }, reject?: (reason?: ENetUC_Common.AsnRequestError) => void): T {
+	public getResult<T>(
+		response: T | ENetUC_Common.AsnRequestError | AsnInvokeProblem,
+		className: { new(...args: any[]): T; },
+		reject?: (reason?: ENetUC_Common.AsnRequestError) => void,
+	): T {
 		if (response instanceof className)
 			return response;
 
@@ -204,10 +259,18 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 
 		if (response instanceof ENetUC_Common.AsnRequestError)
 			error = response;
-		else if (response instanceof AsnInvokeProblem)
-			error = new ENetUC_Common.AsnRequestError({ iErrorDetail: response.value || -1, u8sErrorString: response.details });
-		else
-			error = new ENetUC_Common.AsnRequestError({ iErrorDetail: CustomInvokeProblemEnum.missingResponse, u8sErrorString: "unhandled result" });
+		else if (response instanceof AsnInvokeProblem) {
+			error = new ENetUC_Common.AsnRequestError({
+				iErrorDetail: response.value || -1,
+				u8sErrorString: response.details,
+			});
+		}
+		else {
+			error = new ENetUC_Common.AsnRequestError({
+				iErrorDetail: CustomInvokeProblemEnum.missingResponse,
+				u8sErrorString: "unhandled result",
+			});
+		}
 
 		if (reject)
 			reject(error);
@@ -225,12 +288,26 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	 * @param event - true, in case we are encoding an event, false for a regular invoke
 	 * @returns - an updated context
 	 */
-	public override getInvokeContextParams(context: Partial<ISendInvokeContextParams> | undefined, operationID: number, operationName: string, event: boolean): ISendInvokeContextParams {
-		return {
-			...context,
-			bAddOperationName: true
-		};
+	public override getInvokeContextParams(
+		context: Partial<ISendInvokeContextParams> | undefined,
+		operationID: number,
+		operationName: string,
+		event: boolean,
+	): ISendInvokeContextParams {
+		return { ...context, bAddOperationName: true };
 	}
 }
 
 export const theClient = new Client();
+
+// We hold the settingsManager outside of the client object, you could also make it a member of the client object
+export const settingsManager: ENetUC_Settings_ManagerROSE & Partial<IENetUC_Settings_ManagerROSE_Handler> =
+	new ENetUC_Settings_ManagerROSE(theClient, true);
+// The settingsManager itself also implements the receiver interface (events, server to client invokes)
+settingsManager.setHandler(settingsManager);
+
+// We hold the settingsManager outside of the client object, you could also make it a member of the client object
+export const eventManager: ENetUC_Event_ManagerROSE & Partial<IENetUC_Event_ManagerROSE_Handler> =
+	new ENetUC_Event_ManagerROSE(theClient, true);
+// The settingsManager itself also implements the receiver interface (events, server to client invokes)
+eventManager.setHandler(eventManager);
