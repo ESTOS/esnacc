@@ -11,7 +11,9 @@ export enum ConverterErrorType {
 	NO_ERROR = 0,
 	PROPERTY_MISSING = 2,
 	PROPERTY_NULLORUNDEFINED = 3,
-	PROPERTY_TYPEMISMATCH = 4
+	PROPERTY_TYPEMISMATCH = 4,
+	NOT_AN_OBJECT = 5,
+	EXCEPTION_OCCURRED = 6,
 }
 
 /**
@@ -410,19 +412,33 @@ export class TSConverter {
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
 	public static validateParam(data: object, propertyName: string, expectedType: "boolean" | "number" | "string" | "Date" | "Uint8Array" | "object" | "null", errors?: ConverterErrors, context?: IDecodeContext | IEncodeContext, optional?: boolean): boolean {
-		if (!Object.prototype.hasOwnProperty.call(data, propertyName)) {
-			if (errors) {
-				if (!(optional === true)) {
+		try {
+			if (data == null || typeof data !== "object" 
+				// Technically we would need to check for an array as well as it is an object but the next method will return false anyway (just a propery missing but that would logical wise match it as well)
+				/*|| Array.isArray(data) */) {
+				if (errors && !(optional === true)) {
+					const location = context?.context ? context.context + "::" : "";
+					// Fix old javascript bug that treated null as an object 
+					if(data === null)
+						errors.push(new ConverterError(ConverterErrorType.NOT_AN_OBJECT, location + propertyName, `data type is null but expected an object`));
+					else
+						errors.push(new ConverterError(ConverterErrorType.NOT_AN_OBJECT, location + propertyName, `data type is ${typeof data} but expected an object`));
+				}
+				return false;
+			}
+			if (!Object.prototype.hasOwnProperty.call(data, propertyName)) {
+				if (errors && !(optional === true)) {
 					const location = context?.context ? context.context + "::" : "";
 					errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, location + propertyName, "property missing"));
 				}
+				return false;
 			}
-		} else {
+
 			const property = (data as Record<string, unknown>)[propertyName];
 			if (property === undefined || property === null) {
 				if (property === null && expectedType === "null")
 					return true;
-				if (!optional && errors) {
+				if (errors && !(optional === true)) {
 					const location = context?.context ? context.context + "::" : "";
 					errors.push(new ConverterError(ConverterErrorType.PROPERTY_NULLORUNDEFINED, location + propertyName, "property null or undefined"));
 				}
@@ -443,7 +459,13 @@ export class TSConverter {
 				const location = context?.context ? context.context + "::" : "";
 				errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, location + propertyName, "expected type was " + expectedType + ", effective type is " + typeof property));
 			}
+		} catch (error) {
+			if (errors) {
+				const location = context?.context ? context.context + "::" : "";
+				errors.push(new ConverterError(ConverterErrorType.EXCEPTION_OCCURRED, location + propertyName, `exception occurred while trying to validate a parameter, error: ${error instanceof Error ? error.message : String(error)}`));
+			}
 		}
+
 		return false;
 	}
 
