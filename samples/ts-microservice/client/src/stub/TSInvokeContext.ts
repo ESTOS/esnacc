@@ -5,7 +5,7 @@
 // dprint-ignore-file
 /* eslint-disable */
 
-import { IncomingHttpHeaders } from "http";
+import { IncomingHttpHeaders } from "node:http";
 
 /**
  * Handles http headers on the receiving and sending side.
@@ -18,7 +18,7 @@ export type EHttpHeaders = IncomingHttpHeaders;
  */
 export enum EASN1TransportEncoding {
 	JSON = 1,
-	BER = 2
+	BER = 2,
 }
 
 /**

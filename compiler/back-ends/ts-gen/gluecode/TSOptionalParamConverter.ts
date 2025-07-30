@@ -6,21 +6,29 @@
 /* eslint-disable */
 
 import * as ENetUC_Common from "./ENetUC_Common";
-import { TSConverter, DecodeContext, EncodeContext, ConverterErrors, ConverterError, ConverterErrorType, INamedType } from "./TSConverterBase";
+import {
+	ConverterError,
+	ConverterErrors,
+	ConverterErrorType,
+	DecodeContext,
+	EncodeContext,
+	INamedType,
+	TSConverter,
+} from "./TSConverterBase";
 
 /**
  * Sadly someone added custom written encoders decoders for the custom parameters in the UCServer
  * So we cannot use the asn1 stub definitions for them, we need to encode decode them in the same notation
  * This is how an optional parameter looks like the UCServer is aware of
  */
-type IUCServerOptionalParam = number | string | { binarydata: string };
+type IUCServerOptionalParam = number | string | { binarydata: string; };
 
 /**
  * Sadly someone added custom written encoders decoders for the custom parameters in the UCServer
  * So we cannot use the asn1 stub definitions for them, we need to encode decode them in the same notation
  * This is how the array of optional parameters in asn1 is encoded into, or decoded from a json object
  */
-type IUCServerOptionalParameters = Record<string, IUCServerOptionalParam>
+type IUCServerOptionalParameters = Record<string, IUCServerOptionalParam>;
 
 /**
  * Helper class that contains the code to do the custom conversion the UCServer is doing for the AsnOptionalParameters
@@ -35,7 +43,12 @@ export class EAsnOptionalParametersConverter {
 	 * @param parametername - the parent parameter value name this object is held in
 	 * @returns true on success
 	 */
-	public static toJSON(obj: ENetUC_Common.AsnOptionalParameters, errors?: ConverterErrors, context?: EncodeContext, parametername?: string): ENetUC_Common.AsnOptionalParameters & INamedType | undefined {
+	public static toJSON(
+		obj: ENetUC_Common.AsnOptionalParameters,
+		errors?: ConverterErrors,
+		context?: EncodeContext,
+		parametername?: string,
+	): ENetUC_Common.AsnOptionalParameters & INamedType | undefined {
 		errors ||= new ConverterErrors();
 		errors.storeState();
 		const newContext = TSConverter.addEncodeContext(context, parametername, "AsnOptionalParameters");
@@ -49,10 +62,7 @@ export class EAsnOptionalParametersConverter {
 		if (newContext?.bAddTypes)
 			result["_type"] = "IUCServerOptionalParameters";
 
-		for (const id in obj) {
-			if (!Object.prototype.hasOwnProperty.call(obj, id))
-				continue;
-			const element = obj[id];
+		for (const [id, element] of obj.entries()) {
 			if (element) {
 				if (element.value.integerdata !== undefined)
 					result[element.key] = element.value.integerdata;
@@ -62,7 +72,13 @@ export class EAsnOptionalParametersConverter {
 					result[element.key] = { binarydata: TSConverter.encode64(element.value.binarydata) };
 				else {
 					debugger;
-					errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, newContext.context, `Unable to read ${id}, not integer, not string, not binary`));
+					errors.push(
+						new ConverterError(
+							ConverterErrorType.PROPERTY_TYPEMISMATCH,
+							newContext.context,
+							`Unable to read ${id}, not integer, not string, not binary`,
+						),
+					);
 				}
 			}
 		}
@@ -84,7 +100,14 @@ export class EAsnOptionalParametersConverter {
 	 * @param optional - true if this is an optional object (no error on not existing)
 	 * @returns true on success
 	 */
-	public static fromJSON(dataarg: string | object | undefined, obj: ENetUC_Common.AsnOptionalParameters, errors?: ConverterErrors, context?: DecodeContext, parametername?: string, optional?: boolean): boolean {
+	public static fromJSON(
+		dataarg: string | object | undefined,
+		obj: ENetUC_Common.AsnOptionalParameters,
+		errors?: ConverterErrors,
+		context?: DecodeContext,
+		parametername?: string,
+		optional?: boolean,
+	): boolean {
 		const bFirstCaller = context ? context.context === "" : false;
 		if (errors == null)
 			errors = new ConverterErrors();
@@ -110,10 +133,20 @@ export class EAsnOptionalParametersConverter {
 					obj.push(new ENetUC_Common.AsnOptionalParam({ key, value: { integerdata: value } }));
 				else if (typeof value === "string")
 					obj.push(new ENetUC_Common.AsnOptionalParam({ key, value: { stringdata: value } }));
-				else if (value?.binarydata)
-					obj.push(new ENetUC_Common.AsnOptionalParam({ key, value: { binarydata: TSConverter.decode64(value.binarydata) } }));
-				else
-					errors.push(new ConverterError(ConverterErrorType.PROPERTY_TYPEMISMATCH, newContext.context, `Error while decoding AsnOptionalParameter ${key}`));
+				else if (value?.binarydata) {
+					obj.push(
+						new ENetUC_Common.AsnOptionalParam({ key, value: { binarydata: TSConverter.decode64(value.binarydata) } }),
+					);
+				}
+				else {
+					errors.push(
+						new ConverterError(
+							ConverterErrorType.PROPERTY_TYPEMISMATCH,
+							newContext.context,
+							`Error while decoding AsnOptionalParameter ${key}`,
+						),
+					);
+				}
 			}
 		}
 

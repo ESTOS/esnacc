@@ -4,11 +4,10 @@
 
 // dprint-ignore-file
 /* eslint-disable */
-
-import { TSASN1Client } from "./TSASN1Client";
-import { ELogSeverity, IDualWebSocket } from "./TSROSEBase";
 import { ASN1ClassInstanceType } from "./TSASN1Base";
+import { TSASN1Client } from "./TSASN1Client";
 import { EASN1TransportEncoding } from "./TSInvokeContext";
+import { ELogSeverity, IDualWebSocket } from "./TSROSEBase";
 /**
  * The ASN1 client side as required in the browser (different websocket and timer)
  */
@@ -53,7 +52,7 @@ export class TSASN1BrowserClient extends TSASN1Client {
 				send: this.send.bind(this),
 				close: this.close.bind(this),
 				addEventListener: this.addEventListener.bind(this),
-				removeEventListener: this.removeEventListener.bind(this)
+				removeEventListener: this.removeEventListener.bind(this),
 			};
 			return this.idual;
 		}
@@ -81,14 +80,8 @@ export class TSASN1BrowserClient extends TSASN1Client {
 	private onerror(event: Event): void {
 		if (this.idual && this.socket)
 			this.idual.readyState = this.socket.readyState;
-		if (this.idual && this.idual.onerror) {
-			this.idual.onerror({
-				error: event,
-				message: "",
-				type: event.type,
-				target: event.target
-			});
-		}
+		if (this.idual && this.idual.onerror)
+			this.idual.onerror({ error: event, message: "", type: event.type, target: event.target });
 	}
 
 	/**
@@ -99,13 +92,8 @@ export class TSASN1BrowserClient extends TSASN1Client {
 	private onmessage(event: MessageEvent<string>): void {
 		if (this.idual && this.socket)
 			this.idual.readyState = this.socket.readyState;
-		if (this.idual && this.idual.onmessage) {
-			this.idual.onmessage({
-				data: event.data.toString(),
-				type: event.type,
-				target: event.target
-			});
-		}
+		if (this.idual && this.idual.onmessage)
+			this.idual.onmessage({ data: event.data.toString(), type: event.type, target: event.target });
 	}
 
 	/**

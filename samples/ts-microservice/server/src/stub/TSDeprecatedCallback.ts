@@ -22,7 +22,12 @@ export interface IASN1DeprecatedCallback {
 	 * @param objectName - the name of the object that is about to get created
 	 * @param callStack - the call stack that shows where the object has been created
 	 */
-	deprecatedObject(deprecatedSince: number, moduleName: string, objectName: string, callStack: IASN1CallStackEntry[]): void;
+	deprecatedObject(
+		deprecatedSince: number,
+		moduleName: string,
+		objectName: string,
+		callStack: IASN1CallStackEntry[],
+	): void;
 
 	/**
 	 * A deprecated method has been called
@@ -34,7 +39,14 @@ export interface IASN1DeprecatedCallback {
 	 * @param invokeContext - the invokeContext that shows more details about the invoke
 	 * @param callStack - the call stack that shows where the object has been created
 	 */
-	deprecatedMethod(deprecatedSince: number, moduleName: string, methodName: string, direction: "IN" | "OUT", invokeContext: IReceiveInvokeContextParams | ISendInvokeContextParams | undefined, callStack: IASN1CallStackEntry[]): void;
+	deprecatedMethod(
+		deprecatedSince: number,
+		moduleName: string,
+		methodName: string,
+		direction: "IN" | "OUT",
+		invokeContext: IReceiveInvokeContextParams | ISendInvokeContextParams | undefined,
+		callStack: IASN1CallStackEntry[],
+	): void;
 }
 
 /**
@@ -85,11 +97,24 @@ export class TSDeprecatedCallback {
 	 * @param direction - whether the call was inbound or outbound
 	 * @param invokeContext - the invokeContext that shows more details about the invoke
 	 */
-	public static deprecatedMethod(deprecatedSince: number, moduleName: string, methodName: string, direction: "IN" | "OUT", invokeContext: IReceiveInvokeContextParams | ISendInvokeContextParams | undefined): void {
+	public static deprecatedMethod(
+		deprecatedSince: number,
+		moduleName: string,
+		methodName: string,
+		direction: "IN" | "OUT",
+		invokeContext: IReceiveInvokeContextParams | ISendInvokeContextParams | undefined,
+	): void {
 		if (!TSDeprecatedCallback.deprecatedCallback)
 			return;
 		const stack = this.getCallStack();
-		TSDeprecatedCallback.deprecatedCallback.deprecatedMethod(deprecatedSince, moduleName, methodName, direction, invokeContext, stack);
+		TSDeprecatedCallback.deprecatedCallback.deprecatedMethod(
+			deprecatedSince,
+			moduleName,
+			methodName,
+			direction,
+			invokeContext,
+			stack,
+		);
 	}
 
 	/**
@@ -100,7 +125,7 @@ export class TSDeprecatedCallback {
 	 * @returns - the stack that allows to see where a call has come from
 	 */
 	private static getCallStack(back = 1): IASN1CallStackEntry[] {
-		const result: IASN1CallStackEntry [] = [];
+		const result: IASN1CallStackEntry[] = [];
 		const stack = new Error().stack;
 		if (stack) {
 			const elements = stack.split("\n");

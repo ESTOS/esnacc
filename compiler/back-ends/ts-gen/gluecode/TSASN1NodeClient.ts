@@ -4,15 +4,14 @@
 
 // dprint-ignore-file
 /* eslint-disable */
-
-import { TSASN1Client } from "./TSASN1Client";
 // IF NODE<22
 import fetch, { RequestInit as FetchInit } from "node-fetch";
 // ENDIF
 import WebSocket from "ws";
-import { ELogSeverity, IDualWebSocket, IDualWebSocketMessageEvent } from "./TSROSEBase";
-import { EASN1TransportEncoding } from "./TSInvokeContext";
 import { ASN1ClassInstanceType } from "./TSASN1Base";
+import { TSASN1Client } from "./TSASN1Client";
+import { EASN1TransportEncoding } from "./TSInvokeContext";
+import { ELogSeverity, IDualWebSocket, IDualWebSocketMessageEvent } from "./TSROSEBase";
 
 /**
  * The ASN1 client side as required in node (different websocket and timer)
@@ -56,7 +55,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 				send: this.send.bind(this),
 				close: this.close.bind(this),
 				addEventListener: this.addEventListener.bind(this),
-				removeEventListener: this.removeEventListener.bind(this)
+				removeEventListener: this.removeEventListener.bind(this),
 			};
 			return this.idual;
 		}
@@ -218,5 +217,4 @@ export class TSASN1NodeClient extends TSASN1Client {
 		}
 		return rawData;
 	}
-
 }

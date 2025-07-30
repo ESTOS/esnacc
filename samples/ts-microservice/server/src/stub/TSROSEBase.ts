@@ -6,20 +6,34 @@
 /* eslint-disable */
 
 import * as asn1ts from "@estos/asn1ts";
-import { IncomingHttpHeaders } from "http";
-
+import { IncomingHttpHeaders } from "node:http";
 import * as ENetUC_Common from "./ENetUC_Common.js";
 import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter.js";
-import { InvokeProblemenum, RejectProblem, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSERejectChoice, ROSEResult, ROSEResultSeq } from "./SNACCROSE.js";
-import { ROSEMessage_Converter, ROSEReject_Converter } from "./SNACCROSE_Converter.js";
-import { ConverterErrors, DecodeContext, IConverter, EncodeContext, IEncodeContext } from "./TSConverterBase.js";
-import { EASN1TransportEncoding, IInvokeContextBaseParams, IReceiveInvokeContextParams, ISendInvokeContextParams } from "./TSInvokeContext.js";
+import {
+	InvokeProblemenum,
+	RejectProblem,
+	ROSEError,
+	ROSEInvoke,
+	ROSEMessage,
+	ROSEReject,
+	ROSERejectChoice,
+	ROSEResult,
+	ROSEResultSeq,
+} from "./SNACCROSE.js";
+import { ROSEMessage_Converter } from "./SNACCROSE_Converter.js";
+import { ConverterErrors, DecodeContext, EncodeContext, IConverter, IEncodeContext } from "./TSConverterBase.js";
+import {
+	EASN1TransportEncoding,
+	IInvokeContextBaseParams,
+	IReceiveInvokeContextParams,
+	ISendInvokeContextParams,
+} from "./TSInvokeContext.js";
 
 /**
  * The websocket is different between the node and the browser implemenation, thus we cast it to any
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type IOriginalWebSocket = any
+type IOriginalWebSocket = any;
 
 // Special Custom Invoke Problems for internal usage (used in Error Responses)
 export enum CustomInvokeProblemEnum {
@@ -30,7 +44,7 @@ export enum CustomInvokeProblemEnum {
 	// HTTP - Gateway Timeout
 	requestTimedOut = 504,
 	// HTTP - internal error (e.g. if we fail after parsing the argument)
-	internalError = 500
+	internalError = 500,
 }
 
 /**
@@ -66,7 +80,7 @@ export enum EDualWebSocketState {
 	CONNECTING = 0,
 	OPEN = 1,
 	CLOSING = 2,
-	CLOSED = 3
+	CLOSED = 3,
 }
 
 export interface IDualWebSocket {
@@ -92,7 +106,11 @@ export interface IDualWebSocket {
  * @param description - An additional description to hand over to the other side
  * @returns - the created ROSEReject object
  */
-export function createInvokeReject(invoke: ROSEInvoke | number, value: InvokeProblemenum | CustomInvokeProblemEnum, description?: string): ROSEReject {
+export function createInvokeReject(
+	invoke: ROSEInvoke | number,
+	value: InvokeProblemenum | CustomInvokeProblemEnum,
+	description?: string,
+): ROSEReject {
 	let sessionID: string | undefined;
 	let invokedID: number;
 	if (typeof invoke === "number")
@@ -102,14 +120,10 @@ export function createInvokeReject(invoke: ROSEInvoke | number, value: InvokePro
 		sessionID = invoke.sessionID;
 	}
 	return new ROSEReject({
-		invokedID: new ROSERejectChoice({
-			invokedID
-		}),
+		invokedID: new ROSERejectChoice({ invokedID }),
 		sessionID,
-		reject: new RejectProblem({
-			invokeProblem: value
-		}),
-		details: description
+		reject: new RejectProblem({ invokeProblem: value }),
+		details: description,
 	});
 }
 
@@ -240,7 +254,7 @@ export class ReceiveInvokeContext extends BaseInvokeContext implements IReceiveI
 			clientConnectionID: invoke.sessionID,
 			invokeID: invoke.invokeID,
 			operationID: invoke.operationID,
-			operationName: invoke.operationName
+			operationName: invoke.operationName,
 		});
 	}
 }
@@ -365,7 +379,7 @@ export enum ELogSeverity {
 	error = 1,
 	warn = 2,
 	info = 3,
-	debug = 4
+	debug = 4,
 }
 
 /**
@@ -384,7 +398,11 @@ export interface IROSELogger {
 export interface IInvokeHandler {
 	getNameForOperationID(id: number): string | undefined;
 	getIDForOperationName(id: string): number | undefined;
-	onInvoke(invoke: ROSEInvoke, invokeContext: IReceiveInvokeContext, requesthandler: unknown): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
+	onInvoke(
+		invoke: ROSEInvoke,
+		invokeContext: IReceiveInvokeContext,
+		requesthandler: unknown,
+	): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
 }
 
 /**
@@ -393,20 +411,63 @@ export interface IInvokeHandler {
 export interface IASN1Transport {
 	sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
 	sendEvent(data: IASN1InvokeData): undefined | boolean;
-	registerOperation(oninvokehandler: IInvokeHandler, requesthandler: unknown, operationID: number, operationName: string): void;
+	registerOperation(
+		oninvokehandler: IInvokeHandler,
+		requesthandler: unknown,
+		operationID: number,
+		operationName: string,
+	): void;
 	registerModuleVersion(moduleName: string, majorVersion: number, minorVersion: number): void;
-	getInvokeContextParams(context: Partial<ISendInvokeContextParams> | undefined, operationID: number, operationName: string, event: boolean): ISendInvokeContextParams;
+	getInvokeContextParams(
+		context: Partial<ISendInvokeContextParams> | undefined,
+		operationID: number,
+		operationName: string,
+		event: boolean,
+	): ISendInvokeContextParams;
 	getEncodeContext(): EncodeContext;
 	getDecodeContext(): DecodeContext;
 	getNextInvokeID(): number;
 	getSessionID(): string | undefined;
 	getEncoding(clientConnectionID?: string): EASN1TransportEncoding;
 	setEncoding(encoding: EASN1TransportEncoding, clientConnectionID?: string): void;
-	log(severity: ELogSeverity, message: string, calling_method: string, callback: IASN1LogCallback, meta?: unknown, exception?: unknown): void;
-	logInvoke(calling_method: string, callback: IASN1LogCallback, argument: object | undefined, context: IReceiveInvokeContext | ISendInvokeContext, isOutbound: boolean): void;
-	logResult(calling_method: string, callback: IASN1LogCallback, result: object | undefined, context: IReceiveInvokeContext | ISendInvokeContext, isOutbound: boolean): void;
-	logError(calling_method: string, callback: IASN1LogCallback, error: object, invoke: unknown | undefined, context: IInvokeContextBase, isOutbound: boolean): void;
-	logReject(calling_method: string, callback: IASN1LogCallback, reject: object, invoke: unknown | undefined, context: IInvokeContextBase, isOutbound: boolean): void;
+	log(
+		severity: ELogSeverity,
+		message: string,
+		calling_method: string,
+		callback: IASN1LogCallback,
+		meta?: unknown,
+		exception?: unknown,
+	): void;
+	logInvoke(
+		calling_method: string,
+		callback: IASN1LogCallback,
+		argument: object | undefined,
+		context: IReceiveInvokeContext | ISendInvokeContext,
+		isOutbound: boolean,
+	): void;
+	logResult(
+		calling_method: string,
+		callback: IASN1LogCallback,
+		result: object | undefined,
+		context: IReceiveInvokeContext | ISendInvokeContext,
+		isOutbound: boolean,
+	): void;
+	logError(
+		calling_method: string,
+		callback: IASN1LogCallback,
+		error: object,
+		invoke: unknown | undefined,
+		context: IInvokeContextBase,
+		isOutbound: boolean,
+	): void;
+	logReject(
+		calling_method: string,
+		callback: IASN1LogCallback,
+		reject: object,
+		invoke: unknown | undefined,
+		context: IInvokeContextBase,
+		isOutbound: boolean,
+	): void;
 }
 
 // Envelop to be able to retrieve the objects name
@@ -418,7 +479,10 @@ interface IASN1HandlerClass {
 	setLogContext?(argument: unknown, invokeContext: IReceiveInvokeContext): void;
 }
 // Type declares for methods that are handling a request
-type IOnInvokeMethod<T> = (argument: T, invokeContext: IReceiveInvokeContext) => Promise<object | ENetUC_Common.AsnRequestError | undefined>;
+type IOnInvokeMethod<T> = (
+	argument: T,
+	invokeContext: IReceiveInvokeContext,
+) => Promise<object | ENetUC_Common.AsnRequestError | undefined>;
 type IOnEventMethod<T> = (argument: T, invokeContext: IReceiveInvokeContext) => void;
 
 // Reference to the encoded ROSE message data (allows the function to fill in the encoded and hand it back to the caller)
@@ -457,7 +521,13 @@ interface IASN1EncodedInvoke {
  * @param invokeContext - the context that holds and receives the encoding
  * @returns the decoded object or undefined
  */
-export function asn1Decode<T>(argument: Uint8Array | asn1ts.Sequence | string | object | undefined, converter: IConverter, errors: ConverterErrors, decodeContext: DecodeContext, invokeContext?: Partial<IInvokeContextBase>): T | undefined {
+export function asn1Decode<T>(
+	argument: Uint8Array | asn1ts.Sequence | string | object | undefined,
+	converter: IConverter,
+	errors: ConverterErrors,
+	decodeContext: DecodeContext,
+	invokeContext?: Partial<IInvokeContextBase>,
+): T | undefined {
 	let jsonData: object | string | undefined;
 	let berData: Uint8Array | undefined;
 
@@ -469,15 +539,19 @@ export function asn1Decode<T>(argument: Uint8Array | asn1ts.Sequence | string | 
 				// This could be JSON but may also be BER
 				jsonData = argument.toString();
 				berData = argument;
-			} else
+			}
+			else {
 				berData = argument;
-		} else if (typeof argument === "string")
+			}
+		}
+		else if (typeof argument === "string")
 			jsonData = argument;
 		else if (argument instanceof asn1ts.Sequence) {
 			// If this is an encapsulated object we need to use the raw data.
 			// The encapsulated uses a certain scheme and we need to validate that scheme against the data we received
 			berData = argument.valueBeforeDecodeView;
-		} else if (typeof argument === "object")
+		}
+		else if (typeof argument === "object")
 			jsonData = argument;
 		else
 			debugger;
@@ -487,16 +561,20 @@ export function asn1Decode<T>(argument: Uint8Array | asn1ts.Sequence | string | 
 			jsonData = jsonData.substring(1, jsonData.length - 1);
 		else if (Array.isArray(jsonData) && jsonData.length === 1)
 			jsonData = jsonData[0] as object;
-	} else if (invokeContext.encoding === EASN1TransportEncoding.BER) {
+	}
+	else if (invokeContext.encoding === EASN1TransportEncoding.BER) {
 		if (argument instanceof Uint8Array)
 			berData = argument;
 		else if (argument instanceof asn1ts.Sequence) {
 			// If this is an encapsulated object we need to use the raw data.
 			// The encapsulated uses a certain scheme and we need to validate that scheme against the data we received
 			berData = argument.valueBeforeDecodeView;
-		} else
+		}
+		else {
 			debugger;
-	} else if (invokeContext.encoding === EASN1TransportEncoding.JSON) {
+		}
+	}
+	else if (invokeContext.encoding === EASN1TransportEncoding.JSON) {
 		if (argument instanceof Uint8Array)
 			jsonData = argument.toString();
 		else {
@@ -540,7 +618,13 @@ export function asn1Decode<T>(argument: Uint8Array | asn1ts.Sequence | string | 
  * @param encodeContext - the context from the transport how to decode an object
  * @returns the encoded object or undefined on error
  */
-export function asn1Encode(encoding: EASN1TransportEncoding | undefined, argument: unknown, converter: IConverter, errors: ConverterErrors, encodeContext: EncodeContext): asn1ts.Sequence | object | undefined {
+export function asn1Encode(
+	encoding: EASN1TransportEncoding | undefined,
+	argument: unknown,
+	converter: IConverter,
+	errors: ConverterErrors,
+	encodeContext: EncodeContext,
+): asn1ts.Sequence | object | undefined {
 	switch (encoding) {
 		case EASN1TransportEncoding.JSON:
 			return converter.toJSON(argument, errors, encodeContext);
@@ -584,7 +668,9 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 */
 	public dispatchEvents(): void {
 		if (this.cachedEvents.length) {
-			this.transport.log(ELogSeverity.debug, "Going to dispatch queued events", "dispatchEvents", this, { count: this.cachedEvents.length });
+			this.transport.log(ELogSeverity.debug, "Going to dispatch queued events", "dispatchEvents", this, {
+				count: this.cachedEvents.length,
+			});
 			let event = this.cachedEvents.shift();
 			while (event) {
 				event.invokeContext.handleEvent = true;
@@ -612,7 +698,11 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	public abstract getLogData(): IASN1LogData;
 	public abstract getNameForOperationID(id: number): string | undefined;
 	public abstract getIDForOperationName(name: string): number | undefined;
-	public abstract onInvoke(invoke: ROSEInvoke, invokeContext: IReceiveInvokeContext, handler: unknown): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
+	public abstract onInvoke(
+		invoke: ROSEInvoke,
+		invokeContext: IReceiveInvokeContext,
+		handler: unknown,
+	): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
 	public abstract readonly logFilter: string[];
 
 	/**
@@ -623,7 +713,11 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param error - the error to convert into a ROSEError
 	 * @returns - the created ROSEError object
 	 */
-	private createROSEError(encoding: EASN1TransportEncoding | undefined, invoke: ROSEInvoke, error: ENetUC_Common.AsnRequestError): ROSEError | ROSEReject {
+	private createROSEError(
+		encoding: EASN1TransportEncoding | undefined,
+		invoke: ROSEInvoke,
+		error: ENetUC_Common.AsnRequestError,
+	): ROSEError | ROSEReject {
 		return ROSEBase.createROSEError(this.transport, this, encoding, invoke, error);
 	}
 
@@ -637,20 +731,32 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param error - the error to convert into a ROSEError
 	 * @returns - the created ROSEError object
 	 */
-	public static createROSEError(transport: IASN1Transport, logCallback: IASN1LogCallback, encoding: EASN1TransportEncoding | undefined, invoke: ROSEInvoke, error: ENetUC_Common.AsnRequestError): ROSEError | ROSEReject {
+	public static createROSEError(
+		transport: IASN1Transport,
+		logCallback: IASN1LogCallback,
+		encoding: EASN1TransportEncoding | undefined,
+		invoke: ROSEInvoke,
+		error: ENetUC_Common.AsnRequestError,
+	): ROSEError | ROSEReject {
 		let result: ROSEError | ROSEReject;
 		const converterErrors = new ConverterErrors();
-		const encoded = asn1Encode(encoding, error, ENetUC_Common_Converter.AsnRequestError_Converter, converterErrors, transport.getEncodeContext());
-		if (encoded) {
-			result = new ROSEError({
-				invokedID: invoke.invokeID,
-				error_value: error.iErrorDetail,
-				error: encoded
-			});
-		} else {
+		const encoded = asn1Encode(
+			encoding,
+			error,
+			ENetUC_Common_Converter.AsnRequestError_Converter,
+			converterErrors,
+			transport.getEncodeContext(),
+		);
+		if (encoded)
+			result = new ROSEError({ invokedID: invoke.invokeID, error_value: error.iErrorDetail, error: encoded });
+		else {
 			const payLoad = ROSEBase.getDebugPayload(error);
 			const diagnostic = converterErrors.getDiagnostic();
-			transport.log(ELogSeverity.error, "Could not encode error", "createROSEError", logCallback, { encoding, payLoad, diagnostic });
+			transport.log(ELogSeverity.error, "Could not encode error", "createROSEError", logCallback, {
+				encoding,
+				payLoad,
+				diagnostic,
+			});
 			// If you land here, check the payLoad why it could not get encoded
 			debugger;
 			result = createInvokeReject(invoke, CustomInvokeProblemEnum.internalError, "Failed to encode ROSEError object");
@@ -667,7 +773,12 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param converter - the converter to encode the invokeResult
 	 * @returns - the created ROSEError object
 	 */
-	private createROSEResult(encoding: EASN1TransportEncoding | undefined, invoke: ROSEInvoke, invokeResult: unknown, converter: IConverter): ROSEResult | ROSEReject {
+	private createROSEResult(
+		encoding: EASN1TransportEncoding | undefined,
+		invoke: ROSEInvoke,
+		invokeResult: unknown,
+		converter: IConverter,
+	): ROSEResult | ROSEReject {
 		validateIsDedicatedObject(invokeResult);
 		let result: ROSEResult | ROSEReject;
 		const converterErrors = new ConverterErrors();
@@ -675,15 +786,17 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		if (encoded) {
 			result = new ROSEResult({
 				invokeID: invoke.invokeID,
-				result: new ROSEResultSeq({
-					resultValue: 0,
-					result: encoded
-				})
+				result: new ROSEResultSeq({ resultValue: 0, result: encoded }),
 			});
-		} else {
+		}
+		else {
 			const payLoad = ROSEBase.getDebugPayload(invokeResult as object);
 			const diagnostic = converterErrors.getDiagnostic();
-			this.transport.log(ELogSeverity.error, "Could not encode result", "createROSEResult", this, { encoding, payLoad, diagnostic });
+			this.transport.log(ELogSeverity.error, "Could not encode result", "createROSEResult", this, {
+				encoding,
+				payLoad,
+				diagnostic,
+			});
 			// If you land here, check the payLoad why it could not get encoded
 			debugger;
 			result = createInvokeReject(invoke, CustomInvokeProblemEnum.internalError, "Failed to encode ROSEResult object");
@@ -705,7 +818,14 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param contextParams - the invokeContext which has already been prefilled with session related details
 	 * @returns undefined on success or an AsnInvokeProblem on error
 	 */
-	private encodeInvoke(argument: object, operationID: number, operationName: string, argumentConverter: IConverter, event: boolean, contextParams?: Partial<ISendInvokeContext>): AsnInvokeProblem | IASN1InvokeData {
+	private encodeInvoke(
+		argument: object,
+		operationID: number,
+		operationName: string,
+		argumentConverter: IConverter,
+		event: boolean,
+		contextParams?: Partial<ISendInvokeContext>,
+	): AsnInvokeProblem | IASN1InvokeData {
 		// Callback into the transport to get customized invokeContextParams
 		const context = this.transport.getInvokeContextParams(contextParams, operationID, operationName, event);
 
@@ -717,23 +837,14 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			invokeID,
 			...(sessionID && { sessionID }),
 			operationID,
-			...(context.bAddOperationName && { operationName })
+			...(context.bAddOperationName && { operationName }),
 		});
 
 		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
-		const invokeContext = new SendInvokeContext({
-			...context,
-			encoding,
-			operationName,
-			operationID,
-			invokeID
-		});
+		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
 
 		// Copy the invoke for logging purposes (Contains plain json data)
-		const invoke: ROSEInvoke = {
-			...message.invoke,
-			argument
-		};
+		const invoke: ROSEInvoke = { ...message.invoke, argument };
 
 		const converterErrors = new ConverterErrors();
 
@@ -741,8 +852,12 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		{
 			// Encode the embedded invoke argument
 			const encoded = asn1Encode(encoding, argument, argumentConverter, converterErrors, encodeContext);
-			if (converterErrors.length || !encoded)
-				return new AsnInvokeProblem(InvokeProblemenum.mistypedArgument, "Errors encoding ROSEInvoke.argument - " + converterErrors.getDiagnostic());
+			if (converterErrors.length || !encoded) {
+				return new AsnInvokeProblem(
+					InvokeProblemenum.mistypedArgument,
+					"Errors encoding ROSEInvoke.argument - " + converterErrors.getDiagnostic(),
+				);
+			}
 			message.invoke.argument = encoded;
 		}
 
@@ -750,16 +865,16 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		{
 			// Encode the ROSE envelop
 			const encoded = asn1Encode(encoding, message, ROSEMessage_Converter, converterErrors, encodeContext);
-			if (converterErrors.length || !encoded)
-				return new AsnInvokeProblem(InvokeProblemenum.mistypedArgument, "Errors encoding ROSEMessage - " + converterErrors.getDiagnostic());
+			if (converterErrors.length || !encoded) {
+				return new AsnInvokeProblem(
+					InvokeProblemenum.mistypedArgument,
+					"Errors encoding ROSEMessage - " + converterErrors.getDiagnostic(),
+				);
+			}
 			payLoad = encoded;
 		}
 
-		const result: IASN1InvokeData = {
-			invoke,
-			payLoad,
-			invokeContext
-		};
+		const result: IASN1InvokeData = { invoke, payLoad, invokeContext };
 
 		return result;
 	}
@@ -774,7 +889,13 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param invokeContext - the invokeContext which has already been prefilled with session related details
 	 * @returns undefined or, if bSendEventSynchronous has been set true when the event was sent
 	 */
-	public handleEvent(argument: object, operationID: number, operationName: string, argumentConverter: IConverter, invokeContext?: ISendInvokeContextParams): undefined | boolean {
+	public handleEvent(
+		argument: object,
+		operationID: number,
+		operationName: string,
+		argumentConverter: IConverter,
+		invokeContext?: ISendInvokeContextParams,
+	): undefined | boolean {
 		// Encodes the argument and the ROSEInvoke envelop
 		const result = this.encodeInvoke(argument, operationID, operationName, argumentConverter, true, invokeContext);
 		if (result instanceof AsnInvokeProblem)
@@ -798,7 +919,16 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param errorConverter - the converter for the error object into the different encodings
 	 * @returns the answer for the other side (either the result on succes or a ROSEError or ROSEReject
 	 */
-	public async handleInvoke<T, U = ENetUC_Common.AsnRequestError>(argument: object, resultObj: IASN1DataClass, operationID: number, operationName: string, argumentConverter: IConverter, resultConverter: IConverter, invokeContext?: ISendInvokeContextParams, errorConverter: IConverter = ENetUC_Common_Converter.AsnRequestError_Converter): Promise<T | U | AsnInvokeProblem> {
+	public async handleInvoke<T, U = ENetUC_Common.AsnRequestError>(
+		argument: object,
+		resultObj: IASN1DataClass,
+		operationID: number,
+		operationName: string,
+		argumentConverter: IConverter,
+		resultConverter: IConverter,
+		invokeContext?: ISendInvokeContextParams,
+		errorConverter: IConverter = ENetUC_Common_Converter.AsnRequestError_Converter,
+	): Promise<T | U | AsnInvokeProblem> {
 		const result = this.encodeInvoke(argument, operationID, operationName, argumentConverter, false, invokeContext);
 		if (result instanceof AsnInvokeProblem)
 			return result;
@@ -814,27 +944,52 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		let payLoad: string | object | undefined;
 		const converterErrors = new ConverterErrors();
 		if (roseResult instanceof ROSEResult && roseResult.result) {
-			const result = asn1Decode<T>(roseResult.result.result, resultConverter, converterErrors, this.transport.getDecodeContext(), context);
+			const result = asn1Decode<T>(
+				roseResult.result.result,
+				resultConverter,
+				converterErrors,
+				this.transport.getDecodeContext(),
+				context,
+			);
 			if (result) {
 				this.transport.logResult(method, this, result, context, false);
 				return result;
-			} else
+			}
+			else {
 				payLoad = ROSEBase.getDebugPayload(roseResult.result.result);
-		} else if (roseResult instanceof ROSEError && roseResult.error) {
-			const error = asn1Decode<U>(roseResult.error, errorConverter, converterErrors, this.transport.getDecodeContext(), context);
+			}
+		}
+		else if (roseResult instanceof ROSEError && roseResult.error) {
+			const error = asn1Decode<U>(
+				roseResult.error,
+				errorConverter,
+				converterErrors,
+				this.transport.getDecodeContext(),
+				context,
+			);
 			if (error) {
 				this.transport.logError(method, this, error, argument, context, false);
 				return error;
-			} else
+			}
+			else {
 				payLoad = ROSEBase.getDebugPayload(roseResult.error);
-		} else if (roseResult instanceof ROSEReject) {
+			}
+		}
+		else if (roseResult instanceof ROSEReject) {
 			this.transport.logReject(method, this, roseResult, argument, context, false);
 			return handleRoseReject(roseResult);
-		} else if (roseResult)
+		}
+		else if (roseResult) {
 			payLoad = ROSEBase.getDebugPayload(roseResult);
+		}
 
 		const diagnostic = converterErrors.getDiagnostic();
-		this.transport.log(ELogSeverity.error, "Could not decode invoke response", method, this, { encoding: context.encoding, payLoad, expected_type: resultObj.type, diagnostic });
+		this.transport.log(ELogSeverity.error, "Could not decode invoke response", method, this, {
+			encoding: context.encoding,
+			payLoad,
+			expected_type: resultObj.type,
+			diagnostic,
+		});
 		// If you land here, check the payLoad what the other side has replied to our request
 		debugger;
 		return new AsnInvokeProblem(InvokeProblemenum.mistypedArgument, diagnostic);
@@ -852,7 +1007,16 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param invokeContext - the invokeContext which has already been prefilled with session related details
 	 * @returns the answer for the other side (either the result on succes or a ROSEError or ROSEReject
 	 */
-	public async handleOnEvent(invoke: ROSEInvoke, operationID: number, argumentClass: IASN1DataClass, argumentConverter: IConverter, handler: IASN1HandlerClass, method: IOnEventMethod<any> | undefined, invokeContext: IReceiveInvokeContext): Promise<ROSEReject | undefined> {
+	public async handleOnEvent(
+		invoke: ROSEInvoke,
+		operationID: number,
+		argumentClass: IASN1DataClass,
+		argumentConverter: IConverter,
+		handler: IASN1HandlerClass,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		method: IOnEventMethod<any> | undefined,
+		invokeContext: IReceiveInvokeContext,
+	): Promise<ROSEReject | undefined> {
 		let result: ROSEReject;
 
 		const converterErrors = new ConverterErrors();
@@ -861,7 +1025,13 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		invokeContext.init(operationID, operationName || "");
 		const methodName = "onInvoke_" + operationName;
 
-		const argument = asn1Decode(invoke.argument, argumentConverter, converterErrors, this.transport.getDecodeContext(), invokeContext);
+		const argument = asn1Decode(
+			invoke.argument,
+			argumentConverter,
+			converterErrors,
+			this.transport.getDecodeContext(),
+			invokeContext,
+		);
 		if (argument) {
 			this.transport.logInvoke(methodName, this, argument, invokeContext, false);
 			if (method) {
@@ -870,12 +1040,24 @@ export abstract class ROSEBase implements IASN1LogCallback {
 					handler.setLogContext(argument, invokeContext);
 				method(argument, invokeContext);
 				return undefined;
-			} else
-				result = createInvokeReject(invoke, InvokeProblemenum.unrecognisedOperation, `${operationName} is not implemented`);
-		} else {
+			}
+			else {
+				result = createInvokeReject(
+					invoke,
+					InvokeProblemenum.unrecognisedOperation,
+					`${operationName} is not implemented`,
+				);
+			}
+		}
+		else {
 			const diagnostic = converterErrors.getDiagnostic();
 			const payLoad = ROSEBase.getDebugPayload(invoke.argument);
-			this.transport.log(ELogSeverity.error, "Could not decode OnEvent argument", methodName, this, { encoding: invokeContext.encoding, payLoad, expected_type: argumentClass.type, diagnostic });
+			this.transport.log(ELogSeverity.error, "Could not decode OnEvent argument", methodName, this, {
+				encoding: invokeContext.encoding,
+				payLoad,
+				expected_type: argumentClass.type,
+				diagnostic,
+			});
 			// If you land here, check the payLoad what the other side has sent to us
 			debugger;
 			result = createInvokeReject(invoke, InvokeProblemenum.mistypedArgument, diagnostic);
@@ -899,7 +1081,17 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param invokeContext - the invokeContext which has already been prefilled with session related details
 	 * @returns the answer for the other side (either the result on succes or a ROSEError or ROSEReject
 	 */
-	public async handleOnInvoke(invoke: ROSEInvoke, operationID: number, argumentClass: IASN1DataClass, argumentConverter: IConverter, resultConverter: IConverter, handler: IASN1HandlerClass, method: IOnInvokeMethod<any> | undefined, invokeContext: IReceiveInvokeContext): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
+	public async handleOnInvoke(
+		invoke: ROSEInvoke,
+		operationID: number,
+		argumentClass: IASN1DataClass,
+		argumentConverter: IConverter,
+		resultConverter: IConverter,
+		handler: IASN1HandlerClass,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		method: IOnInvokeMethod<any> | undefined,
+		invokeContext: IReceiveInvokeContext,
+	): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
 		let result: ROSEReject | ROSEResult | ROSEError | undefined;
 
 		const converterErrors = new ConverterErrors();
@@ -909,7 +1101,13 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		const methodName = "onInvoke_" + operationName;
 
 		let handlerResult: object | undefined;
-		const argument = asn1Decode(invoke.argument, argumentConverter, converterErrors, this.transport.getDecodeContext(), invokeContext);
+		const argument = asn1Decode(
+			invoke.argument,
+			argumentConverter,
+			converterErrors,
+			this.transport.getDecodeContext(),
+			invokeContext,
+		);
 		if (argument) {
 			this.transport.logInvoke(methodName, this, argument, invokeContext, false);
 			if (method) {
@@ -922,12 +1120,23 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				result = this.createROSEError(invokeContext.encoding, invoke, handlerResult);
 			else if (handlerResult)
 				result = this.createROSEResult(invokeContext.encoding, invoke, handlerResult, resultConverter);
-			else
-				result = createInvokeReject(invoke, InvokeProblemenum.unrecognisedOperation, `${operationName} is not implemented`);
-		} else {
+			else {
+				result = createInvokeReject(
+					invoke,
+					InvokeProblemenum.unrecognisedOperation,
+					`${operationName} is not implemented`,
+				);
+			}
+		}
+		else {
 			const diagnostic = converterErrors.getDiagnostic();
 			const payLoad = ROSEBase.getDebugPayload(invoke.argument);
-			this.transport.log(ELogSeverity.error, "Could not decode OnInvoke argument", methodName, this, { encoding: invokeContext.encoding, payLoad, expected_type: argumentClass.type, diagnostic });
+			this.transport.log(ELogSeverity.error, "Could not decode OnInvoke argument", methodName, this, {
+				encoding: invokeContext.encoding,
+				payLoad,
+				expected_type: argumentClass.type,
+				diagnostic,
+			});
 			// If you land here, check the payLoad what the other side has replied to our request
 			debugger;
 			result = createInvokeReject(invoke, InvokeProblemenum.mistypedArgument, diagnostic);
@@ -961,15 +1170,13 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		if (data instanceof asn1ts.Sequence) {
 			payLoad = new Uint8Array(data.toBER());
 			logData = payLoad;
-		} else {
+		}
+		else {
 			payLoad = JSON.stringify(data, null, encodeContext.bPrettyPrint ? "\t" : undefined);
 			logData = data;
 		}
 
-		return {
-			payLoad,
-			logData
-		};
+		return { payLoad, logData };
 	}
 
 	/**
@@ -995,11 +1202,9 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @returns the buffer in hex string notation
 	 */
 	public static buf2hex(buffer: ArrayBuffer | Uint8Array, separator = ""): string {
-		if (buffer instanceof ArrayBuffer) {
-			return [...new Uint8Array(buffer)]
-				.map(x => x.toString(16).padStart(2, "0"))
-				.join(separator);
-		} else {
+		if (buffer instanceof ArrayBuffer)
+			return [...new Uint8Array(buffer)].map((x) => x.toString(16).padStart(2, "0")).join(separator);
+		else {
 			const data: string[] = [];
 			for (const elem of buffer)
 				data.push(elem.toString(16).padStart(2, "0"));

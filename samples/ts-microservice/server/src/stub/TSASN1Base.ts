@@ -10,9 +10,26 @@ import * as asn1ts from "@estos/asn1ts";
 import * as ENetUC_Common from "./ENetUC_Common.js";
 import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE.js";
 import { ROSEMessage_Converter } from "./SNACCROSE_Converter.js";
-import { DecodeContext, ConverterErrors, EncodeContext } from "./TSConverterBase.js";
-import { createInvokeReject, ELogSeverity, IReceiveInvokeContext, ISendInvokeContext, IInvokeHandler, IROSELogger, IASN1LogData, IASN1LogCallback, CustomInvokeProblemEnum, IInvokeContextBase, asn1Decode, IASN1Transport, IASN1InvokeData, asn1Encode, ROSEBase, ReceiveInvokeContext, SendInvokeContext } from "./TSROSEBase.js";
+import { ConverterErrors, DecodeContext, EncodeContext } from "./TSConverterBase.js";
 import { EASN1TransportEncoding, ISendInvokeContextParams } from "./TSInvokeContext.js";
+import {
+	asn1Decode,
+	asn1Encode,
+	createInvokeReject,
+	CustomInvokeProblemEnum,
+	ELogSeverity,
+	IASN1InvokeData,
+	IASN1LogCallback,
+	IASN1LogData,
+	IASN1Transport,
+	IInvokeContextBase,
+	IInvokeHandler,
+	IReceiveInvokeContext,
+	IROSELogger,
+	ISendInvokeContext,
+	ReceiveInvokeContext,
+	ROSEBase,
+} from "./TSROSEBase.js";
 
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
@@ -24,7 +41,7 @@ interface ILogData {
 export enum ASN1ClassInstanceType {
 	TSASN1Server = 0,
 	TSASN1BrowserClient = 1,
-	TSASN1NodeClient = 2
+	TSASN1NodeClient = 2,
 }
 
 /**
@@ -52,7 +69,12 @@ class Handler {
 	 * @param operationID - The id we registger
 	 * @param operationName - The name we registger
 	 */
-	public constructor(oninvokehandler: IInvokeHandler, requesthandler: never, operationID: number, operationName: string) {
+	public constructor(
+		oninvokehandler: IInvokeHandler,
+		requesthandler: never,
+		operationID: number,
+		operationName: string,
+	) {
 		this.oninvokehandler = oninvokehandler;
 		this.requesthandler = requesthandler;
 		this.operationID = operationID;
@@ -137,7 +159,12 @@ export class PendingInvoke {
 	 * @param timerID - The timerID of the timer that has been created to handle the timeout
 	 * The timer is created outside as it depends on if we are running in a browser or in node
 	 */
-	public constructor(message: ROSEInvoke, resolve: (value?: ROSEReject | ROSEResult | ROSEError) => void, reject: (reason?: unknown) => void, timerID?: ReturnType<typeof setTimeout>) {
+	public constructor(
+		message: ROSEInvoke,
+		resolve: (value?: ROSEReject | ROSEResult | ROSEError) => void,
+		reject: (reason?: unknown) => void,
+		timerID?: ReturnType<typeof setTimeout>,
+	) {
 		this.invoke = message;
 		this.resolve = resolve;
 		// this.reject = reject;
@@ -181,14 +208,10 @@ export class PendingInvoke {
 		if (this.timerID) {
 			this.clearTimeout();
 			const reject = new ROSEReject({
-				invokedID: {
-					invokedID: this.invoke.invokeID
-				},
+				invokedID: { invokedID: this.invoke.invokeID },
 				sessionID: this.invoke.sessionID,
 				details: "timed out",
-				reject: {
-					invokeProblem: CustomInvokeProblemEnum.requestTimedOut
-				}
+				reject: { invokeProblem: CustomInvokeProblemEnum.requestTimedOut },
 			});
 			this.resolve(reject);
 		}
@@ -281,7 +304,10 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param encoding - sets the encoding for outbound calls
 	 * @param instanceType - the type of instance this class belongs to
 	 */
-	public constructor(encoding: EASN1TransportEncoding.JSON | EASN1TransportEncoding.BER, instanceType: ASN1ClassInstanceType) {
+	public constructor(
+		encoding: EASN1TransportEncoding.JSON | EASN1TransportEncoding.BER,
+		instanceType: ASN1ClassInstanceType,
+	) {
 		this.instanceType = instanceType;
 		this.encoding = encoding;
 	}
@@ -330,7 +356,12 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param operationID - the id of the operation that registers
 	 * @param operationName - the name of the operation that registers
 	 */
-	public registerOperation(oninvokehandler: IInvokeHandler, requesthandler: never, operationID: number, operationName: string): void {
+	public registerOperation(
+		oninvokehandler: IInvokeHandler,
+		requesthandler: never,
+		operationID: number,
+		operationName: string,
+	): void {
 		if (!this.handlersByID.has(operationID)) {
 			const handler = new Handler(oninvokehandler, requesthandler, operationID, operationName);
 			this.handlersByID.set(operationID, handler);
@@ -351,7 +382,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			moduleName,
 			majorVersion,
 			minorVersion,
-			version: `${majorVersion}.${minorVersion}`
+			version: `${majorVersion}.${minorVersion}`,
 		};
 		this.moduleVersionsByName.set(moduleName, versionInformation);
 	}
@@ -380,7 +411,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 				majorVersion = mod.majorVersion;
 				minorVersion = mod.minorVersion;
 				module = mod;
-			} else if (mod.majorVersion == majorVersion && mod.minorVersion > minorVersion) {
+			}
+			else if (mod.majorVersion === majorVersion && mod.minorVersion > minorVersion) {
 				majorVersion = mod.majorVersion;
 				minorVersion = mod.minorVersion;
 				module = mod;
@@ -399,7 +431,12 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param additionalMeta - data that is added to the meta data for a general log requets
 	 * @param rawAdditionalMeta - data that is added to the raw meta data for a general log requets
 	 */
-	public setLogger(logger: IROSELogger | undefined, logRawTransport = false, additionalMeta?: Record<string, unknown>, rawAdditionalMeta?: Record<string, unknown>): void {
+	public setLogger(
+		logger: IROSELogger | undefined,
+		logRawTransport = false,
+		additionalMeta?: Record<string, unknown>,
+		rawAdditionalMeta?: Record<string, unknown>,
+	): void {
 		this.logger = logger;
 		this.logRawTransport = logRawTransport;
 		this.additionalLogMeta = additionalMeta;
@@ -426,16 +463,20 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param meta - Meta data you want to have logged with the message (arguments, results, intermediate data, anything that might be usefull later)
 	 * @param exception - In case of an exception pass it here.
 	 */
-	public log(severity: ELogSeverity, message: string, calling_method: string, cbOrLogData: IASN1LogCallback | ILogData, meta?: unknown, exception?: unknown): void {
+	public log(
+		severity: ELogSeverity,
+		message: string,
+		calling_method: string,
+		cbOrLogData: IASN1LogCallback | ILogData,
+		meta?: unknown,
+		exception?: unknown,
+	): void {
 		if (this.logger) {
 			// If additional log data has been added, merge it now into the meta data
 			if (this.additionalLogMeta) {
-				if (meta) {
-					meta = {
-						...(meta as object),
-						...this.additionalLogMeta
-					};
-				} else
+				if (meta)
+					meta = { ...(meta as object), ...this.additionalLogMeta };
+				else
 					meta = this.additionalLogMeta;
 			}
 
@@ -494,14 +535,23 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param invokeContext - Invoke context as specified from the caller (if we have something like a client connection handler, we will have a sessionid. At least some identifier of the client should be provided (e.g. the ip address)
 	 * @returns - the return data and http status code
 	 */
-	public async receive(rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): Promise<IResponseData | undefined> {
+	public async receive(
+		rawData: object | Uint8Array,
+		invokeContext: ReceiveInvokeContext,
+	): Promise<IResponseData | undefined> {
 		// Decodes the outer ROSE envelop, the embedded elements are not decoded:
 		// ROSEInvoke.argument
 		// ROSEResult.result.result
 		// ROSEError.error
 		const errors = new ConverterErrors();
 		const encoding = invokeContext.encoding;
-		let message = asn1Decode<ROSEMessage>(rawData, ROSEMessage_Converter, errors, this.getDecodeContext(), invokeContext);
+		let message = asn1Decode<ROSEMessage>(
+			rawData,
+			ROSEMessage_Converter,
+			errors,
+			this.getDecodeContext(),
+			invokeContext,
+		);
 
 		if (!message && invokeContext.url && this.instanceType === ASN1ClassInstanceType.TSASN1Server) {
 			// If the message was not decodable check if a URL was specified (rest like request), and if we are on the server side
@@ -524,7 +574,11 @@ export abstract class TSASN1Base implements IASN1Transport {
 
 		const payLoad = ROSEBase.getDebugPayload(rawData);
 		this.log(ELogSeverity.error, "Failed to decode ROSEMessage", "receive", this, { payLoad, errors });
-		const result = createInvokeReject(0, InvokeProblemenum.unexpectedChildOperation, "Failed to parse argument " + errors.getDiagnostic());
+		const result = createInvokeReject(
+			0,
+			InvokeProblemenum.unexpectedChildOperation,
+			"Failed to parse argument " + errors.getDiagnostic(),
+		);
 		// If the request was not parsed and the encoding has not been defined we now need to specify one for the result
 		return this.handleResult(result, invokeContext);
 	}
@@ -537,7 +591,11 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param invokeContext - the invokeContext
 	 * @returns - the return data and http status code
 	 */
-	public async receiveHandleROSEMessage(message: ROSEMessage, rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): Promise<IResponseData | undefined> {
+	public async receiveHandleROSEMessage(
+		message: ROSEMessage,
+		rawData: object | Uint8Array,
+		invokeContext: ReceiveInvokeContext,
+	): Promise<IResponseData | undefined> {
 		let result: ROSEReject | ROSEResult | ROSEError | undefined;
 		try {
 			if (message.invoke) {
@@ -554,7 +612,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 				}
 				if (!invokeContext.clientConnectionID)
 					invokeContext.clientConnectionID = message.invoke.sessionID;
-			} else if (message.result)
+			}
+			else if (message.result)
 				invokeContext.invokeID = message.result.invokeID;
 			else if (message.error)
 				invokeContext.invokeID = message.error.invokedID;
@@ -574,11 +633,21 @@ export abstract class TSASN1Base implements IASN1Transport {
 				result = await this.onROSEError(message.error, invokeContext);
 			else if (message.reject)
 				result = await this.onROSEReject(message.reject, invokeContext);
-			else
-				result = createInvokeReject(0, InvokeProblemenum.mistypedArgument, "No member was filled within the ROSEMessage");
-		} catch (error) {
+			else {
+				result = createInvokeReject(
+					0,
+					InvokeProblemenum.mistypedArgument,
+					"No member was filled within the ROSEMessage",
+				);
+			}
+		}
+		catch (error) {
 			this.log(ELogSeverity.error, "exception", "receive", this, undefined, error);
-			result = createInvokeReject(0, InvokeProblemenum.unexpectedChildOperation, "Exception catched while trying to parse argument...");
+			result = createInvokeReject(
+				0,
+				InvokeProblemenum.unexpectedChildOperation,
+				"Exception catched while trying to parse argument...",
+			);
 		}
 		return this.handleResult(result, invokeContext);
 	}
@@ -590,22 +659,42 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param invokeContext - Invoke context as specified from the caller (if we have something like a client connection handler, we will have a sessionid. At least some identifier of the client should be provided (e.g. the ip address)
 	 * @returns - the returns the ROSEMessage on success, or an IResponseData on error or undefined
 	 */
-	public receiveHandleWithoutROSEEnvelop(rawData: object | Uint8Array, invokeContext: ReceiveInvokeContext): ROSEMessage | IResponseData | undefined {
+	public receiveHandleWithoutROSEEnvelop(
+		rawData: object | Uint8Array,
+		invokeContext: ReceiveInvokeContext,
+	): ROSEMessage | IResponseData | undefined {
 		invokeContext.noROSEEnvelop = true;
 
 		const errors = new ConverterErrors();
 		const operationName = invokeContext.getOperationNameFromURL();
 		if (!operationName) {
 			const payLoad = ROSEBase.getDebugPayload(rawData);
-			this.log(ELogSeverity.error, "Could not retrieve operationName from URL", "receive", this, { payLoad, errors, url: invokeContext.url });
-			const result = createInvokeReject(0, InvokeProblemenum.unrecognisedOperation, "Failed to retrieve operationName from URL");
+			this.log(ELogSeverity.error, "Could not retrieve operationName from URL", "receive", this, {
+				payLoad,
+				errors,
+				url: invokeContext.url,
+			});
+			const result = createInvokeReject(
+				0,
+				InvokeProblemenum.unrecognisedOperation,
+				"Failed to retrieve operationName from URL",
+			);
 			return this.handleResult(result, invokeContext);
 		}
 		const handler = this.handlersByName.get(operationName);
 		if (!handler) {
 			const payLoad = ROSEBase.getDebugPayload(rawData);
-			this.log(ELogSeverity.error, "There is no registered handler for this operation", "receive", this, { payLoad, errors, url: invokeContext.url, operationName });
-			const result = createInvokeReject(0, InvokeProblemenum.unrecognisedOperation, "There is no registered handler for this operation");
+			this.log(ELogSeverity.error, "There is no registered handler for this operation", "receive", this, {
+				payLoad,
+				errors,
+				url: invokeContext.url,
+				operationName,
+			});
+			const result = createInvokeReject(
+				0,
+				InvokeProblemenum.unrecognisedOperation,
+				"There is no registered handler for this operation",
+			);
 			return this.handleResult(result, invokeContext);
 		}
 
@@ -632,11 +721,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 
 		// If we found an operationName and an associated handler for it we now need to create a matching ROSE envelop for the handling of the request
 		const message = new ROSEMessage({
-			invoke: new ROSEInvoke({
-				invokeID: 1,
-				operationID: handler.operationID,
-				argument: rawData
-			})
+			invoke: new ROSEInvoke({ invokeID: 1, operationID: handler.operationID, argument: rawData }),
 		});
 
 		return message;
@@ -649,7 +734,10 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param invokeContext - the invokeContext
 	 * @returns - the responseData object
 	 */
-	protected handleResult(result: ROSEReject | ROSEResult | ROSEError | undefined, invokeContext: IReceiveInvokeContext): IResponseData | undefined {
+	protected handleResult(
+		result: ROSEReject | ROSEResult | ROSEError | undefined,
+		invokeContext: IReceiveInvokeContext,
+	): IResponseData | undefined {
 		if (!result)
 			return;
 
@@ -670,10 +758,12 @@ export abstract class TSASN1Base implements IASN1Transport {
 				resultValue = result.reject?.returnResultProblem;
 			message.reject = result;
 			plainResponse = result;
-		} else if (result instanceof ROSEResult) {
+		}
+		else if (result instanceof ROSEResult) {
 			message.result = result;
 			plainResponse = result.result?.result;
-		} else if (result instanceof ROSEError) {
+		}
+		else if (result instanceof ROSEError) {
 			message.error = result;
 			message.error.sessionID = invokeContext.clientConnectionID;
 			resultValue = result.error_value;
@@ -693,19 +783,20 @@ export abstract class TSASN1Base implements IASN1Transport {
 			const errors = new ConverterErrors();
 			encoded = asn1Encode(invokeContext.encoding, message, ROSEMessage_Converter, errors, encodeContext);
 			if (!encoded) {
-				this.log(ELogSeverity.error, "Failed to encode result message", "receive", this, { errors: errors.getDiagnostic() });
+				this.log(ELogSeverity.error, "Failed to encode result message", "receive", this, {
+					errors: errors.getDiagnostic(),
+				});
 				return;
 			}
-		} else
+		}
+		else {
 			encoded = plainResponse as object | asn1ts.Sequence;
+		}
 
 		const forTransport = ROSEBase.encodeToTransport(encoded, this.encodeContext);
 		this.logTransport(forTransport.logData, "receive", "out", invokeContext);
 
-		return {
-			payLoad: forTransport.payLoad,
-			httpStatusCode: resultValue
-		};
+		return { payLoad: forTransport.payLoad, httpStatusCode: resultValue };
 	}
 
 	/**
@@ -716,7 +807,12 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param direction - the direction of this transport log entry
 	 * @param invokeContext - the context of the invoke (connecitionID, clientID etc.)
 	 */
-	protected logTransport(payLoad: Uint8Array | string | object, method: string, direction: "in" | "out", invokeContext: IReceiveInvokeContext): void {
+	protected logTransport(
+		payLoad: Uint8Array | string | object,
+		method: string,
+		direction: "in" | "out",
+		invokeContext: IReceiveInvokeContext,
+	): void {
 		if (this.logRawTransport) {
 			if (payLoad instanceof Uint8Array) {
 				if (invokeContext.encoding === EASN1TransportEncoding.JSON)
@@ -735,7 +831,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 				operationID: invokeContext.operationID,
 				operationName: invokeContext.operationName,
 				direction,
-				payLoad
+				payLoad,
 			};
 			this.log(ELogSeverity.debug, "asn1Transport", method, this, meta);
 		}
@@ -769,7 +865,12 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param event - true, in case we are encoding an event, false for a regular invoke
 	 * @returns - an updated context
 	 */
-	public getInvokeContextParams(context: Partial<ISendInvokeContextParams> | undefined, operationID: number, operationName: string, event: boolean): ISendInvokeContextParams {
+	public getInvokeContextParams(
+		context: Partial<ISendInvokeContextParams> | undefined,
+		operationID: number,
+		operationName: string,
+		event: boolean,
+	): ISendInvokeContextParams {
 		return { ...context };
 	}
 
@@ -791,13 +892,13 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param callback - the callback that provides additional contextual data
 	 * @param context - the context that is passed along with an invoke
 	 */
-	private getCombinedLogData(callback: IASN1LogCallback, context: IReceiveInvokeContext | ISendInvokeContext): ILogData {
+	private getCombinedLogData(
+		callback: IASN1LogCallback,
+		context: IReceiveInvokeContext | ISendInvokeContext,
+	): ILogData {
 		return {
 			...callback.getLogData(),
-			classProps: {
-				clientConnectionID: context.clientConnectionID,
-				invokeID: context.invokeID
-			}
+			classProps: { clientConnectionID: context.clientConnectionID, invokeID: context.invokeID },
 		};
 	}
 
@@ -810,7 +911,13 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param context - the context that is passed along with an invoke
 	 * @param isOutbound - true if this message goes outbound
 	 */
-	public logInvoke(calling_method: string, callback: IASN1LogCallback, argument: object, context: IReceiveInvokeContext | ISendInvokeContext, isOutbound: boolean): void {
+	public logInvoke(
+		calling_method: string,
+		callback: IASN1LogCallback,
+		argument: object,
+		context: IReceiveInvokeContext | ISendInvokeContext,
+		isOutbound: boolean,
+	): void {
 		const meta: IInvokeLogEntry = {
 			_type: "IInvokeLogEntry",
 			operationName: context.operationName || "",
@@ -820,12 +927,18 @@ export abstract class TSASN1Base implements IASN1Transport {
 			isEvent: context.invokeID === 99999,
 			transport: true,
 			argument,
-			argumentName: argument.constructor.name
+			argumentName: argument.constructor.name,
 		};
 
 		const logData = this.getCombinedLogData(callback, context);
 
-		this.log(ELogSeverity.debug, `${meta.isEvent ? "event" : "invoke"} ${isOutbound ? "out" : "in"}`, calling_method, logData, meta);
+		this.log(
+			ELogSeverity.debug,
+			`${meta.isEvent ? "event" : "invoke"} ${isOutbound ? "out" : "in"}`,
+			calling_method,
+			logData,
+			meta,
+		);
 	}
 
 	/**
@@ -837,7 +950,13 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param context - the context that is passed along with an invoke
 	 * @param isOutbound - true if this message goes outbound
 	 */
-	public logResult(calling_method: string, callback: IASN1LogCallback, result: object, context: IReceiveInvokeContext | ISendInvokeContext, isOutbound: boolean): void {
+	public logResult(
+		calling_method: string,
+		callback: IASN1LogCallback,
+		result: object,
+		context: IReceiveInvokeContext | ISendInvokeContext,
+		isOutbound: boolean,
+	): void {
 		const meta: IResultLogEntry = {
 			_type: "IResultLogEntry",
 			operationName: context.operationName,
@@ -846,7 +965,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			isOutbound,
 			transport: true,
 			result,
-			resultName: result.constructor.name
+			resultName: result.constructor.name,
 		};
 
 		const logData = this.getCombinedLogData(callback, context);
@@ -864,7 +983,14 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param context - the context of the invoke that lead to the reject
 	 * @param isOutbound - true if this message goes outbound
 	 */
-	public logError(calling_method: string, callback: IASN1LogCallback, error: object, invokeArgument: object | undefined, context: IInvokeContextBase, isOutbound: boolean): void {
+	public logError(
+		calling_method: string,
+		callback: IASN1LogCallback,
+		error: object,
+		invokeArgument: object | undefined,
+		context: IInvokeContextBase,
+		isOutbound: boolean,
+	): void {
 		const meta: IErrorLogEntry = {
 			_type: "IErrorLogEntry",
 			operationName: context.operationName,
@@ -873,7 +999,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			invokeID: context.invokeID,
 			invokeArgument,
 			invokeArgumentName: invokeArgument?.constructor.name,
-			error
+			error,
 		};
 
 		const logData = this.getCombinedLogData(callback, context);
@@ -891,7 +1017,14 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param context - the context of the invoke that lead to the reject
 	 * @param isOutbound - true if this message goes outbound
 	 */
-	public logReject(calling_method: string, callback: IASN1LogCallback, reject: object, invokeArgument: object | undefined, context: IInvokeContextBase, isOutbound: boolean): void {
+	public logReject(
+		calling_method: string,
+		callback: IASN1LogCallback,
+		reject: object,
+		invokeArgument: object | undefined,
+		context: IInvokeContextBase,
+		isOutbound: boolean,
+	): void {
 		const meta: IRejectLogEntry = {
 			_type: "IRejectLogEntry",
 			operationName: context.operationName,
@@ -900,7 +1033,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			invokeID: context.invokeID,
 			invokeArgument,
 			invokeArgumentName: invokeArgument?.constructor.name,
-			reject
+			reject,
 		};
 
 		const logData = this.getCombinedLogData(callback, context);
@@ -937,7 +1070,10 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param invokeContext - The invoke related contextual data (see IReceiveInvokeContext)
 	 * @returns - Returns one of the possible ROSE messages or undefined if the invoke was an event which has no appropriate result
 	 */
-	protected async onROSEInvoke(invoke: ROSEInvoke, invokeContext: IReceiveInvokeContext): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
+	protected async onROSEInvoke(
+		invoke: ROSEInvoke,
+		invokeContext: IReceiveInvokeContext,
+	): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
 		try {
 			let handler = this.getHandlerById(invoke.operationID);
 			if (handler === undefined && invoke.operationName) {
@@ -945,21 +1081,47 @@ export abstract class TSASN1Base implements IASN1Transport {
 				if (handler)
 					invoke.operationID = handler.operationID;
 			}
-			if (handler === undefined)
-				return createInvokeReject(invoke, InvokeProblemenum.unrecognisedOperation, `There is no registered handler for operation ${invoke.operationName} (${invoke.operationID})`);
-			else
+			if (handler === undefined) {
+				return createInvokeReject(
+					invoke,
+					InvokeProblemenum.unrecognisedOperation,
+					`There is no registered handler for operation ${invoke.operationName} (${invoke.operationID})`,
+				);
+			}
+			else {
 				return await handler.oninvokehandler.onInvoke(invoke, invokeContext, handler.requesthandler);
-		} catch (error) {
+			}
+		}
+		catch (error) {
 			// We want the debugger to catch that behaviour instantly -> so the developer can fix it right away
 			// !!! An exception should NEVER EVER reach this point !!!
 			// Handle all exceptions properly inside the oninvoke methods.
 			debugger;
 			if (error instanceof ENetUC_Common.AsnRequestError) {
-				this.log(ELogSeverity.error, "LAST possible treatment of an unhandled exception. This exception MUST be handled inside the called function, not here!", "onROSEInvoke", this, invoke, error);
+				this.log(
+					ELogSeverity.error,
+					"LAST possible treatment of an unhandled exception. This exception MUST be handled inside the called function, not here!",
+					"onROSEInvoke",
+					this,
+					invoke,
+					error,
+				);
 				return ROSEBase.createROSEError(this, this, invokeContext.encoding, invoke, error);
-			} else {
-				this.log(ELogSeverity.error, "LAST possible treatment of an unhandled exception. This exception MUST be handled inside the called function, not here!", "onROSEInvoke", this, invoke, error);
-				return createInvokeReject(invoke, InvokeProblemenum.unexpectedChildOperation, "Exception catched while handling OnROSEInvoke");
+			}
+			else {
+				this.log(
+					ELogSeverity.error,
+					"LAST possible treatment of an unhandled exception. This exception MUST be handled inside the called function, not here!",
+					"onROSEInvoke",
+					this,
+					invoke,
+					error,
+				);
+				return createInvokeReject(
+					invoke,
+					InvokeProblemenum.unexpectedChildOperation,
+					"Exception catched while handling OnROSEInvoke",
+				);
 			}
 		}
 	}
@@ -981,9 +1143,14 @@ export abstract class TSASN1Base implements IASN1Transport {
 				operation.completed_result(result);
 			}
 			return undefined;
-		} catch (error) {
+		}
+		catch (error) {
 			this.log(ELogSeverity.error, "exception", "onROSEResult", this, result, error);
-			return createInvokeReject(result.invokeID, InvokeProblemenum.unexpectedChildOperation, "Exception catched while handling OnROSEResult");
+			return createInvokeReject(
+				result.invokeID,
+				InvokeProblemenum.unexpectedChildOperation,
+				"Exception catched while handling OnROSEResult",
+			);
 		}
 	}
 
@@ -1004,9 +1171,14 @@ export abstract class TSASN1Base implements IASN1Transport {
 				operation.completed_error(error);
 			}
 			return undefined;
-		} catch (exception) {
+		}
+		catch (exception) {
 			this.log(ELogSeverity.error, "exception", "onROSEError", this, error, exception);
-			return createInvokeReject(0, InvokeProblemenum.unexpectedChildOperation, "Exception catched while handling OnROSEError");
+			return createInvokeReject(
+				0,
+				InvokeProblemenum.unexpectedChildOperation,
+				"Exception catched while handling OnROSEError",
+			);
 		}
 	}
 
@@ -1029,9 +1201,14 @@ export abstract class TSASN1Base implements IASN1Transport {
 				}
 			}
 			return undefined;
-		} catch (error) {
+		}
+		catch (error) {
 			this.log(ELogSeverity.error, "exception", "onROSEReject", this, reject, error);
-			return createInvokeReject(0, InvokeProblemenum.unexpectedChildOperation, "Exception catched while handling OnROSEReject");
+			return createInvokeReject(
+				0,
+				InvokeProblemenum.unexpectedChildOperation,
+				"Exception catched while handling OnROSEReject",
+			);
 		}
 	}
 
