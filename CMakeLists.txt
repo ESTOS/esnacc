@@ -1,5 +1,5 @@
 # Sets the Environmen for the compiler and the c-lib (possible c++-lib too)
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.20...4.1)
 project(esnacc_cmake) #  LANGUAGES CXX) - would interpret all files as C++
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") # GCC
