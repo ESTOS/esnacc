@@ -21,13 +21,18 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_DEBUG_POSTFIX "d")
 # set(CMAKE_VERBOSE_MAKEFILE ON)
 
+# Root-level helper
+function(log_stdout msg)
+    execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${msg}")
+endfunction()
+
 if(MSVC)
     # Ensures that the __cplusplus macro is set to the proper number correspoding to the cpp version beeing used (otherwise it points to CPP98)
     add_compile_options(/Zc:__cplusplus)
     if(MSVC_STATIC_RUNTIME)
-    	message("configuring a static cpp library")
+    	log_stdout("configuring a static cpp library")
     else()
-    	message("configuring a dynamic cpp library")
+    	log_stdout("configuring a dynamic cpp library")
     endif()
 endif()
 
