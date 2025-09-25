@@ -469,6 +469,14 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						genROSEDecoders = TRUE;
 						currArg++;
 					}
+					else if (strcmp(argument + 1, "RS") == 0)
+					{
+						/* stm --added */
+						genCxxCode = FALSE;
+						genSwiftCode = TRUE;
+						genROSEDecoders = TRUE;
+						currArg++;
+					}
 					else if (strcmp(argument + 1, "RTS_SERVER") == 0)
 					{
 						genTSRoseStubs |= 0x01;
