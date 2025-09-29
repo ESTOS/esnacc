@@ -421,16 +421,7 @@ void PrintKotlinSimpleRefDef(ModuleList* mods, Module* mod, TypeDef* td)
 	FILE* src = getKotlinFilePointer(name);
 	PRINTDEBUGGING
 	fprintf(src, "package com.estos.asn\n\n");
-	if (strcmp("AsnGetLocationInformationResult", name) == 0)
-		fprintf(src, "import androidx.annotation.Keep\n");
-	fprintf(src, "import kotlinx.serialization.Serializable\n");
-	fprintf(src, "import javax.annotation.Generated\n\n");
-	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
-	fprintf(src, "@Serializable\n");
-	if (strcmp("AsnGetLocationInformationResult", name) == 0)
-		fprintf(src, "@Keep\n");
-	fprintf(src, "class %s : %s() {\n", td->definedName, td->type->cxxTypeRefInfo->className);
-	fprintf(src, "}\n\n");
+	fprintf(src, "typealias %s = %s \n", td->definedName, td->type->cxxTypeRefInfo->className);
 	fclose(src);
 	free(name);
 }

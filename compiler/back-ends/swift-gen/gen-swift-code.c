@@ -710,18 +710,7 @@ static void PrintSwiftSimpleRefDef(FILE* src, Module* m, TypeDef* td)
 
 	printSequenceComment(src, m, td, COMMENTSTYLE_SWIFT);
 
-	fprintf(src, "open class %s: %s\n", td->definedName, td->type->cxxTypeRefInfo->className);
-	fprintf(src, "{\n");
-	fprintf(src, "    public required init(json: String)\n");
-	fprintf(src, "    {\n");
-	fprintf(src, "        super.init(json: json)\n");
-	fprintf(src, "    }\n\n");
-	fprintf(src, "    public required init(jsonObject: AnyObject)\n");
-	fprintf(src, "    {\n");
-	fprintf(src, "        super.init(jsonObject: jsonObject)\n");
-	fprintf(src, "    }\n");
-
-	fprintf(src, "}\n");
+	fprintf(src, "public typealias %s = %s\n", td->definedName, td->type->cxxTypeRefInfo->className);
 }
 
 static void PrintSwiftSimpleDef(FILE* src, ModuleList* mods, Module* m, TypeDef* td)
