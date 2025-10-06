@@ -772,7 +772,7 @@ static void PrintSwiftSeqOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 
 			printSequenceComment(src, m, td, COMMENTSTYLE_SWIFT);
 
-			if (!EndsWith(td->definedName, SEQOF_SUFFIX) && !EndsWith(td->definedName, SETOF_SUFFIX) && td->type->basicType->choiceId == BASICTYPE_SEQUENCEOF && innerType->basicType->choiceId == BASICTYPE_LOCALTYPEREF)
+			if (!EndsWith(td->definedName, SEQOF_SUFFIX) && !EndsWith(td->definedName, SETOF_SUFFIX) && td->type->basicType->choiceId == BASICTYPE_SEQUENCEOF)
 			{
 				fprintf(src, "public typealias %s = %sArray\n", td->definedName, innerType->cxxTypeRefInfo->className);
 				Type* finalType = ResolveTypeReferencesOneLevel(innerType, NULL);
