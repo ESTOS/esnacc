@@ -1413,7 +1413,11 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
  */
 static void PrintCxxSimpleDef(FILE* hdr, FILE* src, Module* m, CxxRules* r, TypeDef* td, const int genCxxCode_EnumClasses)
 {
+	// The root type is deprecated
 	if (IsDeprecatedNoOutputSequence(m, td->type->cxxTypeRefInfo->className))
+		return;
+	// The type itself is deprecated
+	if (IsDeprecatedNoOutputSequence(m, td->definedName))
 		return;
 
 	fprintf(hdr, "// [%s]\n", __FUNCTION__);
