@@ -367,6 +367,9 @@ void PrintTSChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
+		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+			continue;
+
 		char szOptionalParam[128] = {0};
 		int id = GetContextID(e->type);
 		if (id >= 0)
@@ -404,8 +407,13 @@ void PrintTSChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 	/* Write out properties */
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
+		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+			continue;
 		if (choice->basicType->a.sequence->curr->prev)
 			fprintf(src, "\n");
+
+		printMemberComment(src, m, td, e->fieldName, "\t", COMMENTSTYLE_TYPESCRIPT);
+
 		fprintf(src, "\t");
 		{
 			char* szConverted2 = FixName(e->fieldName);

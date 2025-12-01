@@ -333,6 +333,8 @@ void Print_JSON_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 	NamedType* e;
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
+		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+			continue;
 		fprintf(src, "\t\t");
 		if (bCurly)
 		{
@@ -386,6 +388,8 @@ void Print_BER_EncoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	NamedType* e;
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
+		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+			continue;
 		Type* type = e->type;
 		enum BasicTypeChoiceId choiceId = type->basicType->choiceId;
 		if (choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF)
@@ -434,6 +438,8 @@ void Print_JSON_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 	NamedType* e;
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
+		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+			continue;
 		BasicType* type = e->type->basicType;
 		const char* szOptional = e->type->optional ? "true" : "false";
 		const char* szTypeName = NULL;
@@ -516,6 +522,8 @@ void Print_BER_DecoderChoiceDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	NamedType* e;
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.sequence)
 	{
+		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
+			continue;
 		BasicType* pBasicType = ResolveBasicTypeReferences(e->type->basicType, NULL);
 		enum BasicTypeChoiceId choiceId = pBasicType->choiceId;
 		const char* szOptional = e->type->optional ? "true" : "false";
