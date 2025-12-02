@@ -2,9 +2,10 @@
 	"name": "microservice_server",
 	"version": "1.0.1",
 	"type": "module",
+	"packageManager": "pnpm@10.0.0",
 	"engines": {
-		"npm": ">=9.0.0",
-		"node": ">=18.0.0"
+		"pnpm": ">=10",
+		"node": ">=22"
 	},
 	"description": "estos microservice server example",
 	"private": true,
@@ -20,7 +21,8 @@
 		"start:debugwatch": "tsc-watch --onSuccess \"node --inspect index.js --runInBand\"",
 		"build": "tsc -p .",
 		"updateall": "npx npm-check-updates -u",
-		"depcheck": "npx depcheck"
+		"depcheck": "npx depcheck",
+		"preinstall": "node check-pm.js"
 	},
 	"repository": {
 		"type": "git",
@@ -33,32 +35,38 @@
 	},
 	"license": "UNLICENSED",
 	"dependencies": {
-		"@estos/asn1ts": "^3.2.3",
-		"cors": "^2.8.5",
-		"cross-env": "^10.0.0",
-		"date-fns": "^4.1.0",
-		"dotenv": "^17.2.1",
-		"express": "^5.1.0",
-		"typescript": "^5.8.3",
+		"@estos/asn1ts": "3.2.3",
+		"@typescript-eslint/parser": "8.48.1",
+		"cors": "2.8.5",
+		"cross-env": "10.1.0",
+		"date-fns": "4.1.0",
+		"dotenv": "17.2.3",
+		"express": "5.2.1",
+		"latest": "^0.2.0",
+		"typescript": "5.9.3",
 		"ucconfig": "github:estos/ucconfig#0.0/0.0.3",
 		"uclogger": "github:estos/uclogger#0.0/0.0.21",
-		"uuid": "^11.1.0",
-		"ws": "^8.18.3"
+		"uuid": "13.0.0",
+		"ws": "8.18.3"
 	},
 	"devDependencies": {
-		"@estos/config-eslint": "^1.0.8",
-		"@types/cors": "^2.8.19",
-		"@types/express": "^5.0.3",
-		"@types/jest": "^30.0.0",
-		"@types/node": "^24.1.0",
-		"@types/uuid": "^10.0.0",
-		"@types/ws": "^8.18.1",
-		"axios": "^1.11.0",
-		"dprint": "^0.50.1",
-		"eslint": "^9.31.0",
-		"jest": "^30.0.5",
-		"lint-staged": "^16.1.2",
-		"npm-run-all": "^4.1.5",
-		"ts-jest": "^29.4.0"
+		"@estos/config-eslint": "1.0.8",
+		"@types/cors": "2.8.19",
+		"@types/express": "5.0.6",
+		"@types/jest": "30.0.0",
+		"@types/node": "24.10.1",
+		"@types/ws": "8.18.1",
+		"axios": "1.13.2",
+		"dprint": "0.50.2",
+		"eslint": "9.39.1",
+		"jest": "30.2.0",
+		"lint-staged": "16.2.7",
+		"npm-run-all": "4.1.5",
+		"ts-jest": "29.4.6"
+	},
+	"overrides": {
+		"jest": {
+			"glob": "10.5.0"
+		}
 	}
 }
