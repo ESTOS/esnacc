@@ -1,4 +1,5 @@
 #include "gen-ts-combined.h"
+#include "gen-ts-converter.h"
 #include "../../core/snacc-util.h"
 #include "../str-util.h"
 #include "../structure-util.h"
@@ -137,6 +138,8 @@ void PrintTSImports(FILE* src, ModuleList* mods, Module* mod, bool bIncludeConve
 				Module* referencedModule = GetModuleForImportModule(mods, impMod);
 				if (referencedModule)
 				{
+					if (!ContainsConverters(referencedModule))
+						continue;
 					const char* szNameSpace = GetNameSpace(referencedModule);
 					if (strstr(szAlreadyAdded, szNameSpace) == NULL)
 					{
