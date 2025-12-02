@@ -370,17 +370,23 @@ void PrintTSChoiceDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, T
 		if (IsDeprecatedFlaggedMember(m, td, e->fieldName))
 			continue;
 
+		const char* szPropertyName = "";
+		BasicType* type = ResolveBasicTypeReferences(e->type->basicType, &szPropertyName);
+		enum BasicTypeChoiceId choiceId = type->choiceId;
+
 		char szOptionalParam[128] = {0};
 		int id = GetContextID(e->type);
 		if (id >= 0)
-			sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", idBlock: { optionalID: %i }", id);
+		{
+			if (choiceId == BASICTYPE_ANY)
+				strcpy_s(szOptionalParam, sizeof(szOptionalParam), ", optional: true");
+			else
+				sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", idBlock: { optionalID: %i }", id);
+		}
 
 		if (choice->basicType->a.sequence->curr->prev)
 			fprintf(src, ",\n");
 		const char* szFieldName = e->fieldName;
-		const char* szPropertyName = "";
-		BasicType* type = ResolveBasicTypeReferences(e->type->basicType, &szPropertyName);
-		enum BasicTypeChoiceId choiceId = type->choiceId;
 
 		if (choiceId == BASICTYPE_SEQUENCEOF || choiceId == BASICTYPE_SETOF)
 		{
@@ -593,7 +599,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		if (bOptional)
 		{
 			iOptionalID = GetContextID(e->type);
-			if (iOptionalID > -1)
+			if (iOptionalID > -1 && choiceId != BASICTYPE_ANY)
 				sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", idBlock: { optionalID: %i }", iOptionalID);
 			else
 				sprintf_s(szOptionalParam, sizeof(szOptionalParam), "%s", ", optional: true");
