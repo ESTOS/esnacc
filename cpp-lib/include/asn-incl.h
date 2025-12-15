@@ -1926,27 +1926,21 @@ public:
 	WideAsnString(const std::wstring& strUTF16);
 
 	// Set the string as ASCII string (the internal encoding to and from other encodings wil be ISO-8859-1)
-	void setASCII(const char* strAscii);
-	// Set the string as ASCII string (the internal encoding to and from other encodings wil be ISO-8859-1)
-	void setASCII(const std::string& strAscii);
+	void setASCII(std::string_view strAscii);
 	// Get the string as ASCII string (the internal encoding to and from other encodings wil be ISO-8859-1)
 	std::string getASCII() const;
 	// Get the string as ASCII string (the internal encoding to and from other encodings wil be ISO-8859-1)
 	void getASCII(std::string& strAscii) const;
 
 	// Set the string as UTF8 string
-	void setUTF8(const char* szUTF8);
-	// Set the string as UTF8 string
-	void setUTF8(const std::string& strUTF8);
+	void setUTF8(std::string_view strUTF8);
 	// Get the string as UTF8 string
 	std::string getUTF8() const;
 	// Get the string as UTF8 string
 	void getUTF8(std::string& strUTF8) const;
 
 	// Set the string as UTF16 (= Windows Unicode) string
-	void setUTF16(const wchar_t* szUTF16);
-	// Set the string as UTF16 (= Windows Unicode) string
-	void setUTF16(const std::wstring& strUTF16);
+	void setUTF16(std::wstring_view strUTF16);
 	// Get the string as UTF16 (= Windows Unicode) string
 	std::wstring getUTF16() const;
 	// Get the string as UTF16 (= Windows Unicode) string

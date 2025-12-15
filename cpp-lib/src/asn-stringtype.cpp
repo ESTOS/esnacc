@@ -564,14 +564,9 @@ WideAsnString::WideAsnString(const std::string& strASCII)
 	setASCII(strASCII.c_str());
 }
 
-void WideAsnString::setASCII(const char* strAscii)
+void WideAsnString::setASCII(std::string_view strAscii)
 {
-	assign(AsnStringConvert::AsciiToUTF16(strAscii));
-}
-
-void WideAsnString::setASCII(const std::string& strAscii)
-{
-	assign(AsnStringConvert::AsciiToUTF16(strAscii.c_str()));
+	assign(AsnStringConvert::AsciiToUTF16(strAscii.data()));
 }
 
 std::string WideAsnString::getASCII() const
@@ -584,14 +579,9 @@ void WideAsnString::getASCII(std::string& strAscii) const
 	strAscii = AsnStringConvert::UTF16ToAscii(c_str());
 }
 
-void WideAsnString::setUTF8(const char* szUTF8)
+void WideAsnString::setUTF8(std::string_view strUTF8)
 {
-	assign(AsnStringConvert::UTF8ToUTF16(szUTF8));
-}
-
-void WideAsnString::setUTF8(const std::string& strUTF8)
-{
-	assign(AsnStringConvert::UTF8ToUTF16(strUTF8.c_str()));
+	assign(AsnStringConvert::UTF8ToUTF16(strUTF8.data()));
 }
 
 std::string WideAsnString::getUTF8() const
@@ -604,12 +594,7 @@ void WideAsnString::getUTF8(std::string& strUTF8) const
 	strUTF8 = AsnStringConvert::UTF16ToUTF8(c_str());
 }
 
-void WideAsnString::setUTF16(const wchar_t* szUTF16)
-{
-	assign(szUTF16);
-}
-
-void WideAsnString::setUTF16(const std::wstring& strUTF16)
+void WideAsnString::setUTF16(std::wstring_view strUTF16)
 {
 	assign(strUTF16);
 }
