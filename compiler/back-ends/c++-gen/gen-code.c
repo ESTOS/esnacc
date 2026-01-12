@@ -2212,8 +2212,7 @@ void PrintChoiceDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 	fprintf(src, "void %s::JEnc(SJson::Value& b) const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	/* print local vars */
-	fprintf(src, "\tb = SJson::Value(SJson::objectValue);\n\n");
-	fprintf(src, "\tSJson::Value tmp;\n\n");
+	fprintf(src, "\tb = SJson::Value(SJson::objectValue);\n");
 
 	/* print local vars */
 
@@ -2234,9 +2233,7 @@ void PrintChoiceDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 			/* encode content */
 			fprintf(src, "\t\t\t%s", varName);
 			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
-			fprintf(src, "JEnc(tmp);\n");
-			fprintf(src, "\t\t\tb[\"%s\"] = tmp;\n", varName);
-
+			fprintf(src, "JEnc(b[\"%s\"]);\n", varName);
 			fprintf(src, "\t\tbreak;\n");
 		}
 	}
@@ -2262,7 +2259,6 @@ void PrintChoiceDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 
 	fprintf(src, "\tif (!b.isObject())\n");
 	fprintf(src, "\t\treturn false;\n\n");
-	fprintf(src, "\tSJson::Value tmp;\n");
 
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
 	{
@@ -3409,11 +3405,9 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 	fprintf(hdr, "\tvoid JEnc(SJson::Value& b) const override;\n");
 	fprintf(src, "void %s::JEnc(SJson::Value& b) const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
-	fprintf(src, "\tb = SJson::Value(SJson::objectValue);\n\n");
-	fprintf(src, "\tSJson::Value tmp;\n\n");
+	fprintf(src, "\tb = SJson::Value(SJson::objectValue);\n");
 
 	NamedType* e;
-	bool bFirst = true;
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
 		const CxxTRI* cxxtri = e->type->cxxTypeRefInfo;
@@ -3424,10 +3418,6 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 
 		if (e->type->basicType->choiceId != BASICTYPE_EXTENSION)
 		{
-			if (bFirst)
-				bFirst = false;
-			else
-				fprintf(src, "\n");
 			/* print optional test if nec */
 			if (e->type->defaultVal != NULL)
 			{
@@ -3442,7 +3432,6 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 					case BASICTYPE_INTEGER:
 					case BASICTYPE_ENUMERATED:
 						fprintf(src, "\tif ( %s(%s) && *%s != %d )\n", cxxtri->optTestRoutineName, varName, varName, defVal->basicValue->a.integer);
-						fprintf(src, "\t{\n");
 						break;
 					case BASICTYPE_BITSTRING:
 						{
@@ -3456,13 +3445,11 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 								{
 									// check for default bit.
 									fprintf(src, "\tif ( %s(%s) && (! %s->soloBitCheck(%s::%s)) )\n", cxxtri->optTestRoutineName, varName, varName, cxxtri->className, defBitStr);
-									fprintf(src, "\t{\n");
 								}
 								else
 								{
 									// if default is empty then check for empty
 									fprintf(src, "\tif ( %s(%s) && (! %s->IsEmpty()) ){", cxxtri->optTestRoutineName, varName, varName);
-									fprintf(src, "\t{\n");
 								}
 
 								// RWC;ALLOW "}" alignment using editor...
@@ -3474,7 +3461,6 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 						break;
 					case BASICTYPE_BOOLEAN:
 						fprintf(src, "\tif (%s(%s) && *%s != %s)\n", cxxtri->optTestRoutineName, varName, varName, defVal->basicValue->a.boolean ? "true" : "false");
-						fprintf(src, "\t{\n");
 						// RWC;ALLOW "}" alignment using editor...
 						break;
 					default:
@@ -3485,7 +3471,6 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 			else if (e->type->optional)
 			{
 				fprintf(src, "\tif (%s(%s))\n", cxxtri->optTestRoutineName, varName);
-				fprintf(src, "\t{\n");
 				// RWC;ALLOW "}" alignment using editor...
 			}
 
@@ -3494,12 +3479,7 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 			/* encode content */
 			fprintf(src, "%s%s", szIndent, varName);
 			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
-			fprintf(src, "JEnc(tmp);\n");
-			fprintf(src, "%sb[\"%s\"] = tmp;\n", szIndent, varName);
-
-			/* close optional test if nec */
-			if (e->type->optional || e->type->defaultVal != NULL)
-				fprintf(src, "\t}\n");
+			fprintf(src, "JEnc(b[\"%s\"]);\n", varName);
 		}
 	}
 
@@ -3517,7 +3497,6 @@ void PrintSeqDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 	fprintf(src, "\tClear();\n\n");
 	fprintf(src, "\tif (!b.isObject())\n");
 	fprintf(src, "\t\treturn false;\n\n");
-	fprintf(src, "\tSJson::Value tmp;\n");
 
 	NamedType* e;
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
