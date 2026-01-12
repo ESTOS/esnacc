@@ -357,7 +357,6 @@ Value::Value(ValueType type) {
   initBasic(type);
   switch (type) {
   case nullValue:
-    break;
   case intValue:
   case uintValue:
     value_.int_ = 0;
@@ -1033,6 +1032,7 @@ void Value::releasePayload() {
   case arrayValue:
   case objectValue:
     delete value_.map_;
+    value_.map_ = nullptr;
     break;
   default:
     JSON_ASSERT_UNREACHABLE;
