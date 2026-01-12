@@ -956,7 +956,7 @@ inline const Value& Value::back() const { return *(--end()); }
 
 inline Value& Value::back() { return *(--end()); }
 
-} // namespace Sson
+} // namespace SJson
 
 #pragma pack(pop)
 
