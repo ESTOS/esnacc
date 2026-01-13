@@ -35,23 +35,19 @@ void AsnOptionalParameters::JEnc(SJson::Value& b) const
 {
 	/*
 	b = SJson::Value(SJson::arrayValue);
-	SJson::Value tmp;
-
 	for (AsnOptionalParameters::const_reverse_iterator i = rbegin(); i != rend(); ++i)
 	{
+		SJson::Value tmp;
 		i->JEnc(tmp);
 		b.append(tmp);
 	}
 	*/
 	b = SJson::Value(SJson::objectValue);
-	SJson::Value tmp;
-
 	for (AsnOptionalParameters::const_reverse_iterator i = rbegin(); i != rend(); ++i)
 	{
-		i->value.JEnc(tmp);
 		std::string key;
 		i->key.getUTF8(key);
-		b[key] = tmp;
+		i->value.JEnc(b[key]);
 	}
 }
 
@@ -205,14 +201,8 @@ AsnLen AsnOptionalParam::BEnc(AsnBuf& _b) const
 void AsnOptionalParam::JEnc(SJson::Value& b) const
 {
 	b = SJson::Value(SJson::objectValue);
-
-	SJson::Value tmp;
-
-	key.JEnc(tmp);
-	b["key"] = tmp;
-
-	value.JEnc(tmp);
-	b["value"] = tmp;
+	key.JEnc(b["key"]);
+	value.JEnc(b["value"]);
 }
 
 void AsnOptionalParam::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
@@ -233,7 +223,6 @@ bool AsnOptionalParam::JDec(const SJson::Value& b)
 	if (!b.isObject())
 		return false;
 
-	SJson::Value tmp;
 	if (b.isMember("key"))
 	{
 		if (!key.JDec(b["key"]))
@@ -429,25 +418,17 @@ void AsnOptionalParamChoice::JEnc(SJson::Value& b) const
 	/*
 	b = SJson::Value(SJson::objectValue);
 
-	SJson::Value tmp;
-
 	switch (choiceId)
 	{
 	case stringdataCid:
-		stringdata->JEnc (tmp);
-		b["stringdata"] = tmp;
+		stringdata->JEnc(b["stringdata"]);
 		break;
-
 	case binarydataCid:
-		binarydata->JEnc (tmp);
-		b["binarydata"] = tmp;
+		binarydata->JEnc(b["binarydata"]);
 		break;
-
 	case integerdataCid:
-		integerdata->JEnc (tmp);
-		b["integerdata"] = tmp;
+		integerdata->JEnc(b["integerdata"]);
 		break;
-
 	default:
 		throw EXCEPT("Choice is empty", ENCODE_ERROR);
 	} // end switch
@@ -461,9 +442,7 @@ void AsnOptionalParamChoice::JEnc(SJson::Value& b) const
 		case binarydataCid:
 			{
 				b = SJson::Value(SJson::objectValue);
-				SJson::Value tmp;
-				binarydata->JEnc(tmp);
-				b["binarydata"] = tmp;
+				binarydata->JEnc(b["binarydata"]);
 				break;
 			}
 
@@ -495,7 +474,6 @@ bool AsnOptionalParamChoice::JDec(const SJson::Value& b)
 	Clear();
 	if (b.isObject())
 	{
-		SJson::Value tmp;
 		if (b.isMember("stringdata"))
 		{
 			choiceId = stringdataCid;
