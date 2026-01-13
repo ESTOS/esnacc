@@ -307,10 +307,9 @@ template <class T> void AsnList<T>::BDecContent(const SNACC::AsnBuf& b, SNACC::A
 template <class T> void AsnList<T>::JEnc(SJson::Value& b) const
 {
 	b = SJson::Value(SJson::arrayValue);
-	SJson::Value tmp;
-
 	for (auto i = this->cbegin(); i != this->cend(); ++i)
 	{
+		SJson::Value tmp;
 		i->JEnc(tmp);
 		b.append(tmp);
 	}
