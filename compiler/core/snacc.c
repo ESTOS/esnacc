@@ -35,7 +35,7 @@ char* bVDAGlobalDLLExport = (char*)0;
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <assert.h>
+#include "cpp-lib/include/snacc-assert.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -2142,7 +2142,7 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
 	vfprintf(stderr, szMessage, argptr);
 	va_end(argptr);
 	fprintf(stderr, "\n");
-	assert(false);
+	ASSERT(false);
 	exit(200);
 }
 

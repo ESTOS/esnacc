@@ -311,7 +311,14 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				// We can either send the request with ROSE envelop or without (not really needed here), default is without
 
 				// Build the http request object
-				const requestdata = { method: "POST", body, headers };
+				
+				const requestdata: RequestInit = {
+					method: "POST",
+					body: body instanceof Uint8Array ? new Uint8Array(body) : body,
+					headers: {
+						"Content-Type": "application/json"
+					}
+				};
 
 				// REST requests are handled through the pending invokes list
 				// Every request is added to this list no matter if we defined a timeout or not

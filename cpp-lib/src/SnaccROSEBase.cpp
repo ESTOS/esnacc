@@ -1,6 +1,6 @@
 #include "../include/SnaccROSEBase.h"
 #include "../include/SNACCROSE.h"
-#include <assert.h>
+#include "snacc-assert.h"
 #include <stdio.h>
 #include <wchar.h>
 #include <iomanip>
@@ -30,7 +30,7 @@ SnaccInvokeContext::~SnaccInvokeContext()
 	if (pCustom)
 	{
 		// If you set data in pCustom ensure that it is deleted (freeed) before the object runs out of scope...
-		assert(0);
+		ASSERT(0);
 	}
 }
 
@@ -62,7 +62,7 @@ const char* strstr_limited(const char* haystack, const char* needle, size_t limi
 	}
 	catch (...)
 	{
-		assert(0);
+		ASSERT(0);
 	}
 
 	return NULL;
@@ -87,7 +87,7 @@ void SnaccRoseOperationLookup::RegisterOperation(int iOpID, const char* szOpName
 	if (m_mapIDToOp.find(iOpID) != m_mapIDToOp.end())
 	{
 		// In case we land here we have two operations using the same operationID
-		assert(0);
+		ASSERT(0);
 	}
 #endif
 
@@ -114,7 +114,14 @@ const char* SnaccRoseOperationLookup::LookUpName(int iOpID)
 #ifdef _DEBUG
 	// This may only happen if the other side calls a method we are not aware of
 	// We handle it here as assert as it should not happen in development
-	assert(0);
+	static std::mutex s_mutex; // prevents multiple threads to write to the log at the same time
+	static std::set<int> s_unknownOpIDsAlreadyNotified;
+	std::lock_guard<std::mutex> lock(s_mutex);
+	if (!s_unknownOpIDsAlreadyNotified.contains(iOpID))
+	{
+		s_unknownOpIDsAlreadyNotified.insert(iOpID);
+		fprintf(stderr, "An unknown operation with operationID %d was called.\n", iOpID);
+	}
 #endif
 
 	return nullptr;
@@ -427,7 +434,7 @@ std::string SnaccROSEBase::GetEncoded(const SNACC::TransportEncoding encoding, A
 			}
 			break;
 		default:
-			assert(false);
+			ASSERT(false);
 			throw std::runtime_error("invalid encoding");
 			break;
 	}
@@ -1630,7 +1637,7 @@ bool SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 			{
 				// No length was handed over
 				// When trying to get the length from a zero terminated string it looks like we ran into memory we are not allowed to read
-				assert(false);
+				ASSERT(false);
 			}
 		}
 
@@ -1673,7 +1680,7 @@ bool SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 	}
 	catch (...)
 	{
-		assert(false);
+		ASSERT(false);
 	}
 	return false;
 }

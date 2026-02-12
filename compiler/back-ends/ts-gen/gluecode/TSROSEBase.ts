@@ -417,7 +417,9 @@ export interface IASN1Transport {
 		operationID: number,
 		operationName: string,
 	): void;
+	unregisterOperation(operationID: number): void;
 	registerModuleVersion(moduleName: string, majorVersion: number, minorVersion: number): void;
+	unregisterModuleVersion(moduleName: string): void;
 	getInvokeContextParams(
 		context: Partial<ISendInvokeContextParams> | undefined,
 		operationID: number,

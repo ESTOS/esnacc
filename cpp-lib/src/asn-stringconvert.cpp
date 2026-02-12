@@ -1,8 +1,8 @@
-#include "../include/asn-stringconvert.h"
+#include "asn-stringconvert.h"
+#include "snacc-assert.h"
 #include <locale>
 #include <codecvt>
 #include <utility>
-#include <cassert>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -67,7 +67,7 @@ std::string AsnStringConvert::AsciiToUTF8(const char* szASCII, const char* szCod
 	catch (const std::exception& e)
 	{
 		printf("Exception: %s", e.what());
-		assert(0);
+		ASSERT(0);
 	}
 	return strUTF8;
 }
@@ -91,7 +91,7 @@ std::string AsnStringConvert::UTF8ToAscii(const char* szUTF8, const char* szCode
 	catch (const std::exception& e)
 	{
 		printf("Exception: %s", e.what());
-		assert(0);
+		ASSERT(0);
 	}
 	return strASCII;
 }
@@ -119,7 +119,7 @@ std::wstring AsnStringConvert::AsciiToUTF16(const char* szASCII, const char* szC
 				{
 					DWORD dwErr = GetLastError();
 					printf("Error in AsnStringConvert::AsciiToUTF16: %ld", dwErr);
-					assert(FALSE);
+					ASSERT(FALSE);
 				}
 #endif
 			}
@@ -132,7 +132,7 @@ std::wstring AsnStringConvert::AsciiToUTF16(const char* szASCII, const char* szC
 	catch (const std::exception& e)
 	{
 		printf("Exception: %s", e.what());
-		assert(0);
+		ASSERT(0);
 	}
 	return strUTF16;
 }
@@ -160,7 +160,7 @@ std::string AsnStringConvert::UTF16ToAscii(const wchar_t* szUTF16, const char* s
 				{
 					DWORD dwErr = GetLastError();
 					printf("Error in AsnStringConvert::UTF16ToAscii: %ld", dwErr);
-					assert(FALSE);
+					ASSERT(FALSE);
 				}
 #endif
 			}
@@ -173,7 +173,7 @@ std::string AsnStringConvert::UTF16ToAscii(const wchar_t* szUTF16, const char* s
 	catch (const std::exception& e)
 	{
 		printf("Exception: %s", e.what());
-		assert(0);
+		ASSERT(0);
 	}
 	return strASCII;
 }
@@ -200,7 +200,7 @@ std::wstring AsnStringConvert::UTF8ToUTF16(const char* szUTF8)
 				{
 					DWORD dwErr = GetLastError();
 					printf("Error in AsnStringConvert::UTF8ToUTF16: %ld", dwErr);
-					assert(FALSE);
+					ASSERT(FALSE);
 				}
 #endif
 			}
@@ -213,7 +213,7 @@ std::wstring AsnStringConvert::UTF8ToUTF16(const char* szUTF8)
 	catch (const std::exception& e)
 	{
 		printf("Exception: %s", e.what());
-		assert(0);
+		ASSERT(0);
 	}
 	return strUTF16;
 }
@@ -240,7 +240,7 @@ std::string AsnStringConvert::UTF16ToUTF8(const wchar_t* szUTF16)
 				{
 					DWORD dwErr = GetLastError();
 					printf("Error in AsnStringConvert::UTF16ToUTF8: %ld", dwErr);
-					assert(FALSE);
+					ASSERT(FALSE);
 				}
 #endif
 			}
@@ -253,7 +253,7 @@ std::string AsnStringConvert::UTF16ToUTF8(const wchar_t* szUTF16)
 	catch (const std::exception& e)
 	{
 		printf("Exception: %s", e.what());
-		assert(0);
+		ASSERT(0);
 	}
 	return strUTF8;
 }

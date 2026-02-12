@@ -488,6 +488,26 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 	fprintf(src, "\t}\n");
 }
 
+void PrintTSROSERemoveHandler(FILE* src, Module* m)
+{
+	fprintf(src, "\n\t// [%s]\n", __FUNCTION__);
+	fprintf(src, "\t/**\n");
+	fprintf(src, "\t * Removes a previously registered handler for all operations in this module\n");
+	fprintf(src, "\t */\n");
+
+	fprintf(src, "\tpublic removeHandler(): void {\n");
+	ValueDef* vd;
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (IsROSEValueDef(m, vd))
+			fprintf(src, "\t\tthis.transport.unregisterOperation(OperationIDs.OPID_%s);\n", vd->definedName);
+	}
+	if (gMajorInterfaceVersion >= 0)
+		fprintf(src, "\t\tthis.transport.unregisterModuleVersion(\"%s\");\n", m->moduleName);
+
+	fprintf(src, "\t}\n");
+}
+
 void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents, ValueDef* vd, Module* m)
 {
 	const char* pszArgument = NULL;
@@ -948,6 +968,7 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 
 	PrintTSROSEConstructor(src, m);
 	PrintTSROSESetHandler(src, m);
+	PrintTSROSERemoveHandler(src, m);
 	PrintTSROSEInvokeMethods(src, mods, m);
 	PrintTSROSEOnInvokeswitchCase(src, mods, m);
 	if (hasEvents(m))
