@@ -492,13 +492,18 @@ void PrintTSROSERemoveHandler(FILE* src, Module* m)
 {
 	fprintf(src, "\n\t// [%s]\n", __FUNCTION__);
 	fprintf(src, "\t/**\n");
-	fprintf(src, "\t * Removes the handler for the operationID\n");
+	fprintf(src, "\t * Removes the handler for all operations/event\n");
 	fprintf(src, "\t *\n");
-	fprintf(src, "\t * @param operationID - The ID of the operation to remove the handler for\n");
 	fprintf(src, "\t */\n");
 
-	fprintf(src, "\tpublic removeHandler(operationID: number): void {\n");
-	fprintf(src, "\t\tthis.transport.unregisterOperation(operationID);\n");
+	fprintf(src, "\tpublic removeHandler(): void {\n");
+	ValueDef* vd;
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (IsROSEValueDef(m, vd))
+			fprintf(src, "\t\tthis.transport.unregisterOperation(OperationIDs.OPID_%s);\n", vd->definedName);
+	}
+
 	fprintf(src, "\t}\n");
 }
 
