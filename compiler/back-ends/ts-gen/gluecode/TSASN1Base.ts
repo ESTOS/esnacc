@@ -367,6 +367,22 @@ export abstract class TSASN1Base implements IASN1Transport {
 			this.handlersByID.set(operationID, handler);
 			this.handlersByName.set(operationName, handler);
 		}
+		else {
+			// trying to re-register a handler for an already registered operationID, this should not happen and indicates a problem in the calling code
+			debugger;
+		}
+	}
+
+	/**
+	 * Method to remove a previously registered invoke handler
+	 * @param operationID - the id of the operation that should be removed
+	 */
+	public unregisterOperation(operationID: number): void {
+		const handler = this.handlersByID.get(operationID);
+		if (handler) {
+			this.handlersByID.delete(operationID);
+			this.handlersByName.delete(handler.operationName);
+		}
 	}
 
 	/**

@@ -488,6 +488,20 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 	fprintf(src, "\t}\n");
 }
 
+void PrintTSROSERemoveHandler(FILE* src, Module* m)
+{
+	fprintf(src, "\n\t// [%s]\n", __FUNCTION__);
+	fprintf(src, "\t/**\n");
+	fprintf(src, "\t * Removes the handler for the operationID\n");
+	fprintf(src, "\t *\n");
+	fprintf(src, "\t * @param operationID - The ID of the operation to remove the handler for\n");
+	fprintf(src, "\t */\n");
+
+	fprintf(src, "\tpublic removeHandler(operationID: number): void{\n");
+	fprintf(src, "\t\tthis.transport.unregisterOperation(operationID);\n");
+	fprintf(src, "\t}\n");
+}
+
 void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents, ValueDef* vd, Module* m)
 {
 	const char* pszArgument = NULL;
@@ -948,6 +962,7 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 
 	PrintTSROSEConstructor(src, m);
 	PrintTSROSESetHandler(src, m);
+	PrintTSROSERemoveHandler(src, m);
 	PrintTSROSEInvokeMethods(src, mods, m);
 	PrintTSROSEOnInvokeswitchCase(src, mods, m);
 	if (hasEvents(m))
