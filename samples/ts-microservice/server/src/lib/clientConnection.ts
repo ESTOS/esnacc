@@ -239,14 +239,14 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 	/**
 	 * Sending data to connected client over websocket connection
 	 *
-	 * @param data - data send to client
+	 * @param response - data send to client
 	 * @returns - true on success or false on error
 	 */
-	public send(data: string | ArrayBuffer): boolean {
+	public send(response: string | Uint8Array): boolean {
 		if (!this.wsClient || this.wsClient.readyState !== this.wsClient.OPEN)
 			return false;
 
-		this.wsClient.send(data);
+		this.wsClient.send(response);
 		return true;
 	}
 
