@@ -1,6 +1,6 @@
 #include "../include/SnaccROSEBase.h"
 #include "../include/SNACCROSE.h"
-#include "assert.h"
+#include "snacc-assert.h"
 #include <stdio.h>
 #include <wchar.h>
 #include <iomanip>

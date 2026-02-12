@@ -1,5 +1,5 @@
 #include "asn-stringconvert.h"
-#include "assert.h"
+#include "snacc-assert.h"
 #include <locale>
 #include <codecvt>
 #include <utility>

@@ -35,7 +35,7 @@ char* bVDAGlobalDLLExport = (char*)0;
 
 #include <stdio.h>
 #include <stdarg.h>
-#include "cpp-lib/include/assert.h"
+#include "cpp-lib/include/snacc-assert.h"
 
 #ifdef _WIN32
 #include <windows.h>

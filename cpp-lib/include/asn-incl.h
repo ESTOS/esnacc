@@ -16,7 +16,7 @@
 #include "asn-buf.h"
 #include "snaccexcept.h"
 #include "../jsoncpp/include/json.h"
-#include "assert.h"
+#include "snacc-assert.h"
 
 #ifdef _WIN32
 #include <string>
