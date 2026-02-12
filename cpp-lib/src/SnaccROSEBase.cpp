@@ -114,7 +114,14 @@ const char* SnaccRoseOperationLookup::LookUpName(int iOpID)
 #ifdef _DEBUG
 	// This may only happen if the other side calls a method we are not aware of
 	// We handle it here as assert as it should not happen in development
-	assert(0);
+	static std::mutex s_mutex; // prevents multiple threads to write to the log at the same time
+	static std::set<int> unknownOpIDsAlreadyNotified;
+	std::lock_guard<std::mutex> lock(s_mutex);
+	if (unknownOpIDsAlreadyNotified.find(iOpID) == unknownOpIDsAlreadyNotified.end())
+	{
+		unknownOpIDsAlreadyNotified.insert(iOpID);
+		fprintf(stderr, "Unknown operation ID received: %d\n", iOpID);
+	}
 #endif
 
 	return nullptr;
