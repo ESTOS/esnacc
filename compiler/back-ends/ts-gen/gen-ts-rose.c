@@ -497,7 +497,7 @@ void PrintTSROSERemoveHandler(FILE* src, Module* m)
 	fprintf(src, "\t * @param operationID - The ID of the operation to remove the handler for\n");
 	fprintf(src, "\t */\n");
 
-	fprintf(src, "\tpublic removeHandler(operationID: number): void{\n");
+	fprintf(src, "\tpublic removeHandler(operationID: number): void {\n");
 	fprintf(src, "\t\tthis.transport.unregisterOperation(operationID);\n");
 	fprintf(src, "\t}\n");
 }
