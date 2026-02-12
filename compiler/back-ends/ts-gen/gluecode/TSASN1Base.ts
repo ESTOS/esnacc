@@ -404,6 +404,15 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
+	 * Removed a previously registered module and the associate version information
+	 * 
+	 * @param moduleName - name of the module to unregisters
+	 */
+	public unregisterModuleVersion(moduleName: string): void {
+		this.moduleVersionsByName.delete(moduleName);
+	}
+	
+	/**
 	 * Retrieves version information for a loaded asn1 module (a module that has registere ROSE invoke handlers)
 	 *
 	 * @param moduleName - name of the module we want to get version information for
