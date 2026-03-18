@@ -247,8 +247,7 @@ export class ConverterErrors extends Array<ConverterError> {
 			bSuccess = encodeContext.bLaxEncoding;
 			if (!bSuccess && context.root)
 				this.unshift(new ConverterError(undefined, undefined, `Errors while encoding ${objectName}`));
-		}
-		else {
+		} else {
 			// We are decoding
 			const decodingContext = context as unknown as IDecodeContext;
 			bSuccess = decodingContext.bLaxDecoding;
@@ -317,8 +316,7 @@ export class TSConverter {
 			errors.push(
 				new ConverterError(ConverterErrorType.PROPERTY_MISSING, context.context + "::" + name, "property missing"),
 			);
-		}
-		else {
+		} else {
 			errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, name, "property missing"));
 		}
 	}
@@ -359,8 +357,7 @@ export class TSConverter {
 			if (!optional)
 				errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, context.context, "property missing"));
 			return undefined;
-		}
-		else {
+		} else {
 			if (typeof data === "string") {
 				try {
 					// UCWeb creates an array envelop which is technically wrong so we need to remove that here
@@ -368,16 +365,14 @@ export class TSConverter {
 					if (data.startsWith("["))
 						data = data.substring(1, data.length - 1);
 					result = JSON.parse(data) as T;
-				}
-				catch (error) {
+				} catch (error) {
 					let message = "Could not json parse - ";
 					if (error instanceof SyntaxError)
 						message += error.message;
 					errors.push(new ConverterError(ConverterErrorType.PROPERTY_NULLORUNDEFINED, context.context, message));
 					return undefined;
 				}
-			}
-			else {
+			} else {
 				result = data as T;
 			}
 		}
@@ -405,8 +400,7 @@ export class TSConverter {
 			if (!optional)
 				errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, context.context, "property missing"));
 			return undefined;
-		}
-		else {
+		} else {
 			if (data instanceof Uint8Array) {
 				try {
 					const schema = getschema();
@@ -438,8 +432,7 @@ export class TSConverter {
 						return undefined;
 					}
 					return result.result;
-				}
-				catch (error) {
+				} catch (error) {
 					let message = "Could not json asnjs ber data - ";
 					if (error instanceof SyntaxError)
 						message += error.message;
@@ -487,8 +480,7 @@ export class TSConverter {
 								`data type is null but expected an object`,
 							),
 						);
-					}
-					else {
+					} else {
 						errors.push(
 							new ConverterError(
 								ConverterErrorType.NOT_AN_OBJECT,
@@ -547,8 +539,7 @@ export class TSConverter {
 					),
 				);
 			}
-		}
-		catch (error) {
+		} catch (error) {
 			if (errors) {
 				const location = context?.context ? context.context + "::" : "";
 				errors.push(
@@ -649,8 +640,7 @@ export class TSConverter {
 			value = d.getTypedValueByName(asn1ts.Real, propertyName)?.getValue();
 			if (value !== undefined)
 				value = TSConverter.getDateTimeFromVariantTime(value as number);
-		}
-		else if (expectedType === "Any")
+		} else if (expectedType === "Any")
 			value = d.getValueByName(propertyName);
 		else if (expectedType === "Null")
 			value = d.getTypedValueByName(asn1ts.Null, propertyName)?.getValue();
@@ -677,8 +667,7 @@ export class TSConverter {
 						"property is of the wrong type",
 					),
 				);
-			}
-			else {
+			} else {
 				errors.push(
 					new ConverterError(
 						ConverterErrorType.PROPERTY_MISSING,
@@ -717,20 +706,16 @@ export class TSConverter {
 					new ConverterError(ConverterErrorType.PROPERTY_MISSING, location + propertyName, "property missing"),
 				);
 			}
-		}
-		else if (expectedType === "Uint8Array") {
+		} else if (expectedType === "Uint8Array") {
 			if (property instanceof Uint8Array)
 				return true;
-		}
-		else if (expectedType === "Date") {
+		} else if (expectedType === "Date") {
 			if (property instanceof Date)
 				return true;
-		}
-		else if (expectedType === "null") {
+		} else if (expectedType === "null") {
 			if (typeof property === "object")
 				return true;
-		}
-		else if (typeof property === expectedType) {
+		} else if (typeof property === expectedType) {
 			return true;
 		}
 
@@ -774,8 +759,7 @@ export class TSConverter {
 					);
 				}
 			}
-		}
-		else {
+		} else {
 			const property = (data as never)[propertyName];
 			if (property == null) {
 				if (errors) {
@@ -788,8 +772,7 @@ export class TSConverter {
 						),
 					);
 				}
-			}
-			else {
+			} else {
 				const type = typeof property;
 				if (type === "boolean" || type === "number" || type === "object" || type === "string")
 					return this.validateParam(data, propertyName, type, errors, context, optional);
@@ -863,8 +846,7 @@ export class TSConverter {
 						),
 					);
 				}
-			}
-			else if (typeof datanever[propertyName] !== expectedType) {
+			} else if (typeof datanever[propertyName] !== expectedType) {
 				if (errors) {
 					const location = context?.context ? context.context + "::" : "";
 					errors.push(
@@ -875,8 +857,7 @@ export class TSConverter {
 						),
 					);
 				}
-			}
-			else {
+			} else {
 				return true;
 			}
 		}
@@ -1023,8 +1004,7 @@ export class TSConverter {
 				if (a !== undefined && b !== undefined)
 					base64data += a + b;
 			}
-		}
-		else if (padding === 2) {
+		} else if (padding === 2) {
 			const data1 = binarydata[datalength];
 			const data2 = binarydata[datalength + 1];
 			if (data1 !== undefined && data2 !== undefined) {

@@ -137,8 +137,7 @@ export class EAsnOptionalParametersConverter {
 					obj.push(
 						new ENetUC_Common.AsnOptionalParam({ key, value: { binarydata: TSConverter.decode64(value.binarydata) } }),
 					);
-				}
-				else {
+				} else {
 					errors.push(
 						new ConverterError(
 							ConverterErrorType.PROPERTY_TYPEMISMATCH,

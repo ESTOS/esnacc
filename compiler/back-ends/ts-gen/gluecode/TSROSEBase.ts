@@ -45,6 +45,9 @@ export enum CustomInvokeProblemEnum {
 	requestTimedOut = 504,
 	// HTTP - internal error (e.g. if we fail after parsing the argument)
 	internalError = 500,
+	// We try to send a message which is too big to send it
+	// Technically this can happen e.g. with JSON encoding and TCP transport if the message does not fit into the length framing header
+	messageTooBig = 501,
 }
 
 /**
@@ -541,19 +544,16 @@ export function asn1Decode<T>(
 				// This could be JSON but may also be BER
 				jsonData = argument.toString();
 				berData = argument;
-			}
-			else {
+			} else {
 				berData = argument;
 			}
-		}
-		else if (typeof argument === "string")
+		} else if (typeof argument === "string")
 			jsonData = argument;
 		else if (argument instanceof asn1ts.Sequence) {
 			// If this is an encapsulated object we need to use the raw data.
 			// The encapsulated uses a certain scheme and we need to validate that scheme against the data we received
 			berData = argument.valueBeforeDecodeView;
-		}
-		else if (typeof argument === "object")
+		} else if (typeof argument === "object")
 			jsonData = argument;
 		else
 			debugger;
@@ -563,20 +563,17 @@ export function asn1Decode<T>(
 			jsonData = jsonData.substring(1, jsonData.length - 1);
 		else if (Array.isArray(jsonData) && jsonData.length === 1)
 			jsonData = jsonData[0] as object;
-	}
-	else if (invokeContext.encoding === EASN1TransportEncoding.BER) {
+	} else if (invokeContext.encoding === EASN1TransportEncoding.BER) {
 		if (argument instanceof Uint8Array)
 			berData = argument;
 		else if (argument instanceof asn1ts.Sequence) {
 			// If this is an encapsulated object we need to use the raw data.
 			// The encapsulated uses a certain scheme and we need to validate that scheme against the data we received
 			berData = argument.valueBeforeDecodeView;
-		}
-		else {
+		} else {
 			debugger;
 		}
-	}
-	else if (invokeContext.encoding === EASN1TransportEncoding.JSON) {
+	} else if (invokeContext.encoding === EASN1TransportEncoding.JSON) {
 		if (argument instanceof Uint8Array)
 			jsonData = argument.toString();
 		else {
@@ -790,8 +787,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				invokeID: invoke.invokeID,
 				result: new ROSEResultSeq({ resultValue: 0, result: encoded }),
 			});
-		}
-		else {
+		} else {
 			const payLoad = ROSEBase.getDebugPayload(invokeResult as object);
 			const diagnostic = converterErrors.getDiagnostic();
 			this.transport.log(ELogSeverity.error, "Could not encode result", "createROSEResult", this, {
@@ -956,12 +952,10 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			if (result) {
 				this.transport.logResult(method, this, result, context, false);
 				return result;
-			}
-			else {
+			} else {
 				payLoad = ROSEBase.getDebugPayload(roseResult.result.result);
 			}
-		}
-		else if (roseResult instanceof ROSEError && roseResult.error) {
+		} else if (roseResult instanceof ROSEError && roseResult.error) {
 			const error = asn1Decode<U>(
 				roseResult.error,
 				errorConverter,
@@ -972,16 +966,13 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			if (error) {
 				this.transport.logError(method, this, error, argument, context, false);
 				return error;
-			}
-			else {
+			} else {
 				payLoad = ROSEBase.getDebugPayload(roseResult.error);
 			}
-		}
-		else if (roseResult instanceof ROSEReject) {
+		} else if (roseResult instanceof ROSEReject) {
 			this.transport.logReject(method, this, roseResult, argument, context, false);
 			return handleRoseReject(roseResult);
-		}
-		else if (roseResult) {
+		} else if (roseResult) {
 			payLoad = ROSEBase.getDebugPayload(roseResult);
 		}
 
@@ -1042,16 +1033,14 @@ export abstract class ROSEBase implements IASN1LogCallback {
 					handler.setLogContext(argument, invokeContext);
 				method(argument, invokeContext);
 				return undefined;
-			}
-			else {
+			} else {
 				result = createInvokeReject(
 					invoke,
 					InvokeProblemenum.unrecognisedOperation,
 					`${operationName} is not implemented`,
 				);
 			}
-		}
-		else {
+		} else {
 			const diagnostic = converterErrors.getDiagnostic();
 			const payLoad = ROSEBase.getDebugPayload(invoke.argument);
 			this.transport.log(ELogSeverity.error, "Could not decode OnEvent argument", methodName, this, {
@@ -1129,8 +1118,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 					`${operationName} is not implemented`,
 				);
 			}
-		}
-		else {
+		} else {
 			const diagnostic = converterErrors.getDiagnostic();
 			const payLoad = ROSEBase.getDebugPayload(invoke.argument);
 			this.transport.log(ELogSeverity.error, "Could not decode OnInvoke argument", methodName, this, {
@@ -1168,16 +1156,13 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		let payLoad: Uint8Array | string;
 		// Contains the encoded data for logging
 		let logData: Uint8Array | object;
-
 		if (data instanceof asn1ts.Sequence) {
 			payLoad = new Uint8Array(data.toBER());
 			logData = payLoad;
-		}
-		else {
+		} else {
 			payLoad = JSON.stringify(data, null, encodeContext.bPrettyPrint ? "\t" : undefined);
 			logData = data;
 		}
-
 		return { payLoad, logData };
 	}
 
