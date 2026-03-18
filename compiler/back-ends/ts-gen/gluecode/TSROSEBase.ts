@@ -59,25 +59,25 @@ export interface ISocketCloseEvent {
 	code?: number;
 	wasClean: boolean;
 	reason?: string;
-	target: IOriginalSocket;
+	source: IOriginalSocket;
 }
 
 export interface ISocketErrorEvent {
 	error: unknown;
 	message: string;
 	type?: string;
-	target: IOriginalSocket;
+	source: IOriginalSocket;
 }
 
 export interface ISocketMessageEvent {
 	data: string | Uint8Array;
 	type?: string;
-	target: IOriginalSocket;
+	source: IOriginalSocket;
 }
 
-export interface ISocketOpenEvent {
+export interface ISocketConnectedEvent {
 	type?: string;
-	target: IOriginalSocket;
+	source: IOriginalSocket;
 }
 
 export enum ESocketState {
@@ -99,7 +99,7 @@ export interface IConnectionSocket {
 	// The current state of the socket updated through the 4 notifies we handle (even if they are not subscribed)
 	readyState: ESocketState;
 	// The socket was successfully opened
-	onopen?: (ev: ISocketOpenEvent) => void;
+	onconnected?: (ev: ISocketConnectedEvent) => void;
 	// The socket was closed
 	onclose?: (ev: ISocketCloseEvent) => void;
 	// The socket is in an error state

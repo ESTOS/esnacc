@@ -20,6 +20,7 @@ import {
 	IConnectionSocket,
 	ISendInvokeContext,
 	ISocketCloseEvent,
+	ISocketConnectedEvent,
 	ISocketErrorEvent,
 	ISocketMessageEvent,
 	ReceiveInvokeContext,
@@ -102,7 +103,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 
 	// The client side socket (websocket or raw tcp socket) towards the server
 	// Only beeing used if the connection is statefull using websockets or raw sockets (target points to ws, wss or tcp)
-	private _socket?: IConnectionSocket;
+	private socket?: IConnectionSocket;
 
 	// These Properties are ONLY used if the client is using websockets to connect to the server:
 	// -------------------------------------
@@ -141,13 +142,6 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 		this.onClientClose = this.onClientClose.bind(this);
 		this.onClientMessage = this.onClientMessage.bind(this);
 		this.onClientError = this.onClientError.bind(this);
-	}
-
-	/**
-	 * Make the socket object accessible in the concrete classes for reading
-	 */
-	protected get socket(): IConnectionSocket | undefined {
-		return this._socket;
 	}
 
 	/**
@@ -623,16 +617,12 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 			if (!socket)
 				throw new Error("Failed to get a websocket object");
 			/** called if the websocket was opend (connect to the target */
-			socket.onopen = (): void => {
+			socket.onconnected = (): void => {
 				// In case we are connected
 				this.log(ELogSeverity.info, "Connected to", "createStateFullConnection", this, { target: this.target });
 
 				// Add event listener
-				socket.onopen = undefined;
-				socket.onclose = this.onClientClose;
-				socket.onmessage = this.onClientMessage;
-				socket.onerror = this.onClientError;
-				this._socket = socket;
+				this.socket = socket;
 
 				// tell the notifies that we are connected
 				this.fire_OnConnected(this.bClientReconnecting).then(() => {
@@ -659,8 +649,6 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 			 */
 			socket.onclose = (closed: ISocketCloseEvent): void => {
 				// Error info is available in onclose not in onerror
-				socket.onopen = undefined;
-				socket.onclose = undefined;
 				this.log(ELogSeverity.error, "connecting failed", "createStateFullConnection", this, {
 					target: this.target,
 					closecode: closed.code,
@@ -688,11 +676,8 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	private shutdown(caller: string): void {
 		this.setReconnectTimeout(0);
 		if (this.socket) {
-			this.socket.onclose = undefined;
-			this.socket.onmessage = undefined;
-			this.socket.onerror = undefined;
 			this.socket.close();
-			this._socket = undefined;
+			this.socket = undefined;
 		}
 		const err = new ENetUC_Common.AsnRequestError({
 			iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
@@ -706,7 +691,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @param event - the websocket close event
 	 */
-	private async onClientClose(event: ISocketCloseEvent): Promise<void> {
+	protected async onClientClose(event: ISocketCloseEvent): Promise<void> {
 		this.log(ELogSeverity.error, "WebSocket was closed. Going to reconnect", "onClientClose", this, {
 			code: event.code,
 			reason: event.reason,
@@ -722,7 +707,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @param event - the websocket error event
 	 */
-	private onClientError(event: ISocketErrorEvent): void {
+	protected onClientError(event: ISocketErrorEvent): void {
 		const readystate = this.socket ? TSASN1Client.getWebSocketReadyStateAsString(this.socket.readyState) : "undefined";
 		this.log(ELogSeverity.error, "Websocket is in an error state", "onClientError", this, { readystate });
 		// we do not terminate the connection here as the onclose event handler will be called next (otherwise we remove the callback in exit and thus do not get called)
@@ -734,11 +719,13 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @param event - the websocket message event
 	 */
-	private async onClientMessage(event: ISocketMessageEvent): Promise<void> {
+	protected async onClientMessage(event: ISocketMessageEvent): Promise<void> {
 		if (event.data) {
 			// Fill the invokecontext
 			const invokeContext = new ReceiveInvokeContext({ clientConnectionID: this.clientConnectionID });
 			try {
+				// !!! We need to packetize here !!!
+				// Welcher Transport, welches encoding
 				const rawData = await this.prepareData(event);
 				if (rawData) {
 					// Call the receive method
@@ -751,6 +738,14 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				this.log(ELogSeverity.error, "exception", "onClientMessage", this, undefined, error);
 			}
 		}
+	}
+
+	/**
+	 * Handler that is called if the client connection has been opened
+	 *
+	 * @param event - the websocket message event
+	 */
+	protected async onClientConnected(event: ISocketConnectedEvent): Promise<void> {
 	}
 
 	/**

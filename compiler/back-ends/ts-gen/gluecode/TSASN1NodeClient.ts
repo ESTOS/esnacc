@@ -18,9 +18,9 @@ import {
 	ESocketState,
 	IConnectionSocket,
 	ISocketCloseEvent,
+	ISocketConnectedEvent,
 	ISocketErrorEvent,
 	ISocketMessageEvent,
-	ISocketOpenEvent,
 } from "./TSROSEBase";
 import { ENetUC_Common } from "./types.ts";
 
@@ -45,7 +45,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 		this.onclose = this.onclose.bind(this);
 		this.onerror = this.onerror.bind(this);
 		this.onmessage = this.onmessage.bind(this);
-		this.onopen = this.onopen.bind(this);
+		this.onconnected = this.onconnected.bind(this);
 		this.send = this.send.bind(this);
 		this.close = this.close.bind(this);
 		this.clientReconnect = this.clientReconnect.bind(this);
@@ -60,25 +60,25 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 */
 	protected getConnectionSocket(address: string, options?: IWebSocketOptions): IConnectionSocket | undefined {
 		if (this.connectionMode === EASNCONNECTIONMODE.WEBSOCKET) {
+			this.ws = new WebSocket(address, options);
+			this.ws.binaryType = "nodebuffer";
+			const socket: IConnectionSocket = { readyState: this.ws.readyState, send: this.send, close: this.close };
+			this.ws.onclose = (event: WebSocket.CloseEvent) => this.onclose(event, socket);
+			this.ws.onerror = (event: WebSocket.ErrorEvent) => this.onerror(event, socket);
+			this.ws.onmessage = (event: WebSocket.MessageEvent) => this.onmessage(event, socket);
+			this.ws.onopen = (event: WebSocket.Event) => this.onconnected(event, socket);
+			return socket;
+		} else if (this.connectionMode === EASNCONNECTIONMODE.TCP) {
 			const url = new URL(this.target);
 			const host = url.hostname;
 			const port = Number(url.port);
 			const options: net.NetConnectOpts = { host, port };
 			this.tcp = net.createConnection(options);
-			this.tcp.on("close", this.onclose);
-			this.tcp.on("error", this.onerror);
-			this.tcp.on("data", this.onmessage);
-			this.tcp.on("ready", this.onopen);
+			this.tcp.on("close", (hadError: boolean) => this.onclose(hadError, socket));
+			this.tcp.on("error", (err: Error) => this.onerror(err, socket));
+			this.tcp.on("data", (data: Buffer) => this.onmessage(data, socket));
+			this.tcp.on("connect", () => this.onconnected(undefined, socket));
 			const socket: IConnectionSocket = { readyState: ESocketState.CONNECTING, send: this.send, close: this.close };
-			return socket;
-		} else if (this.connectionMode === EASNCONNECTIONMODE.TCP) {
-			this.ws = new WebSocket(address, options);
-			this.ws.binaryType = "nodebuffer";
-			this.ws.onclose = this.onclose;
-			this.ws.onerror = this.onerror;
-			this.ws.onmessage = this.onmessage;
-			this.ws.onopen = this.onopen;
-			const socket: IConnectionSocket = { readyState: this.ws.readyState, send: this.send, close: this.close };
 			return socket;
 		} else {
 			this.log(ELogSeverity.error, "Invalid connection mode", "getConnectionSocket", this, {
@@ -94,20 +94,21 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 *
 	 * @param event - Node based CloseEvent
 	 */
-	private onclose(event: WebSocket.CloseEvent | boolean): void {
-		this.updateSocketState();
-		if (!this.socket?.onclose)
-			return;
+	private onclose(event: WebSocket.CloseEvent | boolean, socket: IConnectionSocket): void {
+		this.updateSocketState(socket);
 		let close: ISocketCloseEvent | undefined;
 		if (this.ws) {
 			const wsClose = event as WebSocket.CloseEvent;
-			close = { code: wsClose.code, reason: wsClose.reason, wasClean: wsClose.wasClean, target: wsClose.target };
+			close = { code: wsClose.code, reason: wsClose.reason, wasClean: wsClose.wasClean, source: wsClose.target };
 		} else if (this.tcp) {
 			const hadError = event as boolean;
-			close = { wasClean: !hadError, target: this.tcp };
+			close = { wasClean: !hadError, source: this.tcp };
 		}
-		if (close)
-			this.socket.onclose(close);
+		if (close) {
+			if (socket.onclose)
+				socket.onclose(close);
+			this.onClientClose(close);
+		}
 	}
 
 	/**
@@ -115,20 +116,21 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 *
 	 * @param event - Node based ErrorEvent
 	 */
-	private onerror(event: WebSocket.ErrorEvent | Error): void {
-		this.updateSocketState();
-		if (!this.socket?.onerror)
-			return;
+	private onerror(event: WebSocket.ErrorEvent | Error, socket: IConnectionSocket): void {
+		this.updateSocketState(socket);
 		let error: ISocketErrorEvent | undefined;
 		if (this.ws) {
 			const wsError = event as WebSocket.ErrorEvent;
-			error = { error: wsError.error, message: wsError.message, target: wsError.target, type: wsError.type };
+			error = { error: wsError.error, message: wsError.message, source: wsError.target, type: wsError.type };
 		} else if (this.tcp) {
 			const netError = event as Error;
-			error = { error: netError.cause, message: netError.message, target: this.tcp };
+			error = { error: netError.cause, message: netError.message, source: this.tcp };
 		}
-		if (error)
-			this.socket.onerror(error);
+		if (error) {
+			if (socket.onerror)
+				socket.onerror(error);
+			this.onClientError(error);
+		}
 	}
 
 	/**
@@ -136,20 +138,21 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 *
 	 * @param event - Node based MessageEvent
 	 */
-	private onmessage(event: WebSocket.MessageEvent | Buffer): void {
-		this.updateSocketState();
-		if (!this.socket?.onmessage)
-			return;
+	private onmessage(event: WebSocket.MessageEvent | Buffer, socket: IConnectionSocket): void {
+		this.updateSocketState(socket);
 		let message: ISocketMessageEvent | undefined;
 		if (this.ws) {
 			const wsEvent = event as WebSocket.MessageEvent;
-			message = { data: wsEvent.data.toString(), type: wsEvent.type, target: wsEvent.target };
+			message = { data: wsEvent.data.toString(), type: wsEvent.type, source: wsEvent.target };
 		} else if (this.tcp) {
 			const netEvent = event as Buffer;
-			message = { data: netEvent, target: this.tcp };
+			message = { data: netEvent, source: this.tcp };
 		}
-		if (message)
-			this.socket.onmessage(message);
+		if (message) {
+			if (socket.onmessage)
+				socket.onmessage(message);
+			this.onClientMessage(message);
+		}
 	}
 
 	/**
@@ -157,19 +160,20 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 *
 	 * @param event - Node based OpenEvent
 	 */
-	private onopen(event: WebSocket.Event | undefined): void {
-		this.updateSocketState();
-		if (!this.socket?.onopen)
-			return;
-		let open: ISocketOpenEvent | undefined;
+	private onconnected(event: WebSocket.Event | undefined, socket: IConnectionSocket): void {
+		this.updateSocketState(socket);
+		let open: ISocketConnectedEvent | undefined;
 		if (this.ws) {
 			const wsEvent = event as WebSocket.Event;
-			open = { target: wsEvent.target, type: wsEvent.type };
+			open = { source: wsEvent.target, type: wsEvent.type };
 		} else if (this.tcp) {
-			open = { target: this.tcp };
+			open = { source: this.tcp };
 		}
-		if (open)
-			this.socket.onopen(open);
+		if (open) {
+			if (socket.onconnected)
+				socket.onconnected(open);
+			this.onClientConnected(open);
+		}
 	}
 
 	/**
@@ -285,14 +289,13 @@ export class TSASN1NodeClient extends TSASN1Client {
 
 	/**
 	 * Updates the idual socket
-	 * @returns
+	 *
+	 * @param socket - the shared socket object which is handed over to the base class
 	 */
-	protected updateSocketState(): void {
-		if (!this.socket)
-			return;
+	protected updateSocketState(socket: IConnectionSocket): void {
 		if (this.ws)
-			this.socket.readyState = this.ws.readyState;
+			socket.readyState = this.ws.readyState;
 		else if (this.tcp)
-			this.socket.readyState = this.getSocketReadStateFromNodeState(this.tcp.readyState);
+			socket.readyState = this.getSocketReadStateFromNodeState(this.tcp.readyState);
 	}
 }
