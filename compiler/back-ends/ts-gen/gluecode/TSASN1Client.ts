@@ -12,20 +12,21 @@ import { EASN1TransportEncoding } from "./TSInvokeContext";
 import {
 	createInvokeReject,
 	CustomInvokeProblemEnum,
-	EDualWebSocketState,
 	EHttpHeaders,
 	ELogSeverity,
+	ESocketState,
 	IASN1InvokeData,
 	IASN1Transport,
-	IDualWebSocket,
-	IDualWebSocketCloseEvent,
-	IDualWebSocketMessageEvent,
+	IConnectionSocket,
 	ISendInvokeContext,
+	ISocketCloseEvent,
+	ISocketErrorEvent,
+	ISocketMessageEvent,
 	ReceiveInvokeContext,
 	ROSEBase,
 } from "./TSROSEBase";
 
-export interface IDualWebSocketOptions {
+export interface IWebSocketOptions {
 	perMessageDeflate?: boolean;
 	headers?: { [key: string]: string; };
 }
@@ -36,8 +37,8 @@ type HeadersInit = string[][] | Record<string, string> | Headers;
 /**
  * A Promise that is fullfilled if the requested websocket was created or rejected if the creation failed
  */
-class WebSocketPromise {
-	public readonly resolve: (value: ENetUC_Common.AsnRequestError | IDualWebSocket) => void;
+class ConnectionSocketPromise {
+	public readonly resolve: (value: ENetUC_Common.AsnRequestError | IConnectionSocket) => void;
 	public readonly reject: (reason?: unknown) => void;
 	/**
 	 * Constructs a websocket promise object, simply stores the handed over arguments in the class
@@ -46,7 +47,7 @@ class WebSocketPromise {
 	 * @param reject - The rejcet method that is called if something unhandled did occur
 	 */
 	public constructor(
-		resolve: (value: ENetUC_Common.AsnRequestError | IDualWebSocket) => void,
+		resolve: (value: ENetUC_Common.AsnRequestError | IConnectionSocket) => void,
 		reject: (reason?: unknown) => void,
 	) {
 		this.resolve = resolve;
@@ -97,14 +98,11 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	// ws(s) a websocket connection is established
 	// http(s) the Object is calling the server using POST requests (message in body)
 	protected target = "";
-	protected connectionMode: EASNCONNECTIONMODE = EASNCONNECTIONMODE.UNKNOWN;
+	protected connectionMode = EASNCONNECTIONMODE.UNKNOWN;
 
-	// The client Websocket towards the server
-	// Only beeing used if the connection is using websockets (target points to ws or wss)
-	protected ws?: IDualWebSocket;
-
-	// The raw TCP socket
-	protected tcp?: net.Socket;
+	// The client side socket (websocket or raw tcp socket) towards the server
+	// Only beeing used if the connection is statefull using websockets or raw sockets (target points to ws, wss or tcp)
+	private _socket?: IConnectionSocket;
 
 	// These Properties are ONLY used if the client is using websockets to connect to the server:
 	// -------------------------------------
@@ -115,14 +113,14 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	// List of pending requests for a websocket towards the target
 	// As long as the connection is beeing established every request for a websocket is qued
 	// This list is automatically cleared if the connection failed.
-	protected pendingwebsockets: WebSocketPromise[] = [];
+	protected pendingSockets: ConnectionSocketPromise[] = [];
 
 	// We are currently reconnecting
-	private basn1ClientReconnecting = false;
+	private bClientReconnecting = false;
 	// Helper to parametrise the reconnect timer in case of connection failures (first 10 approaces retry every second, afterwards every 5 seconds)
-	private asn1ClientReconnectCounter = 0;
-	// We are currently opening a websocket (asynchronous function)
-	private basn1ClientOpeningWebSocket = false;
+	private nClientReconnectCounter = 0;
+	// We are currently opening a statefull connection (asynchronous function)
+	private bClientOpeningStateFullConnection = false;
 	// Connection related callback list for the ones that are interested in it (add removeConnectionCallback)
 	private connectionCallBack = new Set<IClientConnectionCallback>();
 
@@ -146,20 +144,27 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	}
 
 	/**
-	 * Helper method that provides the websocket state as text for logging and debugging
+	 * Make the socket object accessible in the concrete classes for reading
+	 */
+	protected get socket(): IConnectionSocket | undefined {
+		return this._socket;
+	}
+
+	/**
+	 * Helper method that provides the socket state as text for logging and debugging
 	 *
 	 * @param state - The state the method should provide as string
 	 * @returns - the state as text or UNKNOWN if an unknown state was provided
 	 */
-	public static getWebSocketReadyStateAsString(state: number): string {
+	public static getWebSocketReadyStateAsString(state: ESocketState): string {
 		switch (state) {
-			case 0:
+			case ESocketState.CONNECTING:
 				return "CONNECTING";
-			case 1:
+			case ESocketState.OPEN:
 				return "OPEN";
-			case 2:
+			case ESocketState.CLOSING:
 				return "CLOSING";
-			case 3:
+			case ESocketState.CLOSED:
 				return "CLOSED";
 			default:
 				debugger;
@@ -172,10 +177,10 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @returns - the websocket readyState
 	 */
-	public getWebSocketState(): EDualWebSocketState | undefined {
-		if (!this.ws)
+	public getSocketState(): ESocketState | undefined {
+		if (!this.socket)
 			return undefined;
-		return this.ws.readyState;
+		return this.socket.readyState;
 	}
 
 	/**
@@ -194,9 +199,9 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * @returns true when the event was sent
 	 */
 	public sendEventSync(data: IASN1InvokeData): boolean {
-		if (this.ws && this.ws.readyState === EDualWebSocketState.OPEN) {
+		if (this.socket && this.socket.readyState === ESocketState.OPEN) {
 			const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
-			this.ws.send(encodeResult.payLoad);
+			this.socket.send(encodeResult.payLoad);
 			return true;
 		}
 		return false;
@@ -245,13 +250,10 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 					resolveUndefined = false;
 				}
 			}
-
-			if (connectionMode === EASNCONNECTIONMODE.WEBSOCKET)
-				this.sendWebSocket(data);
+			if (connectionMode === EASNCONNECTIONMODE.WEBSOCKET || connectionMode === EASNCONNECTIONMODE.TCP)
+				this.sendStatefull(data);
 			else if (connectionMode === EASNCONNECTIONMODE.REST)
-				this.sendREST(data);
-			else if (connectionMode === EASNCONNECTIONMODE.TCP)
-				this.sendTCP(data);
+				this.sendStateLess(data);
 			else if (this.target === ``)
 				throw new Error(`You need to specify a connection target either through setTarget() or the ISendInvokeContext`);
 			else
@@ -262,22 +264,22 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	}
 
 	/**
-	 * Sends data via a websocket connection
-	 * - Connects via websocket if not already connected
+	 * Sends data via a statefull socket connection
+	 * - Connects to the target if not already connected
 	 * - Handles errors
 	 * - Sends data
 	 *
 	 * @param data - the data object which contains all the information
 	 * @param reject - the reject method of the sendInvoke promise to reject in case of a connection error
 	 */
-	private sendWebSocket(data: IASN1InvokeData): void {
+	private sendStatefull(data: IASN1InvokeData): void {
 		// Get or create a connection to the target
-		this.getConnection(data.invokeContext).then((ws: IDualWebSocket | ENetUC_Common.AsnRequestError): void => {
-			if (!ws || ws instanceof ENetUC_Common.AsnRequestError) {
+		this.getConnection(data.invokeContext).then((socket: IConnectionSocket | ENetUC_Common.AsnRequestError): void => {
+			if (!socket || socket instanceof ENetUC_Common.AsnRequestError) {
 				// Could not connect to the target or an unknown error occured
 				let invokeReject: ROSEReject;
-				if (ws instanceof ENetUC_Common.AsnRequestError)
-					invokeReject = createInvokeReject(data.invoke, ws.iErrorDetail, ws.u8sErrorString);
+				if (socket instanceof ENetUC_Common.AsnRequestError)
+					invokeReject = createInvokeReject(data.invoke, socket.iErrorDetail, socket.u8sErrorString);
 				else {
 					invokeReject = createInvokeReject(
 						data.invoke,
@@ -286,7 +288,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 					);
 				}
 				// Handl rose reject if we did not successfully connect to the target
-				this.log(ELogSeverity.error, "Could not establish connection", "sendWebSocket", this, ws);
+				this.log(ELogSeverity.error, "Could not establish connection", "sendWebSocket", this, socket);
 				const receiveInvokeContext = ReceiveInvokeContext.create(data.invoke);
 				this.onROSEReject(invokeReject, receiveInvokeContext);
 				throw invokeReject;
@@ -294,11 +296,11 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 				this.logTransport(encodeResult.logData, "sendWebSocket", "out", data.invokeContext);
 				// Send the message
-				ws.send(encodeResult.payLoad);
+				socket.send(encodeResult.payLoad);
 			}
 		}).catch((error): void => {
 			this.log(ELogSeverity.error, "exception", "sendWebSocket", this, undefined, error);
-			this.handlePendingWebsockets(error);
+			this.handlePendingSockets(error);
 			throw error;
 		});
 	}
@@ -311,7 +313,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @param data - the data object which contains all the information
 	 */
-	private sendREST(data: IASN1InvokeData): void {
+	private sendStateLess(data: IASN1InvokeData): void {
 		const encoding = data.invokeContext.encoding;
 		const headers: HeadersInit = {
 			"Content-Type": encoding === EASN1TransportEncoding.JSON ? "application/json" : "application/octet-stream",
@@ -406,42 +408,6 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	}
 
 	/**
-	 * Sends daat via a TCP connection
-	 * - Connects via a plain TCP socket (only availbale in node, thus not implemented in the browser client)
-	 * - Handles errors
-	 * - Sends data
-	 *
-	 * @param data - the data object which contains all the information
-	 */
-	private sendTCP(data: IASN1InvokeData): void {
-		// Framing bauen (abhängig vom encoding json oder ber unterschiedlich)
-		if (this.tcp) {
-			const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
-			let lengthPrefix: string | undefined;
-			if (this.encoding == EASN1TransportEncoding.JSON) {
-				// Only JSON needs a length header as the message itself contains no information about the length
-				// BER shows struct and the length so we can distinguish from the beginning how long a message will be
-				if (encodeResult.payLoad.length > 9999999) {
-					const error = new ENetUC_Common.AsnRequestError({
-						iErrorDetail: CustomInvokeProblemEnum.messageTooBig,
-						u8sErrorString:
-							`Could not generate JSON length header as message was too big. Maximum allows is 9999999, current size is ${encodeResult.payLoad.length}`,
-					});
-					this.log(ELogSeverity.error, "Error creating JSON lenght header", "sendInvoke", this, undefined, error);
-					throw error;
-				}
-				lengthPrefix = `J${String(encodeResult.payLoad.length).padStart(7, "0")}`;
-			}
-			this.logTransport(encodeResult.logData, "sendInvoke", "out", data.invokeContext);
-			// Send the optional length prefix
-			if (lengthPrefix)
-				this.tcp.write(lengthPrefix);
-			// Send the message
-			this.tcp.write(encodeResult.payLoad);
-		}
-	}
-
-	/**
 	 * Helper method that allows to dedicatedly call connect without sending something (test connection method)
 	 *
 	 * @param invokeContext - contextual data provided with the invoke
@@ -451,6 +417,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	public async connect(invokeContext?: ISendInvokeContext): Promise<boolean> {
 		switch (this.connectionMode) {
 			case EASNCONNECTIONMODE.WEBSOCKET:
+			case EASNCONNECTIONMODE.TCP:
 				try {
 					const result = await this.getConnection(invokeContext);
 					if (!result || result instanceof ENetUC_Common.AsnRequestError)
@@ -462,26 +429,13 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				}
 				break;
 			case EASNCONNECTIONMODE.REST:
+				this.log(ELogSeverity.warn, "REST connectionMode does not support connect", "connect", this, {
+					connectionMode: this.connectionMode,
+				});
 				break;
-			case EASNCONNECTIONMODE.TCP:
-				this.tcp = undefined;
-				return new Promise((resolve, reject) => {
-					const url = new URL(this.target);
-					const host = url.hostname;
-					const port = Number(url.port);
-					const options: net.NetConnectOpts = { host, port };
-					const socket = net.createConnection(options);
-					const onConnect = () => {
-						socket.off("error", onError);
-						this.tcp = socket;
-						resolve(true);
-					};
-					const onError = (err: Error) => {
-						socket.off("connect", onConnect);
-						reject(err);
-					};
-					socket.once("connect", onConnect);
-					socket.once("error", onError);
+			default:
+				this.log(ELogSeverity.error, "Invalid connection mode", "connect", this, {
+					connectionMode: this.connectionMode,
 				});
 				break;
 		}
@@ -552,7 +506,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 						);
 					}
 				}
-				if (this.ws || this.tcp) {
+				if (this.socket) {
 					this.disconnect(true).then(() => {}).catch((error) => {
 						this.log(
 							ELogSeverity.error,
@@ -581,59 +535,59 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	}
 
 	// These methods differ between node and browser implementation, thus we implement them in the approriate TSASN1BrowserClient and TSASN1NodeClient
-	protected abstract getWebSocket(address: string, options?: IDualWebSocketOptions): IDualWebSocket | undefined;
+	protected abstract getConnectionSocket(address: string, options?: IWebSocketOptions): IConnectionSocket | undefined;
 	protected abstract fetch(input: string, init?: RequestInit): Promise<Response>;
-	protected abstract asn1ClientsetReconnectTimeout(timeout: number): void;
-	protected abstract prepareData(event: IDualWebSocketMessageEvent): Promise<Uint8Array | object | undefined>;
+	protected abstract setReconnectTimeout(timeout: number): void;
+	protected abstract prepareData(event: ISocketMessageEvent): Promise<Uint8Array | object | undefined>;
 
 	/**
 	 * Helper function to get or create a websocket connection object
 	 *
 	 * @param invokeContext - contextual data provided with the invoke
-	 * @returns - An IDualWebSocket object on success or an AsnRequestError on error
+	 * @returns - An IConnectionSocket object on success or an AsnRequestError on error
 	 */
 	private async getConnection(
 		invokeContext?: ISendInvokeContext,
-	): Promise<IDualWebSocket | ENetUC_Common.AsnRequestError> {
+	): Promise<IConnectionSocket | ENetUC_Common.AsnRequestError> {
 		return new Promise((resolve, reject): void => {
-			if (this.ws && this.ws.readyState === EDualWebSocketState.OPEN) {
+			if (this.socket && this.socket.readyState === ESocketState.OPEN) {
 				// If we already have a usable websocket object return it
-				resolve(this.ws);
-			} else if (!this.basn1ClientOpeningWebSocket) {
+				resolve(this.socket);
+			} else if (!this.bClientOpeningStateFullConnection) {
 				// If we do not yet have one set that we are creating one
-				this.basn1ClientOpeningWebSocket = true;
+				this.bClientOpeningStateFullConnection = true;
 				// Add our request to the front of the pending websocket objects
 				// The list is resolved in createWebSocketConnection on success or here in case of an error
-				this.pendingwebsockets.unshift(new WebSocketPromise(resolve, reject));
-				this.createWebSocketConnection(invokeContext).then((): void => {
-					this.basn1ClientOpeningWebSocket = false;
+				this.pendingSockets.unshift(new ConnectionSocketPromise(resolve, reject));
+				this.createStateFullConnection(invokeContext).then((): void => {
+					this.bClientOpeningStateFullConnection = false;
 				}).catch((error): void => {
 					// If we did not get one add our promise as FIRST object in the pening list
 					// The pending list wil be handled in the handlePendingWebsockets
-					this.handlePendingWebsockets(error);
-					this.basn1ClientOpeningWebSocket = false;
+					this.handlePendingSockets(error);
+					this.bClientOpeningStateFullConnection = false;
 				});
 			} else {
 				// We are currently creating a websocket object, add our request to the pending list
-				this.pendingwebsockets.push(new WebSocketPromise(resolve, reject));
+				this.pendingSockets.push(new ConnectionSocketPromise(resolve, reject));
 			}
 		});
 	}
 
 	/**
-	 * Helper function to create a websocket connection object
+	 * Helper function to create a statefull connection object
 	 *
 	 * @param invokeContext - contextual data provided with the invoke
 	 * @returns - resolved true or reject with an AsnRequestError
 	 */
-	private async createWebSocketConnection(invokeContext?: ISendInvokeContext): Promise<true> {
-		if (this.ws)
+	private async createStateFullConnection(invokeContext?: ISendInvokeContext): Promise<true> {
+		if (this.socket)
 			return true;
 
 		return new Promise((resolve, reject): void => {
 			// Call the node browser implementation to create a websocket object
 
-			const options: IDualWebSocketOptions = { perMessageDeflate: false };
+			const options: IWebSocketOptions = { perMessageDeflate: false };
 
 			// Set the additional headers from the class object
 			if (this.additionalHeaders) {
@@ -665,33 +619,32 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				}
 			}
 
-			const con = this.getWebSocket(this.target, options);
-			if (!con)
+			const socket = this.getConnectionSocket(this.target, options);
+			if (!socket)
 				throw new Error("Failed to get a websocket object");
 			/** called if the websocket was opend (connect to the target */
-			con.onopen = (): void => {
+			socket.onopen = (): void => {
 				// In case we are connected
-				con.onopen = null;
-				con.onclose = null;
-				this.log(ELogSeverity.info, "Connected to", "createWebSocketConnection", this, { target: this.target });
+				this.log(ELogSeverity.info, "Connected to", "createStateFullConnection", this, { target: this.target });
 
 				// Add event listener
-				con.addEventListener("close", this.onClientClose);
-				con.addEventListener("message", this.onClientMessage);
-				con.addEventListener("error", this.onClientError);
-				this.ws = con;
+				socket.onopen = undefined;
+				socket.onclose = this.onClientClose;
+				socket.onmessage = this.onClientMessage;
+				socket.onerror = this.onClientError;
+				this._socket = socket;
 
 				// tell the notifies that we are connected
-				this.fire_OnConnected(this.basn1ClientReconnecting).then(() => {
-					this.basn1ClientReconnecting = false;
+				this.fire_OnConnected(this.bClientReconnecting).then(() => {
+					this.bClientReconnecting = false;
 
 					// Init the reconnect timeout
-					this.asn1ClientsetReconnectTimeout(5000);
+					this.setReconnectTimeout(5000);
 
 					// Handle all pending operations
-					for (const pendingcallback of this.pendingwebsockets)
-						pendingcallback.resolve(con);
-					this.pendingwebsockets = [];
+					for (const pendingcallback of this.pendingSockets)
+						pendingcallback.resolve(socket);
+					this.pendingSockets = [];
 
 					// resolve success
 					resolve(true);
@@ -704,17 +657,17 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 			 *
 			 * @param closed - the id of the closing
 			 */
-			con.onclose = (closed: IDualWebSocketCloseEvent): void => {
+			socket.onclose = (closed: ISocketCloseEvent): void => {
 				// Error info is available in onclose not in onerror
-				con.onopen = null;
-				con.onclose = null;
-				this.log(ELogSeverity.error, "connecting failed", "createWebSocketConnection", this, {
+				socket.onopen = undefined;
+				socket.onclose = undefined;
+				this.log(ELogSeverity.error, "connecting failed", "createStateFullConnection", this, {
 					target: this.target,
 					closecode: closed.code,
 				});
 
 				// Init the reconnect after 1 second
-				this.asn1ClientsetReconnectTimeout(1000);
+				this.setReconnectTimeout(1000);
 
 				// reject with error
 				reject(
@@ -733,23 +686,19 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * @param caller - The caller of the shutdown (for logging and diagnostic)
 	 */
 	private shutdown(caller: string): void {
-		this.asn1ClientsetReconnectTimeout(0);
-		if (this.ws) {
-			this.ws.removeEventListener("close", this.onClientClose);
-			this.ws.removeEventListener("message", this.onClientMessage);
-			this.ws.removeEventListener("error", this.onClientError);
-			this.ws.close();
-			this.ws = undefined;
-		}
-		if (this.tcp) {
-			this.tcp.end();
-			this.tcp = undefined;
+		this.setReconnectTimeout(0);
+		if (this.socket) {
+			this.socket.onclose = undefined;
+			this.socket.onmessage = undefined;
+			this.socket.onerror = undefined;
+			this.socket.close();
+			this._socket = undefined;
 		}
 		const err = new ENetUC_Common.AsnRequestError({
 			iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
 			u8sErrorString: "TSASN1Client exit was called",
 		});
-		this.handlePendingWebsockets(err);
+		this.handlePendingSockets(err);
 	}
 
 	/**
@@ -757,7 +706,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @param event - the websocket close event
 	 */
-	private async onClientClose(event: IDualWebSocketCloseEvent): Promise<void> {
+	private async onClientClose(event: ISocketCloseEvent): Promise<void> {
 		this.log(ELogSeverity.error, "WebSocket was closed. Going to reconnect", "onClientClose", this, {
 			code: event.code,
 			reason: event.reason,
@@ -765,7 +714,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 		await this.fire_OnDisconnected(false);
 
 		this.shutdown("TSASN1Client.clientClose");
-		this.asn1ClientsetReconnectTimeout(1000);
+		this.setReconnectTimeout(1000);
 	}
 
 	/**
@@ -773,8 +722,8 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @param event - the websocket error event
 	 */
-	private onClientError(event: Event): void {
-		const readystate = this.ws ? TSASN1Client.getWebSocketReadyStateAsString(this.ws.readyState) : "undefined";
+	private onClientError(event: ISocketErrorEvent): void {
+		const readystate = this.socket ? TSASN1Client.getWebSocketReadyStateAsString(this.socket.readyState) : "undefined";
 		this.log(ELogSeverity.error, "Websocket is in an error state", "onClientError", this, { readystate });
 		// we do not terminate the connection here as the onclose event handler will be called next (otherwise we remove the callback in exit and thus do not get called)
 		// this.shutdown("TSASN1Client.clientError");
@@ -785,7 +734,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @param event - the websocket message event
 	 */
-	private async onClientMessage(event: IDualWebSocketMessageEvent): Promise<void> {
+	private async onClientMessage(event: ISocketMessageEvent): Promise<void> {
 		if (event.data) {
 			// Fill the invokecontext
 			const invokeContext = new ReceiveInvokeContext({ clientConnectionID: this.clientConnectionID });
@@ -795,8 +744,8 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 					// Call the receive method
 					const response = await this.receive(rawData, invokeContext);
 					// If the receive returned data send it back
-					if (response && this.ws && this.ws.readyState === EDualWebSocketState.OPEN)
-						this.ws.send(response.payLoad);
+					if (response && this.socket && this.socket.readyState === ESocketState.OPEN)
+						this.socket.send(response.payLoad);
 				}
 			} catch (error) {
 				this.log(ELogSeverity.error, "exception", "onClientMessage", this, undefined, error);
@@ -809,45 +758,45 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 *
 	 * @returns - the current connection target
 	 */
-	public async asn1ClientReconnect(): Promise<boolean> {
-		if (this.ws || this.basn1ClientOpeningWebSocket)
+	public async clientReconnect(): Promise<boolean> {
+		if (this.socket || this.bClientOpeningStateFullConnection)
 			return true;
 		try {
-			this.basn1ClientReconnecting = true;
+			this.bClientReconnecting = true;
 			await this.fire_OnBeforeReconnect();
-			await this.createWebSocketConnection();
+			await this.createStateFullConnection();
 			this.log(ELogSeverity.info, "successfully reconnected", "asn1ClientReconnect", this);
 			return true;
 		} catch (error) {
-			this.handlePendingWebsockets(error);
+			this.handlePendingSockets(error);
 			let timeout = 1000;
-			this.asn1ClientReconnectCounter++;
-			if (this.asn1ClientReconnectCounter >= 10)
+			this.nClientReconnectCounter++;
+			if (this.nClientReconnectCounter >= 10)
 				timeout = 5000;
 			this.log(ELogSeverity.warn, "reconnect failed", "asn1ClientReconnect", this, {
-				reconnectCounter: this.asn1ClientReconnectCounter,
+				reconnectCounter: this.nClientReconnectCounter,
 				timeout,
 			}, error);
-			this.asn1ClientsetReconnectTimeout(timeout);
+			this.setReconnectTimeout(timeout);
 			return false;
 		}
 	}
 
 	/**
-	 * In case of a websocket connecting error we fullfill all pending callbacks with the error object
+	 * In case of a statefull connection error we fullfill all pending sockets with the error object
 	 *
 	 * @param err - The error object as provided by the caller
 	 */
-	private handlePendingWebsockets(err: unknown): void {
+	private handlePendingSockets(err: unknown): void {
 		if (!(err instanceof ENetUC_Common.AsnRequestError)) {
 			err = new ENetUC_Common.AsnRequestError({
 				iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
 				u8sErrorString: (err as Error).message,
 			});
 		}
-		for (const pendingcallback of this.pendingwebsockets)
-			pendingcallback.reject(err);
-		this.pendingwebsockets = [];
+		for (const pendingSocket of this.pendingSockets)
+			pendingSocket.reject(err);
+		this.pendingSockets = [];
 	}
 
 	/**
@@ -857,7 +806,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 */
 	private async fire_OnConnected(bReconnected: boolean): Promise<void> {
 		for (const callback of this.connectionCallBack)
-			await callback.onClientConnected(this.basn1ClientReconnecting);
+			await callback.onClientConnected(this.bClientReconnecting);
 	}
 
 	/**

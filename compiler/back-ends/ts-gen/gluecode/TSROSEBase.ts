@@ -30,10 +30,10 @@ import {
 } from "./TSInvokeContext";
 
 /**
- * The websocket is different between the node and the browser implemenation, thus we cast it to any
+ * The socket might be a node or browser websocket or a node raw tcp socket, thus we cast it to any
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type IOriginalWebSocket = any;
+type IOriginalSocket = any;
 
 // Special Custom Invoke Problems for internal usage (used in Error Responses)
 export enum CustomInvokeProblemEnum {
@@ -51,54 +51,61 @@ export enum CustomInvokeProblemEnum {
 }
 
 /**
- * As the websocket implementation in node and the browser differ we need an abstraction layer that
- * fullfills both sides and is implemented according the native websocket implementation in TSASN1BrowserClient or TSASN1NodeClient
+ * As the socket implementations are different in websocket for browser and node and a node tcp socket so need an abstraction layer that
+ * fullfills all sides and is implemented according the native websocket/socket implementation in TSASN1BrowserClient or TSASN1NodeClient
  * Encapsulates methods and events for both sides.
  */
-export interface IDualWebSocketCloseEvent {
-	code: number;
+export interface ISocketCloseEvent {
+	code?: number;
 	wasClean: boolean;
-	reason: string;
-	target: IOriginalWebSocket;
+	reason?: string;
+	target: IOriginalSocket;
 }
 
-export interface IDualWebSocketErrorEvent {
+export interface ISocketErrorEvent {
 	error: unknown;
 	message: string;
-	type: string;
-	target: IOriginalWebSocket;
+	type?: string;
+	target: IOriginalSocket;
 }
 
-export interface IDualWebSocketMessageEvent {
+export interface ISocketMessageEvent {
 	data: string | Uint8Array;
-	type: string;
-	target: IOriginalWebSocket;
+	type?: string;
+	target: IOriginalSocket;
 }
 
-export interface IDualWebSocketOpenEvent {
-	target: IOriginalWebSocket;
+export interface ISocketOpenEvent {
+	type?: string;
+	target: IOriginalSocket;
 }
 
-export enum EDualWebSocketState {
+export enum ESocketState {
 	CONNECTING = 0,
 	OPEN = 1,
 	CLOSING = 2,
 	CLOSED = 3,
 }
 
-export interface IDualWebSocket {
-	readyState: EDualWebSocketState;
-	onclose: ((ev: IDualWebSocketCloseEvent) => void) | null;
-	onerror: ((ev: IDualWebSocketErrorEvent) => void) | null;
-	onmessage: ((ev: IDualWebSocketMessageEvent) => void) | null;
-	onopen: ((ev: IDualWebSocketOpenEvent) => void) | null;
+/**
+ * The IConnectionSocket is the mapping object between the different socket implementations in node and the browser
+ * It is created in getWebSocket and mapped to the appropriate callbacks, states and methods...
+ */
+export interface IConnectionSocket {
+	// Send data via the underlying socket
+	send(data: string | Uint8Array): void;
+	// Close the underlying socket
 	close(code?: number, reason?: string): void;
-	// Also supports blob but we use either string or Uint8Array internally
-	send(data: string | Uint8Array /* | Blob */): void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	addEventListener(type: string, listener?: (event: any) => unknown): void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	removeEventListener(type: string, listener?: (event: any) => unknown): void;
+	// The current state of the socket updated through the 4 notifies we handle (even if they are not subscribed)
+	readyState: ESocketState;
+	// The socket was successfully opened
+	onopen?: (ev: ISocketOpenEvent) => void;
+	// The socket was closed
+	onclose?: (ev: ISocketCloseEvent) => void;
+	// The socket is in an error state
+	onerror?: (ev: ISocketErrorEvent) => void;
+	// The socket has received a message (websocket = completed, net socket might be incomplete)
+	onmessage?: (ev: ISocketMessageEvent) => void;
 }
 
 /**
