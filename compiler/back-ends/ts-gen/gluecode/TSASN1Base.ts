@@ -28,7 +28,7 @@ import {
 	ISendInvokeContext,
 	ReceiveInvokeContext,
 	ROSEBase,
-} from "./TSROSEBase.js";
+} from "./TSROSEBase";
 
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
