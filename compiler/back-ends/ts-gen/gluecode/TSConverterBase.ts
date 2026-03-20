@@ -602,6 +602,7 @@ export class TSConverter {
 	 * @param errors - List of parsing errors
 	 * @param context - context that is provided along with all the decoding operation
 	 * @param optional - set to true if the parameter is optional (if optional, the parameter might be missing)
+	 * @param constructed - set to true if the parameter is constructed (optional burried inside a sequence)
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
 	public static fillASN1Param(
@@ -622,41 +623,50 @@ export class TSConverter {
 		errors: ConverterErrors,
 		context: DecodeContext,
 		optional?: boolean,
+		constructed?: boolean
 	): boolean {
-		let value: unknown;
-		if (expectedType === "Boolean")
-			value = d.getTypedValueByName(asn1ts.Boolean, propertyName)?.getValue();
-		else if (expectedType === "Enumerated")
-			value = d.getTypedValueByName(asn1ts.Enumerated, propertyName)?.getValue();
-		else if (expectedType === "Integer")
-			value = d.getTypedValueByName(asn1ts.Integer, propertyName)?.getValue();
-		else if (expectedType === "Utf8String")
-			value = d.getTypedValueByName(asn1ts.Utf8String, propertyName)?.getValue();
-		else if (expectedType === "Real")
-			value = d.getTypedValueByName(asn1ts.Real, propertyName)?.getValue();
-		else if (expectedType === "Sequence")
-			value = d.getTypedValueByName(asn1ts.Sequence, propertyName)?.getValue();
-		else if (expectedType === "AsnSystemTime") {
-			value = d.getTypedValueByName(asn1ts.Real, propertyName)?.getValue();
-			if (value !== undefined)
-				value = TSConverter.getDateTimeFromVariantTime(value as number);
-		} else if (expectedType === "Any")
-			value = d.getValueByName(propertyName);
-		else if (expectedType === "Null")
-			value = d.getTypedValueByName(asn1ts.Null, propertyName)?.getValue();
-		else {
-			errors.push(
-				new ConverterError(
-					ConverterErrorType.PROPERTY_TYPEMISMATCH,
-					context.context + "::" + propertyName,
-					`Unsupported data type ${expectedType}`,
-				),
-			);
-			return false;
-		}
-		if (value !== undefined) {
-			(target as Record<string, unknown>)[propertyName] = value;
-			return true;
+		let s: asn1ts.Sequence | undefined = d;
+		// If the value is constructed we need to dig into it (explicit optional)
+		if(constructed)
+			s = d.getTypedValueByName(asn1ts.Sequence, propertyName);
+
+		if (s)
+		{
+			let value: unknown;
+			if (expectedType === "Boolean")
+				value = s.getTypedValueByName(asn1ts.Boolean, propertyName)?.getValue();
+			else if (expectedType === "Enumerated")
+				value = s.getTypedValueByName(asn1ts.Enumerated, propertyName)?.getValue();
+			else if (expectedType === "Integer")
+				value = s.getTypedValueByName(asn1ts.Integer, propertyName)?.getValue();
+			else if (expectedType === "Utf8String")
+				value = s.getTypedValueByName(asn1ts.Utf8String, propertyName)?.getValue();
+			else if (expectedType === "Real")
+				value = s.getTypedValueByName(asn1ts.Real, propertyName)?.getValue();
+			else if (expectedType === "Sequence")
+				value = s.getTypedValueByName(asn1ts.Sequence, propertyName)?.getValue();
+			else if (expectedType === "AsnSystemTime") {
+				value = s.getTypedValueByName(asn1ts.Real, propertyName)?.getValue();
+				if (value !== undefined)
+					value = TSConverter.getDateTimeFromVariantTime(value as number);
+			} else if (expectedType === "Any")
+				value = s.getValueByName(propertyName);
+			else if (expectedType === "Null")
+				value = s.getTypedValueByName(asn1ts.Null, propertyName)?.getValue();
+			else {
+				errors.push(
+					new ConverterError(
+						ConverterErrorType.PROPERTY_TYPEMISMATCH,
+						context.context + "::" + propertyName,
+						`Unsupported data type ${expectedType}`,
+					),
+				);
+				return false;
+			}
+			if (value !== undefined) {
+				(target as Record<string, unknown>)[propertyName] = value;
+				return true;
+			}
 		}
 		if (!optional) {
 			if (d.getValueByName(propertyName)) {

@@ -591,14 +591,17 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 
 		fprintf(src, "\t\t\t\t");
 
-		const bool bOptional = e->type->optional ? true : false;
-		// 		const bool bImplicit = e->type->implicit ? true : false;
-
-		char szOptionalParam[128] = {0};
 		int iOptionalID = -1;
+		const bool bOptional = e->type->optional ? true : false;
 		if (bOptional)
-		{
 			iOptionalID = GetContextID(e->type);
+		const bool bImplicit = e->type->implicit ? true : false;
+		const bool bExplicit = bOptional && !bImplicit && iOptionalID >= 0;
+		char szOptionalParam[128] = {0};
+		if (bExplicit)
+			fprintf(src, "new asn1ts.Sequence({ value: [");
+		else if (bOptional)
+		{
 			if (iOptionalID > -1 && choiceId != BASICTYPE_ANY)
 				sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", idBlock: { optionalID: %i }", iOptionalID);
 			else
@@ -634,6 +637,15 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		}
 		else
 			snacc_exit("unknown choiceId %d", choiceId);
+		if (bExplicit)
+		{
+			fprintf(src, "], name: \"%s\", ", szConverted2);
+			iOptionalID = GetContextID(e->type);
+			if (iOptionalID >= 0 && choiceId != BASICTYPE_ANY)
+				fprintf(src, "idBlock: { optionalID: %i }})", iOptionalID);
+			else
+				fprintf(src, "optional: true})");
+		}
 		if (szConverted2)
 		{
 			free(szConverted2);
