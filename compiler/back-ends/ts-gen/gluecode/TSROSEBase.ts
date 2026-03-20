@@ -48,6 +48,8 @@ export enum CustomInvokeProblemEnum {
 	// We try to send a message which is too big to send it
 	// Technically this can happen e.g. with JSON encoding and TCP transport if the message does not fit into the length framing header
 	messageTooBig = 501,
+	// The stub received an empty ROSEreject without details.
+	emptyRejectMessage = 502,
 }
 
 /**
@@ -70,7 +72,7 @@ export interface ISocketErrorEvent {
 }
 
 export interface ISocketMessageEvent {
-	data: string | Uint8Array;
+	data: Uint8Array | object;
 	type?: string;
 	source: IOriginalSocket;
 }
@@ -99,13 +101,13 @@ export interface IConnectionSocket {
 	// The current state of the socket updated through the 4 notifies we handle (even if they are not subscribed)
 	readyState: ESocketState;
 	// The socket was successfully opened
-	onconnected?: (ev: ISocketConnectedEvent) => void;
+	onSocketConnected?: (ev: ISocketConnectedEvent) => void;
 	// The socket was closed
-	onclose?: (ev: ISocketCloseEvent) => void;
+	onSocketClose?: (ev: ISocketCloseEvent) => void;
 	// The socket is in an error state
-	onerror?: (ev: ISocketErrorEvent) => void;
+	onSocketError?: (ev: ISocketErrorEvent) => void;
 	// The socket has received a message (websocket = completed, net socket might be incomplete)
-	onmessage?: (ev: ISocketMessageEvent) => void;
+	onSocketMessage?: (ev: ISocketMessageEvent) => void;
 }
 
 /**
@@ -346,7 +348,7 @@ export class AsnInvokeProblem {
  * @returns - The created AsnInvokeProblem object
  */
 export function handleRoseReject(roseReject: ROSEReject): AsnInvokeProblem {
-	let value = 0xffffffff;
+	let value: number = CustomInvokeProblemEnum.emptyRejectMessage;
 
 	if (roseReject.reject) {
 		const reject = roseReject.reject;
@@ -547,13 +549,10 @@ export function asn1Decode<T>(
 	if (invokeContext?.encoding === undefined) {
 		if (argument instanceof Uint8Array) {
 			// It's raw data from the transport -> could be anything let's check JSON first if the first char is a { or [ afterwards BER
-			if (argument[0] === 123 || argument[0] === 91) {
-				// This could be JSON but may also be BER
-				jsonData = argument.toString();
+			if (argument[0] === 123 || argument[0] === 91)
+				jsonData = new TextDecoder().decode(argument);
+			else
 				berData = argument;
-			} else {
-				berData = argument;
-			}
 		} else if (typeof argument === "string")
 			jsonData = argument;
 		else if (argument instanceof asn1ts.Sequence) {

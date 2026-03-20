@@ -139,9 +139,9 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 		instanceType: ASN1ClassInstanceType,
 	) {
 		super(encoding, instanceType);
-		this.onClientClose = this.onClientClose.bind(this);
-		this.onClientMessage = this.onClientMessage.bind(this);
-		this.onClientError = this.onClientError.bind(this);
+		this.onSocketClose = this.onSocketClose.bind(this);
+		this.onSocketMessage = this.onSocketMessage.bind(this);
+		this.onSocketError = this.onSocketError.bind(this);
 	}
 
 	/**
@@ -532,7 +532,6 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	protected abstract getConnectionSocket(address: string, options?: IWebSocketOptions): IConnectionSocket | undefined;
 	protected abstract fetch(input: string, init?: RequestInit): Promise<Response>;
 	protected abstract setReconnectTimeout(timeout: number): void;
-	protected abstract prepareData(event: ISocketMessageEvent): Promise<Uint8Array | object | undefined>;
 
 	/**
 	 * Helper function to get or create a websocket connection object
@@ -617,11 +616,17 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 			if (!socket)
 				throw new Error("Failed to get a websocket object");
 			/** called if the websocket was opend (connect to the target */
-			socket.onconnected = (): void => {
+			socket.onSocketConnected = (): void => {
 				// In case we are connected
 				this.log(ELogSeverity.info, "Connected to", "createStateFullConnection", this, { target: this.target });
 
-				// Add event listener
+				// Map the event listener to the socket object
+				socket.onSocketConnected = undefined;
+				socket.onSocketMessage = this.onSocketMessage;
+				socket.onSocketError = this.onSocketError;
+				socket.onSocketClose = this.onSocketClose;
+
+				// hold the socket, we need it to send data and close it again
 				this.socket = socket;
 
 				// tell the notifies that we are connected
@@ -647,12 +652,15 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 			 *
 			 * @param closed - the id of the closing
 			 */
-			socket.onclose = (closed: ISocketCloseEvent): void => {
+			socket.onSocketClose = (closed: ISocketCloseEvent): void => {
 				// Error info is available in onclose not in onerror
 				this.log(ELogSeverity.error, "connecting failed", "createStateFullConnection", this, {
 					target: this.target,
 					closecode: closed.code,
 				});
+
+				socket.onSocketConnected = undefined;
+				socket.onSocketClose = undefined;
 
 				// Init the reconnect after 1 second
 				this.setReconnectTimeout(1000);
@@ -688,11 +696,12 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 
 	/**
 	 * Handler that is called if the client connection was closed
+	 * This method is *NOT* ment to be called by subclasses. The subclass provides a socket notify object which then binds to these methods
 	 *
 	 * @param event - the websocket close event
 	 */
-	protected async onClientClose(event: ISocketCloseEvent): Promise<void> {
-		this.log(ELogSeverity.error, "WebSocket was closed. Going to reconnect", "onClientClose", this, {
+	private async onSocketClose(event: ISocketCloseEvent): Promise<void> {
+		this.log(ELogSeverity.error, "WebSocket was closed. Going to reconnect", "onSocketClose", this, {
 			code: event.code,
 			reason: event.reason,
 		});
@@ -704,48 +713,38 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 
 	/**
 	 * Handler that is called if the client connection signalled an error
+	 * This method is *NOT* ment to be called by subclasses. The subclass provides a socket notify object which then binds to these methods
 	 *
 	 * @param event - the websocket error event
 	 */
-	protected onClientError(event: ISocketErrorEvent): void {
+	private onSocketError(event: ISocketErrorEvent): void {
 		const readystate = this.socket ? TSASN1Client.getWebSocketReadyStateAsString(this.socket.readyState) : "undefined";
-		this.log(ELogSeverity.error, "Websocket is in an error state", "onClientError", this, { readystate });
+		this.log(ELogSeverity.error, "Websocket is in an error state", "onSocketError", this, { readystate });
 		// we do not terminate the connection here as the onclose event handler will be called next (otherwise we remove the callback in exit and thus do not get called)
 		// this.shutdown("TSASN1Client.clientError");
 	}
 
 	/**
-	 * Handler that is called if the client connection received websocket message
+	 * Handler that is called if the client connection received a full (non fragmented) message
+	 * This handler is called with full messages (websocket, rest, for tcp the NodeClient takes care about the framing)
+	 * This method is *NOT* ment to be called by subclasses. The subclass provides a socket notify object which then binds to these methods
 	 *
 	 * @param event - the websocket message event
 	 */
-	protected async onClientMessage(event: ISocketMessageEvent): Promise<void> {
-		if (event.data) {
-			// Fill the invokecontext
-			const invokeContext = new ReceiveInvokeContext({ clientConnectionID: this.clientConnectionID });
-			try {
-				// !!! We need to packetize here !!!
-				// Welcher Transport, welches encoding
-				const rawData = await this.prepareData(event);
-				if (rawData) {
-					// Call the receive method
-					const response = await this.receive(rawData, invokeContext);
-					// If the receive returned data send it back
-					if (response && this.socket && this.socket.readyState === ESocketState.OPEN)
-						this.socket.send(response.payLoad);
-				}
-			} catch (error) {
-				this.log(ELogSeverity.error, "exception", "onClientMessage", this, undefined, error);
-			}
+	private async onSocketMessage(event: ISocketMessageEvent): Promise<void> {
+		// Fill the invokecontext
+		const invokeContext = new ReceiveInvokeContext({ clientConnectionID: this.clientConnectionID });
+		try {
+			// Call the receive method
+			const response = await this.receive(event.data, invokeContext);
+			// If the receive returned data send it back
+			if (response && this.socket && this.socket.readyState === ESocketState.OPEN)
+				this.socket.send(response.payLoad);
+		} catch (error) {
+			this.log(ELogSeverity.error, "exception", "onSocketMessage", this, {
+				clientConnectionID: this.clientConnectionID,
+			}, error);
 		}
-	}
-
-	/**
-	 * Handler that is called if the client connection has been opened
-	 *
-	 * @param event - the websocket message event
-	 */
-	protected async onClientConnected(event: ISocketConnectedEvent): Promise<void> {
 	}
 
 	/**

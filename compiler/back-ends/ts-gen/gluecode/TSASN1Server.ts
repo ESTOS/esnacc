@@ -5,9 +5,9 @@
 // dprint-ignore-file
 /* eslint-disable */
 
-import { InvokeProblemenum, ROSEError, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE.js";
-import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base.js";
-import { EASN1TransportEncoding } from "./TSInvokeContext.js";
+import { InvokeProblemenum, ROSEError, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
+import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base";
+import { EASN1TransportEncoding } from "./TSInvokeContext";
 import {
 	createInvokeReject,
 	CustomInvokeProblemEnum,
@@ -16,7 +16,7 @@ import {
 	IASN1Transport,
 	ReceiveInvokeContext,
 	ROSEBase,
-} from "./TSROSEBase.js";
+} from "./TSROSEBase";
 
 /**
  * Interface a client connection object has to provide to be able to send an event based on the id of a client to this client
