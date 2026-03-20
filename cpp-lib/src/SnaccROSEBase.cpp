@@ -476,7 +476,13 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, 
 
 				if (pmessage->choiceId == ROSEMessage::invokeCid && pmessage->invoke)
 				{
+					// Provide the detail that the argument was non decodable to the client
 					ROSEReject reject;
+					reject.reject = new RejectProblem();
+					reject.reject->choiceId = RejectProblem::invokeProblemCid;
+					reject.reject->invokeProblem = new InvokeProblem(SNACC::InvokeProblem::mistypedArgument);
+					reject.details = new UTF8String();
+					reject.details->setASCII(ex.what());
 					if ((AsnIntType)pmessage->invoke->invokeID)
 					{
 						reject.invokedID.choiceId = ROSERejectChoice::invokedIDCid;
