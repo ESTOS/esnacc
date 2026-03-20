@@ -60,7 +60,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 	// The raw TCP socket (Which we currently only support in the node client)
 	private tcp?: net.Socket;
 	// The reconnecting timer
-	private clientReconnectingTimeout?: ReturnType<typeof setTimeout>;
+	private reconnectTimeout?: ReturnType<typeof setTimeout>;
 	/**
 	 * Accumulates bytes that have arrived over the TCP socket but do not yet
 	 * form a complete frame.  New incoming data is always appended here first;
@@ -287,12 +287,12 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 * @param timeout - The timeout after which asn1ClientReconnect is called
 	 */
 	protected setReconnectTimeout(timeout: number): void {
-		if (this.clientReconnectingTimeout) {
-			clearTimeout(this.clientReconnectingTimeout);
-			this.clientReconnectingTimeout = undefined;
+		if (this.reconnectTimeout) {
+			clearTimeout(this.reconnectTimeout);
+			this.reconnectTimeout = undefined;
 		}
 		if (timeout && this.autoreconnect)
-			this.clientReconnectingTimeout = setTimeout(this.clientReconnect, timeout);
+			this.reconnectTimeout = setTimeout(this.clientReconnect, timeout);
 	}
 
 	/**

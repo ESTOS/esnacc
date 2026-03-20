@@ -117,11 +117,11 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	protected pendingSockets: ConnectionSocketPromise[] = [];
 
 	// We are currently reconnecting
-	private bClientReconnecting = false;
+	private reconnecting = false;
 	// Helper to parametrise the reconnect timer in case of connection failures (first 10 approaces retry every second, afterwards every 5 seconds)
-	private nClientReconnectCounter = 0;
+	private reconnectCounter = 0;
 	// We are currently opening a statefull connection (asynchronous function)
-	private bClientOpeningStateFullConnection = false;
+	private openingStateFullConnection = false;
 	// Connection related callback list for the ones that are interested in it (add removeConnectionCallback)
 	private connectionCallBack = new Set<IClientConnectionCallback>();
 
@@ -546,19 +546,19 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 			if (this.socket && this.socket.readyState === ESocketState.OPEN) {
 				// If we already have a usable websocket object return it
 				resolve(this.socket);
-			} else if (!this.bClientOpeningStateFullConnection) {
+			} else if (!this.openingStateFullConnection) {
 				// If we do not yet have one set that we are creating one
-				this.bClientOpeningStateFullConnection = true;
+				this.openingStateFullConnection = true;
 				// Add our request to the front of the pending websocket objects
 				// The list is resolved in createWebSocketConnection on success or here in case of an error
 				this.pendingSockets.unshift(new ConnectionSocketPromise(resolve, reject));
 				this.createStateFullConnection(invokeContext).then((): void => {
-					this.bClientOpeningStateFullConnection = false;
+					this.openingStateFullConnection = false;
 				}).catch((error): void => {
 					// If we did not get one add our promise as FIRST object in the pening list
 					// The pending list wil be handled in the handlePendingWebsockets
 					this.handlePendingSockets(error);
-					this.bClientOpeningStateFullConnection = false;
+					this.openingStateFullConnection = false;
 				});
 			} else {
 				// We are currently creating a websocket object, add our request to the pending list
@@ -630,8 +630,8 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				this.socket = socket;
 
 				// tell the notifies that we are connected
-				this.fire_OnConnected(this.bClientReconnecting).then(() => {
-					this.bClientReconnecting = false;
+				this.fire_OnConnected(this.reconnecting).then(() => {
+					this.reconnecting = false;
 
 					// Init the reconnect timeout
 					this.setReconnectTimeout(5000);
@@ -753,10 +753,10 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * @returns - the current connection target
 	 */
 	public async clientReconnect(): Promise<boolean> {
-		if (this.socket || this.bClientOpeningStateFullConnection)
+		if (this.socket || this.openingStateFullConnection)
 			return true;
 		try {
-			this.bClientReconnecting = true;
+			this.reconnecting = true;
 			await this.fire_OnBeforeReconnect();
 			await this.createStateFullConnection();
 			this.log(ELogSeverity.info, "successfully reconnected", "asn1ClientReconnect", this);
@@ -764,11 +764,11 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 		} catch (error) {
 			this.handlePendingSockets(error);
 			let timeout = 1000;
-			this.nClientReconnectCounter++;
-			if (this.nClientReconnectCounter >= 10)
+			this.reconnectCounter++;
+			if (this.reconnectCounter >= 10)
 				timeout = 5000;
 			this.log(ELogSeverity.warn, "reconnect failed", "asn1ClientReconnect", this, {
-				reconnectCounter: this.nClientReconnectCounter,
+				reconnectCounter: this.reconnectCounter,
 				timeout,
 			}, error);
 			this.setReconnectTimeout(timeout);
@@ -800,7 +800,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 */
 	private async fire_OnConnected(bReconnected: boolean): Promise<void> {
 		for (const callback of this.connectionCallBack)
-			await callback.onClientConnected(this.bClientReconnecting);
+			await callback.onClientConnected(this.reconnecting);
 	}
 
 	/**
