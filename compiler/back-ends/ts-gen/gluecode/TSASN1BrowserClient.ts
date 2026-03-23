@@ -5,9 +5,9 @@
 // dprint-ignore-file
 /* eslint-disable */
 
-import { ASN1ClassInstanceType } from "./TSASN1Base";
-import { IWebSocketOptions, TSASN1Client } from "./TSASN1Client";
-import { EASN1TransportEncoding } from "./TSInvokeContext";
+import { ASN1ClassInstanceType } from "./TSASN1Base.js";
+import { IWebSocketOptions, TSASN1Client } from "./TSASN1Client.js";
+import { EASN1TransportEncoding } from "./TSInvokeContext.js";
 import { ELogSeverity, IConnectionSocket, ISocketCloseEvent, ISocketConnectedEvent, ISocketErrorEvent, ISocketMessageEvent } from "./TSROSEBase";
 /**
  * The ASN1 client side as required in the browser (different websocket and timer)

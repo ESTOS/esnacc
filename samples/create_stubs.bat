@@ -28,7 +28,7 @@ set FILES=%CD%\interface\*.asn1
 rem Building browser client stubs...
 echo Building browser client stubs...
 PUSHD ts-microservice\client\src\stub
-SET COMMAND=-JT -j -RTS_CLIENT_BROWSER -node:%NODEVERSION% -comments -versionfile %FILES%
+SET COMMAND=-JTE -j -RTS_CLIENT_BROWSER -node:%NODEVERSION% -comments -versionfile %FILES%
 echo %COMPILER% %COMMAND%
 %COMPILER% %COMMAND%
 echo.

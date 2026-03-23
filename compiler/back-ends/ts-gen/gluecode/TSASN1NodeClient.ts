@@ -9,9 +9,9 @@ import fetch, { RequestInit as FetchInit } from "node-fetch";
 // ENDIF
 import net from "node:net";
 import WebSocket from "ws";
-import { ASN1ClassInstanceType } from "./TSASN1Base";
-import { EASNCONNECTIONMODE, IWebSocketOptions, TSASN1Client } from "./TSASN1Client";
-import { EASN1TransportEncoding } from "./TSInvokeContext";
+import { ASN1ClassInstanceType } from "./TSASN1Base.js";
+import { EASNCONNECTIONMODE, IWebSocketOptions, TSASN1Client } from "./TSASN1Client.js";
+import { EASN1TransportEncoding } from "./TSInvokeContext.js";
 import {
 	CustomInvokeProblemEnum,
 	ELogSeverity,
@@ -21,8 +21,8 @@ import {
 	ISocketConnectedEvent,
 	ISocketErrorEvent,
 	ISocketMessageEvent,
-} from "./TSROSEBase";
-import { ENetUC_Common } from "./types";
+} from "./TSROSEBase.js";
+import * as ENetUC_Common from "./ENetUC_Common.js";
 
 /**
  * First byte constants used to discriminate between frame types.

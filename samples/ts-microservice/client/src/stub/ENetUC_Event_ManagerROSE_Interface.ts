@@ -11,12 +11,12 @@
 // dprint-ignore-file
 /* eslint-disable */
 // [PrintTSROSEImport]
-import { IReceiveInvokeContext, AsnInvokeProblem } from "./TSROSEBase";
-import { ISendInvokeContextParams } from "./TSInvokeContext";
+import { IReceiveInvokeContext, AsnInvokeProblem } from "./TSROSEBase.js";
+import { ISendInvokeContextParams } from "./TSInvokeContext.js";
 // Local imports
-import * as ENetUC_Event_Manager from "./ENetUC_Event_Manager";
+import * as ENetUC_Event_Manager from "./ENetUC_Event_Manager.js";
 // [PrintTSImports]
-import * as ENetUC_Common from "./ENetUC_Common";
+import * as ENetUC_Common from "./ENetUC_Common.js";
 // [PrintTSRootTypes]
 export const MODULE_NAME = "ENetUC_Event_ManagerROSEInterface";
 export const MODULE_LASTCHANGE = "1970-01-01T00:00:00Z";
@@ -51,9 +51,9 @@ export type IENetUC_Event_ManagerROSE_Handler = IENetUC_Event_ManagerROSE_Invoke
 
 // [PrintTSROSEServerCopyPasteInterface]
 /* Copy paste code for the import statement
-import { IReceiveInvokeContext } from "./TSROSEBase";
-import * as ENetUC_Common from "./ENetUC_Common";
-import { ENetUC_Event_Manager } from "./ENetUC_Event_Manager";
+import { IReceiveInvokeContext } from "./TSROSEBase.js";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import { ENetUC_Event_Manager } from "./ENetUC_Event_Manager.js";
 */
 
 /**

@@ -53,10 +53,6 @@ export class ConverterError {
 				return "PROPERTY_NULLORUNDEFINED";
 			case ConverterErrorType.PROPERTY_TYPEMISMATCH:
 				return "PROPERTY_TYPEMISMATCH";
-			case ConverterErrorType.NOT_AN_OBJECT:
-				return "NOT_AN_OBJECT";
-			case ConverterErrorType.EXCEPTION_OCCURRED:
-				return "EXCEPTION_OCCURRED";
 			default:
 				debugger;
 				return "unknown";

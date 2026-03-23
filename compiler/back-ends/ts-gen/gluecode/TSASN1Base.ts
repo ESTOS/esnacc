@@ -6,11 +6,11 @@
 /* eslint-disable */
 
 import * as asn1ts from "@estos/asn1ts";
-import * as ENetUC_Common from "./ENetUC_Common";
-import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
-import { ROSEMessage_Converter } from "./SNACCROSE_Converter";
-import { ConverterErrors, DecodeContext, EncodeContext } from "./TSConverterBase";
-import { EASN1TransportEncoding, ISendInvokeContextParams } from "./TSInvokeContext";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE.js";
+import { ROSEMessage_Converter } from "./SNACCROSE_Converter.js";
+import { ConverterErrors, DecodeContext, EncodeContext } from "./TSConverterBase.js";
+import { EASN1TransportEncoding, ISendInvokeContextParams } from "./TSInvokeContext.js";
 import {
 	asn1Decode,
 	asn1Encode,
@@ -28,7 +28,7 @@ import {
 	ISendInvokeContext,
 	ReceiveInvokeContext,
 	ROSEBase,
-} from "./TSROSEBase";
+} from "./TSROSEBase.js";
 
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {

@@ -5,10 +5,10 @@
 // dprint-ignore-file
 /* eslint-disable */
 
-import * as ENetUC_Common from "./ENetUC_Common";
-import { ROSEError, ROSEReject, ROSEResult } from "./SNACCROSE";
-import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base";
-import { EASN1TransportEncoding } from "./TSInvokeContext";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import { ROSEError, ROSEReject, ROSEResult } from "./SNACCROSE.js";
+import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base.js";
+import { EASN1TransportEncoding } from "./TSInvokeContext.js";
 import {
 	createInvokeReject,
 	CustomInvokeProblemEnum,
@@ -25,7 +25,7 @@ import {
 	ISocketMessageEvent,
 	ReceiveInvokeContext,
 	ROSEBase,
-} from "./TSROSEBase";
+} from "./TSROSEBase.js";
 
 export interface IWebSocketOptions {
 	perMessageDeflate?: boolean;

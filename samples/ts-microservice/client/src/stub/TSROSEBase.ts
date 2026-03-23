@@ -7,8 +7,8 @@
 
 import * as asn1ts from "@estos/asn1ts";
 import { IncomingHttpHeaders } from "node:http";
-import * as ENetUC_Common from "./ENetUC_Common";
-import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter.js";
 import {
 	InvokeProblemenum,
 	RejectProblem,
@@ -19,15 +19,15 @@ import {
 	ROSERejectChoice,
 	ROSEResult,
 	ROSEResultSeq,
-} from "./SNACCROSE";
-import { ROSEMessage_Converter } from "./SNACCROSE_Converter";
-import { ConverterErrors, DecodeContext, EncodeContext, IConverter, IEncodeContext } from "./TSConverterBase";
+} from "./SNACCROSE.js";
+import { ROSEMessage_Converter } from "./SNACCROSE_Converter.js";
+import { ConverterErrors, DecodeContext, EncodeContext, IConverter, IEncodeContext } from "./TSConverterBase.js";
 import {
 	EASN1TransportEncoding,
 	IInvokeContextBaseParams,
 	IReceiveInvokeContextParams,
 	ISendInvokeContextParams,
-} from "./TSInvokeContext";
+} from "./TSInvokeContext.js";
 
 /**
  * The socket might be a node or browser websocket or a node raw tcp socket, thus we cast it to any

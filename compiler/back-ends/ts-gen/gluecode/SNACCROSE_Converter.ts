@@ -12,8 +12,8 @@
 /* eslint-disable */
 
 // [PrintTSConverterImports]
-import { ConverterError, ConverterErrorType, ConverterErrors, TSConverter, IDecodeContext, IEncodeContext, INamedType } from "./TSConverterBase";
-import * as SNACCROSE from "./SNACCROSE";
+import { ConverterError, ConverterErrorType, ConverterErrors, TSConverter, IDecodeContext, IEncodeContext, INamedType } from "./TSConverterBase.js";
+import * as SNACCROSE from "./SNACCROSE.js";
 // [PrintTSImports]
 import * as asn1ts from "@estos/asn1ts";
 // [PrintTSRootTypes]

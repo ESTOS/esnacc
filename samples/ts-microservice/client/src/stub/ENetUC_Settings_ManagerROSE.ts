@@ -11,17 +11,17 @@
 /* eslint-disable */
 // [PrintTSROSEImports]
 // Global imports
-import { IENetUC_Settings_ManagerROSE, IENetUC_Settings_ManagerROSE_Handler } from "./ENetUC_Settings_ManagerROSE_Interface";
-import { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from "./SNACCROSE";
-import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, IInvokeHandler, ELogSeverity, ROSEBase } from "./TSROSEBase";
-import { ISendInvokeContextParams } from "./TSInvokeContext";
+import { IENetUC_Settings_ManagerROSE, IENetUC_Settings_ManagerROSE_Handler } from "./ENetUC_Settings_ManagerROSE_Interface.js";
+import { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from "./SNACCROSE.js";
+import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, IInvokeHandler, ELogSeverity, ROSEBase } from "./TSROSEBase.js";
+import { ISendInvokeContextParams } from "./TSInvokeContext.js";
 // Local imports
-import * as ENetUC_Settings_Manager from "./ENetUC_Settings_Manager";
-import * as Converter from "./ENetUC_Settings_Manager_Converter";
+import * as ENetUC_Settings_Manager from "./ENetUC_Settings_Manager.js";
+import * as Converter from "./ENetUC_Settings_Manager_Converter.js";
 // [PrintTSImports]
-import { TSDeprecatedCallback } from "./TSDeprecatedCallback";
-import * as ENetUC_Common from "./ENetUC_Common";
-import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter";
+import { TSDeprecatedCallback } from "./TSDeprecatedCallback.js";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter.js";
 // [PrintTSRootTypes]
 export const MODULE_NAME = "ENetUC_Settings_ManagerROSE";
 export const MODULE_LASTCHANGE = "2024-05-06T00:00:00Z";

@@ -23,7 +23,7 @@
  */
 // [PrintTSImports]
 import * as asn1ts from "@estos/asn1ts";
-import * as ENetUC_Common from "./ENetUC_Common";
+import * as ENetUC_Common from "./ENetUC_Common.js";
 // [PrintTSRootTypes]
 export const MODULE_NAME = "ENetUC_Event_Manager";
 export const MODULE_LASTCHANGE = "1970-01-01T00:00:00Z";
