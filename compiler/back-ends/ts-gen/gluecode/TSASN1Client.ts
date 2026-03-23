@@ -437,13 +437,10 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	}
 
 	/**
-	 * Helper method to disconnect a websocket connection
-	 *
-	 * @param bControlledDisconnect - set to true if we do the shutdown in a controlled way (to differ between a disconnect not intented by us)
+	 * Helper method to disconnect a statefull connection
 	 */
-	public async disconnect(bControlledDisconnect: boolean): Promise<void> {
-		this.shutdown("disconnect");
-		await this.fire_OnDisconnected(bControlledDisconnect);
+	public disconnect(): void {
+		this.shutdown();
 	}
 
 	/**
@@ -500,18 +497,8 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 						);
 					}
 				}
-				if (this.socket) {
-					this.disconnect(true).then(() => {}).catch((error) => {
-						this.log(
-							ELogSeverity.error,
-							"Failed to disconnect websocket",
-							"setTarget",
-							this,
-							{ oldTarget, newTarget },
-							error,
-						);
-					});
-				}
+				if (this.socket)
+					this.disconnect();
 			}
 		} catch (error) {
 			this.log(ELogSeverity.error, "Exception", "setTarget", this, { oldTarget, newTarget }, error);
@@ -678,10 +665,8 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 
 	/**
 	 * Helper function to create a websocket connection object
-	 *
-	 * @param caller - The caller of the shutdown (for logging and diagnostic)
 	 */
-	private shutdown(caller: string): void {
+	private shutdown(): void {
 		this.setReconnectTimeout(0);
 		if (this.socket) {
 			this.socket.close();
@@ -689,7 +674,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 		}
 		const err = new ENetUC_Common.AsnRequestError({
 			iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
-			u8sErrorString: "TSASN1Client exit was called",
+			u8sErrorString: "TSASN1Client.shutdown was called",
 		});
 		this.handlePendingSockets(err);
 	}
@@ -698,16 +683,22 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * Handler that is called if the client connection was closed
 	 * This method is *NOT* ment to be called by subclasses. The subclass provides a socket notify object which then binds to these methods
 	 *
-	 * @param event - the websocket close event
+	 * @param event - the ISocketCloseEvent
 	 */
 	private async onSocketClose(event: ISocketCloseEvent): Promise<void> {
-		this.log(ELogSeverity.error, "WebSocket was closed. Going to reconnect", "onSocketClose", this, {
-			code: event.code,
-			reason: event.reason,
-		});
-		await this.fire_OnDisconnected(false);
-
-		this.shutdown("TSASN1Client.clientClose");
+		// In case the socket object is not existing, we have called shutdown -> this notify is the result of it
+		// Thus we are in a controlled by us disconnect scenario and not some external cause
+		let bControlledDisconnect = !this.socket ? true : false;
+		if (this.socket) {
+			// Only in case the socket object was existing, the socket was closed from outside or context
+			// In that case log an error and call shutdown to handle pending socket requests
+			this.log(ELogSeverity.error, "WebSocket was closed.", "onSocketClose", this, {
+				code: event.code,
+				reason: event.reason,
+			});
+			this.shutdown();
+		}
+		await this.fire_OnDisconnected(bControlledDisconnect);
 		this.setReconnectTimeout(1000);
 	}
 
@@ -715,7 +706,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * Handler that is called if the client connection signalled an error
 	 * This method is *NOT* ment to be called by subclasses. The subclass provides a socket notify object which then binds to these methods
 	 *
-	 * @param event - the websocket error event
+	 * @param event - the ISocketErrorEvent
 	 */
 	private onSocketError(event: ISocketErrorEvent): void {
 		const readystate = this.socket ? TSASN1Client.getWebSocketReadyStateAsString(this.socket.readyState) : "undefined";
@@ -729,7 +720,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * This handler is called with full messages (websocket, rest, for tcp the NodeClient takes care about the framing)
 	 * This method is *NOT* ment to be called by subclasses. The subclass provides a socket notify object which then binds to these methods
 	 *
-	 * @param event - the websocket message event
+	 * @param event - the ISocketMessageEvent
 	 */
 	private async onSocketMessage(event: ISocketMessageEvent): Promise<void> {
 		// Fill the invokecontext
@@ -806,7 +797,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	/**
 	 * Notifies the connection callbacks about an disconnected connection
 	 *
-	 * @param bControlledDisconnect - in case of a controlled disconnect (e.g. shutdown or manually called disconnect) set to true
+	 * @param bControlledDisconnect - in case of a controlled disconnect (shutdown) set to true
 	 */
 	private async fire_OnDisconnected(bControlledDisconnect: boolean): Promise<void> {
 		for (const callback of this.connectionCallBack)

@@ -4,9 +4,6 @@
 
 // dprint-ignore-file
 /* eslint-disable */
-// IF NODE<22
-import fetch, { RequestInit as FetchInit } from "node-fetch";
-// ENDIF
 import net from "node:net";
 import WebSocket from "ws";
 import { ASN1ClassInstanceType } from "./TSASN1Base.js";
@@ -274,11 +271,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 * @returns - A Promise resolving into the fetch response
 	 */
 	protected async fetch(input: string, init?: RequestInit): Promise<Response> {
-// IF NODE<22
-		return (await fetch(input, init as FetchInit)) as unknown as Response;
-// ELSE
 		return fetch(input, init);
-// ENDIF
 	}
 
 	/**
