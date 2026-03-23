@@ -95,6 +95,9 @@
 					ahref.href = theClient.getTarget();
 				}
 			}
+			async function dropConnection() {
+				theClient.disconnect();
+			}
 
 			window.encoding_changed = encoding_changed;
 			window.transport_changed = transport_changed;
@@ -102,6 +105,7 @@
 			window.getSettings = getSettings;
 			window.setSettings = setSettings;
 			window.clearLog = clearLog;
+			window.dropConnection = dropConnection;
 
 			window.onload = function() {
 				encoding_changed();
@@ -128,7 +132,7 @@
 			<input
 				type="button"
 				id="disconnect"
-				onclick="theClient.disconnect();"
+				onclick="dropConnection()"
 				value="Disconnect"
 				disabled
 			/>
@@ -185,7 +189,7 @@
 			<input
 				type="button"
 				id="clear"
-				onclick="clearLog();"
+				onclick="clearLog()"
 				value="Clear log"
 				disabled
 			/>

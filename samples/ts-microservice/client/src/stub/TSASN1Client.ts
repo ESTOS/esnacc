@@ -353,7 +353,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 		const requestdata: RequestInit = {
 			method: "POST",
 			body: body instanceof Uint8Array ? new Uint8Array(body) : body,
-			headers: { "Content-Type": "application/json" },
+			headers
 		};
 
 		// REST requests are handled through the pending invokes list

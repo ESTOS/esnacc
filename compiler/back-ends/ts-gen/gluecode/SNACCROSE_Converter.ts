@@ -367,7 +367,7 @@ export class ROSEError_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "ROSEError");
 
 		// [Print_BER_EncoderSeqDefCode]
-		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true, true);
+		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true);
 		TSConverter.validateParam(s, "invokedID", "number", errors, newContext);
 		TSConverter.validateParam(s, "error_value", "number", errors, newContext);
 		TSConverter.validateParam(s, "error", "object", errors, newContext, true);
@@ -784,10 +784,10 @@ export class ROSEInvoke_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "ROSEInvoke");
 
 		// [Print_BER_EncoderSeqDefCode]
-		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true, true);
+		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true);
 		TSConverter.validateParam(s, "invokeID", "number", errors, newContext);
 		TSConverter.validateParam(s, "linked_ID", "number", errors, newContext, true);
-		TSConverter.validateParam(s, "operationName", "string", errors, newContext, true, true);
+		TSConverter.validateParam(s, "operationName", "string", errors, newContext, true);
 		const _authentication = ROSEAuthRequest_Converter.toBER(s.authentication, errors, newContext, "authentication", 3);
 		TSConverter.validateParam(s, "operationID", "number", errors, newContext);
 		TSConverter.validateParam(s, "argument", "object", errors, newContext, true);
@@ -910,7 +910,7 @@ export class ROSEResult_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "ROSEResult");
 
 		// [Print_BER_EncoderSeqDefCode]
-		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true, true);
+		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true);
 		TSConverter.validateParam(s, "invokeID", "number", errors, newContext);
 		const _result = ROSEResultSeq_Converter.toBER(s.result, errors, newContext, "result", true);
 		if (!errors.hasNewErrors()) {
@@ -1157,7 +1157,7 @@ export class ROSEReject_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "ROSEReject");
 
 		// [Print_BER_EncoderSeqDefCode]
-		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true, true);
+		TSConverter.validateParam(s, "sessionID", "string", errors, newContext, true);
 		const _invokedID = ROSERejectChoice_Converter.toBER(s.invokedID, errors, newContext, "invokedID");
 		const _reject = RejectProblem_Converter.toBER(s.reject, errors, newContext, "reject", true);
 		TSConverter.validateParam(s, "details", "string", errors, newContext, true);

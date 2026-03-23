@@ -53,6 +53,10 @@ export class ConverterError {
 				return "PROPERTY_NULLORUNDEFINED";
 			case ConverterErrorType.PROPERTY_TYPEMISMATCH:
 				return "PROPERTY_TYPEMISMATCH";
+			case ConverterErrorType.NOT_AN_OBJECT:
+				return "NOT_AN_OBJECT";
+			case ConverterErrorType.EXCEPTION_OCCURRED:
+				return "EXCEPTION_OCCURRED";
 			default:
 				debugger;
 				return "unknown";
@@ -453,7 +457,6 @@ export class TSConverter {
 	 * @param errors - List of parsing errors
 	 * @param context - context that is provided along with all the decoding operation
 	 * @param optional - set to true if the parameter is optional (if optional, the parameter might be missing)
-	 * @param constructed - set to true if the parameter is constructed (optional inside of another sequence) (if optional, the parameter might be missing)
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
 	public static validateParam(
@@ -462,8 +465,7 @@ export class TSConverter {
 		expectedType: "boolean" | "number" | "object" | "string" | "Uint8Array" | "Date" | "null",
 		errors?: ConverterErrors,
 		context?: IDecodeContext | IEncodeContext,
-		optional?: boolean,
-		constructed?: boolean
+		optional?: boolean
 	): boolean {
 		try {
 			if (
@@ -505,12 +507,7 @@ export class TSConverter {
 				return false;
 			}
 
-			let	property = (data as Record<string, unknown>)[propertyName];
-			if (constructed)
-			{
-				// If constructed the element we are searching for is inside a sequence
-				property = (property as Record<string, unknown>)[propertyName];
-			}
+			const property = (data as Record<string, unknown>)[propertyName];
 			if (property === undefined || property === null) {
 				if (property === null && expectedType === "null")
 					return true;

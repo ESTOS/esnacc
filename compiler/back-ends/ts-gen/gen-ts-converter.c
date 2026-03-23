@@ -743,14 +743,14 @@ void Print_BER_EncoderValidateProperty(FILE* src, ModuleList* mods, Module* m, e
 	if (type != BASICTYPE_EXTENSION)
 	{
 		const bool bOptional = e->type->optional;
-		const bool bImplicit = e->type->implicit;
+		// const bool bImplicit = e->type->implicit;
 		int iOptionalID = -1;
 		if (bOptional)
 			iOptionalID = GetContextID(e->type);
-		const bool bExplicit = bOptional && !bImplicit && iOptionalID >= 0;
+		// const bool bExplicit = bOptional && !bImplicit && iOptionalID >= 0;
 
 		const char* szOptional = bOptional ? ", true" : "";
-		const char* szConstructed = bExplicit ? ", true" : "";
+		// const char* szConstructed = bExplicit ? ", true" : "";
 
 		char szOptionalParam[128] = {0};
 		if (bOptional)
@@ -771,14 +771,14 @@ void Print_BER_EncoderValidateProperty(FILE* src, ModuleList* mods, Module* m, e
 			case BASICTYPE_REAL:
 			case BASICTYPE_ENUMERATED:
 			case BASICTYPE_ANY:
-				fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"%s\", errors, newContext%s%s);\n", szIndent, szFieldName, GetJSONType(type), szOptional, szConstructed);
+				fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"%s\", errors, newContext%s);\n", szIndent, szFieldName, GetJSONType(type), szOptional);
 				break;
 			case BASICTYPE_OCTETSTRING:
 			case BASICTYPE_OCTETCONTAINING:
-				fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"Uint8Array\", errors, newContext%s%s);\n", szIndent, szFieldName, szOptional, szConstructed);
+				fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"Uint8Array\", errors, newContext%s);\n", szIndent, szFieldName, szOptional);
 				break;
 			case BASICTYPE_ASNSYSTEMTIME:
-				fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"Date\", errors, newContext%s%s);\n", szIndent, szFieldName, szOptional, szConstructed);
+				fprintf(src, "%sTSConverter.validateParam(s, \"%s\", \"Date\", errors, newContext%s);\n", szIndent, szFieldName, szOptional);
 				break;
 			case BASICTYPE_LOCALTYPEREF:
 			case BASICTYPE_IMPORTTYPEREF:

@@ -844,6 +844,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			...(context.bAddOperationName && { operationName }),
 		});
 
+		// The encoding is provided by the context or we try to gather it via the connectionID
 		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
 		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
 
