@@ -8,7 +8,8 @@
 import { ASN1ClassInstanceType } from "./TSASN1Base.js";
 import { IWebSocketOptions, TSASN1Client } from "./TSASN1Client.js";
 import { EASN1TransportEncoding } from "./TSInvokeContext.js";
-import { ELogSeverity, IConnectionSocket, ISocketCloseEvent, ISocketConnectedEvent, ISocketErrorEvent, ISocketMessageEvent } from "./TSROSEBase";
+import { ELogSeverity, IConnectionSocket, ISocketCloseEvent, ISocketConnectedEvent, ISocketErrorEvent, ISocketMessageEvent } from "./TSROSEBase.js";
+
 /**
  * The ASN1 client side as required in the browser (different websocket and timer)
  */
@@ -29,6 +30,9 @@ export class TSASN1BrowserClient extends TSASN1Client {
 		this.onerror = this.onerror.bind(this);
 		this.onmessage = this.onmessage.bind(this);
 		this.onconnected = this.onconnected.bind(this);
+		this.send = this.send.bind(this);
+		this.close = this.close.bind(this);
+		this.clientReconnect = this.clientReconnect.bind(this);
 	}
 
 	/**
