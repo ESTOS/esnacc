@@ -72,8 +72,8 @@ export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 		if (this.connectionhandler && data.invokeContext.clientConnectionID) {
 			const client = this.connectionhandler.getClientConnection(data.invokeContext.clientConnectionID);
 			if (client) {
-				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
-				client.send(encoded.payLoad);
+				const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
+				client.send(encodeResult.payLoad);
 				return true;
 			}
 		}
@@ -175,10 +175,10 @@ export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 					this.pendingInvokes.set(id, pending);
 					resolveUndefined = false;
 				}
-				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
+				const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 
-				this.logTransport(encoded.logData, "sendInvoke", "out", data.invokeContext);
-				if (!client.send(encoded.payLoad)) {
+				this.logTransport(encodeResult.logData, "sendInvoke", "out", data.invokeContext);
+				if (!client.send(encodeResult.payLoad)) {
 					const msg = new ROSEMessage();
 					msg.reject = {
 						invokedID: { invokedID: data.invoke.invokeID },

@@ -83,10 +83,8 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	 * Disconnects from the server
 	 */
 	public override async disconnect(): Promise<void> {
-		if (this.ws) {
-			this.addLogEntry(`${this.getTime()} disconnecting...`, "color:darkgray");
-			await super.disconnect(true);
-		}
+		this.addLogEntry(`${this.getTime()} disconnecting...`, "color:darkgray");
+		await super.disconnect(true);
 	}
 
 	/**

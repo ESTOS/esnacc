@@ -65,8 +65,8 @@ export interface ISocketCloseEvent {
 }
 
 export interface ISocketErrorEvent {
-	error: unknown;
-	message: string;
+	error?: unknown;
+	message?: string;
 	type?: string;
 	source: IOriginalSocket;
 }

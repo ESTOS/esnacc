@@ -453,15 +453,17 @@ export class TSConverter {
 	 * @param errors - List of parsing errors
 	 * @param context - context that is provided along with all the decoding operation
 	 * @param optional - set to true if the parameter is optional (if optional, the parameter might be missing)
+	 * @param constructed - set to true if the parameter is constructed (optional inside of another sequence) (if optional, the parameter might be missing)
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
 	public static validateParam(
 		data: object,
 		propertyName: string,
-		expectedType: "boolean" | "number" | "string" | "Date" | "Uint8Array" | "object" | "null",
+		expectedType: "boolean" | "number" | "object" | "string" | "Uint8Array" | "Date" | "null",
 		errors?: ConverterErrors,
 		context?: IDecodeContext | IEncodeContext,
 		optional?: boolean,
+		constructed?: boolean
 	): boolean {
 		try {
 			if (
@@ -492,6 +494,7 @@ export class TSConverter {
 				}
 				return false;
 			}
+
 			if (!Object.prototype.hasOwnProperty.call(data, propertyName)) {
 				if (errors && !(optional === true)) {
 					const location = context?.context ? context.context + "::" : "";
@@ -502,7 +505,12 @@ export class TSConverter {
 				return false;
 			}
 
-			const property = (data as Record<string, unknown>)[propertyName];
+			let	property = (data as Record<string, unknown>)[propertyName];
+			if (constructed)
+			{
+				// If constructed the element we are searching for is inside a sequence
+				property = (property as Record<string, unknown>)[propertyName];
+			}
 			if (property === undefined || property === null) {
 				if (property === null && expectedType === "null")
 					return true;

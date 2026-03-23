@@ -36,6 +36,7 @@ export default defineConfig(({ command, mode }) => {
 			host: "0.0.0.0",
 			open: dnsName,
 			https: useTLS ? { key: readFileSync(sslKeyPath), cert: readFileSync(sslCertPath) } : false,
+			allowedHosts: true
 		},
 		build: {
 			rollupOptions: {
