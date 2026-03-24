@@ -7,8 +7,8 @@
 
 import * as asn1ts from "@estos/asn1ts";
 import { IncomingHttpHeaders } from "node:http";
-import * as ENetUC_Common from "./ENetUC_Common";
-import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter.js";
 import {
 	InvokeProblemenum,
 	RejectProblem,
@@ -19,21 +19,21 @@ import {
 	ROSERejectChoice,
 	ROSEResult,
 	ROSEResultSeq,
-} from "./SNACCROSE";
-import { ROSEMessage_Converter } from "./SNACCROSE_Converter";
-import { ConverterErrors, DecodeContext, EncodeContext, IConverter, IEncodeContext } from "./TSConverterBase";
+} from "./SNACCROSE.js";
+import { ROSEMessage_Converter } from "./SNACCROSE_Converter.js";
+import { ConverterErrors, DecodeContext, EncodeContext, IConverter, IEncodeContext } from "./TSConverterBase.js";
 import {
 	EASN1TransportEncoding,
 	IInvokeContextBaseParams,
 	IReceiveInvokeContextParams,
 	ISendInvokeContextParams,
-} from "./TSInvokeContext";
+} from "./TSInvokeContext.js";
 
 /**
- * The websocket is different between the node and the browser implemenation, thus we cast it to any
+ * The socket might be a node or browser websocket or a node raw tcp socket, thus we cast it to any
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type IOriginalWebSocket = any;
+type IOriginalSocket = any;
 
 // Special Custom Invoke Problems for internal usage (used in Error Responses)
 export enum CustomInvokeProblemEnum {
@@ -45,57 +45,69 @@ export enum CustomInvokeProblemEnum {
 	requestTimedOut = 504,
 	// HTTP - internal error (e.g. if we fail after parsing the argument)
 	internalError = 500,
+	// We try to send a message which is too big to send it
+	// Technically this can happen e.g. with JSON encoding and TCP transport if the message does not fit into the length framing header
+	messageTooBig = 501,
+	// The stub received an empty ROSEreject without details.
+	emptyRejectMessage = 502,
 }
 
 /**
- * As the websocket implementation in node and the browser differ we need an abstraction layer that
- * fullfills both sides and is implemented according the native websocket implementation in TSASN1BrowserClient or TSASN1NodeClient
+ * As the socket implementations are different in websocket for browser and node and a node tcp socket so need an abstraction layer that
+ * fullfills all sides and is implemented according the native websocket/socket implementation in TSASN1BrowserClient or TSASN1NodeClient
  * Encapsulates methods and events for both sides.
  */
-export interface IDualWebSocketCloseEvent {
-	code: number;
+export interface ISocketCloseEvent {
+	code?: number;
 	wasClean: boolean;
-	reason: string;
-	target: IOriginalWebSocket;
+	reason?: string;
+	source: IOriginalSocket;
 }
 
-export interface IDualWebSocketErrorEvent {
-	error: unknown;
-	message: string;
-	type: string;
-	target: IOriginalWebSocket;
+export interface ISocketErrorEvent {
+	error?: unknown;
+	message?: string;
+	type?: string;
+	source: IOriginalSocket;
 }
 
-export interface IDualWebSocketMessageEvent {
-	data: string | Uint8Array;
-	type: string;
-	target: IOriginalWebSocket;
+export interface ISocketMessageEvent {
+	data: Uint8Array | object;
+	type?: string;
+	source: IOriginalSocket;
 }
 
-export interface IDualWebSocketOpenEvent {
-	target: IOriginalWebSocket;
+export interface ISocketConnectedEvent {
+	type?: string;
+	source: IOriginalSocket;
 }
 
-export enum EDualWebSocketState {
+export enum ESocketState {
 	CONNECTING = 0,
 	OPEN = 1,
 	CLOSING = 2,
 	CLOSED = 3,
 }
 
-export interface IDualWebSocket {
-	readyState: EDualWebSocketState;
-	onclose: ((ev: IDualWebSocketCloseEvent) => void) | null;
-	onerror: ((ev: IDualWebSocketErrorEvent) => void) | null;
-	onmessage: ((ev: IDualWebSocketMessageEvent) => void) | null;
-	onopen: ((ev: IDualWebSocketOpenEvent) => void) | null;
+/**
+ * The IConnectionSocket is the mapping object between the different socket implementations in node and the browser
+ * It is created in getWebSocket and mapped to the appropriate callbacks, states and methods...
+ */
+export interface IConnectionSocket {
+	// Send data via the underlying socket
+	send(data: string | Uint8Array): void;
+	// Close the underlying socket
 	close(code?: number, reason?: string): void;
-	// Also supports blob but we use either string or Uint8Array internally
-	send(data: string | Uint8Array /* | Blob */): void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	addEventListener(type: string, listener?: (event: any) => unknown): void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	removeEventListener(type: string, listener?: (event: any) => unknown): void;
+	// The current state of the socket updated through the 4 notifies we handle (even if they are not subscribed)
+	readyState: ESocketState;
+	// The socket was successfully opened
+	onSocketConnected?: (ev: ISocketConnectedEvent) => void;
+	// The socket was closed
+	onSocketClose?: (ev: ISocketCloseEvent) => void;
+	// The socket is in an error state
+	onSocketError?: (ev: ISocketErrorEvent) => void;
+	// The socket has received a message (websocket = completed, net socket might be incomplete)
+	onSocketMessage?: (ev: ISocketMessageEvent) => void;
 }
 
 /**
@@ -336,7 +348,7 @@ export class AsnInvokeProblem {
  * @returns - The created AsnInvokeProblem object
  */
 export function handleRoseReject(roseReject: ROSEReject): AsnInvokeProblem {
-	let value = 0xffffffff;
+	let value: number = CustomInvokeProblemEnum.emptyRejectMessage;
 
 	if (roseReject.reject) {
 		const reject = roseReject.reject;
@@ -537,23 +549,17 @@ export function asn1Decode<T>(
 	if (invokeContext?.encoding === undefined) {
 		if (argument instanceof Uint8Array) {
 			// It's raw data from the transport -> could be anything let's check JSON first if the first char is a { or [ afterwards BER
-			if (argument[0] === 123 || argument[0] === 91) {
-				// This could be JSON but may also be BER
-				jsonData = argument.toString();
+			if (argument[0] === 123 || argument[0] === 91)
+				jsonData = new TextDecoder().decode(argument);
+			else
 				berData = argument;
-			}
-			else {
-				berData = argument;
-			}
-		}
-		else if (typeof argument === "string")
+		} else if (typeof argument === "string")
 			jsonData = argument;
 		else if (argument instanceof asn1ts.Sequence) {
 			// If this is an encapsulated object we need to use the raw data.
 			// The encapsulated uses a certain scheme and we need to validate that scheme against the data we received
 			berData = argument.valueBeforeDecodeView;
-		}
-		else if (typeof argument === "object")
+		} else if (typeof argument === "object")
 			jsonData = argument;
 		else
 			debugger;
@@ -563,20 +569,17 @@ export function asn1Decode<T>(
 			jsonData = jsonData.substring(1, jsonData.length - 1);
 		else if (Array.isArray(jsonData) && jsonData.length === 1)
 			jsonData = jsonData[0] as object;
-	}
-	else if (invokeContext.encoding === EASN1TransportEncoding.BER) {
+	} else if (invokeContext.encoding === EASN1TransportEncoding.BER) {
 		if (argument instanceof Uint8Array)
 			berData = argument;
 		else if (argument instanceof asn1ts.Sequence) {
 			// If this is an encapsulated object we need to use the raw data.
 			// The encapsulated uses a certain scheme and we need to validate that scheme against the data we received
 			berData = argument.valueBeforeDecodeView;
-		}
-		else {
+		} else {
 			debugger;
 		}
-	}
-	else if (invokeContext.encoding === EASN1TransportEncoding.JSON) {
+	} else if (invokeContext.encoding === EASN1TransportEncoding.JSON) {
 		if (argument instanceof Uint8Array)
 			jsonData = argument.toString();
 		else {
@@ -790,8 +793,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				invokeID: invoke.invokeID,
 				result: new ROSEResultSeq({ resultValue: 0, result: encoded }),
 			});
-		}
-		else {
+		} else {
 			const payLoad = ROSEBase.getDebugPayload(invokeResult as object);
 			const diagnostic = converterErrors.getDiagnostic();
 			this.transport.log(ELogSeverity.error, "Could not encode result", "createROSEResult", this, {
@@ -842,6 +844,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			...(context.bAddOperationName && { operationName }),
 		});
 
+		// The encoding is provided by the context or we try to gather it via the connectionID
 		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
 		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
 
@@ -956,12 +959,10 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			if (result) {
 				this.transport.logResult(method, this, result, context, false);
 				return result;
-			}
-			else {
+			} else {
 				payLoad = ROSEBase.getDebugPayload(roseResult.result.result);
 			}
-		}
-		else if (roseResult instanceof ROSEError && roseResult.error) {
+		} else if (roseResult instanceof ROSEError && roseResult.error) {
 			const error = asn1Decode<U>(
 				roseResult.error,
 				errorConverter,
@@ -972,16 +973,13 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			if (error) {
 				this.transport.logError(method, this, error, argument, context, false);
 				return error;
-			}
-			else {
+			} else {
 				payLoad = ROSEBase.getDebugPayload(roseResult.error);
 			}
-		}
-		else if (roseResult instanceof ROSEReject) {
+		} else if (roseResult instanceof ROSEReject) {
 			this.transport.logReject(method, this, roseResult, argument, context, false);
 			return handleRoseReject(roseResult);
-		}
-		else if (roseResult) {
+		} else if (roseResult) {
 			payLoad = ROSEBase.getDebugPayload(roseResult);
 		}
 
@@ -1042,16 +1040,14 @@ export abstract class ROSEBase implements IASN1LogCallback {
 					handler.setLogContext(argument, invokeContext);
 				method(argument, invokeContext);
 				return undefined;
-			}
-			else {
+			} else {
 				result = createInvokeReject(
 					invoke,
 					InvokeProblemenum.unrecognisedOperation,
 					`${operationName} is not implemented`,
 				);
 			}
-		}
-		else {
+		} else {
 			const diagnostic = converterErrors.getDiagnostic();
 			const payLoad = ROSEBase.getDebugPayload(invoke.argument);
 			this.transport.log(ELogSeverity.error, "Could not decode OnEvent argument", methodName, this, {
@@ -1129,8 +1125,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 					`${operationName} is not implemented`,
 				);
 			}
-		}
-		else {
+		} else {
 			const diagnostic = converterErrors.getDiagnostic();
 			const payLoad = ROSEBase.getDebugPayload(invoke.argument);
 			this.transport.log(ELogSeverity.error, "Could not decode OnInvoke argument", methodName, this, {
@@ -1168,16 +1163,13 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		let payLoad: Uint8Array | string;
 		// Contains the encoded data for logging
 		let logData: Uint8Array | object;
-
 		if (data instanceof asn1ts.Sequence) {
 			payLoad = new Uint8Array(data.toBER());
 			logData = payLoad;
-		}
-		else {
+		} else {
 			payLoad = JSON.stringify(data, null, encodeContext.bPrettyPrint ? "\t" : undefined);
 			logData = data;
 		}
-
 		return { payLoad, logData };
 	}
 

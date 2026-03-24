@@ -97,7 +97,7 @@ typedef enum BER_FORM
 	ANY_FORM = -2,
 	NULL_FORM = -1,
 	PRIM = 0,
-	CONS = (1 << 5)
+	CONS = (1 << 5) // 32 or 0x20
 } BER_FORM;
 
 typedef enum BER_UNIV_CODE

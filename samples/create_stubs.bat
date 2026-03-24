@@ -1,29 +1,34 @@
 @echo off
 
-rem This batch compiles the asn1 sample interface all the samples
-SET NODEVERSION=22
+SET NODEVERSION=24
+SET COMPILER=
 
-rem resolve the binary path the compiler should be build into
-SET COMPILERPATH=%CD%\..\output\bin
-IF NOT EXIST %COMPILERPATH% GOTO error
-PUSHD %COMPILERPATH%
-SET COMPILERPATH=%CD%
-POPD
-SET PATH=%PATH%;%COMPILERPATH%
+echo Searching for esnacc executable in output directory
+SET PATH=%PATH%;%CD%\..\output\bin\
+where esnaccd.exe 2>nul
+IF %ERRORLEVEL% == 0 SET COMPILER=esnaccd.exe
+IF NOT "%COMPILER%" == "" GOTO start
+where esnacc.exe 2>nul
+IF %ERRORLEVEL% == 0 SET COMPILER=esnacc.exe
+IF NOT "%COMPILER%" == "" GOTO start
 
-rem resolve the compiler inside the binary path
-IF EXIST %COMPILERPATH%\esnaccd.exe SET COMPILER=esnaccd.exe
-IF EXIST %COMPILERPATH%\esnacc.exe SET COMPILER=esnacc.exe
-IF "%COMPILER%" == "" GOTO error
-echo Using %COMPILER% as compiler...
-echo.
+echo Searching for esnacc executable in global buildtools
+SET PATH=%PATH%;%CD%\..\..\..\buildtools\
+where esnacc7.exe 2>nul
+IF %ERRORLEVEL% == 0 SET COMPILER=esnacc7.exe
+IF NOT "%COMPILER%" == "" GOTO start
+
+echo Could not find esnaccd.exe or esnacc.exe, please build the compiler first
+goto end
+
+:start
 
 set FILES=%CD%\interface\*.asn1
 
 rem Building browser client stubs...
 echo Building browser client stubs...
 PUSHD ts-microservice\client\src\stub
-SET COMMAND=-JT -j -RTS_CLIENT_BROWSER -node:%NODEVERSION% -comments -versionfile %FILES%
+SET COMMAND=-JTE -j -RTS_CLIENT_BROWSER -node:%NODEVERSION% -comments -versionfile %FILES%
 echo %COMPILER% %COMMAND%
 %COMPILER% %COMMAND%
 echo.
@@ -57,15 +62,6 @@ echo.
 if NOT %ERRORLEVEL% == 0 echo Build has failed, check console...>&2
 POPD
 
-
-
-
 echo finished...
-GOTO end
-
-:error
-ECHO Could not find esnacc compiler executable in this folder %COMPILERPATH%
-ECHO You need to build the compiler using cmake 
-ECHO Check the top readme.md how to build the compiler
-
 :end
+timeout /t 10

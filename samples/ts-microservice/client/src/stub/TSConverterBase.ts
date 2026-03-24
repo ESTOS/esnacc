@@ -53,6 +53,10 @@ export class ConverterError {
 				return "PROPERTY_NULLORUNDEFINED";
 			case ConverterErrorType.PROPERTY_TYPEMISMATCH:
 				return "PROPERTY_TYPEMISMATCH";
+			case ConverterErrorType.NOT_AN_OBJECT:
+				return "NOT_AN_OBJECT";
+			case ConverterErrorType.EXCEPTION_OCCURRED:
+				return "EXCEPTION_OCCURRED";
 			default:
 				debugger;
 				return "unknown";
@@ -247,8 +251,7 @@ export class ConverterErrors extends Array<ConverterError> {
 			bSuccess = encodeContext.bLaxEncoding;
 			if (!bSuccess && context.root)
 				this.unshift(new ConverterError(undefined, undefined, `Errors while encoding ${objectName}`));
-		}
-		else {
+		} else {
 			// We are decoding
 			const decodingContext = context as unknown as IDecodeContext;
 			bSuccess = decodingContext.bLaxDecoding;
@@ -317,8 +320,7 @@ export class TSConverter {
 			errors.push(
 				new ConverterError(ConverterErrorType.PROPERTY_MISSING, context.context + "::" + name, "property missing"),
 			);
-		}
-		else {
+		} else {
 			errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, name, "property missing"));
 		}
 	}
@@ -359,8 +361,7 @@ export class TSConverter {
 			if (!optional)
 				errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, context.context, "property missing"));
 			return undefined;
-		}
-		else {
+		} else {
 			if (typeof data === "string") {
 				try {
 					// UCWeb creates an array envelop which is technically wrong so we need to remove that here
@@ -368,16 +369,14 @@ export class TSConverter {
 					if (data.startsWith("["))
 						data = data.substring(1, data.length - 1);
 					result = JSON.parse(data) as T;
-				}
-				catch (error) {
+				} catch (error) {
 					let message = "Could not json parse - ";
 					if (error instanceof SyntaxError)
 						message += error.message;
 					errors.push(new ConverterError(ConverterErrorType.PROPERTY_NULLORUNDEFINED, context.context, message));
 					return undefined;
 				}
-			}
-			else {
+			} else {
 				result = data as T;
 			}
 		}
@@ -405,8 +404,7 @@ export class TSConverter {
 			if (!optional)
 				errors.push(new ConverterError(ConverterErrorType.PROPERTY_MISSING, context.context, "property missing"));
 			return undefined;
-		}
-		else {
+		} else {
 			if (data instanceof Uint8Array) {
 				try {
 					const schema = getschema();
@@ -438,8 +436,7 @@ export class TSConverter {
 						return undefined;
 					}
 					return result.result;
-				}
-				catch (error) {
+				} catch (error) {
 					let message = "Could not json asnjs ber data - ";
 					if (error instanceof SyntaxError)
 						message += error.message;
@@ -465,10 +462,10 @@ export class TSConverter {
 	public static validateParam(
 		data: object,
 		propertyName: string,
-		expectedType: "boolean" | "number" | "string" | "Date" | "Uint8Array" | "object" | "null",
+		expectedType: "boolean" | "number" | "object" | "string" | "Uint8Array" | "Date" | "null",
 		errors?: ConverterErrors,
 		context?: IDecodeContext | IEncodeContext,
-		optional?: boolean,
+		optional?: boolean
 	): boolean {
 		try {
 			if (
@@ -487,8 +484,7 @@ export class TSConverter {
 								`data type is null but expected an object`,
 							),
 						);
-					}
-					else {
+					} else {
 						errors.push(
 							new ConverterError(
 								ConverterErrorType.NOT_AN_OBJECT,
@@ -500,6 +496,7 @@ export class TSConverter {
 				}
 				return false;
 			}
+
 			if (!Object.prototype.hasOwnProperty.call(data, propertyName)) {
 				if (errors && !(optional === true)) {
 					const location = context?.context ? context.context + "::" : "";
@@ -547,8 +544,7 @@ export class TSConverter {
 					),
 				);
 			}
-		}
-		catch (error) {
+		} catch (error) {
 			if (errors) {
 				const location = context?.context ? context.context + "::" : "";
 				errors.push(
@@ -611,6 +607,7 @@ export class TSConverter {
 	 * @param errors - List of parsing errors
 	 * @param context - context that is provided along with all the decoding operation
 	 * @param optional - set to true if the parameter is optional (if optional, the parameter might be missing)
+	 * @param constructed - set to true if the parameter is constructed (optional burried inside a sequence)
 	 * @returns - true if the parameter in object data meets the expectations, or false other cases
 	 */
 	public static fillASN1Param(
@@ -631,42 +628,50 @@ export class TSConverter {
 		errors: ConverterErrors,
 		context: DecodeContext,
 		optional?: boolean,
+		constructed?: boolean
 	): boolean {
-		let value: unknown;
-		if (expectedType === "Boolean")
-			value = d.getTypedValueByName(asn1ts.Boolean, propertyName)?.getValue();
-		else if (expectedType === "Enumerated")
-			value = d.getTypedValueByName(asn1ts.Enumerated, propertyName)?.getValue();
-		else if (expectedType === "Integer")
-			value = d.getTypedValueByName(asn1ts.Integer, propertyName)?.getValue();
-		else if (expectedType === "Utf8String")
-			value = d.getTypedValueByName(asn1ts.Utf8String, propertyName)?.getValue();
-		else if (expectedType === "Real")
-			value = d.getTypedValueByName(asn1ts.Real, propertyName)?.getValue();
-		else if (expectedType === "Sequence")
-			value = d.getTypedValueByName(asn1ts.Sequence, propertyName)?.getValue();
-		else if (expectedType === "AsnSystemTime") {
-			value = d.getTypedValueByName(asn1ts.Real, propertyName)?.getValue();
-			if (value !== undefined)
-				value = TSConverter.getDateTimeFromVariantTime(value as number);
-		}
-		else if (expectedType === "Any")
-			value = d.getValueByName(propertyName);
-		else if (expectedType === "Null")
-			value = d.getTypedValueByName(asn1ts.Null, propertyName)?.getValue();
-		else {
-			errors.push(
-				new ConverterError(
-					ConverterErrorType.PROPERTY_TYPEMISMATCH,
-					context.context + "::" + propertyName,
-					`Unsupported data type ${expectedType}`,
-				),
-			);
-			return false;
-		}
-		if (value !== undefined) {
-			(target as Record<string, unknown>)[propertyName] = value;
-			return true;
+		let s: asn1ts.Sequence | undefined = d;
+		// If the value is constructed we need to dig into it (explicit optional)
+		if(constructed)
+			s = d.getTypedValueByName(asn1ts.Sequence, propertyName);
+
+		if (s)
+		{
+			let value: unknown;
+			if (expectedType === "Boolean")
+				value = s.getTypedValueByName(asn1ts.Boolean, propertyName)?.getValue();
+			else if (expectedType === "Enumerated")
+				value = s.getTypedValueByName(asn1ts.Enumerated, propertyName)?.getValue();
+			else if (expectedType === "Integer")
+				value = s.getTypedValueByName(asn1ts.Integer, propertyName)?.getValue();
+			else if (expectedType === "Utf8String")
+				value = s.getTypedValueByName(asn1ts.Utf8String, propertyName)?.getValue();
+			else if (expectedType === "Real")
+				value = s.getTypedValueByName(asn1ts.Real, propertyName)?.getValue();
+			else if (expectedType === "Sequence")
+				value = s.getTypedValueByName(asn1ts.Sequence, propertyName)?.getValue();
+			else if (expectedType === "AsnSystemTime") {
+				value = s.getTypedValueByName(asn1ts.Real, propertyName)?.getValue();
+				if (value !== undefined)
+					value = TSConverter.getDateTimeFromVariantTime(value as number);
+			} else if (expectedType === "Any")
+				value = s.getValueByName(propertyName);
+			else if (expectedType === "Null")
+				value = s.getTypedValueByName(asn1ts.Null, propertyName)?.getValue();
+			else {
+				errors.push(
+					new ConverterError(
+						ConverterErrorType.PROPERTY_TYPEMISMATCH,
+						context.context + "::" + propertyName,
+						`Unsupported data type ${expectedType}`,
+					),
+				);
+				return false;
+			}
+			if (value !== undefined) {
+				(target as Record<string, unknown>)[propertyName] = value;
+				return true;
+			}
 		}
 		if (!optional) {
 			if (d.getValueByName(propertyName)) {
@@ -677,8 +682,7 @@ export class TSConverter {
 						"property is of the wrong type",
 					),
 				);
-			}
-			else {
+			} else {
 				errors.push(
 					new ConverterError(
 						ConverterErrorType.PROPERTY_MISSING,
@@ -717,20 +721,16 @@ export class TSConverter {
 					new ConverterError(ConverterErrorType.PROPERTY_MISSING, location + propertyName, "property missing"),
 				);
 			}
-		}
-		else if (expectedType === "Uint8Array") {
+		} else if (expectedType === "Uint8Array") {
 			if (property instanceof Uint8Array)
 				return true;
-		}
-		else if (expectedType === "Date") {
+		} else if (expectedType === "Date") {
 			if (property instanceof Date)
 				return true;
-		}
-		else if (expectedType === "null") {
+		} else if (expectedType === "null") {
 			if (typeof property === "object")
 				return true;
-		}
-		else if (typeof property === expectedType) {
+		} else if (typeof property === expectedType) {
 			return true;
 		}
 
@@ -774,8 +774,7 @@ export class TSConverter {
 					);
 				}
 			}
-		}
-		else {
+		} else {
 			const property = (data as never)[propertyName];
 			if (property == null) {
 				if (errors) {
@@ -788,8 +787,7 @@ export class TSConverter {
 						),
 					);
 				}
-			}
-			else {
+			} else {
 				const type = typeof property;
 				if (type === "boolean" || type === "number" || type === "object" || type === "string")
 					return this.validateParam(data, propertyName, type, errors, context, optional);
@@ -863,8 +861,7 @@ export class TSConverter {
 						),
 					);
 				}
-			}
-			else if (typeof datanever[propertyName] !== expectedType) {
+			} else if (typeof datanever[propertyName] !== expectedType) {
 				if (errors) {
 					const location = context?.context ? context.context + "::" : "";
 					errors.push(
@@ -875,8 +872,7 @@ export class TSConverter {
 						),
 					);
 				}
-			}
-			else {
+			} else {
 				return true;
 			}
 		}
@@ -1023,8 +1019,7 @@ export class TSConverter {
 				if (a !== undefined && b !== undefined)
 					base64data += a + b;
 			}
-		}
-		else if (padding === 2) {
+		} else if (padding === 2) {
 			const data1 = binarydata[datalength];
 			const data2 = binarydata[datalength + 1];
 			if (data1 !== undefined && data2 !== undefined) {

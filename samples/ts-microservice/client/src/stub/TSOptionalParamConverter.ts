@@ -5,7 +5,7 @@
 // dprint-ignore-file
 /* eslint-disable */
 
-import * as ENetUC_Common from "./ENetUC_Common";
+import * as ENetUC_Common from "./ENetUC_Common.js";
 import {
 	ConverterError,
 	ConverterErrors,
@@ -14,7 +14,7 @@ import {
 	EncodeContext,
 	INamedType,
 	TSConverter,
-} from "./TSConverterBase";
+} from "./TSConverterBase.js";
 
 /**
  * Sadly someone added custom written encoders decoders for the custom parameters in the UCServer
@@ -137,8 +137,7 @@ export class EAsnOptionalParametersConverter {
 					obj.push(
 						new ENetUC_Common.AsnOptionalParam({ key, value: { binarydata: TSConverter.decode64(value.binarydata) } }),
 					);
-				}
-				else {
+				} else {
 					errors.push(
 						new ConverterError(
 							ConverterErrorType.PROPERTY_TYPEMISMATCH,

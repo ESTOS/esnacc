@@ -5,9 +5,9 @@
 // dprint-ignore-file
 /* eslint-disable */
 
-import { InvokeProblemenum, ROSEError, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
-import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base";
-import { EASN1TransportEncoding } from "./TSInvokeContext";
+import { InvokeProblemenum, ROSEError, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE.js";
+import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base.js";
+import { EASN1TransportEncoding } from "./TSInvokeContext.js";
 import {
 	createInvokeReject,
 	CustomInvokeProblemEnum,
@@ -16,7 +16,7 @@ import {
 	IASN1Transport,
 	ReceiveInvokeContext,
 	ROSEBase,
-} from "./TSROSEBase";
+} from "./TSROSEBase.js";
 
 /**
  * Interface a client connection object has to provide to be able to send an event based on the id of a client to this client
@@ -72,8 +72,8 @@ export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 		if (this.connectionhandler && data.invokeContext.clientConnectionID) {
 			const client = this.connectionhandler.getClientConnection(data.invokeContext.clientConnectionID);
 			if (client) {
-				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
-				client.send(encoded.payLoad);
+				const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
+				client.send(encodeResult.payLoad);
 				return true;
 			}
 		}
@@ -175,10 +175,10 @@ export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 					this.pendingInvokes.set(id, pending);
 					resolveUndefined = false;
 				}
-				const encoded = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
+				const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 
-				this.logTransport(encoded.logData, "sendInvoke", "out", data.invokeContext);
-				if (!client.send(encoded.payLoad)) {
+				this.logTransport(encodeResult.logData, "sendInvoke", "out", data.invokeContext);
+				if (!client.send(encodeResult.payLoad)) {
 					const msg = new ROSEMessage();
 					msg.reject = {
 						invokedID: { invokedID: data.invoke.invokeID },
