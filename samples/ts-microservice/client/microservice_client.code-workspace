@@ -5,7 +5,6 @@
 		}
 	],
 	"settings": {
-		"typescript.tsdk": "./node_modules/typescript/lib",
-		"eslint.debug": false
+		"js/ts.tsdk.path": "./node_modules/typescript/lib"
 	}
 }

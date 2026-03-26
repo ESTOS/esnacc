@@ -1,3 +1,5 @@
+// eslint-disable
+
 import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 import { defineConfig, loadEnv } from "vite";
@@ -23,8 +25,7 @@ export default defineConfig(({ command, mode }) => {
 		dnsName = "https://" + dnsName;
 		if (port !== 443)
 			dnsName += ":" + port;
-	}
-	else {
+	} else {
 		dnsName = "http://" + dnsName;
 		if (port !== 80)
 			dnsName += ":" + port;
@@ -36,7 +37,7 @@ export default defineConfig(({ command, mode }) => {
 			host: "0.0.0.0",
 			open: dnsName,
 			https: useTLS ? { key: readFileSync(sslKeyPath), cert: readFileSync(sslCertPath) } : false,
-			allowedHosts: true
+			allowedHosts: true,
 		},
 		build: {
 			rollupOptions: {

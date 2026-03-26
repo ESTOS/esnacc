@@ -164,21 +164,4 @@ export class Common {
 		(console as Console).error({ code, text });
 		process.exit(code);
 	}
-
-	/**
-	 * Helper method to overcome a certain typescript error
-	 *
-	 * You have a class property in method that is nulled/undefined at the beginning and filled at the end
-	 * In between you have async await methods.
-	 * If you undefine it at the beginning the typescript compiler assumes that it is filled at the end, but
-	 * due to the await it´s not guaranteed if you call the method multiple times at ones.
-	 *
-	 * So we use this method to check whether the object is really filled or not
-	 *
-	 * @param element - the element to check
-	 * @returns - true if element is defined, otherwise false
-	 */
-	public static getDefined<T>(element: T | undefined, className: { new(...args: any[]): T; }): T | undefined {
-		return element;
-	}
 }

@@ -332,8 +332,7 @@ export class ClientConnection extends EventEmitter implements IClientConnection 
 					}
 				}
 			}
-		}
-		catch (err) {
+		} catch (err) {
 			theLogger.error("exception theServer.receive", "wsClientMessage", this, undefined, err);
 		}
 	}

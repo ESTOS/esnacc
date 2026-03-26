@@ -47,8 +47,7 @@ class RestSample implements IEModule {
 							"Content-Length": response.payLoad.length,
 						});
 						res.end(response.payLoad, "ascii");
-					}
-					else {
+					} else {
 						res.writeHead(response.httpStatusCode, {
 							"Content-Type": "application/octet-stream",
 							"Content-Length": response.payLoad.length,
@@ -56,8 +55,7 @@ class RestSample implements IEModule {
 						res.end(response.payLoad, "binary");
 					}
 				}
-			}
-			catch (error) {
+			} catch (error) {
 				debugger;
 				theLogger.error("exception", "restRequest", this, undefined, error);
 				res.status(500).send("Catched an unhandled exception while processing request");

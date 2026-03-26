@@ -30,7 +30,8 @@
 		"strictFunctionTypes": true,
 		"strictNullChecks": true,
 		"strictPropertyInitialization": true,
-		"useUnknownInCatchVariables": true
+		"useUnknownInCatchVariables": true,
+		"types": ["node", "jest"]
 	},
 	"exclude": [
 		"**/node_modules"

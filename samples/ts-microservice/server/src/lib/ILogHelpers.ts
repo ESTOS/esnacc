@@ -110,8 +110,7 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 										result[key] = element;
 								}
 								counter++;
-							}
-							else if (counter === 20) {
+							} else if (counter === 20) {
 								result.truncated = true;
 								counter++;
 							}
@@ -127,8 +126,7 @@ function omitForLoggingInternal(obj: logany, levelstoprocess?: number, id?: stri
 		}
 
 		return result;
-	}
-	catch (error) {
+	} catch (error) {
 		console.error(error);
 		debugger;
 		return obj;

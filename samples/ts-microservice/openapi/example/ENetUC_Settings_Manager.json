@@ -145,9 +145,6 @@
 	},
 	"components": {
 		"schemas": {
-			"AsnOptionalParameters": {
-				"$ref": "ENetUC_Common.json#/components/schemas/AsnOptionalParameters"
-			},
 			"AsnRequestError": {
 				"$ref": "ENetUC_Common.json#/components/schemas/AsnRequestError"
 			},

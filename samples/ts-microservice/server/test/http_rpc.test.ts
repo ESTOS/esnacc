@@ -177,8 +177,7 @@ describe("Test HTTP Post RPC calls", () => {
 		try {
 			await theAxios.post(url, undefined, jsonHeader);
 			fail("Should not have returned successfully");
-		}
-		catch (error: unknown) {
+		} catch (error: unknown) {
 			const axiosError = error as axios.AxiosError;
 			expect(axiosError.response).toBeDefined();
 			if (axiosError.response) {
@@ -203,8 +202,7 @@ describe("Test HTTP Post RPC calls", () => {
 		try {
 			await theAxios.post(url, undefined, berHeader);
 			fail("Should not have returned successfully");
-		}
-		catch (error: unknown) {
+		} catch (error: unknown) {
 			const axiosError = error as axios.AxiosError;
 			expect(axiosError.response).toBeDefined();
 			if (axiosError.response) {

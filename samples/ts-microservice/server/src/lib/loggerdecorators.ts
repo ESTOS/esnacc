@@ -172,8 +172,7 @@ function logResult(logInternal: ILogInternal, bNoResultValues: boolean, result: 
 				reject(rej);
 			});
 		});
-	}
-	else {
+	} else {
 		const duration = Date.now() - logInternal.now;
 		if (duration > 100) {
 			const resultdata: IResultData = { callCounter: logInternal.callCounter, duration };

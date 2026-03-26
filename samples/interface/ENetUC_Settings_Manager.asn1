@@ -25,7 +25,7 @@ IMPLICIT TAGS ::=
 BEGIN
 
 IMPORTS 
-AsnOptionalParameters, AsnRequestError, AsnSystemTime FROM UC-Server-Access-Protocol-Common;
+AsnRequestError, AsnSystemTime FROM UC-Server-Access-Protocol-Common;
 
 AsnSomeSettings ::= SEQUENCE
 {

@@ -103,8 +103,7 @@ void Print_JSON_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	}
 	else
 	{
-		fprintf(src, "\t\tfor (const id in s) {\n");
-		fprintf(src, "\t\t\tconst se = s[id];\n");
+		fprintf(src, "\t\tfor (const se of s) {\n");
 		fprintf(src, "\t\t\tif (se === undefined)\n");
 		fprintf(src, "\t\t\t\tcontinue;\n");
 		if (choice == BASICTYPE_IMPORTTYPEREF)
@@ -162,15 +161,15 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	}
 	else
 	{
-		fprintf(src, "\t\tfor (const id in s) {\n");
+		fprintf(src, "\t\tfor (const se of s) {\n");
 		if (choice == BASICTYPE_IMPORTTYPEREF)
 		{
 			Module* mod = GetImportModuleRefByClassName(szTypeName, mods, m);
 			const char* szNameSpace = GetNameSpace(mod);
-			fprintf(src, "\t\t\tconst val = %s_Converter.%s_Converter.toBER(s[id], errors, newContext, \"%s\");\n", szNameSpace, szTypeName, szTypeName);
+			fprintf(src, "\t\t\tconst val = %s_Converter.%s_Converter.toBER(se, errors, newContext, \"%s\");\n", szNameSpace, szTypeName, szTypeName);
 		}
 		else if (choice == BASICTYPE_LOCALTYPEREF)
-			fprintf(src, "\t\t\tconst val = %s_Converter.toBER(s[id], errors, newContext, \"%s\");\n", szTypeName, szTypeName);
+			fprintf(src, "\t\t\tconst val = %s_Converter.toBER(se, errors, newContext, \"%s\");\n", szTypeName, szTypeName);
 		else
 			snacc_exit("invalid choice %d", choice);
 		fprintf(src, "\t\t\tif (val)\n");
@@ -242,8 +241,7 @@ void Print_JSON_DecoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	}
 	else
 	{
-		fprintf(src, "%sfor (const id in s) {\n", szIdendt);
-		fprintf(src, "%s\tconst se = s[id];\n", szIdendt);
+		fprintf(src, "%sfor (const se of s) {\n", szIdendt);
 		fprintf(src, "%s\tif (se === undefined)\n", szIdendt);
 		fprintf(src, "%s\t\tcontinue;\n", szIdendt);
 		if (seqOf->basicType->a.sequenceOf->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
@@ -1318,6 +1316,33 @@ void Print_BER_EncoderCodeStructuredType(FILE* src, ModuleList* mods, Module* m,
 	}
 }
 
+bool HasElements(const TypeDef* td)
+{
+	enum BasicTypeChoiceId choice = td->type->basicType->choiceId;
+	switch (choice)
+	{
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			return true;
+			break;
+		case BASICTYPE_CHOICE:
+			return td->type->basicType->a.choice->count ? true : false;
+			break;
+		case BASICTYPE_SEQUENCE:
+			return td->type->basicType->a.sequence->count ? true : false;
+			break;
+		case BASICTYPE_IMPORTTYPEREF:
+			return true;
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+			return true;
+			break;
+		default:
+			snacc_exit("unknown choice %d", choice);
+	}
+	return false;
+}
+
 // ********************************************************************************************************************************************
 // ********************************************************************************************************************************************
 // ********************************************************************************************************************************************
@@ -1510,11 +1535,15 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			fprintf(src, "\t\t}\n\n");
 
 			if (td->type->basicType->choiceId == BASICTYPE_CHOICE)
-				fprintf(src, "\t\tlet t: asn1ts.BaseBlock | undefined;\n");
+			{
+				if (HasElements(td))
+					fprintf(src, "\t\tlet t: asn1ts.BaseBlock | undefined;\n");
+			}
 			else
 			{
 				fprintf(src, "\t\tconst result = new asn1ts.Sequence(TSConverter.getASN1TSConstructorParams(name, optional));\n");
-				fprintf(src, "\t\tconst t = result.valueBlock.value;\n");
+				if (HasElements(td))
+					fprintf(src, "\t\tconst t = result.valueBlock.value;\n");
 			}
 
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");
