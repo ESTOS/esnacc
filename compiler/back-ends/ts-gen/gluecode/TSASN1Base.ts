@@ -154,14 +154,12 @@ export class PendingInvoke {
 	 *
 	 * @param message - The original invoke message where we are waiting for a response
 	 * @param resolve - The resolve method we call in case we receive a proper ROSE Response (Reject, Result, Error)
-	 * @param reject - The reject method - (currently not used)
 	 * @param timerID - The timerID of the timer that has been created to handle the timeout
 	 * The timer is created outside as it depends on if we are running in a browser or in node
 	 */
 	public constructor(
 		message: ROSEInvoke,
 		resolve: (value?: ROSEReject | ROSEResult | ROSEError) => void,
-		reject: (reason?: unknown) => void,
 		timerID?: ReturnType<typeof setTimeout>,
 	) {
 		this.invoke = message;

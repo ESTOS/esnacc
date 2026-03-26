@@ -60,8 +60,7 @@ const initExitHandler = function(): void {
 				const fileStream = fs.createWriteStream(heapFile);
 				snapShot.pipe(fileStream);
 				fileStream.close();
-			}
-			catch (error) {
+			} catch (error) {
 				theLogger.error("Failed to create dump", "perfomExit", exitHandler, undefined, error);
 			}
 		}
@@ -73,8 +72,7 @@ const initExitHandler = function(): void {
 		cleaned = true;
 		try {
 			await theLogger.exit();
-		}
-		catch (error) {
+		} catch (error) {
 			(console as Console).error(`Failed to flush logger ${error}`);
 		}
 	};
@@ -101,8 +99,7 @@ const initExitHandler = function(): void {
 		try {
 			await performExit(true, undefined, reason);
 			Common.exit("EXIT_CODE_UNHANDLED_EXCEPTION", CONF_EXIT_CODES.EXIT_CODE_UNHANDLED_EXCEPTION);
-		}
-		catch (error) {
+		} catch (error) {
 			theLogger.error("Unhandled rejection cleanup failed", "unhandledRejection", exitHandler, undefined, error);
 			Common.exit("EXIT_CODE_UNHANDLED_PROMISE", CONF_EXIT_CODES.EXIT_CODE_UNHANDLED_PROMISE);
 		}
@@ -131,8 +128,7 @@ const initExitHandler = function(): void {
 		try {
 			await performExit(true, error);
 			Common.exit("EXIT_CODE_UNHANDLED_EXCEPTION", CONF_EXIT_CODES.EXIT_CODE_UNHANDLED_EXCEPTION);
-		}
-		catch (error) {
+		} catch (error) {
 			theLogger.error("Unhandled rejection cleanup failed", "unhandledRejection", exitHandler, undefined, error);
 			Common.exit("EXIT_CODE_UNHANDLED_EXCEPTION", CONF_EXIT_CODES.EXIT_CODE_UNHANDLED_EXCEPTION);
 		}

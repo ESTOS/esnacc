@@ -946,6 +946,7 @@ void PrintTSComments(FILE* src, Module* m)
 
 	fprintf(src, DPRINT_DISABLE);
 	fprintf(src, ESLINT_DISABLE);
+	fprintf(src, "\n");
 
 	printModuleComment(src, RemovePath(m->baseFilePath), COMMENTSTYLE_TYPESCRIPT);
 }

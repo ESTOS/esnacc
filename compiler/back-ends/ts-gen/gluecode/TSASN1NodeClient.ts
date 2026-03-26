@@ -4,6 +4,7 @@
 
 // dprint-ignore-file
 /* eslint-disable */
+
 import net from "node:net";
 import WebSocket from "ws";
 import { ASN1ClassInstanceType } from "./TSASN1Base.js";
@@ -227,11 +228,21 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 * @param code - Close code
 	 * @param reason - Close reason
 	 */
-	private close(code?: number, reason?: string): void {
-		if (this.ws)
+	private async close(code?: number, reason?: string): Promise<void> {
+		if (this.ws) {
+			const ws = this.ws;
+			this.ws.removeAllListeners();
 			this.ws.close(code, reason);
-		else if (this.tcp)
+			this.ws = undefined;
+			await new Promise((resolve) => ws.once("close", resolve));
+		}
+		else if (this.tcp) {
+			const tcp = this.tcp;
+			this.tcp.removeAllListeners();
 			this.tcp.destroy();
+			this.tcp = undefined;
+			await new Promise((resolve) => tcp.once("close", resolve));
+		}
 	}
 
 	/**
@@ -295,13 +306,11 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 * @returns data on successs or undefined on error
 	 */
 	protected prepareData(data: string | Buffer | ArrayBuffer | Buffer[]): Uint8Array | object | undefined {
-		let rawData: Uint8Array | object | undefined;
-
 		if (typeof data === "string")
-			rawData = JSON.parse(data) as object;
+			return JSON.parse(data) as object;
 		else if (Buffer.isBuffer(data))
 			return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-		if (data instanceof ArrayBuffer)
+		else if (data instanceof ArrayBuffer)
 			return new Uint8Array(data);
 		else if (Array.isArray(data))
 			return new Uint8Array(Buffer.concat(data));
@@ -309,7 +318,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 			this.log(ELogSeverity.error, "exception", "Received unhandled data", this);
 			debugger;
 		}
-		return rawData;
+		return undefined;
 	}
 
 	/**

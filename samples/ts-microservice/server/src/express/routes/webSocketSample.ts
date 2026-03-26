@@ -38,9 +38,9 @@ class WebSocketSample extends WebSocketRoute implements IEModule {
 	 *
 	 * @param options - the verfiy context object that is handed over from the caller
 	 * @param func - the function to be called to signal that the connection is allowed or not
-	 * @returns a Promis resolving to void
+	 * pn@returns a Promis resolving to void
 	 */
-	protected async verifyClient(options: IVerifyClientOptions, func: VerifyClientFunction): Promise<void> {
+	protected verifyClient(options: IVerifyClientOptions, func: VerifyClientFunction): void {
 		func(true);
 	}
 
@@ -64,8 +64,7 @@ class WebSocketSample extends WebSocketRoute implements IEModule {
 					return true;
 				});
 			}
-		}
-		catch (error) {
+		} catch (error) {
 			theLogger.error("Upgrading connection failed", "onUpgrade", this, { request }, error);
 		}
 		return false;

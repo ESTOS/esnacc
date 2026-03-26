@@ -14,6 +14,9 @@ IF NOT "%COMPILER%" == "" GOTO start
 
 echo Searching for esnacc executable in global buildtools
 SET PATH=%PATH%;%CD%\..\..\..\buildtools\
+where esnacc7d.exe 2>nul
+IF %ERRORLEVEL% == 0 SET COMPILER=esnacc7d.exe
+IF NOT "%COMPILER%" == "" GOTO start
 where esnacc7.exe 2>nul
 IF %ERRORLEVEL% == 0 SET COMPILER=esnacc7.exe
 IF NOT "%COMPILER%" == "" GOTO start

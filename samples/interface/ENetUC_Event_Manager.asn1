@@ -24,7 +24,7 @@ IMPLICIT TAGS ::=
 BEGIN
 
 IMPORTS 
-AsnOptionalParameters, AsnRequestError FROM UC-Server-Access-Protocol-Common;
+AsnRequestError FROM UC-Server-Access-Protocol-Common;
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -- ~ FUNCTION ~~~~~~~~~~~~~~~~ asnCreateFancyEvents ~~~~~~~~~~~~~~~~~~~~~~~~

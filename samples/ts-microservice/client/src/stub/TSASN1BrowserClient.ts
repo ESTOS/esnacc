@@ -58,10 +58,10 @@ export class TSASN1BrowserClient extends TSASN1Client {
 		// Simpler reading the data from the message event.
 		this.ws.binaryType = "arraybuffer";
 
-		this.ws.onclose = (event: CloseEvent) => this.onclose(event, socket);
-		this.ws.onerror = (event: Event) => this.onerror(event, socket);
-		this.ws.onmessage = (event: MessageEvent<string>) => this.onmessage(event, socket);
-		this.ws.onopen = (event: Event) => this.onconnected(event, socket);
+		this.ws.onclose = (event: CloseEvent): void => { this.onclose(event, socket) };
+		this.ws.onerror = (event: Event): void =>  { this.onerror(event, socket) };
+		this.ws.onmessage = (event: MessageEvent<string>): void => { this.onmessage(event, socket) };
+		this.ws.onopen = (event: Event): void => {this.onconnected(event, socket)};
 		const socket: IConnectionSocket = { readyState: this.ws.readyState, send: this.send, close: this.close };
 		return socket;
 	}
@@ -70,6 +70,7 @@ export class TSASN1BrowserClient extends TSASN1Client {
 	 * WebSocket onclose handler, handed over to the idual.onclose
 	 *
 	 * @param event - Broser based CloseEvent
+	 * @param socket - the shared socket to access the notifies attached to it
 	 */
 	private onclose(event: CloseEvent, socket: IConnectionSocket): void {
 		this.updateSocketState(socket);
@@ -88,6 +89,7 @@ export class TSASN1BrowserClient extends TSASN1Client {
 	 * WebSocket onerror handler, handed over to the idual.onerror
 	 *
 	 * @param event - Broser based Event
+	 * @param socket - the shared socket to access the notifies attached to it
 	 */
 	private onerror(event: Event, socket: IConnectionSocket): void {
 		this.updateSocketState(socket);
@@ -104,6 +106,7 @@ export class TSASN1BrowserClient extends TSASN1Client {
 	 * WebSocket onmessage handler, handed over to the idual.onmessage
 	 *
 	 * @param event - Broser based MessageEvent
+	 * @param socket - the shared socket to access the notifies attached to it
 	 */
 	private onmessage(event: MessageEvent<string>, socket: IConnectionSocket): void {
 		this.updateSocketState(socket);
@@ -120,6 +123,7 @@ export class TSASN1BrowserClient extends TSASN1Client {
 	 * WebSocket onopen handler, handed over to the idual.onopen
 	 *
 	 * @param event - Broser based Event
+	 * @param socket - the shared socket to access the notifies attached to it
 	 */
 	private onconnected(event: Event, socket: IConnectionSocket): void {
 		this.updateSocketState(socket);
@@ -167,18 +171,24 @@ export class TSASN1BrowserClient extends TSASN1Client {
 	 * @param timeout - The timeout after which clientReconnect is called
 	 */
 	protected setReconnectTimeout(timeout: number): void {
-		if (this.reconnectTimeout) {
+		if(this.autoReconnect && timeout && !this.reconnectTimeout)
+			this.log(ELogSeverity.debug, "Starting reconnect timer", "setReconnectTimeout", this, {timeout});
+		else if(this.autoReconnect && !timeout && this.reconnectTimeout)
+			this.log(ELogSeverity.debug, "Stopping reconnect timer", "setReconnectTimeout", this);
+		else if(this.autoReconnect && timeout && this.reconnectTimeout)
+			this.log(ELogSeverity.debug, "Restarting reconnect timer", "setReconnectTimeout", this, {timeout});
+		if (this.reconnectTimeout) { 
 			clearTimeout(this.reconnectTimeout);
 			this.reconnectTimeout = undefined;
 		}
-		if (timeout && this.autoreconnect)
+		if (timeout && this.autoReconnect)
 			this.reconnectTimeout = self.setTimeout(this.clientReconnect, timeout);
 	}
 
 	/**
 	 * Prepares data from the message event to the notastion we need (Differs between node and browser implementation)
 	 *
-	 * @param event - the message that contains the payload
+	 * @param data - the raw data we have received
 	 * @returns data on successs or undefined on error
 	 */
 	protected prepareData(data: string | ArrayBuffer): Uint8Array | object | undefined {

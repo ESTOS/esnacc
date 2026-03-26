@@ -47,6 +47,15 @@ resttarget += `://${name}:${port}/rest`;
 */
 
 /**
+ * A structured log entry that can optionally carry metadata.
+ */
+interface ILogEntry {
+	id: number;
+	html: string; // the main line (may contain styled <span>)
+	meta?: string; // pretty-printed JSON string, present only when metadata exists
+}
+
+/**
  * Sample client that supports a rest request mode and a websocket connection mode
  */
 class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
@@ -56,8 +65,10 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	// public readonly eventManager: EventManager;
 	// public readonly settingsManager: SettingsManager;
 
-	// Log entries
-	private results: string[] = new Array<string>(0);
+	// Structured log entries
+	private results: ILogEntry[] = [];
+	private nextId = 0;
+	public loglevel: ELogSeverity | number = 0;
 
 	/**
 	 * Constructs
@@ -103,8 +114,19 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	 * Clears the log entries
 	 */
 	public clearLog(): void {
-		this.results = new Array<string>(0);
-		this.addLogEntry("");
+		this.results = [];
+		this.renderLog();
+	}
+
+	/**
+	 * Change how we handle auto reconnect
+	 *
+	 * @param autoReconnect - true to enable automatic reconnect (timer based) or false to disable it
+	 */
+	public setAutoReconnect(autoReconnect: boolean): void {
+		if (!autoReconnect)
+			this.setReconnectTimeout(0);
+		this.autoReconnect = autoReconnect;
 	}
 
 	/**
@@ -127,66 +149,179 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	): void {
 		if (meta) {
 			const logEntry = meta as IROSELogEntryBase;
-			let color = logEntry.isOutbound ? "green" : "orange";
+			let color = logEntry.isOutbound ? "green" : "blue";
 			const direction = logEntry.isOutbound ? "OUT" : "IN";
 			if (logEntry._type === "IInvokeLogEntry") {
 				const invoke = meta as IInvokeLogEntry;
 				this.addLogEntry(
 					`${this.getTime()} - ${
-						invoke.isEvent ? "Event" : "Invoke"
+						invoke.isEvent ? "EVENT" : "INVOKE"
 					} - ${direction} - ${invoke.operationName} - ${invoke.argumentName}`,
 					`color:${color};font-weight:bold`,
+					JSON.stringify(invoke.argument, null, 2),
 				);
-				this.addLogEntry(`<pre>${JSON.stringify(invoke.argument, null, 2)}</pre>`);
-			}
-			else if (logEntry._type === "IResultLogEntry") {
+				return;
+			} else if (logEntry._type === "IResultLogEntry") {
 				const result = meta as IResultLogEntry;
 				this.addLogEntry(
-					`${this.getTime()} - Result - ${direction} - ${result.operationName} - ${result.resultName}`,
+					`${this.getTime()} - RESULT - ${direction} - ${result.operationName} - ${result.resultName}`,
 					`color:${color}`,
+					JSON.stringify(result.result, null, 2),
 				);
-				this.addLogEntry(`<pre>${JSON.stringify(result.result, null, 2)}</pre>`);
-			}
-			else if (logEntry._type === "IRejectLogEntry") {
+				return;
+			} else if (logEntry._type === "IRejectLogEntry") {
 				const reject = meta as IRejectLogEntry;
 				color = "orange";
-				this.addLogEntry(`${this.getTime()} - Reject - ${direction} - ${reject.operationName}`, `color:${color}`);
-				this.addLogEntry(`<pre>${JSON.stringify(reject.reject, null, 2)}</pre>`);
-			}
-			else if (logEntry._type === "IErrorLogEntry") {
+				this.addLogEntry(
+					`${this.getTime()} - REJECT - ${direction} - ${reject.operationName}`,
+					`color:${color}`,
+					JSON.stringify(reject.reject, null, 2),
+				);
+				return;
+			} else if (logEntry._type === "IErrorLogEntry") {
 				const error = meta as IErrorLogEntry;
 				color = "red";
-				this.addLogEntry(`${this.getTime()} - Error - ${direction} - ${error.operationName}`, `color:${color}`);
-				this.addLogEntry(`<pre>${JSON.stringify(error.error, null, 2)}</pre>`);
+				this.addLogEntry(
+					`${this.getTime()} - ERROR - ${direction} - ${error.operationName}`,
+					`color:${color}`,
+					JSON.stringify(error.error, null, 2),
+				);
+				return;
 			}
+		}
+		if (severity <= this.loglevel) {
+			let color = "";
+			let type = "";
+			switch (severity) {
+				case ELogSeverity.debug:
+					color = "darkgrey";
+					type = "debug";
+					break;
+				case ELogSeverity.error:
+					color = "darkred";
+					type = "error";
+					break;
+				case ELogSeverity.warn:
+					color = "darkorange";
+					type = "warn";
+					break;
+				case ELogSeverity.info:
+					color = "black";
+					type = "info";
+					break;
+				default:
+					color = "purple";
+					type = "unknown";
+					break;
+			}
+			const logMessage = `${this.getTime()} - ${type} - ${calling_method} - ${message}`;
+			this.addLogEntry(logMessage, `color:${color}`, meta ? JSON.stringify(meta, null, 2) : undefined);
+			return;
 		}
 	}
 
 	/**
-	 * TODOC
+	 * Adds a structured log entry to the UI by appending a new DOM node.
+	 * Existing nodes are never touched, so expanded metadata panels stay open
+	 * when new entries arrive.
 	 *
-	 * @param entry - the log message to set
-	 * @param css - the style to apply in case it´s needed
+	 * When metaJson is provided the entry renders an expand/collapse toggle
+	 * button *before* the timestamp; entries without metadata show an
+	 * invisible placeholder so all timestamps stay aligned.
+	 *
+	 * @param html     - the main log line content (plain text or trusted HTML)
+	 * @param css      - optional inline style applied to the main line
+	 * @param metaJson - optional pretty-printed JSON shown in an expandable block
 	 */
-	public addLogEntry(entry: string, css?: string): void {
-		if (css)
-			entry = `<span style="${css}">${entry}</span>`;
-		if (entry.length)
-			this.results.push(entry);
-		while (this.results.length > 50)
-			this.results.shift();
+	public addLogEntry(html: string, css?: string, metaJson?: string): void {
+		if (!html.length)
+			return;
+
 		const div = document.getElementById("result");
-		if (div)
-			div.innerHTML = this.results.join("</br>");
-		const button = document.getElementById("clear") as HTMLButtonElement;
-		if (button)
-			button.disabled = this.results.length ? false : true;
+		if (!div)
+			return;
+
+		const id = this.nextId++;
+		this.results.push({ id, html, meta: metaJson });
+
+		// Enforce the 50-entry cap by removing the oldest DOM node first.
+		while (this.results.length > 50) {
+			this.results.shift();
+			const oldest = div.firstElementChild;
+			if (oldest)
+				div.removeChild(oldest);
+		}
+
+		// Build the new entry node entirely in the DOM — no innerHTML on the container.
+		const entryEl = document.createElement("div");
+		entryEl.className = "log-entry";
+
+		const lineEl = document.createElement("div");
+		lineEl.className = "log-entry__line";
+
+		if (metaJson) {
+			// Active toggle button
+			const btn = document.createElement("button");
+			btn.type = "button"; // prevent form submission — default is "submit" inside <form>
+			btn.id = `log-btn-${id}`;
+			btn.className = "log-toggle";
+			btn.title = "Expand metadata";
+			btn.textContent = "▶";
+			btn.addEventListener("click", () => {
+				toggleLogMeta(`log-meta-${id}`, btn);
+			});
+			lineEl.appendChild(btn);
+
+			// Metadata panel (hidden by default)
+			const metaEl = document.createElement("div");
+			metaEl.id = `log-meta-${id}`;
+			metaEl.className = "log-meta";
+			metaEl.hidden = true;
+			const pre = document.createElement("pre");
+			pre.textContent = metaJson; // textContent handles escaping automatically
+			metaEl.appendChild(pre);
+			entryEl.appendChild(metaEl); // appended to entry, revealed below the line
+		} else {
+			// Invisible spacer — keeps timestamps aligned with entries that have a button
+			const spacer = document.createElement("button");
+			spacer.className = "log-toggle log-toggle--empty";
+			spacer.setAttribute("aria-hidden", "true");
+			lineEl.appendChild(spacer);
+		}
+
+		// Main text — set via innerHTML so callers can pass styled <span> content
+		const textEl = document.createElement("span");
+		textEl.innerHTML = css ? `<span style="${css}">${html}</span>` : html;
+		lineEl.appendChild(textEl);
+
+		// Line comes first, meta panel (if any) is already appended; reorder so
+		// the line is the first child and meta is below it.
+		entryEl.insertBefore(lineEl, entryEl.firstChild);
+
+		div.appendChild(entryEl);
+
+		const clearBtn = document.getElementById("clear") as HTMLButtonElement;
+		if (clearBtn)
+			clearBtn.disabled = false;
 	}
 
 	/**
-	 * TODOC
+	 * Clears all DOM nodes from the log container and resets internal state.
+	 */
+	private renderLog(): void {
+		const div = document.getElementById("result");
+		if (!div)
+			return;
+		div.innerHTML = "";
+		const clearBtn = document.getElementById("clear") as HTMLButtonElement;
+		if (clearBtn)
+			clearBtn.disabled = true;
+	}
+
+	/**
+	 * Retrieve a predefined time for the log messages
 	 *
-	 * @returns - TODOC
+	 * @returns - the time as string
 	 */
 	public getTime(): string {
 		const time = new Date();
@@ -212,27 +347,51 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	}
 
 	/**
-	 * TODOC
+	 * Is called in case the client is not connected and about to establish a statefull connection
+	 * Within that callback the target may get changed (e.g. if you need auth data for the websocket connection)
+	 * Returning false will terminate the connect request (and all pending connect request)
 	 *
-	 * @param bReconnected - TODOC
+	 * @param bReconnecting - true in case we are reconnecting
 	 */
-	public async onClientConnected(bReconnected: boolean): Promise<void> {
-		this.addLogEntry(`${this.getTime()} connected to ${this.target}`, "color:darkgray");
-		const button = document.getElementById("disconnect") as HTMLInputElement;
-		if (button)
-			button.disabled = false;
+	public async onBeforeConnect(bReconnecting: boolean): Promise<boolean> {
+		return true;
 	}
 
 	/**
-	 * TODOC
+	 * The client is now connected
 	 *
-	 * @param bShuttingDown - TODOC
+	 * @param bReconnected - true in case it was a reconnect
+	 */
+	public async onClientConnected(bReconnected: boolean): Promise<void> {
+		this.addLogEntry(`${this.getTime()} connected to ${this.target}`, "color:darkgray");
+		this.adoptUIElements(true);
+	}
+
+	/**
+	 * The client is now disconnected
+	 *
+	 * @param bShuttingDown - true in case it was intentional and not by a connection loss
 	 */
 	public async onClientDisconnected(bShuttingDown: boolean): Promise<void> {
 		this.addLogEntry(`${this.getTime()} disconnected`, "color:darkgray");
-		const button = document.getElementById("disconnect") as HTMLInputElement;
-		if (button)
-			button.disabled = true;
+		this.adoptUIElements(false);
+	}
+
+	/**
+	 * Enable or disables the UI elements based on the connection state
+	 *
+	 * @param bConnected - true if we are connected, or false if we are disconnected
+	 */
+	private adoptUIElements(bConnected: boolean): void {
+		const connectionState = document.getElementById("state");
+		if (connectionState)
+			connectionState.textContent = bConnected ? "Connected" : "Connecting";
+		const elements = ["disconnect", "encoding", "transport"];
+		for (const element of elements) {
+			const button = document.getElementById(element) as HTMLInputElement;
+			if (button)
+				button.disabled = element === "disconnect" ? !bConnected : bConnected;
+		}
 	}
 
 	/**
@@ -248,8 +407,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	public getResult<T>(
 		response: T | ENetUC_Common.AsnRequestError | AsnInvokeProblem,
 		className: { new(...args: any[]): T; },
-		reject?: (reason?: ENetUC_Common.AsnRequestError) => void,
-	): T {
+	): T | undefined {
 		if (response instanceof className)
 			return response;
 
@@ -262,23 +420,19 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 				iErrorDetail: response.value || -1,
 				u8sErrorString: response.details,
 			});
-		}
-		else {
+		} else {
 			error = new ENetUC_Common.AsnRequestError({
 				iErrorDetail: CustomInvokeProblemEnum.missingResponse,
 				u8sErrorString: "unhandled result",
 			});
 		}
 
-		if (reject)
-			reject(error);
-
-		throw error;
+		return undefined;
 	}
 
 	/**
 	 * Getter for the invoke context
-	 * Allows to intercept the context that the caller has (oprovided
+	 * Allows to intercept the context that the caller has (provided)
 	 *
 	 * @param context - the context the caller has provided with an invoke or event
 	 * @param operationID - the operation ID that has been called
@@ -296,6 +450,33 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	}
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Toggles a metadata panel open/closed and updates the arrow on the button.
+ * Called directly via closure from the button's addEventListener — no global
+ * window attachment needed.
+ *
+ * @param metaId - the id for the element we want to show or hide
+ * @param btn - the corresponding button element
+ */
+function toggleLogMeta(metaId: string, btn: HTMLButtonElement): void {
+	const meta = document.getElementById(metaId);
+	if (!meta)
+		return;
+	if (meta.hidden) {
+		meta.hidden = false;
+		btn.textContent = "▼";
+		btn.title = "Collapse metadata";
+	} else {
+		meta.hidden = true;
+		btn.textContent = "▶";
+		btn.title = "Expand metadata";
+	}
+}
+
+// ── Exports ───────────────────────────────────────────────────────────────────
+
 export const theClient = new Client();
 
 // We hold the settingsManager outside of the client object, you could also make it a member of the client object
@@ -304,8 +485,8 @@ export const settingsManager: ENetUC_Settings_ManagerROSE & Partial<IENetUC_Sett
 // The settingsManager itself also implements the receiver interface (events, server to client invokes)
 settingsManager.setHandler(settingsManager);
 
-// We hold the settingsManager outside of the client object, you could also make it a member of the client object
+// We hold the eventManager outside of the client object, you could also make it a member of the client object
 export const eventManager: ENetUC_Event_ManagerROSE & Partial<IENetUC_Event_ManagerROSE_Handler> =
 	new ENetUC_Event_ManagerROSE(theClient, true);
-// The settingsManager itself also implements the receiver interface (events, server to client invokes)
+// The eventManager itself also implements the receiver interface (events, server to client invokes)
 eventManager.setHandler(eventManager);

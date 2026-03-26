@@ -707,8 +707,7 @@ export class AsnStringPairList_Converter {
 		const t = [] as ENetUC_Common.AsnStringPairList;
 
 		// [Print_JSON_EncoderSetOfDefCode]
-		for (const id in s) {
-			const se = s[id];
+		for (const se of s) {
 			if (se === undefined)
 				continue;
 			const val = AsnStringPair_Converter.toJSON(se, errors, newContext, "AsnStringPair");
@@ -732,8 +731,7 @@ export class AsnStringPairList_Converter {
 		if (s) {
 			t = new ENetUC_Common.AsnStringPairList();
 			// [Print_JSON_DecoderSetOfDefCode]
-			for (const id in s) {
-				const se = s[id];
+			for (const se of s) {
 				if (se === undefined)
 					continue;
 				const val = AsnStringPair_Converter.fromJSON(se, errors, newContext, "AsnStringPair", false);
@@ -762,8 +760,8 @@ export class AsnStringPairList_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "AsnStringPairList");
 
 		// [Print_BER_EncoderSetOfDefCode]
-		for (const id in s) {
-			const val = AsnStringPair_Converter.toBER(s[id], errors, newContext, "AsnStringPair");
+		for (const se of s) {
+			const val = AsnStringPair_Converter.toBER(se, errors, newContext, "AsnStringPair");
 			if (val)
 				t.push(val);
 		}
@@ -1066,8 +1064,7 @@ export class AsnOptionalParameters_Converter {
 			return undefined;
 		}
 		// [Print_JSON_EncoderSetOfDefCode]
-		for (const id in s) {
-			const se = s[id];
+		for (const se of s) {
 			if (se === undefined)
 				continue;
 			const val = AsnOptionalParam_Converter.toJSON(se, errors, newContext, "AsnOptionalParam");
@@ -1095,8 +1092,7 @@ export class AsnOptionalParameters_Converter {
 				EAsnOptionalParametersConverter.fromJSON(s, t, errors, context, name, optional);
 			} else {
 				// [Print_JSON_DecoderSetOfDefCode]
-				for (const id in s) {
-					const se = s[id];
+				for (const se of s) {
 					if (se === undefined)
 						continue;
 					const val = AsnOptionalParam_Converter.fromJSON(se, errors, newContext, "AsnOptionalParam", false);
@@ -1126,8 +1122,8 @@ export class AsnOptionalParameters_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "AsnOptionalParameters");
 
 		// [Print_BER_EncoderSetOfDefCode]
-		for (const id in s) {
-			const val = AsnOptionalParam_Converter.toBER(s[id], errors, newContext, "AsnOptionalParam");
+		for (const se of s) {
+			const val = AsnOptionalParam_Converter.toBER(se, errors, newContext, "AsnOptionalParam");
 			if (val)
 				t.push(val);
 		}
@@ -1615,8 +1611,7 @@ export class AsnIntegerPairList_Converter {
 		const t = [] as ENetUC_Common.AsnIntegerPairList;
 
 		// [Print_JSON_EncoderSetOfDefCode]
-		for (const id in s) {
-			const se = s[id];
+		for (const se of s) {
 			if (se === undefined)
 				continue;
 			const val = AsnIntegerPair_Converter.toJSON(se, errors, newContext, "AsnIntegerPair");
@@ -1640,8 +1635,7 @@ export class AsnIntegerPairList_Converter {
 		if (s) {
 			t = new ENetUC_Common.AsnIntegerPairList();
 			// [Print_JSON_DecoderSetOfDefCode]
-			for (const id in s) {
-				const se = s[id];
+			for (const se of s) {
 				if (se === undefined)
 					continue;
 				const val = AsnIntegerPair_Converter.fromJSON(se, errors, newContext, "AsnIntegerPair", false);
@@ -1670,8 +1664,8 @@ export class AsnIntegerPairList_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "AsnIntegerPairList");
 
 		// [Print_BER_EncoderSetOfDefCode]
-		for (const id in s) {
-			const val = AsnIntegerPair_Converter.toBER(s[id], errors, newContext, "AsnIntegerPair");
+		for (const se of s) {
+			const val = AsnIntegerPair_Converter.toBER(se, errors, newContext, "AsnIntegerPair");
 			if (val)
 				t.push(val);
 		}
@@ -1720,8 +1714,7 @@ export class AsnStringIntegerPairList_Converter {
 		const t = [] as ENetUC_Common.AsnStringIntegerPairList;
 
 		// [Print_JSON_EncoderSetOfDefCode]
-		for (const id in s) {
-			const se = s[id];
+		for (const se of s) {
 			if (se === undefined)
 				continue;
 			const val = AsnStringIntegerPair_Converter.toJSON(se, errors, newContext, "AsnStringIntegerPair");
@@ -1745,8 +1738,7 @@ export class AsnStringIntegerPairList_Converter {
 		if (s) {
 			t = new ENetUC_Common.AsnStringIntegerPairList();
 			// [Print_JSON_DecoderSetOfDefCode]
-			for (const id in s) {
-				const se = s[id];
+			for (const se of s) {
 				if (se === undefined)
 					continue;
 				const val = AsnStringIntegerPair_Converter.fromJSON(se, errors, newContext, "AsnStringIntegerPair", false);
@@ -1775,8 +1767,8 @@ export class AsnStringIntegerPairList_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "AsnStringIntegerPairList");
 
 		// [Print_BER_EncoderSetOfDefCode]
-		for (const id in s) {
-			const val = AsnStringIntegerPair_Converter.toBER(s[id], errors, newContext, "AsnStringIntegerPair");
+		for (const se of s) {
+			const val = AsnStringIntegerPair_Converter.toBER(se, errors, newContext, "AsnStringIntegerPair");
 			if (val)
 				t.push(val);
 		}
@@ -1825,8 +1817,7 @@ export class AsnRequestErrorList_Converter {
 		const t = [] as ENetUC_Common.AsnRequestErrorList;
 
 		// [Print_JSON_EncoderSetOfDefCode]
-		for (const id in s) {
-			const se = s[id];
+		for (const se of s) {
 			if (se === undefined)
 				continue;
 			const val = AsnRequestError_Converter.toJSON(se, errors, newContext, "AsnRequestError");
@@ -1850,8 +1841,7 @@ export class AsnRequestErrorList_Converter {
 		if (s) {
 			t = new ENetUC_Common.AsnRequestErrorList();
 			// [Print_JSON_DecoderSetOfDefCode]
-			for (const id in s) {
-				const se = s[id];
+			for (const se of s) {
 				if (se === undefined)
 					continue;
 				const val = AsnRequestError_Converter.fromJSON(se, errors, newContext, "AsnRequestError", false);
@@ -1880,8 +1870,8 @@ export class AsnRequestErrorList_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "AsnRequestErrorList");
 
 		// [Print_BER_EncoderSetOfDefCode]
-		for (const id in s) {
-			const val = AsnRequestError_Converter.toBER(s[id], errors, newContext, "AsnRequestError");
+		for (const se of s) {
+			const val = AsnRequestError_Converter.toBER(se, errors, newContext, "AsnRequestError");
 			if (val)
 				t.push(val);
 		}
@@ -2120,8 +2110,7 @@ export class AsnNetDatabaseContactList_Converter {
 		const t = [] as ENetUC_Common.AsnNetDatabaseContactList;
 
 		// [Print_JSON_EncoderSetOfDefCode]
-		for (const id in s) {
-			const se = s[id];
+		for (const se of s) {
 			if (se === undefined)
 				continue;
 			const val = AsnNetDatabaseContact_Converter.toJSON(se, errors, newContext, "AsnNetDatabaseContact");
@@ -2145,8 +2134,7 @@ export class AsnNetDatabaseContactList_Converter {
 		if (s) {
 			t = new ENetUC_Common.AsnNetDatabaseContactList();
 			// [Print_JSON_DecoderSetOfDefCode]
-			for (const id in s) {
-				const se = s[id];
+			for (const se of s) {
 				if (se === undefined)
 					continue;
 				const val = AsnNetDatabaseContact_Converter.fromJSON(se, errors, newContext, "AsnNetDatabaseContact", false);
@@ -2175,8 +2163,8 @@ export class AsnNetDatabaseContactList_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "AsnNetDatabaseContactList");
 
 		// [Print_BER_EncoderSetOfDefCode]
-		for (const id in s) {
-			const val = AsnNetDatabaseContact_Converter.toBER(s[id], errors, newContext, "AsnNetDatabaseContact");
+		for (const se of s) {
+			const val = AsnNetDatabaseContact_Converter.toBER(se, errors, newContext, "AsnNetDatabaseContact");
 			if (val)
 				t.push(val);
 		}
@@ -2225,8 +2213,7 @@ export class AsnNetDatabaseContactIDList_Converter {
 		const t = [] as ENetUC_Common.AsnNetDatabaseContactIDList;
 
 		// [Print_JSON_EncoderSetOfDefCode]
-		for (const id in s) {
-			const se = s[id];
+		for (const se of s) {
 			if (se === undefined)
 				continue;
 			const val = AsnNetDatabaseContactID_Converter.toJSON(se, errors, newContext, "AsnNetDatabaseContactID");
@@ -2250,8 +2237,7 @@ export class AsnNetDatabaseContactIDList_Converter {
 		if (s) {
 			t = new ENetUC_Common.AsnNetDatabaseContactIDList();
 			// [Print_JSON_DecoderSetOfDefCode]
-			for (const id in s) {
-				const se = s[id];
+			for (const se of s) {
 				if (se === undefined)
 					continue;
 				const val = AsnNetDatabaseContactID_Converter.fromJSON(se, errors, newContext, "AsnNetDatabaseContactID", false);
@@ -2280,8 +2266,8 @@ export class AsnNetDatabaseContactIDList_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "AsnNetDatabaseContactIDList");
 
 		// [Print_BER_EncoderSetOfDefCode]
-		for (const id in s) {
-			const val = AsnNetDatabaseContactID_Converter.toBER(s[id], errors, newContext, "AsnNetDatabaseContactID");
+		for (const se of s) {
+			const val = AsnNetDatabaseContactID_Converter.toBER(se, errors, newContext, "AsnNetDatabaseContactID");
 			if (val)
 				t.push(val);
 		}

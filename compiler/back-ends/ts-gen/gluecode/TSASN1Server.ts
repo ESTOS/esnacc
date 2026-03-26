@@ -159,7 +159,7 @@ export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 			);
 		}
 
-		return new Promise((resolve, reject): void => {
+		return new Promise((resolve): void => {
 			let resolveUndefined = true;
 			const receiveInvokeContext = ReceiveInvokeContext.create(data.invoke);
 
@@ -171,7 +171,7 @@ export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 					const timerid = setTimeout((): void => {
 						this.onROSETimeout(id);
 					}, timeout);
-					const pending = new PendingInvoke(data.invoke, resolve, reject, timerid);
+					const pending = new PendingInvoke(data.invoke, resolve, timerid);
 					this.pendingInvokes.set(id, pending);
 					resolveUndefined = false;
 				}

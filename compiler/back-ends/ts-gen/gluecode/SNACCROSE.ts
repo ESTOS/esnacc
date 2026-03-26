@@ -10,6 +10,7 @@
 
 // dprint-ignore-file
 /* eslint-disable */
+
 // [PrintTSImports]
 import * as asn1ts from "@estos/asn1ts";
 // [PrintTSRootTypes]

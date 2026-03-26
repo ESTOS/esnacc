@@ -10,6 +10,7 @@
 
 // dprint-ignore-file
 /* eslint-disable */
+
 /**
  * This module is used to retrieve and store settings and to dispatch events for changed settings
  * A client may retrieve settings, adopt them and store them on the server
@@ -82,7 +83,7 @@ export class AsnSomeSettings {
 /**
  * Argument for the asnGetSettings method
  *
- * @added 06.05.2024
+ * @since 06.05.2024
  */
 export class AsnGetSettingsArgument {
 	public constructor(that?: AsnGetSettingsArgument) {
@@ -214,7 +215,7 @@ export class AsnGetSettingsResult {
 		});
 	}
 
-	/** @added 06.05.2024 */
+	/** @since 06.05.2024 */
 	public settings!: AsnSomeSettings;
 }
 

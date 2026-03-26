@@ -172,7 +172,7 @@ export class ENetUC_Settings_ManagerROSE extends ROSEBase implements IInvokeHand
 	/**
 	 * Method to retrieve settings from the server side
 	 *
-	 * @added 06.05.2024
+	 * @since 06.05.2024
 	 *
 	 * @param argument - An AsnGetSettingsArgument object containing all the relevant parameters for the call
 	 * @param invokeContext - Invoke related contextual data (e.g. a clientConnectionID)

@@ -731,7 +731,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 						if (operationComment.i64Added)
 						{
 							char* szTime = ConvertUnixTimeToReadable(operationComment.i64Added);
-							fprintf(src, "\t * @added %s\n", szTime);
+							fprintf(src, "\t * @since %s\n", szTime);
 							free(szTime);
 						}
 						if (operationComment.iPrivate)

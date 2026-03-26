@@ -118,8 +118,7 @@ export class ClientConnectionManager implements IASN1ClientConnectionHandler {
 			this.clientConnections.delete(sessionID);
 			this.fire_OnClientDisconnected(con);
 			return true;
-		}
-		else {
+		} else {
 			theLogger.error("client connection not found", "removeConnection", this, { key: sessionID });
 		}
 

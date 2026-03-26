@@ -7,7 +7,7 @@
 
 import * as ENetUC_Common from "./ENetUC_Common.js";
 import { ROSEError, ROSEReject, ROSEResult } from "./SNACCROSE.js";
-import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./TSASN1Base.js";
+import { ASN1ClassInstanceType, IResponseData, PendingInvoke, TSASN1Base } from "./TSASN1Base.js";
 import { EASN1TransportEncoding } from "./TSInvokeContext.js";
 import {
 	createInvokeReject,
@@ -39,8 +39,8 @@ type HeadersInit = string[][] | Record<string, string> | Headers;
  * A Promise that is fullfilled if the requested websocket was created or rejected if the creation failed
  */
 class ConnectionSocketPromise {
-	public readonly resolve: (value: ENetUC_Common.AsnRequestError | IConnectionSocket) => void;
-	public readonly reject: (reason?: unknown) => void;
+	public readonly resolve: (value: IConnectionSocket) => void;
+	public readonly reject: (reason: ENetUC_Common.AsnRequestError) => void;
 	/**
 	 * Constructs a websocket promise object, simply stores the handed over arguments in the class
 	 *
@@ -48,11 +48,67 @@ class ConnectionSocketPromise {
 	 * @param reject - The rejcet method that is called if something unhandled did occur
 	 */
 	public constructor(
-		resolve: (value: ENetUC_Common.AsnRequestError | IConnectionSocket) => void,
-		reject: (reason?: unknown) => void,
+		resolve: (value: IConnectionSocket) => void,
+		reject: (reason: ENetUC_Common.AsnRequestError) => void,
 	) {
 		this.resolve = resolve;
 		this.reject = reject;
+	}
+}
+
+/*
+ An array of promises that is waiting for a connection setup
+ */
+class PendingSockets
+{
+	private promises = new Array<ConnectionSocketPromise>();
+
+	/**
+	 * Adds another pending socket promise to the list of pending sockets
+	 *
+	 * @param promise - The pending promise
+	 */
+	public push(promise: ConnectionSocketPromise) {
+		this.promises.push(promise);
+	}
+
+	/**
+	 * Resolve the pending promises with a connected socket
+	 *
+	 * @param connection - the connected socket
+	 */
+	public resolve(connection: IConnectionSocket) {
+		// Handle all pending operations
+		for (const pending of this.promises)
+			pending.resolve(connection);
+		this.promises = [];
+	}
+
+	/**
+	 * In case of a statefull connection error we fullfill all pending sockets with the error object
+	 *
+	 * @param error - The error object as provided by the caller
+	 */
+	public reject(error: unknown): void {
+		let err: ENetUC_Common.AsnRequestError;
+		if (error instanceof ENetUC_Common.AsnRequestError)
+			err = error;
+		else if (error instanceof Error) {
+			err = new ENetUC_Common.AsnRequestError({
+				iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
+				u8sErrorString: error.message,
+			});
+		}
+		else {
+			const erroMsg = error instanceof Object ? JSON.stringify(error, null, 2) : String(error);
+			err = new ENetUC_Common.AsnRequestError({
+				iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
+				u8sErrorString: `Unknown error received: ${erroMsg}`,
+			});
+		}
+		for (const pendingSocket of this.promises)
+			pendingSocket.reject(err);
+		this.promises = [];
 	}
 }
 
@@ -60,8 +116,10 @@ class ConnectionSocketPromise {
  * Connection related callbacks if we get connected or disconnected
  */
 export interface IClientConnectionCallback {
-	// Is called before the reconnect is done (allows the client to do necessary things in advance (calculcate tokens, fetch the proper target url))
-	onBeforeReconnect?(): Promise<void>;
+	// Is called in case the client is not connected and about to establish a statefull connection
+	// Within that callback the target may get changed (e.g. if you need auth data for the websocket connection)
+	// Returning false will terminate the connect request (and all pending connect request)
+	onBeforeConnect?(bReconnecting: boolean): Promise<boolean>;
 	// Is called after the client has opened the websocket connection
 	onClientConnected(bReconnected: boolean): Promise<void>;
 	// Is called after the (established) websocket connection did disconnect
@@ -108,13 +166,13 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	// These Properties are ONLY used if the client is using websockets to connect to the server:
 	// -------------------------------------
 	// The client automatically tries to reconnect the target if the connection was dropped
-	protected autoreconnect = true;
+	protected autoReconnect = true;
 	// The sessionID the server provided for this client (has to be filled by the businesslogik as soon as a session id is available)
 	protected clientConnectionID?: string;
-	// List of pending requests for a websocket towards the target
-	// As long as the connection is beeing established every request for a websocket is qued
-	// This list is automatically cleared if the connection failed.
-	protected pendingSockets: ConnectionSocketPromise[] = [];
+	// List of pending requests for a sockets towards the target
+	// As long as the connection is beeing established every request for a socket is queued
+	// This list is automatically cleared if the connection succeeds or fails.
+	protected pendingSockets = new PendingSockets();
 
 	// We are currently reconnecting
 	private reconnecting = false;
@@ -212,9 +270,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * If no timeout was specified we resolve in undefined to cleanup the promise object
 	 */
 	public async sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
-		const receiveInvokeContext = ReceiveInvokeContext.create(data.invoke);
-
-		return new Promise((resolve, reject): void => {
+		return new Promise((resolve): void => {
 			let resolveUndefined = true;
 
 			let connectionMode = this.connectionMode;
@@ -239,7 +295,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 							this.onROSETimeout(id);
 						}, timeout);
 					}
-					const pending = new PendingInvoke(data.invoke, resolve, reject, timerID);
+					const pending = new PendingInvoke(data.invoke, resolve, timerID);
 					this.pendingInvokes.set(id, pending);
 					resolveUndefined = false;
 				}
@@ -264,63 +320,49 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * - Sends data
 	 *
 	 * @param data - the data object which contains all the information
-	 * @param reject - the reject method of the sendInvoke promise to reject in case of a connection error
 	 */
 	private sendStatefull(data: IASN1InvokeData): void {
 		// Get or create a connection to the target
-		this.getConnection(data.invokeContext).then((socket: IConnectionSocket | ENetUC_Common.AsnRequestError): void => {
-			if (!socket || socket instanceof ENetUC_Common.AsnRequestError) {
-				// Could not connect to the target or an unknown error occured
-				let invokeReject: ROSEReject;
-				if (socket instanceof ENetUC_Common.AsnRequestError)
-					invokeReject = createInvokeReject(data.invoke, socket.iErrorDetail, socket.u8sErrorString);
-				else {
-					invokeReject = createInvokeReject(
-						data.invoke,
-						CustomInvokeProblemEnum.serviceUnavailable,
-						`Could not connect to ${this.target}`,
-					);
-				}
-				// Handl rose reject if we did not successfully connect to the target
-				this.log(ELogSeverity.error, "Could not establish connection", "sendWebSocket", this, socket);
-				const receiveInvokeContext = ReceiveInvokeContext.create(data.invoke);
-				this.onROSEReject(invokeReject, receiveInvokeContext);
-				throw invokeReject;
-			} else {
-				const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
-				this.logTransport(encodeResult.logData, "sendWebSocket", "out", data.invokeContext);
-				// Send the message
-				socket.send(encodeResult.payLoad);
+		this.getConnection(data.invokeContext).then((connection: IConnectionSocket): void => {
+			const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
+			this.logTransport(encodeResult.logData, "sendStatefull", "out", data.invokeContext);
+			// Send the message
+			connection.send(encodeResult.payLoad);
+		}).catch((error: unknown): void => {
+			// Could not connect to the target or an unknown error occured
+			let invokeReject: ROSEReject;
+			if (error instanceof ENetUC_Common.AsnRequestError)
+				invokeReject = createInvokeReject(data.invoke, error.iErrorDetail, error.u8sErrorString);
+			else {
+				invokeReject = createInvokeReject(
+					data.invoke,
+					CustomInvokeProblemEnum.serviceUnavailable,
+					`Could not connect to ${this.target}`,
+				);
 			}
-		}).catch((error): void => {
-			this.log(ELogSeverity.error, "exception", "sendWebSocket", this, undefined, error);
-			this.handlePendingSockets(error);
-			throw error;
+			// Handl rose reject if we did not successfully connect to the target
+			this.log(ELogSeverity.error, "Could not establish connection", "sendWebSocket", this, {
+				invokeContext: data.invokeContext,
+			}, error);
+
+			// Reject the currently pending operation
+			const receiveInvokeContext = ReceiveInvokeContext.create(data.invoke);
+			this.onROSEReject(invokeReject, receiveInvokeContext);
 		});
 	}
 
 	/**
-	 * Sends a single request via a REST fetch connection
-	 * - Connects via fetch
-	 * - Handles errors
-	 * - Sends data
+	 * Does the async fetch and handles all errors that might occur
 	 *
+	 * @param target - the target we are connecting to
 	 * @param data - the data object which contains all the information
 	 */
-	private sendStateLess(data: IASN1InvokeData): void {
+	private async handleFetch(target: string, data: IASN1InvokeData): Promise<void> {
 		const encoding = data.invokeContext.encoding;
 		const headers: HeadersInit = {
 			"Content-Type": encoding === EASN1TransportEncoding.JSON ? "application/json" : "application/octet-stream",
 		};
-
-		// Allows to specify a REST target through the invokeContext for this request (indipendently from the this.target)
-		let target = data.invokeContext?.restTarget || this.target;
-
-		// Add the method we are calling to the url
-		if (target.charAt(target.length - 1) !== "/")
-			target += "/";
-		target += data.invokeContext.operationName;
-
+	
 		const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 
 		// Contains the encoded data for the transport
@@ -353,7 +395,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 		const requestdata: RequestInit = {
 			method: "POST",
 			body: body instanceof Uint8Array ? new Uint8Array(body) : body,
-			headers
+			headers,
 		};
 
 		// REST requests are handled through the pending invokes list
@@ -362,42 +404,52 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 		// The result is handled through the regular methods and completed in the background
 		this.logTransport(encodeResult.logData, "sendInvoke", "out", data.invokeContext);
 		const receiveInvokeContext = ReceiveInvokeContext.create(data.invoke);
-		this.fetch(target, requestdata).then(async (response: Response): Promise<boolean> => {
-			if (response.status < 200 || response.status > 299) {
-				const reject = createInvokeReject(data.invoke, response.status, response.statusText);
-				this.onROSEReject(reject, receiveInvokeContext);
-			} else {
-				try {
-					// We received a result (Will this work for BER encoding as well?)
-					let message: Uint8Array | object;
-					if (encoding === EASN1TransportEncoding.BER) {
-						const buffer = await response.arrayBuffer();
-						message = new Uint8Array(buffer);
-					} else {
-						message = (await response.json()) as object;
-					}
-					await this.receive(message, receiveInvokeContext);
-				} catch (error) {
-					this.log(ELogSeverity.error, "receiving failed with exception", "sendInvoke", this, undefined, error);
-					// We received something else -> create reject object and process it
-					const reject = createInvokeReject(
-						data.invoke,
-						CustomInvokeProblemEnum.missingResponse,
-						"Exception while handling server response",
-					);
-					this.onROSEReject(reject, receiveInvokeContext);
-				}
+
+		const response = await this.fetch(target, requestdata);
+		try {
+			// We received a result (Will this work for BER encoding as well?)
+			let message: Uint8Array | object;
+			if (encoding === EASN1TransportEncoding.BER) {
+				const buffer = await response.arrayBuffer();
+				message = new Uint8Array(buffer);
 			}
-			return false; // We are not really interested in this result or handle it
-		}).catch((error) => {
+			else {
+				message = (await response.json()) as object;
+			}
+			await this.receive(message, receiveInvokeContext);
+		}
+		catch (error: unknown) {
+			this.log(ELogSeverity.error, "receiving failed with exception", "sendInvoke", this, undefined, error);
+			const reject = createInvokeReject(data.invoke, response.status, response.statusText);
+			this.onROSEReject(reject, receiveInvokeContext);
+		}
+	}
+
+	/**
+	 * Sends a single request via a REST fetch connection
+	 * - Connects via fetch
+	 * - Handles errors
+	 * - Sends data
+	 *
+	 * @param data - the data object which contains all the information
+	 */
+	private sendStateLess(data: IASN1InvokeData): void {
+		// Allows to specify a REST target through the invokeContext for this request (indipendently from the this.target)
+		let target = data.invokeContext?.restTarget || this.target;
+		// Add the method we are calling to the url
+		if (target.charAt(target.length - 1) !== "/")
+			target += "/";
+		target += data.invokeContext.operationName;
+
+		this.handleFetch(target, data).catch((error: unknown) => {
 			this.log(ELogSeverity.error, "Could not establish connection", "sendInvoke", this, undefined, error);
 			const reject = createInvokeReject(
 				data.invoke,
 				CustomInvokeProblemEnum.serviceUnavailable,
 				`Could not connect to ${target}`,
 			);
+			const receiveInvokeContext = ReceiveInvokeContext.create(data.invoke);
 			this.onROSEReject(reject, receiveInvokeContext);
-			return false; // We are not really interested in this result or handle it
 		});
 	}
 
@@ -413,12 +465,10 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 			case EASNCONNECTIONMODE.WEBSOCKET:
 			case EASNCONNECTIONMODE.TCP:
 				try {
-					const result = await this.getConnection(invokeContext);
-					if (!result || result instanceof ENetUC_Common.AsnRequestError)
-						this.log(ELogSeverity.error, "Could not establish connection", "connect", this, result);
-					else
-						return true;
-				} catch (error) {
+					await this.getConnection(invokeContext);
+					return true;
+				}
+				catch (error: unknown) {
 					this.log(ELogSeverity.error, "exception", "connect", this, undefined, error);
 				}
 				break;
@@ -437,10 +487,13 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	}
 
 	/**
-	 * Helper method to disconnect a statefull connection
+	 * Helper method to disconnect a websocket connection
+	 *
+	 * @param bControlledDisconnect - set to true if we do the shutdown in a controlled way (to differ between a disconnect not intented by us)
 	 */
-	public disconnect(): void {
-		this.shutdown();
+	public async disconnect(bControlledDisconnect: boolean): Promise<void> {
+		this.shutdown("disconnect");
+		await this.fire_OnDisconnected(bControlledDisconnect);
 	}
 
 	/**
@@ -497,10 +550,14 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 						);
 					}
 				}
-				if (this.socket)
-					this.disconnect();
+				if (this.socket) {
+					this.disconnect(true).then(() => {}).catch((error) => {
+						this.log(ELogSeverity.error, "Failed to disconnect", "setTarget", this, { oldTarget, newTarget }, error);
+					});
+				}
 			}
-		} catch (error) {
+		}
+		catch (error: unknown) {
 			this.log(ELogSeverity.error, "Exception", "setTarget", this, { oldTarget, newTarget }, error);
 			throw error;
 		}
@@ -521,52 +578,55 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	protected abstract setReconnectTimeout(timeout: number): void;
 
 	/**
-	 * Helper function to get or create a websocket connection object
+	 * Helper function to get or create a websocket connection object.
+	 * Implements a single-flight pattern: if a connection attempt is already in progress,
+	 * the caller is queued and resolved once the ongoing attempt completes.
 	 *
 	 * @param invokeContext - contextual data provided with the invoke
-	 * @returns - An IConnectionSocket object on success or an AsnRequestError on error
+	 * @returns - An IConnectionSocket object on success
 	 */
-	private async getConnection(
-		invokeContext?: ISendInvokeContext,
-	): Promise<IConnectionSocket | ENetUC_Common.AsnRequestError> {
+	private async getConnection(invokeContext?: ISendInvokeContext): Promise<IConnectionSocket> {
+		if (this.socket)
+			return this.socket;
+
 		return new Promise((resolve, reject): void => {
-			if (this.socket && this.socket.readyState === ESocketState.OPEN) {
-				// If we already have a usable websocket object return it
-				resolve(this.socket);
-			} else if (!this.openingStateFullConnection) {
-				// If we do not yet have one set that we are creating one
-				this.openingStateFullConnection = true;
-				// Add our request to the front of the pending websocket objects
-				// The list is resolved in createWebSocketConnection on success or here in case of an error
-				this.pendingSockets.unshift(new ConnectionSocketPromise(resolve, reject));
-				this.createStateFullConnection(invokeContext).then((): void => {
-					this.openingStateFullConnection = false;
-				}).catch((error): void => {
-					// If we did not get one add our promise as FIRST object in the pening list
-					// The pending list wil be handled in the handlePendingWebsockets
-					this.handlePendingSockets(error);
-					this.openingStateFullConnection = false;
+			// Add the request to the pending list
+			this.pendingSockets.push(new ConnectionSocketPromise(resolve, reject));
+			if (!this.openingStateFullConnection) {
+				this.createStateFullConnection(invokeContext).catch((error: unknown): void => {
+					this.log(
+						ELogSeverity.error,
+						"createStateFullConnection exception catched",
+						"getConnection",
+						this,
+						undefined,
+						error,
+					);
 				});
-			} else {
-				// We are currently creating a websocket object, add our request to the pending list
-				this.pendingSockets.push(new ConnectionSocketPromise(resolve, reject));
 			}
 		});
 	}
-
 	/**
 	 * Helper function to create a statefull connection object
 	 *
 	 * @param invokeContext - contextual data provided with the invoke
-	 * @returns - resolved true or reject with an AsnRequestError
 	 */
-	private async createStateFullConnection(invokeContext?: ISendInvokeContext): Promise<true> {
+	private async createStateFullConnection(invokeContext?: ISendInvokeContext): Promise<boolean> {
 		if (this.socket)
 			return true;
 
-		return new Promise((resolve, reject): void => {
-			// Call the node browser implementation to create a websocket object
+		// Set the flag that we are creating a statefull connection (pending operation in progress)
+		this.openingStateFullConnection = true;
 
+		if (!await this.fire_OnBeforeConnect(this.reconnecting)) {
+			throw new ENetUC_Common.AsnRequestError({
+				iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
+				u8sErrorString: `Connecting terminated as a onBeforeReconnect returned false`,
+			});
+		}
+
+		return new Promise((resolve): void => {
+			// Set websocket options
 			const options: IWebSocketOptions = { perMessageDeflate: false };
 
 			// Set the additional headers from the class object
@@ -615,23 +675,24 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 
 				// hold the socket, we need it to send data and close it again
 				this.socket = socket;
+				// Set our flags properly
+				this.reconnecting = false;
+				this.reconnectCounter = 0;
 
 				// tell the notifies that we are connected
-				this.fire_OnConnected(this.reconnecting).then(() => {
-					this.reconnecting = false;
-
-					// Init the reconnect timeout
-					this.setReconnectTimeout(5000);
-
-					// Handle all pending operations
-					for (const pendingcallback of this.pendingSockets)
-						pendingcallback.resolve(socket);
-					this.pendingSockets = [];
-
-					// resolve success
+				this.fire_OnConnected(this.reconnecting).catch((error: unknown) => {
+					this.log(
+						ELogSeverity.error,
+						"fire_OnConnected exception catched",
+						"createStateFullConnection",
+						this,
+						undefined,
+						error,
+					);
+				}).finally(() => {
+					this.pendingSockets.resolve(socket);
+					this.openingStateFullConnection = false;
 					resolve(true);
-				}).catch((error) => {
-					reject(error);
 				});
 			};
 			/**
@@ -641,7 +702,8 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 			 */
 			socket.onSocketClose = (closed: ISocketCloseEvent): void => {
 				// Error info is available in onclose not in onerror
-				this.log(ELogSeverity.error, "connecting failed", "createStateFullConnection", this, {
+				const verb = this.reconnecting ? "Reconnect" : "Connect";
+				this.log(ELogSeverity.error, `${verb} failed`, "createStateFullConnection", this, {
 					target: this.target,
 					closecode: closed.code,
 				});
@@ -649,24 +711,40 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				socket.onSocketConnected = undefined;
 				socket.onSocketClose = undefined;
 
-				// Init the reconnect after 1 second
-				this.setReconnectTimeout(1000);
+				// Okay we have an error, let´s notify the pending sockets about this error
+				const error = new ENetUC_Common.AsnRequestError({
+					iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
+					u8sErrorString: `${verb} to ${this.target} failed. WebSocket error ${closed.code}`,
+				});
+				this.pendingSockets.reject(error);
 
-				// reject with error
-				reject(
-					new ENetUC_Common.AsnRequestError({
-						iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
-						u8sErrorString: `Connect to ${this.target} failed. WebSocket error ${closed.code}`,
-					}),
-				);
+				if (this.autoReconnect) {
+					// The client wants auto reconnect, so let´s start the timer
+					let timeout = 1000;
+					this.reconnectCounter++;
+					if (this.reconnectCounter >= 10)
+						timeout = 5000;
+					if (this.reconnecting) {
+						this.log(ELogSeverity.warn, "reconnect failed", "clientReconnect", this, {
+							reconnectCounter: this.reconnectCounter,
+							timeout,
+						}, error);
+					}
+					this.setReconnectTimeout(timeout);
+				}
+
+				this.openingStateFullConnection = false;
+				resolve(false);
 			};
 		});
 	}
 
 	/**
 	 * Helper function to create a websocket connection object
+	 *
+	 * @param caller - The caller of the shutdown (for logging and diagnostic)
 	 */
-	private shutdown(): void {
+	private shutdown(caller: string): void {
 		this.setReconnectTimeout(0);
 		if (this.socket) {
 			this.socket.close();
@@ -674,31 +752,26 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 		}
 		const err = new ENetUC_Common.AsnRequestError({
 			iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
-			u8sErrorString: "TSASN1Client.shutdown was called",
+			u8sErrorString: "TSASN1Client exit was called",
 		});
-		this.handlePendingSockets(err);
+		this.pendingSockets.reject(err);
 	}
 
 	/**
 	 * Handler that is called if the client connection was closed
 	 * This method is *NOT* ment to be called by subclasses. The subclass provides a socket notify object which then binds to these methods
 	 *
-	 * @param event - the ISocketCloseEvent
+	 * @param event - the websocket close event
 	 */
-	private async onSocketClose(event: ISocketCloseEvent): Promise<void> {
-		// In case the socket object is not existing, we have called shutdown -> this notify is the result of it
-		// Thus we are in a controlled by us disconnect scenario and not some external cause
-		let bControlledDisconnect = !this.socket ? true : false;
-		if (this.socket) {
-			// Only in case the socket object was existing, the socket was closed from outside or context
-			// In that case log an error and call shutdown to handle pending socket requests
-			this.log(ELogSeverity.error, "WebSocket was closed.", "onSocketClose", this, {
-				code: event.code,
-				reason: event.reason,
-			});
-			this.shutdown();
-		}
-		await this.fire_OnDisconnected(bControlledDisconnect);
+	private onSocketClose(event: ISocketCloseEvent): void {
+		this.log(ELogSeverity.error, "WebSocket was closed. Going to reconnect", "onSocketClose", this, {
+			code: event.code,
+			reason: event.reason,
+		});
+		this.fire_OnDisconnected(false).catch((error: unknown): void => {
+			this.log(ELogSeverity.error, "fire_OnDisconnected exception catched", "onSocketClose", this, undefined, error);
+		});
+		this.shutdown("TSASN1Client.clientClose");
 		this.setReconnectTimeout(1000);
 	}
 
@@ -706,7 +779,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * Handler that is called if the client connection signalled an error
 	 * This method is *NOT* ment to be called by subclasses. The subclass provides a socket notify object which then binds to these methods
 	 *
-	 * @param event - the ISocketErrorEvent
+	 * @param event - the websocket error event
 	 */
 	private onSocketError(event: ISocketErrorEvent): void {
 		const readystate = this.socket ? TSASN1Client.getWebSocketReadyStateAsString(this.socket.readyState) : "undefined";
@@ -720,22 +793,21 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * This handler is called with full messages (websocket, rest, for tcp the NodeClient takes care about the framing)
 	 * This method is *NOT* ment to be called by subclasses. The subclass provides a socket notify object which then binds to these methods
 	 *
-	 * @param event - the ISocketMessageEvent
+	 * @param event - the websocket message event
 	 */
-	private async onSocketMessage(event: ISocketMessageEvent): Promise<void> {
+	private onSocketMessage(event: ISocketMessageEvent): void {
 		// Fill the invokecontext
 		const invokeContext = new ReceiveInvokeContext({ clientConnectionID: this.clientConnectionID });
-		try {
-			// Call the receive method
-			const response = await this.receive(event.data, invokeContext);
+		// Call the receive method
+		this.receive(event.data, invokeContext).then((response: IResponseData | undefined): void => {
 			// If the receive returned data send it back
 			if (response && this.socket && this.socket.readyState === ESocketState.OPEN)
 				this.socket.send(response.payLoad);
-		} catch (error) {
+		}).catch((error: unknown): void => {
 			this.log(ELogSeverity.error, "exception", "onSocketMessage", this, {
 				clientConnectionID: this.clientConnectionID,
 			}, error);
-		}
+		});
 	}
 
 	/**
@@ -748,40 +820,13 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 			return true;
 		try {
 			this.reconnecting = true;
-			await this.fire_OnBeforeReconnect();
-			await this.createStateFullConnection();
-			this.log(ELogSeverity.info, "successfully reconnected", "asn1ClientReconnect", this);
+			if (await this.createStateFullConnection())
+				this.log(ELogSeverity.info, "successfully reconnected", "clientReconnect", this);
 			return true;
-		} catch (error) {
-			this.handlePendingSockets(error);
-			let timeout = 1000;
-			this.reconnectCounter++;
-			if (this.reconnectCounter >= 10)
-				timeout = 5000;
-			this.log(ELogSeverity.warn, "reconnect failed", "asn1ClientReconnect", this, {
-				reconnectCounter: this.reconnectCounter,
-				timeout,
-			}, error);
-			this.setReconnectTimeout(timeout);
+		}
+		catch (error: unknown) {
 			return false;
 		}
-	}
-
-	/**
-	 * In case of a statefull connection error we fullfill all pending sockets with the error object
-	 *
-	 * @param err - The error object as provided by the caller
-	 */
-	private handlePendingSockets(err: unknown): void {
-		if (!(err instanceof ENetUC_Common.AsnRequestError)) {
-			err = new ENetUC_Common.AsnRequestError({
-				iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
-				u8sErrorString: (err as Error).message,
-			});
-		}
-		for (const pendingSocket of this.pendingSockets)
-			pendingSocket.reject(err);
-		this.pendingSockets = [];
 	}
 
 	/**
@@ -790,28 +835,50 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * @param bReconnected - in case of a reconnect this property is set to true
 	 */
 	private async fire_OnConnected(bReconnected: boolean): Promise<void> {
-		for (const callback of this.connectionCallBack)
-			await callback.onClientConnected(this.reconnecting);
+		this.log(ELogSeverity.debug, "calling notifies", "fire_OnConnected", this, { bReconnected });
+		try {
+			for (const callback of this.connectionCallBack)
+				await callback.onClientConnected(bReconnected);
+		}
+		catch (error) {
+			this.log(ELogSeverity.error, "fire_OnConnected threw an exception", "fire_OnConnected", this, undefined, error);
+		}
 	}
 
 	/**
 	 * Notifies the connection callbacks about an disconnected connection
 	 *
-	 * @param bControlledDisconnect - in case of a controlled disconnect (shutdown) set to true
+	 * @param bControlledDisconnect - in case of a controlled disconnect (e.g. shutdown or manually called disconnect) set to true
 	 */
 	private async fire_OnDisconnected(bControlledDisconnect: boolean): Promise<void> {
+		this.log(ELogSeverity.debug, "calling notifies", "fire_OnDisconnected", this, { bControlledDisconnect });
 		for (const callback of this.connectionCallBack)
 			await callback.onClientDisconnected(bControlledDisconnect);
 	}
 
 	/**
-	 * Notifies the connection callbacks about a reconnect taking place
+	 * Notifies the connection callbacks about a connection attempt taking place
 	 * The notified can then do things in advance (reset things, show a notification, fetch the proper server)
+	 * Returning false will terminate the connect attempt and also terminate pending invokes which have been queued
+	 *
+	 * @param bReconnecting - true in case this is a reconnect attempt from the lib
 	 */
-	private async fire_OnBeforeReconnect(): Promise<void> {
+	private async fire_OnBeforeConnect(bReconnecting: boolean): Promise<boolean> {
+		this.log(ELogSeverity.debug, "calling notifies", "fire_OnBeforeConnect", this, { bReconnecting });
+
+		let bContinue = true;
 		for (const callback of this.connectionCallBack) {
-			if (callback.onBeforeReconnect)
-				await callback.onBeforeReconnect();
+			if (callback.onBeforeConnect) {
+				if (!await callback.onBeforeConnect(bReconnecting)) {
+					bContinue = false;
+					break;
+				}
+			}
 		}
+
+		if (!bContinue)
+			this.log(ELogSeverity.warn, "notified returned false, stopping connect", "fire_OnBeforeConnect", this);
+
+		return bContinue;
 	}
 }

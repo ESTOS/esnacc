@@ -10,6 +10,7 @@
 
 // dprint-ignore-file
 /* eslint-disable */
+
 /**
  * This module is used to create and dispatch events.
  * Clients may request events from the server

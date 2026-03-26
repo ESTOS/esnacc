@@ -74,8 +74,7 @@ class ERouter {
 					if (module.onUpgrade && module.onUpgrade(request, socket, head))
 						break;
 				}
-			}
-			catch (error) {
+			} catch (error) {
 				theLogger.error("Upgrading connection failed", "setServer", this, { request }, error);
 			}
 		});

@@ -165,8 +165,7 @@ export class LogLocalStorage {
 			let datalen = 0;
 			try {
 				datalen = Common.stringify(logData).length;
-			}
-			catch (error) {
+			} catch (error) {
 				debugger;
 				// If we hit this line we likely have a circular dependency in the logData that needs to be resolved/removed
 				// Check especially the meta data for timer objects

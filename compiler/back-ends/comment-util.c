@@ -211,7 +211,10 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 				if (comment.i64Added)
 				{
 					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
-					fprintf(src, "%s @added %s%s\n", szPrefix, szTime, szSuffix);
+					if (style == COMMENTSTYLE_TYPESCRIPT)
+						fprintf(src, "%s @since %s%s\n", szPrefix, szTime, szSuffix);
+					else
+						fprintf(src, "%s @added %s%s\n", szPrefix, szTime, szSuffix);
 					free(szTime);
 				}
 				if (comment.iPrivate)
@@ -270,7 +273,10 @@ void printModuleComment(FILE* src, const char* szModuleName, enum COMMENTSTYLE s
 				if (comment.i64Added)
 				{
 					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
-					fprintf(src, " * @added %s\n", szTime);
+					if (style == COMMENTSTYLE_TYPESCRIPT)
+						fprintf(src, " * @since %s\n", szTime);
+					else
+						fprintf(src, " * @added %s\n", szTime);
 					free(szTime);
 				}
 				if (comment.iPrivate)
@@ -334,7 +340,10 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 				if (comment.i64Added)
 				{
 					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
-					fprintf(src, "%s @added %s\n", szPrefix, szTime);
+					if (style == COMMENTSTYLE_TYPESCRIPT)
+						fprintf(src, "%s @since %s\n", szPrefix, szTime);
+					else
+						fprintf(src, "%s @added %s\n", szPrefix, szTime);
 					free(szTime);
 				}
 				if (comment.iPrivate)
@@ -405,7 +414,10 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum CO
 				if (comment.i64Added)
 				{
 					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
-					fprintf(src, "%s @added %s\n", szPrefix, szTime);
+					if (style == COMMENTSTYLE_TYPESCRIPT)
+						fprintf(src, "%s @since %s\n", szPrefix, szTime);
+					else
+						fprintf(src, "%s @added %s\n", szPrefix, szTime);
 					free(szTime);
 				}
 				if (comment.iPrivate)

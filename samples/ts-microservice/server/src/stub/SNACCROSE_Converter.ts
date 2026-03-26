@@ -422,8 +422,7 @@ export class ROSEAuthList_Converter {
 		const t = [] as SNACCROSE.ROSEAuthList;
 
 		// [Print_JSON_EncoderSetOfDefCode]
-		for (const id in s) {
-			const se = s[id];
+		for (const se of s) {
 			if (se === undefined)
 				continue;
 			const val = ROSEAuth_Converter.toJSON(se, errors, newContext, "ROSEAuth");
@@ -447,8 +446,7 @@ export class ROSEAuthList_Converter {
 		if (s) {
 			t = new SNACCROSE.ROSEAuthList();
 			// [Print_JSON_DecoderSetOfDefCode]
-			for (const id in s) {
-				const se = s[id];
+			for (const se of s) {
 				if (se === undefined)
 					continue;
 				const val = ROSEAuth_Converter.fromJSON(se, errors, newContext, "ROSEAuth", false);
@@ -477,8 +475,8 @@ export class ROSEAuthList_Converter {
 		const newContext = TSConverter.addEncodeContext(context, name, "ROSEAuthList");
 
 		// [Print_BER_EncoderSetOfDefCode]
-		for (const id in s) {
-			const val = ROSEAuth_Converter.toBER(s[id], errors, newContext, "ROSEAuth");
+		for (const se of s) {
+			const val = ROSEAuth_Converter.toBER(se, errors, newContext, "ROSEAuth");
 			if (val)
 				t.push(val);
 		}
