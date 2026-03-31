@@ -149,7 +149,7 @@ public:
 	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don´t care about the result))
 	 * pCtx - contextual data for the invoke
 	 */
-	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::ROSEMessage** pResponse, const char* szOperationName, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) = 0;
+	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, const SNACC::ROSEMessage** pResponse, const char* szOperationName, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) = 0;
 
 	/** Handles the response payload of the SendInvoke method. Retrieves the result or error from the response
 	 *
@@ -159,7 +159,7 @@ public:
 	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
 	 * pCtx - contextual data for the invoke
 	 */
-	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) = 0;
+	virtual long HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) = 0;
 
 	/**
 	 * Decodes an invoke and properly handles logging for it
@@ -167,7 +167,7 @@ public:
 	 * pInvokeMessage - the invoke message as provided from the other side
 	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
 	 */
-	virtual long DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) = 0;
+	virtual long DecodeInvoke(const SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) = 0;
 
 	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
