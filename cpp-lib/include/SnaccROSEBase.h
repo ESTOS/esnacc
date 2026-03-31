@@ -233,11 +233,11 @@ public:
 	long SendRejectInvoke(int invokeID, SNACC::InvokeProblem problem, const char* szError = NULL, const wchar_t* szSessionID = 0, SNACC::ROSEAuthResult* pAuthHeader = 0);
 
 	/* Send a Error Message */
-	long SendError(SNACC::ROSEError* perror);
+	long EncodeError(const SNACC::ROSEError* perror, std::string& strResponse);
 
 	/* Send a Error Message.
 		Override from SnaccRoseSender */
-	virtual long SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID = 0) override;
+	virtual long EncodeError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID, std::string& strResponse) override;
 
 	/*! Increment invoke counter
 		Override from SnaccRoseSender*/
@@ -279,6 +279,16 @@ public:
 	 * pCtx - contextual data for the invoke
 	 */
 	virtual long HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
+
+	/** Encodes the result or error from an OnInvoke request. Retrieves the result or error from the response
+	 *
+	 * invokeResult - the result of the OnInvoke method
+	 * strResponse - the encoded result to put it on the transport
+	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
+	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
+	 * pCtx - contextual data for the invoke
+	 */
+	virtual long HandleOnInvokeResult(SNACC::InvokeResult invokeResult, std::string& strResponse, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
 
 	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *

@@ -801,6 +801,7 @@ long SnaccROSEBase::SendRejectInvoke(int invokeID, SNACC::InvokeProblem problem,
 
 void SnaccROSEBase::OnInvokeMessage(const SNACC::ROSEMessage* pMessage)
 {
+	auto start = std::chrono::steady_clock::now();
 	long lRoseResult = ROSE_REJECT_UNKNOWNOPERATION;
 
 	SnaccInvokeContext invokeContext;
@@ -869,8 +870,8 @@ void SnaccROSEBase::OnInvokeMessage(const SNACC::ROSEMessage* pMessage)
 		OnInvokeContextRunsOutOfScope(&invokeContext);
 
 	// prevent autodelete
-	invokeContext.pInvokeAuth = NULL;
-	invokeContext.pInvoke = NULL;
+	invokeContext.pInvokeAuth = nullptr;
+	invokeContext.pInvoke = nullptr;
 }
 
 void SnaccROSEBase::OnResultMessage(const SNACC::ROSEResult* presult)
@@ -1219,13 +1220,13 @@ long SnaccROSEBase::SendResult(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType*
 	return lRoseResult;
 }
 
-long SnaccROSEBase::SendError(SNACC::ROSEError* perror)
+long SnaccROSEBase::EncodeError(const SNACC::ROSEError* perror, std::string& strResponse)
 {
 	long lRoseResult = ROSE_NOERROR;
 
 	ROSEMessage errorMsg;
 	errorMsg.choiceId = ROSEMessage::errorCid;
-	errorMsg.error = perror;
+	errorMsg.error = (SNACC::ROSEError*)perror;
 
 	// encode now.
 	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
@@ -1233,38 +1234,33 @@ long SnaccROSEBase::SendError(SNACC::ROSEError* perror)
 		AsnBuf OutBuf;
 		AsnLen BytesEncoded = errorMsg.BEnc(OutBuf);
 
-		std::string strData;
 		OutBuf.ResetMode();
-		OutBuf.GetSeg(strData, BytesEncoded);
+		OutBuf.GetSeg(strResponse, BytesEncoded);
 
-		LogTransportData(true, m_eTransportEncoding, nullptr, strData.c_str(), strData.length(), &errorMsg, nullptr);
-
-		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), BytesEncoded, nullptr);
+		LogTransportData(true, m_eTransportEncoding, nullptr, strResponse.c_str(), strResponse.length(), &errorMsg, nullptr);
 	}
 	else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
 	{
 		SJson::Value value;
 		errorMsg.JEnc(value);
 
-		std::string strData;
 		int logLevel = (int)GetLogLevel(true);
 		if (logLevel & (int)EAsnLogLevel::JSON || logLevel & (int)EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED)
-			strData = getPrettyPrinted(value);
+			strResponse = getPrettyPrinted(value);
 		else
 		{
 			SJson::FastWriter writer;
-			strData = writer.write(value);
+			strResponse = writer.write(value);
 		}
 
 		std::string strPrefix;
 		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
-			lRoseResult = GetJsonLengthPrefix(strData, strPrefix);
+			lRoseResult = GetJsonLengthPrefix(strResponse, strPrefix);
 		if (lRoseResult == ROSE_NOERROR)
 		{
-			LogTransportData(true, m_eTransportEncoding, nullptr, strData.c_str(), strData.length(), &errorMsg, nullptr);
+			LogTransportData(true, m_eTransportEncoding, nullptr, strResponse.c_str(), strResponse.length(), &errorMsg, nullptr);
 			if (!strPrefix.empty())
-				strData.insert(0, strPrefix);
-			lRoseResult = SendBinaryDataBlockEx(strData.c_str(), (unsigned long)strData.length(), nullptr);
+				strResponse.insert(0, strPrefix);
 		}
 	}
 	else
@@ -1273,12 +1269,12 @@ long SnaccROSEBase::SendError(SNACC::ROSEError* perror)
 	}
 
 	// prevent delete of perror...
-	errorMsg.error = 0;
+	errorMsg.error = nullptr;
 
 	return lRoseResult;
 }
 
-long SnaccROSEBase::SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID /* = 0 */)
+long SnaccROSEBase::EncodeError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID, std::string& strResponse)
 {
 	long lRoseResult = ROSE_NOERROR;
 
@@ -1290,10 +1286,10 @@ long SnaccROSEBase::SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 	if (szSessionID)
 		error.sessionID = new UTF8String(szSessionID);
 
-	lRoseResult = SendError(&error);
+	lRoseResult = EncodeError(&error, strResponse);
 
 	// prevent delete of value...
-	error.error->value = 0;
+	error.error->value = nullptr;
 
 	return lRoseResult;
 }
@@ -1446,6 +1442,11 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessag
 		delete pResponseMsg;
 
 	return lRoseResult;
+}
+
+long SnaccROSEBase::HandleOnInvokeResult(SNACC::InvokeResult invokeResult, std::string& strResponse, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt)
+{
+	return 0;
 }
 
 long SnaccROSEBase::DecodeInvoke(const SNACC::ROSEMessage* pMessage, SNACC::AsnType* argument)
