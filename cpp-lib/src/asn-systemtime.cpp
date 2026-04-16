@@ -66,7 +66,6 @@ std::string DateToISO8601(DATE dt)
 	// Technically this is SUPER ugly as it breaks basically the concept of asn1. If i define a date that values should be filled with a date and not with an empty string!
 	if (dt == 0)
 		return "";
-	
 
 	// 2012-04-23T18:25:43.511Z
 	// 2012-04-23T18:25:43.500Z		// Zeros at the end are technically superfluous, but make them easier to read.
@@ -157,14 +156,14 @@ void AsnSystemTime::set_time_t(time_t tim)
 	value = dbltmp + 25569;
 }
 
-void AsnSystemTime::JEnc(SJson::Value& b) const
+SJson::Value AsnSystemTime::JEnc() const
 {
 	// ISO 8601
 	// 2012-04-23T18:25:43.511Z
 #ifdef _WIN32
-	b = SJson::Value(DateToISO8601(value));
+	return SJson::Value(DateToISO8601(value));
 #else
-	b = SJson::Value(value);
+	return SJson::Value(value);
 #endif
 }
 

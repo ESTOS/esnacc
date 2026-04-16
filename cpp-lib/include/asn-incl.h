@@ -317,7 +317,7 @@ public:
 	virtual void BDec(const AsnBuf& b, AsnLen& bytesDecoded) = 0;
 	virtual AsnLen BEnc(AsnBuf& b) const = 0;
 
-	virtual void JEnc(SJson::Value& b) const
+	virtual SJson::Value JEnc() const
 	{
 		throw EXCEPT("If you want to use JSON encoding you need to create the structures with JSON encoders/decoders. Check the compiler command line switches for -j", PARAMETER_ERROR);
 	}
@@ -400,7 +400,7 @@ public:
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	AsnLen PEnc(AsnBufBits& b) const override;
@@ -458,7 +458,7 @@ public:
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	AsnLen PEnc(AsnBufBits& b) const override;
@@ -568,7 +568,7 @@ public:
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	AsnLen PEnc(AsnBufBits& b) const override;
@@ -658,7 +658,7 @@ public:
 		return AsnOcts::operator!=(o);
 	};
 
-	virtual void JEnc(SJson::Value& b) const override;
+	virtual SJson::Value JEnc() const override;
 	virtual bool JDec(const SJson::Value& b) override;
 };
 
@@ -769,7 +769,7 @@ public:
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	AsnLen EncodeGeneral(AsnBufBits& b) const;
@@ -904,7 +904,7 @@ public:
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	virtual AsnLen PEnc(AsnBufBits& b) const override;
@@ -1134,7 +1134,7 @@ public:
 	AsnLen BEnc(AsnBuf& b) const override;
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	AsnLen PEnc(AsnBufBits& b) const override;
@@ -1196,7 +1196,7 @@ public:
 		return "AsnSystemTime";
 	}
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	void Print(std::ostream& os, unsigned short indent = 0) const override;
@@ -1276,7 +1276,7 @@ public:
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	AsnLen PEnc(AsnBufBits& b) const override;
@@ -1455,7 +1455,7 @@ public:
 	void BDec(const AsnBuf& b, AsnLen& bytesDecoded) override;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	AsnLen PEnc(AsnBufBits& b) const override;
@@ -1518,7 +1518,7 @@ public:
 	AsnLen BEncContent(AsnBuf& b) const;
 	void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded);
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	AsnLen PEnc(AsnBufBits& b) const override;
@@ -1966,7 +1966,7 @@ public:
 	virtual AsnLen BEncContent(AsnBuf& b) const = 0;
 	virtual void BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen& bytesDecoded) = 0;
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	AsnLen PEnc(AsnBufBits& b) const override;
@@ -2155,7 +2155,7 @@ public:
 		return UTF8STRING_TAG_CODE;
 	}
 
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	bool JDec(const SJson::Value& b) override;
 
 	AsnLen BEncContent(AsnBuf& b) const override;
@@ -2381,8 +2381,9 @@ public:
 	{
 	}
 
-	virtual void JEnc(SJson::Value& b) const override
+	virtual SJson::Value JEnc() const override
 	{
+		return SJson::Value();
 	}
 
 	virtual bool JDec(const SJson::Value& b) override
@@ -2446,7 +2447,7 @@ public:
 	AsnLen BEncContent(AsnBuf& _b) const;
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded /*, s env*/);
 	AsnLen BEnc(AsnBuf& _b) const override;
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded) override;
 	bool JDec(const SJson::Value& b) override;
 
@@ -2487,7 +2488,7 @@ public:
 	void BDecContent(const AsnBuf& _b, AsnTag tag, AsnLen elmtLen, AsnLen& bytesDecoded);
 
 	AsnLen BEnc(AsnBuf& _b) const override;
-	void JEnc(SJson::Value& b) const override;
+	SJson::Value JEnc() const override;
 	void BDec(const AsnBuf& _b, AsnLen& bytesDecoded) override;
 	bool JDec(const SJson::Value& b) override;
 

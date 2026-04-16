@@ -291,12 +291,12 @@ void AsnRelativeOid::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	BDecContent(b, tagId, elmtLen, bytesDecoded);
 }
 
-void AsnRelativeOid::JEnc(SJson::Value& b) const
+SJson::Value AsnRelativeOid::JEnc() const
 {
 	std::string str;
 	if (oid && octetLen)
 		str = std::string(oid, octetLen);
-	b = SJson::Value(str);
+	return SJson::Value(str);
 }
 
 bool AsnRelativeOid::JDec(const SJson::Value& b)

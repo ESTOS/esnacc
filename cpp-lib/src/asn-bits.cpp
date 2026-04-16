@@ -350,7 +350,7 @@ void AsnBits::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen&
 
 } /* AsnBits::BDecContent */
 
-void AsnBits::JEnc(SJson::Value& b) const
+SJson::Value AsnBits::JEnc() const
 {
 	// Convert to string form
 	std::string str;
@@ -359,7 +359,7 @@ void AsnBits::JEnc(SJson::Value& b) const
 			str += "1";
 		else
 			str += "0";
-	b = SJson::Value(str.c_str());
+	return SJson::Value(str.c_str());
 }
 
 bool AsnBits::JDec(const SJson::Value& b)

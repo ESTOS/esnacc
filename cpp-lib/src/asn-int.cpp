@@ -1471,9 +1471,9 @@ AsnLen AsnInt::PEncFullyConstrained(AsnBufBits& b, long lowerBound, long upperBo
 	return len;
 }
 
-void AsnInt::JEnc(SJson::Value& b) const
+SJson::Value AsnInt::JEnc() const
 {
-	b = SJson::Value((SJson::Value::Int64)GetLongLong());
+	return SJson::Value((SJson::Value::Int64)GetLongLong());
 }
 
 bool AsnInt::JDec(const SJson::Value& b)
