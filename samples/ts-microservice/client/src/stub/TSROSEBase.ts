@@ -1017,7 +1017,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		method: IOnEventMethod<any> | undefined,
 		invokeContext: IReceiveInvokeContext,
 	): Promise<ROSEReject | undefined> {
-		let result: ROSEReject;
+		let result: ROSEReject | undefined;
 
 		const converterErrors = new ConverterErrors();
 		const operationName = this.getNameForOperationID(operationID);
@@ -1040,7 +1040,8 @@ export abstract class ROSEBase implements IASN1LogCallback {
 					handler.setLogContext(argument, invokeContext);
 				method(argument, invokeContext);
 				return undefined;
-			} else {
+			} else if(invokeContext.invokeID != 99999) {
+				// Only send a reject for invokes and not for events
 				result = createInvokeReject(
 					invoke,
 					InvokeProblemenum.unrecognisedOperation,
@@ -1061,7 +1062,8 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			result = createInvokeReject(invoke, InvokeProblemenum.mistypedArgument, diagnostic);
 		}
 
-		this.transport.logReject(methodName, this, result, invoke, invokeContext, false);
+		if (result)
+			this.transport.logReject(methodName, this, result, invoke, invokeContext, false);
 
 		return result;
 	}
