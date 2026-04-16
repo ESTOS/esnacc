@@ -421,8 +421,7 @@ std::string SnaccROSEBase::GetEncoded(const SNACC::TransportEncoding encoding, A
 		case SNACC::TransportEncoding::JSON_NO_HEADING:
 		case SNACC::TransportEncoding::JSON:
 			{
-				SJson::Value value;
-				pValue->JEnc(value);
+				auto value = pValue->JEnc();
 				int logLevel = (int)GetLogLevel(true);
 				if (logLevel & (int)EAsnLogLevel::JSON || logLevel & (int)EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED)
 					strData = getPrettyPrinted(value);
@@ -708,8 +707,7 @@ long SnaccROSEBase::SendReject(SNACC::ROSEReject* preject)
 	}
 	else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
 	{
-		SJson::Value value;
-		rejectMsg.JEnc(value);
+		auto value = rejectMsg.JEnc();
 
 		std::string strData;
 		int logLevel = (int)GetLogLevel(true);
@@ -992,8 +990,7 @@ bool SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 			{
 				// The strTransportData is not already JSON encoded...
 				// So we encode the ROSEMessage as JSON
-				SJson::Value value;
-				pMsg->JEnc(value);
+				auto value = pMsg->JEnc();
 				std::string strLogData = getPrettyPrinted(value);
 				bTransportDataWasLogged = PrintJSONToLog(bOutbound, false, szOperationName, strLogData.c_str(), strLogData.length());
 			}
@@ -1161,8 +1158,7 @@ long SnaccROSEBase::SendResult(SNACC::ROSEResult* presult)
 	}
 	else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
 	{
-		SJson::Value value;
-		ResultMsg.JEnc(value);
+		auto value = ResultMsg.JEnc();
 
 		std::string strData;
 		int logLevel = (int)GetLogLevel(true);
@@ -1240,8 +1236,7 @@ long SnaccROSEBase::SendError(SNACC::ROSEError* perror)
 	}
 	else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
 	{
-		SJson::Value value;
-		errorMsg.JEnc(value);
+		auto value = errorMsg.JEnc();
 
 		std::string strData;
 		int logLevel = (int)GetLogLevel(true);

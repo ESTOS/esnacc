@@ -417,9 +417,9 @@ void AsnString::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	BDecContent(b, tag, elmtLen1, bytesDecoded);
 }
 
-void AsnString::JEnc(SJson::Value& b) const
+SJson::Value AsnString::JEnc() const
 {
-	b = SJson::Value(c_str());
+	return SJson::Value(c_str());
 }
 
 bool AsnString::JDec(const SJson::Value& b)
@@ -649,9 +649,9 @@ void WideAsnString::BDec(const AsnBuf& b, AsnLen& bytesDecoded)
 	BDecContent(b, tag, elmtLen1, bytesDecoded);
 }
 
-void WideAsnString::JEnc(SJson::Value& b) const
+SJson::Value WideAsnString::JEnc() const
 {
-	b = SJson::Value(c_str());
+	return SJson::Value(c_str());
 }
 
 bool WideAsnString::JDec(const SJson::Value& b)
@@ -1337,9 +1337,9 @@ UTF8String* UTF8String::CreateNewFromASCII(const std::string& strAscii)
 	return new UTF8String(AsnStringConvert::AsciiToUTF16(strAscii.c_str()));
 }
 
-void UTF8String::JEnc(SJson::Value& b) const
+SJson::Value UTF8String::JEnc() const
 {
-	b = SJson::Value(getUTF8().c_str());
+	return SJson::Value(getUTF8().c_str());
 }
 
 bool UTF8String::JDec(const SJson::Value& b)
