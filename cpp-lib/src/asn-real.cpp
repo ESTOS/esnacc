@@ -910,9 +910,9 @@ void AsnReal::BDecContent(const AsnBuf& b, AsnTag /* tagId */, AsnLen elmtLen, A
 	}
 } /* AsnInt::BDecContent */
 
-void AsnReal::JEnc(SJson::Value& b) const
+SJson::Value AsnReal::JEnc() const
 {
-	b = SJson::Value(value);
+	return SJson::Value(value);
 }
 
 bool AsnReal::JDec(const SJson::Value& b)
