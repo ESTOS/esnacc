@@ -95,6 +95,8 @@ void ROSERejectChoice::Clear()
 				invokednull = nullptr;
 			}
 			break;
+		default:
+			break;
 	}
 	choiceId = notinitialized;
 }
@@ -121,6 +123,8 @@ ROSERejectChoice& ROSERejectChoice::operator=(const ROSERejectChoice& that)
 					break;
 				case invokednullCid:
 					invokednull = new AsnNull(*that.invokednull);
+					break;
+				default:
 					break;
 			}
 		}
@@ -155,13 +159,13 @@ AsnLen ROSERejectChoice::BEncContent(AsnBuf& _b) const
 			l = invokedID->BEncContent(_b);
 			l += BEncDefLen(_b, l);
 			l += BEncTag1(_b, UNIV, PRIM, INTEGER_TAG_CODE);
-		break;
+			break;
 		case invokednullCid:
 			l = invokednull->BEncContent(_b);
 			BEncDefLenTo127(_b, l);
 			l++;
 			l += BEncTag1(_b, UNIV, PRIM, NULLTYPE_TAG_CODE);
-		break;
+			break;
 		default:
 			throw EXCEPT("Choice is empty", ENCODE_ERROR);
 	}
@@ -178,15 +182,14 @@ void ROSERejectChoice::BDecContent(const AsnBuf &_b, AsnTag tag, AsnLen elmtLen0
 			choiceId = invokedIDCid;
 			invokedID = new AsnInt;
 			invokedID->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(UNIV, PRIM, NULLTYPE_TAG_CODE):
 			choiceId = invokednullCid;
 			invokednull = new AsnNull;
 			invokednull->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		default:
 			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-		break;
 	}
 }
 
@@ -259,22 +262,22 @@ void ROSERejectChoice::Print(std::ostream& os, unsigned short indent) const
 {
 	switch (choiceId)
 	{
-	case invokedIDCid:
-		os << "invokedID ";
-		if (invokedID)
-			invokedID->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case invokednullCid:
-		os << "invokednull ";
-		if (invokednull)
-			invokednull->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
+		case invokedIDCid:
+			os << "invokedID ";
+			if (invokedID)
+				invokedID->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+		case invokednullCid:
+			os << "invokednull ";
+			if (invokednull)
+				invokednull->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+		default:
+			throw EXCEPT("Choice is empty", PARAMETER_ERROR);
 	} // end of switch
 } // end of ROSERejectChoice::Print()
 
@@ -295,20 +298,16 @@ void ROSERejectChoice::PrintXML(std::ostream& os, const char* lpszTitle) const
 			if (invokedID)
 				invokedID->PrintXML(os,"invokedID");
 			else
-			{
 				os << "<invokedID -- void3 -- /invokedID>" << std::endl;
-			}
-		break;
-
+			break;
 		case invokednullCid:
 			if (invokednull)
 				invokednull->PrintXML(os,"invokednull");
 			else
-			{
 				os << "<invokednull -- void3 -- /invokednull>" << std::endl;
-			}
-		break;
-
+			break;
+		default:
+			throw EXCEPT("Choice is empty", PARAMETER_ERROR);
 	} // end of switch
 	if (lpszTitle)
 		os << "</" << lpszTitle << ">";
@@ -808,8 +807,8 @@ ROSEError::~ROSEError()
 // [PrintInit]
 void ROSEError::Init()
 {
-	sessionID = NULL;
-	error = NULL;
+	sessionID = nullptr;
+	error = nullptr;
 }
 
 // [PrintClear]
@@ -818,12 +817,12 @@ void ROSEError::Clear()
 	if (sessionID)
 	{
 		delete sessionID;
-		sessionID = NULL;
+		sessionID = nullptr;
 	}
 	if (error)
 	{
 		delete error;
-		error = NULL;
+		error = nullptr;
 	}
 }
 
@@ -848,7 +847,7 @@ ROSEError& ROSEError::operator=(const ROSEError& that)
 		else if (sessionID)
 		{
 			delete sessionID;
-			sessionID = NULL;
+			sessionID = nullptr;
 		}
 		invokedID = that.invokedID;
 		error_value = that.error_value;
@@ -861,7 +860,7 @@ ROSEError& ROSEError::operator=(const ROSEError& that)
 		else if (error)
 		{
 			delete error;
-			error = NULL;
+			error = nullptr;
 		}
 	}
 
@@ -1187,7 +1186,7 @@ ROSEAuthRequest::~ROSEAuthRequest()
 // [PrintInit]
 void ROSEAuthRequest::Init()
 {
-	context = NULL;
+	context = nullptr;
 }
 
 // [PrintClear]
@@ -1197,7 +1196,7 @@ void ROSEAuthRequest::Clear()
 	if (context)
 	{
 		delete context;
-		context = NULL;
+		context = nullptr;
 	}
 }
 
@@ -1223,7 +1222,7 @@ ROSEAuthRequest& ROSEAuthRequest::operator=(const ROSEAuthRequest& that)
 		else if (context)
 		{
 			delete context;
-			context = NULL;
+			context = nullptr;
 		}
 	}
 
@@ -1453,7 +1452,7 @@ ROSEAuthResult::~ROSEAuthResult()
 // [PrintInit]
 void ROSEAuthResult::Init()
 {
-	context = NULL;
+	context = nullptr;
 }
 
 // [PrintClear]
@@ -1462,7 +1461,7 @@ void ROSEAuthResult::Clear()
 	if (context)
 	{
 		delete context;
-		context = NULL;
+		context = nullptr;
 	}
 }
 
@@ -1488,7 +1487,7 @@ ROSEAuthResult& ROSEAuthResult::operator=(const ROSEAuthResult& that)
 		else if (context)
 		{
 			delete context;
-			context = NULL;
+			context = nullptr;
 		}
 	}
 
@@ -1718,11 +1717,11 @@ ROSEInvoke::~ROSEInvoke()
 // [PrintInit]
 void ROSEInvoke::Init()
 {
-	sessionID = NULL;
-	linked_ID = NULL;
-	operationName = NULL;
-	authentication = NULL;
-	argument = NULL;
+	sessionID = nullptr;
+	linked_ID = nullptr;
+	operationName = nullptr;
+	authentication = nullptr;
+	argument = nullptr;
 }
 
 // [PrintClear]
@@ -1731,27 +1730,27 @@ void ROSEInvoke::Clear()
 	if (sessionID)
 	{
 		delete sessionID;
-		sessionID = NULL;
+		sessionID = nullptr;
 	}
 	if (linked_ID)
 	{
 		delete linked_ID;
-		linked_ID = NULL;
+		linked_ID = nullptr;
 	}
 	if (operationName)
 	{
 		delete operationName;
-		operationName = NULL;
+		operationName = nullptr;
 	}
 	if (authentication)
 	{
 		delete authentication;
-		authentication = NULL;
+		authentication = nullptr;
 	}
 	if (argument)
 	{
 		delete argument;
-		argument = NULL;
+		argument = nullptr;
 	}
 }
 
@@ -1776,7 +1775,7 @@ ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
 		else if (sessionID)
 		{
 			delete sessionID;
-			sessionID = NULL;
+			sessionID = nullptr;
 		}
 		invokeID = that.invokeID;
 		if (that.linked_ID)
@@ -1788,7 +1787,7 @@ ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
 		else if (linked_ID)
 		{
 			delete linked_ID;
-			linked_ID = NULL;
+			linked_ID = nullptr;
 		}
 		if (that.operationName)
 		{
@@ -1799,7 +1798,7 @@ ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
 		else if (operationName)
 		{
 			delete operationName;
-			operationName = NULL;
+			operationName = nullptr;
 		}
 		if (that.authentication)
 		{
@@ -1810,7 +1809,7 @@ ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
 		else if (authentication)
 		{
 			delete authentication;
-			authentication = NULL;
+			authentication = nullptr;
 		}
 		operationID = that.operationID;
 		if (that.argument)
@@ -1822,7 +1821,7 @@ ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
 		else if (argument)
 		{
 			delete argument;
-			argument = NULL;
+			argument = nullptr;
 		}
 	}
 
@@ -2282,8 +2281,8 @@ ROSEResult::~ROSEResult()
 // [PrintInit]
 void ROSEResult::Init()
 {
-	sessionID = NULL;
-	result = NULL;
+	sessionID = nullptr;
+	result = nullptr;
 }
 
 // [PrintClear]
@@ -2292,12 +2291,12 @@ void ROSEResult::Clear()
 	if (sessionID)
 	{
 		delete sessionID;
-		sessionID = NULL;
+		sessionID = nullptr;
 	}
 	if (result)
 	{
 		delete result;
-		result = NULL;
+		result = nullptr;
 	}
 }
 
@@ -2322,7 +2321,7 @@ ROSEResult& ROSEResult::operator=(const ROSEResult& that)
 		else if (sessionID)
 		{
 			delete sessionID;
-			sessionID = NULL;
+			sessionID = nullptr;
 		}
 		invokeID = that.invokeID;
 		if (that.result)
@@ -2334,7 +2333,7 @@ ROSEResult& ROSEResult::operator=(const ROSEResult& that)
 		else if (result)
 		{
 			delete result;
-			result = NULL;
+			result = nullptr;
 		}
 	}
 
@@ -2656,6 +2655,8 @@ void RejectProblem::Clear()
 				returnErrorProblem = nullptr;
 			}
 			break;
+		default:
+			break;
 	}
 	choiceId = notinitialized;
 }
@@ -2688,6 +2689,8 @@ RejectProblem& RejectProblem::operator=(const RejectProblem& that)
 					break;
 				case returnErrorProblemCid:
 					returnErrorProblem = new ReturnErrorProblem(*that.returnErrorProblem);
+					break;
+				default:
 					break;
 			}
 		}
@@ -2726,22 +2729,22 @@ AsnLen RejectProblem::BEncContent(AsnBuf& _b) const
 			l = generalProblem->BEncContent(_b);
 			l += BEncDefLen(_b, l);
 			l += BEncTag1(_b, CNTX, PRIM, 0);
-		break;
+			break;
 		case invokeProblemCid:
 			l = invokeProblem->BEncContent(_b);
 			l += BEncDefLen(_b, l);
 			l += BEncTag1(_b, CNTX, PRIM, 1);
-		break;
+			break;
 		case returnResultProblemCid:
 			l = returnResultProblem->BEncContent(_b);
 			l += BEncDefLen(_b, l);
 			l += BEncTag1(_b, CNTX, PRIM, 2);
-		break;
+			break;
 		case returnErrorProblemCid:
 			l = returnErrorProblem->BEncContent(_b);
 			l += BEncDefLen(_b, l);
 			l += BEncTag1(_b, CNTX, PRIM, 3);
-		break;
+			break;
 		default:
 			throw EXCEPT("Choice is empty", ENCODE_ERROR);
 	}
@@ -2758,25 +2761,24 @@ void RejectProblem::BDecContent(const AsnBuf &_b, AsnTag tag, AsnLen elmtLen0, A
 			choiceId = generalProblemCid;
 			generalProblem = new GeneralProblem;
 			generalProblem->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, PRIM, 1):
 			choiceId = invokeProblemCid;
 			invokeProblem = new InvokeProblem;
 			invokeProblem->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, PRIM, 2):
 			choiceId = returnResultProblemCid;
 			returnResultProblem = new ReturnResultProblem;
 			returnResultProblem->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, PRIM, 3):
 			choiceId = returnErrorProblemCid;
 			returnErrorProblem = new ReturnErrorProblem;
 			returnErrorProblem->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		default:
 			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-		break;
 	}
 }
 
@@ -2871,38 +2873,36 @@ void RejectProblem::Print(std::ostream& os, unsigned short indent) const
 {
 	switch (choiceId)
 	{
-	case generalProblemCid:
-		os << "generalProblem ";
-		if (generalProblem)
-			generalProblem->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case invokeProblemCid:
-		os << "invokeProblem ";
-		if (invokeProblem)
-			invokeProblem->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case returnResultProblemCid:
-		os << "returnResultProblem ";
-		if (returnResultProblem)
-			returnResultProblem->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case returnErrorProblemCid:
-		os << "returnErrorProblem ";
-		if (returnErrorProblem)
-			returnErrorProblem->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
+		case generalProblemCid:
+			os << "generalProblem ";
+			if (generalProblem)
+				generalProblem->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+		case invokeProblemCid:
+			os << "invokeProblem ";
+			if (invokeProblem)
+				invokeProblem->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+		case returnResultProblemCid:
+			os << "returnResultProblem ";
+			if (returnResultProblem)
+				returnResultProblem->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+		case returnErrorProblemCid:
+			os << "returnErrorProblem ";
+			if (returnErrorProblem)
+				returnErrorProblem->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+		default:
+			throw EXCEPT("Choice is empty", PARAMETER_ERROR);
 	} // end of switch
 } // end of RejectProblem::Print()
 
@@ -2923,38 +2923,28 @@ void RejectProblem::PrintXML(std::ostream& os, const char* lpszTitle) const
 			if (generalProblem)
 				generalProblem->PrintXML(os,"generalProblem");
 			else
-			{
 				os << "<generalProblem -- void3 -- /generalProblem>" << std::endl;
-			}
-		break;
-
+			break;
 		case invokeProblemCid:
 			if (invokeProblem)
 				invokeProblem->PrintXML(os,"invokeProblem");
 			else
-			{
 				os << "<invokeProblem -- void3 -- /invokeProblem>" << std::endl;
-			}
-		break;
-
+			break;
 		case returnResultProblemCid:
 			if (returnResultProblem)
 				returnResultProblem->PrintXML(os,"returnResultProblem");
 			else
-			{
 				os << "<returnResultProblem -- void3 -- /returnResultProblem>" << std::endl;
-			}
-		break;
-
+			break;
 		case returnErrorProblemCid:
 			if (returnErrorProblem)
 				returnErrorProblem->PrintXML(os,"returnErrorProblem");
 			else
-			{
 				os << "<returnErrorProblem -- void3 -- /returnErrorProblem>" << std::endl;
-			}
-		break;
-
+			break;
+		default:
+			throw EXCEPT("Choice is empty", PARAMETER_ERROR);
 	} // end of switch
 	if (lpszTitle)
 		os << "</" << lpszTitle << ">";
@@ -2984,10 +2974,10 @@ ROSEReject::~ROSEReject()
 // [PrintInit]
 void ROSEReject::Init()
 {
-	sessionID = NULL;
-	reject = NULL;
-	details = NULL;
-	authentication = NULL;
+	sessionID = nullptr;
+	reject = nullptr;
+	details = nullptr;
+	authentication = nullptr;
 }
 
 // [PrintClear]
@@ -2996,23 +2986,23 @@ void ROSEReject::Clear()
 	if (sessionID)
 	{
 		delete sessionID;
-		sessionID = NULL;
+		sessionID = nullptr;
 	}
 	invokedID.Clear();
 	if (reject)
 	{
 		delete reject;
-		reject = NULL;
+		reject = nullptr;
 	}
 	if (details)
 	{
 		delete details;
-		details = NULL;
+		details = nullptr;
 	}
 	if (authentication)
 	{
 		delete authentication;
-		authentication = NULL;
+		authentication = nullptr;
 	}
 }
 
@@ -3037,7 +3027,7 @@ ROSEReject& ROSEReject::operator=(const ROSEReject& that)
 		else if (sessionID)
 		{
 			delete sessionID;
-			sessionID = NULL;
+			sessionID = nullptr;
 		}
 		invokedID = that.invokedID;
 		if (that.reject)
@@ -3049,7 +3039,7 @@ ROSEReject& ROSEReject::operator=(const ROSEReject& that)
 		else if (reject)
 		{
 			delete reject;
-			reject = NULL;
+			reject = nullptr;
 		}
 		if (that.details)
 		{
@@ -3060,7 +3050,7 @@ ROSEReject& ROSEReject::operator=(const ROSEReject& that)
 		else if (details)
 		{
 			delete details;
-			details = NULL;
+			details = nullptr;
 		}
 		if (that.authentication)
 		{
@@ -3071,7 +3061,7 @@ ROSEReject& ROSEReject::operator=(const ROSEReject& that)
 		else if (authentication)
 		{
 			delete authentication;
-			authentication = NULL;
+			authentication = nullptr;
 		}
 	}
 
@@ -3488,6 +3478,8 @@ void ROSEMessage::Clear()
 				reject = nullptr;
 			}
 			break;
+		default:
+			break;
 	}
 	choiceId = notinitialized;
 }
@@ -3520,6 +3512,8 @@ ROSEMessage& ROSEMessage::operator=(const ROSEMessage& that)
 					break;
 				case rejectCid:
 					reject = new ROSEReject(*that.reject);
+					break;
+				default:
 					break;
 			}
 		}
@@ -3558,22 +3552,22 @@ AsnLen ROSEMessage::BEncContent(AsnBuf& _b) const
 			l = invoke->BEncContent(_b);
 			l += BEncConsLen(_b, l);
 			l += BEncTag1(_b, CNTX, CONS, 1);
-		break;
+			break;
 		case resultCid:
 			l = result->BEncContent(_b);
 			l += BEncConsLen(_b, l);
 			l += BEncTag1(_b, CNTX, CONS, 2);
-		break;
+			break;
 		case errorCid:
 			l = error->BEncContent(_b);
 			l += BEncConsLen(_b, l);
 			l += BEncTag1(_b, CNTX, CONS, 3);
-		break;
+			break;
 		case rejectCid:
 			l = reject->BEncContent(_b);
 			l += BEncConsLen(_b, l);
 			l += BEncTag1(_b, CNTX, CONS, 4);
-		break;
+			break;
 		default:
 			throw EXCEPT("Choice is empty", ENCODE_ERROR);
 	}
@@ -3590,25 +3584,24 @@ void ROSEMessage::BDecContent(const AsnBuf &_b, AsnTag tag, AsnLen elmtLen0, Asn
 			choiceId = invokeCid;
 			invoke = new ROSEInvoke;
 			invoke->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, CONS, 2):
 			choiceId = resultCid;
 			result = new ROSEResult;
 			result->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, CONS, 3):
 			choiceId = errorCid;
 			error = new ROSEError;
 			error->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		case MAKE_TAG_ID(CNTX, CONS, 4):
 			choiceId = rejectCid;
 			reject = new ROSEReject;
 			reject->BDecContent(_b, tag, elmtLen0, bytesDecoded);
-		break;
+			break;
 		default:
 			throw InvalidTagException(typeName(), tag, STACK_ENTRY);
-		break;
 	}
 }
 
@@ -3703,38 +3696,36 @@ void ROSEMessage::Print(std::ostream& os, unsigned short indent) const
 {
 	switch (choiceId)
 	{
-	case invokeCid:
-		os << "invoke ";
-		if (invoke)
-			invoke->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case resultCid:
-		os << "result ";
-		if (result)
-			result->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case errorCid:
-		os << "error ";
-		if (error)
-			error->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
-	case rejectCid:
-		os << "reject ";
-		if (reject)
-			reject->Print(os, indent);
-		else
-			os << "<CHOICE value is missing>\n";
-		break;
-
+		case invokeCid:
+			os << "invoke ";
+			if (invoke)
+				invoke->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+		case resultCid:
+			os << "result ";
+			if (result)
+				result->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+		case errorCid:
+			os << "error ";
+			if (error)
+				error->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+		case rejectCid:
+			os << "reject ";
+			if (reject)
+				reject->Print(os, indent);
+			else
+				os << "<CHOICE value is missing>\n";
+			break;
+		default:
+			throw EXCEPT("Choice is empty", PARAMETER_ERROR);
 	} // end of switch
 } // end of ROSEMessage::Print()
 
@@ -3755,38 +3746,28 @@ void ROSEMessage::PrintXML(std::ostream& os, const char* lpszTitle) const
 			if (invoke)
 				invoke->PrintXML(os,"invoke");
 			else
-			{
 				os << "<invoke -- void3 -- /invoke>" << std::endl;
-			}
-		break;
-
+			break;
 		case resultCid:
 			if (result)
 				result->PrintXML(os,"result");
 			else
-			{
 				os << "<result -- void3 -- /result>" << std::endl;
-			}
-		break;
-
+			break;
 		case errorCid:
 			if (error)
 				error->PrintXML(os,"error");
 			else
-			{
 				os << "<error -- void3 -- /error>" << std::endl;
-			}
-		break;
-
+			break;
 		case rejectCid:
 			if (reject)
 				reject->PrintXML(os,"reject");
 			else
-			{
 				os << "<reject -- void3 -- /reject>" << std::endl;
-			}
-		break;
-
+			break;
+		default:
+			throw EXCEPT("Choice is empty", PARAMETER_ERROR);
 	} // end of switch
 	if (lpszTitle)
 		os << "</" << lpszTitle << ">";

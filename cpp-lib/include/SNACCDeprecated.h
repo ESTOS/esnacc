@@ -42,9 +42,9 @@ public:
 	 * @param szMethodName - the name of the method that has been called
 	 * @param direction - whether the call was inbound or outbound
 	 * @param callStack - the call stack that shows where the object has been created
-	 * @param pContext - The invoke Context that is associated with the invoke
+	 * @param ctx - the invoke context that is associated with the invoke
 	 */
-	virtual void DeprecatedASN1Method(const long long i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const std::list<std::string>& callStack, const SnaccInvokeContext* pContext = NULL) = 0;
+	virtual void DeprecatedASN1Method(const long long i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const std::list<std::string>& callStack, const SnaccInvokeContext& ctx) = 0;
 };
 
 class SNACCDeprecated
@@ -74,9 +74,9 @@ public:
 	 * @param szModuleName - the module in which the object is located
 	 * @param szMethodName - the name of the method that has been called
 	 * @param direction - whether the call was inbound or outbound
-	 * @param pContext - the invokeContext that shows more details about the invoke
+	 * @param ctx - the invoke context that shows more details about the invoke
 	 */
-	static void DeprecatedASN1Method(const long long i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext = NULL);
+	static void DeprecatedASN1Method(const long long i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, SnaccInvokeContext& ctx);
 
 private:
 	/**

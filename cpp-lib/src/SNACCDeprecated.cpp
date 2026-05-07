@@ -28,14 +28,15 @@ void SNACCDeprecated::DeprecatedASN1Object(const long long i64DeprecatedSince, c
 	m_pCallback->DeprecatedASN1Object(i64DeprecatedSince, szModuleName, szObjectName, callStack);
 }
 
-void SNACCDeprecated::DeprecatedASN1Method(const long long i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, const SnaccInvokeContext* pContext /* = NULL */)
+void SNACCDeprecated::DeprecatedASN1Method(const long long i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction,
+	SnaccInvokeContext& ctx)
 {
 	if (!m_pCallback)
 		return;
 
 	std::list<std::string> callStack = GetStackTrace(2);
 
-	m_pCallback->DeprecatedASN1Method(i64DeprecatedSince, szModuleName, szMethodName, direction, callStack, pContext);
+	m_pCallback->DeprecatedASN1Method(i64DeprecatedSince, szModuleName, szMethodName, direction, callStack, ctx);
 }
 
 std::list<std::string> SNACCDeprecated::GetStackTrace(int remove /*= 1*/)

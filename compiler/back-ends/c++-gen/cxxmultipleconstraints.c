@@ -54,7 +54,6 @@ int BasicTypeString_LISTS PARAMS((hdr, src, scList, iSCPresent, curr, currS_type
 		{
 			switch (currS_type->a.single->choiceId)
 			{
-
 				case SUBTYPEVALUE_VALUERANGE:
 					{
 						break;
@@ -67,7 +66,6 @@ int BasicTypeString_LISTS PARAMS((hdr, src, scList, iSCPresent, curr, currS_type
 
 				case SUBTYPEVALUE_SIZECONSTRAINT:
 					{
-
 						if (currS_type->choiceId == SUBTYPE_OR)
 						{
 							pTmpnode = currS_type->a.single->a.sizeConstraint->a.or->first;
@@ -494,7 +492,7 @@ int PrintCxxMultiConstraintOrHandler PARAMS((hdr, src, definedName, e, i), FILE*
 				else
 				{
 					fprintf(src, "		sizeVRList = 0;\n");
-					fprintf(src, "		return NULL;\n");
+					fprintf(src, "		return nullptr;\n");
 				}
 
 				fprintf(src, "}\n\n");
@@ -629,7 +627,6 @@ int PrintCxxMultiConstraintOrHandler PARAMS((hdr, src, definedName, e, i), FILE*
 
 				if (s_type->choiceId == SUBTYPE_AND)
 				{
-
 					and_curr = s_type->a.and->first;
 					while (and_curr)
 					{
@@ -716,7 +713,7 @@ int PrintCxxMultiConstraintOrHandler PARAMS((hdr, src, definedName, e, i), FILE*
 				else
 				{
 					fprintf(src, "	sizeList = 0;\n");
-					fprintf(src, "	return NULL;\n");
+					fprintf(src, "	return nullptr;\n");
 				}
 				fprintf(src, "}\n\n\n");
 
@@ -746,7 +743,6 @@ int PrintCxxMultiConstraintOrHandler PARAMS((hdr, src, definedName, e, i), FILE*
 
 				if (i != 3 && i != 0)
 				{
-
 					/* Last we declare an instance of the internal class we */
 					/*   just created                                       */
 					if (i == 0)
@@ -887,7 +883,7 @@ int PrintCxxMultiConstraintOrHandler PARAMS((hdr, src, definedName, e, i), FILE*
 				else
 				{
 					fprintf(src, "	sizeList = 0;\n");
-					fprintf(src, "	return NULL;\n");
+					fprintf(src, "	return nullptr;\n");
 				}
 
 				fprintf(src, "}\n\n\n");
@@ -1036,7 +1032,7 @@ int PrintCxxMultiConstraintOrHandler PARAMS((hdr, src, definedName, e, i), FILE*
 				else
 				{
 					fprintf(src, "	sizeList = 0;\n");
-					fprintf(src, "	return NULL;\n");
+					fprintf(src, "	return nullptr;\n");
 				}
 
 				fprintf(src, "}\n\n\n");

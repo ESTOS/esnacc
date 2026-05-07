@@ -503,7 +503,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					if (strcmp(argument + 1, "stdafx") == 0)
 					{
 						/* ste --added */
-						genCodeCPPPrintStdAfxInclude = 1;
+						genCodeCPPPrintPCHInclude = 1;
 						currArg++;
 					}
 					break;
@@ -563,7 +563,10 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					currArg++;
 					break;
 				case 'p':
-					genPrintCode = TRUE;
+					if (strcmp(argument + 1, "pch") == 0)
+						genCodeCPPPrintPCHInclude = 2;
+					else
+						genPrintCode = TRUE;
 					currArg++;
 					break;
 				case 'x':

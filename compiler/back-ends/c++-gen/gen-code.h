@@ -45,7 +45,7 @@ extern int gNO_NAMESPACE;
 extern const char* gAlternateNamespaceString;
 extern int genPERCode;
 // extern short ImportedFilesG;
-extern int genCodeCPPPrintStdAfxInclude; // Print stdafx.h includes
+extern int genCodeCPPPrintPCHInclude; // Print stdafx.h or pch.h includes
 
 static const char bufTypeNameG[] = "AsnBuf";
 static const char lenTypeNameG[] = "AsnLen";

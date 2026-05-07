@@ -803,8 +803,8 @@ void PrintKotlinCode(ModuleList* allMods)
 	if (gMajorInterfaceVersion >= 0)
 	{
 		char szFileName[_MAX_PATH] = {0};
-		strcpy_s(szFileName, _MAX_PATH, gszOutputPath);
-		strcat_s(szFileName, _MAX_PATH, "Asn1InterfaceVersion");
+		strcpy_s(szFileName, _MAX_PATH - 1, gszOutputPath);
+		strcat_s(szFileName, _MAX_PATH - 1, "Asn1InterfaceVersion");
 		FILE* src = getKotlinFilePointer(szFileName);
 		if (src)
 		{
