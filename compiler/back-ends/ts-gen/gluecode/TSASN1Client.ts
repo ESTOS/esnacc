@@ -711,7 +711,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				socket.onSocketConnected = undefined;
 				socket.onSocketClose = undefined;
 
-				// Okay we have an error, let´s notify the pending sockets about this error
+				// Okay we have an error, let's notify the pending sockets about this error
 				const error = new ENetUC_Common.AsnRequestError({
 					iErrorDetail: CustomInvokeProblemEnum.serviceUnavailable,
 					u8sErrorString: `${verb} to ${this.target} failed. WebSocket error ${closed.code}`,
@@ -719,7 +719,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 				this.pendingSockets.reject(error);
 
 				if (this.autoReconnect) {
-					// The client wants auto reconnect, so let´s start the timer
+					// The client wants auto reconnect, so let's start the timer
 					let timeout = 1000;
 					this.reconnectCounter++;
 					if (this.reconnectCounter >= 10)
@@ -811,7 +811,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	}
 
 	/**
-	 * Helper that tries to reconnect to the target. Is called from outside to reestablish a connection in case the embedded reconnect mechanism isn´t used.
+	 * Helper that tries to reconnect to the target. Is called from outside to reestablish a connection in case the embedded reconnect mechanism isn't used.
 	 *
 	 * @returns - the current connection target
 	 */

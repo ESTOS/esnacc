@@ -404,11 +404,11 @@ void AsnOcts::BDecContent(const AsnBuf& b, AsnTag tagId, AsnLen elmtLen, AsnLen&
 
 } /* AsnOcts::BDecContent */
 
-void AsnOcts::JEnc(SJson::Value& b) const
+SJson::Value AsnOcts::JEnc() const
 {
 	if (m_str.size() == 0)
 	{
-		b = SJson::Value("");
+		return SJson::Value("");
 	}
 	else
 	{
@@ -446,12 +446,13 @@ void AsnOcts::JEnc(SJson::Value& b) const
 
 			/* we want to print the encoded data, so null-terminate it: */
 			*c = 0;
-			b = SJson::Value(output);
+			auto b = SJson::Value(output);
 			free(output);
+			return b;
 		}
 		else
 		{
-			b = SJson::Value("");
+			return SJson::Value("");
 		}
 	}
 }

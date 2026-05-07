@@ -26,14 +26,14 @@ import * as ENetUC_Common from "./ENetUC_Common.js";
  * First byte constants used to discriminate between frame types.
  *
  * JSON frames always start with the ASCII character 'J' (0x4A).
- * ROSE frames start with a context-specific constructed ASN.1 tag (0xA1–0xA4),
+ * ROSE frames start with a context-specific constructed ASN.1 tag (0xA1-0xA4),
  * corresponding to the four ROSE operation types defined in X.880.
  */
 const FRAME_START_JSON = 0x4A; // ASCII 'J'
-const FRAME_START_ROSE_INVOKE = 0xA1; // [1] IMPLICIT — ROSEInvoke
-const FRAME_START_ROSE_RESULT = 0xA2; // [2] IMPLICIT — ROSEResult
-const FRAME_START_ROSE_ERROR = 0xA3; // [3] IMPLICIT — ROSEError
-const FRAME_START_ROSE_REJECT = 0xA4; // [4] IMPLICIT — ROSEReject
+const FRAME_START_ROSE_INVOKE = 0xA1; // [1] IMPLICIT - ROSEInvoke
+const FRAME_START_ROSE_RESULT = 0xA2; // [2] IMPLICIT - ROSEResult
+const FRAME_START_ROSE_ERROR = 0xA3; // [3] IMPLICIT - ROSEError
+const FRAME_START_ROSE_REJECT = 0xA4; // [4] IMPLICIT - ROSEReject
 
 /** The fixed size (in bytes) of a JSON frame header: 'J' + 7 ASCII decimal digits. */
 const JSON_HEADER_SIZE = 8;
@@ -361,12 +361,12 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 * The method supports two frame formats on the same connection, identified
 	 * by the first byte of each frame:
 	 *
-	 *  • **JSON frames** — start with ASCII `J` (0x4A), followed by exactly
+	 *  - **JSON frames** - start with ASCII `J` (0x4A), followed by exactly
 	 *    7 ASCII decimal digits that encode the payload length in bytes, then
-	 *    the raw JSON payload.  Example header: `J0000120` → 120-byte payload.
+	 *    the raw JSON payload.  Example header: `J0000120` -> 120-byte payload.
 	 *
-	 *  • **ROSE / ASN.1 BER frames** — start with one of the four ROSE
-	 *    context-specific constructed tags (0xA1–0xA4: Invoke, Result, Error,
+	 *  - **ROSE / ASN.1 BER frames** - start with one of the four ROSE
+	 *    context-specific constructed tags (0xA1-0xA4: Invoke, Result, Error,
 	 *    Reject).  The tag is always a single byte.  It is followed by a BER
 	 *    definite-form length field and then the value bytes.
 	 *
@@ -395,23 +395,23 @@ export class TSASN1NodeClient extends TSASN1Client {
 			const firstByte = this.pendingSocketData[0]!;
 
 			if (firstByte === FRAME_START_JSON) {
-				// ── JSON frame ──────────────────────────────────────────────
+				// -- JSON frame -------------------------------------------------
 				const frame = this.tryConsumeJsonFrame();
 				if (!frame) {
-					// Incomplete header or payload — wait for more data.
+					// Incomplete header or payload - wait for more data.
 					break;
 				}
 				completeFrames.push(frame);
 			} else if (isRoseTag(firstByte)) {
-				// ── ROSE / ASN.1 BER frame ───────────────────────────────
+				// -- ROSE / ASN.1 BER frame ----------------------------------
 				const frame = this.tryConsumeBerFrame();
 				if (!frame) {
-					// Incomplete TLV — wait for more data.
+					// Incomplete TLV - wait for more data.
 					break;
 				}
 				completeFrames.push(frame);
 			} else {
-				// ── Unknown / garbled byte ───────────────────────────────
+				// -- Unknown / garbled byte ----------------------------------
 				// Discard this byte and keep scanning.  On a clean TCP stream
 				// this branch should never be reached.
 				this.pendingSocketData = this.pendingSocketData.subarray(1);
@@ -431,9 +431,9 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 *
 	 * Frame layout:
 	 * ```
-	 * ┌───┬─────────────────────────┬──────────────────────────┐
-	 * │ J │  7 ASCII decimal digits │  <length> bytes of JSON  │
-	 * └───┴─────────────────────────┴──────────────────────────┘
+	 * +---+-------------------------+--------------------------+
+	 * | J |  7 ASCII decimal digits |  <length> bytes of JSON  |
+	 * +---+-------------------------+--------------------------+
 	 *   1             7                      variable
 	 * ```
 	 *
@@ -446,7 +446,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 		if (this.pendingSocketData.length < JSON_HEADER_SIZE)
 			return undefined;
 
-		// Parse the 7-digit decimal length field (bytes 1–7).
+		// Parse the 7-digit decimal length field (bytes 1-7).
 		const lengthString = this.pendingSocketData.toString("ascii", 1, JSON_HEADER_SIZE);
 		const payloadLength = parseInt(lengthString, 10);
 
@@ -468,8 +468,8 @@ export class TSASN1NodeClient extends TSASN1Client {
 		// Slice out the complete frame and advance the pending buffer.
 		const frame = new Uint8Array(
 			this.pendingSocketData.buffer,
-			this.pendingSocketData.byteOffset + JSON_HEADER_SIZE, // ← skips 8-byte header
-			payloadLength, // ← payload length only
+			this.pendingSocketData.byteOffset + JSON_HEADER_SIZE, // skips 8-byte header
+			payloadLength, // payload length only
 		);
 		this.pendingSocketData = this.pendingSocketData.subarray(totalFrameLength);
 
@@ -482,15 +482,15 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 *
 	 * Expected top-level structure (definite length only):
 	 * ```
-	 * ┌──────────┬──────────────────────────────┬───────────────┐
-	 * │  Tag     │         Length field         │  Value bytes  │
-	 * │  1 byte  │  1 byte (short) or 2–5 bytes │   variable    │
-	 * └──────────┴──────────────────────────────┴───────────────┘
+	 * +----------+------------------------------+---------------+
+	 * |  Tag     |         Length field         |  Value bytes  |
+	 * |  1 byte  |  1 byte (short) or 2-5 bytes |   variable    |
+	 * +----------+------------------------------+---------------+
 	 * ```
 	 *
 	 * BER definite length encoding:
-	 *  - Short form  (0x00–0x7F): the byte itself is the length.
-	 *  - Long form   (0x81–0x84): the low 7 bits tell how many subsequent
+	 *  - Short form  (0x00-0x7F): the byte itself is the length.
+	 *  - Long form   (0x81-0x84): the low 7 bits tell how many subsequent
 	 *    bytes encode the length as a big-endian unsigned integer.
 	 *    We support up to 4 subsequent bytes (max ~4 GB), which is more
 	 *    than sufficient for any real ROSE message.
@@ -503,11 +503,11 @@ export class TSASN1NodeClient extends TSASN1Client {
 		if (this.pendingSocketData.length < 2)
 			return undefined;
 
-		// ── Tag ─────────────────────────────────────────────────────────────
+		// -- Tag ------------------------------------------------------------
 		// All ROSE top-level tags fit in one byte (verified by the caller).
 		const tagSize = 1;
 
-		// ── Length ──────────────────────────────────────────────────────────
+		// -- Length ---------------------------------------------------------
 		const lengthResult = this.parseBerLength(tagSize);
 		if (!lengthResult) {
 			// Not enough bytes to parse the length field yet.
@@ -535,9 +535,9 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 *
 	 * Supported encodings:
 	 * ```
-	 *  Short form:  0xxxxxxx  — value is the byte itself (0–127)
-	 *  Long  form:  1xxxxxxx  — low 7 bits = number of subsequent length bytes
-	 *                           (we support 1–4 subsequent bytes)
+	 *  Short form:  0xxxxxxx  - value is the byte itself (0-127)
+	 *  Long  form:  1xxxxxxx  - low 7 bits = number of subsequent length bytes
+	 *                           (we support 1-4 subsequent bytes)
 	 * ```
 	 *
 	 * @param offset - Byte offset into `pendingSocketData` where the length field
@@ -554,11 +554,11 @@ export class TSASN1NodeClient extends TSASN1Client {
 		const firstLengthByte = this.pendingSocketData[offset]!;
 
 		if ((firstLengthByte & 0x80) === 0) {
-			// ── Short form ── single byte encodes the length directly.
+			// -- Short form -- single byte encodes the length directly.
 			return { valueLength: firstLengthByte, lengthFieldSize: 1 };
 		}
 
-		// ── Long form ── low 7 bits tell us how many bytes follow.
+		// -- Long form -- low 7 bits tell us how many bytes follow.
 		const numLengthBytes = firstLengthByte & 0x7F;
 
 		// Guard: we only handle up to 4 subsequent length bytes.

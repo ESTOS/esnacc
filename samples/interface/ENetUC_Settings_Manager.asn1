@@ -1,4 +1,4 @@
-﻿UC-Server-Access-Protocol-Settings-Manager
+UC-Server-Access-Protocol-Settings-Manager
 	{ iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) estos(10924) micro-service-example(3) settings-manager(2) }
 
 -- @category Settings Manager
@@ -7,7 +7,7 @@
 -- A client may retrieve settings, adopt them and store them on the server
 -- In case a property in the events has changed the server will notify this to connected websocket events
 
---~ Interface uses the following operation IDs (please check that the id´s do not overlap other id´s)
+--~ Interface uses the following operation IDs (please check that the ids do not overlap other ids)
 --~ Operation IDs: 4100 - 4199
 
 -- Methods and Events

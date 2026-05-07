@@ -35,7 +35,7 @@ export class EventManager implements IENetUC_Event_ManagerROSE_Invoke_Handler {
 	/**
 	 * Method that will create some events the server will then dispatch to the clients
 	 *
-	 * It´s not possible to call this method through rest as the client won´t receive these events
+	 * It's not possible to call this method through rest as the client won't receive these events
 	 *
 	 * @param argument - Argument to create fancy events on the server side
 	 * @param invokeContext - Invokecontext from the asn.1 lib (containing invoke related data)

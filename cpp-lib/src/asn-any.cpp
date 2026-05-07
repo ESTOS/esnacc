@@ -447,17 +447,18 @@ void AsnAny::PDec(AsnBufBits& b, AsnLen& bitsDecoded)
 	} // END IF ai != NULL
 } // END AsnAny::PDec(...)
 
-void AsnAny::JEnc(SJson::Value& b) const
+SJson::Value AsnAny::JEnc() const
 {
-	if (value != NULL)
+	if (value)
 	{
-		value->JEnc(b);
+		SJson::Value b = value->JEnc();
 		if (b.isObject())
 			b["_type"] = value->typeName();
+		return b;
 	}
 	else if (jsonBuf != NULL)
 	{
-		b = *jsonBuf;
+		return *jsonBuf;
 	}
 	else if (anyBuf != NULL)
 	{
@@ -465,8 +466,13 @@ void AsnAny::JEnc(SJson::Value& b) const
 		auto before = anyBuf->GetReadLoc();
 		anyBuf->ResetMode();
 		anyBuf->GetSeg(data);
-		b = SJson::Value(data);
+		auto b = SJson::Value(data);
 		anyBuf->SetReadLoc(before);
+		return b;
+	}
+	else
+	{
+		return SJson::Value();
 	}
 }
 

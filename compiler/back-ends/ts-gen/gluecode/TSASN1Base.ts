@@ -835,7 +835,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 					payLoad = ROSEBase.buf2hex(payLoad);
 			}
 
-			// Let´s log what we did receive
+			// Let's log what we did receive
 			const meta: ITransportMetaData = {
 				...this.additionalLogMetaForRawTransport,
 				clientConnectionID: invokeContext.clientConnectionID,

@@ -4,7 +4,7 @@ project(esnacc_cmake) #  LANGUAGES CXX) - would interpret all files as C++
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") # GCC
 	# Ugly but i see no other option than specifying the compiler directly
-	# No matter what i do to tell cmake to use a newer standard than C89 itś
+	# No matter what i do to tell cmake to use a newer standard than C89 it's
     # always invoking the g89-gcc compiler which complains about -std=c99 -std=c11 etc as not supported
     set(CMAKE_C_STANDARD 99)
 	set(CMAKE_C_COMPILER "/usr/bin/c99-gcc")

@@ -3,9 +3,9 @@
 
 _BEGIN_SNACC_NAMESPACE
 
-void AsnStringOcts::JEnc(SJson::Value& b) const
+SJson::Value AsnStringOcts::JEnc() const
 {
-	b = SJson::Value(m_str.c_str());
+	return SJson::Value(m_str.c_str());
 }
 
 bool AsnStringOcts::JDec(const SJson::Value& b)

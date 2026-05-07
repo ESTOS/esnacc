@@ -8,6 +8,7 @@
 #include <string>
 #include <mutex>
 #include <wchar.h>
+#include <optional>
 #include "SnaccROSEInterfaces.h"
 #include "syncevent.h"
 
@@ -48,7 +49,7 @@ public:
 	long m_lInvokeID;
 
 	/*! The answer message. */
-	SNACC::ROSEMessage* m_pAnswerMessage;
+	const SNACC::ROSEMessage* m_pAnswerMessage;
 
 	/*! Error code (one of the ROSE_ error codes. */
 	long m_lRoseResult;
@@ -57,7 +58,7 @@ public:
 		Attention: The AnswerMessage will not be copied.
 		The AnswerMessage must be new allocated and will be deleted
 		when processed. */
-	void CompleteOperation(long lRoseResult, SNACC::ROSEMessage* pAnswerMessage);
+	void CompleteOperation(long lRoseResult, const SNACC::ROSEMessage* pAnswerMessage);
 
 	/*! Wait for answer received. */
 	bool WaitForComplete(long lTimeOut = -1);
@@ -73,19 +74,19 @@ class SnaccROSEBase;
 class SnaccRoseOperationLookup
 {
 public:
-	static const char* LookUpName(int iOpID);
-	static int LookUpID(const char* szOpName);
-	static void RegisterOperation(int iOpID, const char* szOpName, int iInterfaceID);
-	static int LookUpInterfaceID(int iOpID);
+	static const char* LookUpName(unsigned int uiOpID);
+	static unsigned int LookUpID(const char* szOpName);
+	static void RegisterOperation(unsigned int uiOpID, const char* szOpName, unsigned int uiInterfaceID);
+	static unsigned int LookUpInterfaceID(unsigned int uiOpID);
 	// check if at least one Operation has been registerd
 	static bool Initialized();
 	// Cleanup all registered Operations (can be called during shutdown)
 	static void CleanUp();
 
 private:
-	static std::map<std::string, int> m_mapOpToID;
-	static std::map<int, std::string> m_mapIDToOp;
-	static std::map<int, int> m_mapIDToInterface;
+	static inline std::map<std::string, unsigned int> m_mapOpToID;
+	static inline std::map<unsigned int, std::string> m_mapIDToOp;
+	static inline std::map<unsigned int, unsigned int> m_mapIDToInterface;
 };
 
 // Invoke Context
@@ -232,11 +233,11 @@ public:
 	long SendRejectInvoke(int invokeID, SNACC::InvokeProblem problem, const char* szError = NULL, const wchar_t* szSessionID = 0, SNACC::ROSEAuthResult* pAuthHeader = 0);
 
 	/* Send a Error Message */
-	long SendError(SNACC::ROSEError* perror);
+	long EncodeError(const SNACC::ROSEError* perror, std::string& strResponse);
 
 	/* Send a Error Message.
 		Override from SnaccRoseSender */
-	virtual long SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID = 0) override;
+	virtual long EncodeError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID, std::string& strResponse) override;
 
 	/*! Increment invoke counter
 		Override from SnaccRoseSender*/
@@ -266,7 +267,7 @@ public:
 	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don�t care about the result))
 	 * pCtx - contextual data for the invoke
 	 */
-	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, const char* szOperationName, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) override;
+	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, const SNACC::ROSEMessage** pResponse, const char* szOperationName, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) override;
 
 	/**
 	 * Handles the response payload of the SendInvoke method. Retrieves the result or error from the response
@@ -277,7 +278,17 @@ public:
 	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
 	 * pCtx - contextual data for the invoke
 	 */
-	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
+	virtual long HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
+
+	/** Encodes the result or error from an OnInvoke request. Retrieves the result or error from the response
+	 *
+	 * invokeResult - the result of the OnInvoke method
+	 * strResponse - the encoded result to put it on the transport
+	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
+	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
+	 * pCtx - contextual data for the invoke
+	 */
+	virtual long HandleOnInvokeResult(SNACC::InvokeResult invokeResult, std::string& strResponse, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
 
 	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
@@ -302,7 +313,7 @@ public:
 	 * pInvokeMessage - the invoke message as provided from the other side
 	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
 	 */
-	long DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) override;
+	long DecodeInvoke(const SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) override;
 
 protected:
 	// Get the length prefix for a given strJson payload
@@ -312,7 +323,7 @@ protected:
 	/*! Die functions and events.
 		The implementation of this functions is contained in the generated code from the
 		esnacc. */
-	virtual long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccInvokeContext* cxt) = 0;
+	virtual long OnInvoke(const SNACC::ROSEMessage* pMsg, SnaccInvokeContext* cxt) = 0;
 
 	/* Function is called when a received data Packet cannot be decoded (invalid Rose Message)
 	 * bAlreadyTransportLogged	- true if the transport data has already been logged in the tranport log (so we do not need to log it again)
@@ -329,7 +340,7 @@ protected:
 		pmessage is new allocated and must be deleted inside this function.
 		returns true if the message was processed.
 		set bAllowInvokes to false, if invokes are not processed. */
-	virtual bool OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowInvokes);
+	virtual bool OnROSEMessage(const SNACC::ROSEMessage* pmessage, bool bAllowInvokes, unsigned long ulMessageSize);
 
 	/*
 	 * This callback allows the implementer to enrich the invokecontext with data in case it wants to add or tune it
@@ -350,15 +361,42 @@ protected:
 	 */
 	virtual void OnInvokeContextRunsOutOfScope(SnaccInvokeContext* pInvokeContext) {};
 
+	/*
+	 * This callback provides statistic data for inbound messages
+	 * The idea is that a logic behind the callback is able to collect message durations, payload sizes, amount of calls etc.
+	 *
+	 * uiOperationID - the called OperationID (The called method may query SnaccRoseOperationLookup to get the name if needed)
+	 * ulInboundPayLoadSize - the inbound message size
+	 * duration - how long it took to process the message internally
+	 * ulResponsePayloadSize - the size of the response message (optional as events provide no response data)
+	 */
+	virtual void OnInboundMessageProcessed(unsigned int uiOperationID, unsigned long ulInboundPayLoadSize, std::chrono::milliseconds duration, std::optional<unsigned long> ulResponsePayloadSize)
+	{
+	}
+
+	/*
+	 * This callback provides statistic data for inbound messages
+	 * The idea is that a logic behind the callback is able to collect
+	 *
+	 * uiOperationID - the called OperationID (The called method may query SnaccRoseOperationLookup to get the name if needed)
+	 * ulOutboundPayLoadSize - the outbound message size
+	 * duration - how long it took to process the message on the other size (optional as events will not provide a respsone)
+	 * ulResponsePayloadSize - the size of the response message (optional as events provide no response data)
+	 * bTimedOut - true in case the request timed out (duration is then filled with the timeout value)
+	 */
+	virtual void OnOutboundMessageProcessed(unsigned int uiOperationID, unsigned long ulOutboundPayLoadSize, std::optional<std::chrono::milliseconds> duration, std::optional<unsigned long> ulResponsePayloadSize, bool bTimedOut = false)
+	{
+	}
+
 private:
 	/*! The ROSE component messages.
 		These are called from the OnROSEMessage.
 		Do not dete the parameters. The functions are called
 		before the CompleteOperation */
-	virtual void OnInvokeMessage(SNACC::ROSEMessage* pMsg);
-	virtual void OnResultMessage(SNACC::ROSEResult* presult);
-	virtual void OnErrorMessage(SNACC::ROSEError* perror);
-	virtual void OnRejectMessage(SNACC::ROSEReject* preject);
+	virtual void OnInvokeMessage(const SNACC::ROSEMessage* pMessage);
+	virtual void OnResultMessage(const SNACC::ROSEResult* pResult);
+	virtual void OnErrorMessage(const SNACC::ROSEError* pError);
+	virtual void OnRejectMessage(const SNACC::ROSEReject* pReject);
 
 	/*! Maximum wait time (milliseconds) for a function to return default: 20000 ms*/
 	long m_lMaxInvokeWait = 20000;
@@ -382,7 +420,7 @@ private:
 	/*! Pending Operation result has been received.
 		Attention: The pMessage Objekt will be taken over from the
 		SnaccROSEPendingOperation Object and deleted in the end. */
-	bool CompletePendingOperation(int invokeID, SNACC::ROSEMessage* pMessage);
+	bool CompletePendingOperation(int invokeID, const SNACC::ROSEMessage* pMessage);
 	void CompleteAllPendingOperations();
 
 	SnaccROSEPendingOperationMap m_PendingOperations;

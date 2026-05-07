@@ -13,7 +13,7 @@
 			visibility: hidden;
 		}
 
-		/* ── Log entry layout ─────────────────────────────────────── */
+		/* -- Log entry layout --------------------------------------- */
 
 		#result {
 			font-family: monospace;
@@ -120,6 +120,7 @@
 			import {
 				AsnCreateFancyEventsArgument,
 				AsnCreateFancyEventsResult,
+				AsnFancyEventArgument,
 			} from "/src/stub/ENetUC_Event_Manager.ts";
 			import {
 				AsnGetSettingsArgument,
@@ -128,7 +129,7 @@
 				AsnSetSettingsResult,
 			} from "/src/stub/ENetUC_Settings_Manager.ts";
 
-			// ── Cookie helpers ──────────────────────────────────────────────
+			// -- Cookie helpers ----------------------------------------------
 			const COOKIE_NAME = "mstcSettings";
 			const COOKIE_DAYS = 365;
 			let lastAutoReconnect = false;
@@ -149,7 +150,7 @@
 				}; expires=${expires}; path=/`;
 			}
 
-			// ───────────────────────────────────────────────────────────────
+			// ---------------------------------------------------------------
 
 			settingsManager.onEvent_asnSettingsChanged = (argument, invokeContext) => {
 				if (argument.settings.bEnabled !== undefined) {
@@ -194,6 +195,12 @@
 					saveCookies();
 				}
 			}
+
+			async function sendEvent() {
+				const argument = new AsnFancyEventArgument({ iEventCounter: 0, iEventsLeft: 1 });
+				const response = await eventManager.event_asnFancyEvent(argument);
+			}
+
 			async function getEvents() {
 				const amount = document.getElementById("amount");
 				const delay = document.getElementById("delay");
@@ -260,6 +267,7 @@
 			window.encoding_changed = encoding_changed;
 			window.transport_changed = transport_changed;
 			window.getEvents = getEvents;
+			window.sendEvent = sendEvent;
 			window.getSettings = getSettings;
 			window.setSettings = setSettings;
 			window.clearLog = clearLog;
@@ -328,6 +336,11 @@
 				type="button"
 				onclick="getEvents()"
 				value="Get events"
+			/>
+			<input
+				type="button"
+				onclick="sendEvent()"
+				value="Send event"
 			/>
 			<br />
 			<h4>Module Two Functions:</h4>

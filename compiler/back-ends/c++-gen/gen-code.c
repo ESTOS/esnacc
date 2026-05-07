@@ -2206,13 +2206,11 @@ void PrintChoiceDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 	CxxTRI* cxxtri;
 	char* varName;
 
-	// void JEnc (SJson::Value &b) const;
-
-	fprintf(hdr, "\tvoid JEnc(SJson::Value& b) const override;\n");
-	fprintf(src, "void %s::JEnc(SJson::Value& b) const\n", td->cxxTypeDefInfo->className);
+	fprintf(hdr, "\tSJson::Value JEnc() const override;\n");
+	fprintf(src, "SJson::Value %s::JEnc() const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	/* print local vars */
-	fprintf(src, "\tb = SJson::Value(SJson::objectValue);\n");
+	fprintf(src, "\tauto b = SJson::Value(SJson::objectValue);\n");
 
 	/* print local vars */
 
@@ -2231,15 +2229,15 @@ void PrintChoiceDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 			varName = cxxtri->fieldName;
 
 			/* encode content */
-			fprintf(src, "\t\t\t%s", varName);
-			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
-			fprintf(src, "JEnc(b[\"%s\"]);\n", varName);
-			fprintf(src, "\t\tbreak;\n");
+			fprintf(src, "\t\t\tb[\"%s\"] = %s", varName, varName);
+			fprintf(src, "%sJEnc();\n", getAccessor(cxxtri->isPtr));
+			fprintf(src, "\t\t\tbreak;\n");
 		}
 	}
 	fprintf(src, "\t\tdefault:\n");
 	fprintf(src, "\t\t\tthrow EXCEPT(\"Choice is empty\", ENCODE_ERROR);\n");
 	fprintf(src, "\t}\n");
+	fprintf(src, "\treturn b;\n");
 	fprintf(src, "}\n\n");
 }
 
@@ -3402,10 +3400,10 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	fprintf(hdr, "\tvoid JEnc(SJson::Value& b) const override;\n");
-	fprintf(src, "void %s::JEnc(SJson::Value& b) const\n", td->cxxTypeDefInfo->className);
+	fprintf(hdr, "\tSJson::Value JEnc() const override;\n");
+	fprintf(src, "SJson::Value %s::JEnc() const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
-	fprintf(src, "\tb = SJson::Value(SJson::objectValue);\n");
+	fprintf(src, "\tauto b = SJson::Value(SJson::objectValue);\n");
 
 	NamedType* e;
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
@@ -3477,12 +3475,11 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 			const char* szIndent = e->type->optional || e->type->defaultVal != NULL ? "\t\t" : "\t";
 
 			/* encode content */
-			fprintf(src, "%s%s", szIndent, varName);
-			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
-			fprintf(src, "JEnc(b[\"%s\"]);\n", varName);
+			fprintf(src, "%sb[\"%s\"] = %s", szIndent, varName, varName);
+			fprintf(src, "%sJEnc();\n", getAccessor(cxxtri->isPtr));
 		}
 	}
-
+	fprintf(src, "\treturn b;\n");
 	fprintf(src, "}\n\n");
 }
 

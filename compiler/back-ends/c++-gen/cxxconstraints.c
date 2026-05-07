@@ -12,8 +12,7 @@
 /* Prints the default instantiation for a typedefined object */
 void PrintTypeDefDefault(FILE* hdr, FILE* src, TypeDef* td)
 {
-	// ste 4.11.14
-	// AsnSystemTime hat nun eigene Implementierung in der snacclib wegen JSON Encoding als String und BER Encoding Real
+	// AsnSystemTime now has its own implementation in snacclib because JSON encodes it as a string and BER as a real value
 	if (strcmp(td->cxxTypeDefInfo->className, "AsnSystemTime") == 0)
 		return;
 

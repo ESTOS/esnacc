@@ -31,24 +31,16 @@ New JSON Format:
 */
 
 // Implementation from asn-listset.h
-void AsnOptionalParameters::JEnc(SJson::Value& b) const
+SJson::Value AsnOptionalParameters::JEnc() const
 {
-	/*
-	b = SJson::Value(SJson::arrayValue);
-	for (AsnOptionalParameters::const_reverse_iterator i = rbegin(); i != rend(); ++i)
-	{
-		SJson::Value tmp;
-		i->JEnc(tmp);
-		b.append(tmp);
-	}
-	*/
-	b = SJson::Value(SJson::objectValue);
+	auto b = SJson::Value(SJson::objectValue);
 	for (AsnOptionalParameters::const_reverse_iterator i = rbegin(); i != rend(); ++i)
 	{
 		std::string key;
 		i->key.getUTF8(key);
-		i->value.JEnc(b[key]);
+		b[key] = i->value.JEnc();
 	}
+	return b;
 }
 
 bool AsnOptionalParameters::JDec(const SJson::Value& b)
@@ -148,7 +140,7 @@ void AsnOptionalParam::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elm
 	Clear();
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
-	// Wenn nix da ist, brauchen wir nicht weiter machen --> raus
+	// If nothing is there, we do not need to continue
 	if (elmtLen0 == 0)
 		return;
 
@@ -198,11 +190,12 @@ AsnLen AsnOptionalParam::BEnc(AsnBuf& _b) const
 	return l;
 }
 
-void AsnOptionalParam::JEnc(SJson::Value& b) const
+SJson::Value AsnOptionalParam::JEnc() const
 {
-	b = SJson::Value(SJson::objectValue);
-	key.JEnc(b["key"]);
-	value.JEnc(b["value"]);
+	auto b = SJson::Value(SJson::objectValue);
+	b["key"] = key.JEnc();
+	b["value"] = value.JEnc();
+	return b;
 }
 
 void AsnOptionalParam::BDec(const AsnBuf& _b, AsnLen& bytesDecoded)
@@ -412,44 +405,21 @@ AsnLen AsnOptionalParamChoice::BEnc(AsnBuf& _b) const
 	return l;
 }
 
-void AsnOptionalParamChoice::JEnc(SJson::Value& b) const
+SJson::Value AsnOptionalParamChoice::JEnc() const
 {
 	FUNC("AsnOptionalParamChoice::JEnc()");
-	/*
-	b = SJson::Value(SJson::objectValue);
-
-	switch (choiceId)
-	{
-	case stringdataCid:
-		stringdata->JEnc(b["stringdata"]);
-		break;
-	case binarydataCid:
-		binarydata->JEnc(b["binarydata"]);
-		break;
-	case integerdataCid:
-		integerdata->JEnc(b["integerdata"]);
-		break;
-	default:
-		throw EXCEPT("Choice is empty", ENCODE_ERROR);
-	} // end switch
-	*/
 	switch (choiceId)
 	{
 		case stringdataCid:
-			stringdata->JEnc(b);
-			break;
-
+			return stringdata->JEnc();
 		case binarydataCid:
 			{
-				b = SJson::Value(SJson::objectValue);
-				binarydata->JEnc(b["binarydata"]);
-				break;
+				auto b = SJson::Value(SJson::objectValue);
+				b["binarydata"] = binarydata->JEnc();
+				return b;
 			}
-
 		case integerdataCid:
-			integerdata->JEnc(b);
-			break;
-
+			return integerdata->JEnc();
 		default:
 			throw EXCEPT("Choice is empty", ENCODE_ERROR);
 	} // end switch

@@ -252,7 +252,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 				div.removeChild(oldest);
 		}
 
-		// Build the new entry node entirely in the DOM — no innerHTML on the container.
+		// Build the new entry node entirely in the DOM - no innerHTML on the container.
 		const entryEl = document.createElement("div");
 		entryEl.className = "log-entry";
 
@@ -262,7 +262,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 		if (metaJson) {
 			// Active toggle button
 			const btn = document.createElement("button");
-			btn.type = "button"; // prevent form submission — default is "submit" inside <form>
+			btn.type = "button"; // prevent form submission - default is "submit" inside <form>
 			btn.id = `log-btn-${id}`;
 			btn.className = "log-toggle";
 			btn.title = "Expand metadata";
@@ -282,14 +282,14 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 			metaEl.appendChild(pre);
 			entryEl.appendChild(metaEl); // appended to entry, revealed below the line
 		} else {
-			// Invisible spacer — keeps timestamps aligned with entries that have a button
+			// Invisible spacer - keeps timestamps aligned with entries that have a button
 			const spacer = document.createElement("button");
 			spacer.className = "log-toggle log-toggle--empty";
 			spacer.setAttribute("aria-hidden", "true");
 			lineEl.appendChild(spacer);
 		}
 
-		// Main text — set via innerHTML so callers can pass styled <span> content
+		// Main text - set via innerHTML so callers can pass styled <span> content
 		const textEl = document.createElement("span");
 		textEl.innerHTML = css ? `<span style="${css}">${html}</span>` : html;
 		lineEl.appendChild(textEl);
@@ -450,11 +450,11 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	}
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// -- Helpers -----------------------------------------------------------------
 
 /**
  * Toggles a metadata panel open/closed and updates the arrow on the button.
- * Called directly via closure from the button's addEventListener — no global
+ * Called directly via closure from the button's addEventListener - no global
  * window attachment needed.
  *
  * @param metaId - the id for the element we want to show or hide
@@ -475,7 +475,7 @@ function toggleLogMeta(metaId: string, btn: HTMLButtonElement): void {
 	}
 }
 
-// ── Exports ───────────────────────────────────────────────────────────────────
+// -- Exports ------------------------------------------------------------------
 
 export const theClient = new Client();
 
