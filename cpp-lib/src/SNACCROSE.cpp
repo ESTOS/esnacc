@@ -808,8 +808,8 @@ ROSEError::~ROSEError()
 // [PrintInit]
 void ROSEError::Init()
 {
-	sessionID = NULL;
-	error = NULL;
+	sessionID = nullptr;
+	error = nullptr;
 }
 
 // [PrintClear]
@@ -818,12 +818,12 @@ void ROSEError::Clear()
 	if (sessionID)
 	{
 		delete sessionID;
-		sessionID = NULL;
+		sessionID = nullptr;
 	}
 	if (error)
 	{
 		delete error;
-		error = NULL;
+		error = nullptr;
 	}
 }
 
@@ -848,7 +848,7 @@ ROSEError& ROSEError::operator=(const ROSEError& that)
 		else if (sessionID)
 		{
 			delete sessionID;
-			sessionID = NULL;
+			sessionID = nullptr;
 		}
 		invokedID = that.invokedID;
 		error_value = that.error_value;
@@ -861,7 +861,7 @@ ROSEError& ROSEError::operator=(const ROSEError& that)
 		else if (error)
 		{
 			delete error;
-			error = NULL;
+			error = nullptr;
 		}
 	}
 
@@ -1187,7 +1187,7 @@ ROSEAuthRequest::~ROSEAuthRequest()
 // [PrintInit]
 void ROSEAuthRequest::Init()
 {
-	context = NULL;
+	context = nullptr;
 }
 
 // [PrintClear]
@@ -1197,7 +1197,7 @@ void ROSEAuthRequest::Clear()
 	if (context)
 	{
 		delete context;
-		context = NULL;
+		context = nullptr;
 	}
 }
 
@@ -1223,7 +1223,7 @@ ROSEAuthRequest& ROSEAuthRequest::operator=(const ROSEAuthRequest& that)
 		else if (context)
 		{
 			delete context;
-			context = NULL;
+			context = nullptr;
 		}
 	}
 
@@ -1453,7 +1453,7 @@ ROSEAuthResult::~ROSEAuthResult()
 // [PrintInit]
 void ROSEAuthResult::Init()
 {
-	context = NULL;
+	context = nullptr;
 }
 
 // [PrintClear]
@@ -1462,7 +1462,7 @@ void ROSEAuthResult::Clear()
 	if (context)
 	{
 		delete context;
-		context = NULL;
+		context = nullptr;
 	}
 }
 
@@ -1488,7 +1488,7 @@ ROSEAuthResult& ROSEAuthResult::operator=(const ROSEAuthResult& that)
 		else if (context)
 		{
 			delete context;
-			context = NULL;
+			context = nullptr;
 		}
 	}
 
@@ -1718,11 +1718,11 @@ ROSEInvoke::~ROSEInvoke()
 // [PrintInit]
 void ROSEInvoke::Init()
 {
-	sessionID = NULL;
-	linked_ID = NULL;
-	operationName = NULL;
-	authentication = NULL;
-	argument = NULL;
+	sessionID = nullptr;
+	linked_ID = nullptr;
+	operationName = nullptr;
+	authentication = nullptr;
+	argument = nullptr;
 }
 
 // [PrintClear]
@@ -1731,27 +1731,27 @@ void ROSEInvoke::Clear()
 	if (sessionID)
 	{
 		delete sessionID;
-		sessionID = NULL;
+		sessionID = nullptr;
 	}
 	if (linked_ID)
 	{
 		delete linked_ID;
-		linked_ID = NULL;
+		linked_ID = nullptr;
 	}
 	if (operationName)
 	{
 		delete operationName;
-		operationName = NULL;
+		operationName = nullptr;
 	}
 	if (authentication)
 	{
 		delete authentication;
-		authentication = NULL;
+		authentication = nullptr;
 	}
 	if (argument)
 	{
 		delete argument;
-		argument = NULL;
+		argument = nullptr;
 	}
 }
 
@@ -1776,7 +1776,7 @@ ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
 		else if (sessionID)
 		{
 			delete sessionID;
-			sessionID = NULL;
+			sessionID = nullptr;
 		}
 		invokeID = that.invokeID;
 		if (that.linked_ID)
@@ -1788,7 +1788,7 @@ ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
 		else if (linked_ID)
 		{
 			delete linked_ID;
-			linked_ID = NULL;
+			linked_ID = nullptr;
 		}
 		if (that.operationName)
 		{
@@ -1799,7 +1799,7 @@ ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
 		else if (operationName)
 		{
 			delete operationName;
-			operationName = NULL;
+			operationName = nullptr;
 		}
 		if (that.authentication)
 		{
@@ -1810,7 +1810,7 @@ ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
 		else if (authentication)
 		{
 			delete authentication;
-			authentication = NULL;
+			authentication = nullptr;
 		}
 		operationID = that.operationID;
 		if (that.argument)
@@ -1822,7 +1822,7 @@ ROSEInvoke& ROSEInvoke::operator=(const ROSEInvoke& that)
 		else if (argument)
 		{
 			delete argument;
-			argument = NULL;
+			argument = nullptr;
 		}
 	}
 
@@ -2282,8 +2282,8 @@ ROSEResult::~ROSEResult()
 // [PrintInit]
 void ROSEResult::Init()
 {
-	sessionID = NULL;
-	result = NULL;
+	sessionID = nullptr;
+	result = nullptr;
 }
 
 // [PrintClear]
@@ -2292,12 +2292,12 @@ void ROSEResult::Clear()
 	if (sessionID)
 	{
 		delete sessionID;
-		sessionID = NULL;
+		sessionID = nullptr;
 	}
 	if (result)
 	{
 		delete result;
-		result = NULL;
+		result = nullptr;
 	}
 }
 
@@ -2322,7 +2322,7 @@ ROSEResult& ROSEResult::operator=(const ROSEResult& that)
 		else if (sessionID)
 		{
 			delete sessionID;
-			sessionID = NULL;
+			sessionID = nullptr;
 		}
 		invokeID = that.invokeID;
 		if (that.result)
@@ -2334,7 +2334,7 @@ ROSEResult& ROSEResult::operator=(const ROSEResult& that)
 		else if (result)
 		{
 			delete result;
-			result = NULL;
+			result = nullptr;
 		}
 	}
 
@@ -2984,10 +2984,10 @@ ROSEReject::~ROSEReject()
 // [PrintInit]
 void ROSEReject::Init()
 {
-	sessionID = NULL;
-	reject = NULL;
-	details = NULL;
-	authentication = NULL;
+	sessionID = nullptr;
+	reject = nullptr;
+	details = nullptr;
+	authentication = nullptr;
 }
 
 // [PrintClear]
@@ -2996,23 +2996,23 @@ void ROSEReject::Clear()
 	if (sessionID)
 	{
 		delete sessionID;
-		sessionID = NULL;
+		sessionID = nullptr;
 	}
 	invokedID.Clear();
 	if (reject)
 	{
 		delete reject;
-		reject = NULL;
+		reject = nullptr;
 	}
 	if (details)
 	{
 		delete details;
-		details = NULL;
+		details = nullptr;
 	}
 	if (authentication)
 	{
 		delete authentication;
-		authentication = NULL;
+		authentication = nullptr;
 	}
 }
 
@@ -3037,7 +3037,7 @@ ROSEReject& ROSEReject::operator=(const ROSEReject& that)
 		else if (sessionID)
 		{
 			delete sessionID;
-			sessionID = NULL;
+			sessionID = nullptr;
 		}
 		invokedID = that.invokedID;
 		if (that.reject)
@@ -3049,7 +3049,7 @@ ROSEReject& ROSEReject::operator=(const ROSEReject& that)
 		else if (reject)
 		{
 			delete reject;
-			reject = NULL;
+			reject = nullptr;
 		}
 		if (that.details)
 		{
@@ -3060,7 +3060,7 @@ ROSEReject& ROSEReject::operator=(const ROSEReject& that)
 		else if (details)
 		{
 			delete details;
-			details = NULL;
+			details = nullptr;
 		}
 		if (that.authentication)
 		{
@@ -3071,7 +3071,7 @@ ROSEReject& ROSEReject::operator=(const ROSEReject& that)
 		else if (authentication)
 		{
 			delete authentication;
-			authentication = NULL;
+			authentication = nullptr;
 		}
 	}
 

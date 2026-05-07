@@ -106,7 +106,7 @@ void SaveTSROSEFilesToOutputDirectory(const int genRoseStubs, const char* szPath
 	{
 		char szFileName[_MAX_PATH] = {0};
 		strcpy_s(szFileName, _MAX_PATH - 1, szPath);
-		strcat_s(szFileName, _MAX_PATH - 1, "TSInvokeContext.ts");
+		strcat_s(szFileName, _MAX_PATH - 1, "TSctx.ts");
 		SaveResourceToFile(ETS_INVOKE_CONTEXT, szFileName);
 	}
 }
@@ -118,8 +118,8 @@ void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "// Global imports\n");
 	fprintf(src, "import { I%s, I%s_Handler } from \"./%s_Interface%s\";\n", mod->ROSEClassName, mod->ROSEClassName, mod->ROSEClassName, getCommonJSFileExtension());
 	fprintf(src, "import { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from \"./SNACCROSE%s\";\n", getCommonJSFileExtension());
-	fprintf(src, "import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, IInvokeHandler, ELogSeverity, ROSEBase } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
-	fprintf(src, "import { ISendInvokeContextParams } from \"./TSInvokeContext%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceivectx, IInvokeHandler, ELogSeverity, ROSEBase } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { ISendctxParams } from \"./TSctx%s\";\n", getCommonJSFileExtension());
 
 	fprintf(src, "// Local imports\n");
 	fprintf(src, "import * as %s from \"./%s%s\";\n", GetNameSpace(mod), mod->moduleName, getCommonJSFileExtension());
@@ -182,7 +182,7 @@ void PrintTSROSEInterfaceEntry(FILE* src, ModuleList* mods, ValueDef* vd, bool b
 			Module* resultMod = GetImportModuleRefByClassName(pszResult, mods, m);
 			const char* resultNS = GetNameSpace(resultMod);
 			fprintf(src, bAsComment ? "public " : "\t");
-			fprintf(src, "invoke_%s(argument: %s.%s, invokeContext?: ISendInvokeContextParams): Promise<%s.%s", pszFunction, argumentNS, pszArgument, resultNS, pszResult);
+			fprintf(src, "invoke_%s(argument: %s.%s, ctx?: ISendctxParams): Promise<%s.%s", pszFunction, argumentNS, pszArgument, resultNS, pszResult);
 			if (pszError)
 			{
 				Module* errorMod = GetImportModuleRefByClassName(pszError, mods, m);
@@ -197,7 +197,7 @@ void PrintTSROSEInterfaceEntry(FILE* src, ModuleList* mods, ValueDef* vd, bool b
 		else if (!pszResult)
 		{
 			fprintf(src, bAsComment ? "public " : "\t");
-			fprintf(src, "event_%s(argument: %s.%s, invokeContext?: ISendInvokeContextParams): void", pszFunction, argumentNS, pszArgument);
+			fprintf(src, "event_%s(argument: %s.%s, ctx?: ISendctxParams): void", pszFunction, argumentNS, pszArgument);
 			fprintf(src, bAsComment ? " {\n}\n" : ";\n");
 		}
 	}
@@ -259,7 +259,7 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 				}
 				fprintf(src, "\n");
 			}
-			fprintf(src, " * @param invokeContext - Invokecontext from the asn.1 lib (containing invoke related data)\n");
+			fprintf(src, " * @param ctx - ctx from the asn.1 lib (containing invoke related data)\n");
 			if (pszResult)
 				fprintf(src, " * @returns - %s on success, %s on error or undefined if the function is not implemented\n", pszResult, pszError);
 			fprintf(src, " */\n");
@@ -273,7 +273,7 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 		const char* argumentNS = GetNameSpace(argumentMod);
 		Module* resultMod = GetImportModuleRefByClassName(pszResult, mods, m);
 		const char* resultNS = GetNameSpace(resultMod);
-		fprintf(src, "onInvoke_%s(argument: %s.%s, invokeContext: IReceiveInvokeContext): Promise<%s.%s", pszFunction, argumentNS, pszArgument, resultNS, pszResult);
+		fprintf(src, "onInvoke_%s(argument: %s.%s, ctx: IReceivectx): Promise<%s.%s", pszFunction, argumentNS, pszArgument, resultNS, pszResult);
 		if (pszError)
 		{
 			Module* errorMod = GetImportModuleRefByClassName(pszError, mods, m);
@@ -289,7 +289,7 @@ bool PrintTSROSEHandlerInterfaceEntry(FILE* src, ModuleList* mods, Module* m, Va
 		Module* argumentMod = GetImportModuleRefByClassName(pszArgument, mods, m);
 		const char* argumentNS = GetNameSpace(argumentMod);
 		fprintf(src, bAsComment ? "public " : "\t");
-		fprintf(src, "onEvent_%s(argument: %s.%s, invokeContext: IReceiveInvokeContext): void", pszFunction, argumentNS, pszArgument);
+		fprintf(src, "onEvent_%s(argument: %s.%s, ctx: IReceivectx): void", pszFunction, argumentNS, pszArgument);
 		fprintf(src, bAsComment ? " {\n}\n" : ";\n");
 	}
 	if (bAsComment)
@@ -302,8 +302,8 @@ void PrintTSROSEImport(FILE* src, ModuleList* mods, Module* mod)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	fprintf(src, "import { IReceiveInvokeContext, AsnInvokeProblem } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
-	fprintf(src, "import { ISendInvokeContextParams } from \"./TSInvokeContext%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { IReceivectx, AsnInvokeProblem } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { ISendctxParams } from \"./TSctx%s\";\n", getCommonJSFileExtension());
 	fprintf(src, "// Local imports\n");
 	fprintf(src, "import * as %s from \"./%s%s\";\n", GetNameSpace(mod), mod->moduleName, getCommonJSFileExtension());
 
@@ -336,7 +336,7 @@ void PrintTSROSEHandlerInterface(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "// Contains all invokes of the interface (normally the server side)\n");
 	fprintf(src, "export interface I%s_Invoke_Handler {\n", m->ROSEClassName);
 	fprintf(src, "\t// Allows the implementer to (globally) implement an async local storage (thread local storage) for calls inside the called environment)\n");
-	fprintf(src, "\tsetLogContext?(argument: unknown, invokeContext: IReceiveInvokeContext): void;\n");
+	fprintf(src, "\tsetLogContext?(argument: unknown, ctx: IReceivectx): void;\n");
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
@@ -352,7 +352,7 @@ void PrintTSROSEHandlerInterface(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "// Contains all events of the interface (normally the client side)\n");
 	fprintf(src, "export interface I%s_Event_Handler {\n", m->ROSEClassName);
 	fprintf(src, "\t// Allows the implementer to (globally) implement an async local storage (thread local storage) for calls inside the called environment)\n");
-	fprintf(src, "\tsetLogContext?(argument: unknown, invokeContext: IReceiveInvokeContext): void;\n");
+	fprintf(src, "\tsetLogContext?(argument: unknown, ctx: IReceivectx): void;\n");
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
@@ -373,7 +373,7 @@ void PrintTSROSEServerCopyPasteInterface(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
 	fprintf(src, "/* Copy paste code for the import statement\n");
-	fprintf(src, "import { IReceiveInvokeContext } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { IReceivectx } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
 	fprintf(src, "import * as ENetUC_Common from \"./ENetUC_Common%s\";\n", getCommonJSFileExtension());
 	fprintf(src, "import { %s } from \"./%s%s\";\n", GetNameSpace(m), RemovePath(m->baseFilePath), getCommonJSFileExtension());
 	fprintf(src, "*/\n");
@@ -381,13 +381,13 @@ void PrintTSROSEServerCopyPasteInterface(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\n/**\n");
 	fprintf(src, " * Allows to set the log context for an invoke.\n");
 	fprintf(src, " * This method is called in advanced of methods handled inside this handler\n");
-	fprintf(src, " * The idea is to implement a async local storage based on the provided data from the argument or invokeContext\n");
+	fprintf(src, " * The idea is to implement a async local storage based on the provided data from the argument or ctx\n");
 	fprintf(src, " *\n");
 	fprintf(src, " * @param argument - the snacc rose argument\n");
-	fprintf(src, " * @param invokeContext - the invoke context\n");
+	fprintf(src, " * @param ctx - the invoke context\n");
 	fprintf(src, " */\n");
 	fprintf(src, "/*\n");
-	fprintf(src, "public setLogContext(argument: unknown, invokeContext: IReceiveInvokeContext): void {\n");
+	fprintf(src, "public setLogContext(argument: unknown, ctx: IReceivectx): void {\n");
 	fprintf(src, "}\n");
 	fprintf(src, "*/\n\n");
 
@@ -536,7 +536,7 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 			{
 				asnoperationcomment comment;
 				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"IN\", ctx);\n", comment.i64Deprecated, pszFunction);
 			}
 			fprintf(src, "\t\t\t\treturn await this.handleOnInvoke(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
@@ -551,7 +551,7 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 				fprintf(src, "%s_Converter.%s_Converter, ", szResultNS, pszResult);
 			fprintf(src, "handler, ");
 			fprintf(src, "handler.onInvoke_%s, ", pszFunction);
-			fprintf(src, "invokeContext);\n");
+			fprintf(src, "ctx);\n");
 		}
 		else if (!pszResult && bEvents)
 		{
@@ -560,7 +560,7 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 			{
 				asnoperationcomment comment;
 				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"IN\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"IN\", ctx);\n", comment.i64Deprecated, pszFunction);
 			}
 			fprintf(src, "\t\t\t\treturn await this.handleOnEvent(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
@@ -571,7 +571,7 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 				fprintf(src, "%s_Converter.%s_Converter, ", szArgumentNS, pszArgument);
 			fprintf(src, "handler, ");
 			fprintf(src, "handler.onEvent_%s, ", pszFunction);
-			fprintf(src, "invokeContext);\n");
+			fprintf(src, "ctx);\n");
 		}
 	}
 }
@@ -587,12 +587,12 @@ void PrintTSROSEOnInvokeswitchCase(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t * @param invoke - The (ROSE) decoded invoke which also contains the function argument (not yet decoded). The\n");
 	fprintf(src, "\t * operationID is the one that defines which function we call. In the switch case we decode the methods argument\n");
 	fprintf(src, "\t * and call the metho in the handler.\n");
-	fprintf(src, "\t * @param invokeContext - The invoke related contextual data (see IReceiveInvokeContext)\n");
+	fprintf(src, "\t * @param ctx - The invoke related contextual data (see IReceivectx)\n");
 	fprintf(src, "\t * @param handler - This object is handling the invoke after having successfully decoded the argument.\n");
 	fprintf(src, "\t * it contains the methods as defined in the asn.1 files.\n");
 	fprintf(src, "\t * @returns ROSEReject if the request was not handled, ROSEResult for the invoke result, ROSEError for an error or undefined if an event was called\n");
 	fprintf(src, "\t */\n");
-	fprintf(src, "\tpublic async onInvoke(invoke: ROSEInvoke, invokeContext: IReceiveInvokeContext, handler: I%s_Handler): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {\n", m->ROSEClassName);
+	fprintf(src, "\tpublic async onInvoke(invoke: ROSEInvoke, ctx: IReceivectx, handler: I%s_Handler): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {\n", m->ROSEClassName);
 	fprintf(src, "\t\tswitch (invoke.operationID) {\n");
 
 	ValueDef* vd;
@@ -625,7 +625,7 @@ void PrintTSROSEOnInvokeswitchCase(FILE* src, ModuleList* mods, Module* m)
 		}
 	}
 	if (addedOne)
-		fprintf(src, "\t\t\t\treturn this.onEvent(invoke, invokeContext, handler);\n");
+		fprintf(src, "\t\t\t\treturn this.onEvent(invoke, ctx, handler);\n");
 
 	fprintf(src, "\t\t\tdefault:\n");
 	fprintf(src, "\t\t\t\t// If you land here stub of client and server are incompatible...\n");
@@ -646,16 +646,16 @@ void PrintTSROSEOnEventSwitchCase(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t * @param invoke - The (ROSE) decoded invoke which also contains the function argument (not yet decoded). The\n");
 	fprintf(src, "\t * operationID is the one that defines which function we call. In the switch case we decode the methods argument\n");
 	fprintf(src, "\t * and call the method in the handler.\n");
-	fprintf(src, "\t * @param invokeContext - The invoke related contextual data (see IReceiveInvokeContext)\n");
+	fprintf(src, "\t * @param ctx - The invoke related contextual data (see IReceivectx)\n");
 	fprintf(src, "\t * @param handler - This object is handling the invoke after having successfully decoded the argument.\n");
 	fprintf(src, "\t * it contains the methods as defined in the asn.1 files.\n");
 	fprintf(src, "\t * @returns ROSEReject if the request was not handled or undefined\n");
 	fprintf(src, "\t */\n");
-	fprintf(src, "\tprivate async onEvent(invoke: ROSEInvoke, invokeContext: IReceiveInvokeContext, handler: I%s_Handler): Promise<ROSEReject | undefined> {\n", m->ROSEClassName);
-	fprintf(src, "\t\t// If the class says do not handle events and the override flag in the invokeContext has not been set, add the event to the que, otherwise we dispatch it\n");
-	fprintf(src, "\t\tif (!this.handleEvents && !invokeContext?.handleEvent) {\n");
+	fprintf(src, "\tprivate async onEvent(invoke: ROSEInvoke, ctx: IReceivectx, handler: I%s_Handler): Promise<ROSEReject | undefined> {\n", m->ROSEClassName);
+	fprintf(src, "\t\t// If the class says do not handle events and the override flag in the ctx has not been set, add the event to the que, otherwise we dispatch it\n");
+	fprintf(src, "\t\tif (!this.handleEvents && !ctx?.handleEvent) {\n");
 	fprintf(src, "\t\t\tthis.transport.log(ELogSeverity.debug, \"Adding event to queue\", \"onEvent\", this, { operationName: invoke.operationName, operationID: invoke.operationID });\n");
-	fprintf(src, "\t\t\tthis.cachedEvents.push({ invoke, invokeContext, handler });\n");
+	fprintf(src, "\t\t\tthis.cachedEvents.push({ invoke, ctx, handler });\n");
 	fprintf(src, "\t\t\treturn;\n");
 	fprintf(src, "\t\t}\n\n");
 
@@ -740,7 +740,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 					}
 
 					fprintf(src, "\t * @param argument - An %s object containing all the relevant parameters for the call\n", pszArgument);
-					fprintf(src, "\t * @param invokeContext - Invoke related contextual data (e.g. a clientConnectionID)\n");
+					fprintf(src, "\t * @param ctx - Invoke related contextual data (e.g. a clientConnectionID)\n");
 					if (pszResult && !bEvents)
 						fprintf(src, "\t * @returns a Promise resolving into %s, an AsnRequestError or AsnInvokeProblem object\n", pszResult);
 					else if (bEvents)
@@ -751,7 +751,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 
 			if (pszResult && !bEvents)
 			{
-				fprintf(src, "\tpublic async invoke_%s(argument: %s.%s, invokeContext?: ISendInvokeContextParams): Promise<%s.%s", pszFunction, szArgumentNS, pszArgument, szResultNS, pszResult);
+				fprintf(src, "\tpublic async invoke_%s(argument: %s.%s, ctx?: ISendctxParams): Promise<%s.%s", pszFunction, szArgumentNS, pszArgument, szResultNS, pszResult);
 				const char* szErrorNS = GetNameSpace(errorMod);
 				if (szErrorNS && pszError)
 					fprintf(src, " | %s.%s", szErrorNS, pszError);
@@ -760,7 +760,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 				{
 					asnoperationcomment comment;
 					GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"OUT\", ctx);\n", comment.i64Deprecated, pszFunction);
 				}
 				fprintf(src, "\t\treturn this.handleInvoke(argument, ");
 				fprintf(src, "%s.%s, ", szResultNS, pszResult);
@@ -774,7 +774,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 					fprintf(src, "Converter.%s_Converter, ", pszResult);
 				else
 					fprintf(src, "%s_Converter.%s_Converter, ", szResultNS, pszResult);
-				fprintf(src, "invokeContext");
+				fprintf(src, "ctx");
 
 				if (pszError && strcmp(pszError, "AsnRequestError") != 0)
 				{
@@ -790,12 +790,12 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 			}
 			else if (!pszResult && bEvents)
 			{
-				fprintf(src, "\tpublic event_%s(argument: %s.%s, invokeContext?: ISendInvokeContextParams): undefined | boolean {\n", pszFunction, szArgumentNS, pszArgument);
+				fprintf(src, "\tpublic event_%s(argument: %s.%s, ctx?: ISendctxParams): undefined | boolean {\n", pszFunction, szArgumentNS, pszArgument);
 				if (bDeprecated)
 				{
 					asnoperationcomment comment;
 					GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"OUT\", invokeContext);\n", comment.i64Deprecated, pszFunction);
+					fprintf(src, "\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"OUT\", ctx);\n", comment.i64Deprecated, pszFunction);
 				}
 				fprintf(src, "\t\treturn this.handleEvent(argument, ");
 				fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
@@ -804,7 +804,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 					fprintf(src, "Converter.%s_Converter, ", pszArgument);
 				else
 					fprintf(src, "%s_Converter.%s_Converter, ", szArgumentNS, pszArgument);
-				fprintf(src, "invokeContext);\n");
+				fprintf(src, "ctx);\n");
 				fprintf(src, "\t}\n");
 			}
 			return true;

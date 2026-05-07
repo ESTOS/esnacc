@@ -93,7 +93,7 @@ void Print_JSON_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	if (baseChoice == BASICTYPE_OCTETCONTAINING && pBase->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
 		baseChoice = BASICTYPE_UTF8_STR;
 
-	// Ist der Typ den wir iterieren eine basis Type?
+	// Is the type we are iterating over a base type?
 	if (IsSimpleType(baseChoice))
 	{
 		fprintf(src, "\t\tfor (const se of s) {\n");
@@ -139,7 +139,7 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	// Unser Sequence Typ
 	enum BasicTypeChoiceId choice = seqOf->basicType->a.sequenceOf->basicType->choiceId;
 
-	// Basis Typ der Sequence
+	// Base type of the sequence
 	BasicType* pRootBasicType = GetRootType(seqOf, NULL)->basicType;
 	enum BasicTypeChoiceId rootChoiceId = pRootBasicType->choiceId;
 	if (rootChoiceId == BASICTYPE_OCTETCONTAINING && pRootBasicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
@@ -151,7 +151,7 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	if (baseChoice == BASICTYPE_OCTETCONTAINING && pBase->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
 		baseChoice = BASICTYPE_UTF8_STR;
 
-	// Ist der Typ den wir iterieren eine basis Type?
+	// Is the type we are iterating over a base type?
 	if (IsSimpleType(baseChoice))
 	{
 		fprintf(src, "\t\tfor (const se of s) {\n");
@@ -1416,7 +1416,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 	char* szConverted = FixName(td->definedName);
 
 	const char* szNameSpace = GetNameSpace(m);
-	// Simple Typen, also Typen die auf oberster Ebene nur einen anderen Namen bekomme haben
+	// Simple types, meaning types that only received a different name at the top level
 	// Bspw: AsnSystemTime ::= REAL
 	// brauchen keinen Encoder Decoder
 
