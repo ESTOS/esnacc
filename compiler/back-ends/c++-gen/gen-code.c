@@ -419,6 +419,8 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 			}
 			fprintf(src, "\t\t\tbreak;\n");
 		}
+		fprintf(src, "\t\tdefault:\n");
+		fprintf(src, "\t\t\tbreak;\n");
 		fprintf(src, "\t}\n");
 		fprintf(src, "\tchoiceId = notinitialized;\n");
 	}
@@ -713,6 +715,8 @@ static void PrintAssignmentOperator(FILE* hdr, FILE* src, Module* m, Type* t, Ty
 				fprintf(src, "\t\t\t\t\t%s = that.%s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->fieldName);
 			fprintf(src, "\t\t\t\t\tbreak;\n");
 		}
+		fprintf(src, "\t\t\t\tdefault:\n");
+		fprintf(src, "\t\t\t\t\tbreak;\n");
 		fprintf(src, "\t\t\t}\n");
 		fprintf(src, "\t\t}\n");
 	}
@@ -1845,7 +1849,7 @@ void PrintChoiceDefCodeBerEncodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 		/* encode tag (s) & len (s) */
 		PrintCxxTagAndLenEncodingCode(src, td, e->type, "l", "_b", "\t\t\t");
 
-		fprintf(src, "\t\tbreak;\n");
+		fprintf(src, "\t\t\tbreak;\n");
 	}
 	fprintf(src, "\t\tdefault:\n");
 	fprintf(src, "\t\t\tthrow EXCEPT(\"Choice is empty\", ENCODE_ERROR);\n");
@@ -2062,7 +2066,7 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 				fprintf(src, "\t\t\t\tBDecEoc (_b, bytesDecoded);\n");
 			}
 
-			fprintf(src, "\t\tbreak;\n");
+			fprintf(src, "\t\t\tbreak;\n");
 			FreeTags(tags);
 		}
 	}
@@ -2075,13 +2079,13 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 		fprintf(src, "\t\t\tchoiceId = extensionCid;\n");
 		fprintf(src, "\t\t\textAny.BDecContent(_b, tag, elmtLen0, bytesDecoded);\n");
 		fprintf(src, "\t\t\textension->extList.insert( extension->extList.end(), extAny );\n");
+		fprintf(src, "\t\t\tbreak;\n");
 	}
 	else
 	{
 		fprintf(src, "\t\t\tthrow InvalidTagException(typeName(), tag, STACK_ENTRY);\n");
 	}
 
-	fprintf(src, "\t\tbreak;\n");
 	fprintf(src, "\t}\n");
 	fprintf(src, "}\n\n");
 }
@@ -2583,26 +2587,28 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 
 		FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
 		{
-			fprintf(src, "\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
+			fprintf(src, "\t\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
 
 			/* value notation so print the choice elmts field name */
 			if (e->fieldName != NULL)
-				fprintf(src, "\t\tos << \"%s \";\n", e->fieldName);
+				fprintf(src, "\t\t\tos << \"%s \";\n", e->fieldName);
 
 			if (e->type->cxxTypeRefInfo->isPtr)
 			{
-				fprintf(src, "\t\tif (%s)\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "\t\t\t%s->Print(os, indent);\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "\t\telse\n");
-				fprintf(src, "\t\t\tos << \"<CHOICE value is missing>\\n\";\n");
+				fprintf(src, "\t\t\tif (%s)\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\t\t%s->Print(os, indent);\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\telse\n");
+				fprintf(src, "\t\t\t\tos << \"<CHOICE value is missing>\\n\";\n");
 			}
 			else
 			{
-				fprintf(src, "\t\t%s.Print(os, indent);\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\t%s.Print(os, indent);\n", e->type->cxxTypeRefInfo->fieldName);
 			}
 
-			fprintf(src, "\t\tbreak;\n\n");
+			fprintf(src, "\t\t\tbreak;\n");
 		}
+		fprintf(src, "\t\tdefault:\n");
+		fprintf(src, "\t\t\tthrow EXCEPT(\"Choice is empty\", PARAMETER_ERROR);\n");
 		fprintf(src, "\t} // end of switch\n");
 
 		fprintf(src, "} // end of %s::Print()\n\n", td->cxxTypeDefInfo->className);
@@ -2640,20 +2646,19 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 				else
 					fprintf(src, ");\n");
 				fprintf(src, "\t\t\telse\n");
-				fprintf(src, "\t\t\t{\n");
 
 				if (e->fieldName != NULL)
 					fprintf(src, "\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->fieldName, e->fieldName);
 				else
 					fprintf(src, "\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->fieldName);
-
-				fprintf(src, "\t\t\t}\n");
 			}
 			else
 				fprintf(src, "\t\t\t%s.PrintXML(os, \"%s\");\n", e->type->cxxTypeRefInfo->fieldName, e->fieldName);
 
-			fprintf(src, "\t\tbreak;\n\n");
+			fprintf(src, "\t\t\tbreak;\n");
 		}
+		fprintf(src, "\t\tdefault:\n");
+		fprintf(src, "\t\t\tthrow EXCEPT(\"Choice is empty\", PARAMETER_ERROR);\n");
 		fprintf(src, "\t} // end of switch\n");
 		fprintf(src, "\tif (lpszTitle)\n");
 		fprintf(src, "\t\tos << \"</\" << lpszTitle << \">\";\n");
@@ -4004,7 +4009,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 						mandatoryElmtCount++;
 						fprintf(src, "\t\t\tmandatoryElmtsDecoded++;\n");
 					}
-					fprintf(src, "\t\t\tbreak;\n\n");
+					fprintf(src, "\t\t\tbreak;\n");
 
 					FreeTags(tags);
 				}
