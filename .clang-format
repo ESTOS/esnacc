@@ -28,7 +28,7 @@ IndentCaseBlocks: true
 IndentCaseLabels: true
 NamespaceIndentation: All
 
-# We don´t care about line limits...
+# We don't care about line limits...
 ColumnLimit: 500
 AlignAfterOpenBracket: Align
 AlignTrailingComments: true

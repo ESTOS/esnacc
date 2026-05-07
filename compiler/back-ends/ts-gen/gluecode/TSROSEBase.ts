@@ -506,7 +506,7 @@ export interface IASN1InvokeData {
 	invoke: ROSEInvoke;
 
 	// The ROSE payload which we want to send
-	// The data is not yet ready to send, it´s the validated internal representation of the ROSE payload
+	// The data is not yet ready to send, it's the validated internal representation of the ROSE payload
 	payLoad: object | asn1ts.Sequence;
 
 	// the send invoke context that carries additional details from the calling function
@@ -833,7 +833,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		// Callback into the transport to get customized invokeContextParams
 		const context = this.transport.getInvokeContextParams(contextParams, operationID, operationName, event);
 
-		// The root ROSE message which is now fille with it´s own parameters
+		// The root ROSE message which is now filled with its own parameters
 		const message = new ROSEMessage();
 		const sessionID = this.transport.getSessionID();
 		const invokeID = event ? 99999 : this.transport.getNextInvokeID();

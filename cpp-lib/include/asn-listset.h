@@ -595,7 +595,7 @@ template <class T> void AsnSetOf<T>::PrintXML(std::ostream& os, const char* lpsz
 namespace SNACC
 {
 
-	// Implementierung von JEnc und JDec ist in asn-optionalparam.cpp
+	// The implementation of JEnc and JDec is in asn-optionalparam.cpp
 	class AsnOptionalParameters : public AsnSeqOf<AsnOptionalParam>
 	{
 	public:

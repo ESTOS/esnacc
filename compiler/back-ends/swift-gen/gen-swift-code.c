@@ -258,7 +258,7 @@ void PrintSwiftType(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type* p
 			fprintf(src, "AnyObject");
 			break;
 		case BASICTYPE_UTCTIME:
-			fprintf(src, "AsnSystemTime"); // AsnSystemTime ist im Asn1-file als REAL definiert, wird aber im TS als String übermittelt.
+			fprintf(src, "AsnSystemTime"); // AsnSystemTime is defined as REAL in the Asn1 file, but is transferred as a string in TS.
 			break;
 		case BASICTYPE_IMPORTTYPEREF:
 			{

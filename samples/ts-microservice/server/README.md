@@ -79,7 +79,7 @@ The sample client contains a simple website to invoke calls towards the server. 
 in the terminal in VSCode.
 
 As soon as the package has been build by webpack
-`(｢wdm｣: Compiled successfully.)` you can launch a browser with F5.
+`(wdm: Compiled successfully.)` you can launch a browser with F5.
 (Firefox, Chrome and Edge have been configured as debug applications in VSCode)
 
 MicroService Template:

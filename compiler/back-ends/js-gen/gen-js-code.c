@@ -542,7 +542,7 @@ static void PrintJSExportCode(FILE* src, Module* m, TypeDef* td)
 		case BASICTYPE_ENUMERATED: /* library type */
 		case BASICTYPE_SEQUENCE:
 
-			// Datentypen, die in JS nicht als eigenes HumanModel abgebildet werden.
+			// Data types that are not represented as their own HumanModel in JS.
 			if (strcmp(td->definedName, "UTF8StringList") == 0 || strcmp(td->definedName, "SEQInteger") == 0 || strcmp(td->definedName, "AsnContactIDs") == 0 || strcmp(td->definedName, "AsnContactID") == 0 || strcmp(td->definedName, "AsnOptionalParameters") == 0)
 				break;
 

@@ -162,7 +162,7 @@ extern "C"
 	extern FILE* errFileG;
 }
 
-// std::set SORTIERT, das darf aber bei dem explode nicht sein!
+// std::set sorts its elements, but that must not happen for explode!
 std::vector<std::string> explode(std::string const& s, char delim, const bool bSkipEmpty = true, const bool bTrim = true)
 {
 	std::vector<std::string> result;
@@ -170,7 +170,7 @@ std::vector<std::string> explode(std::string const& s, char delim, const bool bS
 
 	for (std::string token; std::getline(iss, token, delim);)
 	{
-		// leere tokens auslassen, brauchen wir nicht
+		// Skip empty tokens, we do not need them
 		auto element = bTrim ? trim(token) : token;
 		if (!bSkipEmpty || element.size())
 			result.push_back(element);
@@ -409,15 +409,15 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 			}
 			else if ((last == eLast::_unknown) && pType->strShort_UTF8.empty() && commentList.size() > 1)
 			{
-				// es ist noch kein Modus gesetzt, es gibt mehrere Zeilen, wir sehen gerade die erste Zeile
+				// No mode is set yet, there are multiple lines, and we are currently looking at the first line
 				pType->strShort_UTF8 += escapeJsonString(strLine);
 				last = eLast::_brief;
 			}
 			else if ((last != eLast::_brief) && pType->strShort_UTF8.empty())
 			{
-				// Wenn das letzte Element ein linked, deprecated oder private ist erlaubten wir den Kommentar der hinter dem Element steht
+				// If the last element is linked, deprecated or private, we allow the comment that follows the element
 				// @linked OtherElementType
-				// iElement Number -- Beschreibung von iElement, auch wenn es ein linked type ist
+				// iElement Number -- description of iElement, even if it is a linked type
 				pType->strShort_UTF8 += escapeJsonString(strLine);
 			}
 		}
@@ -956,7 +956,7 @@ int EAsnCommentParser::ParseFileForComments(FILE* fp, const char* szModuleName, 
 		if (gFilterASN1Files)
 		{
 			auto pFile = m_stack.back();
-			// Add lines at the end of the file which haven´t had a element association
+			// Add lines at the end of the file which haven't had a element association
 			pFile->m_strFilteredFileContent += pFile->m_strRawSourceFileIncrement;
 			m_FilteredFileContents.push_back(EFilteredAsnFile(szModuleName, pFile->m_strFilteredFileContent, type));
 		}
@@ -1170,16 +1170,16 @@ int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
 
 		strLine = trim(strLine);
 
-		// Kommentare bekommen nur das erste Leerzeichen entfernt
+		// Comments only have the first leading space removed
 		if (strComment.substr(0, 1) == " ")
 			strComment = strComment.substr(1, strComment.size() - 1);
 
 		// strComment.TrimRight();
-		// Ein existierender Kommentar ist nie ganz leer
+		// An existing comment is never completely empty
 		if (strComment.empty())
 			strComment = " ";
 
-		// Ein Kommentar der mit ~ beginnt wird ignoriert
+		// A comment starting with ~ is ignored
 		if (strComment.substr(0, 1) == "~")
 			strComment.clear();
 	}

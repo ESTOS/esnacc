@@ -1161,7 +1161,7 @@ public:
 extern const AsnReal PLUS_INFINITY;
 extern const AsnReal MINUS_INFINITY;
 
-// ste 4.11.14 AsnSystemTime Eigene Implementierung wegen unterschied Json / BER
+// ste 4.11.14 AsnSystemTime own implementation because JSON and BER differ
 class SNACCDLL_API AsnSystemTime : public AsnReal
 {
 public:
@@ -2400,7 +2400,7 @@ public:
 	}
 };
 
-// ste 4.11.14 AsnOptionalParam Eigene Implementierung wegen unterschied Json / BER
+// ste 4.11.14 AsnOptionalParam own implementation because JSON and BER differ
 class AsnOptionalParamChoice : public AsnType
 {
 public:
@@ -2454,7 +2454,7 @@ public:
 	void Print(std::ostream& os, unsigned short indent = 0) const override;
 };
 
-// ste 4.11.14 AsnOptionalParam Eigene Implementierung wegen unterschied Json / BER
+// ste 4.11.14 AsnOptionalParam own implementation because JSON and BER differ
 class AsnOptionalParam : public AsnType
 {
 public:
