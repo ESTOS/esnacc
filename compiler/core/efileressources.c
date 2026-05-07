@@ -20,7 +20,7 @@ INCBIN(BIN_ASN1_SERVER, "compiler/back-ends/ts-gen/gluecode/TSASN1Server.ts");
 INCBIN(BIN_ROSE_BASE, "compiler/back-ends/ts-gen/gluecode/TSROSEBase.ts");
 INCBIN(BIN_SNACCROSE, "compiler/back-ends/ts-gen/gluecode/SNACCROSE.ts");
 INCBIN(BIN_SNACCROSE_CONVERTER, "compiler/back-ends/ts-gen/gluecode/SNACCROSE_Converter.ts");
-INCBIN(BIN_INVOKE_CONTEXT, "compiler/back-ends/ts-gen/gluecode/TSctx.ts");
+INCBIN(BIN_INVOKE_CONTEXT, "compiler/back-ends/ts-gen/gluecode/TSInvokeContext.ts");
 INCBIN(BIN_DEPRECATED_CALLBACK, "compiler/back-ends/ts-gen/gluecode/TSDeprecatedCallback.ts");
 
 INCBIN(BIN_EDELPHI_ASN1_YPES, "compiler/back-ends/delphi-gen/gluecode/DelphiAsn1Types.pas");

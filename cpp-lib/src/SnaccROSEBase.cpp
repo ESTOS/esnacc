@@ -1524,6 +1524,8 @@ long SnaccROSEBase::DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::R
 
 	switch (pResponse->choiceId)
 	{
+		case ROSEMessage::notinitialized:
+			throw std::runtime_error("response ROSEMessage choiceId is notinitialized");
 		case ROSEMessage::invokeCid:
 			break;
 		case ROSEMessage::resultCid:
