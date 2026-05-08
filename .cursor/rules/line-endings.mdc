@@ -1,0 +1,11 @@
+---
+description: Preserve repository line endings
+alwaysApply: true
+---
+
+# Line Endings
+
+- Preserve the existing line-ending style of every file you edit.
+- In this repository on Windows, prefer `CRLF` for new text files unless nearby files or explicit repo configuration require a different style.
+- Avoid introducing line-ending-only diffs unless the user explicitly asks for normalization.
+- If a file already uses a consistent EOL style, keep that style unchanged after edits.
