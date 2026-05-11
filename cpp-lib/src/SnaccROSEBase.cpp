@@ -2008,7 +2008,7 @@ int SnaccROSEBase::ConfigureFileLogging(const LOG_CHARTYPE* szPath, bool bAppend
 	return 0;
 }
 
-bool SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, const char* szOperationName, const char* szData, const size_t size)
+bool SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bException, const char* szOperationName, const char* szData, const size_t size)
 {
 	if (!m_pAsnLogFile || !szData)
 		return false;
@@ -2056,7 +2056,7 @@ bool SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 
 		// if the data is encapsulated json we need a name
 		if (*szData == '{' || *szData == '[')
-			fprintf(m_pAsnLogFile, "\t\"%s\" : \n", bError ? "ERROR" : "ROSE");
+			fprintf(m_pAsnLogFile, "\t\"%s\" : \n", bException ? "ERROR" : "ROSE");
 
 		size_t stPrintLength = size;
 		if (!stPrintLength)

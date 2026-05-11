@@ -195,13 +195,13 @@ public:
 
 	/*! Writes JSON encoded log messages to the log file
 		bOutbound = true in case the log entry is related to an outbound message
-		bError = true in case this is an error message
+		bException = true in case this is an exception based error message
 		szOperationName = the operationName beeing called (if available)
 		szData = the JSON (!) encoded log message. (!) The message is no necessarily null terminated (!)
 		length = length of the szData (as it is not necessarily null terminated respect the length!)
 		returns true if data was logged
 	*/
-	virtual bool PrintJSONToLog(const bool bOutbound, const bool bError, const char* szOperationName, const char* szData, const size_t size = 0);
+	virtual bool PrintJSONToLog(const bool bOutbound, const bool bException, const char* szOperationName, const char* szData, const size_t size = 0);
 
 	/* Set the Transport Encoding to be used */
 	bool SetTransportEncoding(const SNACC::TransportEncoding transportEncoding);
