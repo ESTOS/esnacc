@@ -52,7 +52,10 @@ target_link_libraries(snacc-sample-generated PUBLIC snacc_cpp_lib)
 
 add_executable(cpp-lib-sample-runtime-tests
 	call_flow_tests.cpp
+	logging_tests.cpp
 	logical_failure_tests.cpp
+	public_api_tests.cpp
+	telemetry_tests.cpp
 	transport_failure_tests.cpp
 	lifecycle_tests.cpp
 )

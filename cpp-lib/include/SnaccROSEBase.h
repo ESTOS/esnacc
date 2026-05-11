@@ -74,7 +74,7 @@ public:
 		The AnswerMessage must be new allocated and will be deleted
 		when processed. */
 	void CompleteOperation(long lRoseResult, const SNACC::ROSEMessage* pAnswerMessage, size_t stResponseData = 0);
-	void FinalizeTelemetry(std::shared_ptr<SnaccInvokeContext> pctx);
+	void FinalizeTelemetry(long lFinalRoseResult, std::shared_ptr<SnaccInvokeContext> pctx);
 
 	/*! Wait for answer received. */
 	bool WaitForComplete(long lTimeOut = -1);
@@ -332,7 +332,7 @@ protected:
 	virtual long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) = 0;
 
 	/* Function is called when a received data Packet cannot be decoded (invalid Rose Message)
-	 * bAlreadyTransportLogged	- true if the transport data has already been logged in the tranport log (so we do not need to log it again)
+	 * bAlreadyTransportLogged	- true if the transport data has already been logged in the transport log (so we do not need to log it again)
 	 * encoding	- the encoding that was used for the transport
 	 * lpBytes - the data that could not get decoded
 	 * ulSize - the size of the data that could not get decoded
@@ -371,7 +371,7 @@ private:
 	/*! Maximum wait time (milliseconds) for a function to return default: 20000 ms*/
 	long m_lMaxInvokeWait{20000};
 	/*! Are we currently active or was StopProcessing called */
-	bool m_bProcessingAllowed{};
+	bool m_bProcessingAllowed{true};
 	/*! The counter for the InvokeIds */
 	long m_lInvokeCounter{};
 	/*! The guard for m_bProcessingAllowed and SnaccROSEPendingOperationMap */
@@ -396,6 +396,7 @@ private:
 	static long GetRejectResultCode(const SNACC::ROSEReject* pReject, SnaccInvokeContext& ctx);
 	static long DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::ROSEResult** ppResult, SNACC::ROSEError** ppError, SnaccInvokeContext& ctx);
 	void CompleteAllPendingOperations();
+	bool IsProcessingAllowed();
 
 	SnaccROSEPendingOperationMap m_PendingOperations;
 

@@ -30,6 +30,8 @@ const char* SnaccTelemetryData::GetDebugText(Outcome outcome)
 			return "EVENT";
 		case Outcome::UNHANDLED:
 			return "UNHANDLED";
+		case Outcome::DISPATCHED:
+			return "DISPATCHED";
 		default:
 			ASSERT(0);
 			return "INVALID_OUTCOME";

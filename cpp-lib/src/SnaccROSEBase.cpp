@@ -272,10 +272,17 @@ void SnaccROSEPendingOperation::CompleteOperation(long lRoseResult, const SNACC:
 	m_CompletedEvent.signal();
 }
 
-void SnaccROSEPendingOperation::FinalizeTelemetry(std::shared_ptr<SnaccInvokeContext> pctx)
+void SnaccROSEPendingOperation::FinalizeTelemetry(long lFinalRoseResult, std::shared_ptr<SnaccInvokeContext> pctx)
 {
 	if (!m_pTelemetry)
 		return;
+
+	if (m_pAnswerMessage && lFinalRoseResult != m_lRoseResult)
+	{
+		m_pTelemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, GetOutboundUnhandledStageFromResult(lFinalRoseResult), GetUnhandledReasonFromResult(lFinalRoseResult),
+			lFinalRoseResult, m_stResponseData, std::move(pctx));
+		return;
+	}
 
 	if (m_pAnswerMessage)
 	{
@@ -303,7 +310,7 @@ void SnaccROSEPendingOperation::FinalizeTelemetry(std::shared_ptr<SnaccInvokeCon
 		return;
 	}
 
-	m_pTelemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_WAIT, SnaccTelemetryData::Reason::WAIT_SKIPPED, m_lRoseResult, std::nullopt, std::move(pctx));
+	m_pTelemetry->finalize(SnaccTelemetryData::Outcome::DISPATCHED, SnaccTelemetryData::Stage::OUTBOUND_WAIT, SnaccTelemetryData::Reason::WAIT_SKIPPED, m_lRoseResult, std::nullopt, std::move(pctx));
 }
 
 SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName)
@@ -334,7 +341,8 @@ void SnaccROSEBase::StopProcessing(bool bStop /*= true*/)
 		m_bProcessingAllowed = bStop ? false : true;
 	}
 
-	CompleteAllPendingOperations();
+	if (bStop)
+		CompleteAllPendingOperations();
 }
 
 void SnaccROSEBase::SetMaxInvokeWaitTime(long lMaxInvokeWait)
@@ -349,6 +357,12 @@ void SnaccROSEBase::CompleteAllPendingOperations()
 
 	for (auto it = m_PendingOperations.begin(); it != m_PendingOperations.end(); it++)
 		it->second->CompleteOperation(ROSE_TE_SHUTDOWN, NULL);
+}
+
+bool SnaccROSEBase::IsProcessingAllowed()
+{
+	std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+	return m_bProcessingAllowed;
 }
 
 SnaccROSEPendingOperation& SnaccROSEBase::AddPendingOperation(int invokeID, unsigned int uiOperationID, const char* szOperationName)
@@ -493,7 +507,7 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 					catch (const SnaccException& ex)
 					{
 						if (bLogTransportData)
-							LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+							bLogTransportData = LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 						SJson::Value error;
 						error["exception"] = ex.what();
@@ -501,6 +515,7 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 						error["error"] = (int)ex.m_errorCode;
 						std::string strError = getPrettyPrinted(error);
 						PrintJSONToLog(false, true, nullptr, strError.c_str(), strError.length());
+						OnRoseDecodeError(bLogTransportData, SNACC::TransportEncoding::BER, lpBytes, lSize, ex.what());
 
 						unsigned int uiOperationID = 0;
 						const char* szOperationName = nullptr;
@@ -566,7 +581,7 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 						catch (const SnaccException& ex)
 						{
 							if (bLogTransportData)
-								LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+								bLogTransportData = LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 							SJson::Value error;
 							error["exception"] = ex.what();
@@ -574,6 +589,7 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 							error["error"] = (int)ex.m_errorCode;
 							std::string strError = getPrettyPrinted(error);
 							PrintJSONToLog(false, true, nullptr, strError.c_str(), strError.length());
+							OnRoseDecodeError(bLogTransportData, m_eTransportEncoding, lpBytes, lSize, ex.what());
 
 							unsigned int uiOperationID = 0;
 							const char* szOperationName = nullptr;
@@ -627,7 +643,7 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 					else
 					{
 						if (bLogTransportData)
-							LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+							bLogTransportData = LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
 #ifdef _DEBUG
 						std::string strPayLoad;
@@ -638,12 +654,19 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 						error["where"] = __FUNCTION__;
 						std::string strError = getPrettyPrinted(error);
 						PrintJSONToLog(false, true, nullptr, strError.c_str(), strError.length());
+						OnRoseDecodeError(bLogTransportData, m_eTransportEncoding, lpBytes, lSize, reader.getFormattedErrorMessages());
 						OnInvokeProcessed(SnaccTelemetryData::CreateFinalized(SnaccTelemetryData::Direction::INBOUND, 0, nullptr, lSize, SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::INBOUND_DECODE, SnaccTelemetryData::Reason::DECODE_FAILED, ROSE_RE_DECODE_FAILED));
 					}
 					break;
 				}
 			default:
-				throw std::runtime_error("invalid m_eTransportEncoding");
+				{
+					if (bLogTransportData)
+						bLogTransportData = LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, lpBytes, lSize, nullptr, nullptr);
+					OnRoseDecodeError(bLogTransportData, SNACC::TransportEncoding::BER, lpBytes, lSize, "unknown encoding");
+					OnInvokeProcessed(SnaccTelemetryData::CreateFinalized(SnaccTelemetryData::Direction::INBOUND, 0, nullptr, lSize, SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::INBOUND_DECODE, SnaccTelemetryData::Reason::DECODE_FAILED, ROSE_RE_DECODE_FAILED));
+					break;
+				}
 				break;
 		}
 	}
@@ -1216,22 +1239,27 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEMessage* pMessage, unsigned long 
 	auto telemetryReason = SnaccTelemetryData::Reason::UNKNOWN_FAILURE;
 	bool bInvokeException = false;
 
-	try
+	if (!IsProcessingAllowed())
+		lResult = ROSE_TE_SHUTDOWN;
+	else
 	{
-		lResult = OnInvoke(pMessage, *pCtx, strResponse);
-	}
-	catch (const SnaccException& ex)
-	{
-		// decode of invoke detail failed.
-		lResult = ROSE_REJECT_MISTYPEDARGUMENT;
-		bInvokeException = true;
-		SJson::Value error;
-		error["exception"] = ex.what();
-		error["method"] = __FUNCTION__;
-		error["error"] = (int)ex.m_errorCode;
-		error["invokeID"] = (int)pInvoke->invokeID;
-		std::string jsonString = getPrettyPrinted(error);
-		PrintJSONToLog(false, true, nullptr, jsonString.c_str(), jsonString.length());
+		try
+		{
+			lResult = OnInvoke(pMessage, *pCtx, strResponse);
+		}
+		catch (const SnaccException& ex)
+		{
+			// decode of invoke detail failed.
+			lResult = ROSE_REJECT_MISTYPEDARGUMENT;
+			bInvokeException = true;
+			SJson::Value error;
+			error["exception"] = ex.what();
+			error["method"] = __FUNCTION__;
+			error["error"] = (int)ex.m_errorCode;
+			error["invokeID"] = (int)pInvoke->invokeID;
+			std::string jsonString = getPrettyPrinted(error);
+			PrintJSONToLog(false, true, nullptr, jsonString.c_str(), jsonString.length());
+		}
 	}
 
 	const bool bIsInvoke = (AsnIntType)pInvoke->invokeID != 99999;
@@ -1392,7 +1420,7 @@ long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperatio
 	}
 	auto& ctx = *pCtx;
 	size_t stRequestData = 0;
-	const long lRoseResult = Send(pinvoke, szOperationName, ctx, &stRequestData);
+	const long lRoseResult = IsProcessingAllowed() ? Send(pinvoke, szOperationName, ctx, &stRequestData) : ROSE_TE_SHUTDOWN;
 	auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pinvoke->operationID, szResolvedOperationName, stRequestData, chronoCreated);
 	telemetry->finalize(lRoseResult == ROSE_NOERROR ? SnaccTelemetryData::Outcome::EVENT : SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, lRoseResult == ROSE_NOERROR ? SnaccTelemetryData::Reason::LOCAL_EVENT : GetUnhandledReasonFromResult(lRoseResult), lRoseResult, std::nullopt, pCtx);
 	OnInvokeProcessed(telemetry);
@@ -1497,6 +1525,14 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::AsnType* resul
 	}
 	auto& ctx = *pCtx;
 
+	if (!IsProcessingAllowed())
+	{
+		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pinvoke->operationID, szResolvedOperationName, 0, chronoCreated);
+		telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::SHUTDOWN, ROSE_TE_SHUTDOWN, std::nullopt, std::move(pCtx));
+		OnInvokeProcessed(telemetry);
+		return ROSE_TE_SHUTDOWN;
+	}
+
 	auto& pendingOP = AddPendingOperation(pinvoke->invokeID, pinvoke->operationID, szResolvedOperationName);
 
 	size_t stRequestData = 0;
@@ -1538,7 +1574,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::AsnType* resul
 	if (pendingOP.m_pAnswerMessage)
 		lRoseResult = HandleInvokeResult(lRoseResult, pendingOP.m_pAnswerMessage, result, error, ctx);
 
-	pendingOP.FinalizeTelemetry(pCtx);
+	pendingOP.FinalizeTelemetry(lRoseResult, pCtx);
 	OnInvokeProcessed(pendingOP.m_pTelemetry);
 
 	RemovePendingOperation(pendingOP.m_lInvokeID);
@@ -1780,7 +1816,8 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessag
 				}
 				else if (pResult->result->result.jsonBuf)
 				{
-					result->JDec(*pResult->result->result.jsonBuf);
+					if (!result->JDec(*pResult->result->result.jsonBuf))
+						lRoseResult = ROSE_RE_DECODE_FAILED;
 					// No logging here as the full object has already been logged in OnBinaryDataBlock
 				}
 			}
@@ -1833,7 +1870,8 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessag
 				}
 				else if (pError->error->jsonBuf)
 				{
-					error->JDec(*pError->error->jsonBuf);
+					if (!error->JDec(*pError->error->jsonBuf))
+						lRoseResult = ROSE_RE_DECODE_FAILED;
 					// No logging here as the full object has already been logged in OnBinaryDataBlock
 				}
 			}

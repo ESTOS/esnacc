@@ -46,7 +46,9 @@ public:
 		// The inbound message was an event and therefore intentionally produced no response.
 		EVENT = 3,
 		// The local lifecycle completed abnormally (exception, unable to decode, unable to encode, sending failed etc.)
-		UNHANDLED = 4
+		UNHANDLED = 4,
+		// The request was successfully sent, but the caller intentionally skipped waiting for a reply.
+		DISPATCHED = 5
 	};
 
 	// Stage identifies the lifecycle area in which the telemetry record was finalized.

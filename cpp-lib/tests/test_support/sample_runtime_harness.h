@@ -3,10 +3,12 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cstring>
 #include <deque>
 #include <future>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -69,6 +71,16 @@ inline std::string GetInvokeSessionId(const SNACC::ROSEInvoke* pInvoke)
 		return std::string();
 	return pInvoke->sessionID->getASCII();
 }
+
+// Captures one logical log entry emitted by the runtime after all formatting and
+// BER/JSON conversion logic has already been applied.
+struct CapturedLogEntry
+{
+	bool bOutbound = false;       // true for outbound traffic, false for inbound traffic
+	bool bError = false;          // true when the entry represents an error log
+	std::string strOperationName; // operation name attached by the runtime if available
+	std::string strPayload;       // final JSON or BER payload written to the log sink
+};
 
 // Enumerates the transport behaviors the loopback transport can simulate for a
 // single outbound send.
@@ -149,6 +161,14 @@ public:
 	// Delivers all queued payloads in the order they were originally sent.
 	void FlushQueuedMessages();
 
+	// Moves all queued payloads out so tests can feed them into a runtime entry point manually.
+	std::vector<std::string> TakeQueuedMessages()
+	{
+		auto queuedMessages = std::move(m_queuedMessages);
+		m_queuedMessages.clear();
+		return queuedMessages;
+	}
+
 	// Returns the number of payloads currently waiting for FlushQueuedMessages().
 	size_t QueuedMessageCount() const
 	{
@@ -194,6 +214,27 @@ public:
 	// Placeholder hook for future telemetry tests that may need to detach data.
 	void PrepareForTelemetry() override
 	{
+		m_bPreparedForTelemetry = true;
+		if (!m_strTelemetryNote.empty())
+			m_strTelemetryNote = "prepared:" + m_strTelemetryNote;
+	}
+
+	// Stores a small test marker that should survive context cloning into telemetry.
+	void SetTelemetryNote(const std::string& value)
+	{
+		m_strTelemetryNote = value;
+	}
+
+	// Returns the current telemetry marker stored on this context.
+	const std::string& TelemetryNote() const
+	{
+		return m_strTelemetryNote;
+	}
+
+	// Returns whether PrepareForTelemetry() has already run on this concrete instance.
+	bool WasPreparedForTelemetry() const
+	{
+		return m_bPreparedForTelemetry;
 	}
 
 	const std::string m_strLocalSessionId; // session id of the endpoint creating the context
@@ -212,9 +253,14 @@ private:
 	SessionInvokeContext(const SessionInvokeContext& other)
 		: SnaccInvokeContext(other),
 		  m_strLocalSessionId(other.m_strLocalSessionId),
-		  m_strInvokeSessionId(other.m_strInvokeSessionId)
+		  m_strInvokeSessionId(other.m_strInvokeSessionId),
+		  m_bPreparedForTelemetry(other.m_bPreparedForTelemetry),
+		  m_strTelemetryNote(other.m_strTelemetryNote)
 	{
 	}
+
+	bool m_bPreparedForTelemetry = false; // indicates whether the telemetry clone was normalized for retention
+	std::string m_strTelemetryNote;       // extra test data used to verify clone and prepare semantics
 };
 
 // Session-scoped runtime host used on both client and server sides. It models a
@@ -256,6 +302,15 @@ public:
 	const std::string& SessionId() const
 	{
 		return m_strSessionId;
+	}
+
+	// Creates the same session-aware context the runtime would construct for an
+	// outbound invoke after the session id has been attached to the payload.
+	std::shared_ptr<SessionInvokeContext> CreateSessionInvokeContext(SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
+	{
+		AttachSessionId(pInvoke);
+		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pInvoke, szOperationName);
+		return SessionInvokeContext::Create(init, m_strSessionId);
 	}
 
 	// Gives tests direct access to transport scripting helpers.
@@ -334,6 +389,126 @@ private:
 	std::map<unsigned int, IRuntimeModule*> m_modules; // registered modules keyed by generated interface id
 	std::string m_strSessionId; // narrow session id used in test assertions and invoke payloads
 	std::wstring m_wstrSessionId; // wide session id used by SnaccROSEBase result/error encoders
+};
+
+// Runtime endpoint used by the test fixture when log assertions are required.
+// It captures the final log entries while still allowing optional forwarding to
+// the file-based logger implemented in SnaccROSEBase.
+class ObservedRuntimeEndpoint : public RuntimeEndpoint
+{
+public:
+	using RuntimeEndpoint::RuntimeEndpoint;
+
+	// Configures the active log levels independently for inbound and outbound traffic.
+	void SetLogLevels(const EAsnLogLevel inbound, const EAsnLogLevel outbound)
+	{
+		m_inboundLogLevel = inbound;
+		m_outboundLogLevel = outbound;
+	}
+
+	// Controls whether captured log entries should additionally be written to the
+	// normal file sink via SnaccROSEBase::PrintJSONToLog().
+	void SetForwardLogsToBase(const bool bForward)
+	{
+		m_bForwardLogsToBase = bForward;
+	}
+
+	// Clears all captured log entries so each test can start from a known state.
+	void ClearCapturedLogs()
+	{
+		m_logEntries.clear();
+	}
+
+	// Returns the captured log entries in emission order.
+	const std::vector<CapturedLogEntry>& CapturedLogs() const
+	{
+		return m_logEntries;
+	}
+
+	// Returns the number of captured log entries.
+	size_t CapturedLogCount() const
+	{
+		return m_logEntries.size();
+	}
+
+	// Uses the test-controlled log level instead of hard-wiring logging off.
+	EAsnLogLevel GetLogLevel(const bool bOutbound) override
+	{
+		return bOutbound ? m_outboundLogLevel : m_inboundLogLevel;
+	}
+
+	// Captures the final log entry and optionally forwards it to the base file logger.
+	bool PrintJSONToLog(const bool bOutbound, const bool bError, const char* szOperationName, const char* szData, const size_t size = 0) override
+	{
+		if (szData)
+		{
+			CapturedLogEntry entry;
+			entry.bOutbound = bOutbound;
+			entry.bError = bError;
+			entry.strOperationName = szOperationName ? szOperationName : "";
+			entry.strPayload.assign(szData, size ? size : strlen(szData));
+			m_logEntries.push_back(std::move(entry));
+		}
+
+		if (m_bForwardLogsToBase)
+			RuntimeEndpoint::PrintJSONToLog(bOutbound, bError, szOperationName, szData, size);
+
+		return szData != nullptr;
+	}
+
+private:
+	EAsnLogLevel m_inboundLogLevel = EAsnLogLevel::DISABLED;  // active inbound log level for the endpoint
+	EAsnLogLevel m_outboundLogLevel = EAsnLogLevel::DISABLED; // active outbound log level for the endpoint
+	bool m_bForwardLogsToBase = false;                        // whether logs are also forwarded into file logging
+	std::vector<CapturedLogEntry> m_logEntries;              // captured final log entries for assertions
+};
+
+// Collects telemetry callback invocations from the process-wide runtime callback
+// registration point so tests can assert lifecycle metadata afterward.
+class TelemetryRecorder : public SnaccTelemetryCallback
+{
+public:
+	// Stores each telemetry record in arrival order.
+	void OnInvokeProcessed(std::shared_ptr<const SnaccTelemetryData> pTelemetry) override
+	{
+		std::lock_guard<std::mutex> guard(m_mutex);
+		m_entries.push_back(std::move(pTelemetry));
+	}
+
+	// Clears all previously recorded telemetry entries.
+	void Clear()
+	{
+		std::lock_guard<std::mutex> guard(m_mutex);
+		m_entries.clear();
+	}
+
+	// Returns a stable snapshot of all telemetry entries seen so far.
+	std::vector<std::shared_ptr<const SnaccTelemetryData>> Snapshot() const
+	{
+		std::lock_guard<std::mutex> guard(m_mutex);
+		return m_entries;
+	}
+
+private:
+	mutable std::mutex m_mutex;                                      // protects asynchronous callback delivery
+	std::vector<std::shared_ptr<const SnaccTelemetryData>> m_entries; // recorded telemetry callbacks
+};
+
+// Small RAII helper that installs a telemetry recorder for one test scope and
+// reliably unregisters it again even when assertions fail.
+class ScopedTelemetryCapture
+{
+public:
+	explicit ScopedTelemetryCapture(TelemetryRecorder& recorder)
+	{
+		recorder.Clear();
+		SnaccROSEBase::SetTelemetryCallback(&recorder);
+	}
+
+	~ScopedTelemetryCapture()
+	{
+		SnaccROSEBase::SetTelemetryCallback(nullptr);
+	}
 };
 
 // Server-side module implementing the generated settings interface. It owns the
@@ -466,6 +641,13 @@ public:
 	long InvokeGetSettings(AsnGetSettingsArgument* argument, AsnGetSettingsResult* result, AsnRequestError* error, int timeoutMs = -1)
 	{
 		return m_component.Invoke_asnGetSettings(argument, result, error, timeoutMs);
+	}
+
+	// Issues the same invoke through the raw runtime API so tests can attach a custom context.
+	long InvokeGetSettingsWithContext(AsnGetSettingsArgument* argument, AsnGetSettingsResult* result, AsnRequestError* error, std::shared_ptr<SnaccInvokeContext> pCtx, int timeoutMs = -1)
+	{
+		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnGetSettings, argument);
+		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnGetSettings", timeoutMs, std::move(pCtx));
 	}
 
 	// Issues the generated "set settings" invoke from the client side.
@@ -644,6 +826,13 @@ public:
 		return m_component.Invoke_asnCreateFancyEvents(argument, result, error, timeoutMs);
 	}
 
+	// Issues the same invoke through the raw runtime API so tests can attach a custom context.
+	long InvokeCreateFancyEventsWithContext(AsnCreateFancyEventsArgument* argument, AsnCreateFancyEventsResult* result, AsnRequestError* error, std::shared_ptr<SnaccInvokeContext> pCtx, int timeoutMs = -1)
+	{
+		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnCreateFancyEvents, argument);
+		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnCreateFancyEvents", timeoutMs, std::move(pCtx));
+	}
+
 	// Sends the event-manager invoke with an intentionally wrong argument type.
 	long InvokeCreateFancyEventsWithWrongArgument(AsnType* wrongArgument, AsnCreateFancyEventsResult* result, AsnRequestError* error, int timeoutMs = 250)
 	{
@@ -738,7 +927,9 @@ protected:
 
 	// Constructs all modules around the already constructed client/server hosts.
 	RuntimeTestBase()
-		: m_serverSettingsModule(m_server),
+		: m_telemetryRecorder(),
+		  m_telemetryScope(m_telemetryRecorder),
+		  m_serverSettingsModule(m_server),
 		  m_clientSettingsModule(m_client),
 		  m_serverEventModule(m_server),
 		  m_clientEventModule(m_client)
@@ -756,6 +947,13 @@ protected:
 		m_clientSettingsModule.ResetState();
 		m_serverEventModule.ResetState();
 		m_clientEventModule.ResetState();
+		m_server.SetLogLevels(EAsnLogLevel::DISABLED, EAsnLogLevel::DISABLED);
+		m_client.SetLogLevels(EAsnLogLevel::DISABLED, EAsnLogLevel::DISABLED);
+		m_server.SetForwardLogsToBase(false);
+		m_client.SetForwardLogsToBase(false);
+		m_server.ClearCapturedLogs();
+		m_client.ClearCapturedLogs();
+		m_telemetryRecorder.Clear();
 	}
 
 	// Applies one logical-behavior configuration to all server-side modules.
@@ -807,6 +1005,60 @@ protected:
 		return m_clientEventModule.FancyEvents();
 	}
 
+	// Configures the server endpoint log levels for inbound and outbound traffic.
+	void SetServerLogLevels(const EAsnLogLevel inbound, const EAsnLogLevel outbound)
+	{
+		m_server.SetLogLevels(inbound, outbound);
+	}
+
+	// Configures the client endpoint log levels for inbound and outbound traffic.
+	void SetClientLogLevels(const EAsnLogLevel inbound, const EAsnLogLevel outbound)
+	{
+		m_client.SetLogLevels(inbound, outbound);
+	}
+
+	// Allows tests to forward captured server logs into the real file sink as well.
+	void SetServerLogForwardingToBase(const bool bForward)
+	{
+		m_server.SetForwardLogsToBase(bForward);
+	}
+
+	// Allows tests to forward captured client logs into the real file sink as well.
+	void SetClientLogForwardingToBase(const bool bForward)
+	{
+		m_client.SetForwardLogsToBase(bForward);
+	}
+
+	// Exposes the server-side captured log entries for assertions.
+	const std::vector<CapturedLogEntry>& ServerLogs() const
+	{
+		return m_server.CapturedLogs();
+	}
+
+	// Exposes the client-side captured log entries for assertions.
+	const std::vector<CapturedLogEntry>& ClientLogs() const
+	{
+		return m_client.CapturedLogs();
+	}
+
+	// Returns the telemetry records captured through the process-wide callback hook.
+	std::vector<std::shared_ptr<const SnaccTelemetryData>> TelemetryEntries() const
+	{
+		return m_telemetryRecorder.Snapshot();
+	}
+
+	// Gives tests a simple way to create a session-aware outbound context for the client.
+	std::shared_ptr<SessionInvokeContext> CreateClientInvokeContext(SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
+	{
+		return m_client.CreateSessionInvokeContext(pInvoke, szOperationName);
+	}
+
+	// Gives tests a simple way to create a session-aware outbound context for the server.
+	std::shared_ptr<SessionInvokeContext> CreateServerInvokeContext(SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
+	{
+		return m_server.CreateSessionInvokeContext(pInvoke, szOperationName);
+	}
+
 	// Starts an asynchronous get-settings invoke so lifecycle tests can race it
 	// against shutdown or delayed transport behavior.
 	std::future<long> InvokeGetSettingsAsync(int timeoutMs = 500)
@@ -828,8 +1080,10 @@ protected:
 		return "J0000007{\"bad\":";
 	}
 
-	RuntimeEndpoint m_server{L"LoopbackServer", "server-session"}; // server-side session host used by all tests
-	RuntimeEndpoint m_client{L"LoopbackClient", "client-session"}; // client-side session host used by all tests
+	TelemetryRecorder m_telemetryRecorder;   // collects callback records emitted by SnaccROSEBase
+	ScopedTelemetryCapture m_telemetryScope; // keeps telemetry callback capture installed for the fixture lifetime
+	ObservedRuntimeEndpoint m_server{L"LoopbackServer", "server-session"}; // server-side session host used by all tests
+	ObservedRuntimeEndpoint m_client{L"LoopbackClient", "client-session"}; // client-side session host used by all tests
 	SettingsServiceModule m_serverSettingsModule; // server module handling settings invokes
 	SettingsClientModule m_clientSettingsModule;  // client module issuing settings invokes and receiving settings events
 	EventServiceModule m_serverEventModule;       // server module handling event-manager invokes
