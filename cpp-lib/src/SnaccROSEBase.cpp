@@ -10,10 +10,26 @@
 
 using namespace SNACC;
 
+namespace
+{
+	const char* GetOperationNameOrEmpty(const SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
+	{
+		if (szOperationName)
+			return szOperationName;
+		else if (pInvoke)
+		{
+			const char* szResolvedName = SnaccRoseOperationLookup::LookUpName(pInvoke->operationID);
+			if (szResolvedName)
+				return szResolvedName;
+		}
+		return "";
+	}
+} // namespace
+
 SnaccInvokeContextInit::SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke, const char* szOperationName /*= nullptr*/)
 	: m_direction(direction),
 	  m_pInvoke(pInvoke),
-	  m_strOperationName(szOperationName ? szOperationName : (pInvoke ? SnaccRoseOperationLookup::LookUpName(pInvoke->operationID) : nullptr))
+	  m_strOperationName(GetOperationNameOrEmpty(pInvoke, szOperationName))
 {
 }
 
@@ -111,6 +127,21 @@ SnaccTelemetryData::Reason GetUnhandledReasonFromResult(const long lRoseResult)
 {
 	switch (lRoseResult)
 	{
+		case ROSE_REJECT_UNKNOWNOPERATION:
+		case ROSE_REJECT_MISTYPEDARGUMENT:
+		case ROSE_REJECT_FUNCTIONMISSING:
+		case ROSE_REJECT_UNKNOWN:
+		case ROSE_REJECT_ARGUMENT_MISSING:
+			return SnaccTelemetryData::Reason::REJECT_PROTOCOL;
+		case ROSE_REJECT_INVALIDSESSIONID:
+		case ROSE_REJECT_STARTSSLREQUIRED:
+			return SnaccTelemetryData::Reason::REJECT_SESSION;
+		case ROSE_REJECT_AUTHENTICATIONINCOMPLETE:
+		case ROSE_REJECT_AUTHENTICATIONFAILED:
+		case ROSE_REJECT_AUTHENTICATION_SERVER_BUSY:
+		case ROSE_REJECT_AUTHENTICATION_USER_TEMPORARY_LOCKED_OUT:
+		case ROSE_REJECT_AUTHENTICATION_USER_LOCKED_OUT:
+			return SnaccTelemetryData::Reason::REJECT_AUTHENTICATION;
 		case ROSE_TE_TRANSPORTFAILED:
 			return SnaccTelemetryData::Reason::SEND_FAILED;
 		case ROSE_TE_ENCODE_FAILED:
@@ -1041,24 +1072,23 @@ long SnaccROSEBase::EncodeReject(SNACC::ROSEReject* preject, std::string& strRes
 	{
 		auto value = rejectMsg.JEnc();
 
-		std::string strData;
 		int logLevel = (int)GetLogLevel(true);
 		if (logLevel & (int)EAsnLogLevel::JSON || logLevel & (int)EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED)
-			strData = getPrettyPrinted(value);
+			strResponse = getPrettyPrinted(value);
 		else
 		{
 			SJson::FastWriter writer;
-			strData = writer.write(value);
+			strResponse = writer.write(value);
 		}
 
 		std::string strPrefix;
 		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
-			lRoseResult = GetJsonLengthPrefix(strData, strPrefix);
+			lRoseResult = GetJsonLengthPrefix(strResponse, strPrefix);
 		if (lRoseResult == ROSE_NOERROR)
 		{
-			LogTransportData(true, m_eTransportEncoding, nullptr, strData.c_str(), strData.length(), &rejectMsg, nullptr);
+			LogTransportData(true, m_eTransportEncoding, nullptr, strResponse.c_str(), strResponse.length(), &rejectMsg, nullptr);
 			if (!strPrefix.empty())
-				strData.insert(0, strPrefix);
+				strResponse.insert(0, strPrefix);
 		}
 	}
 	else

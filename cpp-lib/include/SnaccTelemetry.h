@@ -101,8 +101,15 @@ public:
 		WAIT_SKIPPED = 14,
 		// The local invoke handler raised an exception and the stub replied with a reject.
 		INVOKE_EXCEPTION = 15,
+		// The lifecycle ended around a protocol-level reject such as unknown operation
+		// or an argument/dispatch mismatch.
+		REJECT_PROTOCOL = 16,
+		// The lifecycle ended around a session or connection-security precondition reject.
+		REJECT_SESSION = 17,
+		// The lifecycle ended around an authentication reject.
+		REJECT_AUTHENTICATION = 18,
 		// Fallback value in case the exact failure reason could not be classified.
-		UNKNOWN_FAILURE = 16
+		UNKNOWN_FAILURE = 19
 	};
 
 	// Returns a short debug-friendly text for the enum value.

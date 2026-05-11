@@ -2,6 +2,8 @@
 cmake_minimum_required(VERSION 3.20...4.1)
 project(esnacc_cmake) #  LANGUAGES CXX) - would interpret all files as C++
 
+include(CTest)
+
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") # GCC
 	# Ugly but i see no other option than specifying the compiler directly
 	# No matter what i do to tell cmake to use a newer standard than C89 it's
@@ -78,4 +80,8 @@ add_subdirectory(cpp-lib)
 
 # compiler itself
 add_subdirectory(compiler)
+
+if(BUILD_TESTING)
+	add_subdirectory(cpp-lib/tests)
+endif()
 

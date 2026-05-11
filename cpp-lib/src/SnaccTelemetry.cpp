@@ -94,6 +94,12 @@ const char* SnaccTelemetryData::GetDebugText(Reason reason)
 			return "WAIT_SKIPPED";
 		case Reason::INVOKE_EXCEPTION:
 			return "INVOKE_EXCEPTION";
+		case Reason::REJECT_PROTOCOL:
+			return "REJECT_PROTOCOL";
+		case Reason::REJECT_SESSION:
+			return "REJECT_SESSION";
+		case Reason::REJECT_AUTHENTICATION:
+			return "REJECT_AUTHENTICATION";
 		case Reason::UNKNOWN_FAILURE:
 			return "UNKNOWN_FAILURE";
 		default:
