@@ -46,7 +46,9 @@ public:
 		// The inbound message was an event and therefore intentionally produced no response.
 		EVENT = 3,
 		// The local lifecycle completed abnormally (exception, unable to decode, unable to encode, sending failed etc.)
-		UNHANDLED = 4
+		UNHANDLED = 4,
+		// The request was successfully sent, but the caller intentionally skipped waiting for a reply.
+		DISPATCHED = 5
 	};
 
 	// Stage identifies the lifecycle area in which the telemetry record was finalized.
@@ -101,8 +103,15 @@ public:
 		WAIT_SKIPPED = 14,
 		// The local invoke handler raised an exception and the stub replied with a reject.
 		INVOKE_EXCEPTION = 15,
+		// The lifecycle ended around a protocol-level reject such as unknown operation
+		// or an argument/dispatch mismatch.
+		REJECT_PROTOCOL = 16,
+		// The lifecycle ended around a session or connection-security precondition reject.
+		REJECT_SESSION = 17,
+		// The lifecycle ended around an authentication reject.
+		REJECT_AUTHENTICATION = 18,
 		// Fallback value in case the exact failure reason could not be classified.
-		UNKNOWN_FAILURE = 16
+		UNKNOWN_FAILURE = 19
 	};
 
 	// Returns a short debug-friendly text for the enum value.

@@ -7,6 +7,7 @@ file(GLOB src_files src/*.cpp src/tkAppInit.c jsoncpp/*.cpp)
 file(GLOB header_files **/*.h)
 
 add_library(cpp-lib STATIC ${src_files} ${header_files})
+add_library(snacc_cpp_lib ALIAS cpp-lib)
 
 target_include_directories(cpp-lib PUBLIC "include")
 target_compile_definitions(cpp-lib PRIVATE SNACCDLL_NONE)

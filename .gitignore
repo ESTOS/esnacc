@@ -1,5 +1,6 @@
 .vs/
 build*/
+Testing/
 output/
 .cache
 dist/
