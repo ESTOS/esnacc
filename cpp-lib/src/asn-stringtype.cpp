@@ -566,32 +566,34 @@ WideAsnString::WideAsnString(const std::string& strASCII)
 
 void WideAsnString::setASCII(std::string_view strAscii)
 {
-	assign(AsnStringConvert::AsciiToUTF16(strAscii.data()));
+	const std::string strAsciiBuffer(strAscii);
+	assign(AsnStringConvert::CodePageToWide(strAsciiBuffer.c_str()));
 }
 
 std::string WideAsnString::getASCII() const
 {
-	return AsnStringConvert::UTF16ToAscii(c_str());
+	return AsnStringConvert::WideToCodePage(c_str());
 }
 
 void WideAsnString::getASCII(std::string& strAscii) const
 {
-	strAscii = AsnStringConvert::UTF16ToAscii(c_str());
+	strAscii = AsnStringConvert::WideToCodePage(c_str());
 }
 
 void WideAsnString::setUTF8(std::string_view strUTF8)
 {
-	assign(AsnStringConvert::UTF8ToUTF16(strUTF8.data()));
+	const std::string strUTF8Buffer(strUTF8);
+	assign(AsnStringConvert::UTF8ToWide(strUTF8Buffer.c_str()));
 }
 
 std::string WideAsnString::getUTF8() const
 {
-	return AsnStringConvert::UTF16ToUTF8(c_str());
+	return AsnStringConvert::WideToUTF8(c_str());
 }
 
 void WideAsnString::getUTF8(std::string& strUTF8) const
 {
-	strUTF8 = AsnStringConvert::UTF16ToUTF8(c_str());
+	strUTF8 = AsnStringConvert::WideToUTF8(c_str());
 }
 
 void WideAsnString::setUTF16(std::wstring_view strUTF16)
@@ -1299,42 +1301,42 @@ UTF8String::UTF8String(const std::wstring& strUTF16)
 
 UTF8String UTF8String::CreateFromUTF8(const char* szUTF8)
 {
-	return UTF8String(AsnStringConvert::UTF8ToUTF16(szUTF8));
+	return UTF8String(AsnStringConvert::UTF8ToWide(szUTF8));
 }
 
 UTF8String UTF8String::CreateFromUTF8(const std::string& strUTF8)
 {
-	return UTF8String(AsnStringConvert::UTF8ToUTF16(strUTF8.c_str()));
+	return UTF8String(AsnStringConvert::UTF8ToWide(strUTF8.c_str()));
 }
 
 UTF8String UTF8String::CreateFromASCII(const char* szAscii)
 {
-	return UTF8String(AsnStringConvert::AsciiToUTF16(szAscii));
+	return UTF8String(AsnStringConvert::CodePageToWide(szAscii));
 }
 
 UTF8String UTF8String::CreateFromASCII(const std::string& strAscii)
 {
-	return UTF8String(AsnStringConvert::AsciiToUTF16(strAscii.c_str()));
+	return UTF8String(AsnStringConvert::CodePageToWide(strAscii.c_str()));
 }
 
 UTF8String* UTF8String::CreateNewFromUTF8(const char* szUTF8)
 {
-	return new UTF8String(AsnStringConvert::UTF8ToUTF16(szUTF8));
+	return new UTF8String(AsnStringConvert::UTF8ToWide(szUTF8));
 }
 
 UTF8String* UTF8String::CreateNewFromUTF8(const std::string& strUTF8)
 {
-	return new UTF8String(AsnStringConvert::UTF8ToUTF16(strUTF8.c_str()));
+	return new UTF8String(AsnStringConvert::UTF8ToWide(strUTF8.c_str()));
 }
 
 UTF8String* UTF8String::CreateNewFromASCII(const char* szAscii)
 {
-	return new UTF8String(AsnStringConvert::AsciiToUTF16(szAscii));
+	return new UTF8String(AsnStringConvert::CodePageToWide(szAscii));
 }
 
 UTF8String* UTF8String::CreateNewFromASCII(const std::string& strAscii)
 {
-	return new UTF8String(AsnStringConvert::AsciiToUTF16(strAscii.c_str()));
+	return new UTF8String(AsnStringConvert::CodePageToWide(strAscii.c_str()));
 }
 
 SJson::Value UTF8String::JEnc() const

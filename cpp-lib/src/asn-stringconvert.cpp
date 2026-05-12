@@ -1,31 +1,17 @@
 #include "asn-stringconvert.h"
 #include "snacc-assert.h"
-#include <locale>
-#include <codecvt>
-#include <utility>
+#include <algorithm>
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
+#include <cwchar>
+#include <stdexcept>
+#include <vector>
 #ifdef _WIN32
 #include <Windows.h>
+#else
+#include <iconv.h>
 #endif
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
-template <class Facet> struct deletable_facet : Facet
-{
-	template <class... Args>
-	deletable_facet(Args&&... args)
-		: Facet(std::forward<Args>(args)...)
-	{
-	}
-	~deletable_facet()
-	{
-	}
-};
 
 #ifdef _DEBUG
 #define FILLCHAR_W 65535
@@ -46,6 +32,196 @@ int getWindowsCodePage(const char* szCodePage)
 	else
 		return CP_ACP;
 }
+
+std::wstring convertCodePageToWidePlatform(const char* szCodePageString, const char* szCodePage)
+{
+	if (szCodePageString == NULL || *szCodePageString == '\0')
+		return std::wstring();
+
+	const int size = (int)strlen(szCodePageString);
+	const int iCodePage = getWindowsCodePage(szCodePage);
+	const int sizeNeeded = MultiByteToWideChar(iCodePage, 0, szCodePageString, size, NULL, 0);
+	if (!sizeNeeded)
+		return std::wstring();
+
+	std::wstring strWide(sizeNeeded, FILLCHAR_W);
+#ifdef _DEBUG
+	const int iConverted =
+#endif
+		MultiByteToWideChar(iCodePage, 0, szCodePageString, size, &strWide[0], sizeNeeded);
+#ifdef _DEBUG
+	if (sizeNeeded != iConverted)
+	{
+		DWORD dwErr = GetLastError();
+		printf("Error in AsnStringConvert::CodePageToWide: %ld", dwErr);
+		ASSERT(FALSE);
+	}
+#endif
+	return strWide;
+}
+
+std::string convertWideToCodePagePlatform(const wchar_t* szWideString, const char* szCodePage)
+{
+	if (szWideString == NULL || *szWideString == L'\0')
+		return std::string();
+
+	const int size = (int)wcslen(szWideString);
+	const int iCodePage = getWindowsCodePage(szCodePage);
+	const int sizeNeeded = WideCharToMultiByte(iCodePage, 0, szWideString, size, NULL, 0, NULL, NULL);
+	if (!sizeNeeded)
+		return std::string();
+
+	std::string strResult(sizeNeeded, FILLCHAR_A);
+#ifdef _DEBUG
+	const int iConverted =
+#endif
+		WideCharToMultiByte(iCodePage, 0, szWideString, size, &strResult[0], sizeNeeded, NULL, NULL);
+#ifdef _DEBUG
+	if (sizeNeeded != iConverted)
+	{
+		DWORD dwErr = GetLastError();
+		printf("Error in AsnStringConvert::WideToCodePage: %ld", dwErr);
+		ASSERT(FALSE);
+	}
+#endif
+	return strResult;
+}
+
+std::wstring convertUTF8ToWidePlatform(const char* szUTF8)
+{
+	if (szUTF8 == NULL || *szUTF8 == '\0')
+		return std::wstring();
+
+	const int size = (int)strlen(szUTF8);
+	const int sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, szUTF8, size, NULL, 0);
+	if (!sizeNeeded)
+		return std::wstring();
+
+	std::wstring strWide(sizeNeeded, FILLCHAR_W);
+#ifdef _DEBUG
+	const int iConverted =
+#endif
+		MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, szUTF8, size, &strWide[0], sizeNeeded);
+#ifdef _DEBUG
+	if (sizeNeeded != iConverted)
+	{
+		DWORD dwErr = GetLastError();
+		printf("Error in AsnStringConvert::UTF8ToWide: %ld", dwErr);
+		ASSERT(FALSE);
+	}
+#endif
+	return strWide;
+}
+
+std::string convertWideToUTF8Platform(const wchar_t* szWideString)
+{
+	if (szWideString == NULL || *szWideString == L'\0')
+		return std::string();
+
+	const int size = (int)wcslen(szWideString);
+	const int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, szWideString, size, NULL, 0, NULL, NULL);
+	if (!sizeNeeded)
+		return std::string();
+
+	std::string strUTF8(sizeNeeded, FILLCHAR_A);
+#ifdef _DEBUG
+	const int iConverted =
+#endif
+		WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, szWideString, size, &strUTF8[0], sizeNeeded, NULL, NULL);
+#ifdef _DEBUG
+	if (sizeNeeded != iConverted)
+	{
+		DWORD dwErr = GetLastError();
+		printf("Error in AsnStringConvert::WideToUTF8: %ld", dwErr);
+		ASSERT(FALSE);
+	}
+#endif
+	return strUTF8;
+}
+#else
+const char* getCodePageName(const char* szCodePage)
+{
+	return (szCodePage && *szCodePage) ? szCodePage : "ISO-8859-1";
+}
+
+std::wstring convertCodePageToWidePlatform(const char* szCodePageString, const char* szCodePage)
+{
+	if (szCodePageString == NULL || *szCodePageString == '\0')
+		return std::wstring();
+
+	iconv_t hConverter = iconv_open("WCHAR_T", getCodePageName(szCodePage));
+	if (hConverter == (iconv_t)-1)
+		throw std::runtime_error("Unable to create iconv converter for source code page");
+
+	size_t inBytesLeft = strlen(szCodePageString);
+	char* pszInput = const_cast<char*>(szCodePageString);
+	std::vector<wchar_t> strWide(std::max<size_t>(inBytesLeft + 1, 16), FILLCHAR_W);
+	char* pszOutput = reinterpret_cast<char*>(strWide.data());
+	size_t outBytesLeft = strWide.size() * sizeof(wchar_t);
+
+	while (iconv(hConverter, &pszInput, &inBytesLeft, &pszOutput, &outBytesLeft) == (size_t)-1)
+	{
+		if (errno != E2BIG)
+		{
+			iconv_close(hConverter);
+			throw std::runtime_error("Unable to convert codepage text to wide string");
+		}
+
+		const size_t outBytesUsed = (strWide.size() * sizeof(wchar_t)) - outBytesLeft;
+		strWide.resize(strWide.size() * 2, FILLCHAR_W);
+		pszOutput = reinterpret_cast<char*>(strWide.data()) + outBytesUsed;
+		outBytesLeft = (strWide.size() * sizeof(wchar_t)) - outBytesUsed;
+	}
+
+	iconv_close(hConverter);
+	const size_t outBytesWritten = (strWide.size() * sizeof(wchar_t)) - outBytesLeft;
+	strWide.resize(outBytesWritten / sizeof(wchar_t));
+	return std::wstring(strWide.begin(), strWide.end());
+}
+
+std::string convertWideToCodePagePlatform(const wchar_t* szWideString, const char* szCodePage)
+{
+	if (szWideString == NULL || *szWideString == L'\0')
+		return std::string();
+
+	iconv_t hConverter = iconv_open(getCodePageName(szCodePage), "WCHAR_T");
+	if (hConverter == (iconv_t)-1)
+		throw std::runtime_error("Unable to create iconv converter for target code page");
+
+	size_t inBytesLeft = wcslen(szWideString) * sizeof(wchar_t);
+	char* pszInput = const_cast<char*>(reinterpret_cast<const char*>(szWideString));
+	std::vector<char> strResult(std::max<size_t>(inBytesLeft + 1, 16), FILLCHAR_A);
+	char* pszOutput = strResult.data();
+	size_t outBytesLeft = strResult.size();
+
+	while (iconv(hConverter, &pszInput, &inBytesLeft, &pszOutput, &outBytesLeft) == (size_t)-1)
+	{
+		if (errno != E2BIG)
+		{
+			iconv_close(hConverter);
+			throw std::runtime_error("Unable to convert wide string to codepage text");
+		}
+
+		const size_t outBytesUsed = strResult.size() - outBytesLeft;
+		strResult.resize(strResult.size() * 2, FILLCHAR_A);
+		pszOutput = strResult.data() + outBytesUsed;
+		outBytesLeft = strResult.size() - outBytesUsed;
+	}
+
+	iconv_close(hConverter);
+	strResult.resize(strResult.size() - outBytesLeft);
+	return std::string(strResult.begin(), strResult.end());
+}
+
+std::wstring convertUTF8ToWidePlatform(const char* szUTF8)
+{
+	return convertCodePageToWidePlatform(szUTF8, "UTF-8");
+}
+
+std::string convertWideToUTF8Platform(const wchar_t* szWideString)
+{
+	return convertWideToCodePagePlatform(szWideString, "UTF-8");
+}
 #endif
 
 std::string AsnStringConvert::AsciiToUTF8(const char* szASCII, const char* szCodePage /* = "ISO-8859-1" */)
@@ -53,16 +229,10 @@ std::string AsnStringConvert::AsciiToUTF8(const char* szASCII, const char* szCod
 	std::string strUTF8;
 	try
 	{
-#ifdef _WIN32
-		// 1. Convert to Unicode
-		std::wstring strUTF16 = AsnStringConvert::AsciiToUTF16(szASCII, szCodePage);
-		// 2. Convert to ASCII with codepage
-		strUTF8 = AsnStringConvert::UTF16ToUTF8(strUTF16.c_str());
-#else
-		std::wstring_convert<deletable_facet<std::codecvt_utf8<wchar_t>>> converter;
-		std::wstring utf16_str = converter.from_bytes(szASCII);
-		strUTF8 = converter.to_bytes(utf16_str);
-#endif
+		// Convert through the platform wide-string form so codepage handling
+		// stays aligned between Windows and Linux implementations.
+		std::wstring strWide = AsnStringConvert::CodePageToWide(szASCII, szCodePage);
+		strUTF8 = AsnStringConvert::WideToUTF8(strWide.c_str());
 	}
 	catch (const std::exception& e)
 	{
@@ -77,16 +247,10 @@ std::string AsnStringConvert::UTF8ToAscii(const char* szUTF8, const char* szCode
 	std::string strASCII;
 	try
 	{
-#ifdef _WIN32
-		// 1. Convert to Unicode
-		std::wstring strUTF16 = AsnStringConvert::UTF8ToUTF16(szUTF8);
-		// 2. Convert to ASCII with codepage
-		strASCII = AsnStringConvert::UTF16ToAscii(strUTF16.c_str(), szCodePage);
-#else
-		std::wstring_convert<deletable_facet<std::codecvt_utf8<wchar_t>>> converter;
-		std::wstring utf16_str = converter.from_bytes(szUTF8);
-		strASCII = converter.to_bytes(utf16_str);
-#endif
+		// Convert through the platform wide-string form so codepage handling
+		// stays aligned between Windows and Linux implementations.
+		std::wstring strWide = AsnStringConvert::UTF8ToWide(szUTF8);
+		strASCII = AsnStringConvert::WideToCodePage(strWide.c_str(), szCodePage);
 	}
 	catch (const std::exception& e)
 	{
@@ -96,166 +260,65 @@ std::string AsnStringConvert::UTF8ToAscii(const char* szUTF8, const char* szCode
 	return strASCII;
 }
 
-std::wstring AsnStringConvert::AsciiToUTF16(const char* szASCII, const char* szCodePage /* = "ISO-8859-1" */)
+std::wstring AsnStringConvert::CodePageToWide(const char* szCodePageString, const char* szCodePage /* = "ISO-8859-1" */)
 {
-	std::wstring strUTF16;
+	std::wstring strWide;
 	try
 	{
-#ifdef _WIN32
-		int size = (int)strlen(szASCII);
-		if (size)
-		{
-			int iCodePage = getWindowsCodePage(szCodePage);
-			int size_needed = MultiByteToWideChar(iCodePage, 0, szASCII, size, NULL, 0);
-			if (size_needed)
-			{
-				strUTF16.resize(size_needed, FILLCHAR_W);
-#ifdef _DEBUG
-				int iConverted =
-#endif
-					MultiByteToWideChar(iCodePage, 0, szASCII, size, &strUTF16[0], size_needed);
-#ifdef _DEBUG
-				if (size_needed != iConverted)
-				{
-					DWORD dwErr = GetLastError();
-					printf("Error in AsnStringConvert::AsciiToUTF16: %ld", dwErr);
-					ASSERT(FALSE);
-				}
-#endif
-			}
-		}
-#else
-		while (*szASCII)
-		{
-			strUTF16.push_back(static_cast<unsigned char>(*szASCII));
-			++szASCII;
-		}
-#endif
+		if (szCodePageString == NULL || *szCodePageString == '\0')
+			return strWide;
+		strWide = convertCodePageToWidePlatform(szCodePageString, szCodePage);
 	}
 	catch (const std::exception& e)
 	{
 		printf("Exception: %s", e.what());
 		ASSERT(0);
 	}
-	return strUTF16;
+	return strWide;
 }
 
-std::string AsnStringConvert::UTF16ToAscii(const wchar_t* szUTF16, const char* szCodePage /* = "ISO-8859-1" */)
+std::string AsnStringConvert::WideToCodePage(const wchar_t* szWideString, const char* szCodePage /* = "ISO-8859-1" */)
 {
-	std::string strASCII;
+	std::string strResult;
 	try
 	{
-#ifdef _WIN32
-		int size = (int)wcslen(szUTF16);
-		if (size)
-		{
-			int iCodePage = getWindowsCodePage(szCodePage);
-			int size_needed = WideCharToMultiByte(iCodePage, 0, szUTF16, size, NULL, 0, NULL, NULL);
-			if (size_needed)
-			{
-				strASCII.resize(size_needed, FILLCHAR_A);
-#ifdef _DEBUG
-				int iConverted =
-#endif
-					WideCharToMultiByte(iCodePage, 0, szUTF16, size, &strASCII[0], size_needed, NULL, NULL);
-#ifdef _DEBUG
-				if (size_needed != iConverted)
-				{
-					DWORD dwErr = GetLastError();
-					printf("Error in AsnStringConvert::UTF16ToAscii: %ld", dwErr);
-					ASSERT(FALSE);
-				}
-#endif
-			}
-		}
-#else
-		while (*szUTF16)
-		{
-			const wchar_t ch = *szUTF16;
-			strASCII.push_back(ch >= 0 && ch <= 0xFF ? static_cast<char>(ch) : '?');
-			++szUTF16;
-		}
-#endif
+		if (szWideString == NULL || *szWideString == L'\0')
+			return strResult;
+		strResult = convertWideToCodePagePlatform(szWideString, szCodePage);
 	}
 	catch (const std::exception& e)
 	{
 		printf("Exception: %s", e.what());
 		ASSERT(0);
 	}
-	return strASCII;
+	return strResult;
 }
 
-std::wstring AsnStringConvert::UTF8ToUTF16(const char* szUTF8)
+std::wstring AsnStringConvert::UTF8ToWide(const char* szUTF8)
 {
-	std::wstring strUTF16;
+	std::wstring strWide;
 	try
 	{
-#ifdef _WIN32
-		int size = (int)strlen(szUTF8);
-		if (size)
-		{
-			int size_needed = MultiByteToWideChar(CP_UTF8, 0, szUTF8, size, NULL, 0);
-			if (size_needed)
-			{
-				strUTF16.resize(size_needed, FILLCHAR_W);
-#ifdef _DEBUG
-				int iConverted =
-#endif
-					MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, szUTF8, size, &strUTF16[0], size_needed);
-#ifdef _DEBUG
-				if (size_needed != iConverted)
-				{
-					DWORD dwErr = GetLastError();
-					printf("Error in AsnStringConvert::UTF8ToUTF16: %ld", dwErr);
-					ASSERT(FALSE);
-				}
-#endif
-			}
-		}
-#else
-		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-		strUTF16 = converter.from_bytes(szUTF8);
-#endif
+		if (szUTF8 == NULL || *szUTF8 == '\0')
+			return strWide;
+		strWide = convertUTF8ToWidePlatform(szUTF8);
 	}
 	catch (const std::exception& e)
 	{
 		printf("Exception: %s", e.what());
 		ASSERT(0);
 	}
-	return strUTF16;
+	return strWide;
 }
 
-std::string AsnStringConvert::UTF16ToUTF8(const wchar_t* szUTF16)
+std::string AsnStringConvert::WideToUTF8(const wchar_t* szWideString)
 {
 	std::string strUTF8;
 	try
 	{
-#ifdef _WIN32
-		int size = (int)wcslen(szUTF16);
-		if (size)
-		{
-			int size_needed = WideCharToMultiByte(CP_UTF8, 0, szUTF16, size, NULL, 0, NULL, NULL);
-			if (size_needed)
-			{
-				strUTF8.resize(size_needed, FILLCHAR_A);
-#ifdef _DEBUG
-				int iConverted =
-#endif
-					WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, szUTF16, size, &strUTF8[0], size_needed, NULL, NULL);
-#ifdef _DEBUG
-				if (size_needed != iConverted)
-				{
-					DWORD dwErr = GetLastError();
-					printf("Error in AsnStringConvert::UTF16ToUTF8: %ld", dwErr);
-					ASSERT(FALSE);
-				}
-#endif
-			}
-		}
-#else
-		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-		strUTF8 = converter.to_bytes(szUTF16);
-#endif
+		if (szWideString == NULL || *szWideString == L'\0')
+			return strUTF8;
+		strUTF8 = convertWideToUTF8Platform(szWideString);
 	}
 	catch (const std::exception& e)
 	{
@@ -265,8 +328,3 @@ std::string AsnStringConvert::UTF16ToUTF8(const wchar_t* szUTF16)
 	return strUTF8;
 }
 
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif

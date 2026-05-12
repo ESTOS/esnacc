@@ -11,15 +11,15 @@ public:
 	// Converts an UTF8 string into an ASCII string
 	static std::string UTF8ToAscii(const char* szUTF8, const char* szCodePage = "ISO-8859-1");
 
-	// Converts an ASCII buffer into an UTF16 (Windows Unicode) string
-	static std::wstring AsciiToUTF16(const char* szASCII, const char* szCodePage = "ISO-8859-1");
-	// Converts an UTF16 string into an ASCII string
-	static std::string UTF16ToAscii(const wchar_t* szUTF16, const char* szCodePage = "ISO-8859-1");
+	// Converts a codepage-encoded narrow string into the platform wide-string representation.
+	static std::wstring CodePageToWide(const char* szCodePageString, const char* szCodePage = "ISO-8859-1");
+	// Converts the platform wide-string representation into a codepage-encoded narrow string.
+	static std::string WideToCodePage(const wchar_t* szWideString, const char* szCodePage = "ISO-8859-1");
 
-	// Converts an UTF8 string into an UTF16 (Windows Unicode) string
-	static std::wstring UTF8ToUTF16(const char* szUTF8);
-	// Converts an UTF16 string into an UTF8 string
-	static std::string UTF16ToUTF8(const wchar_t* szUTF16);
+	// Converts an UTF8 string into the platform wide-string representation.
+	static std::wstring UTF8ToWide(const char* szUTF8);
+	// Converts the platform wide-string representation into an UTF8 string.
+	static std::string WideToUTF8(const wchar_t* szWideString);
 };
 
 #endif // ASN_STRINGCONVERT_H
