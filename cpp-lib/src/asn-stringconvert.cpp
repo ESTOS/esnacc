@@ -125,8 +125,11 @@ std::wstring AsnStringConvert::AsciiToUTF16(const char* szASCII, const char* szC
 			}
 		}
 #else
-		std::wstring_convert<deletable_facet<std::codecvt_utf16<wchar_t, 0x10ffff, std::little_endian>>> converter;
-		strUTF16 = converter.from_bytes(szASCII);
+		while (*szASCII)
+		{
+			strUTF16.push_back(static_cast<unsigned char>(*szASCII));
+			++szASCII;
+		}
 #endif
 	}
 	catch (const std::exception& e)
@@ -166,8 +169,12 @@ std::string AsnStringConvert::UTF16ToAscii(const wchar_t* szUTF16, const char* s
 			}
 		}
 #else
-		std::wstring_convert<deletable_facet<std::codecvt_utf16<wchar_t, 0x10ffff, std::little_endian>>> converter;
-		strASCII = converter.to_bytes(szUTF16);
+		while (*szUTF16)
+		{
+			const wchar_t ch = *szUTF16;
+			strASCII.push_back(ch >= 0 && ch <= 0xFF ? static_cast<char>(ch) : '?');
+			++szUTF16;
+		}
 #endif
 	}
 	catch (const std::exception& e)
