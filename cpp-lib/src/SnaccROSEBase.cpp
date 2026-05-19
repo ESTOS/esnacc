@@ -593,7 +593,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long lSize, 
 		}
 		else
 		{
-			// if we don´t know the encoding, we need to log it binary to ensure proper readability in the logs (ensure payload is hex converted)
+			// if we don't know the encoding, we need to log it binary to ensure proper readability in the logs (ensure payload is hex converted)
 			if (bLogTransportData)
 				bLogTransportData = LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, lpBytes, lSize, nullptr, nullptr);
 			OnRoseDecodeError(bLogTransportData, SNACC::TransportEncoding::BER, lpBytes, lSize, "unknown encoding");
@@ -747,7 +747,7 @@ long SnaccROSEBase::GetJsonLengthPrefix(std::string_view strJson, std::string& s
 	if (len > 9999999)
 		return ROSE_TE_ENCODE_FAILED;
 
-	// Calc prefix z.B. (J1234567)
+	// Calc prefix e.g. (J1234567)
 	char szPrefix[10] = {0};
 #if _WIN32
 #if _MSC_VER < 1900
@@ -1576,9 +1576,9 @@ bool SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bError, cons
 	if (!m_pAsnLogFile || !szData)
 		return false;
 
-	// Die ASN.1-Funktionen k�nnen auch aus verschiedenen Threads gerufen werden.
-	// Das Schreiben in die roseout.log muss aber damit serialisiert werden.
-	// Der Lock sollte nicht schaden, da nur die Datei selbst gelockt wird und kein anderes Objekt (PAIM-1732).
+	// The ASN.1 functions can also be called from different threads.
+	// Writing to roseout.log must therefore be serialized.
+	// The lock should not cause harm, as only the file itself is locked and no other object (PAIM-1732).
 	std::lock_guard<std::mutex> lock(m_mtxLogFile);
 
 	// Securly check the logfile pointer once more after aquiring the lock

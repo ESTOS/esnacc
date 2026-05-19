@@ -463,7 +463,7 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 	int iMandatoryFields = 0;
 	int iOptionalFields = 0;
 
-	// Wieviele Pflicht Elemente hat die Sequence?
+	// How many mandatory elements does the sequence have?
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
 	{
 		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
@@ -474,11 +474,11 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 			iMandatoryFields++;
 	}
 
-	// Jetzt schreiben wir den Konstruktor mit dem einen Argumenten was unserer eigenen Klasse entspricht
-	// Damit erzwingen wir die dedizierte Angabe der pflicht Attribute beim Konstruktor aufruf
+	// Now we write the constructor with the one argument that corresponds to our own class
+	// This enforces the explicit specification of the mandatory attributes in the constructor call
 	fprintf(src, "\tpublic constructor(that");
 
-	// Haben wir keine Pflicht Elemente ist auch das Attribut am Konstruktor Optional
+	// If we have no mandatory elements, the attribute in the constructor is also optional
 	if (!iMandatoryFields)
 		fprintf(src, "?");
 

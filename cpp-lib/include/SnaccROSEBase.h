@@ -262,8 +262,8 @@ public:
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
 	 * pResponse - the response payload (is handled afterwards in the HandleInvokeResult method
 	 * szOperationName - the operationName (for logging purposes)
-	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don�t care about the result))
-	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don�t care about the result))
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don't care about the result))
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don't care about the result))
 	 * pCtx - contextual data for the invoke
 	 */
 	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, const char* szOperationName, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) override;
@@ -309,7 +309,7 @@ protected:
 	// In case the message is longer than 9999999 which is the longest possible length returns ROSE_TE_ENCODE_FAILED
 	long GetJsonLengthPrefix(std::string_view strJson, std::string& strLenghtPrefix) const;
 
-	/*! Die functions and events.
+	/*! The functions and events.
 		The implementation of this functions is contained in the generated code from the
 		esnacc. */
 	virtual long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccInvokeContext* cxt) = 0;

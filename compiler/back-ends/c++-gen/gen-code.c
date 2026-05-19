@@ -1135,7 +1135,7 @@ static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd,
 
 			bCommentWasAdded = printOperationComment(hdr, mod, vd->definedName, COMMENTSTYLE_CPP);
 
-			// there is a result -> it is a Funktion
+			// there is a result -> it is a function
 			// Header
 			if (pszError)
 				fprintf(hdr, "\tvirtual InvokeResult OnInvoke_%s(%s* argument, %s* result, %s* error, SnaccInvokeContext* cxt) { return InvokeResult::returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
@@ -1234,7 +1234,7 @@ static void PrintAllForwardDeclarations(FILE* hdr, Module* m)
 	fprintf(hdr, "// ------------------------------------------------------------------------------\n");
 	fprintf(hdr, "// forward declarations:\n\n");
 
-	// Alle klassen printen
+	// Print all classes
 	// walk through all Type Definitions
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
@@ -1250,7 +1250,7 @@ static void PrintAllForwardDeclarations(FILE* hdr, Module* m)
 			}
 		}
 	}
-	// Alle typedefs printen
+	// Print all typedefs
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
 		if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
@@ -1344,7 +1344,7 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 
 			bCommentWasAdded = printOperationComment(hdr, m, vd->definedName, COMMENTSTYLE_CPP);
 
-			// there is a result -> it is a Funktion
+			// there is a result -> it is a function
 			// Are there errors inside?
 			if (pszResult)
 			{
