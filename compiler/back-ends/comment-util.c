@@ -147,7 +147,7 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 
 	asnmembercomment comment;
 	bool bSucceeded = false;
-	if (style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP && !genUTF8Output)
 		bSucceeded = GetMemberComment_ASCII(m->moduleName, td->definedName, szElement, &comment) ? true : false;
 	else
 		bSucceeded = GetMemberComment_UTF8(m->moduleName, td->definedName, szElement, &comment) ? true : false;
@@ -236,7 +236,7 @@ void printModuleComment(FILE* src, const char* szModuleName, enum COMMENTSTYLE s
 
 	asnmodulecomment comment;
 	bool bSucceeded = false;
-	if (style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP && !genUTF8Output)
 		bSucceeded = GetModuleComment_ASCII(szModuleName, &comment) ? true : false;
 	else
 		bSucceeded = GetModuleComment_UTF8(szModuleName, &comment) ? true : false;
@@ -288,7 +288,7 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 
 	asnoperationcomment comment;
 	bool bSucceeded = false;
-	if (style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP && !genUTF8Output)
 		bSucceeded = GetOperationComment_ASCII(m->moduleName, szOperationName, &comment) ? true : false;
 	else
 		bSucceeded = GetOperationComment_UTF8(m->moduleName, szOperationName, &comment) ? true : false;
@@ -362,7 +362,7 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum CO
 
 	asnsequencecomment comment;
 	bool bSucceeded = false;
-	if (style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP && !genUTF8Output)
 		bSucceeded = GetSequenceComment_ASCII(m->moduleName, td->definedName, &comment) ? true : false;
 	else
 		bSucceeded = GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment) ? true : false;
