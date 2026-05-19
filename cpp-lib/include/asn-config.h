@@ -151,7 +151,7 @@
 #include <stdlib.h> /* for wchar_t on UNIX */
 #endif				// _WIN32
 
-// ESTOS: wir linken immer statisch
+// ESTOS: we always link statically
 #ifndef SNACCDLL_NONE
 #define SNACCDLL_NONE
 #endif

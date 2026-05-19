@@ -11,26 +11,26 @@ bool IsROSEValueDef(Module* mod, ValueDef* vd);
 // if specified also resolves the types of these references
 // if bResolveToRoot is specified a local or imported type ref is resolved to the root, otherwise a type ref is only resolved one level
 bool GetROSEDetails(Module* mod, ValueDef* vd, const char** ppszArgument, const char** ppszResult, const char** ppszError, Type** argumentType, Type** resultType, Type** errorType, bool bResolveToRoot);
-// Wenn es sich um ein localtyperef oder importedtyperef handelt wandert es so lange nach oben bis es kein imported oder localtyperef mehr ist
+// If it is a localtyperef or importedtyperef, it traverses upward until it is no longer an imported or localtyperef
 BasicType* ResolveBasicTypeReferences(BasicType* type, const char** szName);
 // Resolveds a type reference one level down (if imported or local type ref)
 Type* ResolveTypeReferencesOneLevel(Type* type, const char** szName);
 // Resolveds a type reference all levels down (until it's no longer imported or local type ref)
 Type* ResolveTypeReferencesToRoot(Type* type, const char** szName);
-// Wenn es sich um ein localtyperef oder importedtyperef handelt wandert es so lange nach oben bis es kein imported oder localtyperef mehr ist
+// If it is a localtyperef or importedtyperef, it traverses upward until it is no longer an imported or localtyperef
 Type* GetRootType(Type* type, const char** szName);
 
 int IsSimpleType(const enum BasicTypeChoiceId type);
 
 const char* GetNameSpace(Module* mod);
 
-// Wenn es sich um ein localtyperef oder importedtyperef handelt liefert es den Typ eine ebene weiter oben
+// If it is a localtyperef or importedtyperef, it returns the type one level up
 BasicType* GetBaseBasicType(BasicType* type, const char** szName);
 
-// Wenn es sich um ein localtyperef oder importedtyperef handelt liefert es den enum Typ eine ebene weiter oben
+// If it is a localtyperef or importedtyperef, it returns the enum type one level up
 enum BasicTypeChoiceId GetBaseBasicTypeChoiceId(BasicType* basicType);
 
-// Wenn es sich um eine sequenceof oder setof handelt ermittelt es den zugrundeliegenden typ
+// If it is a sequenceof or setof, it determines the underlying type
 BasicType* ResolveArrayRootType(BasicType* type, const char** szName);
 
 char* GetImportFileName(char* Impname, ModuleList* mods);

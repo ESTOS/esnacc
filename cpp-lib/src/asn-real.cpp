@@ -898,7 +898,7 @@ void AsnReal::BDecContent(const AsnBuf& b, AsnTag /* tagId */, AsnLen elmtLen, A
 		}
 		else
 		{
-			// Aus mantissa, base und exp das value bauen
+			// Build the value from mantissa, base and exponent
 			value = mantissa * pow((double)base, (double)exponent);
 		}
 

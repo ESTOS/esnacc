@@ -140,7 +140,7 @@ void AsnOptionalParam::BDecContent(const AsnBuf& _b, AsnTag /*tag0*/, AsnLen elm
 	Clear();
 	AsnLen seqBytesDecoded = 0;
 	AsnLen elmtLen1 = 0;
-	// Wenn nix da ist, brauchen wir nicht weiter machen --> raus
+	// If there is nothing, we don't need to continue --> exit
 	if (elmtLen0 == 0)
 		return;
 

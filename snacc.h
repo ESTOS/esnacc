@@ -100,6 +100,8 @@ extern "C"
 	extern int giWriteComments;
 	extern int genVersionFile;
 	extern int genTSESMCode;
+	extern int genUTF8Output;
+	extern int genUTF8BOM;
 	extern int gNodeVersion;
 	extern int gMajorInterfaceVersion;
 	extern char gszOutputPath[];

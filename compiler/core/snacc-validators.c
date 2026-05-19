@@ -692,7 +692,7 @@ bool recurseFindInvalid(Module* mod, Type* type, int* supportedTypes, const char
 		strcat_s(szTest2, TESTBUFFERSIZE, "::");
 		if (strstr(szPath, szTest2))
 		{
-			// Recursion check -> haben wir schon (raus...)
+			// Recursion check -> already seen (exit...)
 			return false;
 		}
 
@@ -704,7 +704,7 @@ bool recurseFindInvalid(Module* mod, Type* type, int* supportedTypes, const char
 			const size_t len2 = strlen(szNewName);
 			if (len1 == len2)
 			{
-				// Recursion check -> haben wir schon (raus...)
+				// Recursion check -> already seen (exit...)
 				return false;
 			}
 		}
