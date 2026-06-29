@@ -122,6 +122,27 @@ describe("TypeScript ASN.1 integration", () => {
 		assert.ok(result.settings);
 	});
 
+	test("REST asnSetSettings round-trips Unicode username through asnGetSettings", async () => {
+		const { client, settingsRose } = createIntegrationRoses(testPort);
+		client.useRest();
+
+		const username = "Müller-äöü";
+		const setResponse = await settingsRose.invoke_asnSetSettings(
+			new ENetUC_Settings_Manager.AsnSetSettingsArgument({
+				settings: { bEnabled: true, u8sUsername: username },
+			}),
+		);
+		assertInvokeResult(setResponse, ENetUC_Settings_Manager.AsnSetSettingsResult, "asnSetSettings");
+
+		const getResponse = await settingsRose.invoke_asnGetSettings(new ENetUC_Settings_Manager.AsnGetSettingsArgument());
+		const getResult = assertInvokeResult(
+			getResponse,
+			ENetUC_Settings_Manager.AsnGetSettingsResult,
+			"asnGetSettings after Unicode set",
+		);
+		assert.equal(getResult.settings.u8sUsername, username);
+	});
+
 	test("REST asnSetSettings round-trips through asnGetSettings", async () => {
 		const { client, settingsRose } = createIntegrationRoses(testPort);
 		client.useRest();

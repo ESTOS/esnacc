@@ -43,10 +43,10 @@ class RestSample implements IEModule {
 				if (response) {
 					if (typeof response.payLoad === "string") {
 						res.writeHead(response.httpStatusCode, {
-							"Content-Type": "application/json",
-							"Content-Length": response.payLoad.length,
+							"Content-Type": "application/json; charset=utf-8",
+							"Content-Length": Buffer.byteLength(response.payLoad, "utf8"),
 						});
-						res.end(response.payLoad, "ascii");
+						res.end(response.payLoad, "utf8");
 					} else {
 						res.writeHead(response.httpStatusCode, {
 							"Content-Type": "application/octet-stream",
