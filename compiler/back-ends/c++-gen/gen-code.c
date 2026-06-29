@@ -1162,6 +1162,69 @@ static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd,
 }
 
 /*
+ * Emit one ROSE operation handler in its own function so /analyze (C6262) does not
+ * treat every operation's locals as one giant OnInvoke stack frame.
+ */
+static void PrintROSEOnInvokeHandler(FILE* src, int bEvents, Module* mod, ValueDef* vd)
+{
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
+
+	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
+	{
+		if ((pszResult && !bEvents) || (!pszResult && bEvents))
+		{
+			const char* pszHandlerPrefix = bEvents ? "RoseEvent" : "RoseInvoke";
+
+			fprintf(src, "// [%s] OPID_%s\n", __FUNCTION__, vd->definedName);
+			fprintf(src, "static long %s_OPID_%s(SNACC::ROSEMessage* pMsg, SNACC::ROSEInvoke* pInvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData)\n", pszHandlerPrefix, vd->definedName, mod->ROSEClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "\tlong lRoseResult = ROSE_NOERROR;\n");
+			fprintf(src, "\t%s argument;\n", pszArgument);
+			fprintf(src, "\tlRoseResult = pBase->DecodeInvoke(pMsg, &argument);\n");
+			fprintf(src, "\tif (lRoseResult == ROSE_NOERROR)\n");
+			const bool bIsDeprecated = IsDeprecatedFlaggedOperation(mod, vd->definedName);
+			const bool bIsMultiLine = bIsDeprecated || pszResult;
+			if (bIsMultiLine)
+				fprintf(src, "\t{\n");
+
+			if (bIsDeprecated)
+			{
+				fprintf(src, "\t\t// This method has been flagged deprecated\n");
+				asnoperationcomment comment;
+				GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment);
+				fprintf(src, "\t\tSNACCDeprecated::DeprecatedASN1Method(%lld, \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::in, ctx);\n", comment.i64Deprecated, mod->moduleName, vd->definedName);
+			}
+			if (pszResult)
+			{
+				fprintf(src, "\t\t%s result;\n", pszResult);
+				if (pszError)
+				{
+					fprintf(src, "\t\t%s error;\n", pszError);
+					fprintf(src, "\t\tauto invokeResult = pInt->OnInvoke_%s(&argument, &result, &error, ctx);\n", vd->definedName);
+					fprintf(src, "\t\tlRoseResult = pBase->HandleOnInvokeResult(invokeResult, pInvoke, ctx, strResponseData, &result, &error);\n");
+				}
+				else
+				{
+					fprintf(src, "\t\tauto invokeResult = pInt->OnInvoke_%s(&argument, &result, ctx);\n", vd->definedName);
+					fprintf(src, "\t\tlRoseResult = pBase->HandleOnInvokeResult(invokeResult, pInvoke, ctx, strResponseData, &result);\n");
+				}
+			}
+			else
+			{
+				fprintf(src, "\t\tpInt->OnEvent_%s(&argument);\n", vd->definedName);
+			}
+			if (bIsMultiLine)
+				fprintf(src, "\t}\n");
+
+			fprintf(src, "\treturn lRoseResult;\n");
+			fprintf(src, "}\n\n");
+		}
+	}
+} /* PrintROSEOnInvokeHandler */
+
+/*
  * prints PrintROSEOnInvokeswitchCase
  */
 static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, ValueDef* vd)
@@ -1172,53 +1235,12 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 
 	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 	{
-		// there is an argument
 		if ((pszResult && !bEvents) || (!pszResult && bEvents))
 		{
-			fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
+			const char* pszHandlerPrefix = bEvents ? "RoseEvent" : "RoseInvoke";
 
-			fprintf(src, "\t\tcase OPID_%s:\n", vd->definedName);
-			fprintf(src, "\t\t{\n");
-
-			fprintf(src, "\t\t\t%s argument;\n", pszArgument);
-			fprintf(src, "\t\t\tlRoseResult = pBase->DecodeInvoke(pMsg, &argument);\n");
-			fprintf(src, "\t\t\tif (lRoseResult == ROSE_NOERROR)\n");
-			const bool bIsDeprecated = IsDeprecatedFlaggedOperation(mod, vd->definedName);
-			const bool bIsMultiLine = bIsDeprecated || pszResult;
-			if (bIsMultiLine)
-				fprintf(src, "\t\t\t{\n");
-
-			if (bIsDeprecated)
-			{
-				fprintf(src, "\t\t\t\t// This method has been flagged deprecated\n");
-				asnoperationcomment comment;
-				GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment);
-				fprintf(src, "\t\t\t\tSNACCDeprecated::DeprecatedASN1Method(%lld, \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::in, ctx);\n", comment.i64Deprecated, mod->moduleName, vd->definedName);
-			}
-			if (pszResult)
-			{
-				fprintf(src, "\t\t\t\t%s result;\n", pszResult);
-				if (pszError)
-				{
-					fprintf(src, "\t\t\t\t%s error;\n", pszError);
-					fprintf(src, "\t\t\t\tauto invokeResult = pInt->OnInvoke_%s(&argument, &result, &error, ctx);\n", vd->definedName);
-					fprintf(src, "\t\t\t\tlRoseResult = pBase->HandleOnInvokeResult(invokeResult, pInvoke, ctx, strResponseData, &result, &error);\n");
-				}
-				else
-				{
-					fprintf(src, "\t\t\t\tauto invokeResult = pInt->OnInvoke_%s(&argument, &result, ctx);\n", vd->definedName);
-					fprintf(src, "\t\t\t\tlRoseResult = pBase->HandleOnInvokeResult(invokeResult, pInvoke, ctx, strResponseData, &result);\n");
-				}
-			}
-			else
-			{
-				fprintf(src, "\t\t\t\tpInt->OnEvent_%s(&argument);\n", vd->definedName);
-			}
-			if (bIsMultiLine)
-				fprintf(src, "\t\t\t}\n");
-
-			fprintf(src, "\t\t}\n");
-			fprintf(src, "\t\tbreak;\n");
+			fprintf(src, "\tcase OPID_%s:\n", vd->definedName);
+			fprintf(src, "\t\treturn %s_OPID_%s(pMsg, pInvoke, pBase, pInt, ctx, strResponseData);\n", pszHandlerPrefix, vd->definedName);
 		}
 	}
 } /* PrintROSEOnInvokeswitchCase */
@@ -4584,6 +4606,18 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(src, "}\n\n");
 	fflush(src);
 	fflush(hdr);
+
+	// Per-operation handlers (own stack frame each; avoids MSVC C6262 on OnInvoke).
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+			PrintROSEOnInvokeHandler(src, 0, m, vd);
+	}
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+			PrintROSEOnInvokeHandler(src, 1, m, vd);
+	}
 
 	// generate the InvokeHandler
 	fprintf(hdr, "\t// The main Invoke Dispatcher\n");
