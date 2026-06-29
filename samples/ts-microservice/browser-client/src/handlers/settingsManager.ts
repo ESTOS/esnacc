@@ -47,7 +47,7 @@ class SettingsManager implements IENetUC_Settings_ManagerROSE_Event_Handler {
 		// const response = await this.server.invoke_asnGetSettings(argument, { bSendRestWithROSEEnvelop: true });
 		const response = await this.server.invoke_asnGetSettings(argument);
 		const result = theClient.getResult(response, ENetUC_Settings_Manager.AsnGetSettingsResult);
-		return { enabled: result.settings.bEnabled, username: result.settings.u8sUsername };
+		return { enabled: result?.settings.bEnabled || false, username: result?.settings.u8sUsername || "" };
 	}
 
 	/**
