@@ -1,23 +1,20 @@
-import { TSASN1NodeClient } from "./stub/TSASN1NodeClient.js";
-import { ENetUC_Event_ManagerROSE } from "./stub/ENetUC_Event_ManagerROSE.js";
-import { IENetUC_Event_ManagerROSE_Handler } from "./stub/ENetUC_Event_ManagerROSE_Interface.js";
-import { ENetUC_Settings_ManagerROSE } from "./stub/ENetUC_Settings_ManagerROSE.js";
-import { IENetUC_Settings_ManagerROSE_Handler } from "./stub/ENetUC_Settings_ManagerROSE_Interface.js";
-import { AsnInvokeProblem } from "./stub/TSROSEBase.js";
-import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
 import * as ENetUC_Common from "./stub/ENetUC_Common.js";
 import * as ENetUC_Event_Manager from "./stub/ENetUC_Event_Manager.js";
+import { ENetUC_Event_ManagerROSE } from "./stub/ENetUC_Event_ManagerROSE.js";
+import { IENetUC_Event_ManagerROSE_Handler } from "./stub/ENetUC_Event_ManagerROSE_Interface.js";
 import * as ENetUC_Settings_Manager from "./stub/ENetUC_Settings_Manager.js";
+import { ENetUC_Settings_ManagerROSE } from "./stub/ENetUC_Settings_ManagerROSE.js";
+import { IENetUC_Settings_ManagerROSE_Handler } from "./stub/ENetUC_Settings_ManagerROSE_Interface.js";
+import { TSASN1NodeClient } from "./stub/TSASN1NodeClient.js";
+import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
+import { AsnInvokeProblem } from "./stub/TSROSEBase.js";
 
 export class EventCollector
-	implements Partial<IENetUC_Settings_ManagerROSE_Handler>, Partial<IENetUC_Event_ManagerROSE_Handler>
-{
+	implements Partial<IENetUC_Settings_ManagerROSE_Handler>, Partial<IENetUC_Event_ManagerROSE_Handler> {
 	public readonly settingsChangedEvents: ENetUC_Settings_Manager.AsnSettingsChangedArgument[] = [];
 	public readonly fancyEvents: ENetUC_Event_Manager.AsnFancyEventArgument[] = [];
 
-	public onEvent_asnSettingsChanged(
-		argument: ENetUC_Settings_Manager.AsnSettingsChangedArgument,
-	): void {
+	public onEvent_asnSettingsChanged(argument: ENetUC_Settings_Manager.AsnSettingsChangedArgument): void {
 		this.settingsChangedEvents.push(argument);
 	}
 
@@ -49,7 +46,7 @@ export class IntegrationClient extends TSASN1NodeClient {
 
 export function assertInvokeResult<T>(
 	response: T | ENetUC_Common.AsnRequestError | AsnInvokeProblem,
-	classType: { new (...args: never[]): T },
+	classType: { new(...args: never[]): T; },
 	label: string,
 ): T {
 	if (response instanceof classType)
@@ -64,22 +61,52 @@ export function assertInvokeResult<T>(
 	throw new Error(`${label}: unexpected response type`);
 }
 
-export interface IntegrationRoses {
+/** REST invoke tests: one client, settings module only, no inbound event handlers. */
+export interface SettingsIntegration {
 	client: IntegrationClient;
-	collector: EventCollector;
 	settingsRose: ENetUC_Settings_ManagerROSE;
-	eventRose: ENetUC_Event_ManagerROSE;
 }
 
-export function createIntegrationRoses(port: number): IntegrationRoses {
+export function createSettingsIntegration(port: number): SettingsIntegration {
+	const client = new IntegrationClient(port);
+	const settingsRose = new ENetUC_Settings_ManagerROSE(client, false);
+	return { client, settingsRose };
+}
+
+/** WebSocket event tests: one client; register only the ROSE modules needed for that test. */
+export interface EventIntegration {
+	client: IntegrationClient;
+	collector: EventCollector;
+	settingsRose?: ENetUC_Settings_ManagerROSE;
+	eventRose?: ENetUC_Event_ManagerROSE;
+}
+
+export interface CreateEventIntegrationOptions {
+	settings?: boolean;
+	events?: boolean;
+}
+
+export function createEventIntegration(port: number, options: CreateEventIntegrationOptions): EventIntegration {
 	const client = new IntegrationClient(port);
 	const collector = new EventCollector();
-	const settingsRose = new ENetUC_Settings_ManagerROSE(client, true, collector);
-	settingsRose.setHandler(collector);
-	const eventRose = new ENetUC_Event_ManagerROSE(client, true, collector);
-	eventRose.setHandler(collector);
+	let settingsRose: ENetUC_Settings_ManagerROSE | undefined;
+	let eventRose: ENetUC_Event_ManagerROSE | undefined;
+
+	if (options.settings)
+		settingsRose = new ENetUC_Settings_ManagerROSE(client, true, collector);
+	if (options.events)
+		eventRose = new ENetUC_Event_ManagerROSE(client, true, collector);
 
 	return { client, collector, settingsRose, eventRose };
+}
+
+export async function releaseIntegration(
+	client: IntegrationClient,
+	roses?: { settingsRose?: ENetUC_Settings_ManagerROSE; eventRose?: ENetUC_Event_ManagerROSE; },
+): Promise<void> {
+	roses?.settingsRose?.removeHandler();
+	roses?.eventRose?.removeHandler();
+	await client.disconnect(true);
 }
 
 export async function waitForCount<T>(

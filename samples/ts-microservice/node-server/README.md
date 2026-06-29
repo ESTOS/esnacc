@@ -17,10 +17,10 @@ Features:
 
 This server is used by two clients in the same sample:
 
-| Package | Role |
-| --- | --- |
-| [`../browser-client`](../browser-client) | Interactive browser demo (`TSASN1BrowserClient`, Vite UI) |
-| [`../node-client`](../node-client) | Automated integration tests (`TSASN1NodeClient`, `node:test`) |
+| Package                                  | Role                                                          |
+| ---------------------------------------- | ------------------------------------------------------------- |
+| [`../browser-client`](../browser-client) | Interactive browser demo (`TSASN1BrowserClient`, Vite UI)     |
+| [`../node-client`](../node-client)       | Automated integration tests (`TSASN1NodeClient`, `node:test`) |
 
 Both clients share the same ASN.1 modules from `samples/interface/`. The server does not distinguish between them — only the transport and client stub differ.
 
@@ -55,9 +55,9 @@ Singleton manager classes (prefix `the_`) are created in `src/globals.ts`:
 ```typescript
 import {
 	theClientConnectionManager, // connected WebSocket clients
-	theConfig,                  // validated configuration from environment
-	theLogger,                  // logging (console, file, …)
-	theServer,                  // ASN.1 ROSE dispatch / handler routing
+	theConfig, // validated configuration from environment
+	theLogger, // logging (console, file, …)
+	theServer, // ASN.1 ROSE dispatch / handler routing
 } from "./globals.js";
 ```
 

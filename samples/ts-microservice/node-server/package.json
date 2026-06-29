@@ -26,8 +26,9 @@
 		"url": ""
 	},
 	"lint-staged": {
-		"src/**/*.{ts,tsx}": [
-			"eslint --cache --fix -c .eslint.config.js"
+		"src/**/*.{ts,tsx,json,jsonc}": [
+			"dprint fmt",
+			"oxlint --fix"
 		]
 	},
 	"license": "UNLICENSED",

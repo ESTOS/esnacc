@@ -58,6 +58,15 @@ importers:
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
+      dprint:
+        specifier: ^0.55.1
+        version: 0.55.1
+      oxlint:
+        specifier: ^1.71.0
+        version: 1.71.0(oxlint-tsgolint@0.23.0)
+      oxlint-tsgolint:
+        specifier: ^0.23.0
+        version: 0.23.0
       typescript:
         specifier: ^6.0.3
         version: 6.0.3

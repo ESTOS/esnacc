@@ -47,7 +47,8 @@
 	"excludes": [
 		"**/node_modules",
 		"**/*-lock.json",
-		"**/dist/**"
+		"**/dist/**",
+		"**/src/stub/**"
 	],
 	"plugins": [
 		"https://plugins.dprint.dev/typescript-0.93.4.wasm",

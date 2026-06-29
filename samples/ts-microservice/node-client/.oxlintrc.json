@@ -180,5 +180,13 @@
 		"unicorn/no-nested-ternary": "off",
 		"unicorn/number-literal-case": "off",
 		"no-empty-function": "off"
-	}
+	},
+	"overrides": [
+		{
+			"files": ["src/run-tests.ts"],
+			"rules": {
+				"@typescript-eslint/no-floating-promises": "off"
+			}
+		}
+	]
 }

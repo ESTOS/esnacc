@@ -1,6 +1,7 @@
 {
 	"recommendations": [
-		"dbaeumer.vscode-eslint",
-		"dprint.dprint"
+		"dprint.dprint",
+		"oxc.oxc-vscode",
+		"firefox-devtools.vscode-firefox-debug"
 	]
 }

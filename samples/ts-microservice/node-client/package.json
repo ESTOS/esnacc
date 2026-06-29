@@ -12,6 +12,7 @@
 	"scripts": {
 		"build": "tsc -p .",
 		"clean": "npx rimraf dist",
+		"lint": "dprint fmt && oxlint",
 		"test": "node --test dist/run-tests.js",
 		"preinstall": "node check-pm.js"
 	},
@@ -23,6 +24,9 @@
 	"devDependencies": {
 		"@types/node": "^26.0.1",
 		"@types/ws": "^8.18.1",
+		"dprint": "^0.55.1",
+		"oxlint": "^1.71.0",
+		"oxlint-tsgolint": "^0.23.0",
 		"typescript": "^6.0.3"
 	}
 }
