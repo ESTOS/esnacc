@@ -1,11 +1,28 @@
-# directories
+# Dependencies
 node_modules/
+.pnpm-store/
+
+# Build output
 dist/
+*.tsbuildinfo
+
+# Generated ASN.1 stubs (regenerate via samples/prepare.*)
+browser-client/src/stub/*
+node-server/src/stub/*
+node-client/src/stub/*
+
+# Generated OpenAPI specs
+openapi/example/*.json
+openapi/unpkg-example/*.json
+
+# Runtime / local config
 log/
+.env
+.eslintcache
+
+# Tooling
 .vs/
 esbuild/
 
-# files
+# TLS sample keys
 *.pem
-.env
-.eslintcache

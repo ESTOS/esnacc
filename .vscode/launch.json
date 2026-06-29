@@ -11,7 +11,7 @@
             "program": "${command:cmake.launchTargetPath}",
             "args": [
                 "-o",
-                "${workspaceFolder}/samples/ts-microservice/server/src/stub",
+                "${workspaceFolder}/samples/ts-microservice/node-server/src/stub",
                 "-JT",
                 "-j",
                 "-RTS_SERVER",
@@ -29,11 +29,31 @@
             "program": "${command:cmake.launchTargetPath}",
             "args": [
                 "-o",
-                "${workspaceFolder}/samples/ts-microservice/client/src/stub",
+                "${workspaceFolder}/samples/ts-microservice/browser-client/src/stub",
                 "-JT",
                 "-j",
                 "-RTS_CLIENT_BROWSER",
                 "-comments",
+                "*.asn1"
+            ],
+            "cwd": "${workspaceFolder}/samples/interface",
+            "preLaunchTask": "CMake: build",
+            "console": "externalTerminal"
+        },
+        {
+            "name": "Visual Studio - ts-microservice-sample - node-client - compile asn1 files",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [
+                "-o",
+                "${workspaceFolder}/samples/ts-microservice/node-client/src/stub",
+                "-JTE",
+                "-j",
+                "-RTS_CLIENT_NODE",
+                "-node:24",
+                "-comments",
+                "-versionfile",
                 "*.asn1"
             ],
             "cwd": "${workspaceFolder}/samples/interface",
@@ -63,7 +83,7 @@
             "program": "${command:cmake.launchTargetPath}",
             "args": [
                 "-o",
-                "${workspaceFolder}/samples/ts-microservice/server/src/stub",
+                "${workspaceFolder}/samples/ts-microservice/node-server/src/stub",
                 "-JT",
                 "-j",
                 "-RTS_SERVER",
@@ -80,7 +100,7 @@
             "program": "${command:cmake.launchTargetPath}",
             "args": [
                 "-o",
-                "${workspaceFolder}/samples/ts-microservice/client/src/stub",
+                "${workspaceFolder}/samples/ts-microservice/browser-client/src/stub",
                 "-JT",
                 "-j",
                 "-RTS_CLIENT_BROWSER",

@@ -295,7 +295,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 			clearTimeout(this.reconnectTimeout);
 			this.reconnectTimeout = undefined;
 		}
-		if (timeout && this.autoreconnect)
+		if (timeout && this.autoReconnect)
 			this.reconnectTimeout = setTimeout(this.clientReconnect, timeout);
 	}
 
