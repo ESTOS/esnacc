@@ -8,7 +8,7 @@
 import { ASN1ClassInstanceType } from "./TSASN1Base.js";
 import { IWebSocketOptions, TSASN1Client } from "./TSASN1Client.js";
 import { EASN1TransportEncoding } from "./TSInvokeContext.js";
-import { ELogSeverity, IConnectionSocket, ISocketCloseEvent, ISocketConnectedEvent, ISocketErrorEvent, ISocketMessageEvent } from "./TSROSEBase.js";
+import { ASN1ByteArray, ELogSeverity, IConnectionSocket, ISocketCloseEvent, ISocketConnectedEvent, ISocketErrorEvent, ISocketMessageEvent, toASN1ByteArray } from "./TSROSEBase.js";
 
 /**
  * The ASN1 client side as required in the browser (different websocket and timer)
@@ -149,7 +149,7 @@ export class TSASN1BrowserClient extends TSASN1Client {
 	 *
 	 * @param data - data to send through the websocket
 	 */
-	private send(data: string | Uint8Array): void {
+	private send(data: string | ASN1ByteArray): void {
 		if (this.ws)
 			this.ws.send(data);
 	}
@@ -191,11 +191,11 @@ export class TSASN1BrowserClient extends TSASN1Client {
 	 * @param data - the raw data we have received
 	 * @returns data on successs or undefined on error
 	 */
-	protected prepareData(data: string | ArrayBuffer): Uint8Array | object | undefined {
+	protected prepareData(data: string | ArrayBuffer): ASN1ByteArray | object | undefined {
 		if (typeof data === "string")
 			return JSON.parse(data) as object;
 		if (data instanceof ArrayBuffer)
-			return new Uint8Array(data);
+			return toASN1ByteArray(data);
 
 		this.log(ELogSeverity.error, "exception", "Received unhandled data", this);
 		debugger;

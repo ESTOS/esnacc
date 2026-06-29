@@ -15,6 +15,7 @@ import {
 	IASN1InvokeData,
 	IASN1Transport,
 	ReceiveInvokeContext,
+	ASN1ByteArray,
 	ROSEBase,
 } from "./TSROSEBase.js";
 
@@ -22,7 +23,7 @@ import {
  * Interface a client connection object has to provide to be able to send an event based on the id of a client to this client
  */
 export interface IASN1ClientConnection {
-	send(response: string | Uint8Array): boolean;
+	send(response: string | ASN1ByteArray): boolean;
 	getTransportEncoding(): EASN1TransportEncoding | undefined;
 	setTransportEncoding(encoding: EASN1TransportEncoding): void;
 }
