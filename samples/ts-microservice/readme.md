@@ -13,9 +13,11 @@ Prepare the TypeScript sample packages from the `samples` folder (after building
    - **Windows:** `prepare.bat`
    - **Linux:** `prepare.sh`
 
-This generates stubs (TS + OpenAPI) and runs `pnpm install` in `browser-client`, `node-server`, and `node-client`. The script picks the right compiler name for your OS (`esnacc.exe` / `esnaccd.exe` on Windows, `esnacc` / `esnaccd` on Linux).
+This generates stubs (TS + OpenAPI) and runs `pnpm install` for the `ts-microservice` workspace (`browser-client`, `node-server`, `node-client`). Requires **pnpm 11+** and **Node 24+**. Lockfile: `ts-microservice/pnpm-lock.yaml`.
 
 CMake/CI uses the same `prepare.js` (with `--frozen-lockfile`) via the `snacc-ts-prepare` target before building and running `snacc-ts-integration`.
+
+Optional flags: `--skip-stubs`, `--skip-install`, `--frozen-lockfile`, `--clean` (delete each package's `node_modules` before `pnpm install`; or set `SNACC_PREPARE_CLEAN=1`). On Windows, `prepare.bat` waits 10 seconds on success unless `SNACC_NO_PAUSE=1` is set.
 
 # node-server
 The Node backend exposes generated ROSE stubs through Express:

@@ -2,9 +2,9 @@
 	"name": "microservice_client",
 	"version": "1.0.1",
 	"type": "module",
-	"packageManager": "pnpm@10.0.0",
+	"packageManager": "pnpm@11.9.0",
 	"engines": {
-		"pnpm": ">=10",
+		"pnpm": ">=11",
 		"node": ">=24"
 	},
 	"description": "estos microservice client example",
@@ -30,22 +30,16 @@
 	"dependencies": {
 		"@estos/asn1ts": "^3.2.3",
 		"@types/ws": "^8.18.1",
-		"ts-loader": "^9.5.4",
-		"typescript": "^5.9.3",
-		"ws": "^8.20.0"
+		"ts-loader": "^9.6.2",
+		"typescript": "^6.0.3",
+		"ws": "^8.21.0"
 	},
 	"devDependencies": {
-		"@types/node": "^25.5.0",
-		"dprint": "^0.53.0",
+		"@types/node": "^26.0.1",
+		"dprint": "^0.55.1",
 		"npm-run-all": "^4.1.5",
-		"oxlint": "^1.57.0",
-		"oxlint-tsgolint": "^0.17.4",
-		"vite": "^8.0.2"
-	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"dprint",
-			"esbuild"
-		]
+		"oxlint": "^1.71.0",
+		"oxlint-tsgolint": "^0.23.0",
+		"vite": "^8.1.0"
 	}
 }

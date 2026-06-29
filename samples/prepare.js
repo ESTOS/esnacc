@@ -15,6 +15,8 @@ const PNPM_PACKAGES = [
 	"ts-microservice/node-server",
 	"ts-microservice/node-client",
 ];
+const PNPM_WORKSPACE_ROOT = path.join(SAMPLES_DIR, "ts-microservice");
+const PNPM_WORKSPACE_FILE = path.join(PNPM_WORKSPACE_ROOT, "pnpm-workspace.yaml");
 
 const COMPILER_CANDIDATES = process.platform === "win32"
 	? ["esnaccd.exe", "esnacc.exe", "esnacc7d.exe", "esnacc7.exe"]
@@ -170,6 +172,13 @@ function findExecutable(command) {
 	return lookup.stdout.trim().split(/\r?\n/)[0];
 }
 
+function removeNodeModules(packageDir) {
+	const nodeModulesDir = path.join(packageDir, "node_modules");
+	if (fs.existsSync(nodeModulesDir)) {
+		fs.rmSync(nodeModulesDir, { recursive: true, force: true });
+	}
+}
+
 function runPnpmInstall(label, cwd, installArgs) {
 	console.log(`\n=== ${label} ===\n`);
 	const result = process.platform === "win32"
@@ -189,6 +198,9 @@ function prepare(options = {}) {
 	const frozenLockfile = options.frozenLockfile ?? (
 		process.argv.includes("--frozen-lockfile") || process.env.SNACC_PREPARE_FROZEN === "1"
 	);
+	const cleanInstall = options.cleanInstall ?? (
+		process.argv.includes("--clean") || process.env.SNACC_PREPARE_CLEAN === "1"
+	);
 
 	if (!skipStubs) {
 		const stubStatus = generateStubs();
@@ -205,13 +217,27 @@ function prepare(options = {}) {
 
 		const installArgs = frozenLockfile ? ["install", "--frozen-lockfile"] : ["install"];
 
-		for (const packageDir of PNPM_PACKAGES) {
-			const absDir = path.join(SAMPLES_DIR, packageDir);
-			if (!fs.existsSync(path.join(absDir, "package.json"))) {
-				console.error(`error: package.json not found in ${absDir}`);
-				return 1;
+		if (fs.existsSync(PNPM_WORKSPACE_FILE)) {
+			if (cleanInstall) {
+				removeNodeModules(PNPM_WORKSPACE_ROOT);
+				for (const packageDir of PNPM_PACKAGES) {
+					removeNodeModules(path.join(SAMPLES_DIR, packageDir));
+				}
 			}
-			runPnpmInstall(`pnpm ${installArgs.join(" ")} in ${packageDir}`, absDir, installArgs);
+			runPnpmInstall(`pnpm ${installArgs.join(" ")} in ts-microservice workspace`, PNPM_WORKSPACE_ROOT, installArgs);
+		} else {
+			for (const packageDir of PNPM_PACKAGES) {
+				const absDir = path.join(SAMPLES_DIR, packageDir);
+				if (!fs.existsSync(path.join(absDir, "package.json"))) {
+					console.error(`error: package.json not found in ${absDir}`);
+					return 1;
+				}
+				if (cleanInstall) {
+					console.log(`Removing node_modules in ${packageDir}`);
+					removeNodeModules(absDir);
+				}
+				runPnpmInstall(`pnpm ${installArgs.join(" ")} in ${packageDir}`, absDir, installArgs);
+			}
 		}
 	}
 

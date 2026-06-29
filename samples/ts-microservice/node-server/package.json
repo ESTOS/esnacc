@@ -2,9 +2,9 @@
 	"name": "microservice_server",
 	"version": "1.0.1",
 	"type": "module",
-	"packageManager": "pnpm@10.0.0",
+	"packageManager": "pnpm@11.9.0",
 	"engines": {
-		"pnpm": ">=10",
+		"pnpm": ">=11",
 		"node": ">=24"
 	},
 	"description": "estos microservice server example",
@@ -32,38 +32,28 @@
 	},
 	"license": "UNLICENSED",
 	"dependencies": {
-		"@estos/asn1ts": "3.2.3",
-		"cors": "2.8.6",
-		"cross-env": "10.1.0",
-		"date-fns": "4.1.0",
-		"dotenv": "17.3.1",
-		"express": "5.2.1",
-		"latest": "^0.2.0",
-		"typescipt": "^1.0.0",
-		"typescript": "6.0.2",
+		"@estos/asn1ts": "^3.2.3",
+		"cors": "^2.8.6",
+		"cross-env": "^10.1.0",
+		"date-fns": "^4.1.0",
+		"dotenv": "^17.4.2",
+		"express": "^5.2.1",
+		"typescript": "^6.0.3",
 		"ucconfig": "github:estos/ucconfig#0.0/0.0.3",
 		"uclogger": "github:estos/uclogger#0.0/0.0.21",
-		"uuid": "13.0.0",
-		"ws": "8.20.0"
+		"uuid": "^13.0.0",
+		"ws": "^8.21.0"
 	},
 	"devDependencies": {
-		"@types/cors": "2.8.19",
-		"@types/express": "5.0.6",
-		"@types/jest": "30.0.0",
-		"@types/node": "25.5.0",
-		"@types/ws": "8.18.1",
-		"axios": "1.13.6",
-		"dprint": "0.53.0",
-		"jest": "30.3.0",
-		"lint-staged": "16.4.0",
-		"npm-run-all": "4.1.5",
-		"oxlint": "^1.57.0",
-		"oxlint-tsgolint": "^0.17.4",
-		"ts-jest": "29.4.6"
-	},
-	"overrides": {
-		"jest": {
-			"glob": "10.5.0"
-		}
+		"@types/cors": "^2.8.19",
+		"@types/express": "^5.0.6",
+		"@types/node": "^26.0.1",
+		"@types/ws": "^8.18.1",
+		"axios": "^1.18.1",
+		"dprint": "^0.55.1",
+		"lint-staged": "^17.0.8",
+		"npm-run-all": "^4.1.5",
+		"oxlint": "^1.71.0",
+		"oxlint-tsgolint": "^0.23.0"
 	}
 }

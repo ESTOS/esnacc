@@ -2,9 +2,9 @@
 	"name": "microservice_node_client",
 	"version": "1.0.0",
 	"type": "module",
-	"packageManager": "pnpm@10.0.0",
+	"packageManager": "pnpm@11.9.0",
 	"engines": {
-		"pnpm": ">=10",
+		"pnpm": ">=11",
 		"node": ">=24"
 	},
 	"description": "Node integration tests for the estos TypeScript ASN.1 sample",
@@ -17,12 +17,12 @@
 	},
 	"license": "UNLICENSED",
 	"dependencies": {
-		"@estos/asn1ts": "3.2.3",
-		"ws": "8.20.0"
+		"@estos/asn1ts": "^3.2.3",
+		"ws": "^8.21.0"
 	},
 	"devDependencies": {
-		"@types/node": "25.5.0",
-		"@types/ws": "8.18.1",
-		"typescript": "6.0.2"
+		"@types/node": "^26.0.1",
+		"@types/ws": "^8.18.1",
+		"typescript": "^6.0.3"
 	}
 }

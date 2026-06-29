@@ -30,7 +30,7 @@ jobs:
     - name: Enable pnpm
       run: |
         corepack enable
-        corepack prepare pnpm@10.0.0 --activate
+        corepack prepare pnpm@11.9.0 --activate
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
