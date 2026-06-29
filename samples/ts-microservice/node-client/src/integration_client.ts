@@ -67,8 +67,11 @@ export interface SettingsIntegration {
 	settingsRose: ENetUC_Settings_ManagerROSE;
 }
 
-export function createSettingsIntegration(port: number): SettingsIntegration {
-	const client = new IntegrationClient(port);
+export function createSettingsIntegration(
+	port: number,
+	encoding: EASN1TransportEncoding = EASN1TransportEncoding.JSON,
+): SettingsIntegration {
+	const client = new IntegrationClient(port, encoding);
 	const settingsRose = new ENetUC_Settings_ManagerROSE(client, false);
 	return { client, settingsRose };
 }
@@ -86,8 +89,12 @@ export interface CreateEventIntegrationOptions {
 	events?: boolean;
 }
 
-export function createEventIntegration(port: number, options: CreateEventIntegrationOptions): EventIntegration {
-	const client = new IntegrationClient(port);
+export function createEventIntegration(
+	port: number,
+	options: CreateEventIntegrationOptions,
+	encoding: EASN1TransportEncoding = EASN1TransportEncoding.JSON,
+): EventIntegration {
+	const client = new IntegrationClient(port, encoding);
 	const collector = new EventCollector();
 	let settingsRose: ENetUC_Settings_ManagerROSE | undefined;
 	let eventRose: ENetUC_Event_ManagerROSE | undefined;

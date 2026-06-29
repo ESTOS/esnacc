@@ -42,8 +42,8 @@ Headless integration tests for the TypeScript stack. This package is the CI coun
 
 **What it verifies**
 - Fresh `esnacc` TypeScript output compiles (`tsc`).
-- REST invoke round-trips (`asnGetSettings`, `asnSetSettings`).
-- WebSocket invoke + inbound events (`asnSettingsChanged`, multiple `asnFancyEvent`).
+- REST invoke round-trips (`asnGetSettings`, `asnSetSettings`) over **JSON and BER**.
+- WebSocket invoke + inbound events (`asnSettingsChanged`, multiple `asnFancyEvent`) over **JSON and BER**.
 
 **What it does not cover**
 - Browser / Vite UI (see `browser-client`).

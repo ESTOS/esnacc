@@ -14,12 +14,18 @@ import {
 } from "./integration_client.js";
 import * as ENetUC_Event_Manager from "./stub/ENetUC_Event_Manager.js";
 import * as ENetUC_Settings_Manager from "./stub/ENetUC_Settings_Manager.js";
+import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const nodeClientRoot = path.resolve(testDir, "..");
 const nodeServerRoot = process.env.SNACC_TS_SERVER_ROOT ?? path.resolve(nodeClientRoot, "../node-server");
 const testPort = Number(process.env.SNACC_TS_TEST_PORT ?? "13020");
 const logDirectory = process.env.SNACC_TS_LOG_DIRECTORY ?? path.join(nodeServerRoot, "log", "integration-tests");
+
+const transportEncodings = [{ label: "JSON", encoding: EASN1TransportEncoding.JSON }, {
+	label: "BER",
+	encoding: EASN1TransportEncoding.BER,
+}] as const;
 
 let serverProcess: ChildProcess | undefined;
 
@@ -32,7 +38,6 @@ function serverEnv(): NodeJS.ProcessEnv {
 		MICROSERVICE_LOG_DIRECTORY: logDirectory,
 		MICROSERVICE_SERVER_FQDN: "localhost",
 		MICROSERVICE_SERVER_LISTEN_PORT_TCP: String(testPort),
-		MICROSERVICE_SERVER_DEFAULTENCODING: "1",
 	};
 }
 
@@ -108,108 +113,110 @@ after(async () => {
 	await stopServer();
 });
 
-describe("TypeScript ASN.1 integration", { concurrency: 1 }, () => {
-	test("REST asnGetSettings returns a result", async () => {
-		const { client, settingsRose } = createSettingsIntegration(testPort);
-		try {
-			client.useRest();
+for (const { label, encoding } of transportEncodings) {
+	describe(`TypeScript ASN.1 integration (${label})`, { concurrency: 1 }, () => {
+		test("REST asnGetSettings returns a result", async () => {
+			const { client, settingsRose } = createSettingsIntegration(testPort, encoding);
+			try {
+				client.useRest();
 
-			const response = await settingsRose.invoke_asnGetSettings(new ENetUC_Settings_Manager.AsnGetSettingsArgument());
-			const result = assertInvokeResult(response, ENetUC_Settings_Manager.AsnGetSettingsResult, "asnGetSettings");
-			assert.ok(result.settings);
-		} finally {
-			await releaseIntegration(client, { settingsRose });
-		}
+				const response = await settingsRose.invoke_asnGetSettings(new ENetUC_Settings_Manager.AsnGetSettingsArgument());
+				const result = assertInvokeResult(response, ENetUC_Settings_Manager.AsnGetSettingsResult, "asnGetSettings");
+				assert.ok(result.settings);
+			} finally {
+				await releaseIntegration(client, { settingsRose });
+			}
+		});
+
+		test("REST asnSetSettings round-trips Unicode username through asnGetSettings", async () => {
+			const { client, settingsRose } = createSettingsIntegration(testPort, encoding);
+			try {
+				client.useRest();
+
+				const username = "Müller-äöü";
+				const setResponse = await settingsRose.invoke_asnSetSettings(
+					new ENetUC_Settings_Manager.AsnSetSettingsArgument({ settings: { bEnabled: true, u8sUsername: username } }),
+				);
+				assertInvokeResult(setResponse, ENetUC_Settings_Manager.AsnSetSettingsResult, "asnSetSettings");
+
+				const getResponse = await settingsRose.invoke_asnGetSettings(
+					new ENetUC_Settings_Manager.AsnGetSettingsArgument(),
+				);
+				const getResult = assertInvokeResult(
+					getResponse,
+					ENetUC_Settings_Manager.AsnGetSettingsResult,
+					"asnGetSettings after Unicode set",
+				);
+				assert.equal(getResult.settings.u8sUsername, username);
+			} finally {
+				await releaseIntegration(client, { settingsRose });
+			}
+		});
+
+		test("REST asnSetSettings round-trips through asnGetSettings", async () => {
+			const { client, settingsRose } = createSettingsIntegration(testPort, encoding);
+			try {
+				client.useRest();
+
+				const setResponse = await settingsRose.invoke_asnSetSettings(
+					new ENetUC_Settings_Manager.AsnSetSettingsArgument({
+						settings: { bEnabled: true, u8sUsername: "integration-user" },
+					}),
+				);
+				assertInvokeResult(setResponse, ENetUC_Settings_Manager.AsnSetSettingsResult, "asnSetSettings");
+
+				const getResponse = await settingsRose.invoke_asnGetSettings(
+					new ENetUC_Settings_Manager.AsnGetSettingsArgument(),
+				);
+				const getResult = assertInvokeResult(
+					getResponse,
+					ENetUC_Settings_Manager.AsnGetSettingsResult,
+					"asnGetSettings after set",
+				);
+				assert.equal(getResult.settings.bEnabled, true);
+				assert.equal(getResult.settings.u8sUsername, "integration-user");
+			} finally {
+				await releaseIntegration(client, { settingsRose });
+			}
+		});
+
+		test("WebSocket asnSetSettings dispatches asnSettingsChanged", async () => {
+			const { client, collector, settingsRose } = createEventIntegration(testPort, { settings: true }, encoding);
+			try {
+				client.useWebSocket();
+				assert.equal(await client.connect(), true);
+
+				const setResponse = await settingsRose!.invoke_asnSetSettings(
+					new ENetUC_Settings_Manager.AsnSetSettingsArgument({
+						settings: { bEnabled: false, u8sUsername: "event-user" },
+					}),
+				);
+				assertInvokeResult(setResponse, ENetUC_Settings_Manager.AsnSetSettingsResult, "asnSetSettings over ws");
+
+				const events = await waitForCount(() => collector.settingsChangedEvents, 1);
+				assert.equal(events[0]?.settings.bEnabled, false);
+				assert.equal(events[0]?.settings.u8sUsername, "event-user");
+			} finally {
+				await releaseIntegration(client, { settingsRose });
+			}
+		});
+
+		test("WebSocket asnCreateFancyEvents dispatches ordered fancy events", async () => {
+			const { client, collector, eventRose } = createEventIntegration(testPort, { events: true }, encoding);
+			try {
+				client.useWebSocket();
+				assert.equal(await client.connect(), true);
+
+				const response = await eventRose!.invoke_asnCreateFancyEvents(
+					new ENetUC_Event_Manager.AsnCreateFancyEventsArgument({ iEventDelay: 0, iEventCount: 3 }),
+				);
+				assertInvokeResult(response, ENetUC_Event_Manager.AsnCreateFancyEventsResult, "asnCreateFancyEvents");
+
+				const events = await waitForCount(() => collector.fancyEvents, 3);
+				assert.deepEqual(events.map((event) => [event.iEventCounter, event.iEventsLeft]), [[1, 2], [2, 1], [3, 0]]);
+			} finally {
+				await releaseIntegration(client, { eventRose });
+			}
+		});
 	});
-
-	test("REST asnSetSettings round-trips Unicode username through asnGetSettings", async () => {
-		const { client, settingsRose } = createSettingsIntegration(testPort);
-		try {
-			client.useRest();
-
-			const username = "Müller-äöü";
-			const setResponse = await settingsRose.invoke_asnSetSettings(
-				new ENetUC_Settings_Manager.AsnSetSettingsArgument({ settings: { bEnabled: true, u8sUsername: username } }),
-			);
-			assertInvokeResult(setResponse, ENetUC_Settings_Manager.AsnSetSettingsResult, "asnSetSettings");
-
-			const getResponse = await settingsRose.invoke_asnGetSettings(
-				new ENetUC_Settings_Manager.AsnGetSettingsArgument(),
-			);
-			const getResult = assertInvokeResult(
-				getResponse,
-				ENetUC_Settings_Manager.AsnGetSettingsResult,
-				"asnGetSettings after Unicode set",
-			);
-			assert.equal(getResult.settings.u8sUsername, username);
-		} finally {
-			await releaseIntegration(client, { settingsRose });
-		}
-	});
-
-	test("REST asnSetSettings round-trips through asnGetSettings", async () => {
-		const { client, settingsRose } = createSettingsIntegration(testPort);
-		try {
-			client.useRest();
-
-			const setResponse = await settingsRose.invoke_asnSetSettings(
-				new ENetUC_Settings_Manager.AsnSetSettingsArgument({
-					settings: { bEnabled: true, u8sUsername: "integration-user" },
-				}),
-			);
-			assertInvokeResult(setResponse, ENetUC_Settings_Manager.AsnSetSettingsResult, "asnSetSettings");
-
-			const getResponse = await settingsRose.invoke_asnGetSettings(
-				new ENetUC_Settings_Manager.AsnGetSettingsArgument(),
-			);
-			const getResult = assertInvokeResult(
-				getResponse,
-				ENetUC_Settings_Manager.AsnGetSettingsResult,
-				"asnGetSettings after set",
-			);
-			assert.equal(getResult.settings.bEnabled, true);
-			assert.equal(getResult.settings.u8sUsername, "integration-user");
-		} finally {
-			await releaseIntegration(client, { settingsRose });
-		}
-	});
-
-	test("WebSocket asnSetSettings dispatches asnSettingsChanged", async () => {
-		const { client, collector, settingsRose } = createEventIntegration(testPort, { settings: true });
-		try {
-			client.useWebSocket();
-			assert.equal(await client.connect(), true);
-
-			const setResponse = await settingsRose!.invoke_asnSetSettings(
-				new ENetUC_Settings_Manager.AsnSetSettingsArgument({
-					settings: { bEnabled: false, u8sUsername: "event-user" },
-				}),
-			);
-			assertInvokeResult(setResponse, ENetUC_Settings_Manager.AsnSetSettingsResult, "asnSetSettings over ws");
-
-			const events = await waitForCount(() => collector.settingsChangedEvents, 1);
-			assert.equal(events[0]?.settings.bEnabled, false);
-			assert.equal(events[0]?.settings.u8sUsername, "event-user");
-		} finally {
-			await releaseIntegration(client, { settingsRose });
-		}
-	});
-
-	test("WebSocket asnCreateFancyEvents dispatches ordered fancy events", async () => {
-		const { client, collector, eventRose } = createEventIntegration(testPort, { events: true });
-		try {
-			client.useWebSocket();
-			assert.equal(await client.connect(), true);
-
-			const response = await eventRose!.invoke_asnCreateFancyEvents(
-				new ENetUC_Event_Manager.AsnCreateFancyEventsArgument({ iEventDelay: 0, iEventCount: 3 }),
-			);
-			assertInvokeResult(response, ENetUC_Event_Manager.AsnCreateFancyEventsResult, "asnCreateFancyEvents");
-
-			const events = await waitForCount(() => collector.fancyEvents, 3);
-			assert.deepEqual(events.map((event) => [event.iEventCounter, event.iEventsLeft]), [[1, 2], [2, 1], [3, 0]]);
-		} finally {
-			await releaseIntegration(client, { eventRose });
-		}
-	});
-});
+}
