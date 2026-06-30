@@ -28,6 +28,7 @@ const transportEncodings = [{ label: "JSON", encoding: EASN1TransportEncoding.JS
 }] as const;
 
 let serverProcess: ChildProcess | undefined;
+let serverOutput = "";
 
 function serverEnv(): NodeJS.ProcessEnv {
 	return {
@@ -41,11 +42,23 @@ function serverEnv(): NodeJS.ProcessEnv {
 	};
 }
 
+function appendServerOutput(stream: NodeJS.WriteStream, chunk: Buffer): void {
+	serverOutput += chunk.toString("utf8");
+	if (process.env.SNACC_TS_VERBOSE === "1")
+		stream.write(chunk);
+}
+
 async function waitForServerReady(timeoutMs = 60000): Promise<void> {
 	const deadline = Date.now() + timeoutMs;
 	const url = `http://127.0.0.1:${testPort}/echo`;
 
 	while (Date.now() < deadline) {
+		if (serverProcess?.exitCode !== null && serverProcess?.exitCode !== undefined) {
+			throw new Error(
+				`node-server exited before becoming ready (code ${serverProcess.exitCode}). Output:\n${serverOutput}`,
+			);
+		}
+
 		try {
 			const response = await fetch(url, { method: "GET" });
 			if (response.ok)
@@ -56,11 +69,12 @@ async function waitForServerReady(timeoutMs = 60000): Promise<void> {
 		await new Promise((resolve) => setTimeout(resolve, 200));
 	}
 
-	throw new Error(`Server on port ${testPort} did not become ready in time`);
+	throw new Error(`Server on port ${testPort} did not become ready in time. Output:\n${serverOutput}`);
 }
 
 async function startServer(): Promise<void> {
 	fs.mkdirSync(logDirectory, { recursive: true });
+	serverOutput = "";
 
 	serverProcess = spawn(process.execPath, ["index.js"], {
 		cwd: nodeServerRoot,
@@ -69,12 +83,18 @@ async function startServer(): Promise<void> {
 	});
 
 	serverProcess.stdout?.on("data", (chunk: Buffer) => {
-		if (process.env.SNACC_TS_VERBOSE === "1")
-			process.stdout.write(chunk);
+		appendServerOutput(process.stdout, chunk);
 	});
 	serverProcess.stderr?.on("data", (chunk: Buffer) => {
-		if (process.env.SNACC_TS_VERBOSE === "1")
-			process.stderr.write(chunk);
+		appendServerOutput(process.stderr, chunk);
+	});
+	serverProcess.on("exit", (code, signal) => {
+		if (code !== null && code !== 0) {
+			serverOutput += `\n[node-server exited with code ${code}]`;
+		}
+		if (signal) {
+			serverOutput += `\n[node-server terminated by signal ${signal}]`;
+		}
 	});
 
 	await waitForServerReady();
