@@ -112,6 +112,8 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -node
 Settings are read from the environment via `ucconfig` / `dotenv`. Copy `.env.sample` to `.env` in this directory.
 
 ```
+MICROSERVICE_VERSION_BUILD_DATE=10/03/2026
+MICROSERVICE_VERSION_TAG=1.0.0
 MICROSERVICE_ENVIRONMENT=development
 MICROSERVICE_LOG_LEVEL=debug
 MICROSERVICE_LOG_TO_CONSOLE=1

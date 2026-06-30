@@ -15,12 +15,16 @@ import {
 import * as ENetUC_Event_Manager from "./stub/ENetUC_Event_Manager.js";
 import * as ENetUC_Settings_Manager from "./stub/ENetUC_Settings_Manager.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
+import {
+	assertNodeServerTestLayout,
+	createMicroserviceServerEnv,
+	resolveIntegrationRunnerEnv,
+} from "./test_env.js";
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const nodeClientRoot = path.resolve(testDir, "..");
-const nodeServerRoot = process.env.SNACC_TS_SERVER_ROOT ?? path.resolve(nodeClientRoot, "../node-server");
-const testPort = Number(process.env.SNACC_TS_TEST_PORT ?? "13020");
-const logDirectory = process.env.SNACC_TS_LOG_DIRECTORY ?? path.join(nodeServerRoot, "log", "integration-tests");
+const { nodeServerRoot, testPort, logDirectory } = resolveIntegrationRunnerEnv(nodeClientRoot);
+assertNodeServerTestLayout(nodeServerRoot);
 
 const transportEncodings = [{ label: "JSON", encoding: EASN1TransportEncoding.JSON }, {
 	label: "BER",
@@ -31,15 +35,7 @@ let serverProcess: ChildProcess | undefined;
 let serverOutput = "";
 
 function serverEnv(): NodeJS.ProcessEnv {
-	return {
-		...process.env,
-		MICROSERVICE_ENVIRONMENT: "development",
-		MICROSERVICE_LOG_LEVEL: "error",
-		MICROSERVICE_LOG_TO_CONSOLE: "0",
-		MICROSERVICE_LOG_DIRECTORY: logDirectory,
-		MICROSERVICE_SERVER_FQDN: "localhost",
-		MICROSERVICE_SERVER_LISTEN_PORT_TCP: String(testPort),
-	};
+	return createMicroserviceServerEnv({ logDirectory, testPort });
 }
 
 function appendServerOutput(stream: NodeJS.WriteStream, chunk: Buffer): void {
