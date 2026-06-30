@@ -1143,7 +1143,7 @@ long SnaccROSEBase::GetJsonLengthPrefix(std::string_view strJson, std::string& s
 	if (len > 9999999)
 		return ROSE_TE_ENCODE_FAILED;
 
-	// Calc prefix z.B. (J1234567)
+	// Calc prefix e.g. (J1234567)
 	char szPrefix[10] = {0};
 #if _WIN32
 #if _MSC_VER < 1900
