@@ -310,7 +310,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 
 	fprintf(fp, "Copyright (C) 1993 Michael Sample and UBC\n");
 	fprintf(fp, "Copyright (C) 1994, 1995 by Robert Joop and GMD FOKUS\n");
-	fprintf(fp, "Improvements 2004-2016 estos GmbH, www.estos.com\n\n");
+	fprintf(fp, "Improvements 2004-2026 estos GmbH, https://www.estos.de\n\n");
 
 	fprintf(fp, "This program is free software; you can redistribute it and/or modify\n");
 	fprintf(fp, "it under the terms of the GNU General Public License as published by\n");
