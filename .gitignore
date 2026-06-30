@@ -5,6 +5,8 @@ output/
 .cache
 dist/
 *.tsbuildinfo
+**/node_modules/
+**/.pnpm-store/
 CMakeCache.txt
 CMakeFiles/
 Makefile

@@ -35,6 +35,21 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type IOriginalSocket = any;
 
+/** Byte view backed by ArrayBuffer; compatible with DOM BufferSource and WebSocket.send */
+export type ASN1ByteArray = Uint8Array<ArrayBuffer>;
+
+/**
+ * Creates an ASN1ByteArray from binary data, copying when the source is another typed array view
+ *
+ * @param data - source bytes
+ * @returns bytes backed by ArrayBuffer
+ */
+export function toASN1ByteArray(data: ArrayBuffer | Uint8Array): ASN1ByteArray {
+	if (data instanceof ArrayBuffer)
+		return new Uint8Array(data);
+	return new Uint8Array(data);
+}
+
 // Special Custom Invoke Problems for internal usage (used in Error Responses)
 export enum CustomInvokeProblemEnum {
 	// HTTP - no response (NGINX)
@@ -72,7 +87,7 @@ export interface ISocketErrorEvent {
 }
 
 export interface ISocketMessageEvent {
-	data: Uint8Array | object;
+	data: ASN1ByteArray | object;
 	type?: string;
 	source: IOriginalSocket;
 }
@@ -95,7 +110,7 @@ export enum ESocketState {
  */
 export interface IConnectionSocket {
 	// Send data via the underlying socket
-	send(data: string | Uint8Array): void;
+	send(data: string | ASN1ByteArray): void;
 	// Close the underlying socket
 	close(code?: number, reason?: string): void;
 	// The current state of the socket updated through the 4 notifies we handle (even if they are not subscribed)
@@ -516,7 +531,7 @@ export interface IASN1InvokeData {
 // Contains encoded data and the associated log data when we are about to send data
 interface IASN1EncodedInvoke {
 	// Contains the encoded data for the transportlayer (the payload)
-	payLoad: Uint8Array | string;
+	payLoad: ASN1ByteArray | string;
 	// Contains the encoded data for logging
 	logData: Uint8Array | object;
 }
@@ -1162,11 +1177,11 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 */
 	public static encodeToTransport(data: object | asn1ts.Sequence, encodeContext: IEncodeContext): IASN1EncodedInvoke {
 		// Contains the encoded data for the transport
-		let payLoad: Uint8Array | string;
+		let payLoad: ASN1ByteArray | string;
 		// Contains the encoded data for logging
 		let logData: Uint8Array | object;
 		if (data instanceof asn1ts.Sequence) {
-			payLoad = new Uint8Array(data.toBER());
+			payLoad = toASN1ByteArray(data.toBER());
 			logData = payLoad;
 		} else {
 			payLoad = JSON.stringify(data, null, encodeContext.bPrettyPrint ? "\t" : undefined);

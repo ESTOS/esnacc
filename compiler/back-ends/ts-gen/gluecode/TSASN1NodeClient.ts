@@ -11,6 +11,7 @@ import { ASN1ClassInstanceType } from "./TSASN1Base.js";
 import { EASNCONNECTIONMODE, IWebSocketOptions, TSASN1Client } from "./TSASN1Client.js";
 import { EASN1TransportEncoding } from "./TSInvokeContext.js";
 import {
+	ASN1ByteArray,
 	CustomInvokeProblemEnum,
 	ELogSeverity,
 	ESocketState,
@@ -19,6 +20,7 @@ import {
 	ISocketConnectedEvent,
 	ISocketErrorEvent,
 	ISocketMessageEvent,
+	toASN1ByteArray,
 } from "./TSROSEBase.js";
 import * as ENetUC_Common from "./ENetUC_Common.js";
 
@@ -250,7 +252,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 *
 	 * @param data - data to send through the websocket
 	 */
-	private send(data: string | Uint8Array): void {
+	private send(data: string | ASN1ByteArray): void {
 		if (this.ws)
 			this.ws.send(data);
 		else if (this.tcp) {
@@ -295,7 +297,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 			clearTimeout(this.reconnectTimeout);
 			this.reconnectTimeout = undefined;
 		}
-		if (timeout && this.autoreconnect)
+		if (timeout && this.autoReconnect)
 			this.reconnectTimeout = setTimeout(this.clientReconnect, timeout);
 	}
 
@@ -305,15 +307,15 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 * @param event - the message that contains the payload
 	 * @returns data on successs or undefined on error
 	 */
-	protected prepareData(data: string | Buffer | ArrayBuffer | Buffer[]): Uint8Array | object | undefined {
+	protected prepareData(data: string | Buffer | ArrayBuffer | Buffer[]): ASN1ByteArray | object | undefined {
 		if (typeof data === "string")
 			return JSON.parse(data) as object;
 		else if (Buffer.isBuffer(data))
-			return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+			return toASN1ByteArray(data);
 		else if (data instanceof ArrayBuffer)
-			return new Uint8Array(data);
+			return toASN1ByteArray(data);
 		else if (Array.isArray(data))
-			return new Uint8Array(Buffer.concat(data));
+			return toASN1ByteArray(Buffer.concat(data));
 		else {
 			this.log(ELogSeverity.error, "exception", "Received unhandled data", this);
 			debugger;
@@ -383,11 +385,11 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 *             an empty array if the accumulated data does not yet contain
 	 *             one complete frame.
 	 */
-	protected handleFraming(data: Buffer): Uint8Array[] {
+	protected handleFraming(data: Buffer): ASN1ByteArray[] {
 		// Append the new chunk to whatever was left from the previous call.
 		this.pendingSocketData = Buffer.concat([this.pendingSocketData, data]);
 
-		const completeFrames: Uint8Array[] = [];
+		const completeFrames: ASN1ByteArray[] = [];
 
 		// Keep consuming frames from the front of the buffer until we either
 		// run out of data or hit an incomplete frame.
@@ -440,7 +442,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 * @returns The complete frame (header + payload) as a `Uint8Array`, or
 	 *          `undefined` if the buffer does not yet hold a full frame.
 	 */
-	private tryConsumeJsonFrame(): Uint8Array | undefined {
+	private tryConsumeJsonFrame(): ASN1ByteArray | undefined {
 		// We need at least the 8-byte header before we can determine the
 		// payload length.
 		if (this.pendingSocketData.length < JSON_HEADER_SIZE)
@@ -465,11 +467,9 @@ export class TSASN1NodeClient extends TSASN1Client {
 			return undefined;
 		}
 
-		// Slice out the complete frame and advance the pending buffer.
+		// Copy out the complete frame payload and advance the pending buffer.
 		const frame = new Uint8Array(
-			this.pendingSocketData.buffer,
-			this.pendingSocketData.byteOffset + JSON_HEADER_SIZE, // skips 8-byte header
-			payloadLength, // payload length only
+			this.pendingSocketData.subarray(JSON_HEADER_SIZE, totalFrameLength),
 		);
 		this.pendingSocketData = this.pendingSocketData.subarray(totalFrameLength);
 
@@ -498,7 +498,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 	 * @returns The complete TLV frame as a `Uint8Array`, or `undefined` if the
 	 *          buffer does not yet hold a full frame.
 	 */
-	private tryConsumeBerFrame(): Uint8Array | undefined {
+	private tryConsumeBerFrame(): ASN1ByteArray | undefined {
 		// Minimum: 1 tag byte + 1 length byte.
 		if (this.pendingSocketData.length < 2)
 			return undefined;
@@ -522,8 +522,8 @@ export class TSASN1NodeClient extends TSASN1Client {
 			return undefined;
 		}
 
-		// Slice out the complete TLV and advance the pending buffer.
-		const frame = new Uint8Array(this.pendingSocketData.buffer, this.pendingSocketData.byteOffset, totalFrameLength);
+		// Copy out the complete TLV and advance the pending buffer.
+		const frame = new Uint8Array(this.pendingSocketData.subarray(0, totalFrameLength));
 		this.pendingSocketData = this.pendingSocketData.subarray(totalFrameLength);
 
 		return frame;

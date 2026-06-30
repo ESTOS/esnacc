@@ -25,6 +25,7 @@ import {
 	ISocketMessageEvent,
 	ReceiveInvokeContext,
 	ROSEBase,
+	toASN1ByteArray,
 } from "./TSROSEBase.js";
 
 export interface IWebSocketOptions {
@@ -394,7 +395,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 
 		const requestdata: RequestInit = {
 			method: "POST",
-			body: body instanceof Uint8Array ? new Uint8Array(body) : body,
+			body: body instanceof Uint8Array ? toASN1ByteArray(body) : body,
 			headers,
 		};
 
@@ -411,7 +412,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 			let message: Uint8Array | object;
 			if (encoding === EASN1TransportEncoding.BER) {
 				const buffer = await response.arrayBuffer();
-				message = new Uint8Array(buffer);
+				message = toASN1ByteArray(buffer);
 			}
 			else {
 				message = (await response.json()) as object;

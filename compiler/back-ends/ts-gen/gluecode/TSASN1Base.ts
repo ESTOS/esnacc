@@ -27,6 +27,7 @@ import {
 	IROSELogger,
 	ISendInvokeContext,
 	ReceiveInvokeContext,
+	ASN1ByteArray,
 	ROSEBase,
 } from "./TSROSEBase.js";
 
@@ -127,7 +128,7 @@ export interface IRejectLogEntry extends IROSELogEntryBase {
  */
 export interface IResponseData {
 	// JSON encoded payload to put into the body
-	payLoad: Uint8Array | string;
+	payLoad: ASN1ByteArray | string;
 	// HTTP result value for the client
 	httpStatusCode: number;
 }
