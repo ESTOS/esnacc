@@ -1417,8 +1417,8 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 
 	const char* szNameSpace = GetNameSpace(m);
 	// Simple types, meaning types that only received a different name at the top level
-	// Bspw: AsnSystemTime ::= REAL
-	// brauchen keinen Encoder Decoder
+	// E.g.: AsnSystemTime ::= REAL
+	// do not need an encoder/decoder
 
 	enum BasicTypeChoiceId type = td->type->basicType->choiceId;
 	if (!IsSimpleType(type) && ResolveTypeReferencesToRoot(td->type, NULL)->basicType->choiceId != BASICTYPE_ENUMERATED)
