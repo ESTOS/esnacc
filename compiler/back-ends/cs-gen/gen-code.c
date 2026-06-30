@@ -111,7 +111,7 @@ static void PrintROSEOnInvokeCS(FILE* src, int bEvents, ValueDef* vd)
 	{
 		if (pszResult && !bEvents)
 		{
-			// there is a result -> it is a Funktion
+			// there is a result -> it is a function
 			// Header
 			if (pszError)
 				fprintf(src, "\tpublic virtual InvokeResult OnInvoke_%s(%s argument, %s result, %s error) { return InvokeResult.returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
@@ -167,7 +167,7 @@ static void PrintROSEOnInvokeswitchCaseCS(FILE* src, int bEvents, ValueDef* vd)
 		// there is an argument
 		if (pszResult && !bEvents)
 		{
-			// there is a result -> it is a Funktion
+			// there is a result -> it is a function
 			// Source here
 
 			fprintf(src, "\t\t\tcase OPID_%s:\n", vd->definedName);
@@ -229,7 +229,7 @@ static void PrintROSEInvokeCS(FILE* hdr, FILE* src, Module* m, int bEvents, Valu
 	{
 		if (pszResult && !bEvents)
 		{
-			// there is a result -> it is a Funktion
+			// there is a result -> it is a function
 			// Are there errors inside?
 			if (pszError)
 			{
