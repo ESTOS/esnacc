@@ -1,3 +1,21 @@
+---
+title: estos Enhanced Sample Neufeld ASN C Compiler
+scope: estos-esnacc
+owner_repo: esnacc
+entry_for:
+  - ASN.1 compiler development
+  - target-language code generation
+  - protocol documentation generation
+purpose: Explain how to build and use the enhanced ASN.1 compiler and its generated targets.
+read_when:
+  - Changing compiler behavior or generated output
+  - Updating build instructions
+  - Investigating TypeScript, C++, Java, Swift, JSDoc, or OpenAPI generation
+related_docs:
+  - ../AGENTS.md
+  - ../docs/repos.md
+---
+
 # estos Enhanced Sample Neufeld ASN C Compiler
 This is the estos enhanced sample neufeld asn c compiler. 
 It is an functional enriched fork of the original enhanced sample neufeld asn c compiler offering:

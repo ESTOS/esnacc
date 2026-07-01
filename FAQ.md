@@ -1,3 +1,20 @@
+---
+title: estos-esnacc FAQ
+scope: estos-esnacc
+owner_repo: esnacc
+entry_for:
+  - ASN.1 compiler background
+  - supported target languages
+  - licensing questions
+purpose: Answer common questions about the enhanced ASN.1 compiler, supported targets, and licensing.
+read_when:
+  - Investigating compiler capabilities or project background
+  - Updating generated target language or licensing documentation
+related_docs:
+  - ReadMe.md
+  - ../docs/repos.md
+---
+
 Frequently Asked Questions
 ==========================
 
