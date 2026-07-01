@@ -1,3 +1,19 @@
+---
+title: C++ Runtime Correctness Notes
+scope: cpp-lib/tests
+owner_repo: esnacc
+entry_for:
+  - C++ runtime behavior
+  - runtime correctness tests
+  - ROSE telemetry and shutdown semantics
+purpose: Record intended C++ runtime semantics before tests or implementation are tightened.
+read_when:
+  - Changing cpp-lib runtime behavior, telemetry, shutdown, or decode-error handling
+  - Adding or reviewing runtime correctness tests
+related_docs:
+  - ../../ReadMe.md
+---
+
 # Runtime Correctness Notes
 
 This note records the intended semantics for selected `cpp-lib` runtime behaviors

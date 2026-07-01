@@ -1,3 +1,20 @@
+---
+title: TypeScript Microservice Sample
+scope: samples/ts-microservice
+owner_repo: esnacc
+entry_for:
+  - TypeScript generated stubs
+  - Node server and client integration tests
+  - browser demo and OpenAPI sample
+purpose: Explain the TypeScript microservice sample layout, preparation steps, and verification flow.
+read_when:
+  - Updating TypeScript code generation samples
+  - Running node-server, node-client, browser-client, or OpenAPI examples
+related_docs:
+  - ../readme.md
+  - node-server/README.md
+---
+
 # Typescript based microservice sample
 This sample shows how generated TypeScript ASN.1 stubs are used end-to-end: a Node server, a browser demo, and automated integration tests.
 

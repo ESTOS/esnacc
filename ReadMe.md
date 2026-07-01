@@ -10,10 +10,11 @@ purpose: Explain how to build and use the enhanced ASN.1 compiler and its genera
 read_when:
   - Changing compiler behavior or generated output
   - Updating build instructions
-  - Investigating TypeScript, C++, Java, Swift, JSDoc, or OpenAPI generation
+  - Investigating TypeScript, C++, C, C#, Java, Kotlin, Swift, JSDoc, IDL, or OpenAPI generation
 related_docs:
-  - ../AGENTS.md
-  - ../docs/repos.md
+  - FAQ.md
+  - samples/readme.md
+  - cpp-lib/tests/runtime_correctness_notes.md
 ---
 
 # estos Enhanced Sample Neufeld ASN C Compiler
@@ -22,6 +23,9 @@ It is an functional enriched fork of the original enhanced sample neufeld asn c 
 * Documented source code, based on the documentation from the asn1 source files
 * Creating documentation based on the documentation from the asn1 source files
 * Additional supported target languages
+  * C
+    * Structure definitions
+    * BER encoder/decoders
   * Typescript (main maintained language)
     * Structure definitions
     * JSON and BER encoder/decoders
@@ -31,14 +35,22 @@ It is an functional enriched fork of the original enhanced sample neufeld asn c 
     * Structure definitions
     * JSON and BER encoder/decoders
     * ROSE client/server implementation (complete stubs)
+  * C#
+    * Structure definitions
   * Delphi
     * Structure definitions
   * JAVA
     * Structure definitions
+  * Kotlin
+    * Structure definitions
   * JavaScript JSON
+    * Structure definitions
+  * JavaScript ES6
     * Structure definitions
   * SWIFT
     * Structure definitions
+  * IDL
+    * Interface definitions
   * JSDOC
     * JSON formatted Documentation generated based on the documentation inside the asn1 files
   * OpenApi
@@ -54,12 +66,13 @@ Other languages just offer to get created structures which need to get serialize
 # Getting started
 You need to compile the compiler or use a precompiled version of it.
 The samples folder offers examples on the usage for the different supported languages. These folders show some sample asn1 files, the command line and the expected output of the compiler.
+See [samples/readme.md](samples/readme.md) for the current TypeScript microservice sample layout and required Node/pnpm setup.
 
 # Building the compiler
 ## Prerequesites to compile the compiler
 * Have cmake installed 
   * https://cmake.org
-  * at least V3.21
+  * at least V3.20
   * available in the path
   
 ## Command line

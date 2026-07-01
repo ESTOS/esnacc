@@ -1,3 +1,20 @@
+---
+title: esnacc Samples Overview
+scope: samples
+owner_repo: esnacc
+entry_for:
+  - sample applications
+  - TypeScript microservice sample
+  - generated runtime code examples
+purpose: Route readers to the sample projects that demonstrate generated esnacc code.
+read_when:
+  - Running or updating esnacc samples
+  - Changing TypeScript sample package layout or integration-test flow
+related_docs:
+  - ../ReadMe.md
+  - ts-microservice/readme.md
+---
+
 # Samples
 This folder contains samples that show how to use the snacc compiler and the generated runtime code.
 
