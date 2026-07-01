@@ -1,0 +1,10 @@
+packages:
+  - browser-client
+  - node-server
+  - node-client
+
+allowBuilds:
+  dprint: true
+  esbuild: true
+  ucconfig@https://codeload.github.com/estos/ucconfig/tar.gz/2812238c450fed1fd32227051cabf9f1e2723fbb: true
+  uclogger@https://codeload.github.com/estos/uclogger/tar.gz/4ce144511b8af5be6bd71d98a5dd43278ea9d8c4: true

@@ -474,11 +474,11 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 			iMandatoryFields++;
 	}
 
-	// Jetzt schreiben wir den Konstruktor mit dem einen Argumenten was unserer eigenen Klasse entspricht
-	// Damit erzwingen wir die dedizierte Angabe der pflicht Attribute beim Konstruktor aufruf
+	// Now write the constructor with the single argument that matches our own class
+	// This enforces explicit specification of the required attributes when calling the constructor
 	fprintf(src, "\tpublic constructor(that");
 
-	// Haben wir keine Pflicht Elemente ist auch das Attribut am Konstruktor Optional
+	// If there are no required elements, the constructor argument is optional as well
 	if (!iMandatoryFields)
 		fprintf(src, "?");
 
@@ -591,14 +591,17 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 
 		fprintf(src, "\t\t\t\t");
 
-		const bool bOptional = e->type->optional ? true : false;
-		// 		const bool bImplicit = e->type->implicit ? true : false;
-
-		char szOptionalParam[128] = {0};
 		int iOptionalID = -1;
+		const bool bOptional = e->type->optional ? true : false;
 		if (bOptional)
-		{
 			iOptionalID = GetContextID(e->type);
+		const bool bImplicit = e->type->implicit ? true : false;
+		const bool bExplicit = bOptional && !bImplicit && iOptionalID >= 0;
+		char szOptionalParam[128] = {0};
+		if (bExplicit)
+			fprintf(src, "new asn1ts.Sequence({ value: [");
+		else if (bOptional)
+		{
 			if (iOptionalID > -1 && choiceId != BASICTYPE_ANY)
 				sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", idBlock: { optionalID: %i }", iOptionalID);
 			else
@@ -634,6 +637,15 @@ void PrintTSSeqDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, Type
 		}
 		else
 			snacc_exit("unknown choiceId %d", choiceId);
+		if (bExplicit)
+		{
+			fprintf(src, "], name: \"%s\", ", szConverted2);
+			iOptionalID = GetContextID(e->type);
+			if (iOptionalID >= 0 && choiceId != BASICTYPE_ANY)
+				fprintf(src, "idBlock: { optionalID: %i }})", iOptionalID);
+			else
+				fprintf(src, "optional: true})");
+		}
 		if (szConverted2)
 		{
 			free(szConverted2);
@@ -934,6 +946,7 @@ void PrintTSComments(FILE* src, Module* m)
 
 	fprintf(src, DPRINT_DISABLE);
 	fprintf(src, ESLINT_DISABLE);
+	fprintf(src, "\n");
 
 	printModuleComment(src, RemovePath(m->baseFilePath), COMMENTSTYLE_TYPESCRIPT);
 }

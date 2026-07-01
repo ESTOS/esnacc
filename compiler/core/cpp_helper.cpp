@@ -338,17 +338,16 @@ bool CPPHelper::WriteFile(const char* buffer, const unsigned long ulSize, const 
 		for (auto strLine : strLines)
 		{
 			EADDLINE eAddlines = EADDLINE::NOCHANGE;
-			if (bWriteESM)
+			if (!bWriteESM)
 			{
-				auto posBegin = strLine.find("from \".");
-				if (posBegin != std::string::npos)
-				{
-					posBegin += 7;
-					// Special syntax for esm modules....
-					auto posEnd = strLine.find("\"", posBegin);
-					if (posEnd != std::string::npos)
-						strLine.insert(posEnd, ".js");
-				}
+				// Files are now checked in with
+				//
+				// import xxx from "module.js"
+				//
+				// so for *NOT* writing esm we need to remove that
+				const auto posEnd = strLine.rfind(".js\";");
+				if (posEnd != std::string::npos)
+					strLine.erase(posEnd, 3);
 			}
 			if (strLine.substr(0, 2) == "//")
 			{

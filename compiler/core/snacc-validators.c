@@ -6,6 +6,7 @@
 #include "mem.h"
 #include <string.h>
 #include <assert.h>
+#include <ctype.h>
 
 enum EVALIDATIONCHECK
 {
@@ -692,7 +693,7 @@ bool recurseFindInvalid(Module* mod, Type* type, int* supportedTypes, const char
 		strcat_s(szTest2, TESTBUFFERSIZE, "::");
 		if (strstr(szPath, szTest2))
 		{
-			// Recursion check -> haben wir schon (raus...)
+			// Recursion check -> already seen (exit...)
 			return false;
 		}
 
@@ -704,7 +705,7 @@ bool recurseFindInvalid(Module* mod, Type* type, int* supportedTypes, const char
 			const size_t len2 = strlen(szNewName);
 			if (len1 == len2)
 			{
-				// Recursion check -> haben wir schon (raus...)
+				// Recursion check -> already seen (exit...)
 				return false;
 			}
 		}
@@ -749,6 +750,21 @@ bool recurseFindInvalid(Module* mod, Type* type, int* supportedTypes, const char
 #define MAX_STR_LENGTH 100
 #define MAX_STRINGS 50
 
+static void trimWhitespace(char* str)
+{
+	char* start = str;
+	while (*start && isspace((unsigned char)*start))
+		start++;
+
+	char* end = start + strlen(start);
+	while (end > start && isspace((unsigned char)end[-1]))
+		end--;
+	*end = '\0';
+
+	if (start != str)
+		memmove(str, start, (size_t)(end - start) + 1);
+}
+
 void freeStrings(char** strings, int numStrings)
 {
 	int i;
@@ -789,13 +805,11 @@ char** loadStringsFromFile(const char* filename, int* numStrings)
 	char buffer[4096];
 	while (fgets(buffer, sizeof(buffer), file) != NULL)
 	{
-		if (strlen(buffer) == 0)
+		trimWhitespace(buffer);
+		if (buffer[0] == '\0')
 			continue;
 		if (buffer[0] == '/' && buffer[1] == '/')
 			continue;
-
-		// Remove trailing newline character
-		buffer[strcspn(buffer, "\n")] = '\0';
 
 		// Copy the string to the list
 		strcpy_s(strings[*numStrings], MAX_STR_LENGTH - 1, buffer);

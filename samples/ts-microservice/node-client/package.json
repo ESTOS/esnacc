@@ -1,0 +1,32 @@
+{
+	"name": "microservice_node_client",
+	"version": "1.0.0",
+	"type": "module",
+	"packageManager": "pnpm@11.9.0",
+	"engines": {
+		"pnpm": ">=11",
+		"node": ">=24"
+	},
+	"description": "Node integration tests for the estos TypeScript ASN.1 sample",
+	"private": true,
+	"scripts": {
+		"build": "tsc -p .",
+		"clean": "npx rimraf dist",
+		"lint": "dprint fmt && oxlint",
+		"test": "node --test dist/run-tests.js",
+		"preinstall": "node check-pm.js"
+	},
+	"license": "UNLICENSED",
+	"dependencies": {
+		"@estos/asn1ts": "^3.2.3",
+		"ws": "^8.21.0"
+	},
+	"devDependencies": {
+		"@types/node": "^26.0.1",
+		"@types/ws": "^8.18.1",
+		"dprint": "^0.55.1",
+		"oxlint": "^1.71.0",
+		"oxlint-tsgolint": "^0.23.0",
+		"typescript": "^6.0.3"
+	}
+}

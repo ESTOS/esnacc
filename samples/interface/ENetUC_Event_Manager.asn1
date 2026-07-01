@@ -1,4 +1,4 @@
-﻿UC-Server-Access-Protocol-Event-Manager
+UC-Server-Access-Protocol-Event-Manager
 	{ iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) estos(10924) micro-service-example(3) event-manager(1) }
 
 -- @category Event Manager
@@ -8,7 +8,7 @@
 -- The server then sends events to all websocket connected clients
 -- Requesting events through rest is not supported and rejected
 
---~ Interface uses the following operation IDs (please check that the id´s do not overlap other id´s)
+--~ Interface uses the following operation IDs (please check that the ids do not overlap other ids)
 --~ Operation IDs: 4000 - 4099
 
 -- Methods and Events
@@ -24,7 +24,7 @@ IMPLICIT TAGS ::=
 BEGIN
 
 IMPORTS 
-AsnOptionalParameters, AsnRequestError FROM UC-Server-Access-Protocol-Common;
+AsnRequestError FROM UC-Server-Access-Protocol-Common;
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -- ~ FUNCTION ~~~~~~~~~~~~~~~~ asnCreateFancyEvents ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -47,7 +47,7 @@ AsnCreateFancyEventsResult ::= SEQUENCE
 }
 
 -- @brief Method that will create some events the server will then dispatch to the clients
--- @long It´s not possible to call this method through rest as the client won´t receive these events
+-- @long It's not possible to call this method through rest as the client won't receive these events
 asnCreateFancyEvents OPERATION
 	ARGUMENT	arg AsnCreateFancyEventsArgument
 	RESULT		res AsnCreateFancyEventsResult

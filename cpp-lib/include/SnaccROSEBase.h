@@ -4,11 +4,14 @@
 /*! Requires std::map */
 #include <set>
 #include <map>
+#include <memory>
 #include <functional>
 #include <string>
 #include <mutex>
 #include <wchar.h>
+#include <optional>
 #include "SnaccROSEInterfaces.h"
+#include "SnaccTelemetry.h"
 #include "syncevent.h"
 
 #if defined(_MSC_VER)
@@ -40,31 +43,44 @@ class SnaccROSEPendingOperation
 {
 private:
 	SyncEvent m_CompletedEvent;
+	SnaccROSEPendingOperation(long lInvokeID, unsigned int uiOperationID, const char* szOperationName);
 
 public:
-	SnaccROSEPendingOperation();
+	static std::unique_ptr<SnaccROSEPendingOperation> Create(long lInvokeID, unsigned int uiOperationID, const char* szOperationName)
+	{
+		return std::unique_ptr<SnaccROSEPendingOperation>(new SnaccROSEPendingOperation(lInvokeID, uiOperationID, szOperationName));
+	}
+
 	~SnaccROSEPendingOperation();
 
-	long m_lInvokeID;
+	const long m_lInvokeID;
+	const unsigned int m_uiOperationID{};
+	const std::string m_strOperationName;
 
 	/*! The answer message. */
-	SNACC::ROSEMessage* m_pAnswerMessage;
+	const SNACC::ROSEMessage* m_pAnswerMessage;
 
 	/*! Error code (one of the ROSE_ error codes. */
 	long m_lRoseResult;
+
+	/*! Encoded size of the received response payload. */
+	size_t m_stResponseData{};
+
+	/*! Outbound invoke telemetry tracked alongside the pending completion state. */
+	std::shared_ptr<SnaccTelemetryData> m_pTelemetry;
 
 	/*! Async Operation completed.
 		Attention: The AnswerMessage will not be copied.
 		The AnswerMessage must be new allocated and will be deleted
 		when processed. */
-	void CompleteOperation(long lRoseResult, SNACC::ROSEMessage* pAnswerMessage);
+	void CompleteOperation(long lRoseResult, const SNACC::ROSEMessage* pAnswerMessage, size_t stResponseData = 0);
+	void FinalizeTelemetry(long lFinalRoseResult, std::shared_ptr<SnaccInvokeContext> pctx);
 
 	/*! Wait for answer received. */
 	bool WaitForComplete(long lTimeOut = -1);
 };
 
-typedef std::map<long, SnaccROSEPendingOperation*> SnaccROSEPendingOperationMap;
-typedef std::pair<long, SnaccROSEPendingOperation*> SnaccROSEPendingOperationPair;
+typedef std::map<long, std::unique_ptr<SnaccROSEPendingOperation>> SnaccROSEPendingOperationMap;
 
 class SnaccROSEBase;
 
@@ -73,53 +89,19 @@ class SnaccROSEBase;
 class SnaccRoseOperationLookup
 {
 public:
-	static const char* LookUpName(int iOpID);
-	static int LookUpID(const char* szOpName);
-	static void RegisterOperation(int iOpID, const char* szOpName, int iInterfaceID);
-	static int LookUpInterfaceID(int iOpID);
+	static const char* LookUpName(unsigned int uiOpID);
+	static unsigned int LookUpID(const char* szOpName);
+	static void RegisterOperation(unsigned int uiOpID, const char* szOpName, unsigned int uiInterfaceID);
+	static unsigned int LookUpInterfaceID(unsigned int uiOpID);
 	// check if at least one Operation has been registerd
 	static bool Initialized();
 	// Cleanup all registered Operations (can be called during shutdown)
 	static void CleanUp();
 
 private:
-	static std::map<std::string, int> m_mapOpToID;
-	static std::map<int, std::string> m_mapIDToOp;
-	static std::map<int, int> m_mapIDToInterface;
-};
-
-// Invoke Context
-// This context is passed to all OnInvoke_ functions
-// This context can be transferred to the Invoke_ functions
-// The ROSEAuth members are automatically deleted, created with new
-class SnaccInvokeContext
-{
-public:
-	SnaccInvokeContext();
-	virtual ~SnaccInvokeContext();
-
-	// Meaning in OnInvoke_: Authentication Header from the ROSE Invoke (Pointer to the object in the invoke)
-	// Meaning in Invoke_: Authentication Header that is dispatched along with the invoke (create it with new, cleanup is done inside)
-	SNACC::ROSEAuthRequest* pInvokeAuth;
-
-	// Meaning in OnInvoke_: Authentication Header, which is returned in the reject if the method returnReject returns must be created with new, is cleaned up itself
-	// Meaning in Invoke_: If the method returnsReject, this member contains the optional reject authentication (only if SNACC_REJECT_AUTH_INCOMPLETE)
-	SNACC::ROSEAuthResult* pRejectAuth;
-
-	// Reject Result Code: 0 or ROSE_REJECT_AUTHENTICATIONFAILED or ROSE_REJECT_AUTHENTICATIONINCOMPLETE
-	// Meaning in Invoke_: If the method returns returnReject, this member contains ROSE_REJECT_AUTHENTICATIONINCOMPLETE or ROSE_REJECT_AUTHENTICATIONFAILED if the authentication was not successful
-	// Special: ROSE_REJECT_ASYNCOPERATION - no result is sent.
-	long lRejectResult;
-
-	// Meaning in OnInvoke_: Function that is called after the result has been returned.
-	// Usage: cxt->funcAfterResult = [this, strCrossRefID]() -> void { /* executed after result has been sent. */ };
-	std::function<void()> funcAfterResult;
-
-	// Meaning in OnInvoke_: Originaler Invoke
-	SNACC::ROSEInvoke* pInvoke;
-
-	// A Custom void pointer that allows the caller to add custom data to the transport layer that is dispatching a request
-	void* pCustom;
+	static inline std::map<std::string, unsigned int> m_mapOpToID;
+	static inline std::map<unsigned int, std::string> m_mapIDToOp;
+	static inline std::map<unsigned int, unsigned int> m_mapIDToInterface;
 };
 
 #define SNACC_TE_BER SNACC::TransportEncoding::BER
@@ -149,12 +131,19 @@ public:
 	The generated class overrides OnInvoke to implement the OnInvoke_XXX handlers.
 	The generated class calls the Invoke function from the Invoke_XXX functions.
 	*/
-class SnaccROSEBase : public SnaccROSESender
+class SnaccROSEBase : public SnaccROSESender, public SnaccTelemetryCallback
 {
 public:
-	SnaccROSEBase(void);
-	SnaccROSEBase(const std::set<int>& multithreadInvokeIDs);
+	SnaccROSEBase(const wchar_t* szClassName);
+	SnaccROSEBase(const wchar_t* szClassName, const std::set<int>& multithreadInvokeIDs);
 	virtual ~SnaccROSEBase(void);
+
+	/*
+	 * Allows to set a central callback for telemetry data the SnaccROSEBase class is providing
+	 * The implementer can either overwrite OnInvokeProcessed in this class or set
+	 * the central callback to gather telemetry data for inbound and outbound messages.
+	 */
+	static void SetTelemetryCallback(SnaccTelemetryCallback* pCallBack);
 
 	/*! Set timeout for function invokes.
 		Wait time in milliseconds */
@@ -183,7 +172,7 @@ public:
 	/* Output of the binary data.
 		Override this function to send the data to the transport layer.
 		Optional you can set a ISnaccROSETransport Interface to receive the outbound data*/
-	virtual long SendBinaryDataBlockEx(const char* lpBytes, unsigned long lSize, SnaccInvokeContext* pCtx);
+	virtual long SendBinaryDataBlockEx(const char* lpBytes, size_t Size, SnaccInvokeContext& ctx);
 
 	/*! Set a ISnaccROSETransport Interface to be called when outbound Data must be sent.
 		This is an alternative to overriding SendBinaryDataBlock */
@@ -206,37 +195,54 @@ public:
 
 	/*! Writes JSON encoded log messages to the log file
 		bOutbound = true in case the log entry is related to an outbound message
-		bError = true in case this is an error message
+		bException = true in case this is an exception based error message
 		szOperationName = the operationName beeing called (if available)
 		szData = the JSON (!) encoded log message. (!) The message is no necessarily null terminated (!)
 		length = length of the szData (as it is not necessarily null terminated respect the length!)
 		returns true if data was logged
 	*/
-	virtual bool PrintJSONToLog(const bool bOutbound, const bool bError, const char* szOperationName, const char* szData, const size_t length = 0);
+	virtual bool PrintJSONToLog(const bool bOutbound, const bool bException, const char* szOperationName, const char* szData, const size_t size = 0);
 
 	/* Set the Transport Encoding to be used */
 	bool SetTransportEncoding(const SNACC::TransportEncoding transportEncoding);
 	SNACC::TransportEncoding GetTransportEncoding() const;
 
-	/* Send a Result Message. */
-	virtual long SendResult(SNACC::ROSEResult* presult);
-
-	/* Send a Result Message.
-		Override from SnaccRoseSender */
-	virtual long SendResult(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, const wchar_t* szSessionID = 0) override;
+	/*
+	 * Encodes a result as repsonse to an invoke
+	 *
+	 * uiInvokeID - the inbound invoke that we send the error for
+	 * pResult - the actual result object
+	 * strResponse - the encoded response data to send via the transport layer
+	 * szSessionID - the SessionID (this propery is filled by subclassing from the concrete class in case we are handling multiple clients via one connection)
+	 */
+	virtual long EncodeResult(unsigned int uiInvokeID, SNACC::AsnType* pResult, std::string& strResponse, const wchar_t* szSessionID = nullptr) override;
 
 	/* Send a Reject Message. */
-	long SendReject(SNACC::ROSEReject* preject);
-	/* Send back reject message.
-		Invoke Problem */
-	long SendRejectInvoke(int invokeID, SNACC::InvokeProblem problem, const char* szError = NULL, const wchar_t* szSessionID = 0, SNACC::ROSEAuthResult* pAuthHeader = 0);
+	long EncodeReject(SNACC::ROSEReject* preject, std::string& strResponse);
+	long SendRejectEx(SNACC::ROSEReject* preject);
 
-	/* Send a Error Message */
-	long SendError(SNACC::ROSEError* perror);
+	/*
+	 * Encodes a reject as repsonse to an invoke
+	 *
+	 * uiInvokeID - the inbound invoke that we send the error for
+	 * problem - the reject cause
+	 * strResponse - the encoded response data to send via the transport layer
+	 * szError - an optional error description (basically the problem as text, used for json encoded results)
+	 * szSessionID - the SessionID as taken from the invoke
+	 * pAuthHeader - an optional Auth header
+	 */
+	long EncodeRejectInvoke(unsigned int uiInvokeID, SNACC::InvokeProblem problem, std::string& strResponse, const char* szError = nullptr, const wchar_t* szSessionID = nullptr, SNACC::ROSEAuthResult* pAuthHeader = nullptr);
+	long EncodeInvokeRejectResponse(const SNACC::ROSEInvoke* pInvoke, long lProtocolResult, SnaccInvokeContext& ctx, std::string& strResponse);
 
-	/* Send a Error Message.
-		Override from SnaccRoseSender */
-	virtual long SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pError, const wchar_t* szSessionID = 0) override;
+	/*
+	 * Encodes an error as repsonse to an invoke
+	 *
+	 * uiInvokeID - the inbound invoke that we send the error for
+	 * pError - the actual error object
+	 * strResponse - the encoded response data to send via the transport layer
+	 * szSessionID - the SessionID (this propery is filled by subclassing from the concrete class in case we are handling multiple clients via one connection)
+	 */
+	virtual long EncodeError(unsigned int uiInvokeID, SNACC::AsnType* pError, std::string& strResponse, const wchar_t* szSessionID = nullptr) override;
 
 	/*! Increment invoke counter
 		Override from SnaccRoseSender*/
@@ -260,41 +266,52 @@ public:
 	 * An invoke that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
-	 * pResponse - the response payload (is handled afterwards in the HandleInvokeResult method
+	 * result - decoded result payload in case a result response is received
+	 * error - decoded error payload in case an error response is received
 	 * szOperationName - the operationName (for logging purposes)
-	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don�t care about the result))
-	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don�t care about the result))
-	 * pCtx - contextual data for the invoke
+	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don't care about the result))
+	 * pCtx - contextual data for the invoke. The caller may keep another shared reference
+	 *        to inspect changes after the call.
 	 */
-	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::ROSEMessage** pResponse, const char* szOperationName, int iTimeout = -1, SnaccInvokeContext* pCtx = nullptr) override;
+	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::AsnType* result, SNACC::AsnType* error, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
 
 	/**
-	 * Handles the response payload of the SendInvoke method. Retrieves the result or error from the response
+	 * Encodes the result or error from an OnInvoke request. Retrieves the result or error from the response
 	 *
-	 * lRoseResult - the result of the SendInvoke method
-	 * pResponseMsg - the response message as provided by the SendInvoke method
-	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
-	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
-	 * pCtx - contextual data for the invoke
+	 * invokeResult - the result of the OnInvoke method
+	 * pInvoke - the original invoke
+	 * ctx - contextual data for the invoke
+	 * strResponse - the encoded result to put it on the transport
+	 * pResult - the result object (Base type pointer, the caller of the invoke provides the proper type)
+	 * pError - the error object (Base type pointer, the caller of the invoke provides the proper type)
 	 */
-	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext* cxt) override;
-
-	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
-	 *
-	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
-	 * pCtx - contextual data for the invoke
-	 */
-	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperationName, SnaccInvokeContext* cxt = nullptr) override;
+	virtual long HandleOnInvokeResult(SNACC::InvokeResult invokeResult, const SNACC::ROSEInvoke* pInvoke, SnaccInvokeContext& ctx, std::string& strResponse, SNACC::AsnType* pResult, SNACC::AsnType* pError) override;
 
 	/**
-	 * Helper method that retrieves the proper object (result, error, reject) from the repsonse Message
+	 * Allows implementers to customize the decoded invoke response before it is handed back
+	 * to the caller, for example to propagate connection-specific session data.
 	 *
-	 * pResponseMsg - the response message as provided by the SendInvoke method
-	 * ppResult - filled with the result object in case we have received a result
-	 * ppError - filled with the error object in case we have received an error
-	 * pCtx - contextual data from the invoke
+	 * lRoseResult - the current ROSE result code
+	 * pResponseMsg - the raw response message that was received
+	 * result - the decoded result payload in case a result response is received
+	 * error - the decoded error payload in case an error response is received
+	 * ctx - contextual data for the invoke
 	 */
-	static long DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::ROSEResult** ppResult, SNACC::ROSEError** ppError, SnaccInvokeContext* pCtx);
+	virtual long HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext& ctx) override;
+
+	/**
+	 * An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
+	 *
+	 * pinvoke - the invoke payload (it is put into a ROSEMessage in the function)
+	 * pCtx - contextual data for the invoke. The caller may keep another shared reference
+	 *        to inspect changes after the call.
+	 */
+	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
+
+	/**
+	 * Creates the invoke context for inbound and outbound invoke lifecycles.
+	 */
+	std::shared_ptr<SnaccInvokeContext> CreateInvokeContext(const SnaccInvokeContextInit& init) override;
 
 	/**
 	 * Decodes an invoke and properly handles logging for it
@@ -302,20 +319,20 @@ public:
 	 * pInvokeMessage - the invoke message as provided from the other side
 	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
 	 */
-	long DecodeInvoke(SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) override;
+	long DecodeInvoke(const SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) override;
 
 protected:
 	// Get the length prefix for a given strJson payload
 	// In case the message is longer than 9999999 which is the longest possible length returns ROSE_TE_ENCODE_FAILED
 	long GetJsonLengthPrefix(std::string_view strJson, std::string& strLenghtPrefix) const;
 
-	/*! Die functions and events.
+	/*! The functions and events.
 		The implementation of this functions is contained in the generated code from the
 		esnacc. */
-	virtual long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccInvokeContext* cxt) = 0;
+	virtual long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) = 0;
 
 	/* Function is called when a received data Packet cannot be decoded (invalid Rose Message)
-	 * bAlreadyTransportLogged	- true if the transport data has already been logged in the tranport log (so we do not need to log it again)
+	 * bAlreadyTransportLogged	- true if the transport data has already been logged in the transport log (so we do not need to log it again)
 	 * encoding	- the encoding that was used for the transport
 	 * lpBytes - the data that could not get decoded
 	 * ulSize - the size of the data that could not get decoded
@@ -329,61 +346,57 @@ protected:
 		pmessage is new allocated and must be deleted inside this function.
 		returns true if the message was processed.
 		set bAllowInvokes to false, if invokes are not processed. */
-	virtual bool OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowInvokes);
+	virtual bool OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowInvokes, unsigned long ulMessageSize);
 
 	/*
-	 * This callback allows the implementer to enrich the invokecontext with data in case it wants to add or tune it
-	 *
-	 * @param pInvokeContext - the context that has just been created (some properties are already filled such as the pInvoke and the pInvokeAuth)
-	 * @return true in case you implement the fuction (the stub will then call)
+	 * This callback provides telemetry data for processed ROSE messages.
 	 */
-	virtual bool OnInvokeContextCreated(SnaccInvokeContext* pInvokeContext)
-	{
-		return false;
-	};
-
-	/*
-	 * This callback is called before the invokeContext runs out of scope.
-	 * It's only called if the implementer implemented OnInvokeContextCreated and returned true there
-	 *
-	 * @param pInvokeContext - the context that is about to get deleted
-	 */
-	virtual void OnInvokeContextRunsOutOfScope(SnaccInvokeContext* pInvokeContext) {};
+	void OnInvokeProcessed(std::shared_ptr<const SnaccTelemetryData> data) override;
 
 private:
 	/*! The ROSE component messages.
 		These are called from the OnROSEMessage.
 		Do not dete the parameters. The functions are called
 		before the CompleteOperation */
-	virtual void OnInvokeMessage(SNACC::ROSEMessage* pMsg);
-	virtual void OnResultMessage(SNACC::ROSEResult* presult);
-	virtual void OnErrorMessage(SNACC::ROSEError* perror);
-	virtual void OnRejectMessage(SNACC::ROSEReject* preject);
+	virtual void OnInvokeMessage(SNACC::ROSEMessage* pMessage, unsigned long lMessageSize);
+	virtual void OnResultMessage(SNACC::ROSEResult* pResult, unsigned long lMessageSize);
+	virtual void OnErrorMessage(SNACC::ROSEError* pError, unsigned long lMessageSize);
+	virtual void OnRejectMessage(SNACC::ROSEReject* pReject, unsigned long lMessageSize);
 
+	// The central process wide telemetry callback
+	static inline SnaccTelemetryCallback* m_pTelemetryCallback{};
+
+	/* The name of the concrete class. This is used for the static global telemetry callback when reporting telemetry to differ between different SnaccROSEBase inheriting classes */
+	const std::wstring m_strClassName;
 	/*! Maximum wait time (milliseconds) for a function to return default: 20000 ms*/
-	long m_lMaxInvokeWait = 20000;
+	long m_lMaxInvokeWait{20000};
 	/*! Are we currently active or was StopProcessing called */
-	bool m_bProcessingAllowed = false;
+	bool m_bProcessingAllowed{true};
 	/*! The counter for the InvokeIds */
-	long m_lInvokeCounter = 0;
+	long m_lInvokeCounter{};
 	/*! The guard for m_bProcessingAllowed and SnaccROSEPendingOperationMap */
 	std::mutex m_InternalProtectMutex;
 	/*! If set, the open file where we append log data to. The pointer is created with ConfigureFileLogging() */
-	FILE* m_pAsnLogFile = nullptr;
+	FILE* m_pAsnLogFile{};
 	/*! true if the logfile already contains data, false if not */
-	bool m_bAsnLogFileContainsData = false;
+	bool m_bAsnLogFileContainsData{};
 	/*! true if every write to the logger shall get flushed */
-	bool m_bFlushEveryWrite = false;
+	bool m_bFlushEveryWrite{};
 	/*! Mutex to access the logging function (serialize multiple threads to it) */
 	std::mutex m_mtxLogFile;
 
-	void AddPendingOperation(int invokeID, SnaccROSEPendingOperation* pOperation);
+	SnaccROSEPendingOperation& AddPendingOperation(int invokeID, unsigned int uiOperationID, const char* szOperationName);
 	void RemovePendingOperation(int invokeID);
 	/*! Pending Operation result has been received.
 		Attention: The pMessage Objekt will be taken over from the
 		SnaccROSEPendingOperation Object and deleted in the end. */
-	bool CompletePendingOperation(int invokeID, SNACC::ROSEMessage* pMessage);
+	bool CompletePendingOperation(int invokeID, const SNACC::ROSEMessage* pMessage, unsigned long ulMessageSize);
+	bool GetPendingOperationTelemetryInfo(int invokeID, unsigned int& uiOperationID, std::string& strOperationName);
+	static long GetRejectResultCode(const SNACC::ROSEReject* pReject);
+	static long GetRejectResultCode(const SNACC::ROSEReject* pReject, SnaccInvokeContext& ctx);
+	static long DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::ROSEResult** ppResult, SNACC::ROSEError** ppError, SnaccInvokeContext& ctx);
 	void CompleteAllPendingOperations();
+	bool IsProcessingAllowed();
 
 	SnaccROSEPendingOperationMap m_PendingOperations;
 
@@ -392,10 +405,13 @@ private:
 	const std::set<int> m_multithreadInvokeIDs;
 
 	// Outbound Data Interface (optional)
-	ISnaccROSETransport* m_pTransport = NULL;
+	ISnaccROSETransport* m_pTransport{};
 
 	// Transport Encoding to be used
-	SNACC::TransportEncoding m_eTransportEncoding = SNACC::TransportEncoding::BER;
+	SNACC::TransportEncoding m_eTransportEncoding{SNACC::TransportEncoding::UNKNOWN};
+
+	// Detects the encoding from the transport data (used for inbound data)
+	SNACC::TransportEncoding DetectEncoding(const char* lpBytes, unsigned long ulSize) const;
 
 	// Get Length of JSON Header J1235{} )
 	int GetJsonHeaderLen(const char* lpBytes, unsigned long iLength);
@@ -408,9 +424,9 @@ private:
 	 *
 	 * pInvoke - the invoke to send
 	 * szOperationName - the operationName (for logging purposes)
-	 * pCtx - contextual data for the invoke
+	 * ctx - contextual data for the invoke
 	 */
-	long Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, SnaccInvokeContext* pCtx = nullptr);
+	long Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, SnaccInvokeContext& ctx, size_t* pstRequestData = nullptr);
 };
 
 #endif //_SnaccROSEBase_h_

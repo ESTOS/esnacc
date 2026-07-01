@@ -35,7 +35,7 @@ char* bVDAGlobalDLLExport = (char*)0;
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <assert.h>
+#include "cpp-lib/include/snacc-assert.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -195,6 +195,12 @@ int genTSESMCode = FALSE;
 int gFilterASN1Files = FALSE;
 char gszOutputPath[_MAX_PATH] = {0};
 
+// When set, output files are written in UTF-8 encoding; default is system codepage (Windows-1252)
+int genUTF8Output = FALSE;
+
+// When set (implies genUTF8Output), a UTF-8 BOM is written at the start of every output file
+int genUTF8BOM = FALSE;
+
 #ifdef WIN_SNACC /* Deepak: 14/Feb/2003 */
 #define main Win_Snacc_Main
 #endif
@@ -265,6 +271,8 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "   64 Ensure that optional parameters are not encoded implicit (context specific, with number) and explicit (without) in the same object (@deprecated are not validated)\n");
 	fprintf(fp, "   128 Ensure that optional parameters are always encoded implicit and never explicit (@deprecated are not validated)\n");
 	fprintf(fp, "  -versionfile - the compiler writes a version file for the highest version found (requires interfaceversion.txt)\n");
+	fprintf(fp, "  -utf8   write output files with UTF-8 encoding (default: system codepage / Windows-1252)\n");
+	fprintf(fp, "  -utf8bom   write a UTF-8 BOM at the start of each output file (implies -utf8)\n");
 	fprintf(fp, "  -h   prints this msg\n");
 	fprintf(fp, "  -P   print the parsed ASN.1 modules to stdout from their parse trees\n");
 	fprintf(fp, "       (helpful debugging)\n");
@@ -310,7 +318,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 
 	fprintf(fp, "Copyright (C) 1993 Michael Sample and UBC\n");
 	fprintf(fp, "Copyright (C) 1994, 1995 by Robert Joop and GMD FOKUS\n");
-	fprintf(fp, "Improvements 2004-2016 estos GmbH, www.estos.com\n\n");
+	fprintf(fp, "Improvements 2004-2026 estos GmbH, https://www.estos.de\n\n");
 
 	fprintf(fp, "This program is free software; you can redistribute it and/or modify\n");
 	fprintf(fp, "it under the terms of the GNU General Public License as published by\n");
@@ -503,7 +511,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					if (strcmp(argument + 1, "stdafx") == 0)
 					{
 						/* ste --added */
-						genCodeCPPPrintStdAfxInclude = 1;
+						genCodeCPPPrintPCHInclude = 1;
 						currArg++;
 					}
 					break;
@@ -563,7 +571,10 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					currArg++;
 					break;
 				case 'p':
-					genPrintCode = TRUE;
+					if (strcmp(argument + 1, "pch") == 0)
+						genCodeCPPPrintPCHInclude = 2;
+					else
+						genPrintCode = TRUE;
 					currArg++;
 					break;
 				case 'x':
@@ -679,10 +690,25 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						novolatilefuncs = TRUE;
 						currArg++;
 					}
-					else
-						goto error;
-					break;
-				case 'c':
+				else
+					goto error;
+				break;
+			case 'u':
+				if (strcmp(argument + 1, "utf8") == 0)
+				{
+					genUTF8Output = TRUE;
+					currArg++;
+				}
+				else if (strcmp(argument + 1, "utf8bom") == 0)
+				{
+					genUTF8Output = TRUE;
+					genUTF8BOM = TRUE;
+					currArg++;
+				}
+				else
+					goto error;
+				break;
+			case 'c':
 					if (strcmp(argument + 1, "comments") == 0)
 						giWriteComments = TRUE;
 					else
@@ -1353,6 +1379,13 @@ Module* ParseAsn1File(const char* fileName, short ImportFlag, int parseComments)
 
 } /* ParseAsn1File */
 
+/* Write a UTF-8 BOM to an output file when the -utf8bom flag is active */
+static void WriteUTF8BOM(FILE* fp)
+{
+	if (fp && genUTF8BOM)
+		fprintf(fp, "\xEF\xBB\xBF");
+}
+
 /*
  * Given the list of parsed, linked, normalized, error-checked and sorted
  * modules, and some code generation flags, generates C code and
@@ -1410,6 +1443,8 @@ int GenCCode PARAMS((allMods, longJmpVal, genTypes, genValues, genEncoders, genD
 
 		else if (currMod->ImportedFlag == FALSE)
 		{
+			WriteUTF8BOM(cHdrFilePtr);
+			WriteUTF8BOM(cSrcFilePtr);
 			PrintCCode(cSrcFilePtr, cHdrFilePtr, allMods, currMod, &cRulesG, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genPrinters, genFree);
 			fclose(cHdrFilePtr);
 			fclose(cSrcFilePtr);
@@ -1486,14 +1521,13 @@ void GenCSCode(ModuleList* allMods, int genROSECSDecoders)
 		{
 			if (genROSECSDecoders) // CS
 			{
-				if (fopen_s(&srcFilePtr, currMod->ROSESrcCSFileName, "wt") != 0 || srcFilePtr == NULL)
-				{
-					perror("fopen ROSE");
+			if (fopen_s(&srcFilePtr, currMod->ROSESrcCSFileName, "wt") != 0 || srcFilePtr == NULL)				{
+				perror("fopen ROSE");
 				}
 				else
 				{
 					saveMods = allMods->curr;
-
+					WriteUTF8BOM(srcFilePtr);
 					PrintROSECSCode(srcFilePtr, allMods, currMod);
 					allMods->curr = saveMods;
 					fclose(srcFilePtr);
@@ -1601,6 +1635,7 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 			perror("fopen");
 		else
 		{
+			WriteUTF8BOM(versionFile);
 			long long lMaxPatchVersion = GetMaxModulePatchVersion();
 			write_snacc_header(versionFile, "// ");
 			fprintf(versionFile, "\n");
@@ -1651,6 +1686,8 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 			}
 			else
 			{
+				WriteUTF8BOM(hdrFilePtr);
+				WriteUTF8BOM(srcFilePtr);
 				saveMods = allMods->curr;
 				PrintCxxCode(srcFilePtr, hdrFilePtr, if_META(genMeta COMMA & meta COMMA meta_pdus COMMA) allMods, currMod, &cxxRulesG, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, genPrinters, genPrintersXML, genFree, if_TCL(genTcl COMMA) novolatilefuncs, szCppHeaderIncludePath, genCxxCode_EnumClasses);
 				allMods->curr = saveMods;
@@ -1669,7 +1706,7 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 				else
 				{
 					saveMods = allMods->curr;
-
+					WriteUTF8BOM(hdrForwardDecl);
 					PrintForwardDeclarationsCode(hdrForwardDecl, allMods, currMod);
 					allMods->curr = saveMods;
 
@@ -1678,19 +1715,21 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 
 				if (HasROSEOperations(currMod))
 				{
-					fopen_s(&hdrFilePtr, currMod->ROSEHdrFileName, "wt");
-					fopen_s(&srcFilePtr, currMod->ROSESrcFileName, "wt");
-					fopen_s(&hdrInterfaceFilePtr, currMod->ROSEHdrInterfaceFileName, "wt");
+				fopen_s(&hdrFilePtr, currMod->ROSEHdrFileName, "wt");
+				fopen_s(&srcFilePtr, currMod->ROSESrcFileName, "wt");
+				fopen_s(&hdrInterfaceFilePtr, currMod->ROSEHdrInterfaceFileName, "wt");
 
-					if ((hdrFilePtr == NULL) || (srcFilePtr == NULL) || (hdrInterfaceFilePtr == NULL))
-					{
-						perror("fopen ROSE");
-					}
-					else
-					{
-						saveMods = allMods->curr;
-
-						PrintROSECode(srcFilePtr, hdrFilePtr, hdrInterfaceFilePtr, allMods, currMod, &cxxRulesG, szCppHeaderIncludePath);
+				if ((hdrFilePtr == NULL) || (srcFilePtr == NULL) || (hdrInterfaceFilePtr == NULL))
+				{
+					perror("fopen ROSE");
+				}
+				else
+				{
+					saveMods = allMods->curr;
+					WriteUTF8BOM(hdrFilePtr);
+					WriteUTF8BOM(srcFilePtr);
+					WriteUTF8BOM(hdrInterfaceFilePtr);
+					PrintROSECode(srcFilePtr, hdrFilePtr, hdrInterfaceFilePtr, allMods, currMod, &cxxRulesG, szCppHeaderIncludePath);
 						allMods->curr = saveMods;
 
 						fclose(hdrFilePtr);
@@ -1819,6 +1858,7 @@ void GenJSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValues
 			else
 			{
 				saveMods = allMods->curr;
+				WriteUTF8BOM(srcFilePtr);
 				PrintJSCode(srcFilePtr, allMods, currMod, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, novolatilefuncs);
 				allMods->curr = saveMods;
 				fclose(srcFilePtr);
@@ -1884,6 +1924,7 @@ void GenOpenApiCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 			else
 			{
 				saveMods = allMods->curr;
+				WriteUTF8BOM(srcFilePtr);
 				PrintOpenApiCode(srcFilePtr, allMods, currMod, longJmpVal, genTypes, genValues, genEncoders, genDecoders, genJSONEncDec, novolatilefuncs);
 				allMods->curr = saveMods;
 				fclose(srcFilePtr);
@@ -1976,6 +2017,7 @@ void GenDelphiCode(ModuleList* allMods, long longJmpVal, int genTypes, int genVa
 			else
 			{
 				saveMods = allMods->curr;
+				WriteUTF8BOM(srcFilePtr);
 				PrintDelphiCode(srcFilePtr, allMods, currMod);
 				allMods->curr = saveMods;
 				fclose(srcFilePtr);
@@ -2050,6 +2092,7 @@ void GenIDLCode PARAMS((allMods, longJmpVal, genTypes, genValues, genPrinters, g
 			perror("fopen");
 		else
 		{
+			WriteUTF8BOM(idlFilePtr);
 			PrintIDLCode(idlFilePtr, allMods, currMod, &idlRulesG, longJmpVal, genValues);
 
 			fclose(idlFilePtr);
@@ -2142,7 +2185,7 @@ void snacc_exit_now(const char* szMethod, const char* szMessage, ...)
 	vfprintf(stderr, szMessage, argptr);
 	va_end(argptr);
 	fprintf(stderr, "\n");
-	assert(false);
+	ASSERT(false);
 	exit(200);
 }
 

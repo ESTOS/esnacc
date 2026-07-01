@@ -179,9 +179,9 @@ int AsnBool::TclSetVal(Tcl_Interp* interp, const char* valstr)
 #endif /* TCL */
 #endif /* META */
 
-void AsnBool::JEnc(SJson::Value& b) const
+SJson::Value AsnBool::JEnc() const
 {
-	b = SJson::Value(operator bool());
+	return SJson::Value(operator bool());
 }
 
 bool AsnBool::JDec(const SJson::Value& b)

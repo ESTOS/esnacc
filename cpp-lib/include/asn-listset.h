@@ -31,7 +31,7 @@ public:
 	// virtual void BDec(const SNACC::AsnBuf& b, SNACC::AsnLen& bytesDecoded) = 0;
 	virtual void BDecContent(const SNACC::AsnBuf& b, SNACC::AsnTag tagId, SNACC::AsnLen elmtLen, SNACC::AsnLen& bytesDecoded);
 
-	virtual void JEnc(SJson::Value& b) const override;
+	virtual SJson::Value JEnc() const override;
 	virtual bool JDec(const SJson::Value& b) override;
 
 	// const char* typeName() const = 0;
@@ -304,15 +304,12 @@ template <class T> void AsnList<T>::BDecContent(const SNACC::AsnBuf& b, SNACC::A
 	bytesDecoded += localBytesDecoded;
 } // AsnList<T>::BDecContent()
 
-template <class T> void AsnList<T>::JEnc(SJson::Value& b) const
+template <class T> SJson::Value AsnList<T>::JEnc() const
 {
-	b = SJson::Value(SJson::arrayValue);
+	auto b = SJson::Value(SJson::arrayValue);
 	for (auto i = this->cbegin(); i != this->cend(); ++i)
-	{
-		SJson::Value tmp;
-		i->JEnc(tmp);
-		b.append(tmp);
-	}
+		b.append(i->JEnc());
+	return b;
 }
 
 template <class T> bool AsnList<T>::JDec(const SJson::Value& b)
@@ -598,7 +595,7 @@ template <class T> void AsnSetOf<T>::PrintXML(std::ostream& os, const char* lpsz
 namespace SNACC
 {
 
-	// Implementierung von JEnc und JDec ist in asn-optionalparam.cpp
+	// The implementation of JEnc and JDec is in asn-optionalparam.cpp
 	class AsnOptionalParameters : public AsnSeqOf<AsnOptionalParam>
 	{
 	public:
@@ -610,7 +607,7 @@ namespace SNACC
 		{
 			return new AsnOptionalParameters(*this);
 		}
-		void JEnc(SJson::Value& b) const override;
+		SJson::Value JEnc() const override;
 		bool JDec(const SJson::Value& b) override;
 	};
 

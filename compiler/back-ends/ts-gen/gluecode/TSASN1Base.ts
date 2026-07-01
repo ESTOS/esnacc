@@ -6,12 +6,11 @@
 /* eslint-disable */
 
 import * as asn1ts from "@estos/asn1ts";
-
-import * as ENetUC_Common from "./ENetUC_Common";
-import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE";
-import { ROSEMessage_Converter } from "./SNACCROSE_Converter";
-import { ConverterErrors, DecodeContext, EncodeContext } from "./TSConverterBase";
-import { EASN1TransportEncoding, ISendInvokeContextParams } from "./TSInvokeContext";
+import * as ENetUC_Common from "./ENetUC_Common.js";
+import { InvokeProblemenum, ROSEError, ROSEInvoke, ROSEMessage, ROSEReject, ROSEResult } from "./SNACCROSE.js";
+import { ROSEMessage_Converter } from "./SNACCROSE_Converter.js";
+import { ConverterErrors, DecodeContext, EncodeContext } from "./TSConverterBase.js";
+import { EASN1TransportEncoding, ISendInvokeContextParams } from "./TSInvokeContext.js";
 import {
 	asn1Decode,
 	asn1Encode,
@@ -28,8 +27,9 @@ import {
 	IROSELogger,
 	ISendInvokeContext,
 	ReceiveInvokeContext,
+	ASN1ByteArray,
 	ROSEBase,
-} from "./TSROSEBase";
+} from "./TSROSEBase.js";
 
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
@@ -128,7 +128,7 @@ export interface IRejectLogEntry extends IROSELogEntryBase {
  */
 export interface IResponseData {
 	// JSON encoded payload to put into the body
-	payLoad: Uint8Array | string;
+	payLoad: ASN1ByteArray | string;
 	// HTTP result value for the client
 	httpStatusCode: number;
 }
@@ -155,14 +155,12 @@ export class PendingInvoke {
 	 *
 	 * @param message - The original invoke message where we are waiting for a response
 	 * @param resolve - The resolve method we call in case we receive a proper ROSE Response (Reject, Result, Error)
-	 * @param reject - The reject method - (currently not used)
 	 * @param timerID - The timerID of the timer that has been created to handle the timeout
 	 * The timer is created outside as it depends on if we are running in a browser or in node
 	 */
 	public constructor(
 		message: ROSEInvoke,
 		resolve: (value?: ROSEReject | ROSEResult | ROSEError) => void,
-		reject: (reason?: unknown) => void,
 		timerID?: ReturnType<typeof setTimeout>,
 	) {
 		this.invoke = message;
@@ -366,6 +364,21 @@ export abstract class TSASN1Base implements IASN1Transport {
 			const handler = new Handler(oninvokehandler, requesthandler, operationID, operationName);
 			this.handlersByID.set(operationID, handler);
 			this.handlersByName.set(operationName, handler);
+		} else {
+			// trying to re-register a handler for an already registered operationID, this should not happen and indicates a problem in the calling code
+			debugger;
+		}
+	}
+
+	/**
+	 * Method to remove a previously registered invoke handler
+	 * @param operationID - the id of the operation that should be removed
+	 */
+	public unregisterOperation(operationID: number): void {
+		const handler = this.handlersByID.get(operationID);
+		if (handler) {
+			this.handlersByID.delete(operationID);
+			this.handlersByName.delete(handler.operationName);
 		}
 	}
 
@@ -385,6 +398,15 @@ export abstract class TSASN1Base implements IASN1Transport {
 			version: `${majorVersion}.${minorVersion}`,
 		};
 		this.moduleVersionsByName.set(moduleName, versionInformation);
+	}
+
+	/**
+	 * Removed a previously registered module and the associate version information
+	 *
+	 * @param moduleName - name of the module to unregisters
+	 */
+	public unregisterModuleVersion(moduleName: string): void {
+		this.moduleVersionsByName.delete(moduleName);
 	}
 
 	/**
@@ -411,8 +433,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 				majorVersion = mod.majorVersion;
 				minorVersion = mod.minorVersion;
 				module = mod;
-			}
-			else if (mod.majorVersion === majorVersion && mod.minorVersion > minorVersion) {
+			} else if (mod.majorVersion === majorVersion && mod.minorVersion > minorVersion) {
 				majorVersion = mod.majorVersion;
 				minorVersion = mod.minorVersion;
 				module = mod;
@@ -612,8 +633,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 				}
 				if (!invokeContext.clientConnectionID)
 					invokeContext.clientConnectionID = message.invoke.sessionID;
-			}
-			else if (message.result)
+			} else if (message.result)
 				invokeContext.invokeID = message.result.invokeID;
 			else if (message.error)
 				invokeContext.invokeID = message.error.invokedID;
@@ -640,8 +660,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 					"No member was filled within the ROSEMessage",
 				);
 			}
-		}
-		catch (error) {
+		} catch (error) {
 			this.log(ELogSeverity.error, "exception", "receive", this, undefined, error);
 			result = createInvokeReject(
 				0,
@@ -758,12 +777,10 @@ export abstract class TSASN1Base implements IASN1Transport {
 				resultValue = result.reject?.returnResultProblem;
 			message.reject = result;
 			plainResponse = result;
-		}
-		else if (result instanceof ROSEResult) {
+		} else if (result instanceof ROSEResult) {
 			message.result = result;
 			plainResponse = result.result?.result;
-		}
-		else if (result instanceof ROSEError) {
+		} else if (result instanceof ROSEError) {
 			message.error = result;
 			message.error.sessionID = invokeContext.clientConnectionID;
 			resultValue = result.error_value;
@@ -776,27 +793,25 @@ export abstract class TSASN1Base implements IASN1Transport {
 			resultValue = 500;
 
 		// Encode the ROSE message with the embedded result object
-		let encoded: object | asn1ts.Sequence | undefined;
+		let payload: object | asn1ts.Sequence | undefined;
 
 		const encodeContext = this.getEncodeContext();
 		if (!invokeContext.noROSEEnvelop) {
 			const errors = new ConverterErrors();
-			encoded = asn1Encode(invokeContext.encoding, message, ROSEMessage_Converter, errors, encodeContext);
-			if (!encoded) {
-				this.log(ELogSeverity.error, "Failed to encode result message", "receive", this, {
+			payload = asn1Encode(invokeContext.encoding, message, ROSEMessage_Converter, errors, encodeContext);
+			if (!payload) {
+				this.log(ELogSeverity.error, "Failed to encode result message", "handleResult", this, {
 					errors: errors.getDiagnostic(),
 				});
 				return;
 			}
-		}
-		else {
-			encoded = plainResponse as object | asn1ts.Sequence;
+		} else {
+			payload = plainResponse as object | asn1ts.Sequence;
 		}
 
-		const forTransport = ROSEBase.encodeToTransport(encoded, this.encodeContext);
-		this.logTransport(forTransport.logData, "receive", "out", invokeContext);
-
-		return { payLoad: forTransport.payLoad, httpStatusCode: resultValue };
+		const encodeResult = ROSEBase.encodeToTransport(payload, this.encodeContext);
+		this.logTransport(encodeResult.logData, "handleResult", "out", invokeContext);
+		return { payLoad: encodeResult.payLoad, httpStatusCode: resultValue };
 	}
 
 	/**
@@ -821,7 +836,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 					payLoad = ROSEBase.buf2hex(payLoad);
 			}
 
-			// Let´s log what we did receive
+			// Let's log what we did receive
 			const meta: ITransportMetaData = {
 				...this.additionalLogMetaForRawTransport,
 				clientConnectionID: invokeContext.clientConnectionID,
@@ -1087,12 +1102,10 @@ export abstract class TSASN1Base implements IASN1Transport {
 					InvokeProblemenum.unrecognisedOperation,
 					`There is no registered handler for operation ${invoke.operationName} (${invoke.operationID})`,
 				);
-			}
-			else {
+			} else {
 				return await handler.oninvokehandler.onInvoke(invoke, invokeContext, handler.requesthandler);
 			}
-		}
-		catch (error) {
+		} catch (error) {
 			// We want the debugger to catch that behaviour instantly -> so the developer can fix it right away
 			// !!! An exception should NEVER EVER reach this point !!!
 			// Handle all exceptions properly inside the oninvoke methods.
@@ -1107,8 +1120,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 					error,
 				);
 				return ROSEBase.createROSEError(this, this, invokeContext.encoding, invoke, error);
-			}
-			else {
+			} else {
 				this.log(
 					ELogSeverity.error,
 					"LAST possible treatment of an unhandled exception. This exception MUST be handled inside the called function, not here!",
@@ -1143,8 +1155,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 				operation.completed_result(result);
 			}
 			return undefined;
-		}
-		catch (error) {
+		} catch (error) {
 			this.log(ELogSeverity.error, "exception", "onROSEResult", this, result, error);
 			return createInvokeReject(
 				result.invokeID,
@@ -1171,8 +1182,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 				operation.completed_error(error);
 			}
 			return undefined;
-		}
-		catch (exception) {
+		} catch (exception) {
 			this.log(ELogSeverity.error, "exception", "onROSEError", this, error, exception);
 			return createInvokeReject(
 				0,
@@ -1201,8 +1211,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 				}
 			}
 			return undefined;
-		}
-		catch (error) {
+		} catch (error) {
 			this.log(ELogSeverity.error, "exception", "onROSEReject", this, reject, error);
 			return createInvokeReject(
 				0,

@@ -1,4 +1,4 @@
-﻿SNACC-ROSE {joint-iso-itu-t remote-operations(4) informationObjects(5) version1(0) }
+SNACC-ROSE {joint-iso-itu-t remote-operations(4) informationObjects(5) version1(0) }
 
 DEFINITIONS ::= BEGIN
 

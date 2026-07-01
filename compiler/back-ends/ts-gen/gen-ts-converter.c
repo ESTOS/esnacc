@@ -93,7 +93,7 @@ void Print_JSON_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	if (baseChoice == BASICTYPE_OCTETCONTAINING && pBase->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
 		baseChoice = BASICTYPE_UTF8_STR;
 
-	// Ist der Typ den wir iterieren eine basis Type?
+	// Is the type we are iterating over a base type?
 	if (IsSimpleType(baseChoice))
 	{
 		fprintf(src, "\t\tfor (const se of s) {\n");
@@ -103,8 +103,7 @@ void Print_JSON_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	}
 	else
 	{
-		fprintf(src, "\t\tfor (const id in s) {\n");
-		fprintf(src, "\t\t\tconst se = s[id];\n");
+		fprintf(src, "\t\tfor (const se of s) {\n");
 		fprintf(src, "\t\t\tif (se === undefined)\n");
 		fprintf(src, "\t\t\t\tcontinue;\n");
 		if (choice == BASICTYPE_IMPORTTYPEREF)
@@ -140,7 +139,7 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	// Unser Sequence Typ
 	enum BasicTypeChoiceId choice = seqOf->basicType->a.sequenceOf->basicType->choiceId;
 
-	// Basis Typ der Sequence
+	// Base type of the sequence
 	BasicType* pRootBasicType = GetRootType(seqOf, NULL)->basicType;
 	enum BasicTypeChoiceId rootChoiceId = pRootBasicType->choiceId;
 	if (rootChoiceId == BASICTYPE_OCTETCONTAINING && pRootBasicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
@@ -152,7 +151,7 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	if (baseChoice == BASICTYPE_OCTETCONTAINING && pBase->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
 		baseChoice = BASICTYPE_UTF8_STR;
 
-	// Ist der Typ den wir iterieren eine basis Type?
+	// Is the type we are iterating over a base type?
 	if (IsSimpleType(baseChoice))
 	{
 		fprintf(src, "\t\tfor (const se of s) {\n");
@@ -162,15 +161,15 @@ void Print_BER_EncoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, TypeD
 	}
 	else
 	{
-		fprintf(src, "\t\tfor (const id in s) {\n");
+		fprintf(src, "\t\tfor (const se of s) {\n");
 		if (choice == BASICTYPE_IMPORTTYPEREF)
 		{
 			Module* mod = GetImportModuleRefByClassName(szTypeName, mods, m);
 			const char* szNameSpace = GetNameSpace(mod);
-			fprintf(src, "\t\t\tconst val = %s_Converter.%s_Converter.toBER(s[id], errors, newContext, \"%s\");\n", szNameSpace, szTypeName, szTypeName);
+			fprintf(src, "\t\t\tconst val = %s_Converter.%s_Converter.toBER(se, errors, newContext, \"%s\");\n", szNameSpace, szTypeName, szTypeName);
 		}
 		else if (choice == BASICTYPE_LOCALTYPEREF)
-			fprintf(src, "\t\t\tconst val = %s_Converter.toBER(s[id], errors, newContext, \"%s\");\n", szTypeName, szTypeName);
+			fprintf(src, "\t\t\tconst val = %s_Converter.toBER(se, errors, newContext, \"%s\");\n", szTypeName, szTypeName);
 		else
 			snacc_exit("invalid choice %d", choice);
 		fprintf(src, "\t\t\tif (val)\n");
@@ -242,8 +241,7 @@ void Print_JSON_DecoderSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Type
 	}
 	else
 	{
-		fprintf(src, "%sfor (const id in s) {\n", szIdendt);
-		fprintf(src, "%s\tconst se = s[id];\n", szIdendt);
+		fprintf(src, "%sfor (const se of s) {\n", szIdendt);
 		fprintf(src, "%s\tif (se === undefined)\n", szIdendt);
 		fprintf(src, "%s\t\tcontinue;\n", szIdendt);
 		if (seqOf->basicType->a.sequenceOf->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
@@ -743,11 +741,18 @@ void Print_BER_EncoderValidateProperty(FILE* src, ModuleList* mods, Module* m, e
 	if (type != BASICTYPE_EXTENSION)
 	{
 		const bool bOptional = e->type->optional;
+		// const bool bImplicit = e->type->implicit;
+		int iOptionalID = -1;
+		if (bOptional)
+			iOptionalID = GetContextID(e->type);
+		// const bool bExplicit = bOptional && !bImplicit && iOptionalID >= 0;
+
 		const char* szOptional = bOptional ? ", true" : "";
+		// const char* szConstructed = bExplicit ? ", true" : "";
+
 		char szOptionalParam[128] = {0};
 		if (bOptional)
 		{
-			int iOptionalID = GetContextID(e->type);
 			if (iOptionalID >= 0)
 				sprintf_s(szOptionalParam, sizeof(szOptionalParam), ", %i", iOptionalID);
 			else
@@ -802,26 +807,50 @@ void Print_BER_EncoderValidateProperty(FILE* src, ModuleList* mods, Module* m, e
 void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enum BasicTypeChoiceId type, NamedType* e, const char* szIndent)
 {
 	const char* szFieldName = e->fieldName;
+	// The attribute is optional
 	const bool bOptional = e->type->optional ? true : false;
-	// const bool bImplicit = e->type->implicit ? true : false;
+	// Optional parameters may be encoded implicit (as type itself) or explizit where the object is itself encapsulated in a dedicated
+	const bool bImplicit = e->type->implicit ? true : false;
+	if (bImplicit && !bOptional)
+		fprintf(stderr, "Invalid combination? Non optional is implicitly defined '%s'\n", szFieldName);
 	char szOptional[128] = {0};
 	int iOptionalID = -1;
 	if (bOptional)
 	{
 		iOptionalID = GetContextID(e->type);
-		if (iOptionalID >= 0)
+		if (iOptionalID >= 0 && bImplicit)
 			sprintf_s(szOptional, sizeof(szOptional), ", idBlock: { optionalID: %i }", iOptionalID);
 	}
+	const bool bExplicit = bOptional && !bImplicit && iOptionalID > -1;
 
 	if (type != BASICTYPE_EXTENSION)
 	{
 		char* szAccessName = FixName(szFieldName);
 
 		if (type == BASICTYPE_IMPORTTYPEREF || type == BASICTYPE_LOCALTYPEREF)
-			fprintf(src, "%sif (_%s)\n\t", szIndent, szAccessName);
+		{
+			fprintf(src, "%sif (_%s)", szIndent, szAccessName);
+			if (bExplicit)
+				fprintf(src, " {");
+			fprintf(src, "\n");
+		}
 		else if (bOptional)
-			fprintf(src, "%sif (s.%s !== undefined)\n\t", szIndent, szAccessName);
-		fprintf(src, "%st.push(", szIndent);
+		{
+			fprintf(src, "%sif (s.%s !== undefined)", szIndent, szAccessName);
+			if (bExplicit)
+				fprintf(src, " {");
+			fprintf(src, "\n");
+		}
+
+		if (bExplicit)
+		{
+			fprintf(src, "%s\tconst cons = new asn1ts.Sequence(TSConverter.getASN1TSConstructorParams(undefined, %i))\n", szIndent, iOptionalID);
+			fprintf(src, "%s\tcons.valueBlock.value.push(", szIndent);
+		}
+		else if (bOptional)
+			fprintf(src, "%s\tt.push(", szIndent);
+		else
+			fprintf(src, "%st.push(", szIndent);
 
 		switch (type)
 		{
@@ -861,6 +890,12 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 		}
 
 		fprintf(src, ");\n");
+
+		if (bExplicit)
+		{
+			fprintf(src, "%s\tt.push(cons);\n", szIndent);
+			fprintf(src, "%s}\n", szIndent);
+		}
 
 		free(szAccessName);
 	}
@@ -1049,8 +1084,15 @@ void Print_BER_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTyp
 {
 	const char* szFieldName = type->fieldName;
 	const char* szClassName = type->type->cxxTypeRefInfo->className;
-	bool bOptional = type->type->optional ? true : false;
+	const bool bOptional = type->type->optional ? true : false;
+	const bool bImplicit = type->type->implicit ? true : false;
+	int iOptionalID = -1;
+	if (bOptional)
+		iOptionalID = GetContextID(type->type);
+	const bool bExplicit = bOptional && !bImplicit && iOptionalID >= 0;
+
 	const char* szOptional = bOptional ? ", true" : "";
+	const char* szConstructed = bExplicit ? ", true" : "";
 
 	char* szAccessName = FixName(szFieldName);
 
@@ -1066,7 +1108,7 @@ void Print_BER_DecoderNamedType(FILE* src, Module* m, ModuleList* mods, NamedTyp
 		case BASICTYPE_ASNSYSTEMTIME:
 		case BASICTYPE_ANY:
 		case BASICTYPE_NULL:
-			fprintf(src, "%sTSConverter.fillASN1Param(s, t, \"%s\", \"%s\", errors, newContext%s);\n", szIndent, szAccessName, GetBERType(choice), szOptional);
+			fprintf(src, "%sTSConverter.fillASN1Param(s, t, \"%s\", \"%s\", errors, newContext%s%s);\n", szIndent, szAccessName, GetBERType(choice), szOptional, szConstructed);
 			break;
 		case BASICTYPE_LOCALTYPEREF:
 		case BASICTYPE_IMPORTTYPEREF:
@@ -1274,6 +1316,33 @@ void Print_BER_EncoderCodeStructuredType(FILE* src, ModuleList* mods, Module* m,
 	}
 }
 
+bool HasElements(const TypeDef* td)
+{
+	enum BasicTypeChoiceId choice = td->type->basicType->choiceId;
+	switch (choice)
+	{
+		case BASICTYPE_SEQUENCEOF: /* list types */
+		case BASICTYPE_SETOF:
+			return true;
+			break;
+		case BASICTYPE_CHOICE:
+			return td->type->basicType->a.choice->count ? true : false;
+			break;
+		case BASICTYPE_SEQUENCE:
+			return td->type->basicType->a.sequence->count ? true : false;
+			break;
+		case BASICTYPE_IMPORTTYPEREF:
+			return true;
+			break;
+		case BASICTYPE_LOCALTYPEREF:
+			return true;
+			break;
+		default:
+			snacc_exit("unknown choice %d", choice);
+	}
+	return false;
+}
+
 // ********************************************************************************************************************************************
 // ********************************************************************************************************************************************
 // ********************************************************************************************************************************************
@@ -1347,9 +1416,9 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 	char* szConverted = FixName(td->definedName);
 
 	const char* szNameSpace = GetNameSpace(m);
-	// Simple Typen, also Typen die auf oberster Ebene nur einen anderen Namen bekomme haben
-	// Bspw: AsnSystemTime ::= REAL
-	// brauchen keinen Encoder Decoder
+	// Simple types, meaning types that only received a different name at the top level
+	// E.g.: AsnSystemTime ::= REAL
+	// do not need an encoder/decoder
 
 	enum BasicTypeChoiceId type = td->type->basicType->choiceId;
 	if (!IsSimpleType(type) && ResolveTypeReferencesToRoot(td->type, NULL)->basicType->choiceId != BASICTYPE_ENUMERATED)
@@ -1466,11 +1535,15 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			fprintf(src, "\t\t}\n\n");
 
 			if (td->type->basicType->choiceId == BASICTYPE_CHOICE)
-				fprintf(src, "\t\tlet t: asn1ts.BaseBlock | undefined;\n");
+			{
+				if (HasElements(td))
+					fprintf(src, "\t\tlet t: asn1ts.BaseBlock | undefined;\n");
+			}
 			else
 			{
 				fprintf(src, "\t\tconst result = new asn1ts.Sequence(TSConverter.getASN1TSConstructorParams(name, optional));\n");
-				fprintf(src, "\t\tconst t = result.valueBlock.value;\n");
+				if (HasElements(td))
+					fprintf(src, "\t\tconst t = result.valueBlock.value;\n");
 			}
 
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");

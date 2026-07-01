@@ -147,7 +147,7 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 
 	asnmembercomment comment;
 	bool bSucceeded = false;
-	if (style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP && !genUTF8Output)
 		bSucceeded = GetMemberComment_ASCII(m->moduleName, td->definedName, szElement, &comment) ? true : false;
 	else
 		bSucceeded = GetMemberComment_UTF8(m->moduleName, td->definedName, szElement, &comment) ? true : false;
@@ -211,7 +211,10 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 				if (comment.i64Added)
 				{
 					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
-					fprintf(src, "%s @added %s%s\n", szPrefix, szTime, szSuffix);
+					if (style == COMMENTSTYLE_TYPESCRIPT)
+						fprintf(src, "%s @since %s%s\n", szPrefix, szTime, szSuffix);
+					else
+						fprintf(src, "%s @added %s%s\n", szPrefix, szTime, szSuffix);
 					free(szTime);
 				}
 				if (comment.iPrivate)
@@ -236,7 +239,7 @@ void printModuleComment(FILE* src, const char* szModuleName, enum COMMENTSTYLE s
 
 	asnmodulecomment comment;
 	bool bSucceeded = false;
-	if (style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP && !genUTF8Output)
 		bSucceeded = GetModuleComment_ASCII(szModuleName, &comment) ? true : false;
 	else
 		bSucceeded = GetModuleComment_UTF8(szModuleName, &comment) ? true : false;
@@ -270,7 +273,10 @@ void printModuleComment(FILE* src, const char* szModuleName, enum COMMENTSTYLE s
 				if (comment.i64Added)
 				{
 					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
-					fprintf(src, " * @added %s\n", szTime);
+					if (style == COMMENTSTYLE_TYPESCRIPT)
+						fprintf(src, " * @since %s\n", szTime);
+					else
+						fprintf(src, " * @added %s\n", szTime);
 					free(szTime);
 				}
 				if (comment.iPrivate)
@@ -288,7 +294,7 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 
 	asnoperationcomment comment;
 	bool bSucceeded = false;
-	if (style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP && !genUTF8Output)
 		bSucceeded = GetOperationComment_ASCII(m->moduleName, szOperationName, &comment) ? true : false;
 	else
 		bSucceeded = GetOperationComment_UTF8(m->moduleName, szOperationName, &comment) ? true : false;
@@ -334,7 +340,10 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 				if (comment.i64Added)
 				{
 					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
-					fprintf(src, "%s @added %s\n", szPrefix, szTime);
+					if (style == COMMENTSTYLE_TYPESCRIPT)
+						fprintf(src, "%s @since %s\n", szPrefix, szTime);
+					else
+						fprintf(src, "%s @added %s\n", szPrefix, szTime);
 					free(szTime);
 				}
 				if (comment.iPrivate)
@@ -362,7 +371,7 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum CO
 
 	asnsequencecomment comment;
 	bool bSucceeded = false;
-	if (style == COMMENTSTYLE_CPP)
+	if (style == COMMENTSTYLE_CPP && !genUTF8Output)
 		bSucceeded = GetSequenceComment_ASCII(m->moduleName, td->definedName, &comment) ? true : false;
 	else
 		bSucceeded = GetSequenceComment_UTF8(m->moduleName, td->definedName, &comment) ? true : false;
@@ -405,7 +414,10 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum CO
 				if (comment.i64Added)
 				{
 					char* szTime = ConvertUnixTimeToReadable(comment.i64Added);
-					fprintf(src, "%s @added %s\n", szPrefix, szTime);
+					if (style == COMMENTSTYLE_TYPESCRIPT)
+						fprintf(src, "%s @since %s\n", szPrefix, szTime);
+					else
+						fprintf(src, "%s @added %s\n", szPrefix, szTime);
 					free(szTime);
 				}
 				if (comment.iPrivate)

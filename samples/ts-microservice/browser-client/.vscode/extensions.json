@@ -1,0 +1,7 @@
+{
+	"recommendations": [
+		"dprint.dprint",
+		"oxc.oxc-vscode",
+		"firefox-devtools.vscode-firefox-debug"
+	]
+}

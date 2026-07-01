@@ -57,7 +57,7 @@ const char* getAccessor(const AsnBool isPtr)
 int constraints_flag;
 long lconstraintvar = 0;
 
-int genCodeCPPPrintStdAfxInclude = 0;
+int genCodeCPPPrintPCHInclude = 0;
 
 long longJmpValG = -100;
 int printTypesG = 0;
@@ -312,7 +312,7 @@ void PrintInit(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 					fprintf(src, "#if TCL\n");
 					fprintf(src, "\t%s = new %s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
 					fprintf(src, "#else\n");
-					fprintf(src, "\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+					fprintf(src, "\t%s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 					fprintf(src, "#endif // TCL\n");
 #else
 					/* Default member initialization is a work in progress for eSNACC 1.6
@@ -370,7 +370,7 @@ void PrintInit(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 					else
 					{
 						if (e->type->optional)
-							fprintf(src, "\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+							fprintf(src, "\t%s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 						else
 							fprintf(src, "\t%s = new %s();\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
 					}
@@ -419,6 +419,8 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 			}
 			fprintf(src, "\t\t\tbreak;\n");
 		}
+		fprintf(src, "\t\tdefault:\n");
+		fprintf(src, "\t\t\tbreak;\n");
 		fprintf(src, "\t}\n");
 		fprintf(src, "\tchoiceId = notinitialized;\n");
 	}
@@ -436,7 +438,7 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 				fprintf(src, "\tif (%s)\n", e->type->cxxTypeRefInfo->fieldName);
 				fprintf(src, "\t{\n");
 				fprintf(src, "\t\tdelete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "\t\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t%s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 				fprintf(src, "\t}\n");
 			}
 			else if (!e->type->cxxTypeRefInfo->isPtr && ((tmpTypeId == BASICTYPE_CHOICE) || (tmpTypeId == BASICTYPE_SET) || (tmpTypeId == BASICTYPE_SEQUENCE)))
@@ -458,7 +460,7 @@ void PrintClear(FILE* hdr, FILE* src, Module* m, TypeDef* td, Type* t)
 			{
 				fprintf(src, "\tif(%s)\n", e->type->cxxTypeRefInfo->fieldName);
 				fprintf(src, "\t\tdelete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "\t\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t%s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 			}
 			else if (!e->type->cxxTypeRefInfo->isPtr && ((tmpTypeId == BASICTYPE_CHOICE) || (tmpTypeId == BASICTYPE_SET) || (tmpTypeId == BASICTYPE_SEQUENCE)))
 			{
@@ -713,6 +715,8 @@ static void PrintAssignmentOperator(FILE* hdr, FILE* src, Module* m, Type* t, Ty
 				fprintf(src, "\t\t\t\t\t%s = that.%s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->fieldName);
 			fprintf(src, "\t\t\t\t\tbreak;\n");
 		}
+		fprintf(src, "\t\t\t\tdefault:\n");
+		fprintf(src, "\t\t\t\t\tbreak;\n");
 		fprintf(src, "\t\t\t}\n");
 		fprintf(src, "\t\t}\n");
 	}
@@ -743,7 +747,7 @@ static void PrintAssignmentOperator(FILE* hdr, FILE* src, Module* m, Type* t, Ty
 					fprintf(src, "\t\telse if (%s)\n", e->type->cxxTypeRefInfo->fieldName);
 					fprintf(src, "\t\t{\n");
 					fprintf(src, "\t\t\tdelete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-					fprintf(src, "\t\t\t%s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+					fprintf(src, "\t\t\t%s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 					fprintf(src, "\t\t}\n");
 				}
 				else
@@ -1135,12 +1139,12 @@ static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd,
 
 			bCommentWasAdded = printOperationComment(hdr, mod, vd->definedName, COMMENTSTYLE_CPP);
 
-			// there is a result -> it is a Funktion
+			// there is a result -> it is a function
 			// Header
 			if (pszError)
-				fprintf(hdr, "\tvirtual InvokeResult OnInvoke_%s(%s* argument, %s* result, %s* error, SnaccInvokeContext* cxt) { return InvokeResult::returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
+				fprintf(hdr, "\tvirtual InvokeResult OnInvoke_%s(%s* argument, %s* result, %s* error, SnaccInvokeContext& ctx) { return InvokeResult::returnReject; }\n", vd->definedName, pszArgument, pszResult, pszError);
 			else
-				fprintf(hdr, "\tvirtual InvokeResult OnInvoke_%s(%s* argument, %s* result, SnaccInvokeContext* cxt) { return InvokeResult::returnReject; }\n", vd->definedName, pszArgument, pszResult);
+				fprintf(hdr, "\tvirtual InvokeResult OnInvoke_%s(%s* argument, %s* result, SnaccInvokeContext& ctx) { return InvokeResult::returnReject; }\n", vd->definedName, pszArgument, pszResult);
 		}
 		else if (!pszResult && bEvents)
 		{
@@ -1158,6 +1162,69 @@ static bool PrintROSEOnInvoke(FILE* hdr, int bEvents, Module* mod, ValueDef* vd,
 }
 
 /*
+ * Emit one ROSE operation handler in its own function so /analyze (C6262) does not
+ * treat every operation's locals as one giant OnInvoke stack frame.
+ */
+static void PrintROSEOnInvokeHandler(FILE* src, int bEvents, Module* mod, ValueDef* vd)
+{
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
+
+	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
+	{
+		if ((pszResult && !bEvents) || (!pszResult && bEvents))
+		{
+			const char* pszHandlerPrefix = bEvents ? "RoseEvent" : "RoseInvoke";
+
+			fprintf(src, "// [%s] OPID_%s\n", __FUNCTION__, vd->definedName);
+			fprintf(src, "static long %s_OPID_%s(SNACC::ROSEMessage* pMsg, SNACC::ROSEInvoke* pInvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData)\n", pszHandlerPrefix, vd->definedName, mod->ROSEClassName);
+			fprintf(src, "{\n");
+			fprintf(src, "\tlong lRoseResult = ROSE_NOERROR;\n");
+			fprintf(src, "\t%s argument;\n", pszArgument);
+			fprintf(src, "\tlRoseResult = pBase->DecodeInvoke(pMsg, &argument);\n");
+			fprintf(src, "\tif (lRoseResult == ROSE_NOERROR)\n");
+			const bool bIsDeprecated = IsDeprecatedFlaggedOperation(mod, vd->definedName);
+			const bool bIsMultiLine = bIsDeprecated || pszResult;
+			if (bIsMultiLine)
+				fprintf(src, "\t{\n");
+
+			if (bIsDeprecated)
+			{
+				fprintf(src, "\t\t// This method has been flagged deprecated\n");
+				asnoperationcomment comment;
+				GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment);
+				fprintf(src, "\t\tSNACCDeprecated::DeprecatedASN1Method(%lld, \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::in, ctx);\n", comment.i64Deprecated, mod->moduleName, vd->definedName);
+			}
+			if (pszResult)
+			{
+				fprintf(src, "\t\t%s result;\n", pszResult);
+				if (pszError)
+				{
+					fprintf(src, "\t\t%s error;\n", pszError);
+					fprintf(src, "\t\tauto invokeResult = pInt->OnInvoke_%s(&argument, &result, &error, ctx);\n", vd->definedName);
+					fprintf(src, "\t\tlRoseResult = pBase->HandleOnInvokeResult(invokeResult, pInvoke, ctx, strResponseData, &result, &error);\n");
+				}
+				else
+				{
+					fprintf(src, "\t\tauto invokeResult = pInt->OnInvoke_%s(&argument, &result, ctx);\n", vd->definedName);
+					fprintf(src, "\t\tlRoseResult = pBase->HandleOnInvokeResult(invokeResult, pInvoke, ctx, strResponseData, &result);\n");
+				}
+			}
+			else
+			{
+				fprintf(src, "\t\tpInt->OnEvent_%s(&argument);\n", vd->definedName);
+			}
+			if (bIsMultiLine)
+				fprintf(src, "\t}\n");
+
+			fprintf(src, "\treturn lRoseResult;\n");
+			fprintf(src, "}\n\n");
+		}
+	}
+} /* PrintROSEOnInvokeHandler */
+
+/*
  * prints PrintROSEOnInvokeswitchCase
  */
 static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, ValueDef* vd)
@@ -1168,61 +1235,12 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 
 	if (GetROSEDetails(mod, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
 	{
-		// there is an argument
 		if ((pszResult && !bEvents) || (!pszResult && bEvents))
 		{
-			fprintf(src, "\t\t// [%s]\n", __FUNCTION__);
+			const char* pszHandlerPrefix = bEvents ? "RoseEvent" : "RoseInvoke";
 
-			fprintf(src, "\t\tcase OPID_%s:\n", vd->definedName);
-			fprintf(src, "\t\t{\n");
-
-			fprintf(src, "\t\t\t%s argument;\n", pszArgument);
-			if (pszResult)
-				fprintf(src, "\t\t\t%s result;\n", pszResult);
-			if (pszError)
-				fprintf(src, "\t\t\t%s error;\n", pszError);
-
-			fprintf(src, "\n\t\t\tlRoseResult = pBase->DecodeInvoke(pMsg, &argument);\n");
-			fprintf(src, "\t\t\tif (lRoseResult != ROSE_NOERROR)\n");
-			fprintf(src, "\t\t\t\tbreak;\n\n");
-
-			if (IsDeprecatedFlaggedOperation(mod, vd->definedName))
-			{
-				fprintf(src, "\t\t\t// This method has been flagged deprecated\n");
-				asnoperationcomment comment;
-				GetOperationComment_UTF8(mod->moduleName, vd->definedName, &comment);
-				fprintf(src, "\t\t\tSNACCDeprecated::DeprecatedASN1Method(%lld, \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::in%s);\n\n", comment.i64Deprecated, mod->moduleName, vd->definedName, pszResult ? ", cxt" : "");
-			}
-
-			if (pszResult)
-			{
-				if (pszError)
-					fprintf(src, "\t\t\tswitch (pInt->OnInvoke_%s(&argument, &result, &error, cxt))\n", vd->definedName);
-				else
-					fprintf(src, "\t\t\tswitch (pInt->OnInvoke_%s(&argument, &result, cxt))\n", vd->definedName);
-				fprintf(src, "\t\t\t{\n");
-				fprintf(src, "\t\t\tcase InvokeResult::returnResult:\n");
-				fprintf(src, "\t\t\t\tlRoseResult = pBase->SendResult(pMsg->invoke, &result);\n");
-				fprintf(src, "\t\t\t\tbreak;\n");
-				fprintf(src, "\t\t\tcase InvokeResult::returnError:\n");
-				if (pszError)
-					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pMsg->invoke, &error);\n");
-				else
-					fprintf(src, "\t\t\t\tlRoseResult = pBase->SendError(pMsg->invoke, NULL);\n");
-
-				fprintf(src, "\t\t\t\tbreak;\n");
-				fprintf(src, "\t\t\tdefault:\n");
-				fprintf(src, "\t\t\t\tlRoseResult = cxt->lRejectResult ? cxt->lRejectResult : ROSE_REJECT_FUNCTIONMISSING;\n");
-				fprintf(src, "\t\t\t\tbreak;\n");
-				fprintf(src, "\t\t\t}\n");
-			}
-			else
-			{
-				fprintf(src, "\t\t\tpInt->OnEvent_%s(&argument);\n", vd->definedName);
-				fprintf(src, "\t\t\tlRoseResult = ROSE_NOERROR;\n");
-			}
-			fprintf(src, "\t\t}\n");
-			fprintf(src, "\t\tbreak;\n");
+			fprintf(src, "\tcase OPID_%s:\n", vd->definedName);
+			fprintf(src, "\t\treturn %s_OPID_%s(pMsg, pInvoke, pBase, pInt, ctx, strResponseData);\n", pszHandlerPrefix, vd->definedName);
 		}
 	}
 } /* PrintROSEOnInvokeswitchCase */
@@ -1234,7 +1252,7 @@ static void PrintAllForwardDeclarations(FILE* hdr, Module* m)
 	fprintf(hdr, "// ------------------------------------------------------------------------------\n");
 	fprintf(hdr, "// forward declarations:\n\n");
 
-	// Alle klassen printen
+	// Print all classes
 	// walk through all Type Definitions
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
@@ -1250,7 +1268,7 @@ static void PrintAllForwardDeclarations(FILE* hdr, Module* m)
 			}
 		}
 	}
-	// Alle typedefs printen
+	// Print all typedefs
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
 		if (IsDeprecatedNoOutputSequence(m, td->cxxTypeDefInfo->className))
@@ -1344,61 +1362,49 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 
 			bCommentWasAdded = printOperationComment(hdr, m, vd->definedName, COMMENTSTYLE_CPP);
 
-			// there is a result -> it is a Funktion
+			// there is a result -> it is a function
 			// Are there errors inside?
 			if (pszResult)
 			{
 				if (pszError)
 				{
-					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout = -1, SnaccInvokeContext* pCtx = 0);\n", vd->definedName, pszArgument, pszResult, pszError);
-					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout, SnaccInvokeContext* pCtx)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult, pszError);
+					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {});\n", vd->definedName, pszArgument, pszResult, pszError);
+					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout /*= -1*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult, pszError);
 				}
 				else
 				{
-					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, int iTimeout = -1, SnaccInvokeContext* pCtx = 0);\n", vd->definedName, pszArgument, pszResult);
-					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, int iTimeout, SnaccInvokeContext* pCtx)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult);
+					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {});\n", vd->definedName, pszArgument, pszResult);
+					fprintf(src, "// default parameters: iTimeout = -1, pCtx = {}\n");
+					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, int iTimeout /*= -1*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult);
 				}
 			}
 			else
 			{
-				fprintf(hdr, "\tlong Event_%s(%s* argument);\n", vd->definedName, pszArgument);
-				fprintf(src, "long %s::Event_%s(%s* argument)\n", m->ROSEClassName, vd->definedName, pszArgument);
+				fprintf(hdr, "\tlong Event_%s(%s* argument, std::shared_ptr<SnaccInvokeContext> pCtx = {});\n", vd->definedName, pszArgument);
+				fprintf(src, "// default parameters: pCtx = {}\n");
+				fprintf(src, "long %s::Event_%s(%s* argument, std::shared_ptr<SnaccInvokeContext> pCtx)\n", m->ROSEClassName, vd->definedName, pszArgument);
 			}
 
 			fprintf(src, "{\n");
-			fprintf(src, "\tROSEInvoke InvokeMsg;\n");
+			fprintf(src, "\tSnaccScopedInvokeMessage invokeMsg(");
 			if (pszResult)
-				fprintf(src, "\tInvokeMsg.invokeID = m_pSB->GetNextInvokeID();\n");
+				fprintf(src, "m_pSB->GetNextInvokeID(), OPID_%s, argument);\n", vd->definedName);
 			else
-				fprintf(src, "\tInvokeMsg.invokeID = 99999;\n");
-
-			fprintf(src, "\tInvokeMsg.operationID = OPID_%s;\n", vd->definedName);
-			fprintf(src, "\tInvokeMsg.argument = new AsnAny;\n");
-			fprintf(src, "\tInvokeMsg.argument->value = argument;\n\n");
-
-			if (pszResult)
-				fprintf(src, "\tROSEMessage* pResponseMsg = NULL;\n");
+				fprintf(src, "99999, OPID_%s, argument);\n", vd->definedName);
 
 			if (IsDeprecatedFlaggedOperation(m, vd->definedName))
 			{
+				fprintf(src, "\tpCtx = pCtx ? pCtx : m_pSB->CreateInvokeContext(SnaccInvokeContextInit(SnaccInvokeDirection::OUTBOUND, invokeMsg.GetPtr(), \"%s\"));\n", vd->definedName);
 				fprintf(src, "\t// This method has been flagged deprecated\n");
 				asnoperationcomment comment;
 				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
-				fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Method(%lld, \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out%s);\n\n", comment.i64Deprecated, m->moduleName, vd->definedName, pszResult ? ", pCtx" : "");
+				fprintf(src, "\tSNACCDeprecated::DeprecatedASN1Method(%lld, \"%s\", \"%s\", SNACCDeprecatedNotifyCallDirection::out, *pCtx);\n", comment.i64Deprecated, m->moduleName, vd->definedName);
 			}
 
 			if (pszResult)
-			{
-				fprintf(src, "\tlong lRoseResult = m_pSB->SendInvoke(&InvokeMsg, &pResponseMsg, \"%s\", iTimeout, pCtx);\n", vd->definedName);
-				fprintf(src, "\tlRoseResult = m_pSB->HandleInvokeResult(lRoseResult, pResponseMsg, result, %s, pCtx);\n", pszError ? "error" : "nullptr");
-			}
+				fprintf(src, "\treturn m_pSB->SendInvoke(invokeMsg.GetPtr(), result, %s, \"%s\", iTimeout, pCtx);\n", pszError ? "error" : "nullptr", vd->definedName);
 			else
-				fprintf(src, "\tlong lRoseResult = m_pSB->SendEvent(&InvokeMsg, \"%s\");\n", vd->definedName);
-
-			fprintf(src, "\n\t// prevent auto deletion of argument\n");
-			fprintf(src, "\tInvokeMsg.argument->value = nullptr;\n\n");
-
-			fprintf(src, "\treturn lRoseResult;\n");
+				fprintf(src, "\treturn m_pSB->SendEvent(invokeMsg.GetPtr(), \"%s\", pCtx);\n", vd->definedName);
 
 			fprintf(src, "}\n");
 			fprintf(src, "\n");
@@ -1865,7 +1871,7 @@ void PrintChoiceDefCodeBerEncodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 		/* encode tag (s) & len (s) */
 		PrintCxxTagAndLenEncodingCode(src, td, e->type, "l", "_b", "\t\t\t");
 
-		fprintf(src, "\t\tbreak;\n");
+		fprintf(src, "\t\t\tbreak;\n");
 	}
 	fprintf(src, "\t\tdefault:\n");
 	fprintf(src, "\t\t\tthrow EXCEPT(\"Choice is empty\", ENCODE_ERROR);\n");
@@ -2082,7 +2088,7 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 				fprintf(src, "\t\t\t\tBDecEoc (_b, bytesDecoded);\n");
 			}
 
-			fprintf(src, "\t\tbreak;\n");
+			fprintf(src, "\t\t\tbreak;\n");
 			FreeTags(tags);
 		}
 	}
@@ -2095,13 +2101,13 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 		fprintf(src, "\t\t\tchoiceId = extensionCid;\n");
 		fprintf(src, "\t\t\textAny.BDecContent(_b, tag, elmtLen0, bytesDecoded);\n");
 		fprintf(src, "\t\t\textension->extList.insert( extension->extList.end(), extAny );\n");
+		fprintf(src, "\t\t\tbreak;\n");
 	}
 	else
 	{
 		fprintf(src, "\t\t\tthrow InvalidTagException(typeName(), tag, STACK_ENTRY);\n");
 	}
 
-	fprintf(src, "\t\tbreak;\n");
 	fprintf(src, "\t}\n");
 	fprintf(src, "}\n\n");
 }
@@ -2206,13 +2212,11 @@ void PrintChoiceDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 	CxxTRI* cxxtri;
 	char* varName;
 
-	// void JEnc (SJson::Value &b) const;
-
-	fprintf(hdr, "\tvoid JEnc(SJson::Value& b) const override;\n");
-	fprintf(src, "void %s::JEnc(SJson::Value& b) const\n", td->cxxTypeDefInfo->className);
+	fprintf(hdr, "\tSJson::Value JEnc() const override;\n");
+	fprintf(src, "SJson::Value %s::JEnc() const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
 	/* print local vars */
-	fprintf(src, "\tb = SJson::Value(SJson::objectValue);\n");
+	fprintf(src, "\tauto b = SJson::Value(SJson::objectValue);\n");
 
 	/* print local vars */
 
@@ -2231,15 +2235,15 @@ void PrintChoiceDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 			varName = cxxtri->fieldName;
 
 			/* encode content */
-			fprintf(src, "\t\t\t%s", varName);
-			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
-			fprintf(src, "JEnc(b[\"%s\"]);\n", varName);
-			fprintf(src, "\t\tbreak;\n");
+			fprintf(src, "\t\t\tb[\"%s\"] = %s", varName, varName);
+			fprintf(src, "%sJEnc();\n", getAccessor(cxxtri->isPtr));
+			fprintf(src, "\t\t\tbreak;\n");
 		}
 	}
 	fprintf(src, "\t\tdefault:\n");
 	fprintf(src, "\t\t\tthrow EXCEPT(\"Choice is empty\", ENCODE_ERROR);\n");
 	fprintf(src, "\t}\n");
+	fprintf(src, "\treturn b;\n");
 	fprintf(src, "}\n\n");
 }
 
@@ -2605,26 +2609,28 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 
 		FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
 		{
-			fprintf(src, "\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
+			fprintf(src, "\t\tcase %s:\n", e->type->cxxTypeRefInfo->choiceIdSymbol);
 
 			/* value notation so print the choice elmts field name */
 			if (e->fieldName != NULL)
-				fprintf(src, "\t\tos << \"%s \";\n", e->fieldName);
+				fprintf(src, "\t\t\tos << \"%s \";\n", e->fieldName);
 
 			if (e->type->cxxTypeRefInfo->isPtr)
 			{
-				fprintf(src, "\t\tif (%s)\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "\t\t\t%s->Print(os, indent);\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "\t\telse\n");
-				fprintf(src, "\t\t\tos << \"<CHOICE value is missing>\\n\";\n");
+				fprintf(src, "\t\t\tif (%s)\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\t\t%s->Print(os, indent);\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\telse\n");
+				fprintf(src, "\t\t\t\tos << \"<CHOICE value is missing>\\n\";\n");
 			}
 			else
 			{
-				fprintf(src, "\t\t%s.Print(os, indent);\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "\t\t\t%s.Print(os, indent);\n", e->type->cxxTypeRefInfo->fieldName);
 			}
 
-			fprintf(src, "\t\tbreak;\n\n");
+			fprintf(src, "\t\t\tbreak;\n");
 		}
+		fprintf(src, "\t\tdefault:\n");
+		fprintf(src, "\t\t\tthrow EXCEPT(\"Choice is empty\", PARAMETER_ERROR);\n");
 		fprintf(src, "\t} // end of switch\n");
 
 		fprintf(src, "} // end of %s::Print()\n\n", td->cxxTypeDefInfo->className);
@@ -2662,20 +2668,19 @@ static void PrintCxxChoiceDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module
 				else
 					fprintf(src, ");\n");
 				fprintf(src, "\t\t\telse\n");
-				fprintf(src, "\t\t\t{\n");
 
 				if (e->fieldName != NULL)
 					fprintf(src, "\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->fieldName, e->fieldName);
 				else
 					fprintf(src, "\t\t\t\tos << \"<%s -- void3 -- /%s>\" << std::endl;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->fieldName);
-
-				fprintf(src, "\t\t\t}\n");
 			}
 			else
 				fprintf(src, "\t\t\t%s.PrintXML(os, \"%s\");\n", e->type->cxxTypeRefInfo->fieldName, e->fieldName);
 
-			fprintf(src, "\t\tbreak;\n\n");
+			fprintf(src, "\t\t\tbreak;\n");
 		}
+		fprintf(src, "\t\tdefault:\n");
+		fprintf(src, "\t\t\tthrow EXCEPT(\"Choice is empty\", PARAMETER_ERROR);\n");
 		fprintf(src, "\t} // end of switch\n");
 		fprintf(src, "\tif (lpszTitle)\n");
 		fprintf(src, "\t\tos << \"</\" << lpszTitle << \">\";\n");
@@ -3402,10 +3407,10 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
 
-	fprintf(hdr, "\tvoid JEnc(SJson::Value& b) const override;\n");
-	fprintf(src, "void %s::JEnc(SJson::Value& b) const\n", td->cxxTypeDefInfo->className);
+	fprintf(hdr, "\tSJson::Value JEnc() const override;\n");
+	fprintf(src, "SJson::Value %s::JEnc() const\n", td->cxxTypeDefInfo->className);
 	fprintf(src, "{\n");
-	fprintf(src, "\tb = SJson::Value(SJson::objectValue);\n");
+	fprintf(src, "\tauto b = SJson::Value(SJson::objectValue);\n");
 
 	NamedType* e;
 	FOR_EACH_LIST_ELMT(e, seq->basicType->a.sequence)
@@ -3477,12 +3482,11 @@ void PrintSeqDefCodeJsonEnc(FILE* src, FILE* hdr, Module* m, TypeDef* td, Type* 
 			const char* szIndent = e->type->optional || e->type->defaultVal != NULL ? "\t\t" : "\t";
 
 			/* encode content */
-			fprintf(src, "%s%s", szIndent, varName);
-			fprintf(src, "%s", getAccessor(cxxtri->isPtr));
-			fprintf(src, "JEnc(b[\"%s\"]);\n", varName);
+			fprintf(src, "%sb[\"%s\"] = %s", szIndent, varName, varName);
+			fprintf(src, "%sJEnc();\n", getAccessor(cxxtri->isPtr));
 		}
 	}
-
+	fprintf(src, "\treturn b;\n");
 	fprintf(src, "}\n\n");
 }
 
@@ -4027,7 +4031,7 @@ static void PrintCxxSetDefCode(FILE* src, FILE* hdr, ModuleList* mods, Module* m
 						mandatoryElmtCount++;
 						fprintf(src, "\t\t\tmandatoryElmtsDecoded++;\n");
 					}
-					fprintf(src, "\t\t\tbreak;\n\n");
+					fprintf(src, "\t\t\tbreak;\n");
 
 					FreeTags(tags);
 				}
@@ -4512,8 +4516,10 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	PrintHdrComment(hdr, m);
 	PrintHdrComment(hdrInterface, m);
 
-	if (genCodeCPPPrintStdAfxInclude)
-		fprintf(src, "#include \"stdafx.h\"\n");
+	if (genCodeCPPPrintPCHInclude == 2)
+		fprintf(src, "#include \"pch.h\"");
+	else if (genCodeCPPPrintPCHInclude)
+		fprintf(src, "#include \"stdafx.h\"");
 
 	PrintConditionalIncludeOpen(hdr, m->ROSEHdrFileName);
 	PrintConditionalIncludeOpen(hdrInterface, m->ROSEHdrInterfaceFileName);
@@ -4528,6 +4534,7 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	PrintSrcIncludes(src, mods, m);
 	fprintf(src, "#include \"%s\"\n", RemovePath(m->ROSEHdrFileName));
 	fprintf(src, "#include \"%s\"\n", RemovePath(m->ROSEHdrInterfaceFileName));
+	fprintf(src, "#include <utility>\n");
 	fprintf(src, "#include <%sSnaccROSEBase.h>\n", szCppHeaderIncludePath);
 	fprintf(src, "#include <%sSNACCROSE.h>\n", szCppHeaderIncludePath);
 	fprintf(src, "#include <%sSNACCDeprecated.h>\n", szCppHeaderIncludePath);
@@ -4600,15 +4607,27 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fflush(src);
 	fflush(hdr);
 
+	// Per-operation handlers (own stack frame each; avoids MSVC C6262 on OnInvoke).
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+			PrintROSEOnInvokeHandler(src, 0, m, vd);
+	}
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
+			PrintROSEOnInvokeHandler(src, 1, m, vd);
+	}
+
 	// generate the InvokeHandler
 	fprintf(hdr, "\t// The main Invoke Dispatcher\n");
-	fprintf(hdr, "\tstatic long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt);\n", m->ROSEClassName);
-	fprintf(src, "long %s::OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext* cxt)\n", m->ROSEClassName, m->ROSEClassName);
+	fprintf(hdr, "\tstatic long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData);\n", m->ROSEClassName);
+	fprintf(src, "long %s::OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData)\n", m->ROSEClassName, m->ROSEClassName);
 	fprintf(src, "{\n");
 	fprintf(src, "\tlong lRoseResult = ROSE_REJECT_UNKNOWNOPERATION;\n");
 	fprintf(src, "\n");
-	fprintf(src, "\t#ifndef ROSENOINVOKEDISPATCH\n");
-	fprintf(src, "\tswitch (pMsg->invoke->operationID)\n");
+	fprintf(src, "\tauto pInvoke = pMsg->invoke;\n");
+	fprintf(src, "\tswitch (pInvoke->operationID)\n");
 	fprintf(src, "\t{\n");
 
 	// Rose Interface class
@@ -4628,7 +4647,6 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	}
 
 	fprintf(src, "\t}\n");
-	fprintf(src, "\t#endif //#ifndef ROSENOINVOKEDISPATCH\n");
 	fprintf(src, "\treturn lRoseResult;\n");
 	fprintf(src, "}\n");
 	fprintf(src, "\n");
@@ -4762,7 +4780,9 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 		free(szNumericDate);
 	}
 
-	if (genCodeCPPPrintStdAfxInclude)
+	if (genCodeCPPPrintPCHInclude == 2)
+		fprintf(src, "#include \"pch.h\"\n");
+	else if (genCodeCPPPrintPCHInclude)
 		fprintf(src, "#include \"stdafx.h\"\n");
 
 #if META
@@ -5881,7 +5901,7 @@ void PrintCxxChoiceDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* choice
 	fprintf(src, "{\n");
 	fprintf(src, "  ChoiceIdEnum newCid = (ChoiceIdEnum)_desc.choicebyname (membername);\n");
 	fprintf(src, "  if (newCid == -1)\n");
-	fprintf(src, "    return NULL;\n");
+	fprintf(src, "    return nullptr;\n");
 	fprintf(src, "  if (newCid == choiceId)\n");
 	fprintf(src, "  {\n");
 	fprintf(src, "    switch (choiceId)\n");
@@ -5892,7 +5912,7 @@ void PrintCxxChoiceDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* choice
 		fprintf(src, "        return %s;\n", e->type->cxxTypeRefInfo->fieldName);
 	}
 	fprintf(src, "      default:\n");
-	fprintf(src, "        return NULL;\n");
+	fprintf(src, "        return nullptr;\n");
 	fprintf(src, "    }\n");
 	fprintf(src, "  }\n");
 	fprintf(src, "  else\n");
@@ -5905,16 +5925,16 @@ void PrintCxxChoiceDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* choice
 	{
 		fprintf(src, "//        case %sCid:\n", e->type->cxxTypeRefInfo->fieldName);
 		fprintf(src, "//          delete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-		fprintf(src, "//          %s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+		fprintf(src, "//          %s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 		fprintf(src, "//          break;\n");
 	}
 	fprintf(src, "//        default:\n");
-	fprintf(src, "//          return NULL;\n");
+	fprintf(src, "//          return nullptr;\n");
 	fprintf(src, "//      }\n");
 	e = FIRST_LIST_ELMT(choice->basicType->a.choice);
 	fprintf(src, "      // simply delete any member, the virtual function table takes care of the rest:\n");
 	fprintf(src, "      delete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-	fprintf(src, "      %s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+	fprintf(src, "      %s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 	fprintf(src, "      switch (choiceId = newCid)\n");
 	fprintf(src, "      {\n");
 	FOR_EACH_LIST_ELMT(e, choice->basicType->a.choice)
@@ -5923,11 +5943,11 @@ void PrintCxxChoiceDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* choice
 		fprintf(src, "          return %s = new %s;\n", e->type->cxxTypeRefInfo->fieldName, e->type->cxxTypeRefInfo->className);
 	}
 	fprintf(src, "        default: // internal error!\n");
-	fprintf(src, "          return NULL;\n");
+	fprintf(src, "          return nullptr;\n");
 	fprintf(src, "      }\n");
 	fprintf(src, "    }\n");
 	fprintf(src, "    else\n");
-	fprintf(src, "      return NULL;\n");
+	fprintf(src, "      return nullptr;\n");
 	fprintf(src, "  }\n");
 	fprintf(src, "}\n\n");
 
@@ -6066,7 +6086,7 @@ void PrintCxxSeqDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* seq, Modu
 		else
 			fprintf(src, "    return &%s;\n", e->type->cxxTypeRefInfo->fieldName);
 	}
-	fprintf(src, "  return NULL;\n");
+	fprintf(src, "  return nullptr;\n");
 	fprintf(src, "}\n\n");
 
 #if TCL
@@ -6220,7 +6240,7 @@ void PrintCxxSeqDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* seq, Modu
 				fprintf(src, "    if (!present)\n");
 				fprintf(src, "    {\n");
 				fprintf(src, "      delete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "      %s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "      %s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 				fprintf(src, "    }\n");
 				fprintf(src, "  }\n");
 			}
@@ -6245,7 +6265,7 @@ void PrintCxxSeqDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* seq, Modu
 			if (e->type->optional || e->type->defaultVal)
 			{
 				fprintf(src, "        delete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "        %s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "        %s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 			}
 			else
 			{
@@ -6328,7 +6348,7 @@ void PrintCxxSetDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* set, Modu
 		else
 			fprintf(src, "    return &%s;\n", e->type->cxxTypeRefInfo->fieldName);
 	}
-	fprintf(src, "  return NULL;\n");
+	fprintf(src, "  return nullptr;\n");
 	fprintf(src, "}\n\n");
 
 #if TCL
@@ -6482,7 +6502,7 @@ void PrintCxxSetDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* set, Modu
 				fprintf(src, "    if (!present)\n");
 				fprintf(src, "    {\n");
 				fprintf(src, "      delete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "      %s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "      %s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 				fprintf(src, "    }\n");
 				fprintf(src, "  }\n");
 			}
@@ -6507,7 +6527,7 @@ void PrintCxxSetDefCodeMeta_1(FILE* hdr, FILE* src, TypeDef* td, Type* set, Modu
 			if (e->type->optional || e->type->defaultVal)
 			{
 				fprintf(src, "      delete %s;\n", e->type->cxxTypeRefInfo->fieldName);
-				fprintf(src, "      %s = NULL;\n", e->type->cxxTypeRefInfo->fieldName);
+				fprintf(src, "      %s = nullptr;\n", e->type->cxxTypeRefInfo->fieldName);
 			}
 			else
 			{

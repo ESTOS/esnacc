@@ -2,12 +2,12 @@
 cmake_minimum_required(VERSION 3.20...4.1)
 project(esnacc_cmake) #  LANGUAGES CXX) - would interpret all files as C++
 
+include(CTest)
+
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") # GCC
-	# Ugly but i see no other option than specifying the compiler directly
-	# No matter what i do to tell cmake to use a newer standard than C89 itś
-    # always invoking the g89-gcc compiler which complains about -std=c99 -std=c11 etc as not supported
-    set(CMAKE_C_STANDARD 99)
-	set(CMAKE_C_COMPILER "/usr/bin/c99-gcc")
+	# On GNU toolchains we require C99 support for the C sources, but we must not
+	# replace CMAKE_C_COMPILER after project() because that breaks configure on CI.
+	set(CMAKE_C_STANDARD 99)
 else()
     set(CMAKE_C_STANDARD 11)
 endif()
@@ -78,4 +78,9 @@ add_subdirectory(cpp-lib)
 
 # compiler itself
 add_subdirectory(compiler)
+
+if(BUILD_TESTING)
+	add_subdirectory(cpp-lib/tests)
+	add_subdirectory(samples/ts-microservice)
+endif()
 
