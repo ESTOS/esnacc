@@ -219,7 +219,7 @@ public:
 
 	/* Send a Reject Message. */
 	long EncodeReject(SNACC::ROSEReject* preject, std::string& strResponse);
-	long SendRejectEx(SNACC::ROSEReject* preject);
+	long SendRejectEx(SNACC::ROSEReject* preject, SnaccInvokeContext& ctx);
 
 	/*
 	 * Encodes a reject as repsonse to an invoke
@@ -265,11 +265,11 @@ public:
 	/**
 	 * An invoke that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
-	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
+	 * pinvoke - the invoke payload (it is put into a ROSEMessage in the function)
 	 * result - decoded result payload in case a result response is received
 	 * error - decoded error payload in case an error response is received
 	 * szOperationName - the operationName (for logging purposes)
-	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don't care about the result))
+	 * iTimeout - the timeout in milliseconds (-1 uses default m_lMaxInvokeWait, 0 returns immediately without waiting for the result)
 	 * pCtx - contextual data for the invoke. The caller may keep another shared reference
 	 *        to inspect changes after the call.
 	 */

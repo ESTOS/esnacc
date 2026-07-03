@@ -212,7 +212,7 @@ public:
 	 * result - decoded result payload in case a result response is received
 	 * error - decoded error payload in case an error response is received
 	 * szOperationName - the operationName (for logging purposes)
-	 * iTimeout - the timeout (-1 is default m_lMaxInvokeWait, 0 return immediately (don't care about the result))
+	 * iTimeout - the timeout in milliseconds (-1 uses default m_lMaxInvokeWait, 0 returns immediately without waiting for the result)
 	 * pCtx - contextual data for the invoke. The caller may keep another shared reference
 	 *        to inspect changes after the call.
 	 */

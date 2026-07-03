@@ -1180,9 +1180,8 @@ static void PrintROSEOnInvokeHandler(FILE* src, int bEvents, Module* mod, ValueD
 			fprintf(src, "// [%s] OPID_%s\n", __FUNCTION__, vd->definedName);
 			fprintf(src, "static long %s_OPID_%s(SNACC::ROSEMessage* pMsg, SNACC::ROSEInvoke* pInvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData)\n", pszHandlerPrefix, vd->definedName, mod->ROSEClassName);
 			fprintf(src, "{\n");
-			fprintf(src, "\tlong lRoseResult = ROSE_NOERROR;\n");
 			fprintf(src, "\t%s argument;\n", pszArgument);
-			fprintf(src, "\tlRoseResult = pBase->DecodeInvoke(pMsg, &argument);\n");
+			fprintf(src, "\tlong lRoseResult = pBase->DecodeInvoke(pMsg, &argument);\n");
 			fprintf(src, "\tif (lRoseResult == ROSE_NOERROR)\n");
 			const bool bIsDeprecated = IsDeprecatedFlaggedOperation(mod, vd->definedName);
 			const bool bIsMultiLine = bIsDeprecated || pszResult;
@@ -4624,8 +4623,6 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(hdr, "\tstatic long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData);\n", m->ROSEClassName);
 	fprintf(src, "long %s::OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData)\n", m->ROSEClassName, m->ROSEClassName);
 	fprintf(src, "{\n");
-	fprintf(src, "\tlong lRoseResult = ROSE_REJECT_UNKNOWNOPERATION;\n");
-	fprintf(src, "\n");
 	fprintf(src, "\tauto pInvoke = pMsg->invoke;\n");
 	fprintf(src, "\tswitch (pInvoke->operationID)\n");
 	fprintf(src, "\t{\n");
@@ -4646,8 +4643,9 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 			PrintROSEOnInvokeswitchCase(src, 1, m, vd);
 	}
 
+	fprintf(src, "\tdefault:\n");
+	fprintf(src, "\t\treturn ROSE_REJECT_UNKNOWNOPERATION;\n");
 	fprintf(src, "\t}\n");
-	fprintf(src, "\treturn lRoseResult;\n");
 	fprintf(src, "}\n");
 	fprintf(src, "\n");
 
