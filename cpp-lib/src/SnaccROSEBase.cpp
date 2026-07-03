@@ -279,8 +279,7 @@ void SnaccROSEPendingOperation::FinalizeTelemetry(long lFinalRoseResult, std::sh
 
 	if (m_pAnswerMessage && lFinalRoseResult != m_lRoseResult)
 	{
-		m_pTelemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, GetOutboundUnhandledStageFromResult(lFinalRoseResult), GetUnhandledReasonFromResult(lFinalRoseResult),
-			lFinalRoseResult, m_stResponseData, std::move(pctx));
+		m_pTelemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, GetOutboundUnhandledStageFromResult(lFinalRoseResult), GetUnhandledReasonFromResult(lFinalRoseResult), lFinalRoseResult, m_stResponseData, std::move(pctx));
 		return;
 	}
 
@@ -540,7 +539,8 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 									reject.invokedID.invokednull = new AsnNull;
 								}
 
-								const long lRejectResult = SendRejectEx(&reject);
+								auto pRejectCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::INBOUND, pInvoke, szOperationName));
+								const long lRejectResult = SendRejectEx(&reject, *pRejectCtx);
 								if (lRejectResult == ROSE_NOERROR)
 								{
 									outcome = SnaccTelemetryData::Outcome::REJECT;
@@ -619,7 +619,8 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 									*reject.reject->invokeProblem = InvokeProblem::mistypedArgument;
 									reject.details = UTF8String::CreateNewFromASCII(strError.c_str());
 
-									const long lRejectResult = SendRejectEx(&reject);
+									auto pRejectCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::INBOUND, pInvoke, szOperationName));
+									const long lRejectResult = SendRejectEx(&reject, *pRejectCtx);
 									if (lRejectResult == ROSE_NOERROR)
 									{
 										outcome = SnaccTelemetryData::Outcome::REJECT;
@@ -843,7 +844,8 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long ulSize,
 									reject.invokedID.invokednull = new AsnNull;
 								}
 
-								const long lRejectResult = SendRejectEx(&reject);
+								auto pRejectCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::INBOUND, pInvoke, szOperationName));
+								const long lRejectResult = SendRejectEx(&reject, *pRejectCtx);
 								if (lRejectResult == ROSE_NOERROR)
 								{
 									outcome = SnaccTelemetryData::Outcome::REJECT;
@@ -919,7 +921,8 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long ulSize,
 									*reject.reject->invokeProblem = InvokeProblem::mistypedArgument;
 									reject.details = UTF8String::CreateNewFromASCII(strError.c_str());
 
-									const long lRejectResult = SendRejectEx(&reject);
+									auto pRejectCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::INBOUND, pInvoke, szOperationName));
+									const long lRejectResult = SendRejectEx(&reject, *pRejectCtx);
 									if (lRejectResult == ROSE_NOERROR)
 									{
 										outcome = SnaccTelemetryData::Outcome::REJECT;
@@ -957,7 +960,8 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long ulSize,
 						reject.details = UTF8String::CreateNewFromASCII(strError.c_str());
 						auto outcome = SnaccTelemetryData::Outcome::UNHANDLED;
 						long lTelemetryResult = ROSE_RE_DECODE_FAILED;
-						const long lRejectResult = SendRejectEx(&reject);
+						auto pRejectCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::INBOUND, nullptr, nullptr));
+						const long lRejectResult = SendRejectEx(&reject, *pRejectCtx);
 						if (lRejectResult == ROSE_NOERROR)
 						{
 							outcome = SnaccTelemetryData::Outcome::REJECT;
@@ -1125,16 +1129,14 @@ long SnaccROSEBase::EncodeReject(SNACC::ROSEReject* preject, std::string& strRes
 	return lRoseResult;
 }
 
-long SnaccROSEBase::SendRejectEx(SNACC::ROSEReject* preject)
+long SnaccROSEBase::SendRejectEx(SNACC::ROSEReject* preject, SnaccInvokeContext& ctx)
 {
 	std::string strResponse;
 	auto lResult = EncodeReject(preject, strResponse);
 	if (lResult)
 		return lResult;
 
-	auto ctx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::OUTBOUND, nullptr));
-
-	return SendBinaryDataBlockEx(strResponse.c_str(), strResponse.length(), *ctx);
+	return SendBinaryDataBlockEx(strResponse.c_str(), strResponse.length(), ctx);
 }
 
 long SnaccROSEBase::GetJsonLengthPrefix(std::string_view strJson, std::string& strLenghtPrefix) const
@@ -1233,7 +1235,7 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEMessage* pMessage, unsigned long 
 	const char* szOperationName = SnaccRoseOperationLookup::LookUpName(pInvoke->operationID);
 
 	SnaccInvokeContextInit init(SnaccInvokeDirection::INBOUND, pInvoke, szOperationName);
-	auto pCtx = SnaccInvokeContext::Create(init);
+	auto pCtx = CreateInvokeContext(init);
 	auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::INBOUND, pInvoke->operationID, szOperationName, ulMessageSize);
 	auto telemetryResult = SnaccTelemetryData::Outcome::UNHANDLED;
 	auto telemetryReason = SnaccTelemetryData::Reason::UNKNOWN_FAILURE;
@@ -1416,7 +1418,7 @@ long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperatio
 	if (!pCtx)
 	{
 		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pinvoke, szResolvedOperationName ? szResolvedOperationName : szOperationName);
-		pCtx = SnaccInvokeContext::Create(init);
+		pCtx = CreateInvokeContext(init);
 	}
 	auto& ctx = *pCtx;
 	size_t stRequestData = 0;
@@ -1521,7 +1523,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::AsnType* resul
 	if (!pCtx)
 	{
 		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pinvoke, szResolvedOperationName ? szResolvedOperationName : szOperationName);
-		pCtx = SnaccInvokeContext::Create(init);
+		pCtx = CreateInvokeContext(init);
 	}
 	auto& ctx = *pCtx;
 
