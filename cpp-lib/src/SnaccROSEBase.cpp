@@ -1233,7 +1233,7 @@ void SnaccROSEBase::OnInvokeMessage(SNACC::ROSEMessage* pMessage, unsigned long 
 	const char* szOperationName = SnaccRoseOperationLookup::LookUpName(pInvoke->operationID);
 
 	SnaccInvokeContextInit init(SnaccInvokeDirection::INBOUND, pInvoke, szOperationName);
-	auto pCtx = SnaccInvokeContext::Create(init);
+	auto pCtx = CreateInvokeContext(init);
 	auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::INBOUND, pInvoke->operationID, szOperationName, ulMessageSize);
 	auto telemetryResult = SnaccTelemetryData::Outcome::UNHANDLED;
 	auto telemetryReason = SnaccTelemetryData::Reason::UNKNOWN_FAILURE;
@@ -1416,7 +1416,7 @@ long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperatio
 	if (!pCtx)
 	{
 		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pinvoke, szResolvedOperationName ? szResolvedOperationName : szOperationName);
-		pCtx = SnaccInvokeContext::Create(init);
+		pCtx = CreateInvokeContext(init);
 	}
 	auto& ctx = *pCtx;
 	size_t stRequestData = 0;
@@ -1521,7 +1521,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::AsnType* resul
 	if (!pCtx)
 	{
 		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pinvoke, szResolvedOperationName ? szResolvedOperationName : szOperationName);
-		pCtx = SnaccInvokeContext::Create(init);
+		pCtx = CreateInvokeContext(init);
 	}
 	auto& ctx = *pCtx;
 
