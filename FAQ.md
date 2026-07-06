@@ -1,3 +1,21 @@
+---
+title: estos-esnacc FAQ
+scope: estos-esnacc
+owner_repo: esnacc
+entry_for:
+  - ASN.1 compiler background
+  - supported target languages
+  - licensing questions
+purpose: Answer common questions about the enhanced ASN.1 compiler, supported targets, and licensing.
+read_when:
+  - Investigating compiler capabilities or project background
+  - Updating generated target language or licensing documentation
+related_docs:
+  - AGENTS.md
+  - ReadMe.md
+  - samples/readme.md
+---
+
 Frequently Asked Questions
 ==========================
 
@@ -30,16 +48,29 @@ A: estos eSNACC is the estos enhanced Sample Neufeld ASN.1 C Compiler.  It is a 
 	* Structure definitions
 	* JSON and BER encoder/decoders
 	* ROSE client/server implementation (complete stubs)
+  * C
+	* Structure definitions
+	* BER encoder/decoders
+  * C#
+	* Structure definitions
   * Delphi
 	* Structure definitions
   * JAVA
 	* Structure definitions
+  * Kotlin
+	* Structure definitions
   * JavaScript JSON
+	* Structure definitions
+  * JavaScript ES6
 	* Structure definitions
   * SWIFT
 	* Structure definitions
+  * IDL
+	* Interface definitions
   * JSDOC
 	* JSON formatted Documentation generated based on the documentation inside the asn1 files
+  * OpenApi
+	* OpenApi JSON documentation generated based on documentation inside the ASN.1 files
 
 ### Q: What versions of ASN.1 does the estos eSNACC interoperate with?
 
@@ -50,8 +81,8 @@ A: The estos eSNACC can support most of X.608/X.609 for Basic Encoding Rules.  S
    
 ### Q: Which programming languages does the estos eSNACC target?
 
-A: Currently, the estos eSNACC mainly targets C++ and typescript but other languages are also supported.
-   Check the compiler back-ends directory for the currently adresses languages.
+A: Currently, the estos eSNACC mainly targets C++ and Typescript but other languages are also supported.
+   Check the compiler back-ends directory for the currently addressed languages.
    However the different languages may not support the full featureset like the c++ and typescript implementation.
 
 

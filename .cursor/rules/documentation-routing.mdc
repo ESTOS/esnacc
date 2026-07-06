@@ -1,0 +1,17 @@
+---
+description: Use esnacc documentation routing metadata before broad code search
+alwaysApply: true
+---
+
+# Documentation routing
+
+Before investigating this repository, read [AGENTS.md](AGENTS.md) at the repository root.
+
+When a markdown file has YAML front matter with `read_when`, `entry_for`, or `related_docs`:
+
+1. Search routed docs first: `rg -l "^read_when:" --glob "*.md"`
+2. Open docs whose `read_when` or `entry_for` matches the task.
+3. Follow `related_docs` links before exploring unrelated directories.
+4. Use `scope` to stay inside the correct subsystem (`compiler/`, `cpp-lib/`, `samples/`, etc.).
+
+For compiler or codegen work, confirm the target language under `compiler/back-ends/` and check `samples/` for exercised behavior. TypeScript and C++ are the primary maintained targets.

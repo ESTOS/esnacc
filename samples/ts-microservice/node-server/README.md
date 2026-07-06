@@ -1,3 +1,20 @@
+---
+title: TypeScript Node Server Sample
+scope: samples/ts-microservice/node-server
+owner_repo: esnacc
+entry_for:
+  - TypeScript ROSE server sample
+  - Express REST and WebSocket handlers
+  - generated server stub usage
+purpose: Document the Node server package used by the TypeScript microservice sample.
+read_when:
+  - Updating node-server handlers, configuration, generated stubs, or integration-test behavior
+related_docs:
+  - ../../../AGENTS.md
+  - ../readme.md
+  - ../../readme.md
+---
+
 # estos NodeJS server sample (`node-server`)
 
 [TOC]
