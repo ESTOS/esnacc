@@ -11,6 +11,7 @@ read_when:
   - Running or updating esnacc samples
   - Changing TypeScript sample package layout or integration-test flow
 related_docs:
+  - ../AGENTS.md
   - ../ReadMe.md
   - ts-microservice/readme.md
 ---

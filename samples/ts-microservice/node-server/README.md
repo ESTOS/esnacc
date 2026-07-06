@@ -10,6 +10,7 @@ purpose: Document the Node server package used by the TypeScript microservice sa
 read_when:
   - Updating node-server handlers, configuration, generated stubs, or integration-test behavior
 related_docs:
+  - ../../../AGENTS.md
   - ../readme.md
   - ../../readme.md
 ---

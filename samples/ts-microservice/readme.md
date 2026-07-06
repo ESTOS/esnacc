@@ -11,6 +11,7 @@ read_when:
   - Updating TypeScript code generation samples
   - Running node-server, node-client, browser-client, or OpenAPI examples
 related_docs:
+  - ../../AGENTS.md
   - ../readme.md
   - node-server/README.md
 ---

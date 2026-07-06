@@ -11,6 +11,7 @@ read_when:
   - Investigating compiler capabilities or project background
   - Updating generated target language or licensing documentation
 related_docs:
+  - AGENTS.md
   - ReadMe.md
   - samples/readme.md
 ---

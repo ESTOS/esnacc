@@ -11,6 +11,7 @@ read_when:
   - Changing cpp-lib runtime behavior, telemetry, shutdown, or decode-error handling
   - Adding or reviewing runtime correctness tests
 related_docs:
+  - ../../AGENTS.md
   - ../../ReadMe.md
 ---
 
