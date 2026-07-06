@@ -2039,8 +2039,6 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 			}
 
 			varName = cxxtri->fieldName;
-			/* set choice id for to this elment */
-			fprintf(src, "\t\t\t%s = %s;\n", r->choiceIdFieldName, cxxtri->choiceIdSymbol);
 
 			/* alloc elmt if nec */
 			if (cxxtri->isPtr)
@@ -2079,6 +2077,8 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "B%s(_b, tag, elmtLen%d, bytesDecoded);\n", r->decodeContentBaseName, elmtLevel);
 			}
+			/* set choice id only after the arm decoded successfully */
+			fprintf(src, "\t\t\t%s = %s;\n", r->choiceIdFieldName, cxxtri->choiceIdSymbol);
 
 			/* decode Eoc (s) */
 			for (i = elmtLevel - 1; i >= 0; i--)
@@ -2096,10 +2096,10 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 	if (extensionsExist)
 	{
 		fprintf(src, "\t\t\tAsnAny extAny;\n");
-		fprintf(src, "\t\t\textension = new AsnExtension;\n");
-		fprintf(src, "\t\t\tchoiceId = extensionCid;\n");
 		fprintf(src, "\t\t\textAny.BDecContent(_b, tag, elmtLen0, bytesDecoded);\n");
+		fprintf(src, "\t\t\textension = new AsnExtension;\n");
 		fprintf(src, "\t\t\textension->extList.insert( extension->extList.end(), extAny );\n");
+		fprintf(src, "\t\t\t%s = extensionCid;\n", r->choiceIdFieldName);
 		fprintf(src, "\t\t\tbreak;\n");
 	}
 	else
@@ -2279,16 +2279,19 @@ void PrintChoiceDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 				fprintf(src, "\telse if (b.isMember(\"%s\"))\n", varName);
 			fprintf(src, "\t{\n");
 
-			fprintf(src, "\t\t%s = %s;\n", r->choiceIdFieldName, cxxtri->choiceIdSymbol);
 			if (cxxtri->isPtr)
 			{
 				fprintf(src, "\t\tdelete %s;\n", varName);
 				fprintf(src, "\t\t%s = new %s;\n", varName, cxxtri->className);
 				fprintf(src, "\t\tif (!%s->JDec(b[\"%s\"]))\n", varName, varName);
+				fprintf(src, "\t\t\tthrow InvalidTagException(typeName(), \"decode failed: %s\", STACK_ENTRY);\n", varName);
 			}
 			else
+			{
 				fprintf(src, "\t\tif (!%s.JDec(b[\"%s\"]))\n", varName, varName);
-			fprintf(src, "\t\t\tthrow InvalidTagException(typeName(), \"decode failed: %s\", STACK_ENTRY);\n", varName);
+				fprintf(src, "\t\t\tthrow InvalidTagException(typeName(), \"decode failed: %s\", STACK_ENTRY);\n", varName);
+			}
+			fprintf(src, "\t\t%s = %s;\n", r->choiceIdFieldName, cxxtri->choiceIdSymbol);
 
 			fprintf(src, "\t}\n");
 		}
