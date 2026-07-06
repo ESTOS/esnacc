@@ -1,0 +1,53 @@
+---
+description: Tests specify public API behavior — never tune tests or product code to go green
+alwaysApply: true
+---
+
+# Tests Define the Public API
+
+**Hard constraint for the snacc ecosystem (compiler, runtimes, generated stubs, samples).**
+
+Tests document the **expected behavior** of the public API. They are the specification callers and integrators may rely on — not a mirror of whatever the code happens to do today.
+
+## Non-negotiable rules
+
+1. **Write tests to specify the API.** The goal is a precise, reviewable contract for public behavior (encoders, decoders, ROSE runtime, generated handlers, etc.) — not merely a green test count.
+
+2. **NEVER tune test code** to make the suite pass. Do not weaken, delete, skip, or rewrite assertions because the current implementation fails. Do not change expected return codes, context identity, telemetry shape, or error semantics to match existing behavior.
+
+3. **NEVER tune production or library code** (compiler, `cpp-lib/`, `c-lib/`, generators, runtimes) merely to make tests pass. Do not add shortcuts, bypasses, test-only branches, or special cases whose purpose is to turn a failing spec test green without implementing the specified behavior.
+
+4. **NEVER tune both sides** in the same change to "meet in the middle."
+
+5. **When writing tests, do not change test or product code** beyond adding the new test files and neutral test infrastructure (fixtures, CMake wiring) that does not alter what is asserted.
+
+6. **Only exception:** the user **explicitly asks** to tune test code, tune product code, or revise the spec. Until then, leave failing tests failing and report what failed and why.
+
+7. **Test-first workflow:** when asked to add tests before fixes, write the **full** scenario matrix (happy + failure paths), run it, and **stop**. Do not fix product code in the same task unless the user asks for that phase.
+
+8. **Harness and fakes are for observation only.** Test support (`cpp-lib/tests/test_support/`, mocks, loopback transports) may record state and drive scenarios. It must **not** bypass the API under test or smuggle in behavior the real runtime would not satisfy.
+
+9. **If the spec is unclear, ask.** Do not guess by aligning test and code. Document locked-in semantics in `cpp-lib/tests/runtime_correctness_notes.md`.
+
+## When a spec test fails (default behavior)
+
+- **Report** the failure and which spec assertion is unmet.
+- **Do not** change the test or product code unless the user explicitly requests it.
+- Neutral test infrastructure (fixtures, capture helpers) is allowed if it does not change what is asserted.
+
+## Forbidden unless the user explicitly asks
+
+- Weakening or removing assertions
+- Changing expected values to match current output
+- Harness workarounds that fake green results
+- Production hacks (`if (testing)`, alternate code paths for tests)
+- `DISABLED` / skipped tests without user approval
+
+## Primary paths
+
+- C++ runtime tests: `cpp-lib/tests/`
+- Semantics notes: `cpp-lib/tests/runtime_correctness_notes.md`
+- ROSE runtime: `cpp-lib/src/SnaccROSEBase.cpp`
+- TypeScript samples: `samples/ts-microservice/`
+
+**The test specifies what the public API must do. Neither tests nor product code are tuned to go green unless the user specially asks.**
