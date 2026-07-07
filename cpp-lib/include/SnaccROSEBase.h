@@ -33,6 +33,7 @@ namespace SNACC
 	class InvokeProblem;
 	class ROSEAuthRequest;
 	class ROSEAuthResult;
+	class SnaccException;
 } // namespace SNACC
 
 /*! The SnapcROSEPendingOperation class is used to implement the function calls.
@@ -364,6 +365,35 @@ private:
 	virtual void OnErrorMessage(SNACC::ROSEError& error, unsigned long lMessageSize);
 	/*! Telemetry hook for inbound reject; borrows arm of owned message. */
 	virtual void OnRejectMessage(SNACC::ROSEReject& reject, unsigned long lMessageSize);
+
+	// Snapshot of inbound invoke metadata taken immediately after a successful
+	// ROSE envelope decode.
+	struct InboundInvokeRejectContext
+	{
+		long m_invokeId = 0;
+		unsigned int m_uiOperationID = 0;
+		std::string m_strOperationName;
+
+		static std::optional<InboundInvokeRejectContext> TryFrom(const SNACC::ROSEMessage& message);
+		bool CanSendReject() const;
+		const char* OperationNameCStr() const;
+	};
+
+	struct InboundDecodeFailureResult
+	{
+		unsigned int uiOperationID = 0;
+		const char* szOperationName = nullptr;
+		SnaccTelemetryData::Outcome outcome = SnaccTelemetryData::Outcome::UNHANDLED;
+		long lTelemetryResult = ROSE_RE_DECODE_FAILED;
+	};
+
+	void EmitInboundDecodeFailureTelemetry(unsigned long ulMessageSize, unsigned int uiOperationID, const char* szOperationName, SnaccTelemetryData::Outcome outcome, long lTelemetryResult);
+	void EmitInboundGenericDecodeFailureTelemetry(unsigned long ulMessageSize);
+	InboundDecodeFailureResult HandleInboundRoseDecodeFailure(const std::optional<InboundInvokeRejectContext>& rejectCtx, bool bSendReject, const std::string& strRejectDetails);
+	void HandleInboundEnvelopeSnaccDecodeFailure(SNACC::TransportEncoding transportEncoding, SNACC::TransportEncoding hookEncoding, const char* lpBytes, unsigned long ulMessageSize, bool& bLogTransportData, const SNACC::SnaccException& ex, const std::optional<InboundInvokeRejectContext>& rejectCtx, bool bSendReject, bool bRejectDetailsFromPrettyJson, const char* szMethod);
+	void HandleInboundJsonParseDecodeFailure(SNACC::TransportEncoding transportEncoding, const char* lpBytes, unsigned long ulMessageSize, bool& bLogTransportData, const std::string& parseError, const char* szMethod);
+	void HandleInboundUnknownEncodingDecodeFailure(const char* lpBytes, unsigned long ulMessageSize, bool& bLogTransportData);
+	void HandleInboundOuterDecodeFailure(unsigned long ulMessageSize, const char* szException, const char* szMethod, std::optional<int> errorCode = std::nullopt);
 
 	// The central process wide telemetry callback
 	static inline SnaccTelemetryCallback* m_pTelemetryCallback{};
