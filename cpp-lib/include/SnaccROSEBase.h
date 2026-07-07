@@ -218,8 +218,8 @@ public:
 	virtual long EncodeResult(unsigned int uiInvokeID, const SNACC::AsnType* pResult, std::string& strResponse, const wchar_t* szSessionID = nullptr) override;
 
 	/* Send a Reject Message. */
-	long EncodeReject(SNACC::ROSEReject* preject, std::string& strResponse);
-	long SendRejectEx(SNACC::ROSEReject* preject, SnaccInvokeContext& ctx);
+	long EncodeReject(SNACC::ROSEReject* pReject, std::string& strResponse);
+	long SendRejectEx(SNACC::ROSEReject* pReject, SnaccInvokeContext& ctx);
 
 	/*
 	 * Encodes a reject as repsonse to an invoke
@@ -265,15 +265,15 @@ public:
 	/**
 	 * An invoke that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
-	 * pinvoke - the invoke payload (it is put into a ROSEMessage in the function)
-	 * result - decoded result payload in case a result response is received
-	 * error - decoded error payload in case an error response is received
+	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
+	 * pResult - decoded result payload in case a result response is received
+	 * pError - decoded error payload in case an error response is received
 	 * szOperationName - the operationName (for logging purposes)
 	 * iTimeout - the timeout in milliseconds (-1 uses default m_lMaxInvokeWait, 0 returns immediately without waiting for the result)
 	 * pCtx - contextual data for the invoke. The caller may keep another shared reference
 	 *        to inspect changes after the call.
 	 */
-	virtual long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::AsnType* result, SNACC::AsnType* error, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
+	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
 
 	/**
 	 * Encodes the result or error from an OnInvoke request. Retrieves the result or error from the response
@@ -293,20 +293,20 @@ public:
 	 *
 	 * lRoseResult - the current ROSE result code
 	 * responseMsg - owned pending-op response; read-only for callers and overrides
-	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
-	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
+	 * pResult - the result object (Base type pointer, the caller of the invoke provides the proper type)
+	 * pError - the error object (Base type pointer, the caller of the invoke provides the proper type)
 	 * ctx - contextual data for the invoke
 	 */
-	virtual long HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage& responseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext& ctx) override;
+	virtual long HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage& responseMsg, SNACC::AsnType* pResult, SNACC::AsnType* pError, SnaccInvokeContext& ctx) override;
 
 	/**
 	 * An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
-	 * pinvoke - the invoke payload (it is put into a ROSEMessage in the function)
+	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
 	 * pCtx - contextual data for the invoke. The caller may keep another shared reference
 	 *        to inspect changes after the call.
 	 */
-	virtual long SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
+	virtual long SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
 
 	/**
 	 * Creates the invoke context for inbound and outbound invoke lifecycles.
@@ -317,9 +317,9 @@ public:
 	 * Decodes an invoke argument and optionally logs the full message (BER JSON).
 	 *
 	 * invokeMessage - inbound invoke ROSEMessage; borrow only for decode/logging
-	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
+	 * pArgument - the argument object (Base type pointer, the caller of the provides the proper type)
 	 */
-	long DecodeInvoke(const SNACC::ROSEMessage& invokeMessage, SNACC::AsnType* argument) override;
+	long DecodeInvoke(const SNACC::ROSEMessage& invokeMessage, SNACC::AsnType* pArgument) override;
 
 protected:
 	// Get the length prefix for a given strJson payload

@@ -222,13 +222,13 @@ std::shared_ptr<SnaccInvokeContext> SnaccInvokeContext::Clone() const
 	return std::shared_ptr<SnaccInvokeContext>(new SnaccInvokeContext(*this));
 }
 
-SnaccScopedInvokeMessage::SnaccScopedInvokeMessage(long invokeID, unsigned int uiOperationID, SNACC::AsnType* argument)
+SnaccScopedInvokeMessage::SnaccScopedInvokeMessage(long invokeID, unsigned int uiOperationID, SNACC::AsnType* pArgument)
 	: m_pInvoke(new SNACC::ROSEInvoke())
 {
 	m_pInvoke->invokeID = invokeID;
 	m_pInvoke->operationID = uiOperationID;
 	m_pInvoke->argument = new AsnAny;
-	m_pInvoke->argument->value = argument;
+	m_pInvoke->argument->value = pArgument;
 }
 
 SnaccScopedInvokeMessage::~SnaccScopedInvokeMessage()
@@ -1155,12 +1155,12 @@ bool SnaccROSEBase::OnROSEMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, 
 	return bProcessed;
 }
 
-long SnaccROSEBase::EncodeReject(SNACC::ROSEReject* preject, std::string& strResponse)
+long SnaccROSEBase::EncodeReject(SNACC::ROSEReject* pReject, std::string& strResponse)
 {
 	long lRoseResult = ROSE_NOERROR;
 
 	ROSEMessage rejectMsg;
-	const RoseEncodeRejectBorrow rejectBorrow(rejectMsg, *preject);
+	const RoseEncodeRejectBorrow rejectBorrow(rejectMsg, *pReject);
 
 	// encode now.
 	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
@@ -1204,10 +1204,10 @@ long SnaccROSEBase::EncodeReject(SNACC::ROSEReject* preject, std::string& strRes
 	return lRoseResult;
 }
 
-long SnaccROSEBase::SendRejectEx(SNACC::ROSEReject* preject, SnaccInvokeContext& ctx)
+long SnaccROSEBase::SendRejectEx(SNACC::ROSEReject* pReject, SnaccInvokeContext& ctx)
 {
 	std::string strResponse;
-	auto lResult = EncodeReject(preject, strResponse);
+	auto lResult = EncodeReject(pReject, strResponse);
 	if (lResult)
 		return lResult;
 
@@ -1480,19 +1480,19 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 	return lRoseResult;
 }
 
-long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
+long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	const auto chronoCreated = std::chrono::steady_clock::now();
-	const char* szResolvedOperationName = SnaccRoseOperationLookup::LookUpName(pinvoke->operationID);
+	const char* szResolvedOperationName = SnaccRoseOperationLookup::LookUpName(pInvoke->operationID);
 	if (!pCtx)
 	{
-		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pinvoke, szResolvedOperationName ? szResolvedOperationName : szOperationName);
+		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pInvoke, szResolvedOperationName ? szResolvedOperationName : szOperationName);
 		pCtx = CreateInvokeContext(init);
 	}
 	auto& ctx = *pCtx;
 	size_t stRequestData = 0;
-	const long lRoseResult = IsProcessingAllowed() ? Send(pinvoke, szOperationName, ctx, &stRequestData) : ROSE_TE_SHUTDOWN;
-	auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pinvoke->operationID, szResolvedOperationName, stRequestData, chronoCreated);
+	const long lRoseResult = IsProcessingAllowed() ? Send(pInvoke, szOperationName, ctx, &stRequestData) : ROSE_TE_SHUTDOWN;
+	auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, stRequestData, chronoCreated);
 	telemetry->finalize(lRoseResult == ROSE_NOERROR ? SnaccTelemetryData::Outcome::EVENT : SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, lRoseResult == ROSE_NOERROR ? SnaccTelemetryData::Reason::LOCAL_EVENT : GetUnhandledReasonFromResult(lRoseResult), lRoseResult, std::nullopt, pCtx);
 	OnInvokeProcessed(telemetry);
 	return lRoseResult;
@@ -1583,32 +1583,32 @@ bool SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 	return bTransportDataWasLogged;
 }
 
-long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::AsnType* result, SNACC::AsnType* error, const char* szOperationName /*= nullptr*/, int iTimeout /*= -1*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
+long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, int iTimeout /*= -1*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	const auto chronoCreated = std::chrono::steady_clock::now();
-	const char* szResolvedOperationName = SnaccRoseOperationLookup::LookUpName(pinvoke->operationID);
+	const char* szResolvedOperationName = SnaccRoseOperationLookup::LookUpName(pInvoke->operationID);
 
 	// Ensure that we always have a ctx
 	if (!pCtx)
 	{
-		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pinvoke, szResolvedOperationName ? szResolvedOperationName : szOperationName);
+		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pInvoke, szResolvedOperationName ? szResolvedOperationName : szOperationName);
 		pCtx = CreateInvokeContext(init);
 	}
 	auto& ctx = *pCtx;
 
 	if (!IsProcessingAllowed())
 	{
-		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pinvoke->operationID, szResolvedOperationName, 0, chronoCreated);
+		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
 		telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::SHUTDOWN, ROSE_TE_SHUTDOWN, std::nullopt, std::move(pCtx));
 		OnInvokeProcessed(telemetry);
 		return ROSE_TE_SHUTDOWN;
 	}
 
-	auto& pendingOP = AddPendingOperation(pinvoke->invokeID, pinvoke->operationID, szResolvedOperationName);
+	auto& pendingOP = AddPendingOperation(pInvoke->invokeID, pInvoke->operationID, szResolvedOperationName);
 
 	size_t stRequestData = 0;
-	long lRoseResult = Send(pinvoke, szOperationName, ctx, &stRequestData);
-	pendingOP.m_pTelemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pinvoke->operationID, szResolvedOperationName, stRequestData, chronoCreated);
+	long lRoseResult = Send(pInvoke, szOperationName, ctx, &stRequestData);
+	pendingOP.m_pTelemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, stRequestData, chronoCreated);
 
 	if (lRoseResult == 0)
 	{
@@ -1643,7 +1643,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::AsnType* resul
 		pendingOP.m_lRoseResult = lRoseResult;
 
 	if (pendingOP.m_pAnswerMessage)
-		lRoseResult = HandleInvokeResult(lRoseResult, *pendingOP.m_pAnswerMessage, result, error, ctx);
+		lRoseResult = HandleInvokeResult(lRoseResult, *pendingOP.m_pAnswerMessage, pResult, pError, ctx);
 
 	pendingOP.FinalizeTelemetry(lRoseResult, pCtx);
 	OnInvokeProcessed(pendingOP.m_pTelemetry);
@@ -1800,26 +1800,26 @@ SNACC::TransportEncoding SnaccROSEBase::GetTransportEncoding() const
 	return m_eTransportEncoding;
 }
 
-long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage& responseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext& ctx)
+long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage& responseMsg, SNACC::AsnType* pResult, SNACC::AsnType* pError, SnaccInvokeContext& ctx)
 {
 	// In case of transport errors, we hand that value back as we have no response to parse
 	if (ISROSE_TE(lRoseResult))
 		return lRoseResult;
 
-	SNACC::ROSEError* pError = nullptr;
-	SNACC::ROSEResult* pResult = nullptr;
-	lRoseResult = DecodeResponse(responseMsg, pResult, pError, ctx);
+	SNACC::ROSEError* pRoseError = nullptr;
+	SNACC::ROSEResult* pRoseResult = nullptr;
+	lRoseResult = DecodeResponse(responseMsg, pRoseResult, pRoseError, ctx);
 
 	if (lRoseResult == ROSE_NOERROR)
 	{
-		if (pResult && pResult->result && result)
+		if (pRoseResult && pRoseResult->result && pResult)
 		{
 			AsnLen len;
 			try
 			{
-				if (pResult->result->result.anyBuf)
+				if (pRoseResult->result->result.anyBuf)
 				{
-					result->BDec(*pResult->result->result.anyBuf, len);
+					pResult->BDec(*pRoseResult->result->result.anyBuf, len);
 					// Special to log the *full* ROSE Message in json
 					// While for JSON Transport we can simply decode the full message on BER we need to decode the envelop and the payload
 					//
@@ -1838,7 +1838,7 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessag
 
 						// Set the decoded result object into the response to be able to fully log the whole message
 						logMsg.result->result = new ROSEResultSeq();
-						logMsg.result->result->result.value = result;
+						logMsg.result->result->result.value = pResult;
 						LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, nullptr, 0, &logMsg, nullptr);
 						// As we hand back the result object to the outer world (function argument) we need to set it to NULL to prevent deletion if we discard the inserted object
 						logMsg.result->result->result.value = NULL;
@@ -1848,9 +1848,9 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessag
 						logMsg.result->result = pOriginalResponse;
 					}
 				}
-				else if (pResult->result->result.jsonBuf)
+				else if (pRoseResult->result->result.jsonBuf)
 				{
-					if (!result->JDec(*pResult->result->result.jsonBuf))
+					if (!pResult->JDec(*pRoseResult->result->result.jsonBuf))
 						lRoseResult = ROSE_RE_DECODE_FAILED;
 					// No logging here as the full object has already been logged in OnBinaryDataBlock
 				}
@@ -1870,14 +1870,14 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessag
 	}
 	else if (lRoseResult == ROSE_ERROR_VALUE)
 	{
-		if (pError && pError->error && error)
+		if (pRoseError && pRoseError->error && pError)
 		{
 			AsnLen len;
 			try
 			{
-				if (pError->error->anyBuf)
+				if (pRoseError->error->anyBuf)
 				{
-					error->BDec(*pError->error->anyBuf, len);
+					pError->BDec(*pRoseError->error->anyBuf, len);
 					// Special to log the *full* ROSE Message in json
 					// While for JSON Transport we can simply decode the full message on BER we need to decode the envelop and the payload
 					//
@@ -1896,7 +1896,7 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessag
 
 						// Set the decoded error object into the response to be able to fully log the whole message
 						logMsg.error->error = new AsnAny();
-						logMsg.error->error->value = error;
+						logMsg.error->error->value = pError;
 						LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, nullptr, 0, &logMsg, nullptr);
 						// As we hand back the error object to the outer world (function argument) we need to set it to NULL to prevent deletion if we discard the inserted object
 						logMsg.error->error->value = NULL;
@@ -1906,9 +1906,9 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessag
 						logMsg.error->error = pOriginalError;
 					}
 				}
-				else if (pError->error->jsonBuf)
+				else if (pRoseError->error->jsonBuf)
 				{
-					if (!error->JDec(*pError->error->jsonBuf))
+					if (!pError->JDec(*pRoseError->error->jsonBuf))
 						lRoseResult = ROSE_RE_DECODE_FAILED;
 					// No logging here as the full object has already been logged in OnBinaryDataBlock
 				}
@@ -1951,12 +1951,12 @@ long SnaccROSEBase::HandleOnInvokeResult(SNACC::InvokeResult invokeResult, const
 	}
 }
 
-long SnaccROSEBase::DecodeInvoke(const SNACC::ROSEMessage& invokeMessage, SNACC::AsnType* argument)
+long SnaccROSEBase::DecodeInvoke(const SNACC::ROSEMessage& invokeMessage, SNACC::AsnType* pArgument)
 {
 	auto& invoke = *invokeMessage.invoke;
 	if (!invoke.argument)
 	{
-		if (argument->mayBeEmpty())
+		if (pArgument->mayBeEmpty())
 			return ROSE_NOERROR;
 		else
 			return ROSE_REJECT_ARGUMENT_MISSING;
@@ -1969,7 +1969,7 @@ long SnaccROSEBase::DecodeInvoke(const SNACC::ROSEMessage& invokeMessage, SNACC:
 		if (invoke.argument->anyBuf)
 		{
 			AsnLen len = 0;
-			argument->BDec(*invoke.argument->anyBuf, len);
+			pArgument->BDec(*invoke.argument->anyBuf, len);
 			// Special to log the *full* ROSE Message in json
 			// While for JSON Transport we can simply decode the full message on BER we need to decode the envelop and the payload
 			//
@@ -1989,7 +1989,7 @@ long SnaccROSEBase::DecodeInvoke(const SNACC::ROSEMessage& invokeMessage, SNACC:
 
 				// Set the decoded result object into the response to be able to fully log the whole message
 				logInvoke.argument = new AsnAny();
-				logInvoke.argument->value = argument;
+				logInvoke.argument->value = pArgument;
 
 				// Get the name of the called operation for logging
 				std::string strOperationName;
@@ -2012,7 +2012,7 @@ long SnaccROSEBase::DecodeInvoke(const SNACC::ROSEMessage& invokeMessage, SNACC:
 		}
 		else if (invoke.argument->jsonBuf)
 		{
-			argument->JDec(*invoke.argument->jsonBuf);
+			pArgument->JDec(*invoke.argument->jsonBuf);
 			// No logging here as the full object has already been logged in OnBinaryDataBlock
 		}
 		else

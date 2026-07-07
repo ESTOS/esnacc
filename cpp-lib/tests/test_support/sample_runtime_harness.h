@@ -541,17 +541,17 @@ public:
 	}
 
 	// Attaches the endpoint session id before the base runtime encodes an invoke.
-	long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::AsnType* result, SNACC::AsnType* error, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
+	long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
 	{
-		AttachSessionId(pinvoke);
-		return SnaccROSEBase::SendInvoke(pinvoke, result, error, szOperationName, iTimeout, std::move(pCtx));
+		AttachSessionId(pInvoke);
+		return SnaccROSEBase::SendInvoke(pInvoke, pResult, pError, szOperationName, iTimeout, std::move(pCtx));
 	}
 
 	// Attaches the endpoint session id before the base runtime encodes an event.
-	long SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
+	long SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
 	{
-		AttachSessionId(pinvoke);
-		return SnaccROSEBase::SendEvent(pinvoke, szOperationName, std::move(pCtx));
+		AttachSessionId(pInvoke);
+		return SnaccROSEBase::SendEvent(pInvoke, szOperationName, std::move(pCtx));
 	}
 
 	// Ensures outbound result payloads inherit the session id of this connection.
