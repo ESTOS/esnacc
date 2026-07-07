@@ -222,10 +222,10 @@ public:
 	 * Handles the response payload of the SendInvoke method. Retrieves the result or error from the response
 	 *
 	 * lRoseResult - the result of the SendInvoke method
-	 * pResponseMsg - the response message as provided by the SendInvoke method
+	 * responseMsg - owned pending-op response; may be mutated for BER JSON logging
 	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
 	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
-	 * pCtx - contextual data for the invoke
+	 * ctx - contextual data for the invoke
 	 */
 	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage& responseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext& ctx) = 0;
 
@@ -233,7 +233,7 @@ public:
 	 * Encodes the result or error from an OnInvoke request. Retrieves the result or error from the response
 	 *
 	 * invokeResult - the result of the OnInvoke method
-	 * pInvoke - the original invoke
+	 * invoke - the original inbound invoke envelope (borrowed from owned ROSEMessage)
 	 * ctx - contextual data for the invoke
 	 * strResponse - the encoded result to put it on the transport
 	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
@@ -244,7 +244,7 @@ public:
 	/**
 	 * Decodes an invoke and properly handles logging for it
 	 *
-	 * pInvokeMessage - the invoke message as provided from the other side
+	 * invokeMessage - inbound invoke ROSEMessage; borrow only for decode/logging
 	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
 	 */
 	virtual long DecodeInvoke(SNACC::ROSEMessage& invokeMessage, SNACC::AsnType* argument) = 0;

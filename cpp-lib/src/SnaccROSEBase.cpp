@@ -26,13 +26,21 @@ namespace
 		return "";
 	}
 
+	// Snapshot of inbound invoke metadata taken immediately after a successful
+	// ROSE envelope decode. Decode catch blocks must not read ROSEMessage after
+	// std::move into dispatch; this struct drives targeted mistypedArgument rejects
+	// and decode-failure telemetry instead.
 	class InboundInvokeRejectContext
 	{
 	public:
+		// Invoke ID from the decoded envelope (99999 = event, no reject).
 		AsnIntType m_invokeId = 0;
+		// Registered operation id for telemetry and reject encoding.
 		unsigned int m_uiOperationID = 0;
+		// Copied lookup name; stable storage for reject/telemetry strings.
 		std::string m_strOperationName;
 
+		// Returns a snapshot when message is a decoded invoke; nullopt otherwise.
 		static std::optional<InboundInvokeRejectContext> TryFrom(const SNACC::ROSEMessage& message)
 		{
 			if (message.choiceId != ROSEMessage::invokeCid || !message.invoke)
@@ -58,6 +66,8 @@ namespace
 		}
 	};
 
+	// Telemetry and optional reject outcome produced by inbound decode failure
+	// handling. Filled by HandleInboundRoseDecodeFailure for OnInvokeProcessed.
 	struct InboundDecodeFailureResult
 	{
 		unsigned int uiOperationID = 0;
@@ -66,6 +76,9 @@ namespace
 		long lTelemetryResult = ROSE_RE_DECODE_FAILED;
 	};
 
+	// Shared inbound decode-failure path for OnBinaryDataBlock and
+	// OnBinaryDataBlockResult. Optionally sends mistypedArgument when rejectCtx
+	// is present; response entry point passes bSendReject=false.
 	InboundDecodeFailureResult HandleInboundRoseDecodeFailure(
 		SnaccROSEBase& rose,
 		const std::optional<InboundInvokeRejectContext>& rejectCtx,
@@ -109,6 +122,182 @@ namespace
 			result.lTelemetryResult = lRejectResult;
 		return result;
 	}
+
+	// Binds a stack-owned ROSEReject into a ROSEMessage for EncodeReject without
+	// transferring ownership. Detaches in ~dtor so ~ROSEMessage never deletes the
+	// caller's reject (including on encode exceptions).
+	class RoseEncodeRejectBorrow final
+	{
+	public:
+		RoseEncodeRejectBorrow(SNACC::ROSEMessage& message, SNACC::ROSEReject& reject)
+		{
+			message.choiceId = ROSEMessage::rejectCid;
+			message.reject = &reject;
+			m_pMessage = &message;
+		}
+
+		~RoseEncodeRejectBorrow() noexcept
+		{
+			if (m_pMessage)
+				m_pMessage->reject = nullptr;
+		}
+
+		RoseEncodeRejectBorrow(const RoseEncodeRejectBorrow&) = delete;
+		RoseEncodeRejectBorrow& operator=(const RoseEncodeRejectBorrow&) = delete;
+
+	private:
+		// ROSEMessage whose reject arm we borrow into for encoding.
+		SNACC::ROSEMessage* m_pMessage = nullptr;
+	};
+
+	// Builds a stack ROSEResult inside a ROSEMessage for outbound EncodeResult.
+	// Owns encode-side allocations; borrows caller AsnType payload. Detach in
+	// ~dtor prevents ~ROSEMessage from deleting stack envelopes or caller values.
+	class RoseEncodeResultEnvelope final
+	{
+	public:
+		RoseEncodeResultEnvelope(unsigned int uiInvokeID, SNACC::AsnType* pResult, const wchar_t* szSessionID)
+		{
+			m_result.invokeID = uiInvokeID;
+			m_result.result = new ROSEResultSeq;
+			m_result.result->resultValue = 0;
+			m_result.result->result.value = pResult;
+			if (szSessionID)
+				m_result.sessionID = new UTF8String(szSessionID);
+			m_message.choiceId = ROSEMessage::resultCid;
+			m_message.result = &m_result;
+		}
+
+		~RoseEncodeResultEnvelope() noexcept
+		{
+			detach();
+		}
+
+		SNACC::ROSEMessage& message() noexcept
+		{
+			return m_message;
+		}
+
+		RoseEncodeResultEnvelope(const RoseEncodeResultEnvelope&) = delete;
+		RoseEncodeResultEnvelope& operator=(const RoseEncodeResultEnvelope&) = delete;
+
+	private:
+		void detach() noexcept
+		{
+			if (m_message.result == &m_result)
+				m_message.result = nullptr;
+			if (m_result.result)
+				m_result.result->result.value = nullptr;
+		}
+
+		// Stack envelope; owns ROSEResultSeq and optional sessionID.
+		SNACC::ROSEResult m_result;
+		// Encode view; borrows m_result until detach().
+		SNACC::ROSEMessage m_message;
+	};
+
+	// Builds a stack ROSEError inside a ROSEMessage for outbound EncodeError.
+	// Owns encode-side allocations (AsnAny wrapper, optional sessionID); borrows
+	// caller AsnType payload. Detach in ~dtor prevents ~ROSEMessage from deleting
+	// stack envelopes or caller values (including on encode exceptions).
+	class RoseEncodeErrorEnvelope final
+	{
+	public:
+		RoseEncodeErrorEnvelope(unsigned int uiInvokeID, SNACC::AsnType* pError, const wchar_t* szSessionID)
+		{
+			m_error.invokedID = uiInvokeID;
+			m_error.error_value = 0;
+			m_error.error = new AsnAny();
+			m_error.error->value = pError;
+			if (szSessionID)
+				m_error.sessionID = new UTF8String(szSessionID);
+			m_message.choiceId = ROSEMessage::errorCid;
+			m_message.error = &m_error;
+		}
+
+		~RoseEncodeErrorEnvelope() noexcept
+		{
+			detach();
+		}
+
+		SNACC::ROSEMessage& message() noexcept
+		{
+			return m_message;
+		}
+
+		RoseEncodeErrorEnvelope(const RoseEncodeErrorEnvelope&) = delete;
+		RoseEncodeErrorEnvelope& operator=(const RoseEncodeErrorEnvelope&) = delete;
+
+	private:
+		void detach() noexcept
+		{
+			if (m_message.error == &m_error)
+				m_message.error = nullptr;
+			if (m_error.error)
+				m_error.error->value = nullptr;
+		}
+
+		// Stack envelope; owns AsnAny wrapper and optional sessionID.
+		SNACC::ROSEError m_error;
+		// Encode view; borrows m_error until detach().
+		SNACC::ROSEMessage m_message;
+	};
+
+	// Binds caller-owned ROSEInvoke into a stack ROSEMessage for Send encoding.
+	// Detaches invoke pointer in ~dtor so ~ROSEMessage does not delete pInvoke.
+	class ScopedEncodeInvokeBorrow final
+	{
+	public:
+		ScopedEncodeInvokeBorrow(SNACC::ROSEMessage& message, SNACC::ROSEInvoke& invoke)
+			: m_message(message)
+		{
+			m_message.choiceId = ROSEMessage::invokeCid;
+			m_message.invoke = &invoke;
+		}
+
+		~ScopedEncodeInvokeBorrow() noexcept
+		{
+			m_message.invoke = nullptr;
+		}
+
+		ScopedEncodeInvokeBorrow(const ScopedEncodeInvokeBorrow&) = delete;
+		ScopedEncodeInvokeBorrow& operator=(const ScopedEncodeInvokeBorrow&) = delete;
+
+	private:
+		// Outbound invoke ROSEMessage being encoded.
+		SNACC::ROSEMessage& m_message;
+	};
+
+	// JSON Send requires operationName on the invoke; adds a temporary name only
+	// for encoding when the caller did not set one, and removes it on scope exit.
+	class ScopedInvokeOperationName final
+	{
+	public:
+		ScopedInvokeOperationName(SNACC::ROSEInvoke& invoke, const char* szOperationName)
+		{
+			if (!invoke.operationName && szOperationName)
+			{
+				m_pInvoke = &invoke;
+				invoke.operationName = UTF8String::CreateNewFromASCII(szOperationName);
+			}
+		}
+
+		~ScopedInvokeOperationName() noexcept
+		{
+			if (m_pInvoke && m_pInvoke->operationName)
+			{
+				delete m_pInvoke->operationName;
+				m_pInvoke->operationName = nullptr;
+			}
+		}
+
+		ScopedInvokeOperationName(const ScopedInvokeOperationName&) = delete;
+		ScopedInvokeOperationName& operator=(const ScopedInvokeOperationName&) = delete;
+
+	private:
+		// Set only when this scope allocated operationName on the invoke.
+		SNACC::ROSEInvoke* m_pInvoke = nullptr;
+	};
 } // namespace
 
 SnaccInvokeContextInit::SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke, const char* szOperationName /*= nullptr*/)
@@ -976,8 +1165,7 @@ long SnaccROSEBase::EncodeReject(SNACC::ROSEReject* preject, std::string& strRes
 	long lRoseResult = ROSE_NOERROR;
 
 	ROSEMessage rejectMsg;
-	rejectMsg.choiceId = ROSEMessage::rejectCid;
-	rejectMsg.reject = preject;
+	const RoseEncodeRejectBorrow rejectBorrow(rejectMsg, *preject);
 
 	// encode now.
 	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
@@ -1017,9 +1205,6 @@ long SnaccROSEBase::EncodeReject(SNACC::ROSEReject* preject, std::string& strRes
 	{
 		throw std::runtime_error("invalid m_eTransportEncoding");
 	}
-
-	// prevent delete of preject...
-	rejectMsg.reject = 0;
 
 	return lRoseResult;
 }
@@ -1259,8 +1444,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 		*pstRequestData = 0;
 
 	ROSEMessage invokeMsg;
-	invokeMsg.choiceId = ROSEMessage::invokeCid;
-	invokeMsg.invoke = pInvoke;
+	const ScopedEncodeInvokeBorrow invokeBorrow(invokeMsg, *pInvoke);
 
 	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
 	{
@@ -1274,9 +1458,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 	}
 	else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
 	{
-		// The mobiles currently rely on the operationName so we need to fill it if it is missing here
-		if (!pInvoke->operationName)
-			pInvoke->operationName = UTF8String::CreateNewFromASCII(szOperationName);
+		const ScopedInvokeOperationName operationName(*pInvoke, szOperationName);
 
 		std::string strData = GetEncoded(m_eTransportEncoding, &invokeMsg);
 
@@ -1299,9 +1481,6 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 	{
 		throw std::runtime_error("invalid m_eTransportEncoding");
 	}
-
-	// prevent autodelete of pInvoke
-	invokeMsg.invoke = NULL;
 
 	return lRoseResult;
 }
@@ -1510,65 +1689,45 @@ long SnaccROSEBase::DecodeResponse(const SNACC::ROSEMessage& response, SNACC::RO
 long SnaccROSEBase::EncodeResult(unsigned int uiInvokeID, SNACC::AsnType* pResult, std::string& strResponse, const wchar_t* szSessionID /*= nullptr*/)
 {
 	long lRoseResult = ROSE_NOERROR;
+	RoseEncodeResultEnvelope encode(uiInvokeID, pResult, szSessionID);
 
-	ROSEResult result;
-	result.invokeID = uiInvokeID;
-	result.result = new ROSEResultSeq;
-	result.result->resultValue = 0;
-	result.result->result.value = pResult;
-	if (szSessionID)
-		result.sessionID = new UTF8String(szSessionID);
-
+	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
 	{
-		ROSEMessage ResultMsg;
-		ResultMsg.choiceId = ROSEMessage::resultCid;
-		ResultMsg.result = &result;
+		AsnBuf OutBuf;
+		AsnLen BytesEncoded = encode.message().BEnc(OutBuf);
 
-		// encode now.
-		if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
-		{
-			AsnBuf OutBuf;
-			AsnLen BytesEncoded = ResultMsg.BEnc(OutBuf);
+		OutBuf.ResetMode();
+		OutBuf.GetSeg(strResponse, BytesEncoded);
 
-			OutBuf.ResetMode();
-			OutBuf.GetSeg(strResponse, BytesEncoded);
+		LogTransportData(true, m_eTransportEncoding, nullptr, strResponse.c_str(), BytesEncoded, &encode.message(), nullptr);
+	}
+	else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
+	{
+		auto value = encode.message().JEnc();
 
-			LogTransportData(true, m_eTransportEncoding, nullptr, strResponse.c_str(), BytesEncoded, &ResultMsg, nullptr);
-		}
-		else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
-		{
-			auto value = ResultMsg.JEnc();
-
-			int logLevel = (int)GetLogLevel(true);
-			if (logLevel & (int)EAsnLogLevel::JSON || logLevel & (int)EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED)
-				strResponse = getPrettyPrinted(value);
-			else
-			{
-				SJson::FastWriter writer;
-				strResponse = writer.write(value);
-			}
-
-			std::string strPrefix;
-			if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
-				lRoseResult = GetJsonLengthPrefix(strResponse, strPrefix);
-			if (lRoseResult == ROSE_NOERROR)
-			{
-				LogTransportData(true, m_eTransportEncoding, nullptr, strResponse.c_str(), strResponse.length(), &ResultMsg, nullptr);
-				if (!strPrefix.empty())
-					strResponse.insert(0, strPrefix);
-			}
-		}
+		int logLevel = (int)GetLogLevel(true);
+		if (logLevel & (int)EAsnLogLevel::JSON || logLevel & (int)EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED)
+			strResponse = getPrettyPrinted(value);
 		else
 		{
-			throw std::runtime_error("invalid m_eTransportEncoding");
+			SJson::FastWriter writer;
+			strResponse = writer.write(value);
 		}
 
-		// prevent delete of presult...
-		ResultMsg.result = nullptr;
+		std::string strPrefix;
+		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
+			lRoseResult = GetJsonLengthPrefix(strResponse, strPrefix);
+		if (lRoseResult == ROSE_NOERROR)
+		{
+			LogTransportData(true, m_eTransportEncoding, nullptr, strResponse.c_str(), strResponse.length(), &encode.message(), nullptr);
+			if (!strPrefix.empty())
+				strResponse.insert(0, strPrefix);
+		}
 	}
-
-	// prevent delete of value...
-	result.result->result.value = nullptr;
+	else
+	{
+		throw std::runtime_error("invalid m_eTransportEncoding");
+	}
 
 	return lRoseResult;
 }
@@ -1576,64 +1735,45 @@ long SnaccROSEBase::EncodeResult(unsigned int uiInvokeID, SNACC::AsnType* pResul
 long SnaccROSEBase::EncodeError(unsigned int uiInvokeID, SNACC::AsnType* pError, std::string& strResponse, const wchar_t* szSessionID /*= nullptr*/)
 {
 	long lRoseResult = ROSE_NOERROR;
+	RoseEncodeErrorEnvelope encode(uiInvokeID, pError, szSessionID);
 
-	ROSEError error;
-	error.invokedID = uiInvokeID;
-	error.error_value = 0;
-	error.error = new AsnAny();
-	error.error->value = pError;
-	if (szSessionID)
-		error.sessionID = new UTF8String(szSessionID);
-
+	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
 	{
-		ROSEMessage errorMsg;
-		errorMsg.choiceId = ROSEMessage::errorCid;
-		errorMsg.error = &error;
+		AsnBuf OutBuf;
+		AsnLen BytesEncoded = encode.message().BEnc(OutBuf);
 
-		// encode now.
-		if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
-		{
-			AsnBuf OutBuf;
-			AsnLen BytesEncoded = errorMsg.BEnc(OutBuf);
+		OutBuf.ResetMode();
+		OutBuf.GetSeg(strResponse, BytesEncoded);
 
-			OutBuf.ResetMode();
-			OutBuf.GetSeg(strResponse, BytesEncoded);
+		LogTransportData(true, m_eTransportEncoding, nullptr, strResponse.c_str(), strResponse.length(), &encode.message(), nullptr);
+	}
+	else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
+	{
+		auto value = encode.message().JEnc();
 
-			LogTransportData(true, m_eTransportEncoding, nullptr, strResponse.c_str(), strResponse.length(), &errorMsg, nullptr);
-		}
-		else if (m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING)
-		{
-			auto value = errorMsg.JEnc();
-
-			int logLevel = (int)GetLogLevel(true);
-			if (logLevel & (int)EAsnLogLevel::JSON || logLevel & (int)EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED)
-				strResponse = getPrettyPrinted(value);
-			else
-			{
-				SJson::FastWriter writer;
-				strResponse = writer.write(value);
-			}
-
-			std::string strPrefix;
-			if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
-				lRoseResult = GetJsonLengthPrefix(strResponse, strPrefix);
-			if (lRoseResult == ROSE_NOERROR)
-			{
-				LogTransportData(true, m_eTransportEncoding, nullptr, strResponse.c_str(), strResponse.length(), &errorMsg, nullptr);
-				if (!strPrefix.empty())
-					strResponse.insert(0, strPrefix);
-			}
-		}
+		int logLevel = (int)GetLogLevel(true);
+		if (logLevel & (int)EAsnLogLevel::JSON || logLevel & (int)EAsnLogLevel::JSON_ALWAYS_PRETTY_PRINTED)
+			strResponse = getPrettyPrinted(value);
 		else
 		{
-			throw std::runtime_error("invalid m_eTransportEncoding");
+			SJson::FastWriter writer;
+			strResponse = writer.write(value);
 		}
-		// prevent delete of perror...
-		errorMsg.error = nullptr;
-	}
 
-	// prevent delete of value...
-	error.error->value = nullptr;
+		std::string strPrefix;
+		if (m_eTransportEncoding == SNACC::TransportEncoding::JSON)
+			lRoseResult = GetJsonLengthPrefix(strResponse, strPrefix);
+		if (lRoseResult == ROSE_NOERROR)
+		{
+			LogTransportData(true, m_eTransportEncoding, nullptr, strResponse.c_str(), strResponse.length(), &encode.message(), nullptr);
+			if (!strPrefix.empty())
+				strResponse.insert(0, strPrefix);
+		}
+	}
+	else
+	{
+		throw std::runtime_error("invalid m_eTransportEncoding");
+	}
 
 	return lRoseResult;
 }

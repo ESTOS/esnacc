@@ -1,0 +1,50 @@
+---
+description: Document new types and members — purpose, usage, problem solved
+alwaysApply: true
+---
+
+# Living Documentation for Types and Members
+
+Good code documents **why** it exists, not only **what** it does. When you add or materially change a type (class, struct, enum, type alias) or a non-obvious member, add brief comments at the definition site.
+
+## Required for new/changed definitions
+
+For each new type or group of related helpers, document:
+
+1. **Purpose** — what problem this solves in the subsystem.
+2. **Usage** — who calls it, lifetime/ownership expectations, borrow vs own.
+3. **Scope** — file-local helper vs public API; thread/context constraints if relevant.
+
+For non-obvious members (handles, caches, flags, borrowed pointers, `unique_ptr` sinks), add a comment **on the line above the member** unless the type-level comment already makes it obvious. Do not use trailing end-of-line comments for member documentation.
+
+## Style in this repo
+
+- **Public headers** (`cpp-lib/include/`, generated interfaces): use existing `/*! ... */` block style where siblings do.
+- **Implementation-only helpers** (anonymous namespaces, `.cpp` RAII guards): `//` block above the type; `//` line above each non-obvious member.
+- Match **line density** of the surrounding file — do not add blank lines after every line.
+- Do not restate the identifier in prose (“`m_foo` is the foo”) unless it disambiguates ownership or invariants.
+- **Document each type or member in place.** Do not defer to another definition with “same as”, “like”, “see”, or “mirrors” — if one changes, cross-references go stale. Repeat purpose, usage, and ownership at every site that needs it.
+
+## Examples
+
+```cpp
+// Snapshot of inbound invoke metadata after envelope decode.
+class InboundInvokeRejectContext {
+public:
+	// Invoke ID from the decoded envelope (99999 = event).
+	AsnIntType m_invokeId = 0;
+};
+
+/*! Owned inbound response matched to a pending outbound invoke. */
+std::unique_ptr<SNACC::ROSEMessage> m_pAnswerMessage;
+```
+
+## When comments are not required
+
+- Trivial locals, loop indices, obvious parameters (`invokeID`, `strResponse`).
+- Generated code unless the generator template is being changed.
+- Renames with unchanged semantics.
+
+## Agent workflow
+
+When introducing structures or members as part of a fix or feature, **include documentation in the same change**. Do not defer “comment pass” to a follow-up unless the user explicitly asks for code-only first.

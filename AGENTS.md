@@ -97,6 +97,7 @@ Requirements and IDE-specific steps are in [ReadMe.md](ReadMe.md). CMake minimum
 - Prefer the smallest correct change; match surrounding code style.
 - Generated output shape is defined by ASN.1 inputs plus the relevant `compiler/back-ends/*-gen` implementation — read both before changing behavior.
 - When documentation and code disagree, verify against `samples/` and tests before updating docs.
+- **Document new types and members** at the definition site (purpose, usage, ownership). See [.cursor/rules/living-documentation.mdc](.cursor/rules/living-documentation.mdc).
 
 ### Tests define the public API (hard constraint)
 

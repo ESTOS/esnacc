@@ -37,7 +37,8 @@ Primary reference points:
 | Response payload decode after a valid reply envelope | Caller sees decode failure, telemetry still looks like remote result/error | Telemetry must primarily reflect the caller-visible outcome |
 | Inbound decode failures and ROSE rejects | Enforced: garbage wire is silent; targeted reject only after envelope decode | See section 5 (implemented on `feature/UCAAS-1446-rose-invoke-context-runtime-tests`) |
 | `OnBinaryDataBlockResult()` decode-error hooks | `OnRoseDecodeError()` and `bAlreadyTransportLogged` parity with `OnBinaryDataBlock()` | Implemented; covered by `PublicApiSmokeTest.OnBinaryDataBlockResultDecodeErrorsInvokeHook*` |
-| `ROSEMessage` ownership on inbound decode | `unique_ptr` at decode sites; `std::move` into `OnROSEMessage()` | See section 6 |
+| `ROSEMessage` ownership on inbound decode | `unique_ptr` at decode sites; `std::move` through dispatch | See section 6 (implemented) |
+| Outbound encode / `Send()` ownership | Manual `new` + `// prevent delete` nulling on happy path | See section 7 — exception safety and fragility, not steady-state leaks on happy path |
 
 ## 1. `StopProcessing()` Shutdown Contract
 
@@ -358,10 +359,8 @@ Hook and logging parity between the two paths is required. **Reject parity is no
 — the response path must not fabricate server-side rejects when a reply cannot be
 decoded.
 
-**Cleanup still open:** `OnBinaryDataBlockResult()` catch blocks still contain
-legacy reject branches gated on `bRoseEnvelopeDecoded && invoke`. They do not fire
-for normal garbage or malformed replies, but should be removed for strict asymmetry
-(see leftovers below).
+**Cleanup done:** legacy reject branches were removed from `OnBinaryDataBlockResult()`
+decode catches; that path is telemetry-only on decode failure.
 
 ### Tests that enforce this
 
@@ -394,8 +393,8 @@ If dispatch throws, the outer `catch` uses the snapshot for targeted
 | --- | --- |
 | Before envelope decode | Local `unique_ptr` in the decode `try` block |
 | After envelope decode, before `OnROSEMessage` | Local `unique_ptr` + optional `InboundInvokeRejectContext` snapshot |
-| Invoke/event dispatch | `OnROSEMessage()` — destroyed on return |
-| Matched result/error/reject | `CompletePendingOperation()` via `release()` → `SnaccROSEPendingOperation::m_pAnswerMessage` |
+| Invoke/event dispatch | `OnInvokeMessage(std::unique_ptr)` — destroyed after dispatch |
+| Matched result/error/reject | `CompletePendingOperation(std::move)` → `m_pAnswerMessage` |
 | Orphan result/error/reject | `CompletePendingOperation()` when lookup fails |
 | `SnaccException` before envelope decode | Local `unique_ptr` destroyed on scope exit |
 | `SnaccException` after envelope decode | `rejectCtx` snapshot drives reject/telemetry; `unique_ptr` destroyed on scope exit |
