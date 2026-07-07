@@ -222,12 +222,12 @@ public:
 	 * Handles the response payload of the SendInvoke method. Retrieves the result or error from the response
 	 *
 	 * lRoseResult - the result of the SendInvoke method
-	 * responseMsg - owned pending-op response; may be mutated for BER JSON logging
+	 * responseMsg - owned pending-op response; read-only for callers and overrides
 	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
 	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
 	 * ctx - contextual data for the invoke
 	 */
-	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage& responseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext& ctx) = 0;
+	virtual long HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage& responseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext& ctx) = 0;
 
 	/**
 	 * Encodes the result or error from an OnInvoke request. Retrieves the result or error from the response
@@ -239,7 +239,7 @@ public:
 	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
 	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
 	 */
-	virtual long HandleOnInvokeResult(SNACC::InvokeResult invokeResult, SNACC::ROSEInvoke& invoke, SnaccInvokeContext& ctx, std::string& strResponse, SNACC::AsnType* pResult, SNACC::AsnType* pError) = 0;
+	virtual long HandleOnInvokeResult(SNACC::InvokeResult invokeResult, const SNACC::ROSEInvoke& invoke, SnaccInvokeContext& ctx, std::string& strResponse, SNACC::AsnType* pResult, SNACC::AsnType* pError) = 0;
 
 	/**
 	 * Decodes an invoke and properly handles logging for it
@@ -247,7 +247,7 @@ public:
 	 * invokeMessage - inbound invoke ROSEMessage; borrow only for decode/logging
 	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
 	 */
-	virtual long DecodeInvoke(SNACC::ROSEMessage& invokeMessage, SNACC::AsnType* argument) = 0;
+	virtual long DecodeInvoke(const SNACC::ROSEMessage& invokeMessage, SNACC::AsnType* argument) = 0;
 
 	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
@@ -266,7 +266,7 @@ public:
 	 * strResponse - the encoded response data to send via the transport layer
 	 * szSessionID - the SessionID (this propery is filled by subclassing from the concrete class in case we are handling multiple clients via one connection)
 	 */
-	virtual long EncodeResult(unsigned int uiInvokeID, SNACC::AsnType* pResult, std::string& strResponse, const wchar_t* szSessionID = nullptr) = 0;
+	virtual long EncodeResult(unsigned int uiInvokeID, const SNACC::AsnType* pResult, std::string& strResponse, const wchar_t* szSessionID = nullptr) = 0;
 
 	/*
 	 * Encodes an error as repsonse to an invoke
@@ -276,7 +276,7 @@ public:
 	 * strResponse - the encoded response data to send via the transport layer
 	 * szSessionID - the SessionID (this propery is filled by subclassing from the concrete class in case we are handling multiple clients via one connection)
 	 */
-	virtual long EncodeError(unsigned int uiInvokeID, SNACC::AsnType* pError, std::string& strResponse, const wchar_t* szSessionID = nullptr) = 0;
+	virtual long EncodeError(unsigned int uiInvokeID, const SNACC::AsnType* pError, std::string& strResponse, const wchar_t* szSessionID = nullptr) = 0;
 };
 
 class SnaccScopedInvokeMessage

@@ -555,13 +555,13 @@ public:
 	}
 
 	// Ensures outbound result payloads inherit the session id of this connection.
-	long EncodeResult(unsigned int uiInvokeID, SNACC::AsnType* pResult, std::string& strResponse, const wchar_t* szSessionID = nullptr) override
+	long EncodeResult(unsigned int uiInvokeID, const SNACC::AsnType* pResult, std::string& strResponse, const wchar_t* szSessionID = nullptr) override
 	{
 		return SnaccROSEBase::EncodeResult(uiInvokeID, pResult, strResponse, szSessionID ? szSessionID : m_wstrSessionId.c_str());
 	}
 
 	// Ensures outbound error payloads inherit the session id of this connection.
-	long EncodeError(unsigned int uiInvokeID, SNACC::AsnType* pError, std::string& strResponse, const wchar_t* szSessionID = nullptr) override
+	long EncodeError(unsigned int uiInvokeID, const SNACC::AsnType* pError, std::string& strResponse, const wchar_t* szSessionID = nullptr) override
 	{
 		return SnaccROSEBase::EncodeError(uiInvokeID, pError, strResponse, szSessionID ? szSessionID : m_wstrSessionId.c_str());
 	}
