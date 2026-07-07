@@ -35,7 +35,9 @@ Primary reference points:
 | `StopProcessing()` | Completes pending operations, but does not block new work in practice | Shutdown must refuse new outbound work and stop inbound invoke/event dispatch |
 | `iTimeout == 0` telemetry | Reported as `Outcome::UNHANDLED` with `WAIT_SKIPPED` | Treated as a successful fire-and-forget dispatch, not as a failure |
 | Response payload decode after a valid reply envelope | Caller sees decode failure, telemetry still looks like remote result/error | Telemetry must primarily reflect the caller-visible outcome |
-| `OnBinaryDataBlockResult()` decode failures | Logs and telemetry are emitted, but `OnRoseDecodeError()` parity is missing | Result-path decode failure handling should mirror `OnBinaryDataBlock()` |
+| Inbound decode failures and ROSE rejects | Enforced: garbage wire is silent; targeted reject only after envelope decode | See section 5 (implemented on `feature/UCAAS-1446-rose-invoke-context-runtime-tests`) |
+| `OnBinaryDataBlockResult()` decode-error hooks | `OnRoseDecodeError()` and `bAlreadyTransportLogged` parity with `OnBinaryDataBlock()` | Implemented; covered by `PublicApiSmokeTest.OnBinaryDataBlockResultDecodeErrorsInvokeHook*` |
+| `ROSEMessage` ownership on inbound decode | `unique_ptr` at decode sites; `std::move` into `OnROSEMessage()` | See section 6 |
 
 ## 1. `StopProcessing()` Shutdown Contract
 
@@ -282,81 +284,136 @@ That means:
 
 ## 4. `OnBinaryDataBlockResult()` Decode-Error Hook and Logging Parity
 
-### Current behavior
+### Status: implemented
 
-`OnBinaryDataBlock()` invokes `OnRoseDecodeError()` on BER, JSON decode, JSON
-parse, and unknown-encoding failures. It also updates `bLogTransportData` with
-the actual return value from `LogTransportData()` before calling the hook.
+Both inbound entry points now call `OnRoseDecodeError()` for comparable decode
+failure classes (BER envelope decode, JSON envelope decode, JSON parse failure,
+unknown encoding). Both pass the real `bAlreadyTransportLogged` value derived
+from `LogTransportData()` return value before invoking the hook.
 
-```780:792:cpp-lib/src/SnaccROSEBase.cpp
-					catch (const SnaccException& ex)
-					{
-						if (bLogTransportData)
-							bLogTransportData = LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, ulSize, nullptr, nullptr);
+### Tests that enforce this
 
-						SJson::Value error;
-						error["exception"] = ex.what();
-						error["method"] = __FUNCTION__;
-						error["error"] = (int)ex.m_errorCode;
-						std::string strError = getPrettyPrinted(error);
-						PrintJSONToLog(false, true, nullptr, strError.c_str(), strError.length());
+- `PublicApiSmokeTest.OnBinaryDataBlockResultDecodeErrorsInvokeHookBer`
+- `PublicApiSmokeTest.OnBinaryDataBlockResultDecodeErrorsInvokeHookJson`
 
-						OnRoseDecodeError(bLogTransportData, SNACC::TransportEncoding::BER, lpBytes, ulSize, ex.what());
-```
+### Remaining maintenance note
 
-`OnBinaryDataBlockResult()` performs similar logging and telemetry work, but it
-never calls `OnRoseDecodeError()` in the corresponding failure cases.
+Hook and logging behavior is duplicated between `OnBinaryDataBlock()` and
+`OnBinaryDataBlockResult()`. A shared helper would reduce future drift, but
+parity itself is no longer an open gap.
 
-```493:503:cpp-lib/src/SnaccROSEBase.cpp
-					catch (const SnaccException& ex)
-					{
-						if (bLogTransportData)
-							LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
+## 5. Inbound Decode Layers, Reject Policy, and BER vs JSON
 
-						SJson::Value error;
-						error["exception"] = ex.what();
-						error["method"] = __FUNCTION__;
-						error["error"] = (int)ex.m_errorCode;
-						std::string strError = getPrettyPrinted(error);
-						PrintJSONToLog(false, true, nullptr, strError.c_str(), strError.length());
-```
+### Why BER and JSON are not symmetric at the wire layer
 
-### Why this is inconsistent
+**BER** is decoded incrementally as nested TLVs. The runtime can fail at
+different depths on the same buffer:
 
-- `OnRoseDecodeError()` is the dedicated extension point for decode failures.
-- Result-path decode failures are still decode failures, but the override hook is
-  bypassed there.
-- Consumers overriding that hook cannot get symmetric behavior for the two
-  inbound entry points.
-- The `bAlreadyTransportLogged` signal is only maintained on the
-  `OnBinaryDataBlock()` side.
+1. **Wire garbage** — not even a decodable `ROSEMessage` (for example truncated
+   tag/length).
+2. **Envelope incomplete** — some bytes consumed, but `ROSEMessage::BDec` did not
+   finish; generated CHOICE `choiceId` must not be trusted (codegen defers
+   `choiceId` until the selected arm decodes successfully).
+3. **Envelope OK, payload bad** — invoke envelope is valid; operation argument
+   decode fails later in `OnInvokeMessage`.
 
-### Intended behavior
+**JSON** does not offer an envelope-only parse for invalid wire text.
+`SJson::Reader::parse` is all-or-nothing on the payload after the `J` length
+prefix:
 
-`OnBinaryDataBlockResult()` should mirror `OnBinaryDataBlock()` for decode
-failure handling unless there is an explicitly documented reason not to.
+- If parse fails, there is no `SJson::Value` tree and no partial ROSE structure
+  to inspect.
+- Wire failure and “not a ROSE JSON object” collapse into one step for malformed
+  syntax.
+- Only after parse succeeds does `ROSEMessage::JDec` run field-by-field (layer 2
+  above).
 
-That means:
+So BER admits **layered** failure classification at runtime; JSON only admits
+layers **after** syntactically valid JSON exists.
 
-1. invoke `OnRoseDecodeError()` for comparable decode-failure classes
-2. pass the real `bAlreadyTransportLogged` state derived from
-   `LogTransportData()`
-3. preserve any legitimate differences in reply-specific protocol handling, but
-   not differences in error-hook visibility
+### Intended reject policy (implemented)
 
-### Tests that should enforce this later
+Outbound ROSE rejects must be **correlatable and semantically honest**. Do not
+claim `mistypedArgument` when no invoke was successfully decoded.
 
-- A test endpoint overriding `OnRoseDecodeError()` sees BER result-path decode
-  failures.
-- The same endpoint sees JSON result-path decode failures.
-- The hook receives the same "already transport logged" semantics as the normal
-  inbound path.
+| Layer | What failed | `bRoseEnvelopeDecoded` | Outbound ROSE reject? |
+| --- | --- | --- | --- |
+| Wire / syntax | BER garbage, JSON `parse` fail, unknown encoding | n/a (no envelope) | **No** — log, `OnRoseDecodeError`, telemetry only |
+| Envelope | `BDec` / `JDec` on `ROSEMessage` did not complete | `false` | **No** |
+| Envelope OK, invoke path | Decode or dispatch failed after envelope succeeded | `true` and `invoke` present | **Yes** on `OnBinaryDataBlock()` — `mistypedArgument` with real `invokeID` |
+| Argument | Operation argument decode in handler path | n/a (handler stage) | **Yes** — `OnInvokeMessage` / handler reject path |
 
-### Likely code paths to change
+Garbage wire therefore gets **no response** on the application ROSE layer (common
+RPC practice: the caller times out; an uncorrelated `invokednull` reject does not
+help a pending client invoke).
 
+### Intentional asymmetry: `OnBinaryDataBlock()` vs `OnBinaryDataBlockResult()`
+
+| Entry point | Role | Reject on decode failure? |
+| --- | --- | --- |
+| `OnBinaryDataBlock()` | Inbound invokes/events (server receive path) | **May** send targeted `mistypedArgument` when envelope decode succeeded and `invoke` is known |
+| `OnBinaryDataBlockResult()` | Inbound results/errors/rejects (client response path) | **Must not** send rejects for decode failures; log + hook + telemetry only |
+
+Hook and logging parity between the two paths is required. **Reject parity is not**
+— the response path must not fabricate server-side rejects when a reply cannot be
+decoded.
+
+**Cleanup still open:** `OnBinaryDataBlockResult()` catch blocks still contain
+legacy reject branches gated on `bRoseEnvelopeDecoded && invoke`. They do not fire
+for normal garbage or malformed replies, but should be removed for strict asymmetry
+(see leftovers below).
+
+### Tests that enforce this
+
+- `InvokeContextRuntimeTest.UnparsableInboundDoesNotReachHandlerBer`
+- `InvokeContextRuntimeTest.UnparsableInboundDoesNotReachHandlerJson`
+- CHOICE `choiceId` deferral: `compiler/back-ends/c++-gen/gen-code.c` (regenerated
+  `SNACCROSE.cpp`)
+
+### Likely code paths
+
+- `SnaccROSEBase::OnBinaryDataBlock()`
 - `SnaccROSEBase::OnBinaryDataBlockResult()`
-- possibly shared helper extraction between `OnBinaryDataBlock()` and
-  `OnBinaryDataBlockResult()` to avoid drift
+- `SnaccROSEBase::OnInvokeMessage()` (argument-layer rejects)
+- `compiler/back-ends/c++-gen/gen-code.c` (CHOICE decode / `choiceId`)
+
+## 6. `ROSEMessage` Ownership on Inbound Decode Paths
+
+### Contract (implemented)
+
+Inbound decode paths allocate with `std::make_unique<ROSEMessage>()`. After a
+successful envelope decode (`BDec` / `JDec`), reject-relevant invoke fields are
+snapshotted into `InboundInvokeRejectContext` (invoke ID, operation ID,
+operation name). Ownership then moves into `OnROSEMessage()` via `std::move`.
+If dispatch throws, the outer `catch` uses the snapshot for targeted
+`mistypedArgument` rejects — not the moved-away message.
+
+`OnROSEMessage()` takes `std::unique_ptr<ROSEMessage>`:
+
+| Stage | Owner |
+| --- | --- |
+| Before envelope decode | Local `unique_ptr` in the decode `try` block |
+| After envelope decode, before `OnROSEMessage` | Local `unique_ptr` + optional `InboundInvokeRejectContext` snapshot |
+| Invoke/event dispatch | `OnROSEMessage()` — destroyed on return |
+| Matched result/error/reject | `CompletePendingOperation()` via `release()` → `SnaccROSEPendingOperation::m_pAnswerMessage` |
+| Orphan result/error/reject | `CompletePendingOperation()` when lookup fails |
+| `SnaccException` before envelope decode | Local `unique_ptr` destroyed on scope exit |
+| `SnaccException` after envelope decode | `rejectCtx` snapshot drives reject/telemetry; `unique_ptr` destroyed on scope exit |
+
+Reject policy in decode `catch` blocks:
+
+| Entry point | Send `mistypedArgument` reject? |
+| --- | --- |
+| `OnBinaryDataBlock()` | Yes, when `rejectCtx` is present and invoke ID ≠ 99999 |
+| `OnBinaryDataBlockResult()` | No — telemetry only |
+
+### Likely code paths
+
+- `SnaccROSEBase::OnBinaryDataBlock()`
+- `SnaccROSEBase::OnBinaryDataBlockResult()`
+- `SnaccROSEBase::OnROSEMessage()`
+- `SnaccROSEBase::CompletePendingOperation()`
+- `SnaccROSEPendingOperation::CompleteOperation()`
 
 ## Recommended Follow-Up Order
 
@@ -366,5 +423,9 @@ That means:
    intentional behavior as a failure.
 3. Fix response-payload decode telemetry so caller-visible failures and
    telemetry agree.
-4. Bring `OnBinaryDataBlockResult()` decode-error hooks into parity with
-   `OnBinaryDataBlock()` to avoid continuing divergence.
+4. ~~Remove legacy reject branches from `OnBinaryDataBlockResult()` decode catches~~ (done)
+   and fix the BER branch there (reject object missing `invokeProblem` if that
+   path ever fired).
+5. Optionally extract shared decode-failure helpers between
+   `OnBinaryDataBlock()` and `OnBinaryDataBlockResult()` to avoid drift.
+6. Commit branch updates; push and open PR for UCAAS-1446.

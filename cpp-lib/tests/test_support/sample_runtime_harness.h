@@ -193,7 +193,7 @@ public:
 	// Returns the generated interface id used for dispatch lookup.
 	virtual unsigned int InterfaceId() const = 0;
 	// Hands the decoded ROSE message to the generated dispatcher owned by the module.
-	virtual long Dispatch(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) = 0;
+	virtual long Dispatch(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) = 0;
 };
 
 // Test-specific invoke context that remembers both the local session owning the
@@ -567,7 +567,7 @@ public:
 	}
 
 	// Generic interface-id based dispatcher used by all tests in this harness.
-	long OnInvoke(ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
+	long OnInvoke(std::unique_ptr<ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
 	{
 		const unsigned int interfaceId = SnaccRoseOperationLookup::LookUpInterfaceID(pMsg->invoke->operationID);
 		const auto it = m_modules.find(interfaceId);
@@ -751,7 +751,7 @@ public:
 	}
 
 	// Calls the generated dispatcher for all settings traffic addressed to this module.
-	long Dispatch(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
+	long Dispatch(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
 	{
 		return ENetUC_Settings_ManagerROSE::OnInvoke(pMsg, &m_endpoint, this, ctx, strResponse);
 	}
@@ -839,7 +839,7 @@ public:
 	}
 
 	// Uses the generated settings dispatcher for inbound results/events on the client.
-	long Dispatch(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
+	long Dispatch(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
 	{
 		return ENetUC_Settings_ManagerROSE::OnInvoke(pMsg, &m_endpoint, this, ctx, strResponse);
 	}
@@ -955,7 +955,7 @@ public:
 	}
 
 	// Calls the generated dispatcher for inbound event-manager traffic.
-	long Dispatch(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
+	long Dispatch(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
 	{
 		return ENetUC_Event_ManagerROSE::OnInvoke(pMsg, &m_endpoint, this, ctx, strResponse);
 	}
@@ -1022,7 +1022,7 @@ public:
 	}
 
 	// Uses the generated event-manager dispatcher for inbound notifications.
-	long Dispatch(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
+	long Dispatch(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
 	{
 		return ENetUC_Event_ManagerROSE::OnInvoke(pMsg, &m_endpoint, this, ctx, strResponse);
 	}

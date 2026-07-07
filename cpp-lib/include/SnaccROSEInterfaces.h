@@ -227,7 +227,7 @@ public:
 	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
 	 * pCtx - contextual data for the invoke
 	 */
-	virtual long HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext& ctx) = 0;
+	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage& responseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext& ctx) = 0;
 
 	/**
 	 * Encodes the result or error from an OnInvoke request. Retrieves the result or error from the response
@@ -239,7 +239,7 @@ public:
 	 * result - the result object (Base type pointer, the caller of the invoke provides the proper type)
 	 * error - the error object (Base type pointer, the caller of the invoke provides the proper type)
 	 */
-	virtual long HandleOnInvokeResult(SNACC::InvokeResult invokeResult, const SNACC::ROSEInvoke* pInvoke, SnaccInvokeContext& ctx, std::string& strResponse, SNACC::AsnType* pResult, SNACC::AsnType* pError) = 0;
+	virtual long HandleOnInvokeResult(SNACC::InvokeResult invokeResult, SNACC::ROSEInvoke& invoke, SnaccInvokeContext& ctx, std::string& strResponse, SNACC::AsnType* pResult, SNACC::AsnType* pError) = 0;
 
 	/**
 	 * Decodes an invoke and properly handles logging for it
@@ -247,7 +247,7 @@ public:
 	 * pInvokeMessage - the invoke message as provided from the other side
 	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
 	 */
-	virtual long DecodeInvoke(const SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) = 0;
+	virtual long DecodeInvoke(SNACC::ROSEMessage& invokeMessage, SNACC::AsnType* argument) = 0;
 
 	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *

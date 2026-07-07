@@ -58,7 +58,7 @@ public:
 	const std::string m_strOperationName;
 
 	/*! The answer message. */
-	const SNACC::ROSEMessage* m_pAnswerMessage;
+	std::unique_ptr<SNACC::ROSEMessage> m_pAnswerMessage;
 
 	/*! Error code (one of the ROSE_ error codes. */
 	long m_lRoseResult;
@@ -69,11 +69,8 @@ public:
 	/*! Outbound invoke telemetry tracked alongside the pending completion state. */
 	std::shared_ptr<SnaccTelemetryData> m_pTelemetry;
 
-	/*! Async Operation completed.
-		Attention: The AnswerMessage will not be copied.
-		The AnswerMessage must be new allocated and will be deleted
-		when processed. */
-	void CompleteOperation(long lRoseResult, const SNACC::ROSEMessage* pAnswerMessage, size_t stResponseData = 0);
+	/*! Async Operation completed. */
+	void CompleteOperation(long lRoseResult, std::unique_ptr<SNACC::ROSEMessage> pAnswerMessage = {}, size_t stResponseData = 0);
 	void FinalizeTelemetry(long lFinalRoseResult, std::shared_ptr<SnaccInvokeContext> pctx);
 
 	/*! Wait for answer received. */
@@ -285,7 +282,7 @@ public:
 	 * pResult - the result object (Base type pointer, the caller of the invoke provides the proper type)
 	 * pError - the error object (Base type pointer, the caller of the invoke provides the proper type)
 	 */
-	virtual long HandleOnInvokeResult(SNACC::InvokeResult invokeResult, const SNACC::ROSEInvoke* pInvoke, SnaccInvokeContext& ctx, std::string& strResponse, SNACC::AsnType* pResult, SNACC::AsnType* pError) override;
+	virtual long HandleOnInvokeResult(SNACC::InvokeResult invokeResult, SNACC::ROSEInvoke& invoke, SnaccInvokeContext& ctx, std::string& strResponse, SNACC::AsnType* pResult, SNACC::AsnType* pError) override;
 
 	/**
 	 * Allows implementers to customize the decoded invoke response before it is handed back
@@ -297,7 +294,7 @@ public:
 	 * error - the decoded error payload in case an error response is received
 	 * ctx - contextual data for the invoke
 	 */
-	virtual long HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage* pResponseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext& ctx) override;
+	virtual long HandleInvokeResult(long lRoseResult, SNACC::ROSEMessage& responseMsg, SNACC::AsnType* result, SNACC::AsnType* error, SnaccInvokeContext& ctx) override;
 
 	/**
 	 * An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
@@ -319,7 +316,7 @@ public:
 	 * pInvokeMessage - the invoke message as provided from the other side
 	 * argument - the argument object (Base type pointer, the caller of the provides the proper type)
 	 */
-	long DecodeInvoke(const SNACC::ROSEMessage* pInvokeMessage, SNACC::AsnType* argument) override;
+	long DecodeInvoke(SNACC::ROSEMessage& invokeMessage, SNACC::AsnType* argument) override;
 
 protected:
 	// Get the length prefix for a given strJson payload
@@ -329,7 +326,7 @@ protected:
 	/*! The functions and events.
 		The implementation of this functions is contained in the generated code from the
 		esnacc. */
-	virtual long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) = 0;
+	virtual long OnInvoke(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) = 0;
 
 	/* Function is called when a received data Packet cannot be decoded (invalid Rose Message)
 	 * bAlreadyTransportLogged	- true if the transport data has already been logged in the transport log (so we do not need to log it again)
@@ -343,10 +340,11 @@ protected:
 	}
 
 	/*! The decoded message.
-		pmessage is new allocated and must be deleted inside this function.
+		Ownership transfers via move; invoke/event messages move into `OnInvokeMessage()`,
+		responses move into `CompletePendingOperation()`.
 		returns true if the message was processed.
 		set bAllowInvokes to false, if invokes are not processed. */
-	virtual bool OnROSEMessage(SNACC::ROSEMessage* pmessage, bool bAllowInvokes, unsigned long ulMessageSize);
+	virtual bool OnROSEMessage(std::unique_ptr<SNACC::ROSEMessage> pmessage, bool bAllowInvokes, unsigned long ulMessageSize);
 
 	/*
 	 * This callback provides telemetry data for processed ROSE messages.
@@ -358,10 +356,10 @@ private:
 		These are called from the OnROSEMessage.
 		Do not dete the parameters. The functions are called
 		before the CompleteOperation */
-	virtual void OnInvokeMessage(SNACC::ROSEMessage* pMessage, unsigned long lMessageSize);
-	virtual void OnResultMessage(SNACC::ROSEResult* pResult, unsigned long lMessageSize);
-	virtual void OnErrorMessage(SNACC::ROSEError* pError, unsigned long lMessageSize);
-	virtual void OnRejectMessage(SNACC::ROSEReject* pReject, unsigned long lMessageSize);
+	virtual void OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long lMessageSize);
+	virtual void OnResultMessage(SNACC::ROSEResult& result, unsigned long lMessageSize);
+	virtual void OnErrorMessage(SNACC::ROSEError& error, unsigned long lMessageSize);
+	virtual void OnRejectMessage(SNACC::ROSEReject& reject, unsigned long lMessageSize);
 
 	// The central process wide telemetry callback
 	static inline SnaccTelemetryCallback* m_pTelemetryCallback{};
@@ -390,11 +388,11 @@ private:
 	/*! Pending Operation result has been received.
 		Attention: The pMessage Objekt will be taken over from the
 		SnaccROSEPendingOperation Object and deleted in the end. */
-	bool CompletePendingOperation(int invokeID, const SNACC::ROSEMessage* pMessage, unsigned long ulMessageSize);
+	bool CompletePendingOperation(int invokeID, std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long ulMessageSize);
 	bool GetPendingOperationTelemetryInfo(int invokeID, unsigned int& uiOperationID, std::string& strOperationName);
 	static long GetRejectResultCode(const SNACC::ROSEReject* pReject);
 	static long GetRejectResultCode(const SNACC::ROSEReject* pReject, SnaccInvokeContext& ctx);
-	static long DecodeResponse(const SNACC::ROSEMessage* pResponse, SNACC::ROSEResult** ppResult, SNACC::ROSEError** ppError, SnaccInvokeContext& ctx);
+	static long DecodeResponse(const SNACC::ROSEMessage& response, SNACC::ROSEResult*& pResult, SNACC::ROSEError*& pError, SnaccInvokeContext& ctx);
 	void CompleteAllPendingOperations();
 	bool IsProcessingAllowed();
 
