@@ -143,9 +143,10 @@ class RuntimeEndpoint;
 class LoopbackTransport : public ISnaccROSETransport
 {
 public:
-	// Binds the transport to the peer endpoint that should receive outbound data.
-	explicit LoopbackTransport(RuntimeEndpoint& remote)
-		: m_remote(remote)
+	// Binds the transport to the sending endpoint and its loopback peer.
+	LoopbackTransport(RuntimeEndpoint& owner, RuntimeEndpoint& remote)
+		: m_owner(owner),
+		  m_remote(remote)
 	{
 	}
 
@@ -176,6 +177,7 @@ public:
 	}
 
 private:
+	RuntimeEndpoint& m_owner;                // endpoint that performs outbound sends
 	RuntimeEndpoint& m_remote;               // peer endpoint that receives delivered payloads
 	std::deque<TransportAction> m_actions;   // scripted behaviors consumed one send at a time
 	std::vector<std::string> m_queuedMessages; // delayed payloads kept until the test flushes them
@@ -191,7 +193,7 @@ public:
 	// Returns the generated interface id used for dispatch lookup.
 	virtual unsigned int InterfaceId() const = 0;
 	// Hands the decoded ROSE message to the generated dispatcher owned by the module.
-	virtual long Dispatch(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) = 0;
+	virtual long Dispatch(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) = 0;
 };
 
 // Test-specific invoke context that remembers both the local session owning the
@@ -263,6 +265,170 @@ private:
 	std::string m_strTelemetryNote;       // extra test data used to verify clone and prepare semantics
 };
 
+// Copies invoke-context fields while the runtime reference is still alive.
+class InvokeContextSnapshot
+{
+public:
+	void Reset()
+	{
+		m_bCaptured = false;
+		m_bIsSessionContext = false;
+		m_strLocalSessionId.clear();
+		m_strInvokeSessionId.clear();
+		m_strTelemetryNote.clear();
+	}
+
+	void Capture(const SnaccInvokeContext& ctx)
+	{
+		m_bCaptured = true;
+		if (const auto* pSessionContext = dynamic_cast<const SessionInvokeContext*>(&ctx))
+		{
+			m_bIsSessionContext = true;
+			m_strLocalSessionId = pSessionContext->m_strLocalSessionId;
+			m_strInvokeSessionId = pSessionContext->m_strInvokeSessionId;
+			m_strTelemetryNote = pSessionContext->TelemetryNote();
+			return;
+		}
+
+		m_bIsSessionContext = false;
+		m_strLocalSessionId.clear();
+		m_strInvokeSessionId.clear();
+		m_strTelemetryNote.clear();
+	}
+
+	bool WasCaptured() const
+	{
+		return m_bCaptured;
+	}
+
+	bool IsSessionContext() const
+	{
+		return m_bIsSessionContext;
+	}
+
+	const std::string& LocalSessionId() const
+	{
+		return m_strLocalSessionId;
+	}
+
+	const std::string& InvokeSessionId() const
+	{
+		return m_strInvokeSessionId;
+	}
+
+	const std::string& TelemetryNote() const
+	{
+		return m_strTelemetryNote;
+	}
+
+private:
+	bool m_bCaptured = false;
+	bool m_bIsSessionContext = false;
+	std::string m_strLocalSessionId;
+	std::string m_strInvokeSessionId;
+	std::string m_strTelemetryNote;
+};
+
+// Records inbound handler and transport observations for one server endpoint.
+class InboundInvokeObservation
+{
+public:
+	void Reset()
+	{
+		m_handlerSnapshot.Reset();
+		m_lastTransportSnapshot.Reset();
+		m_pHandlerContextAddress = nullptr;
+		m_bSameInstanceHandlerToTransport = false;
+		m_nTransportSendCount = 0;
+	}
+
+	void CaptureHandlerContext(SnaccInvokeContext& ctx)
+	{
+		m_handlerSnapshot.Capture(ctx);
+		m_pHandlerContextAddress = &ctx;
+		m_bSameInstanceHandlerToTransport = false;
+	}
+
+	void CaptureTransportSend(SnaccInvokeContext& ctx)
+	{
+		m_lastTransportSnapshot.Capture(ctx);
+		++m_nTransportSendCount;
+		if (m_pHandlerContextAddress != nullptr)
+			m_bSameInstanceHandlerToTransport = (&ctx == m_pHandlerContextAddress);
+	}
+
+	const InvokeContextSnapshot& HandlerSnapshot() const
+	{
+		return m_handlerSnapshot;
+	}
+
+	const InvokeContextSnapshot& LastTransportSnapshot() const
+	{
+		return m_lastTransportSnapshot;
+	}
+
+	bool HandlerWasInvoked() const
+	{
+		return m_handlerSnapshot.WasCaptured();
+	}
+
+	bool SameInstanceHandlerToTransport() const
+	{
+		return m_bSameInstanceHandlerToTransport;
+	}
+
+	size_t TransportSendCount() const
+	{
+		return m_nTransportSendCount;
+	}
+
+private:
+	InvokeContextSnapshot m_handlerSnapshot;
+	InvokeContextSnapshot m_lastTransportSnapshot;
+	SnaccInvokeContext* m_pHandlerContextAddress = nullptr;
+	bool m_bSameInstanceHandlerToTransport = false;
+	size_t m_nTransportSendCount = 0;
+};
+
+// Records outbound transport observations copied at send time.
+class OutboundTransportObservation
+{
+public:
+	void Reset()
+	{
+		m_lastTransportSnapshot.Reset();
+		m_pLastContextAddress = nullptr;
+		m_nTransportSendCount = 0;
+	}
+
+	void CaptureTransportSend(SnaccInvokeContext& ctx)
+	{
+		m_lastTransportSnapshot.Capture(ctx);
+		m_pLastContextAddress = &ctx;
+		++m_nTransportSendCount;
+	}
+
+	const InvokeContextSnapshot& LastTransportSnapshot() const
+	{
+		return m_lastTransportSnapshot;
+	}
+
+	const SnaccInvokeContext* LastContextAddress() const
+	{
+		return m_pLastContextAddress;
+	}
+
+	size_t TransportSendCount() const
+	{
+		return m_nTransportSendCount;
+	}
+
+private:
+	InvokeContextSnapshot m_lastTransportSnapshot;
+	const SnaccInvokeContext* m_pLastContextAddress = nullptr;
+	size_t m_nTransportSendCount = 0;
+};
+
 // Session-scoped runtime host used on both client and server sides. It models a
 // single ROSE connection, owns the transport binding, injects session ids, and
 // dispatches inbound invokes to the registered modules.
@@ -281,8 +447,40 @@ public:
 	// Attaches a loopback transport that forwards outbound data to the peer host.
 	void ConnectTo(RuntimeEndpoint& remote)
 	{
-		m_transport = std::make_unique<LoopbackTransport>(remote);
+		m_transport = std::make_unique<LoopbackTransport>(*this, remote);
 		SetSnaccROSETransport(m_transport.get());
+	}
+
+	// Clears invoke-context observations recorded by the test harness.
+	void ResetInvokeContextObservations()
+	{
+		m_inboundObservation.Reset();
+		m_outboundTransportObservation.Reset();
+	}
+
+	// Returns inbound handler and response-send observations for this endpoint.
+	const InboundInvokeObservation& InboundObservation() const
+	{
+		return m_inboundObservation;
+	}
+
+	// Returns outbound transport observations copied at send time.
+	const OutboundTransportObservation& OutboundTransportObservationState() const
+	{
+		return m_outboundTransportObservation;
+	}
+
+	// Records the invoke context seen inside an inbound handler callback.
+	void RecordInboundHandlerContext(SnaccInvokeContext& ctx)
+	{
+		m_inboundObservation.CaptureHandlerContext(ctx);
+	}
+
+	// Records an outbound transport send on this endpoint.
+	void RecordTransportSend(SnaccInvokeContext& ctx)
+	{
+		m_inboundObservation.CaptureTransportSend(ctx);
+		m_outboundTransportObservation.CaptureTransportSend(ctx);
 	}
 
 	// Selects the wire encoding used for all outbound traffic on this host.
@@ -319,6 +517,11 @@ public:
 		return *m_transport;
 	}
 
+	const LoopbackTransport& Transport() const
+	{
+		return *m_transport;
+	}
+
 	// Injects already encoded transport data directly into the inbound pipeline.
 	void ReceiveRaw(const std::string& payload)
 	{
@@ -338,33 +541,33 @@ public:
 	}
 
 	// Attaches the endpoint session id before the base runtime encodes an invoke.
-	long SendInvoke(SNACC::ROSEInvoke* pinvoke, SNACC::AsnType* result, SNACC::AsnType* error, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
+	long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
 	{
-		AttachSessionId(pinvoke);
-		return SnaccROSEBase::SendInvoke(pinvoke, result, error, szOperationName, iTimeout, std::move(pCtx));
+		AttachSessionId(pInvoke);
+		return SnaccROSEBase::SendInvoke(pInvoke, pResult, pError, szOperationName, iTimeout, std::move(pCtx));
 	}
 
 	// Attaches the endpoint session id before the base runtime encodes an event.
-	long SendEvent(SNACC::ROSEInvoke* pinvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
+	long SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
 	{
-		AttachSessionId(pinvoke);
-		return SnaccROSEBase::SendEvent(pinvoke, szOperationName, std::move(pCtx));
+		AttachSessionId(pInvoke);
+		return SnaccROSEBase::SendEvent(pInvoke, szOperationName, std::move(pCtx));
 	}
 
 	// Ensures outbound result payloads inherit the session id of this connection.
-	long EncodeResult(unsigned int uiInvokeID, SNACC::AsnType* pResult, std::string& strResponse, const wchar_t* szSessionID = nullptr) override
+	long EncodeResult(unsigned int uiInvokeID, const SNACC::AsnType* pResult, std::string& strResponse, const wchar_t* szSessionID = nullptr) override
 	{
 		return SnaccROSEBase::EncodeResult(uiInvokeID, pResult, strResponse, szSessionID ? szSessionID : m_wstrSessionId.c_str());
 	}
 
 	// Ensures outbound error payloads inherit the session id of this connection.
-	long EncodeError(unsigned int uiInvokeID, SNACC::AsnType* pError, std::string& strResponse, const wchar_t* szSessionID = nullptr) override
+	long EncodeError(unsigned int uiInvokeID, const SNACC::AsnType* pError, std::string& strResponse, const wchar_t* szSessionID = nullptr) override
 	{
 		return SnaccROSEBase::EncodeError(uiInvokeID, pError, strResponse, szSessionID ? szSessionID : m_wstrSessionId.c_str());
 	}
 
 	// Generic interface-id based dispatcher used by all tests in this harness.
-	long OnInvoke(ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
+	long OnInvoke(std::unique_ptr<ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
 	{
 		const unsigned int interfaceId = SnaccRoseOperationLookup::LookUpInterfaceID(pMsg->invoke->operationID);
 		const auto it = m_modules.find(interfaceId);
@@ -389,6 +592,8 @@ private:
 	std::map<unsigned int, IRuntimeModule*> m_modules; // registered modules keyed by generated interface id
 	std::string m_strSessionId; // narrow session id used in test assertions and invoke payloads
 	std::wstring m_wstrSessionId; // wide session id used by SnaccROSEBase result/error encoders
+	InboundInvokeObservation m_inboundObservation; // inbound handler and transport snapshots
+	OutboundTransportObservation m_outboundTransportObservation; // outbound transport snapshots
 };
 
 // Runtime endpoint used by the test fixture when log assertions are required.
@@ -546,14 +751,16 @@ public:
 	}
 
 	// Calls the generated dispatcher for all settings traffic addressed to this module.
-	long Dispatch(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
+	long Dispatch(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
 	{
 		return ENetUC_Settings_ManagerROSE::OnInvoke(pMsg, &m_endpoint, this, ctx, strResponse);
 	}
 
 	// Implements the sample "get settings" invoke on the server side.
-	InvokeResult OnInvoke_asnGetSettings(AsnGetSettingsArgument* /* argument */, AsnGetSettingsResult* result, AsnRequestError* error, SnaccInvokeContext& /* ctx */) override
+	InvokeResult OnInvoke_asnGetSettings(AsnGetSettingsArgument* /* argument */, AsnGetSettingsResult* result, AsnRequestError* error, SnaccInvokeContext& ctx) override
 	{
+		m_endpoint.RecordInboundHandlerContext(ctx);
+
 		if (!m_handlerModes.implementGetSettings)
 			return InvokeResult::returnReject;
 		if (m_handlerModes.getSettingsReturnsError)
@@ -632,7 +839,7 @@ public:
 	}
 
 	// Uses the generated settings dispatcher for inbound results/events on the client.
-	long Dispatch(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
+	long Dispatch(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
 	{
 		return ENetUC_Settings_ManagerROSE::OnInvoke(pMsg, &m_endpoint, this, ctx, strResponse);
 	}
@@ -748,7 +955,7 @@ public:
 	}
 
 	// Calls the generated dispatcher for inbound event-manager traffic.
-	long Dispatch(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
+	long Dispatch(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
 	{
 		return ENetUC_Event_ManagerROSE::OnInvoke(pMsg, &m_endpoint, this, ctx, strResponse);
 	}
@@ -815,7 +1022,7 @@ public:
 	}
 
 	// Uses the generated event-manager dispatcher for inbound notifications.
-	long Dispatch(SNACC::ROSEMessage* pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
+	long Dispatch(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
 	{
 		return ENetUC_Event_ManagerROSE::OnInvoke(pMsg, &m_endpoint, this, ctx, strResponse);
 	}
@@ -866,8 +1073,10 @@ private:
 
 // Applies the scripted transport behavior and either delivers, queues, drops, or
 // corrupts the outbound payload.
-inline long LoopbackTransport::SendBinaryDataBlockEx(const char* lpBytes, size_t size, SnaccInvokeContext& /* ctx */)
+inline long LoopbackTransport::SendBinaryDataBlockEx(const char* lpBytes, size_t size, SnaccInvokeContext& ctx)
 {
+	m_owner.RecordTransportSend(ctx);
+
 	TransportAction action;
 	if (!m_actions.empty())
 	{
@@ -947,6 +1156,8 @@ protected:
 		m_clientSettingsModule.ResetState();
 		m_serverEventModule.ResetState();
 		m_clientEventModule.ResetState();
+		m_server.ResetInvokeContextObservations();
+		m_client.ResetInvokeContextObservations();
 		m_server.SetLogLevels(EAsnLogLevel::DISABLED, EAsnLogLevel::DISABLED);
 		m_client.SetLogLevels(EAsnLogLevel::DISABLED, EAsnLogLevel::DISABLED);
 		m_server.SetForwardLogsToBase(false);
@@ -1045,6 +1256,18 @@ protected:
 	std::vector<std::shared_ptr<const SnaccTelemetryData>> TelemetryEntries() const
 	{
 		return m_telemetryRecorder.Snapshot();
+	}
+
+	// Returns inbound invoke-context observations recorded on the server endpoint.
+	const InboundInvokeObservation& ServerInboundObservation() const
+	{
+		return m_server.InboundObservation();
+	}
+
+	// Returns outbound transport observations recorded on the client endpoint.
+	const OutboundTransportObservation& ClientOutboundTransportObservation() const
+	{
+		return m_client.OutboundTransportObservationState();
 	}
 
 	// Gives tests a simple way to create a session-aware outbound context for the client.

@@ -97,6 +97,18 @@ Requirements and IDE-specific steps are in [ReadMe.md](ReadMe.md). CMake minimum
 - Prefer the smallest correct change; match surrounding code style.
 - Generated output shape is defined by ASN.1 inputs plus the relevant `compiler/back-ends/*-gen` implementation — read both before changing behavior.
 - When documentation and code disagree, verify against `samples/` and tests before updating docs.
+- **Document new types and members** at the definition site (purpose, usage, ownership). See [.cursor/rules/living-documentation.mdc](.cursor/rules/living-documentation.mdc).
+
+### Tests define the public API (hard constraint)
+
+See [.cursor/rules/test-specification-first.mdc](.cursor/rules/test-specification-first.mdc).
+
+- Tests specify the **expected behavior** of the snacc ecosystem public API — they are the spec, not a mirror of current code.
+- **NEVER tune test code** to match broken or incomplete implementation.
+- **NEVER tune product or library code** merely to turn a failing spec test green.
+- **NEVER tune both** in one change.
+- When writing tests, focus on specifying the API — not on getting a green suite.
+- **Only exception:** the user explicitly asks to change tests, change product code, or revise the spec.
 
 ## Related repositories
 

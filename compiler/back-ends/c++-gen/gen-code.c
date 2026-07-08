@@ -1178,10 +1178,10 @@ static void PrintROSEOnInvokeHandler(FILE* src, int bEvents, Module* mod, ValueD
 			const char* pszHandlerPrefix = bEvents ? "RoseEvent" : "RoseInvoke";
 
 			fprintf(src, "// [%s] OPID_%s\n", __FUNCTION__, vd->definedName);
-			fprintf(src, "static long %s_OPID_%s(SNACC::ROSEMessage* pMsg, SNACC::ROSEInvoke* pInvoke, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData)\n", pszHandlerPrefix, vd->definedName, mod->ROSEClassName);
+			fprintf(src, "static long %s_OPID_%s(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData)\n", pszHandlerPrefix, vd->definedName, mod->ROSEClassName);
 			fprintf(src, "{\n");
 			fprintf(src, "\t%s argument;\n", pszArgument);
-			fprintf(src, "\tlong lRoseResult = pBase->DecodeInvoke(pMsg, &argument);\n");
+			fprintf(src, "\tlong lRoseResult = pBase->DecodeInvoke(*pMsg, &argument);\n");
 			fprintf(src, "\tif (lRoseResult == ROSE_NOERROR)\n");
 			const bool bIsDeprecated = IsDeprecatedFlaggedOperation(mod, vd->definedName);
 			const bool bIsMultiLine = bIsDeprecated || pszResult;
@@ -1202,12 +1202,12 @@ static void PrintROSEOnInvokeHandler(FILE* src, int bEvents, Module* mod, ValueD
 				{
 					fprintf(src, "\t\t%s error;\n", pszError);
 					fprintf(src, "\t\tauto invokeResult = pInt->OnInvoke_%s(&argument, &result, &error, ctx);\n", vd->definedName);
-					fprintf(src, "\t\tlRoseResult = pBase->HandleOnInvokeResult(invokeResult, pInvoke, ctx, strResponseData, &result, &error);\n");
+					fprintf(src, "\t\tlRoseResult = pBase->HandleOnInvokeResult(invokeResult, *pMsg->invoke, ctx, strResponseData, &result, &error);\n");
 				}
 				else
 				{
 					fprintf(src, "\t\tauto invokeResult = pInt->OnInvoke_%s(&argument, &result, ctx);\n", vd->definedName);
-					fprintf(src, "\t\tlRoseResult = pBase->HandleOnInvokeResult(invokeResult, pInvoke, ctx, strResponseData, &result);\n");
+					fprintf(src, "\t\tlRoseResult = pBase->HandleOnInvokeResult(invokeResult, *pMsg->invoke, ctx, strResponseData, &result);\n");
 				}
 			}
 			else
@@ -1239,7 +1239,7 @@ static void PrintROSEOnInvokeswitchCase(FILE* src, int bEvents, Module* mod, Val
 			const char* pszHandlerPrefix = bEvents ? "RoseEvent" : "RoseInvoke";
 
 			fprintf(src, "\tcase OPID_%s:\n", vd->definedName);
-			fprintf(src, "\t\treturn %s_OPID_%s(pMsg, pInvoke, pBase, pInt, ctx, strResponseData);\n", pszHandlerPrefix, vd->definedName);
+			fprintf(src, "\t\treturn %s_OPID_%s(pMsg, pBase, pInt, ctx, strResponseData);\n", pszHandlerPrefix, vd->definedName);
 		}
 	}
 } /* PrintROSEOnInvokeswitchCase */
@@ -2039,8 +2039,6 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 			}
 
 			varName = cxxtri->fieldName;
-			/* set choice id for to this elment */
-			fprintf(src, "\t\t\t%s = %s;\n", r->choiceIdFieldName, cxxtri->choiceIdSymbol);
 
 			/* alloc elmt if nec */
 			if (cxxtri->isPtr)
@@ -2079,6 +2077,8 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 				fprintf(src, "%s", getAccessor(cxxtri->isPtr));
 				fprintf(src, "B%s(_b, tag, elmtLen%d, bytesDecoded);\n", r->decodeContentBaseName, elmtLevel);
 			}
+			/* set choice id only after the arm decoded successfully */
+			fprintf(src, "\t\t\t%s = %s;\n", r->choiceIdFieldName, cxxtri->choiceIdSymbol);
 
 			/* decode Eoc (s) */
 			for (i = elmtLevel - 1; i >= 0; i--)
@@ -2096,10 +2096,10 @@ void PrintChoiceDefCodeBerDecodeContent(FILE* src, FILE* hdr, Module* m, CxxRule
 	if (extensionsExist)
 	{
 		fprintf(src, "\t\t\tAsnAny extAny;\n");
-		fprintf(src, "\t\t\textension = new AsnExtension;\n");
-		fprintf(src, "\t\t\tchoiceId = extensionCid;\n");
 		fprintf(src, "\t\t\textAny.BDecContent(_b, tag, elmtLen0, bytesDecoded);\n");
+		fprintf(src, "\t\t\textension = new AsnExtension;\n");
 		fprintf(src, "\t\t\textension->extList.insert( extension->extList.end(), extAny );\n");
+		fprintf(src, "\t\t\t%s = extensionCid;\n", r->choiceIdFieldName);
 		fprintf(src, "\t\t\tbreak;\n");
 	}
 	else
@@ -2279,16 +2279,19 @@ void PrintChoiceDefCodeJsonDec(FILE* src, FILE* hdr, Module* m, CxxRules* r, Typ
 				fprintf(src, "\telse if (b.isMember(\"%s\"))\n", varName);
 			fprintf(src, "\t{\n");
 
-			fprintf(src, "\t\t%s = %s;\n", r->choiceIdFieldName, cxxtri->choiceIdSymbol);
 			if (cxxtri->isPtr)
 			{
 				fprintf(src, "\t\tdelete %s;\n", varName);
 				fprintf(src, "\t\t%s = new %s;\n", varName, cxxtri->className);
 				fprintf(src, "\t\tif (!%s->JDec(b[\"%s\"]))\n", varName, varName);
+				fprintf(src, "\t\t\tthrow InvalidTagException(typeName(), \"decode failed: %s\", STACK_ENTRY);\n", varName);
 			}
 			else
+			{
 				fprintf(src, "\t\tif (!%s.JDec(b[\"%s\"]))\n", varName, varName);
-			fprintf(src, "\t\t\tthrow InvalidTagException(typeName(), \"decode failed: %s\", STACK_ENTRY);\n", varName);
+				fprintf(src, "\t\t\tthrow InvalidTagException(typeName(), \"decode failed: %s\", STACK_ENTRY);\n", varName);
+			}
+			fprintf(src, "\t\t%s = %s;\n", r->choiceIdFieldName, cxxtri->choiceIdSymbol);
 
 			fprintf(src, "\t}\n");
 		}
@@ -4620,11 +4623,11 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 
 	// generate the InvokeHandler
 	fprintf(hdr, "\t// The main Invoke Dispatcher\n");
-	fprintf(hdr, "\tstatic long OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData);\n", m->ROSEClassName);
-	fprintf(src, "long %s::OnInvoke(SNACC::ROSEMessage* pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData)\n", m->ROSEClassName, m->ROSEClassName);
+	fprintf(hdr, "\tstatic long OnInvoke(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData);\n", m->ROSEClassName);
+	fprintf(src, "long %s::OnInvoke(std::unique_ptr<SNACC::ROSEMessage>& pMsg, SnaccROSESender* pBase, %sInterface* pInt, SnaccInvokeContext& ctx, std::string& strResponseData)\n", m->ROSEClassName, m->ROSEClassName);
 	fprintf(src, "{\n");
-	fprintf(src, "\tauto pInvoke = pMsg->invoke;\n");
-	fprintf(src, "\tswitch (pInvoke->operationID)\n");
+	fprintf(src, "\tauto& invoke = *pMsg->invoke;\n");
+	fprintf(src, "\tswitch (invoke.operationID)\n");
 	fprintf(src, "\t{\n");
 
 	// Rose Interface class
