@@ -1,23 +1,3 @@
----
-title: estos Enhanced Sample Neufeld ASN C Compiler
-scope: estos-esnacc
-owner_repo: esnacc
-entry_for:
-  - ASN.1 compiler development
-  - target-language code generation
-  - protocol documentation generation
-purpose: Explain how to build and use the enhanced ASN.1 compiler and its generated targets.
-read_when:
-  - Changing compiler behavior or generated output
-  - Updating build instructions
-  - Investigating TypeScript, C++, C, C#, Java, Kotlin, Swift, JSDoc, IDL, or OpenAPI generation
-related_docs:
-  - AGENTS.md
-  - FAQ.md
-  - samples/readme.md
-  - cpp-lib/tests/runtime_correctness_notes.md
----
-
 # estos Enhanced Sample Neufeld ASN C Compiler
 This is the estos enhanced sample neufeld asn c compiler. 
 It is an functional enriched fork of the original enhanced sample neufeld asn c compiler offering:
@@ -65,8 +45,6 @@ Those two languages offer JSON and BER encoding for the transport layer, a compl
 Other languages just offer to get created structures which need to get serialized / deserialized in JSON with other functions of the language.
 
 # Getting started
-Agents and contributors: start with [AGENTS.md](AGENTS.md) for repository routing and task-specific documentation entry points.
-
 You need to compile the compiler or use a precompiled version of it.
 The samples folder offers examples on the usage for the different supported languages. These folders show some sample asn1 files, the command line and the expected output of the compiler.
 See [samples/readme.md](samples/readme.md) for the current TypeScript microservice sample layout and required Node/pnpm setup.
