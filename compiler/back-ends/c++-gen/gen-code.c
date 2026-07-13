@@ -1367,14 +1367,14 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			{
 				if (pszError)
 				{
-					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {});\n", vd->definedName, pszArgument, pszResult, pszError);
-					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, %s* error, int iTimeout /*= -1*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult, pszError);
+					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, %s* error, std::shared_ptr<SnaccInvokeContext> pCtx = {});\n", vd->definedName, pszArgument, pszResult, pszError);
+					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, %s* error, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult, pszError);
 				}
 				else
 				{
-					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {});\n", vd->definedName, pszArgument, pszResult);
-					fprintf(src, "// default parameters: iTimeout = -1, pCtx = {}\n");
-					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, int iTimeout /*= -1*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult);
+					fprintf(hdr, "\tlong Invoke_%s(%s* argument, %s* result, std::shared_ptr<SnaccInvokeContext> pCtx = {});\n", vd->definedName, pszArgument, pszResult);
+					fprintf(src, "// default parameters: pCtx = {}\n");
+					fprintf(src, "long %s::Invoke_%s(%s* argument, %s* result, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)\n", m->ROSEClassName, vd->definedName, pszArgument, pszResult);
 				}
 			}
 			else
@@ -1401,7 +1401,7 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			}
 
 			if (pszResult)
-				fprintf(src, "\treturn m_pSB->SendInvoke(invokeMsg.GetPtr(), result, %s, \"%s\", iTimeout, pCtx);\n", pszError ? "error" : "nullptr", vd->definedName);
+				fprintf(src, "\treturn m_pSB->SendInvoke(invokeMsg.GetPtr(), result, %s, \"%s\", pCtx);\n", pszError ? "error" : "nullptr", vd->definedName);
 			else
 				fprintf(src, "\treturn m_pSB->SendEvent(invokeMsg.GetPtr(), \"%s\", pCtx);\n", vd->definedName);
 

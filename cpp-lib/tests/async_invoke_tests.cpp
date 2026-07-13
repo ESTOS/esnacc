@@ -12,8 +12,9 @@ protected:
 		AsnGetSettingsArgument argument;
 		SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 		auto pCtx = m_client.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
+		pCtx->SetInvokeTimeout(timeoutMs);
 		pCtx->SetAsyncCompletion(latch.Callback(), &result, &error);
-		return m_client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", timeoutMs, std::move(pCtx));
+		return m_client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", std::move(pCtx));
 	}
 
 	long SendFireAndForgetGetSettings()
@@ -23,7 +24,8 @@ protected:
 		AsnRequestError error;
 		SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 		auto pCtx = m_client.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
-		return m_client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", 0, std::move(pCtx));
+		pCtx->SetInvokeTimeout(0);
+		return m_client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", std::move(pCtx));
 	}
 
 	void AssertFireAndForgetDoesNotInvokeCallback(const TransportEncoding encoding)

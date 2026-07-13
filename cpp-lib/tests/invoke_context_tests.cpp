@@ -217,8 +217,9 @@ namespace sample_runtime_tests
 			SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnSetSettings, &argument);
 			auto pContext = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnSetSettings");
 			pContext->SetTelemetryNote("encode-failure");
+			pContext->SetInvokeTimeout(250);
 
-			const long roseResult = m_client.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnSetSettings", 250, pContext);
+			const long roseResult = m_client.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnSetSettings", pContext);
 			EXPECT_EQ(ROSE_TE_ENCODE_FAILED, roseResult);
 			EXPECT_FALSE(pContext->WasPreparedForTelemetry());
 			EXPECT_EQ("encode-failure", pContext->TelemetryNote());
@@ -239,7 +240,7 @@ namespace sample_runtime_tests
 			auto pContext = endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
 			pContext->SetTelemetryNote("no-transport");
 
-			const long roseResult = component.Invoke_asnGetSettings(&argument, &result, &error, 250, pContext);
+			const long roseResult = component.Invoke_asnGetSettings(&argument, &result, &error, pContext);
 			EXPECT_EQ(ROSE_TE_TRANSPORTFAILED, roseResult);
 			EXPECT_FALSE(pContext->WasPreparedForTelemetry());
 			EXPECT_EQ("no-transport", pContext->TelemetryNote());
@@ -274,8 +275,9 @@ namespace sample_runtime_tests
 			SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 			auto pContext = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
 			pContext->SetTelemetryNote("transport-failure");
+			pContext->SetInvokeTimeout(250);
 
-			const long roseResult = m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext, 250);
+			const long roseResult = m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext);
 			EXPECT_EQ(ROSE_TE_TRANSPORTFAILED, roseResult);
 			ASSERT_GT(ClientOutboundTransportObservation().TransportSendCount(), 0u);
 			EXPECT_EQ(pContext.get(), ClientOutboundTransportObservation().LastContextAddress());
@@ -292,8 +294,9 @@ namespace sample_runtime_tests
 			SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 			auto pContext = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
 			pContext->SetTelemetryNote("timeout");
+			pContext->SetInvokeTimeout(25);
 
-			const long roseResult = m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext, 25);
+			const long roseResult = m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext);
 			EXPECT_EQ(ROSE_TE_TIMEOUT, roseResult);
 			ASSERT_GT(ClientOutboundTransportObservation().TransportSendCount(), 0u);
 			EXPECT_EQ(pContext.get(), ClientOutboundTransportObservation().LastContextAddress());
@@ -320,8 +323,9 @@ namespace sample_runtime_tests
 			SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 			auto pContext = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
 			pContext->SetTelemetryNote("remote-reject");
+			pContext->SetInvokeTimeout(250);
 
-			const long roseResult = m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext, 250);
+			const long roseResult = m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext);
 			EXPECT_EQ(ROSE_REJECT_FUNCTIONMISSING, roseResult);
 			ASSERT_GT(ClientOutboundTransportObservation().TransportSendCount(), 0u);
 			EXPECT_EQ(pContext.get(), ClientOutboundTransportObservation().LastContextAddress());
@@ -342,8 +346,9 @@ namespace sample_runtime_tests
 			SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 			auto pContext = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
 			pContext->SetTelemetryNote("remote-error");
+			pContext->SetInvokeTimeout(250);
 
-			const long roseResult = m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext, 250);
+			const long roseResult = m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext);
 			EXPECT_EQ(ROSE_ERROR_VALUE, roseResult);
 			ASSERT_GT(ClientOutboundTransportObservation().TransportSendCount(), 0u);
 			EXPECT_EQ(pContext.get(), ClientOutboundTransportObservation().LastContextAddress());
@@ -362,8 +367,9 @@ namespace sample_runtime_tests
 			SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 			auto pContext = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
 			pContext->SetTelemetryNote("decode-failure");
+			pContext->SetInvokeTimeout(250);
 
-			auto responseFuture = std::async(std::launch::async, [&]() { return m_client.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", 250, pContext); });
+			auto responseFuture = std::async(std::launch::async, [&]() { return m_client.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", pContext); });
 
 			for (int i = 0; i < 20 && m_client.Transport().QueuedMessageCount() == 0; ++i)
 				std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -394,8 +400,9 @@ namespace sample_runtime_tests
 			SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 			auto pContext = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
 			pContext->SetTelemetryNote("pending-invoke");
+			pContext->SetInvokeTimeout(500);
 
-			auto pendingInvoke = std::async(std::launch::async, [&]() { return m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext, 500); });
+			auto pendingInvoke = std::async(std::launch::async, [&]() { return m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext); });
 
 			for (int i = 0; i < 20 && m_server.Transport().QueuedMessageCount() == 0; ++i)
 				std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -435,8 +442,9 @@ namespace sample_runtime_tests
 			SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 			auto pContext = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
 			pContext->SetTelemetryNote("pending-error");
+			pContext->SetInvokeTimeout(500);
 
-			auto pendingInvoke = std::async(std::launch::async, [&]() { return m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext, 500); });
+			auto pendingInvoke = std::async(std::launch::async, [&]() { return m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext); });
 
 			for (int i = 0; i < 20 && m_server.Transport().QueuedMessageCount() == 0; ++i)
 				std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -466,8 +474,9 @@ namespace sample_runtime_tests
 			SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 			auto pContext = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
 			pContext->SetTelemetryNote("pending-reject");
+			pContext->SetInvokeTimeout(500);
 
-			auto pendingInvoke = std::async(std::launch::async, [&]() { return m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext, 500); });
+			auto pendingInvoke = std::async(std::launch::async, [&]() { return m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pContext); });
 
 			for (int i = 0; i < 20 && m_server.Transport().QueuedMessageCount() == 0; ++i)
 				std::this_thread::sleep_for(std::chrono::milliseconds(5));

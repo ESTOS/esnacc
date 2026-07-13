@@ -59,8 +59,9 @@ long SendAsyncGetSettings(RuntimeEndpoint& client, AsyncInvokeLatch& latch, AsnG
 	AsnGetSettingsArgument argument;
 	SnaccScopedInvokeMessage invokeMsg(client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 	auto pCtx = client.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
+	pCtx->SetInvokeTimeout(timeoutMs);
 	pCtx->SetAsyncCompletion(latch.Callback(), &result, &error);
-	return client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", timeoutMs, std::move(pCtx));
+	return client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", std::move(pCtx));
 }
 
 long SendFireAndForgetGetSettings(RuntimeEndpoint& client)
@@ -70,7 +71,8 @@ long SendFireAndForgetGetSettings(RuntimeEndpoint& client)
 	AsnRequestError error;
 	SnaccScopedInvokeMessage invokeMsg(client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 	auto pCtx = client.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
-	return client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", 0, std::move(pCtx));
+	pCtx->SetInvokeTimeout(0);
+	return client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", std::move(pCtx));
 }
 } // namespace
 
@@ -211,9 +213,10 @@ protected:
 		AsnRequestError error;
 		SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
 		auto pCtx = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
+		pCtx->SetInvokeTimeout(250);
 
 		auto responseFuture = std::async(std::launch::async, [&]() {
-			return m_client.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", 250, pCtx);
+			return m_client.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", pCtx);
 		});
 
 		for (int i = 0; i < 20 && m_client.Transport().QueuedMessageCount() == 0; ++i)
@@ -275,7 +278,7 @@ protected:
 		pCtx->SetTelemetryNote("custom");
 
 		EXPECT_FALSE(pCtx->WasPreparedForTelemetry());
-		const long roseResult = m_client.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", -1, pCtx);
+		const long roseResult = m_client.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", pCtx);
 		EXPECT_EQ(ROSE_NOERROR, roseResult);
 		EXPECT_FALSE(pCtx->WasPreparedForTelemetry());
 

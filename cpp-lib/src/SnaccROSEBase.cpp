@@ -15,6 +15,17 @@ using namespace SNACC;
 
 namespace
 {
+int ResolveInvokeTimeoutMs(const SnaccInvokeContext& ctx, long lMaxInvokeWait)
+{
+	const int iTimeout = ctx.InvokeTimeout();
+	if (iTimeout == -1)
+		return static_cast<int>(lMaxInvokeWait);
+	return iTimeout;
+}
+} // namespace
+
+namespace
+{
 	const char* GetOperationNameOrEmpty(const SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
 	{
 		if (szOperationName)
@@ -253,7 +264,11 @@ SnaccInvokeContext::SnaccInvokeContext(const SnaccInvokeContextInit& init)
 
 SnaccInvokeContext::SnaccInvokeContext(const SnaccInvokeContext& other)
 	: m_lRejectResult(other.m_lRejectResult),
-	  m_bResponseIsError(other.m_bResponseIsError)
+	  m_bResponseIsError(other.m_bResponseIsError),
+	  m_iInvokeTimeout(other.m_iInvokeTimeout),
+	  m_asyncCallback(other.m_asyncCallback),
+	  m_pAsyncResult(other.m_pAsyncResult),
+	  m_pAsyncError(other.m_pAsyncError)
 {
 	if (other.m_pRejectAuth)
 		m_pRejectAuth = static_cast<SNACC::ROSEAuthResult*>(other.m_pRejectAuth->Clone());
@@ -270,6 +285,16 @@ SnaccInvokeContext::~SnaccInvokeContext()
 
 void SnaccInvokeContext::PrepareForTelemetry()
 {
+}
+
+void SnaccInvokeContext::SetInvokeTimeout(int iTimeoutMs)
+{
+	m_iInvokeTimeout = iTimeoutMs;
+}
+
+int SnaccInvokeContext::InvokeTimeout() const
+{
+	return m_iInvokeTimeout;
 }
 
 void SnaccInvokeContext::SetAsyncCompletion(SnaccInvokeAsyncCallback callback, SNACC::AsnType* pResult, SNACC::AsnType* pError)
@@ -699,12 +724,12 @@ void SnaccROSEBase::CompleteAllPendingOperations()
 	{
 		std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
 
-		for (auto it = m_PendingOperations.begin(); it != m_PendingOperations.end(); ++it)
+		for (const auto& entry : m_PendingOperations)
 		{
-			if (it->second->m_bAsyncInvoke)
-				asyncInvokeIds.push_back(it->second->m_lInvokeID);
+			if (entry.second->m_bAsyncInvoke)
+				asyncInvokeIds.push_back(entry.second->m_lInvokeID);
 			else
-				it->second->CompleteOperation(ROSE_TE_SHUTDOWN);
+				entry.second->CompleteOperation(ROSE_TE_SHUTDOWN);
 		}
 	}
 
@@ -1583,7 +1608,7 @@ bool SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 	return bTransportDataWasLogged;
 }
 
-long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, int iTimeout /*= -1*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
+long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	const auto chronoCreated = std::chrono::steady_clock::now();
 	const char* szResolvedOperationName = SnaccRoseOperationLookup::LookUpName(pInvoke->operationID);
@@ -1594,7 +1619,12 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResu
 		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pInvoke, szResolvedOperationName ? szResolvedOperationName : szOperationName);
 		pCtx = CreateInvokeContext(init);
 	}
+
+	if (pCtx->HasAsyncCompletion())
+		return SendInvokeAsync(pInvoke, pResult, pError, szOperationName, std::move(pCtx));
+
 	auto& ctx = *pCtx;
+	const int iTimeout = ResolveInvokeTimeoutMs(ctx, m_lMaxInvokeWait);
 
 	if (!IsProcessingAllowed())
 	{
@@ -1613,9 +1643,6 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResu
 	if (lRoseResult == 0)
 	{
 		// Wait for Answer...
-		if (iTimeout == -1)
-			iTimeout = m_lMaxInvokeWait;
-
 		if (iTimeout)
 		{
 			if (pendingOP.WaitForComplete(iTimeout))
@@ -1826,7 +1853,7 @@ void SnaccROSEBase::StopWatchdogThread()
 		m_watchdogThread.join();
 }
 
-long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, int iTimeout /*= -1*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
+long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	const auto chronoCreated = std::chrono::steady_clock::now();
 	const char* szResolvedOperationName = SnaccRoseOperationLookup::LookUpName(pInvoke->operationID);
@@ -1837,12 +1864,10 @@ long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 		pCtx = CreateInvokeContext(init);
 	}
 
-	if (iTimeout == -1)
-		iTimeout = m_lMaxInvokeWait;
-
+	const int iTimeout = ResolveInvokeTimeoutMs(*pCtx, m_lMaxInvokeWait);
 	const bool bFireAndForget = (iTimeout == 0);
 
-	// Fire-and-forget is dispatch-only; a completion callback contradicts iTimeout==0.
+	// Fire-and-forget is dispatch-only; a completion callback contradicts InvokeTimeout()==0.
 	ASSERT(!bFireAndForget || !pCtx->HasAsyncCompletion());
 
 	if (!bFireAndForget && !pCtx->HasAsyncCompletion())
