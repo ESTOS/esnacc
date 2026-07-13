@@ -122,15 +122,11 @@ public:
 
 	// Creates the telemetry object in shared ownership so it can be forwarded safely.
 	static std::shared_ptr<SnaccTelemetryData> Create(Direction direction, unsigned int uiOperationID, const char* szOperationName, size_t stRequestData, std::chrono::steady_clock::time_point chronoCreated = std::chrono::steady_clock::now());
-	static std::shared_ptr<SnaccTelemetryData> CreateFinalized(Direction direction, unsigned int uiOperationID, const char* szOperationName, size_t stRequestData, Outcome outcome, Stage stage, Reason reason,
-		long lRoseResult,
-		std::optional<size_t> stResponseData = std::nullopt, std::shared_ptr<SnaccInvokeContext> pctx = {},
-		std::chrono::steady_clock::time_point chronoCreated = std::chrono::steady_clock::now());
+	static std::shared_ptr<SnaccTelemetryData> CreateFinalized(Direction direction, unsigned int uiOperationID, const char* szOperationName, size_t stRequestData, Outcome outcome, Stage stage, Reason reason, long lRoseResult, std::optional<size_t> stResponseData = std::nullopt, std::shared_ptr<SnaccInvokeContext> pctx = {}, std::chrono::steady_clock::time_point chronoCreated = std::chrono::steady_clock::now());
 
 	// Finalizes the telemetry data once the local request lifecycle has completed.
 	// For events pass Outcome::EVENT and leave stResponseData empty.
-	void finalize(Outcome outcome, Stage stage, Reason reason, std::optional<long> lRoseResult = std::nullopt, std::optional<size_t> stResponseData = std::nullopt,
-		std::shared_ptr<SnaccInvokeContext> pctx = {});
+	void finalize(Outcome outcome, Stage stage, Reason reason, std::optional<long> lRoseResult = std::nullopt, std::optional<size_t> stResponseData = std::nullopt, std::shared_ptr<SnaccInvokeContext> pctx = {});
 
 	// Immutable request metadata captured when the lifecycle starts.
 	const Direction m_Direction{};
