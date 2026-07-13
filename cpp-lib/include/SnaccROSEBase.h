@@ -8,6 +8,10 @@
 #include <functional>
 #include <string>
 #include <mutex>
+#include <atomic>
+#include <thread>
+#include <condition_variable>
+#include <chrono>
 #include <wchar.h>
 #include <optional>
 #include "SnaccROSEInterfaces.h"
@@ -71,6 +75,30 @@ public:
 	/*! Outbound invoke telemetry tracked alongside the pending completion state. */
 	std::shared_ptr<SnaccTelemetryData> m_pTelemetry;
 
+	/*! True for SendInvokeAsync operations waiting for callback delivery. */
+	bool m_bAsyncInvoke{false};
+
+	/*! True when SendInvokeAsync uses iTimeout==0 (dispatch-only, no completion callback). */
+	bool m_bFireAndForgetAsync{false};
+
+	/*! Context carrying the async completion callback; kept alive until finish. */
+	std::shared_ptr<SnaccInvokeContext> m_pAsyncContext;
+
+	/*! Absolute deadline for async timeout handling; empty when no watchdog is armed. */
+	std::optional<std::chrono::steady_clock::time_point> m_asyncDeadline;
+
+	/*! Encoded outbound request size captured before transport send. */
+	size_t m_stOutboundRequestData{};
+
+	/*! Invoke start time used when async telemetry is finalized after Send(). */
+	std::chrono::steady_clock::time_point m_chronoTelemetryCreated{};
+
+	/*! Creates outbound telemetry on first use for async invokes. */
+	void EnsureOutboundTelemetry();
+
+	/*! Claims single completion for async invokes; returns false when already finished. */
+	bool TryClaimAsyncCompletion();
+
 	/*! Async Operation completed.
 		pAnswerMessage transfers ownership of a decoded response when present. */
 	void CompleteOperation(long lRoseResult, std::unique_ptr<SNACC::ROSEMessage> pAnswerMessage = {}, size_t stResponseData = 0);
@@ -78,6 +106,9 @@ public:
 
 	/*! Wait for answer received. */
 	bool WaitForComplete(long lTimeOut = -1);
+
+private:
+	std::atomic<bool> m_bAsyncCompletionClaimed{false};
 };
 
 typedef std::map<long, std::unique_ptr<SnaccROSEPendingOperation>> SnaccROSEPendingOperationMap;
@@ -276,6 +307,12 @@ public:
 	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
 
 	/**
+	 * Async outbound invoke. For iTimeout > 0 (or -1 default), requires SetAsyncCompletion() on pCtx.
+	 * iTimeout == 0 matches SendInvoke fire-and-forget: no watchdog, no completion callback.
+	 */
+	virtual long SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
+
+	/**
 	 * Encodes the result or error from an OnInvoke request. Retrieves the result or error from the response
 	 *
 	 * invokeResult - the result of the OnInvoke method
@@ -424,6 +461,12 @@ private:
 		destroys it when this function returns. */
 	bool CompletePendingOperation(int invokeID, std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long ulMessageSize);
 	bool GetPendingOperationTelemetryInfo(int invokeID, unsigned int& uiOperationID, std::string& strOperationName);
+	void FinishAsyncInvoke(long invokeID, long lRoseResult, std::unique_ptr<SNACC::ROSEMessage> pMessage, size_t stResponseData);
+	void ProcessAsyncTimeouts();
+	void EnsureWatchdogRunning();
+	void StopWatchdogThread();
+	void NotifyWatchdog();
+	void UpdatePendingOutboundRequestData(long invokeID, size_t stRequestData);
 	static long GetRejectResultCode(const SNACC::ROSEReject* pReject);
 	static long GetRejectResultCode(const SNACC::ROSEReject* pReject, SnaccInvokeContext& ctx);
 	static long DecodeResponse(const SNACC::ROSEMessage& response, SNACC::ROSEResult*& pResult, SNACC::ROSEError*& pError, SnaccInvokeContext& ctx);
@@ -431,6 +474,13 @@ private:
 	bool IsProcessingAllowed() const;
 
 	SnaccROSEPendingOperationMap m_PendingOperations;
+
+	std::mutex m_watchdogMutex;
+	std::condition_variable m_watchdogCv;
+	std::thread m_watchdogThread;
+	bool m_watchdogStopRequested{false};
+	bool m_watchdogThreadRunning{false};
+	size_t m_asyncDeadlineCount{0};
 
 	// Operations that are handled multithreaded, event the application itself is single threaded
 	// This member has to be set while initializing the class as it is not thread save

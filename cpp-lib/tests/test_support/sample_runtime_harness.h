@@ -56,6 +56,53 @@ inline std::string GetOptionalString(const AsnSomeSettings& settings)
 	return settings.u8sUsername ? settings.u8sUsername->getASCII() : std::string();
 }
 
+// Waits for exactly one async invoke completion in tests.
+class AsyncInvokeLatch
+{
+public:
+	SnaccInvokeAsyncCallback Callback()
+	{
+		return [this](long lRoseResult, SnaccInvokeContext&) {
+			std::lock_guard<std::mutex> guard(m_mutex);
+			m_lRoseResult = lRoseResult;
+			++m_nCallbackCount;
+			m_bCompleted = true;
+			m_cv.notify_all();
+		};
+	}
+
+	bool WaitFor(std::chrono::milliseconds timeout) const
+	{
+		std::unique_lock<std::mutex> lock(m_mutex);
+		return m_cv.wait_for(lock, timeout, [this]() { return m_bCompleted; });
+	}
+
+	bool IsCompleted() const
+	{
+		std::lock_guard<std::mutex> guard(m_mutex);
+		return m_bCompleted;
+	}
+
+	long RoseResult() const
+	{
+		std::lock_guard<std::mutex> guard(m_mutex);
+		return m_lRoseResult;
+	}
+
+	int CallbackCount() const
+	{
+		std::lock_guard<std::mutex> guard(m_mutex);
+		return m_nCallbackCount;
+	}
+
+private:
+	mutable std::mutex m_mutex;
+	mutable std::condition_variable m_cv;
+	bool m_bCompleted = false;
+	long m_lRoseResult = 0;
+	int m_nCallbackCount = 0;
+};
+
 // Converts the ASCII session id used in tests into the wchar_t form expected by
 // the base runtime methods that encode result and error responses.
 inline std::wstring ToWide(const std::string& value)
@@ -547,6 +594,13 @@ public:
 		return SnaccROSEBase::SendInvoke(pInvoke, pResult, pError, szOperationName, iTimeout, std::move(pCtx));
 	}
 
+	// Attaches the endpoint session id before the base runtime dispatches an async invoke.
+	long SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
+	{
+		AttachSessionId(pInvoke);
+		return SnaccROSEBase::SendInvokeAsync(pInvoke, pResult, pError, szOperationName, iTimeout, std::move(pCtx));
+	}
+
 	// Attaches the endpoint session id before the base runtime encodes an event.
 	long SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
 	{
@@ -855,6 +909,13 @@ public:
 	{
 		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnGetSettings, argument);
 		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnGetSettings", timeoutMs, std::move(pCtx));
+	}
+
+	// Issues an async get-settings invoke; completion is delivered through the context callback.
+	long InvokeGetSettingsAsync(AsnGetSettingsArgument* argument, AsnGetSettingsResult* result, AsnRequestError* error, std::shared_ptr<SnaccInvokeContext> pCtx, int timeoutMs = -1)
+	{
+		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnGetSettings, argument);
+		return m_endpoint.SendInvokeAsync(invokeMsg.GetPtr(), result, error, "asnGetSettings", timeoutMs, std::move(pCtx));
 	}
 
 	// Issues the generated "set settings" invoke from the client side.

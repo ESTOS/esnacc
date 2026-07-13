@@ -272,6 +272,33 @@ void SnaccInvokeContext::PrepareForTelemetry()
 {
 }
 
+void SnaccInvokeContext::SetAsyncCompletion(SnaccInvokeAsyncCallback callback, SNACC::AsnType* pResult, SNACC::AsnType* pError)
+{
+	m_asyncCallback = std::move(callback);
+	m_pAsyncResult = pResult;
+	m_pAsyncError = pError;
+}
+
+bool SnaccInvokeContext::HasAsyncCompletion() const
+{
+	return static_cast<bool>(m_asyncCallback);
+}
+
+const SnaccInvokeAsyncCallback& SnaccInvokeContext::AsyncCallback() const
+{
+	return m_asyncCallback;
+}
+
+SNACC::AsnType* SnaccInvokeContext::AsyncResultBuffer() const
+{
+	return m_pAsyncResult;
+}
+
+SNACC::AsnType* SnaccInvokeContext::AsyncErrorBuffer() const
+{
+	return m_pAsyncError;
+}
+
 std::string getPrettyPrinted(const SJson::Value& value)
 {
 	SJson::StreamWriterBuilder wbuilder;
@@ -568,7 +595,22 @@ void SnaccROSEPendingOperation::CompleteOperation(long lRoseResult, std::unique_
 	m_stResponseData = stResponseData;
 	if (pAnswerMessage)
 		m_pAnswerMessage = std::move(pAnswerMessage);
-	m_CompletedEvent.signal();
+	if (!m_bAsyncInvoke)
+		m_CompletedEvent.signal();
+}
+
+bool SnaccROSEPendingOperation::TryClaimAsyncCompletion()
+{
+	bool expected = false;
+	return m_bAsyncCompletionClaimed.compare_exchange_strong(expected, true);
+}
+
+void SnaccROSEPendingOperation::EnsureOutboundTelemetry()
+{
+	if (m_pTelemetry || m_chronoTelemetryCreated == std::chrono::steady_clock::time_point{})
+		return;
+
+	m_pTelemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, m_uiOperationID, m_strOperationName.c_str(), m_stOutboundRequestData, m_chronoTelemetryCreated);
 }
 
 void SnaccROSEPendingOperation::FinalizeTelemetry(long lFinalRoseResult, std::shared_ptr<SnaccInvokeContext> pctx)
@@ -629,6 +671,8 @@ void SnaccROSEBase::SetTelemetryCallback(SnaccTelemetryCallback* pTelemetryCallB
 
 SnaccROSEBase::~SnaccROSEBase(void)
 {
+	StopProcessing(true);
+	StopWatchdogThread();
 	ConfigureFileLogging(nullptr);
 }
 
@@ -651,10 +695,21 @@ void SnaccROSEBase::SetMaxInvokeWaitTime(long lMaxInvokeWait)
 
 void SnaccROSEBase::CompleteAllPendingOperations()
 {
-	std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+	std::vector<long> asyncInvokeIds;
+	{
+		std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
 
-	for (auto it = m_PendingOperations.begin(); it != m_PendingOperations.end(); it++)
-		it->second->CompleteOperation(ROSE_TE_SHUTDOWN);
+		for (auto it = m_PendingOperations.begin(); it != m_PendingOperations.end(); ++it)
+		{
+			if (it->second->m_bAsyncInvoke)
+				asyncInvokeIds.push_back(it->second->m_lInvokeID);
+			else
+				it->second->CompleteOperation(ROSE_TE_SHUTDOWN);
+		}
+	}
+
+	for (const long invokeID : asyncInvokeIds)
+		FinishAsyncInvoke(invokeID, ROSE_TE_SHUTDOWN, {}, 0);
 }
 
 bool SnaccROSEBase::IsProcessingAllowed() const
@@ -684,13 +739,15 @@ void SnaccROSEBase::RemovePendingOperation(int invokeID)
 
 bool SnaccROSEBase::CompletePendingOperation(int invokeID, std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long ulMessageSize)
 {
-	std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
-
-	const auto it = m_PendingOperations.find(invokeID);
-	if (it != m_PendingOperations.end())
+	long lRoseResult = ROSE_RE_INVALID_ANSWER;
+	bool finishAsync = false;
 	{
-		// found...
-		long lRoseResult = ROSE_RE_INVALID_ANSWER;
+		std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+
+		const auto it = m_PendingOperations.find(invokeID);
+		if (it == m_PendingOperations.end())
+			return false;
+
 		switch (pMessage->choiceId)
 		{
 			case ROSEMessage::resultCid:
@@ -706,11 +763,19 @@ bool SnaccROSEBase::CompletePendingOperation(int invokeID, std::unique_ptr<SNACC
 				break;
 		}
 
-		it->second->CompleteOperation(lRoseResult, std::move(pMessage), ulMessageSize);
-		return true;
+		if (it->second->m_bAsyncInvoke)
+			finishAsync = true;
+		else
+		{
+			it->second->CompleteOperation(lRoseResult, std::move(pMessage), ulMessageSize);
+			return true;
+		}
 	}
 
-	return false;
+	if (finishAsync)
+		FinishAsyncInvoke(invokeID, lRoseResult, std::move(pMessage), ulMessageSize);
+
+	return true;
 }
 
 bool SnaccROSEBase::GetPendingOperationTelemetryInfo(int invokeID, unsigned int& uiOperationID, std::string& strOperationName)
@@ -1355,6 +1420,15 @@ long SnaccROSEBase::GetNextInvokeID()
 	return m_lInvokeCounter;
 }
 
+void SnaccROSEBase::UpdatePendingOutboundRequestData(long invokeID, size_t stRequestData)
+{
+	std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+
+	const auto it = m_PendingOperations.find(invokeID);
+	if (it != m_PendingOperations.end())
+		it->second->m_stOutboundRequestData = stRequestData;
+}
+
 long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, SnaccInvokeContext& ctx, size_t* pstRequestData /*= nullptr*/)
 {
 	long lRoseResult = ROSE_NOERROR;
@@ -1370,6 +1444,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 		std::string strData = GetEncoded(m_eTransportEncoding, &invokeMsg, &ulSize);
 		if (pstRequestData)
 			*pstRequestData = ulSize;
+		UpdatePendingOutboundRequestData(pInvoke->invokeID, ulSize);
 		LogTransportData(true, m_eTransportEncoding, szOperationName, strData.c_str(), ulSize, &invokeMsg, nullptr);
 
 		lRoseResult = SendBinaryDataBlockEx(strData.c_str(), ulSize, ctx);
@@ -1390,6 +1465,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 				strData.insert(0, strPrefix);
 			if (pstRequestData)
 				*pstRequestData = strData.length();
+			UpdatePendingOutboundRequestData(pInvoke->invokeID, strData.length());
 			lRoseResult = SendBinaryDataBlockEx(strData.c_str(), strData.length(), ctx);
 		}
 		else if (pstRequestData)
@@ -1575,6 +1651,262 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResu
 	RemovePendingOperation(pendingOP.m_lInvokeID);
 
 	return lRoseResult;
+}
+
+void SnaccROSEBase::FinishAsyncInvoke(long invokeID, long lRoseResult, std::unique_ptr<SNACC::ROSEMessage> pMessage, size_t stResponseData)
+{
+	std::unique_ptr<SnaccROSEPendingOperation> pending;
+	{
+		std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+
+		const auto it = m_PendingOperations.find(invokeID);
+		if (it == m_PendingOperations.end() || !it->second->m_bAsyncInvoke)
+			return;
+
+		if (!it->second->TryClaimAsyncCompletion())
+			return;
+
+		if (it->second->m_asyncDeadline.has_value())
+		{
+			if (m_asyncDeadlineCount > 0)
+				--m_asyncDeadlineCount;
+		}
+
+		pending = std::move(it->second);
+		m_PendingOperations.erase(it);
+	}
+
+	pending->m_lRoseResult = lRoseResult;
+	pending->m_stResponseData = stResponseData;
+
+	// Fire-and-forget (iTimeout==0): match sync SendInvoke — finalize dispatch telemetry only,
+	// discard any response that arrives before or after Send() returns, never call the callback.
+	if (pending->m_bFireAndForgetAsync)
+	{
+		pending->EnsureOutboundTelemetry();
+		if (pending->m_pTelemetry)
+		{
+			pending->FinalizeTelemetry(lRoseResult, pending->m_pAsyncContext);
+			OnInvokeProcessed(pending->m_pTelemetry);
+			pending->m_pTelemetry.reset();
+		}
+
+		NotifyWatchdog();
+		return;
+	}
+
+	if (pMessage)
+		pending->m_pAnswerMessage = std::move(pMessage);
+
+	long lFinalRoseResult = lRoseResult;
+	std::shared_ptr<SnaccInvokeContext> pCtx = pending->m_pAsyncContext;
+	if (pending->m_pAnswerMessage && pCtx)
+	{
+		lFinalRoseResult = HandleInvokeResult(lFinalRoseResult, *pending->m_pAnswerMessage, pCtx->AsyncResultBuffer(), pCtx->AsyncErrorBuffer(), *pCtx);
+	}
+
+	pending->EnsureOutboundTelemetry();
+
+	if (pending->m_pTelemetry)
+	{
+		pending->FinalizeTelemetry(lFinalRoseResult, pCtx);
+		OnInvokeProcessed(pending->m_pTelemetry);
+		pending->m_pTelemetry.reset();
+	}
+
+	SnaccInvokeAsyncCallback callback;
+	if (pCtx && pCtx->HasAsyncCompletion())
+		callback = pCtx->AsyncCallback();
+
+	NotifyWatchdog();
+
+	if (callback && pCtx)
+		callback(lFinalRoseResult, *pCtx);
+}
+
+void SnaccROSEBase::ProcessAsyncTimeouts()
+{
+	const auto now = std::chrono::steady_clock::now();
+	std::vector<long> timedOutInvokeIds;
+	{
+		std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+		for (const auto& entry : m_PendingOperations)
+		{
+			const SnaccROSEPendingOperation& pending = *entry.second;
+			if (pending.m_bAsyncInvoke && pending.m_asyncDeadline.has_value() && now >= pending.m_asyncDeadline.value())
+				timedOutInvokeIds.push_back(pending.m_lInvokeID);
+		}
+	}
+
+	for (const long invokeID : timedOutInvokeIds)
+		FinishAsyncInvoke(invokeID, ROSE_TE_TIMEOUT, {}, 0);
+}
+
+void SnaccROSEBase::NotifyWatchdog()
+{
+	bool stopWatchdog = false;
+	{
+		std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+		stopWatchdog = (m_asyncDeadlineCount == 0);
+	}
+
+	std::lock_guard<std::mutex> guard(m_watchdogMutex);
+	if (stopWatchdog)
+		m_watchdogStopRequested = true;
+	m_watchdogCv.notify_all();
+}
+
+void SnaccROSEBase::EnsureWatchdogRunning()
+{
+	std::lock_guard<std::mutex> guard(m_watchdogMutex);
+	if (m_watchdogThreadRunning)
+		return;
+
+	m_watchdogStopRequested = false;
+	m_watchdogThreadRunning = true;
+	m_watchdogThread = std::thread([this]() {
+		for (;;)
+		{
+			std::chrono::steady_clock::time_point nextDeadline = std::chrono::steady_clock::time_point::max();
+			{
+				std::lock_guard<std::mutex> pendingGuard(m_InternalProtectMutex);
+				for (const auto& entry : m_PendingOperations)
+				{
+					const SnaccROSEPendingOperation& pending = *entry.second;
+					if (pending.m_bAsyncInvoke && pending.m_asyncDeadline.has_value() && pending.m_asyncDeadline.value() < nextDeadline)
+						nextDeadline = pending.m_asyncDeadline.value();
+				}
+			}
+
+			std::unique_lock<std::mutex> watchdogLock(m_watchdogMutex);
+			if (nextDeadline == std::chrono::steady_clock::time_point::max())
+			{
+				m_watchdogCv.wait(watchdogLock, [this]() {
+					if (m_watchdogStopRequested)
+						return true;
+					std::lock_guard<std::mutex> pendingGuard(m_InternalProtectMutex);
+					return m_asyncDeadlineCount > 0;
+				});
+				if (m_watchdogStopRequested)
+				{
+					std::lock_guard<std::mutex> pendingGuard(m_InternalProtectMutex);
+					if (m_asyncDeadlineCount == 0)
+						break;
+				}
+				continue;
+			}
+
+			if (m_watchdogCv.wait_until(watchdogLock, nextDeadline, [this]() { return m_watchdogStopRequested; }))
+			{
+				std::lock_guard<std::mutex> pendingGuard(m_InternalProtectMutex);
+				if (m_asyncDeadlineCount == 0)
+					break;
+			}
+			else
+			{
+				watchdogLock.unlock();
+				ProcessAsyncTimeouts();
+			}
+		}
+
+		std::lock_guard<std::mutex> guard(m_watchdogMutex);
+		m_watchdogThreadRunning = false;
+	});
+}
+
+void SnaccROSEBase::StopWatchdogThread()
+{
+	{
+		std::lock_guard<std::mutex> guard(m_watchdogMutex);
+		m_watchdogStopRequested = true;
+		m_watchdogCv.notify_all();
+	}
+
+	if (m_watchdogThread.joinable())
+		m_watchdogThread.join();
+}
+
+long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, int iTimeout /*= -1*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
+{
+	const auto chronoCreated = std::chrono::steady_clock::now();
+	const char* szResolvedOperationName = SnaccRoseOperationLookup::LookUpName(pInvoke->operationID);
+
+	if (!pCtx)
+	{
+		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pInvoke, szResolvedOperationName ? szResolvedOperationName : szOperationName);
+		pCtx = CreateInvokeContext(init);
+	}
+
+	if (iTimeout == -1)
+		iTimeout = m_lMaxInvokeWait;
+
+	const bool bFireAndForget = (iTimeout == 0);
+
+	// Fire-and-forget is dispatch-only; a completion callback contradicts iTimeout==0.
+	ASSERT(!bFireAndForget || !pCtx->HasAsyncCompletion());
+
+	if (!bFireAndForget && !pCtx->HasAsyncCompletion())
+	{
+		pCtx->SetAsyncCompletion([](long, SnaccInvokeContext&) {}, pResult, pError);
+	}
+
+	auto& ctx = *pCtx;
+
+	if (!IsProcessingAllowed())
+	{
+		SnaccInvokeAsyncCallback shutdownCallback;
+		if (!bFireAndForget && pCtx->HasAsyncCompletion())
+			shutdownCallback = pCtx->AsyncCallback();
+
+		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
+		telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::SHUTDOWN, ROSE_TE_SHUTDOWN, std::nullopt, pCtx);
+		OnInvokeProcessed(telemetry);
+		if (shutdownCallback)
+			shutdownCallback(ROSE_TE_SHUTDOWN, *pCtx);
+		return ROSE_TE_SHUTDOWN;
+	}
+
+	auto& pendingOP = AddPendingOperation(pInvoke->invokeID, pInvoke->operationID, szResolvedOperationName);
+	pendingOP.m_bAsyncInvoke = true;
+	pendingOP.m_bFireAndForgetAsync = bFireAndForget;
+	pendingOP.m_pAsyncContext = pCtx;
+	pendingOP.m_chronoTelemetryCreated = chronoCreated;
+
+	if (iTimeout > 0)
+	{
+		pendingOP.m_asyncDeadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(iTimeout);
+		{
+			std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+			++m_asyncDeadlineCount;
+		}
+		EnsureWatchdogRunning();
+		NotifyWatchdog();
+	}
+
+	size_t stRequestData = 0;
+	const long lRoseResult = Send(pInvoke, szOperationName, ctx, &stRequestData);
+	(void)stRequestData;
+
+	if (bFireAndForget)
+	{
+		// Finish even when the response was already consumed inside Send(); second call is a no-op.
+		FinishAsyncInvoke(pendingOP.m_lInvokeID, lRoseResult, {}, 0);
+		return lRoseResult;
+	}
+
+	if (lRoseResult != ROSE_NOERROR)
+	{
+		FinishAsyncInvoke(pendingOP.m_lInvokeID, lRoseResult, {}, 0);
+		return lRoseResult;
+	}
+
+	{
+		std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+		if (m_PendingOperations.find(pInvoke->invokeID) == m_PendingOperations.end())
+			return ROSE_NOERROR;
+	}
+
+	return ROSE_NOERROR;
 }
 
 long SnaccROSEBase::DecodeResponse(const SNACC::ROSEMessage& response, SNACC::ROSEResult*& pResult, SNACC::ROSEError*& pError, SnaccInvokeContext& ctx)

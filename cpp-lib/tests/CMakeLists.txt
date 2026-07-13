@@ -51,6 +51,7 @@ target_include_directories(snacc-sample-generated PUBLIC "${SNACC_SAMPLE_TEST_GE
 target_link_libraries(snacc-sample-generated PUBLIC snacc_cpp_lib)
 
 add_executable(cpp-lib-sample-runtime-tests
+	async_invoke_tests.cpp
 	call_flow_tests.cpp
 	invoke_context_tests.cpp
 	logging_tests.cpp
