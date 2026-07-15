@@ -11,7 +11,7 @@ protected:
 	{
 		AsnGetSettingsArgument argument;
 		SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
-		auto pCtx = m_client.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
+		auto pCtx = m_client.CreateSessionInvokeContext(invokeMsg.GetPtr());
 		pCtx->SetInvokeTimeout(timeoutMs);
 		pCtx->SetAsyncCompletion(latch.Callback(), &result, &error);
 		return m_client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", std::move(pCtx));
@@ -23,7 +23,7 @@ protected:
 		AsnGetSettingsResult result;
 		AsnRequestError error;
 		SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
-		auto pCtx = m_client.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
+		auto pCtx = m_client.CreateSessionInvokeContext(invokeMsg.GetPtr());
 		pCtx->SetInvokeTimeout(0);
 		return m_client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", std::move(pCtx));
 	}

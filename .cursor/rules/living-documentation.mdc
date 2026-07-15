@@ -9,6 +9,8 @@ Good code documents **why** it exists, not only **what** it does. When you add o
 
 ## Required for new/changed definitions
 
+Applies to **new or materially changed functions and methods** as well as types and non-obvious members.
+
 For each new type or group of related helpers, document:
 
 1. **Purpose** — what problem this solves in the subsystem.
@@ -16,6 +18,12 @@ For each new type or group of related helpers, document:
 3. **Scope** — file-local helper vs public API; thread/context constraints if relevant.
 
 For non-obvious members (handles, caches, flags, borrowed pointers, `unique_ptr` sinks), add a comment **on the line above the member** unless the type-level comment already makes it obvious. Do not use trailing end-of-line comments for member documentation.
+
+For **every new function or method** (free functions, static helpers, member functions, anonymous-namespace utilities):
+
+- Add a comment block **immediately above the definition** (header or `.cpp`).
+- State purpose, caller context, and non-obvious pre/postconditions (e.g. mutates invoke, borrow vs own).
+- Do not skip file-local helpers in `.cpp` — they are part of the runtime contract tests document.
 
 ## Style in this repo
 
@@ -48,3 +56,5 @@ std::unique_ptr<SNACC::ROSEMessage> m_pAnswerMessage;
 ## Agent workflow
 
 When introducing structures or members as part of a fix or feature, **include documentation in the same change**. Do not defer “comment pass” to a follow-up unless the user explicitly asks for code-only first.
+
+When introducing **new functions or methods**, apply the same rule: comment at the definition site before considering the change complete.

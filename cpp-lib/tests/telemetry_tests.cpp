@@ -58,7 +58,7 @@ long SendAsyncGetSettings(RuntimeEndpoint& client, AsyncInvokeLatch& latch, AsnG
 {
 	AsnGetSettingsArgument argument;
 	SnaccScopedInvokeMessage invokeMsg(client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
-	auto pCtx = client.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
+	auto pCtx = client.CreateSessionInvokeContext(invokeMsg.GetPtr());
 	pCtx->SetInvokeTimeout(timeoutMs);
 	pCtx->SetAsyncCompletion(latch.Callback(), &result, &error);
 	return client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", std::move(pCtx));
@@ -70,7 +70,7 @@ long SendFireAndForgetGetSettings(RuntimeEndpoint& client)
 	AsnGetSettingsResult result;
 	AsnRequestError error;
 	SnaccScopedInvokeMessage invokeMsg(client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
-	auto pCtx = client.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
+	auto pCtx = client.CreateSessionInvokeContext(invokeMsg.GetPtr());
 	pCtx->SetInvokeTimeout(0);
 	return client.SendInvokeAsync(invokeMsg.GetPtr(), &result, &error, "asnGetSettings", std::move(pCtx));
 }
@@ -212,7 +212,7 @@ protected:
 		AsnGetSettingsResult result;
 		AsnRequestError error;
 		SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
-		auto pCtx = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
+		auto pCtx = CreateClientInvokeContext(invokeMsg.GetPtr());
 		pCtx->SetInvokeTimeout(250);
 
 		auto responseFuture = std::async(std::launch::async, [&]() {
@@ -274,7 +274,7 @@ protected:
 		AsnGetSettingsResult result;
 		AsnRequestError error;
 		SnaccScopedInvokeMessage invokeMsg(m_client.GetNextInvokeID(), OPID_asnGetSettings, &argument);
-		auto pCtx = CreateClientInvokeContext(invokeMsg.GetPtr(), "asnGetSettings");
+		auto pCtx = CreateClientInvokeContext(invokeMsg.GetPtr());
 		pCtx->SetTelemetryNote("custom");
 
 		EXPECT_FALSE(pCtx->WasPreparedForTelemetry());

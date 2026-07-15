@@ -139,7 +139,10 @@ using SnaccInvokeAsyncCallback = std::function<void(long lRoseResult, SnaccInvok
 class SnaccInvokeContextInit
 {
 public:
-	SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke, const char* szOperationName = nullptr);
+	/*! @param szOperationName Optional. Inbound: synthetic name or resolved via lookup from
+		@p pInvoke. Outbound: stored when provided (deprecated stub default context);
+		omit for normal outbound contexts (use CreateOutboundInvokeContext()). */
+	SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke = nullptr, const char* szOperationName = nullptr);
 
 	const SnaccInvokeDirection m_direction{};
 	const SNACC::ROSEInvoke* m_pInvoke{};
@@ -203,11 +206,20 @@ public:
 	/*! Returns the typed error buffer supplied to SetAsyncCompletion(). */
 	SNACC::AsnType* AsyncErrorBuffer() const;
 
+	/*! Inbound: canonical name from SnaccRoseOperationLookup. Outbound: set only when
+		passed explicitly to SnaccInvokeContextInit (e.g. deprecated stub). Send/telemetry
+		still use the stub literal at SendInvoke/SendEvent. */
+	const std::string& OperationName() const;
+
+	/*! Returns OperationName().c_str() or nullptr when empty. */
+	const char* OperationNameCStr() const;
+
 protected:
 	explicit SnaccInvokeContext(const SnaccInvokeContextInit& init);
 	// Allows derived context types to copy the base invoke-context state into a richer concrete type.
 	SnaccInvokeContext(const SnaccInvokeContext& other);
 
+	std::string m_strOperationName;
 	int m_iInvokeTimeout{-1};
 	SnaccInvokeAsyncCallback m_asyncCallback;
 	SNACC::AsnType* m_pAsyncResult{};
@@ -220,6 +232,13 @@ class SnaccROSESender
 {
 public:
 	virtual std::shared_ptr<SnaccInvokeContext> CreateInvokeContext(const SnaccInvokeContextInit& init) = 0;
+
+	/*! Pre-configures an outbound invoke context (timeout, async callback, product fields).
+		Delegates to virtual CreateInvokeContext() so product code can supply a derived type. */
+	std::shared_ptr<SnaccInvokeContext> CreateOutboundInvokeContext()
+	{
+		return CreateInvokeContext(SnaccInvokeContextInit(SnaccInvokeDirection::OUTBOUND));
+	}
 
 	/*! Increment invoke counter and return InvokeID */
 	virtual long GetNextInvokeID() = 0;

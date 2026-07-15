@@ -323,11 +323,13 @@ public:
 		m_strLocalSessionId.clear();
 		m_strInvokeSessionId.clear();
 		m_strTelemetryNote.clear();
+		m_strOperationName.clear();
 	}
 
 	void Capture(const SnaccInvokeContext& ctx)
 	{
 		m_bCaptured = true;
+		m_strOperationName = ctx.OperationName();
 		if (const auto* pSessionContext = dynamic_cast<const SessionInvokeContext*>(&ctx))
 		{
 			m_bIsSessionContext = true;
@@ -368,12 +370,18 @@ public:
 		return m_strTelemetryNote;
 	}
 
+	const std::string& OperationName() const
+	{
+		return m_strOperationName;
+	}
+
 private:
 	bool m_bCaptured = false;
 	bool m_bIsSessionContext = false;
 	std::string m_strLocalSessionId;
 	std::string m_strInvokeSessionId;
 	std::string m_strTelemetryNote;
+	std::string m_strOperationName;
 };
 
 // Records inbound handler and transport observations for one server endpoint.
@@ -551,10 +559,11 @@ public:
 
 	// Creates the same session-aware context the runtime would construct for an
 	// outbound invoke after the session id has been attached to the payload.
-	std::shared_ptr<SessionInvokeContext> CreateSessionInvokeContext(SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
+	// Operation naming is resolved at SendInvoke/SendEvent from the stub literal, not here.
+	std::shared_ptr<SessionInvokeContext> CreateSessionInvokeContext(SNACC::ROSEInvoke* pInvoke)
 	{
 		AttachSessionId(pInvoke);
-		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pInvoke, szOperationName);
+		const SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pInvoke);
 		return SessionInvokeContext::Create(init, m_strSessionId);
 	}
 
@@ -904,7 +913,7 @@ public:
 		if (timeoutMs == -1)
 			return m_component.Invoke_asnGetSettings(argument, result, error);
 
-		auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr, "asnGetSettings");
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr);
 		pCtx->SetInvokeTimeout(timeoutMs);
 		return m_component.Invoke_asnGetSettings(argument, result, error, pCtx);
 	}
@@ -929,7 +938,7 @@ public:
 		if (timeoutMs == -1)
 			return m_component.Invoke_asnSetSettings(argument, result, error);
 
-		auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr, "asnSetSettings");
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr);
 		pCtx->SetInvokeTimeout(timeoutMs);
 		return m_component.Invoke_asnSetSettings(argument, result, error, pCtx);
 	}
@@ -941,7 +950,7 @@ public:
 		AsnGetSettingsResult result;
 		AsnRequestError error;
 		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), 4999, &argument);
-		auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnUnknownOperation");
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr());
 		pCtx->SetInvokeTimeout(timeoutMs);
 		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnUnknownOperation", std::move(pCtx));
 	}
@@ -952,7 +961,7 @@ public:
 		ROSEInvoke invoke;
 		invoke.invokeID = m_endpoint.GetNextInvokeID();
 		invoke.operationID = OPID_asnSetSettings;
-		auto pCtx = m_endpoint.CreateSessionInvokeContext(&invoke, "asnSetSettings");
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(&invoke);
 		pCtx->SetInvokeTimeout(timeoutMs);
 		return m_endpoint.SendInvoke(&invoke, result, error, "asnSetSettings", std::move(pCtx));
 	}
@@ -961,7 +970,7 @@ public:
 	long InvokeSetSettingsWithWrongArgument(AsnType* wrongArgument, AsnSetSettingsResult* result, AsnRequestError* error, int timeoutMs = 250)
 	{
 		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnSetSettings, wrongArgument);
-		auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnSetSettings");
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr());
 		pCtx->SetInvokeTimeout(timeoutMs);
 		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnSetSettings", std::move(pCtx));
 	}
@@ -1110,7 +1119,7 @@ public:
 		if (timeoutMs == -1)
 			return m_component.Invoke_asnCreateFancyEvents(argument, result, error);
 
-		auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr, "asnCreateFancyEvents");
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr);
 		pCtx->SetInvokeTimeout(timeoutMs);
 		return m_component.Invoke_asnCreateFancyEvents(argument, result, error, pCtx);
 	}
@@ -1126,7 +1135,7 @@ public:
 	long InvokeCreateFancyEventsWithWrongArgument(AsnType* wrongArgument, AsnCreateFancyEventsResult* result, AsnRequestError* error, int timeoutMs = 250)
 	{
 		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnCreateFancyEvents, wrongArgument);
-		auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr(), "asnCreateFancyEvents");
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr());
 		pCtx->SetInvokeTimeout(timeoutMs);
 		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnCreateFancyEvents", std::move(pCtx));
 	}
@@ -1355,15 +1364,15 @@ protected:
 	}
 
 	// Gives tests a simple way to create a session-aware outbound context for the client.
-	std::shared_ptr<SessionInvokeContext> CreateClientInvokeContext(SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
+	std::shared_ptr<SessionInvokeContext> CreateClientInvokeContext(SNACC::ROSEInvoke* pInvoke)
 	{
-		return m_client.CreateSessionInvokeContext(pInvoke, szOperationName);
+		return m_client.CreateSessionInvokeContext(pInvoke);
 	}
 
 	// Gives tests a simple way to create a session-aware outbound context for the server.
-	std::shared_ptr<SessionInvokeContext> CreateServerInvokeContext(SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
+	std::shared_ptr<SessionInvokeContext> CreateServerInvokeContext(SNACC::ROSEInvoke* pInvoke)
 	{
-		return m_server.CreateSessionInvokeContext(pInvoke, szOperationName);
+		return m_server.CreateSessionInvokeContext(pInvoke);
 	}
 
 	// Starts an asynchronous get-settings invoke so lifecycle tests can race it
