@@ -56,6 +56,53 @@ inline std::string GetOptionalString(const AsnSomeSettings& settings)
 	return settings.u8sUsername ? settings.u8sUsername->getASCII() : std::string();
 }
 
+// Waits for exactly one async invoke completion in tests.
+class AsyncInvokeLatch
+{
+public:
+	SnaccInvokeAsyncCallback Callback()
+	{
+		return [this](long lRoseResult, SnaccInvokeContext&) {
+			std::lock_guard<std::mutex> guard(m_mutex);
+			m_lRoseResult = lRoseResult;
+			++m_nCallbackCount;
+			m_bCompleted = true;
+			m_cv.notify_all();
+		};
+	}
+
+	bool WaitFor(std::chrono::milliseconds timeout) const
+	{
+		std::unique_lock<std::mutex> lock(m_mutex);
+		return m_cv.wait_for(lock, timeout, [this]() { return m_bCompleted; });
+	}
+
+	bool IsCompleted() const
+	{
+		std::lock_guard<std::mutex> guard(m_mutex);
+		return m_bCompleted;
+	}
+
+	long RoseResult() const
+	{
+		std::lock_guard<std::mutex> guard(m_mutex);
+		return m_lRoseResult;
+	}
+
+	int CallbackCount() const
+	{
+		std::lock_guard<std::mutex> guard(m_mutex);
+		return m_nCallbackCount;
+	}
+
+private:
+	mutable std::mutex m_mutex;
+	mutable std::condition_variable m_cv;
+	bool m_bCompleted = false;
+	long m_lRoseResult = 0;
+	int m_nCallbackCount = 0;
+};
+
 // Converts the ASCII session id used in tests into the wchar_t form expected by
 // the base runtime methods that encode result and error responses.
 inline std::wstring ToWide(const std::string& value)
@@ -276,11 +323,13 @@ public:
 		m_strLocalSessionId.clear();
 		m_strInvokeSessionId.clear();
 		m_strTelemetryNote.clear();
+		m_strOperationName.clear();
 	}
 
 	void Capture(const SnaccInvokeContext& ctx)
 	{
 		m_bCaptured = true;
+		m_strOperationName = ctx.OperationName();
 		if (const auto* pSessionContext = dynamic_cast<const SessionInvokeContext*>(&ctx))
 		{
 			m_bIsSessionContext = true;
@@ -321,12 +370,18 @@ public:
 		return m_strTelemetryNote;
 	}
 
+	const std::string& OperationName() const
+	{
+		return m_strOperationName;
+	}
+
 private:
 	bool m_bCaptured = false;
 	bool m_bIsSessionContext = false;
 	std::string m_strLocalSessionId;
 	std::string m_strInvokeSessionId;
 	std::string m_strTelemetryNote;
+	std::string m_strOperationName;
 };
 
 // Records inbound handler and transport observations for one server endpoint.
@@ -504,10 +559,11 @@ public:
 
 	// Creates the same session-aware context the runtime would construct for an
 	// outbound invoke after the session id has been attached to the payload.
-	std::shared_ptr<SessionInvokeContext> CreateSessionInvokeContext(SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
+	// Operation naming is resolved at SendInvoke/SendEvent from the stub literal, not here.
+	std::shared_ptr<SessionInvokeContext> CreateSessionInvokeContext(SNACC::ROSEInvoke* pInvoke)
 	{
 		AttachSessionId(pInvoke);
-		SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pInvoke, szOperationName);
+		const SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, pInvoke);
 		return SessionInvokeContext::Create(init, m_strSessionId);
 	}
 
@@ -541,10 +597,17 @@ public:
 	}
 
 	// Attaches the endpoint session id before the base runtime encodes an invoke.
-	long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
+	long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
 	{
 		AttachSessionId(pInvoke);
-		return SnaccROSEBase::SendInvoke(pInvoke, pResult, pError, szOperationName, iTimeout, std::move(pCtx));
+		return SnaccROSEBase::SendInvoke(pInvoke, pResult, pError, szOperationName, std::move(pCtx));
+	}
+
+	// Attaches the endpoint session id before the base runtime dispatches an async invoke.
+	long SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
+	{
+		AttachSessionId(pInvoke);
+		return SnaccROSEBase::SendInvokeAsync(pInvoke, pResult, pError, szOperationName, std::move(pCtx));
 	}
 
 	// Attaches the endpoint session id before the base runtime encodes an event.
@@ -847,20 +910,37 @@ public:
 	// Issues the generated "get settings" invoke from the client side.
 	long InvokeGetSettings(AsnGetSettingsArgument* argument, AsnGetSettingsResult* result, AsnRequestError* error, int timeoutMs = -1)
 	{
-		return m_component.Invoke_asnGetSettings(argument, result, error, timeoutMs);
+		if (timeoutMs == -1)
+			return m_component.Invoke_asnGetSettings(argument, result, error);
+
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr);
+		pCtx->SetInvokeTimeout(timeoutMs);
+		return m_component.Invoke_asnGetSettings(argument, result, error, pCtx);
 	}
 
 	// Issues the same invoke through the raw runtime API so tests can attach a custom context.
-	long InvokeGetSettingsWithContext(AsnGetSettingsArgument* argument, AsnGetSettingsResult* result, AsnRequestError* error, std::shared_ptr<SnaccInvokeContext> pCtx, int timeoutMs = -1)
+	long InvokeGetSettingsWithContext(AsnGetSettingsArgument* argument, AsnGetSettingsResult* result, AsnRequestError* error, std::shared_ptr<SnaccInvokeContext> pCtx)
 	{
 		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnGetSettings, argument);
-		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnGetSettings", timeoutMs, std::move(pCtx));
+		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnGetSettings", std::move(pCtx));
+	}
+
+	// Issues an async get-settings invoke; completion is delivered through the context callback.
+	long InvokeGetSettingsAsync(AsnGetSettingsArgument* argument, AsnGetSettingsResult* result, AsnRequestError* error, std::shared_ptr<SnaccInvokeContext> pCtx)
+	{
+		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnGetSettings, argument);
+		return m_endpoint.SendInvokeAsync(invokeMsg.GetPtr(), result, error, "asnGetSettings", std::move(pCtx));
 	}
 
 	// Issues the generated "set settings" invoke from the client side.
 	long InvokeSetSettings(AsnSetSettingsArgument* argument, AsnSetSettingsResult* result, AsnRequestError* error, int timeoutMs = -1)
 	{
-		return m_component.Invoke_asnSetSettings(argument, result, error, timeoutMs);
+		if (timeoutMs == -1)
+			return m_component.Invoke_asnSetSettings(argument, result, error);
+
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr);
+		pCtx->SetInvokeTimeout(timeoutMs);
+		return m_component.Invoke_asnSetSettings(argument, result, error, pCtx);
 	}
 
 	// Sends an invoke with an unregistered operation id to exercise reject handling.
@@ -870,7 +950,9 @@ public:
 		AsnGetSettingsResult result;
 		AsnRequestError error;
 		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), 4999, &argument);
-		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnUnknownOperation", timeoutMs);
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr());
+		pCtx->SetInvokeTimeout(timeoutMs);
+		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnUnknownOperation", std::move(pCtx));
 	}
 
 	// Sends a settings invoke without an argument payload to exercise decode rejects.
@@ -879,14 +961,18 @@ public:
 		ROSEInvoke invoke;
 		invoke.invokeID = m_endpoint.GetNextInvokeID();
 		invoke.operationID = OPID_asnSetSettings;
-		return m_endpoint.SendInvoke(&invoke, result, error, "asnSetSettings", timeoutMs);
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(&invoke);
+		pCtx->SetInvokeTimeout(timeoutMs);
+		return m_endpoint.SendInvoke(&invoke, result, error, "asnSetSettings", std::move(pCtx));
 	}
 
 	// Sends a settings invoke with an intentionally wrong argument type.
 	long InvokeSetSettingsWithWrongArgument(AsnType* wrongArgument, AsnSetSettingsResult* result, AsnRequestError* error, int timeoutMs = 250)
 	{
 		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnSetSettings, wrongArgument);
-		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnSetSettings", timeoutMs);
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr());
+		pCtx->SetInvokeTimeout(timeoutMs);
+		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnSetSettings", std::move(pCtx));
 	}
 
 	// Returns how many settings-changed events the client observed.
@@ -1030,21 +1116,28 @@ public:
 	// Issues the generated "create fancy events" invoke from the client side.
 	long InvokeCreateFancyEvents(AsnCreateFancyEventsArgument* argument, AsnCreateFancyEventsResult* result, AsnRequestError* error, int timeoutMs = -1)
 	{
-		return m_component.Invoke_asnCreateFancyEvents(argument, result, error, timeoutMs);
+		if (timeoutMs == -1)
+			return m_component.Invoke_asnCreateFancyEvents(argument, result, error);
+
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr);
+		pCtx->SetInvokeTimeout(timeoutMs);
+		return m_component.Invoke_asnCreateFancyEvents(argument, result, error, pCtx);
 	}
 
 	// Issues the same invoke through the raw runtime API so tests can attach a custom context.
-	long InvokeCreateFancyEventsWithContext(AsnCreateFancyEventsArgument* argument, AsnCreateFancyEventsResult* result, AsnRequestError* error, std::shared_ptr<SnaccInvokeContext> pCtx, int timeoutMs = -1)
+	long InvokeCreateFancyEventsWithContext(AsnCreateFancyEventsArgument* argument, AsnCreateFancyEventsResult* result, AsnRequestError* error, std::shared_ptr<SnaccInvokeContext> pCtx)
 	{
 		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnCreateFancyEvents, argument);
-		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnCreateFancyEvents", timeoutMs, std::move(pCtx));
+		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnCreateFancyEvents", std::move(pCtx));
 	}
 
 	// Sends the event-manager invoke with an intentionally wrong argument type.
 	long InvokeCreateFancyEventsWithWrongArgument(AsnType* wrongArgument, AsnCreateFancyEventsResult* result, AsnRequestError* error, int timeoutMs = 250)
 	{
 		SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnCreateFancyEvents, wrongArgument);
-		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnCreateFancyEvents", timeoutMs);
+		auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr());
+		pCtx->SetInvokeTimeout(timeoutMs);
+		return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnCreateFancyEvents", std::move(pCtx));
 	}
 
 	// Returns how many fancy-event notifications were observed by the client.
@@ -1271,15 +1364,15 @@ protected:
 	}
 
 	// Gives tests a simple way to create a session-aware outbound context for the client.
-	std::shared_ptr<SessionInvokeContext> CreateClientInvokeContext(SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
+	std::shared_ptr<SessionInvokeContext> CreateClientInvokeContext(SNACC::ROSEInvoke* pInvoke)
 	{
-		return m_client.CreateSessionInvokeContext(pInvoke, szOperationName);
+		return m_client.CreateSessionInvokeContext(pInvoke);
 	}
 
 	// Gives tests a simple way to create a session-aware outbound context for the server.
-	std::shared_ptr<SessionInvokeContext> CreateServerInvokeContext(SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
+	std::shared_ptr<SessionInvokeContext> CreateServerInvokeContext(SNACC::ROSEInvoke* pInvoke)
 	{
-		return m_server.CreateSessionInvokeContext(pInvoke, szOperationName);
+		return m_server.CreateSessionInvokeContext(pInvoke);
 	}
 
 	// Starts an asynchronous get-settings invoke so lifecycle tests can race it

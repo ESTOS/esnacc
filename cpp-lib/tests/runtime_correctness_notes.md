@@ -383,6 +383,36 @@ Each helper detaches borrowed pointers in its destructor.
 - `InvokeContextRuntimeTest.OutboundEncodeFailureKeepsCallerContextJson` (encode
   failure must not corrupt caller-owned invoke context)
 
+## 8. Operation Name Resolution
+
+### Status: implemented (7.0.9)
+
+### Contract
+
+1. **Outbound invokes and events:** the generated stub literal passed to
+   `SendInvoke` / `SendEvent` is the authoritative operation name for telemetry,
+   logging, and transport encoding. Normal outbound contexts use
+   `CreateOutboundInvokeContext()` (no name on the context). Generated deprecated
+   outbound stubs default to `CreateInvokeContext(SnaccInvokeContextInit(OUTBOUND,
+   invoke, operationName))` so `SNACCDeprecated::DeprecatedASN1Method` can read
+   `OperationName()` on the context.
+2. **Lookup map:** `SnaccRoseOperationLookup::LookUpName()` is a parachute when
+   the stub name is absent on outbound paths. Registration in the lookup map is
+   optional but required for inbound context naming when only `operationID` is known.
+3. **Inbound invokes:** `operationID` is authoritative for dispatch. When the client
+   sends `operationID: 0` with `operationName`, `PrepareInboundInvokeOperationId`
+   resolves the ID via `LookUpID` before stub dispatch and before the invoke context
+   is built. The context name is then set via `LookUpName(operationID)` — never from
+   the wire string. Synthetic inbound paths without a decoded invoke may pass an
+   explicit name to `SnaccInvokeContextInit`.
+4. **Context factory:** runtime and generated stubs must create contexts only through
+   `SnaccROSESender::CreateInvokeContext()` (including helpers such as
+   `CreateOutboundInvokeContext()`). Never call `SnaccInvokeContext::Create()` from
+   product/runtime code except the default `CreateInvokeContext` implementation.
+5. **`SnaccInvokeContext::OperationName()`:** inbound from `LookUpName(operationID)`.
+   Outbound only when explicitly passed to `SnaccInvokeContextInit` (deprecated stubs).
+6. **`SnaccInvokeContextInit::m_strOperationName`:** mirrors the same rule.
+
 ## Recommended Follow-Up Order
 
 1. ~~Shutdown contract~~ (done)

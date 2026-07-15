@@ -131,10 +131,18 @@ enum class SnaccInvokeDirection
 	OUTBOUND = 1
 };
 
+class SnaccInvokeContext;
+
+/*! Callback invoked exactly once when an async outbound invoke completes. */
+using SnaccInvokeAsyncCallback = std::function<void(long lRoseResult, SnaccInvokeContext& ctx)>;
+
 class SnaccInvokeContextInit
 {
 public:
-	SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke, const char* szOperationName = nullptr);
+	/*! @param szOperationName Optional. Inbound: synthetic name or resolved via lookup from
+		@p pInvoke. Outbound: stored when provided (deprecated stub default context);
+		omit for normal outbound contexts (use CreateOutboundInvokeContext()). */
+	SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke = nullptr, const char* szOperationName = nullptr);
 
 	const SnaccInvokeDirection m_direction{};
 	const SNACC::ROSEInvoke* m_pInvoke{};
@@ -174,10 +182,48 @@ public:
 	// Meaning in OnInvoke_: Original invoke (borrowed, cleared before telemetry retention)
 	// SNACC::ROSEInvoke* pInvoke{};
 
+	/*! Sets the outbound invoke timeout in milliseconds. -1 uses the connection default (m_lMaxInvokeWait).
+		0 is fire-and-forget: dispatch only, no wait and no async completion callback. */
+	void SetInvokeTimeout(int iTimeoutMs);
+
+	/*! Returns the configured invoke timeout (-1 means use connection default). */
+	int InvokeTimeout() const;
+
+	/*! Configures async completion for SendInvokeAsync. Result and error buffers must remain
+		valid until the callback runs or SendInvokeAsync returns a send-time failure.
+		Not allowed when InvokeTimeout() is 0 (fire-and-forget dispatch; debug ASSERT). */
+	void SetAsyncCompletion(SnaccInvokeAsyncCallback callback, SNACC::AsnType* pResult, SNACC::AsnType* pError);
+
+	/*! Returns true when SetAsyncCompletion() was called for SendInvokeAsync. */
+	bool HasAsyncCompletion() const;
+
+	/*! Returns the async completion callback configured by SetAsyncCompletion(). */
+	const SnaccInvokeAsyncCallback& AsyncCallback() const;
+
+	/*! Returns the typed result buffer supplied to SetAsyncCompletion(). */
+	SNACC::AsnType* AsyncResultBuffer() const;
+
+	/*! Returns the typed error buffer supplied to SetAsyncCompletion(). */
+	SNACC::AsnType* AsyncErrorBuffer() const;
+
+	/*! Inbound: canonical name from SnaccRoseOperationLookup. Outbound: set only when
+		passed explicitly to SnaccInvokeContextInit (e.g. deprecated stub). Send/telemetry
+		still use the stub literal at SendInvoke/SendEvent. */
+	const std::string& OperationName() const;
+
+	/*! Returns OperationName().c_str() or nullptr when empty. */
+	const char* OperationNameCStr() const;
+
 protected:
 	explicit SnaccInvokeContext(const SnaccInvokeContextInit& init);
 	// Allows derived context types to copy the base invoke-context state into a richer concrete type.
 	SnaccInvokeContext(const SnaccInvokeContext& other);
+
+	std::string m_strOperationName;
+	int m_iInvokeTimeout{-1};
+	SnaccInvokeAsyncCallback m_asyncCallback;
+	SNACC::AsnType* m_pAsyncResult{};
+	SNACC::AsnType* m_pAsyncError{};
 };
 
 /*! SnaccROSESender is the interface that is used to dispatch inbound invokes and events
@@ -186,6 +232,13 @@ class SnaccROSESender
 {
 public:
 	virtual std::shared_ptr<SnaccInvokeContext> CreateInvokeContext(const SnaccInvokeContextInit& init) = 0;
+
+	/*! Pre-configures an outbound invoke context (timeout, async callback, product fields).
+		Delegates to virtual CreateInvokeContext() so product code can supply a derived type. */
+	std::shared_ptr<SnaccInvokeContext> CreateOutboundInvokeContext()
+	{
+		return CreateInvokeContext(SnaccInvokeContextInit(SnaccInvokeDirection::OUTBOUND));
+	}
 
 	/*! Increment invoke counter and return InvokeID */
 	virtual long GetNextInvokeID() = 0;
@@ -212,11 +265,17 @@ public:
 	 * pResult - decoded result payload in case a result response is received
 	 * pError - decoded error payload in case an error response is received
 	 * szOperationName - the operationName (for logging purposes)
-	 * iTimeout - the timeout in milliseconds (-1 uses default m_lMaxInvokeWait, 0 returns immediately without waiting for the result)
-	 * pCtx - contextual data for the invoke. The caller may keep another shared reference
-	 *        to inspect changes after the call.
+	 * pCtx - contextual data for the invoke (timeout, async callback, telemetry). The caller may keep
+	 *        another shared reference to inspect changes after the call.
 	 */
-	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, int iTimeout = -1, std::shared_ptr<SnaccInvokeContext> pCtx = {}) = 0;
+	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) = 0;
+
+	/** Async outbound invoke. For InvokeTimeout() > 0 (or -1 default), requires SetAsyncCompletion() on pCtx.
+	 * Returns immediately after send (ROSE_NOERROR) or with a transport/encode failure; completion is
+	 * delivered through the context callback when waiting for a reply.
+	 * InvokeTimeout() == 0 is fire-and-forget (parity with SendInvoke): dispatch only, DISPATCHED/WAIT_SKIPPED
+	 * telemetry, no completion callback — SetAsyncCompletion() must not be used (debug ASSERT). */
+	virtual long SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) = 0;
 
 	/**
 	 * Handles the response payload of the SendInvoke method. Retrieves the result or error from the response

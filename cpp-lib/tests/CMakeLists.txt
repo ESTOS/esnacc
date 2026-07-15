@@ -40,7 +40,7 @@ add_custom_command(
 	OUTPUT ${SNACC_SAMPLE_GENERATED_FILES}
 	COMMAND ${CMAKE_COMMAND} -E make_directory "${SNACC_SAMPLE_TEST_GENERATED_DIR}"
 	COMMAND $<TARGET_FILE:compiler> -C -R -j -o "${SNACC_SAMPLE_TEST_GENERATED_DIR}" ${SNACC_SAMPLE_ASN1}
-	DEPENDS compiler ${SNACC_SAMPLE_ASN1}
+	DEPENDS compiler $<TARGET_FILE:compiler> ${SNACC_SAMPLE_ASN1}
 	WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 	COMMENT "Generating C++ sample ROSE stubs for tests"
 	VERBATIM
@@ -51,6 +51,7 @@ target_include_directories(snacc-sample-generated PUBLIC "${SNACC_SAMPLE_TEST_GE
 target_link_libraries(snacc-sample-generated PUBLIC snacc_cpp_lib)
 
 add_executable(cpp-lib-sample-runtime-tests
+	async_invoke_tests.cpp
 	call_flow_tests.cpp
 	invoke_context_tests.cpp
 	logging_tests.cpp
