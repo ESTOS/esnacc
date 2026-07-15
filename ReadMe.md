@@ -1,151 +1,100 @@
-# estos Enhanced Sample Neufeld ASN C Compiler
-This is the estos enhanced sample neufeld asn c compiler. 
-It is an functional enriched fork of the original enhanced sample neufeld asn c compiler offering:
-* Documented source code, based on the documentation from the asn1 source files
-* Creating documentation based on the documentation from the asn1 source files
-* Additional supported target languages
-  * C
-    * Structure definitions
-    * BER encoder/decoders
-  * Typescript (main maintained language)
-    * Structure definitions
-    * JSON and BER encoder/decoders
-    * ROSE client implementation (complete stubs) for node and the browser side
-    * ROSE server implementation (complete stubs)
-  * C++ (main maintained language)
-    * Structure definitions
-    * JSON and BER encoder/decoders
-    * ROSE client/server implementation (complete stubs)
-  * C#
-    * Structure definitions
-  * Delphi
-    * Structure definitions
-  * JAVA
-    * Structure definitions
-  * Kotlin
-    * Structure definitions
-  * JavaScript JSON
-    * Structure definitions
-  * JavaScript ES6
-    * Structure definitions
-  * SWIFT
-    * Structure definitions
-  * IDL
-    * Interface definitions
-  * JSDOC
-    * JSON formatted Documentation generated based on the documentation inside the asn1 files
-  * OpenApi
-    * OpenApi JSON Documentation generated based on the documentation inside the asn1 files
-    * Should be used with our swagger-ui project https://github.com/ESTOS/esnacc-openapi-sdk
-      * Example can be found [here](samples/ts-microservice/openapi)  
+# esnacc
 
-# Functionality
-Based on asn1 files the compiler transcodes the information into matching representations in different languages. Different target languages have different feature sets implemented. The currently two main languages are typescript and c++ which offer the most features.
-Those two languages offer JSON and BER encoding for the transport layer, a complete ROSE (Remote Operations Service Element) implementation for both sides, the server and the client side.
-Other languages just offer to get created structures which need to get serialized / deserialized in JSON with other functions of the language.
+**ASN.1 → typed stubs, encoders, and ROSE runtime** — primary targets **TypeScript** and **C++**, plus many additional language backends.
 
-# Getting started
-You need to compile the compiler or use a precompiled version of it.
-The samples folder offers examples on the usage for the different supported languages. These folders show some sample asn1 files, the command line and the expected output of the compiler.
-See [samples/readme.md](samples/readme.md) for the current TypeScript microservice sample layout and required Node/pnpm setup.
+[estos](https://www.estos.de) enhanced SNACC: parse ASN.1 modules, generate client/server stubs (where supported), and link against runtimes that handle BER/JSON encoding, ROSE invoke flow, telemetry, and async completion.
 
-# Building the compiler
-## Prerequesites to compile the compiler
-* Have cmake installed 
-  * https://cmake.org
-  * at least V3.20
-  * available in the path
-  
-## Command line
-* From the root path of the repo, create a directory where all intermemdiate and build files will be written to
-  ```shell
-  mkdir build
-  ```
-* Navigate into this directory and generate the needed build files with cmake
-  ```shell
-  cd build
-  cmake ..
-    ```
-* Build the compiler and libraries  
-  ```shell
-  cmake --build .
-  ```
+## The three blocks
 
-You may use the following cmake commandline variables to parameterize the output:
+```
+  .asn1 modules          esnacc compiler          your application
+       │                       │                        ▲
+       └──────►  generated stubs (Invoke_ / OnInvoke_) ─┤
+       └──────►  runtime library (cpp-lib / TS glue) ──┘
+```
 
-* __CPP_LIBRARY_OUTPUT_PATH__
-  * the output path where debug and release builds of the cpp library will be written to
-  * by default the libraries are written to /output/libx64 for x64 and /output/lib for x86
+| Block | What it is | Where |
+|-------|------------|--------|
+| **Compiler** | Parses ASN.1, emits types and ROSE stubs | `compiler/`, `output/bin/esnacc` |
+| **Generated output** | Types, encoders, ROSE stubs, or API docs — per target | Your build output directory |
+| **Runtime** | Transport hooks, invoke context, encode/decode, telemetry | `cpp-lib/`, TS glue under `compiler/back-ends/ts-gen/` |
 
-* __CPP_LIBRARY_OUTPUT_NAME__
-  - the name of the library (e.g. if you want to specify a version like snacclib_1_2)
-  - by default the name is "esnacc_cpp_lib"
-  - a "d" is always added for debug builds
+## Supported targets
 
-* __COMPILER_OUTPUT_PATH__
-  - the output path where debug and release builds of the compiler will be written to
-  - by default the compiler is written to /output/bin
+The compiler can emit several kinds of output from the same ASN.1 modules. Feature depth varies by backend; **C++** and **TypeScript** are the fully maintained ROSE stacks.
 
-* __COMPILER_OUTPUT_NAME__
-  - the name of the compiler (e.g. if you want to specify a version like esnacc_1_2)
-  - by default the name is "esnacc"
-  - the .exe for windows is automatically added
+| Target | Generated output |
+|--------|------------------|
+| **C** | Structure definitions; BER encoder/decoders |
+| **C++** | Structure definitions; JSON and BER encoder/decoders; ROSE client/server stubs |
+| **TypeScript** | Structure definitions; JSON and BER encoder/decoders; ROSE client stubs (Node + browser) and server stubs |
+| **C#** | Structure definitions |
+| **Delphi** | Structure definitions |
+| **Java** | Structure definitions |
+| **Kotlin** | Structure definitions |
+| **JavaScript (JSON)** | Structure definitions |
+| **JavaScript (ES6)** | Structure definitions |
+| **Swift** | Structure definitions |
+| **IDL** | Interface definitions |
+| **JSDoc** | JSON documentation from ASN.1 comments |
+| **OpenAPI** | OpenAPI JSON from ASN.1 comments — use with [esnacc-openapi-sdk](https://github.com/ESTOS/esnacc-openapi-sdk) ([sample](samples/ts-microservice/openapi)) |
 
-* __COMPILER_OUTPUT_NAME_DEBUG__
-  - the name of the compiler (e.g. if you want to specify a version like esnacc_1_2d)
-  - by default the name is "esnaccd"
-  - the .exe for windows is automatically added
+Backends live under `compiler/back-ends/` (`c-gen`, `c++-gen`, `ts-gen`, `cs-gen`, `delphi-gen`, `java-gen`, `kotlin-gen`, `js-gen`, `jses6-gen`, `swift-gen`, `idl-gen`, `jsondoc-gen`, `openapi-gen`, …).
 
-## Visual Studio 2022
-1. Open Visual Studio
-2. Instead of "Open Project..." use "Open local folder" for Project-Selection
-3. Choose the "code" folder of the Repository - The folder that contains the root CMakeLists.txt
-4. Visual Studio will recognize the CMakeFiles.txt and starts configuring using cmake.
-   This will generate a subdirectory 'out', the equivalent of "build" from above
-5. Select "esnacc.exe" as the run configuration to debug the binary
-6. Hit F7 or CTRL-SHIFT-B to compile the compiler
+Languages without a bundled ROSE runtime typically emit structures only; serialization is handled in application code (often JSON). See [FAQ.md](FAQ.md) for background on BER vs JSON per target.
 
-## CLion
-1. Open CLion with the code directory as the project directory.
-2. Make sure, that the correct toolchain is set in the settings (Visual Studio or build-in MingW).
-3. Build
-4. For debugging, use run configuration "compiler"
+[samples/](samples/) shows command lines and expected output per language where samples exist.
 
-## Visual Studio Code
-* Have ninja installed
-  * https://github.com/ninja-build/ninja/releases
-  * at least v1.11.1
-  * available in the path
+## C++ ROSE runtime
 
-1. Open Visual Studio Code using the esnacc.code-workspace file in the code folder
-2. If not already done, install the suggested extension
-  * The extensions are advertised with the extensions.json in the .vscode sub folder
-  * C/C++
-  * C/C++ Extension Pack (brings along the C/C++ Themes)
-  * Cmake Tools
-  * CodeLLDB
-  * Clang-Format
-3. Visual Studio Code will now ask you to specify the top cmake config file which is located in the code folder CMakeLists.txt
-  * In case visual studio is not asking you use <Ctrl>+<Shift>+<P> **Cmake: Configure** -> ${workspaceFolder}././CmakeLists.txt
-4. In the bottom bar of the IDE from the left to the right you will find the settings how and what to compile / debug
-  * Check the tooltip on what option the different entry is supposed to configure as the text will be environment specific different
-  1. Element - Info about errors and warnings
-  2. Element - **Click to select the build variant** -> **Cmake: [Debug]: Ready**
-  3. Element - **Click to change the active kit** -> **Clang xx.x.x** not clang-clang-cl
-  4. Element - **Build selected target** -> builds the option on the right
-  5. Element - **Select the default build target** -> **[esnacc]**
-  * Click the build button to build the compiler
+Generated stubs call into `SnaccROSESender` / `SnaccROSEBase`. Product code typically:
 
-## macOS
-1. Make sure all development tools are installed (XCode + commandline tools)
-2. Install cmake (e.g. with homebrew)
-3. Now proceed like it is described in "Command line"
-   ```shell
-   mkdir build
-   cd build
-   cmake ..
-   cmake --build .
-   ```
+- overrides **`CreateInvokeContext()`** to supply a derived `SnaccInvokeContext`
+- uses **`CreateOutboundInvokeContext()`** for timeout / async callback setup on outbound calls
+- passes the **stub operation name** to `SendInvoke` / `SendEvent` (authoritative for send, logging, and telemetry)
 
-The Compiler will be generated in ```output/bin```
+Inbound context operation names resolve from **`operationID`** via the lookup map, not from wire `operationName`.
 
+**Spec and tests:** [cpp-lib/tests/runtime_correctness_notes.md](cpp-lib/tests/runtime_correctness_notes.md) — intended semantics for the public C++ runtime API (147 runtime tests in `cpp-lib/tests`).
+
+**Core ROSE ASN.1 module:** regenerate checked-in glue from [ROSE/SNACCROSE.asn1](ROSE/SNACCROSE.asn1) via [ROSE/makesnaccrose.bat](ROSE/makesnaccrose.bat).
+
+## TypeScript
+
+The [ts-microservice sample](samples/ts-microservice/readme.md) is the reference layout: Node server (REST + WebSocket), browser client, and headless integration tests over shared ASN.1 interfaces.
+
+Start here: [samples/readme.md](samples/readme.md).
+
+## Quick start
+
+```shell
+mkdir build && cd build
+cmake ..
+cmake --build .
+```
+
+Run C++ runtime tests (after build):
+
+```shell
+cmake --build . --config Release --target cpp-lib-sample-runtime-tests
+./cpp-lib/tests/Release/cpp-lib-sample-runtime-tests    # path may vary by platform
+```
+
+Full build options and IDE workflows: **[docs/build.md](docs/build.md)**.
+
+## Documentation
+
+| Topic | Document |
+|-------|----------|
+| Repository map and agent routing | [AGENTS.md](AGENTS.md) |
+| Build (CMake, VS, CLion, VS Code, macOS) | [docs/build.md](docs/build.md) |
+| C++ runtime semantics | [cpp-lib/tests/runtime_correctness_notes.md](cpp-lib/tests/runtime_correctness_notes.md) |
+| Samples and integration tests | [samples/readme.md](samples/readme.md) |
+| Background, licensing, capabilities | [FAQ.md](FAQ.md) |
+| OpenAPI + Swagger UI | [esnacc-openapi-sdk](https://github.com/ESTOS/esnacc-openapi-sdk) · [sample](samples/ts-microservice/openapi) |
+
+## Releases
+
+Pre-release betas are published on [GitHub Releases](https://github.com/ESTOS/esnacc/releases). Tags follow `7.0/<version>.beta.<n>`.
+
+Use a tagged release or build from source, then regenerate stubs when upgrading the compiler or runtime.
