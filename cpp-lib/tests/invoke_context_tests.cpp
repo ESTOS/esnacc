@@ -709,6 +709,23 @@ namespace sample_runtime_tests
 		AssertOrphanRejectDoesNotBreakPendingInvoke(TransportEncoding::JSON);
 	}
 
+	TEST_F(InvokeContextRuntimeTest, CreateOutboundInvokeContextOptionalTimeout)
+	{
+		InitializeEndpoints(TransportEncoding::BER);
+
+		const auto pDefault = m_client.CreateOutboundInvokeContext();
+		ASSERT_TRUE(pDefault);
+		EXPECT_EQ(-1, pDefault->InvokeTimeout());
+
+		const auto pFireAndForget = m_client.CreateOutboundInvokeContext(0u);
+		ASSERT_TRUE(pFireAndForget);
+		EXPECT_EQ(0, pFireAndForget->InvokeTimeout());
+
+		const auto pExplicit = m_client.CreateOutboundInvokeContext(250u);
+		ASSERT_TRUE(pExplicit);
+		EXPECT_EQ(250, pExplicit->InvokeTimeout());
+	}
+
 	TEST(InvokeContextInitTest, OutboundInitStoresExplicitOperationName)
 	{
 		const SnaccInvokeContextInit init(SnaccInvokeDirection::OUTBOUND, nullptr, "asnDeprecatedMethod");
