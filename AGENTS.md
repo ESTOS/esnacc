@@ -61,7 +61,8 @@ Other backends (C, C#, Java, Kotlin, Swift, Delphi, JavaScript, IDL, JSDoc, Open
 
 | Doc | Use when |
 |-----|----------|
-| [ReadMe.md](ReadMe.md) | Build instructions, repo overview, supported targets |
+| [ReadMe.md](ReadMe.md) | Repository overview and quick start |
+| [docs/build.md](docs/build.md) | CMake and IDE build instructions |
 | [FAQ.md](FAQ.md) | Compiler background, licensing, capability questions |
 | [samples/readme.md](samples/readme.md) | Running or updating samples |
 | [samples/ts-microservice/readme.md](samples/ts-microservice/readme.md) | TypeScript microservice layout and verification flow |
@@ -75,7 +76,7 @@ Other backends (C, C#, Java, Kotlin, Swift, Delphi, JavaScript, IDL, JSDoc, Open
 | Change TypeScript generation | `ReadMe.md`, `compiler/back-ends/ts-gen/` | `samples/ts-microservice/` |
 | Change C++ generation or runtime | `ReadMe.md`, `cpp-lib/tests/runtime_correctness_notes.md` | `compiler/back-ends/c++-gen/`, `cpp-lib/` |
 | Add/fix a sample | `samples/readme.md` | The specific sample subdirectory |
-| Build or CI for the compiler | `ReadMe.md` | `compiler/CMakeLists.txt`, root `CMakeLists.txt` |
+| Build or CI for the compiler | [docs/build.md](docs/build.md) | `compiler/CMakeLists.txt`, root `CMakeLists.txt` |
 | OpenAPI / JSDoc output | `FAQ.md` | `compiler/back-ends/openapi-gen/`, `compiler/back-ends/jsondoc-gen/` |
 
 ## Build quick reference
@@ -89,7 +90,7 @@ cmake ..
 cmake --build .
 ```
 
-Requirements and IDE-specific steps are in [ReadMe.md](ReadMe.md). CMake minimum version: 3.20.
+Requirements and IDE-specific steps are in [docs/build.md](docs/build.md). CMake minimum version: 3.20.
 
 ## Working conventions
 

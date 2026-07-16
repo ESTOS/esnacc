@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace SNACC
@@ -234,10 +235,15 @@ public:
 	virtual std::shared_ptr<SnaccInvokeContext> CreateInvokeContext(const SnaccInvokeContextInit& init) = 0;
 
 	/*! Pre-configures an outbound invoke context (timeout, async callback, product fields).
-		Delegates to virtual CreateInvokeContext() so product code can supply a derived type. */
-	std::shared_ptr<SnaccInvokeContext> CreateOutboundInvokeContext()
+		Delegates to virtual CreateInvokeContext() so product code can supply a derived type.
+		When @p invokeTimeoutMs is set, applies SetInvokeTimeout() on the new context; omit it to
+		leave the connection default (-1). Value 0 selects fire-and-forget dispatch. */
+	std::shared_ptr<SnaccInvokeContext> CreateOutboundInvokeContext(std::optional<unsigned int> invokeTimeoutMs = std::nullopt)
 	{
-		return CreateInvokeContext(SnaccInvokeContextInit(SnaccInvokeDirection::OUTBOUND));
+		auto pCtx = CreateInvokeContext(SnaccInvokeContextInit(SnaccInvokeDirection::OUTBOUND));
+		if (invokeTimeoutMs.has_value())
+			pCtx->SetInvokeTimeout(static_cast<int>(*invokeTimeoutMs));
+		return pCtx;
 	}
 
 	/*! Increment invoke counter and return InvokeID */

@@ -392,7 +392,9 @@ Each helper detaches borrowed pointers in its destructor.
 1. **Outbound invokes and events:** the generated stub literal passed to
    `SendInvoke` / `SendEvent` is the authoritative operation name for telemetry,
    logging, and transport encoding. Normal outbound contexts use
-   `CreateOutboundInvokeContext()` (no name on the context). Generated deprecated
+   `CreateOutboundInvokeContext()` (no name on the context). Pass
+   `std::optional<unsigned int>` to set invoke timeout in the same call; omit it for the
+   connection default (-1). Generated deprecated
    outbound stubs default to `CreateInvokeContext(SnaccInvokeContextInit(OUTBOUND,
    invoke, operationName))` so `SNACCDeprecated::DeprecatedASN1Method` can read
    `OperationName()` on the context.
