@@ -136,7 +136,7 @@ void PrintKotlinNativeTypeConstructor(FILE* hdr, Type* type)
 			fprintf(hdr, "\"\""); // String
 			break;
 		case BASICTYPE_ENUMERATED:
-			fprintf(hdr, "%s.values()[0]", type->typeName); // FIXME
+			fprintf(hdr, "%s.entries[0]", type->typeName); // FIXME
 			break;
 		case BASICTYPE_REAL:
 			fprintf(hdr, "0.0"); // Double
@@ -164,11 +164,11 @@ void PrintKotlinTypeConstructor(FILE* hdr, ModuleList* mods, Module* mod, Type* 
 	} else */
 	if (t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link != NULL && t->basicType->a.localTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED)
 	{
-		fprintf(hdr, "%s.values()[0]", t->cxxTypeRefInfo->className); // FIXME
+		fprintf(hdr, "%s.entries[0]", t->cxxTypeRefInfo->className); // FIXME
 	}
 	else if (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF && t->basicType->a.importTypeRef->link != NULL && t->basicType->a.importTypeRef->link->cxxTypeDefInfo->asn1TypeId == BASICTYPE_ENUMERATED)
 	{
-		fprintf(hdr, "%s.values()[0]", t->cxxTypeRefInfo->className); // FIXME
+		fprintf(hdr, "%s.entries[0]", t->cxxTypeRefInfo->className); // FIXME
 	}
 	else
 	{
@@ -338,11 +338,25 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 	NamedType* e;
 	char* name = getKotlinClassName(td->definedName, "");
 	FILE* src = getKotlinFilePointer(name);
+	int needsContextual = 0;
 	PRINTDEBUGGING
+
+	FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
+	{
+		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
+			continue;
+		if (e->type->basicType->choiceId == BASICTYPE_UNKNOWN || e->type->basicType->choiceId == BASICTYPE_NULL)
+		{
+			needsContextual = 1;
+			break;
+		}
+	}
+
 	fprintf(src, "package com.estos.asn\n\n");
 	if (strcmp("AsnRequestError", name) == 0)
 		fprintf(src, "import com.estos.asnconnector.util.kserialize.AsnRequestErrorSerializer\n");
-	fprintf(src, "import kotlinx.serialization.Contextual\n");
+	if (needsContextual)
+		fprintf(src, "import kotlinx.serialization.Contextual\n");
 	fprintf(src, "import kotlinx.serialization.Serializable\n");
 	fprintf(src, "import javax.annotation.Generated\n");
 	fprintf(src, "\n");
@@ -354,7 +368,7 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 	else {
 		fprintf(src, "@Serializable\n");
 	}
-	fprintf(src, "open class %s(\n", name);
+	fprintf(src, "data class %s(\n", name);
 	{
 		int bFirst = 1;
 		FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
@@ -421,7 +435,7 @@ void PrintKotlinChoiceDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "import javax.annotation.Generated\n\n");
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
 	fprintf(src, "@Serializable\n");
-	fprintf(src, "open class %s(\n", name);
+	fprintf(src, "data class %s(\n", name);
 	{
 		int bFirst = 1;
 		FOR_EACH_LIST_ELMT(e, td->type->basicType->a.choice)
@@ -505,7 +519,7 @@ void PrintKotlinEnumDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	}
 	fprintf(src, ";\n\n");
 	fprintf(src, "  companion object {\n");
-	fprintf(src, "      fun fromInt(value: Int) = %s.values().first { it.value == value }\n", name);
+	fprintf(src, "      fun fromInt(value: Int) = %s.entries.first { it.value == value }\n", name);
 	fprintf(src, "  }\n");
 	fprintf(src, "}\n");
 
@@ -550,27 +564,22 @@ void PrintKotlinSimpleDef(ModuleList* mods, Module* mod, TypeDef* td)
 		fprintf(src, "@Serializable(with = AsnSystemTimeSerializer::class)\n");
 	else
 		fprintf(src, "@Serializable\n");
-	fprintf(src, "class %s : SimpleJavaType<", name);
+	fprintf(src, "data class %s(\n", name);
+	fprintf(src, "  val value: ");
 	if (strcmp("AsnSystemTime", name) == 0)
-		fprintf(src, "String?");
+		fprintf(src, "String? = \"\"");
 	else
+	{
 		PrintKotlinNativeType(src, td->type);
-	fprintf(src, ">{\n\n");
-	handleDeprecatedSequenceKotlin(src, mod, td);
-	fprintf(src, "  constructor() : super(");
-	if (strcmp("AsnSystemTime", name) == 0)
-		fprintf(src, "String()");
-	else
+		fprintf(src, " = ");
 		PrintKotlinNativeTypeConstructor(src, td->type);
-
-	fprintf(src, ")\n\n");
-	fprintf(src, "  constructor(value: ");
-	if (strcmp("AsnSystemTime", name) == 0)
-		fprintf(src, "String?");
-	else
-		PrintKotlinNativeType(src, td->type);
-	fprintf(src, " ) : super(value)\n");
-	fprintf(src, "}\n\n");
+	}
+	fprintf(src, "\n) : java.io.Serializable {\n");
+	handleDeprecatedSequenceKotlin(src, mod, td);
+	fprintf(src, "  companion object {\n");
+	fprintf(src, "      private const val serialVersionUID = 3L\n");
+	fprintf(src, "  }\n");
+	fprintf(src, "}\n");
 	free(name);
 	fclose(src);
 }
@@ -806,17 +815,6 @@ void PrintAbstractKotlinOperation()
 	fclose(src);
 }
 
-void PrintSimpleKotlinType()
-{
-	FILE* src = getKotlinFilePointer("SimpleJavaType");
-	PRINTDEBUGGING
-	fprintf(src, "package com.estos.asn\n\n");
-	fprintf(src, "import kotlinx.serialization.Serializable\n\n");
-	fprintf(src, "@Serializable\n");
-	fprintf(src, "abstract class SimpleJavaType<T>(val value: T) : java.io.Serializable \n\n");
-	fclose(src);
-}
-
 void PrintKotlinCode(ModuleList* allMods)
 {
 	Module* currMod;
@@ -905,7 +903,6 @@ void PrintKotlinCodeOneModule(ModuleList* mods, Module* m)
 	ValueDef* vd;
 	TypeDef* td;
 	PrintAbstractKotlinOperation();
-	PrintSimpleKotlinType();
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
