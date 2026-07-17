@@ -187,7 +187,7 @@ void PrintKotlinTypeConstructor(FILE* hdr, ModuleList* mods, Module* mod, Type* 
 				PrintKotlinNativeTypeConstructor(hdr, t);
 				break;
 			case BASICTYPE_SEQUENCEOF:
-				fprintf(hdr, "ArrayList<%s>()", t->cxxTypeRefInfo->className);
+				fprintf(hdr, "emptyList<%s>()", t->cxxTypeRefInfo->className);
 				break;
 			default:
 				fprintf(hdr, "%s()", t->cxxTypeRefInfo->className);
@@ -198,7 +198,7 @@ void PrintKotlinTypeConstructor(FILE* hdr, ModuleList* mods, Module* mod, Type* 
 
 void PrintKotlinArrayType(FILE* hdr, ModuleList* mods, Module* mod, Type* t, TypeDef* innerType)
 {
-	fprintf(hdr, "ArrayList<");
+	fprintf(hdr, "List<");
 	PrintKotlinType(hdr, mods, mod, t);
 	fprintf(hdr, ">");
 
@@ -273,14 +273,20 @@ void PrintSeqKotlinDataSequenceOf(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "import javax.annotation.Generated\n\n");
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
 	fprintf(src, "@Serializable(with = %s::class)\n", serializerName);
-	fprintf(src, "class %s : ArrayList<", name);
+	fprintf(src, "data class %s(\n", name);
+	fprintf(src, "  val items: List<");
 	PrintKotlinType(src, mods, mod, td->type->basicType->a.setOf);
-	fprintf(src, "> {\n");
+	fprintf(src, "> = emptyList(),\n");
+	fprintf(src, ") : List<");
+	PrintKotlinType(src, mods, mod, td->type->basicType->a.setOf);
+	fprintf(src, "> by items, java.io.Serializable {\n");
 	handleDeprecatedSequenceKotlin(src, mod, td);
-	fprintf(src, "  constructor(values: List<");
+	fprintf(src, "  constructor(vararg items: ");
 	PrintKotlinType(src, mods, mod, td->type->basicType->a.setOf);
-	fprintf(src, ">) : super(values)\n");
-	fprintf(src, "  constructor() : super()\n");
+	fprintf(src, ") : this(items.toList())\n\n");
+	fprintf(src, "  companion object {\n");
+	fprintf(src, "    private const val serialVersionUID = 2L\n");
+	fprintf(src, "  }\n");
 	fprintf(src, "}\n");
 
 	if (isCustomSerializer == 0)
@@ -311,11 +317,11 @@ void PrintSeqKotlinDataSequenceOf(ModuleList* mods, Module* mod, TypeDef* td)
 		fprintf(serializerSrc, "    }\n\n");
 		fprintf(serializerSrc, "    @Throws(SerializationException::class)\n");
 		fprintf(serializerSrc, "    override fun deserialize(decoder: Decoder): %s {\n", name);
-		fprintf(serializerSrc, "        val result = ArrayList(with(decoder as JsonDecoder) {\n");
+		fprintf(serializerSrc, "        val result = with(decoder as JsonDecoder) {\n");
 		fprintf(serializerSrc, "           decodeJsonElement().jsonArray.mapNotNull {\n");
 		fprintf(serializerSrc, "              json.decodeFromJsonElement(elementSerializer, it)\n");
 		fprintf(serializerSrc, "           }\n");
-		fprintf(serializerSrc, "        })\n");
+		fprintf(serializerSrc, "        }\n");
 		fprintf(serializerSrc, "        return %s(result)\n", name);
 		fprintf(serializerSrc, "     }\n\n");
 		fprintf(serializerSrc, "}\n");
