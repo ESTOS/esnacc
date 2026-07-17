@@ -354,36 +354,43 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 	else {
 		fprintf(src, "@Serializable\n");
 	}
-	fprintf(src, "open class %s : java.io.Serializable {\n", name);
-	handleDeprecatedSequenceKotlin(src, mod, td);
-	FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
+	fprintf(src, "open class %s(\n", name);
 	{
-		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
-			continue;
+		int bFirst = 1;
+		FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
+		{
+			if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
+				continue;
 
-		int isNullable = 0;
-		if (e->type->optional || td->type->basicType->choiceId == BASICTYPE_CHOICE || td->type->basicType->choiceId == BASICTYPE_NULL)
-			isNullable = 1;
+			int isNullable = 0;
+			if (e->type->optional || td->type->basicType->choiceId == BASICTYPE_CHOICE || td->type->basicType->choiceId == BASICTYPE_NULL)
+				isNullable = 1;
 
-		printMemberComment(src, mod, td, e->fieldName, "  ", COMMENTSTYLE_JAVA);
-		if (e->type->basicType->choiceId == BASICTYPE_UNKNOWN || e->type->basicType->choiceId == BASICTYPE_NULL)
-			fprintf(src, "  @Contextual\n");
-		fprintf(src, "  var");
-		char* szFieldName = Dash2UnderscoreEx(e->fieldName);
-		fprintf(src, " %s: ", szFieldName);
-		PrintKotlinType(src, mods, mod, e->type);
-		if (isNullable == 1)
-			fprintf(src, "?");
-		fprintf(src, " = ");
-		free(szFieldName);
-		if (isNullable == 1)
-			fprintf(src, "null");
-		else
-			PrintKotlinTypeConstructor(src, mods, mod, e->type);
-		fprintf(src, "\n");
+			if (!bFirst)
+				fprintf(src, ",\n");
+			bFirst = 0;
+
+			printMemberComment(src, mod, td, e->fieldName, "  ", COMMENTSTYLE_JAVA);
+			if (e->type->basicType->choiceId == BASICTYPE_UNKNOWN || e->type->basicType->choiceId == BASICTYPE_NULL)
+				fprintf(src, "  @Contextual\n");
+			fprintf(src, "  val");
+			char* szFieldName = Dash2UnderscoreEx(e->fieldName);
+			fprintf(src, " %s: ", szFieldName);
+			PrintKotlinType(src, mods, mod, e->type);
+			if (isNullable == 1)
+				fprintf(src, "?");
+			fprintf(src, " = ");
+			free(szFieldName);
+			if (isNullable == 1)
+				fprintf(src, "null");
+			else
+				PrintKotlinTypeConstructor(src, mods, mod, e->type);
+		}
 	}
+	fprintf(src, "\n) : java.io.Serializable {\n");
+	handleDeprecatedSequenceKotlin(src, mod, td);
 	fprintf(src, "  companion object {\n");
-	fprintf(src, "      private const val serialVersionUID = 2L\n");
+	fprintf(src, "      private const val serialVersionUID = 3L\n");
 	fprintf(src, "  }\n");
 	fprintf(src, "}\n");
 	fclose(src);
