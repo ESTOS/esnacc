@@ -402,27 +402,45 @@ void PrintKotlinChoiceDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	NamedType* e;
 	char* name = getKotlinClassName(td->definedName, "");
 	FILE* src = getKotlinFilePointer(name);
+	int needsContextual = 0;
 	PRINTDEBUGGING
-	fprintf(src, "package com.estos.asn\n\n");
-	fprintf(src, "import kotlinx.serialization.Contextual\n");
-	fprintf(src, "import kotlinx.serialization.Serializable\n");
-	fprintf(src, "import javax.annotation.Generated\n\n");
-	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
-	fprintf(src, "@Serializable\n");
-	fprintf(src, "open class %s : java.io.Serializable {\n\n", name);
-	handleDeprecatedSequenceKotlin(src, mod, td);
 
 	FOR_EACH_LIST_ELMT(e, td->type->basicType->a.choice)
 	{
 		if (e->type->basicType->choiceId == BASICTYPE_UNKNOWN || e->type->basicType->choiceId == BASICTYPE_NULL)
-			fprintf(src, "  @Contextual\n");
-		fprintf(src, "  var %s:", e->fieldName);
-		PrintKotlinType(src, mods, mod, e->type);
-		fprintf(src, "? = null\n");
+		{
+			needsContextual = 1;
+			break;
+		}
 	}
-	fprintf(src, "\n");
+
+	fprintf(src, "package com.estos.asn\n\n");
+	if (needsContextual)
+		fprintf(src, "import kotlinx.serialization.Contextual\n");
+	fprintf(src, "import kotlinx.serialization.Serializable\n");
+	fprintf(src, "import javax.annotation.Generated\n\n");
+	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
+	fprintf(src, "@Serializable\n");
+	fprintf(src, "open class %s(\n", name);
+	{
+		int bFirst = 1;
+		FOR_EACH_LIST_ELMT(e, td->type->basicType->a.choice)
+		{
+			if (!bFirst)
+				fprintf(src, ",\n");
+			bFirst = 0;
+
+			if (e->type->basicType->choiceId == BASICTYPE_UNKNOWN || e->type->basicType->choiceId == BASICTYPE_NULL)
+				fprintf(src, "  @Contextual\n");
+			fprintf(src, "  val %s: ", e->fieldName);
+			PrintKotlinType(src, mods, mod, e->type);
+			fprintf(src, "? = null");
+		}
+	}
+	fprintf(src, "\n) : java.io.Serializable {\n\n");
+	handleDeprecatedSequenceKotlin(src, mod, td);
 	fprintf(src, "  companion object {\n");
-	fprintf(src, "      private const val serialVersionUID = 2L\n");
+	fprintf(src, "      private const val serialVersionUID = 3L\n");
 	fprintf(src, "  }\n");
 	fprintf(src, "}\n");
 	fclose(src);
