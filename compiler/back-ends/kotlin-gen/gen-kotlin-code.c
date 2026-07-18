@@ -339,17 +339,16 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 	char* name = getKotlinClassName(td->definedName, "");
 	FILE* src = getKotlinFilePointer(name);
 	int needsContextual = 0;
+	int fieldCount = 0;
 	PRINTDEBUGGING
 
 	FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
 	{
 		if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
 			continue;
+		fieldCount++;
 		if (e->type->basicType->choiceId == BASICTYPE_UNKNOWN || e->type->basicType->choiceId == BASICTYPE_NULL)
-		{
 			needsContextual = 1;
-			break;
-		}
 	}
 
 	fprintf(src, "package com.estos.asn\n\n");
@@ -368,40 +367,46 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 	else {
 		fprintf(src, "@Serializable\n");
 	}
-	fprintf(src, "data class %s(\n", name);
+	/* ponytail: Kotlin forbids empty data class; empty ASN SEQUENCE → plain open class */
+	if (fieldCount == 0)
+		fprintf(src, "open class %s : java.io.Serializable {\n", name);
+	else
 	{
-		int bFirst = 1;
-		FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
+		fprintf(src, "open class %s(\n", name);
 		{
-			if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
-				continue;
+			int bFirst = 1;
+			FOR_EACH_LIST_ELMT(e, td->type->basicType->a.sequence)
+			{
+				if (e->type->basicType->choiceId == BASICTYPE_EXTENSION)
+					continue;
 
-			int isNullable = 0;
-			if (e->type->optional || td->type->basicType->choiceId == BASICTYPE_CHOICE || td->type->basicType->choiceId == BASICTYPE_NULL)
-				isNullable = 1;
+				int isNullable = 0;
+				if (e->type->optional || td->type->basicType->choiceId == BASICTYPE_CHOICE || td->type->basicType->choiceId == BASICTYPE_NULL)
+					isNullable = 1;
 
-			if (!bFirst)
-				fprintf(src, ",\n");
-			bFirst = 0;
+				if (!bFirst)
+					fprintf(src, ",\n");
+				bFirst = 0;
 
-			printMemberComment(src, mod, td, e->fieldName, "  ", COMMENTSTYLE_JAVA);
-			if (e->type->basicType->choiceId == BASICTYPE_UNKNOWN || e->type->basicType->choiceId == BASICTYPE_NULL)
-				fprintf(src, "  @Contextual\n");
-			fprintf(src, "  val");
-			char* szFieldName = Dash2UnderscoreEx(e->fieldName);
-			fprintf(src, " %s: ", szFieldName);
-			PrintKotlinType(src, mods, mod, e->type);
-			if (isNullable == 1)
-				fprintf(src, "?");
-			fprintf(src, " = ");
-			free(szFieldName);
-			if (isNullable == 1)
-				fprintf(src, "null");
-			else
-				PrintKotlinTypeConstructor(src, mods, mod, e->type);
+				printMemberComment(src, mod, td, e->fieldName, "  ", COMMENTSTYLE_JAVA);
+				if (e->type->basicType->choiceId == BASICTYPE_UNKNOWN || e->type->basicType->choiceId == BASICTYPE_NULL)
+					fprintf(src, "  @Contextual\n");
+				fprintf(src, "  var");
+				char* szFieldName = Dash2UnderscoreEx(e->fieldName);
+				fprintf(src, " %s: ", szFieldName);
+				PrintKotlinType(src, mods, mod, e->type);
+				if (isNullable == 1)
+					fprintf(src, "?");
+				fprintf(src, " = ");
+				free(szFieldName);
+				if (isNullable == 1)
+					fprintf(src, "null");
+				else
+					PrintKotlinTypeConstructor(src, mods, mod, e->type);
+			}
 		}
+		fprintf(src, "\n) : java.io.Serializable {\n");
 	}
-	fprintf(src, "\n) : java.io.Serializable {\n");
 	handleDeprecatedSequenceKotlin(src, mod, td);
 	fprintf(src, "  companion object {\n");
 	fprintf(src, "      private const val serialVersionUID = 3L\n");
@@ -435,7 +440,7 @@ void PrintKotlinChoiceDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "import javax.annotation.Generated\n\n");
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
 	fprintf(src, "@Serializable\n");
-	fprintf(src, "data class %s(\n", name);
+	fprintf(src, "open class %s(\n", name);
 	{
 		int bFirst = 1;
 		FOR_EACH_LIST_ELMT(e, td->type->basicType->a.choice)
@@ -446,7 +451,7 @@ void PrintKotlinChoiceDefCode(ModuleList* mods, Module* mod, TypeDef* td)
 
 			if (e->type->basicType->choiceId == BASICTYPE_UNKNOWN || e->type->basicType->choiceId == BASICTYPE_NULL)
 				fprintf(src, "  @Contextual\n");
-			fprintf(src, "  val %s: ", e->fieldName);
+			fprintf(src, "  var %s: ", e->fieldName);
 			PrintKotlinType(src, mods, mod, e->type);
 			fprintf(src, "? = null");
 		}
