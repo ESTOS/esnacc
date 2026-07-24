@@ -260,9 +260,10 @@ public:
 		return std::shared_ptr<SnaccInvokeContext>(new SessionInvokeContext(*this));
 	}
 
-	// Placeholder hook for future telemetry tests that may need to detach data.
+	// Records that PrepareForTelemetry() ran on the telemetry-retained clone.
 	void PrepareForTelemetry() override
 	{
+		m_pDispatchBorrow = nullptr;
 		m_bPreparedForTelemetry = true;
 		if (!m_strTelemetryNote.empty())
 			m_strTelemetryNote = "prepared:" + m_strTelemetryNote;
@@ -280,10 +281,16 @@ public:
 		return m_strTelemetryNote;
 	}
 
-	// Returns whether PrepareForTelemetry() has already run on this concrete instance.
+	// Returns whether retention cleanup has already run on this concrete instance.
 	bool WasPreparedForTelemetry() const
 	{
 		return m_bPreparedForTelemetry;
+	}
+
+	// Simulates a product-owned dispatch borrow; cleared in PrepareForTelemetry() on the telemetry clone.
+	const SNACC::ROSEInvoke* DispatchBorrowForTest() const
+	{
+		return m_pDispatchBorrow;
 	}
 
 	const std::string m_strLocalSessionId; // session id of the endpoint creating the context
@@ -294,7 +301,8 @@ private:
 	SessionInvokeContext(const SnaccInvokeContextInit& init, const std::string& localSessionId)
 		: SnaccInvokeContext(init),
 		  m_strLocalSessionId(localSessionId),
-		  m_strInvokeSessionId(GetInvokeSessionId(init.m_pInvoke))
+		  m_strInvokeSessionId(GetInvokeSessionId(init.m_pInvoke)),
+		  m_pDispatchBorrow(init.m_pInvoke)
 	{
 	}
 
@@ -304,12 +312,14 @@ private:
 		  m_strLocalSessionId(other.m_strLocalSessionId),
 		  m_strInvokeSessionId(other.m_strInvokeSessionId),
 		  m_bPreparedForTelemetry(other.m_bPreparedForTelemetry),
-		  m_strTelemetryNote(other.m_strTelemetryNote)
+		  m_strTelemetryNote(other.m_strTelemetryNote),
+		  m_pDispatchBorrow(other.m_pDispatchBorrow)
 	{
 	}
 
 	bool m_bPreparedForTelemetry = false; // indicates whether the telemetry clone was normalized for retention
 	std::string m_strTelemetryNote;       // extra test data used to verify clone and prepare semantics
+	const SNACC::ROSEInvoke* m_pDispatchBorrow = nullptr;
 };
 
 // Copies invoke-context fields while the runtime reference is still alive.

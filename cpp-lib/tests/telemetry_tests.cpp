@@ -32,6 +32,13 @@ const SnaccTelemetryData* FindOutboundWaitTelemetry(const std::vector<std::share
 	return FindTelemetry(entries, SnaccTelemetryData::Direction::OUTBOUND, SnaccTelemetryData::Stage::OUTBOUND_WAIT, reason);
 }
 
+void ExpectTelemetryInvokeContextLibBorrowsCleared(const SnaccInvokeContext& ctx)
+{
+	EXPECT_FALSE(ctx.HasAsyncCompletion());
+	EXPECT_EQ(nullptr, ctx.AsyncResultBuffer());
+	EXPECT_EQ(nullptr, ctx.AsyncErrorBuffer());
+}
+
 void ExpectOutboundWaitTelemetry(const SnaccTelemetryData* pTelemetry, const SnaccTelemetryData::Outcome outcome, const SnaccTelemetryData::Reason reason, const std::optional<long> roseResult,
 	const bool bExpectRequestData, const bool bExpectResponseData)
 {
@@ -52,6 +59,8 @@ void ExpectOutboundWaitTelemetry(const SnaccTelemetryData* pTelemetry, const Sna
 		EXPECT_GT(pTelemetry->m_stResponseData.value(), 0u);
 	}
 	EXPECT_GE(pTelemetry->m_Duration.count(), 0);
+	if (pTelemetry->m_pctx)
+		ExpectTelemetryInvokeContextLibBorrowsCleared(*pTelemetry->m_pctx);
 }
 
 long SendAsyncGetSettings(RuntimeEndpoint& client, AsyncInvokeLatch& latch, AsnGetSettingsResult& result, AsnRequestError& error, int timeoutMs)
@@ -265,7 +274,7 @@ protected:
 	}
 
 	// Verifies that outbound telemetry receives a cloned custom context and that
-	// PrepareForTelemetry only touches the retained clone.
+	// retention cleanup only touches the retained clone.
 	void AssertCustomContextIsClonedAndPrepared(const TransportEncoding encoding)
 	{
 		InitializeEndpoints(encoding);
@@ -293,6 +302,9 @@ protected:
 		EXPECT_EQ("client-session", pSessionCtx->m_strInvokeSessionId);
 		EXPECT_TRUE(pSessionCtx->WasPreparedForTelemetry());
 		EXPECT_EQ("prepared:custom", pSessionCtx->TelemetryNote());
+		ExpectTelemetryInvokeContextLibBorrowsCleared(*pSessionCtx);
+		EXPECT_EQ(nullptr, pSessionCtx->DispatchBorrowForTest());
+		EXPECT_NE(nullptr, dynamic_cast<SessionInvokeContext*>(pCtx.get())->DispatchBorrowForTest());
 	}
 
 	// Verifies that outbound transport failures are reported at OUTBOUND_SEND.

@@ -271,6 +271,20 @@ std::shared_ptr<SnaccInvokeContext> SnaccInvokeContext::Clone() const
 	return std::shared_ptr<SnaccInvokeContext>(new SnaccInvokeContext(*this));
 }
 
+std::shared_ptr<SnaccInvokeContext> SnaccInvokeContext::CloneForTelemetryRetention() const
+{
+	auto retained = Clone();
+	retained->m_asyncCallback = {};
+	retained->m_pAsyncResult = nullptr;
+	retained->m_pAsyncError = nullptr;
+	retained->PrepareForTelemetry();
+	return retained;
+}
+
+void SnaccInvokeContext::PrepareForTelemetry()
+{
+}
+
 SnaccScopedInvokeMessage::SnaccScopedInvokeMessage(long invokeID, unsigned int uiOperationID, SNACC::AsnType* pArgument)
 	: m_pInvoke(new SNACC::ROSEInvoke())
 {
@@ -321,10 +335,6 @@ SnaccInvokeContext::~SnaccInvokeContext()
 		delete m_pRejectAuth;
 		m_pRejectAuth = nullptr;
 	}
-}
-
-void SnaccInvokeContext::PrepareForTelemetry()
-{
 }
 
 void SnaccInvokeContext::SetInvokeTimeout(int iTimeoutMs)

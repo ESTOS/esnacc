@@ -154,16 +154,17 @@ class SnaccInvokeContext
 {
 public:
 	static std::shared_ptr<SnaccInvokeContext> Create(const SnaccInvokeContextInit& init);
+
+	/*! Builds the invoke-context snapshot stored on @ref SnaccTelemetryData.
+		Calls @ref Clone(), clears lib-owned async decode borrows on the clone, then @ref PrepareForTelemetry(). */
+	virtual std::shared_ptr<SnaccInvokeContext> CloneForTelemetryRetention() const final;
+
 	virtual std::shared_ptr<SnaccInvokeContext> Clone() const;
 
 	SnaccInvokeContext& operator=(const SnaccInvokeContext&) = delete;
 	SnaccInvokeContext(SnaccInvokeContext&&) = delete;
 	SnaccInvokeContext& operator=(SnaccInvokeContext&&) = delete;
 	virtual ~SnaccInvokeContext();
-
-	// Called immediately before the context is transferred into telemetry retention.
-	// Override if derived types keep borrowed data that must be detached or copied.
-	virtual void PrepareForTelemetry();
 
 	// Meaning in OnInvoke_: Authentication Header from the ROSE Invoke (Pointer to the object in the invoke)
 	// Meaning in Invoke_: Authentication Header that is dispatched along with the invoke (create it with new, cleanup is done inside)
@@ -219,6 +220,14 @@ protected:
 	explicit SnaccInvokeContext(const SnaccInvokeContextInit& init);
 	// Allows derived context types to copy the base invoke-context state into a richer concrete type.
 	SnaccInvokeContext(const SnaccInvokeContext& other);
+
+	/*! Called on a telemetry-retained clone after @ref CloneForTelemetryRetention() copied dispatch state.
+		Dispatch often stores non-owning raw pointers (stub @c ROSEInvoke, transport, session objects)
+		that are only valid while snacclib is still inside the invoke scope. Before the clone is
+		stored on @ref SnaccTelemetryData, override this to copy any needed fields into owned members,
+		then clear those pointers so telemetry cannot outlive the stub stack frame. The live dispatch
+		context is not modified. Lib-owned async result/error buffers are already cleared before this hook. */
+	virtual void PrepareForTelemetry();
 
 	std::string m_strOperationName;
 	int m_iInvokeTimeout{-1};
