@@ -32,6 +32,13 @@ const SnaccTelemetryData* FindOutboundWaitTelemetry(const std::vector<std::share
 	return FindTelemetry(entries, SnaccTelemetryData::Direction::OUTBOUND, SnaccTelemetryData::Stage::OUTBOUND_WAIT, reason);
 }
 
+void ExpectTelemetryInvokeContextLibBorrowsCleared(const SnaccInvokeContext& ctx)
+{
+	EXPECT_FALSE(ctx.HasAsyncCompletion());
+	EXPECT_EQ(nullptr, ctx.AsyncResultBuffer());
+	EXPECT_EQ(nullptr, ctx.AsyncErrorBuffer());
+}
+
 void ExpectOutboundWaitTelemetry(const SnaccTelemetryData* pTelemetry, const SnaccTelemetryData::Outcome outcome, const SnaccTelemetryData::Reason reason, const std::optional<long> roseResult,
 	const bool bExpectRequestData, const bool bExpectResponseData)
 {
@@ -54,13 +61,6 @@ void ExpectOutboundWaitTelemetry(const SnaccTelemetryData* pTelemetry, const Sna
 	EXPECT_GE(pTelemetry->m_Duration.count(), 0);
 	if (pTelemetry->m_pctx)
 		ExpectTelemetryInvokeContextLibBorrowsCleared(*pTelemetry->m_pctx);
-}
-
-void ExpectTelemetryInvokeContextLibBorrowsCleared(const SnaccInvokeContext& ctx)
-{
-	EXPECT_FALSE(ctx.HasAsyncCompletion());
-	EXPECT_EQ(nullptr, ctx.AsyncResultBuffer());
-	EXPECT_EQ(nullptr, ctx.AsyncErrorBuffer());
 }
 
 long SendAsyncGetSettings(RuntimeEndpoint& client, AsyncInvokeLatch& latch, AsnGetSettingsResult& result, AsnRequestError& error, int timeoutMs)
