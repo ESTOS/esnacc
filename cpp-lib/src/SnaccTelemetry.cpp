@@ -130,10 +130,7 @@ void SnaccTelemetryData::finalize(Outcome outcome, Stage stage, Reason reason, s
 
 	std::shared_ptr<SnaccInvokeContext> pTelemetryctx;
 	if (pctx)
-	{
-		pTelemetryctx = pctx->Clone();
-		pTelemetryctx->PrepareForTelemetry();
-	}
+		pTelemetryctx = pctx->CloneForTelemetryRetention();
 
 	m_Duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_ChronoCreated);
 	m_Outcome = outcome;
