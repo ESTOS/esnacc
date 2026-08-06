@@ -578,6 +578,22 @@ bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName)
 	return false;
 }
 
+bool IsIgnoreValidationExemptSequence(Module* mod, const char* szSequenceName, int validationCheck)
+{
+	asnsequencecomment comment;
+	if (GetSequenceComment_UTF8(mod->moduleName, szSequenceName, &comment))
+	{
+		if (comment.iIgnoreValidation & validationCheck)
+			return true;
+	}
+	return false;
+}
+
+bool IsValidationExemptSequence(Module* mod, const char* szSequenceName, int validationCheck)
+{
+	return IsDeprecatedFlaggedSequence(mod, szSequenceName) || IsIgnoreValidationExemptSequence(mod, szSequenceName, validationCheck);
+}
+
 bool IsDeprecatedNoOutputSequence(Module* mod, const char* szSequenceName)
 {
 	if (!gi64NoDeprecatedSymbols)
@@ -599,6 +615,22 @@ bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName)
 			return true;
 	}
 	return false;
+}
+
+bool IsIgnoreValidationExemptOperation(Module* mod, const char* szOperationName, int validationCheck)
+{
+	asnoperationcomment comment;
+	if (GetOperationComment_UTF8(mod->moduleName, szOperationName, &comment))
+	{
+		if (comment.iIgnoreValidation & validationCheck)
+			return true;
+	}
+	return false;
+}
+
+bool IsValidationExemptOperation(Module* mod, const char* szOperationName, int validationCheck)
+{
+	return IsDeprecatedFlaggedOperation(mod, szOperationName) || IsIgnoreValidationExemptOperation(mod, szOperationName, validationCheck);
 }
 
 bool IsDeprecatedNoOutputOperation(Module* mod, const char* szOperationName)

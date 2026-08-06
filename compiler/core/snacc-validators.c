@@ -1,32 +1,13 @@
 #include "snacc-validators.h"
 #include "../core/asn1module.h"
 #include "../core/print.h"
+#include "../core/snacc-validation-rules.h"
 #include "snacc.h"
 #include "compiler/back-ends/structure-util.h"
 #include "mem.h"
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
-
-enum EVALIDATIONCHECK
-{
-	// Do not allow duplicated operation ids
-	NO_DUPLICATE_OPERATIONIDS = 1,
-	// Check that arguments results and error are extendable objects (not e.g. lists which are not extendable)
-	OPERATION_ARGUMENT_RESULT_ERROR_ARE_CHOICES_OR_SEQUENCES = 2,
-	// Check that all errors are the same type to ensure generalized handling
-	OPERATION_ERRORS_ARE_OF_SAME_TYPE = 4,
-	// Check that all sequences have an extension attribute as last element (...)
-	SEQUENCES_ARE_EXTENDABLE = 8,
-	// Validate that the used Attribute types are mentioned in the esnacc_whitelist.txt (side by side with the asn1 files)
-	VALIDATE_TYPE_WHITELISTE = 16,
-	// Validate that invokes consist of an argument, result and error and events only of an error
-	VALIDATE_PROPER_INVOKE_EVENT_ARGUMENTS = 32,
-	// Validate that optionals are not encoded mixed (implicit and explicit in the same object)
-	VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS = 64,
-	// Validate that optional are not encoded explicit (without number)
-	VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS = 128
-};
 
 // These methods return true on success (no error) or false on error
 
@@ -246,39 +227,44 @@ const char* getTypeName(enum BasicTypeChoiceId choiceId)
 void ValidateASN1Data(ModuleList* allMods)
 {
 	bool bSucceeded = true;
-	if (giValidationLevel & NO_DUPLICATE_OPERATIONIDS)
+	if (giValidationLevel & SNACC_VAL_UNIQUE_OPERATION_ID)
 	{
 		if (!ValidateNoDuplicateOperationIDs(allMods))
 			bSucceeded = false;
 	}
-	if (giValidationLevel & OPERATION_ARGUMENT_RESULT_ERROR_ARE_CHOICES_OR_SEQUENCES)
+	if (giValidationLevel & SNACC_VAL_ROSE_PAYLOAD_EXTENDABLE)
 	{
 		if (!ValidateArgumentResultErrorAreSequencesOrChoices(allMods))
 			bSucceeded = false;
 	}
-	if (giValidationLevel & OPERATION_ERRORS_ARE_OF_SAME_TYPE)
+	if (giValidationLevel & SNACC_VAL_UNIFORM_OPERATION_ERROR)
 	{
 		if (!ValidateErrorsAreOfSameType(allMods))
 			bSucceeded = false;
 	}
-	if (giValidationLevel & SEQUENCES_ARE_EXTENDABLE)
+	if (giValidationLevel & SNACC_VAL_SEQUENCE_HAS_ELLIPSIS)
 	{
 		if (!ValidateSequencesAreExtendable(allMods))
 			bSucceeded = false;
 	}
-	if (giValidationLevel & VALIDATE_TYPE_WHITELISTE)
+	if (giValidationLevel & SNACC_VAL_PRIMITIVE_TYPE_WHITELIST)
 	{
 		if (!ValidateOnlySupportedObjects(allMods))
 			bSucceeded = false;
 	}
-	if (giValidationLevel & VALIDATE_PROPER_INVOKE_EVENT_ARGUMENTS)
+	if (giValidationLevel & SNACC_VAL_ROSE_INVOKE_EVENT_SHAPE)
 	{
 		if (!ValidateProperROSEArguments(allMods))
 			bSucceeded = false;
 	}
-	if (giValidationLevel & (VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS | VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS))
+	if (giValidationLevel & (SNACC_VAL_NO_MIXED_OPTIONAL_ENCODING | SNACC_VAL_NO_UNTAGGED_OPTIONAL_MEMBERS))
 	{
 		if (!ValidateOptionals(allMods))
+			bSucceeded = false;
+	}
+	if (giValidationLevel & SNACC_VAL_NO_ASN_OPTIONAL_PARAMETERS)
+	{
+		if (!ValidateNoOptionalParamsBag(allMods))
 			bSucceeded = false;
 	}
 	if (!bSucceeded)
@@ -357,7 +343,7 @@ bool ValidateArgumentResultErrorAreSequencesOrChoices(ModuleList* allMods)
 					if (!IsROSEValueDef(currMod, vd))
 						continue;
 
-					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
+					if (IsValidationExemptOperation(currMod, vd->definedName, SNACC_VAL_ROSE_PAYLOAD_EXTENDABLE))
 						continue;
 
 					const char* pszArgument = NULL;
@@ -474,7 +460,7 @@ bool ValidateErrorsAreOfSameType(ModuleList* allMods)
 					if (!IsROSEValueDef(currMod, vd))
 						continue;
 
-					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
+					if (IsValidationExemptOperation(currMod, vd->definedName, SNACC_VAL_UNIFORM_OPERATION_ERROR))
 						continue;
 
 					const char* pszError = NULL;
@@ -558,7 +544,7 @@ bool ValidateSequencesAreExtendable(ModuleList* allMods)
 			TypeDef* td;
 			FOR_EACH_LIST_ELMT(td, mod->typeDefs)
 			{
-				if (IsDeprecatedFlaggedSequence(mod, td->definedName))
+				if (IsValidationExemptSequence(mod, td->definedName, SNACC_VAL_SEQUENCE_HAS_ELLIPSIS))
 					continue;
 
 				struct BasicType* type = td->type->basicType;
@@ -642,9 +628,9 @@ bool recurseFindInvalid(Module* mod, Type* type, int* supportedTypes, const char
 
 	if (szElementName)
 	{
-		if (choiceId == BASICTYPE_SEQUENCE && IsDeprecatedFlaggedSequence(mod, szElementName))
+		if (choiceId == BASICTYPE_SEQUENCE && IsValidationExemptSequence(mod, szElementName, SNACC_VAL_PRIMITIVE_TYPE_WHITELIST))
 			return false;
-		else if (strstr(szPath, "::") == NULL && IsDeprecatedFlaggedSequence(mod, szElementName))
+		else if (strstr(szPath, "::") == NULL && IsValidationExemptSequence(mod, szElementName, SNACC_VAL_PRIMITIVE_TYPE_WHITELIST))
 			return false;
 	}
 
@@ -674,14 +660,14 @@ bool recurseFindInvalid(Module* mod, Type* type, int* supportedTypes, const char
 
 	if (szElementName)
 	{
-		if (choiceId == BASICTYPE_SEQUENCE && IsDeprecatedFlaggedSequence(mod, szElementName))
+		if (choiceId == BASICTYPE_SEQUENCE && IsValidationExemptSequence(mod, szElementName, SNACC_VAL_PRIMITIVE_TYPE_WHITELIST))
 			return false;
 		char szNewName[TESTBUFFERSIZE + 1] = {0};
 		strcat_s(szNewName, TESTBUFFERSIZE, "::");
 		strcat_s(szNewName, TESTBUFFERSIZE, szElementName);
 		if ((choiceId == BASICTYPE_SEQUENCE || choiceId == BASICTYPE_LOCALTYPEREF || choiceId == BASICTYPE_IMPORTTYPEREF) && type->cxxTypeRefInfo->className)
 		{
-			if (IsDeprecatedFlaggedSequence(mod, type->cxxTypeRefInfo->className))
+			if (IsValidationExemptSequence(mod, type->cxxTypeRefInfo->className, SNACC_VAL_PRIMITIVE_TYPE_WHITELIST))
 				return false;
 			strcat_s(szNewName, TESTBUFFERSIZE, "(");
 			strcat_s(szNewName, TESTBUFFERSIZE, type->cxxTypeRefInfo->className);
@@ -938,7 +924,7 @@ bool ValidateProperROSEArguments(ModuleList* allMods)
 					if (!IsROSEValueDef(currMod, vd))
 						continue;
 
-					if (IsDeprecatedFlaggedOperation(currMod, vd->definedName))
+					if (IsValidationExemptOperation(currMod, vd->definedName, SNACC_VAL_ROSE_INVOKE_EVENT_SHAPE))
 						continue;
 
 					const char* pszArgument = NULL;
@@ -996,7 +982,9 @@ bool ValidateOptionals(ModuleList* allMods)
 			TypeDef* td;
 			FOR_EACH_LIST_ELMT(td, mod->typeDefs)
 			{
-				if (IsDeprecatedFlaggedSequence(mod, td->definedName))
+				const bool bExemptMixed = IsValidationExemptSequence(mod, td->definedName, SNACC_VAL_NO_MIXED_OPTIONAL_ENCODING);
+				const bool bExemptExplicit = IsValidationExemptSequence(mod, td->definedName, SNACC_VAL_NO_UNTAGGED_OPTIONAL_MEMBERS);
+				if (bExemptMixed && bExemptExplicit)
 					continue;
 
 				struct BasicType* type = td->type->basicType;
@@ -1059,17 +1047,17 @@ bool ValidateOptionals(ModuleList* allMods)
 				int nError = 0;
 
 				// Validate that optionals are not encoded mixed (implicit and explicit in the same object)
-				if (giValidationLevel & VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS)
+				if ((giValidationLevel & SNACC_VAL_NO_MIXED_OPTIONAL_ENCODING) && !bExemptMixed)
 				{
 					if (bNotContextSpecific_Explicit_Optional & bContextSpecific_Implicit_Optional)
-						nError |= VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS;
+						nError |= SNACC_VAL_NO_MIXED_OPTIONAL_ENCODING;
 				}
 
 				// Validate that optional are not encoded explicit (without number)
-				if (giValidationLevel & VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS)
+				if ((giValidationLevel & SNACC_VAL_NO_UNTAGGED_OPTIONAL_MEMBERS) && !bExemptExplicit)
 				{
 					if (bNotContextSpecific_Explicit_Optional)
-						nError |= VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS;
+						nError |= SNACC_VAL_NO_UNTAGGED_OPTIONAL_MEMBERS;
 				}
 
 				if (!nError)
@@ -1087,13 +1075,101 @@ bool ValidateOptionals(ModuleList* allMods)
 					iErrorCounter = 0;
 				}
 
-				if (nError & VALIDATE_OPTIONALS_NO_MIXED_OPTIONALS)
+				if (nError & SNACC_VAL_NO_MIXED_OPTIONAL_ENCODING)
 					fprintf(stderr, "- %s contains explicit (%s) and implicit (%s) optionals, use only implicit (with number)\n", szFirstExplicitOptional, szFirstImplicitOptional, td->definedName);
-				else if (nError & VALIDATE_OPTIONALS_NO_EXPLICIT_OPTIONALS)
+				else if (nError & SNACC_VAL_NO_UNTAGGED_OPTIONAL_MEMBERS)
 					fprintf(stderr, "- %s contains explicit optionals, use only implicit (with number)\n", td->definedName);
 
 				iErrorCounter++;
 				nWeHaveErrors++;
+			}
+		}
+	}
+
+	if (iErrorCounter)
+		fprintf(stderr, "  -> File contained %i error(s)\n\n", iErrorCounter);
+
+	return nWeHaveErrors ? false : true;
+}
+
+static bool MemberTypeIsAsnOptionalParameters(Type* memberType)
+{
+	if (!memberType || !memberType->basicType)
+		return false;
+
+	if (memberType->cxxTypeRefInfo && memberType->cxxTypeRefInfo->className)
+	{
+		if (strcmp(memberType->cxxTypeRefInfo->className, "AsnOptionalParameters") == 0)
+			return true;
+	}
+
+	BasicType* resolvedType = ResolveBasicTypeReferences(memberType->basicType, NULL);
+	if (!resolvedType)
+		return false;
+
+	if (resolvedType->choiceId == BASICTYPE_LOCALTYPEREF || resolvedType->choiceId == BASICTYPE_IMPORTTYPEREF)
+	{
+		if (memberType->cxxTypeRefInfo && memberType->cxxTypeRefInfo->className)
+			return strcmp(memberType->cxxTypeRefInfo->className, "AsnOptionalParameters") == 0;
+	}
+
+	return false;
+}
+
+bool ValidateNoOptionalParamsBag(ModuleList* allMods)
+{
+	int nWeHaveErrors = 0;
+	int iErrorCounter = 0;
+	const char* szLastErrorFile = NULL;
+	Module* mod;
+	FOR_EACH_LIST_ELMT(mod, allMods)
+	{
+		if (mod->ImportedFlag == FALSE)
+		{
+			TypeDef* td;
+			FOR_EACH_LIST_ELMT(td, mod->typeDefs)
+			{
+				if (IsValidationExemptSequence(mod, td->definedName, SNACC_VAL_NO_ASN_OPTIONAL_PARAMETERS))
+					continue;
+
+				struct BasicType* type = td->type->basicType;
+				if (!type || type->choiceId != BASICTYPE_SEQUENCE)
+					continue;
+
+				NamedType* subType;
+				bool bHasOptionalParamsBag = false;
+				FOR_EACH_LIST_ELMT(subType, type->a.sequence)
+				{
+					if (subType->type->basicType->choiceId == BASICTYPE_EXTENSION)
+						continue;
+					if (MemberTypeIsAsnOptionalParameters(subType->type))
+					{
+						bHasOptionalParamsBag = true;
+						break;
+					}
+				}
+
+				if (!bHasOptionalParamsBag)
+					continue;
+
+				if (!nWeHaveErrors)
+					fprintf(stderr, "*** Validating that SEQUENCE types do not use legacy AsnOptionalParameters... ***\n");
+
+				if (szLastErrorFile != mod->asn1SrcFileName)
+				{
+					if (szLastErrorFile)
+						fprintf(stderr, "  -> File contained %i error(s)\n\n", iErrorCounter);
+					fprintf(stderr, "Errors in %s:\n", mod->asn1SrcFileName);
+					szLastErrorFile = mod->asn1SrcFileName;
+					iErrorCounter = 0;
+				}
+
+				fprintf(stderr,
+				        "- %s uses legacy AsnOptionalParameters (optionalParams bag); use dedicated [n] OPTIONAL fields instead "
+				        "(@ignorevalidation no-asn-optional-parameters only for grandfathered types)\n",
+				        td->definedName);
+				nWeHaveErrors++;
+				iErrorCounter++;
 			}
 		}
 	}

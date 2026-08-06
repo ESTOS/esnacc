@@ -3,3 +3,4 @@
 #include "asn1module.h"
 
 void ValidateASN1Data(ModuleList* allMods);
+bool ValidateNoOptionalParamsBag(ModuleList* allMods);
