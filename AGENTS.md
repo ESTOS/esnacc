@@ -117,7 +117,8 @@ See [.cursor/rules/snacclib7-release-workflow.mdc](.cursor/rules/snacclib7-relea
 
 - Bump version **once** when opening a feature branch (compare to `main`); do not re-bump while `main` is still behind.
 - Refresh `RELDATE` before opening the MR.
-- Tag tip with `7.0/<version>.beta.<n>`; move or replace stale tags for that version.
+- Tag on **`main` after merge** (e.g. `7.0/7.0.11`); no release tags on the feature branch.
+- Pin `global` **after** esnacc is on `main` (see release workflow rule).
 - **No** `release-notes-*.md` files.
 
 ## Related repositories

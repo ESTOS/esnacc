@@ -18,10 +18,11 @@ alwaysApply: true
 
 ## Git tags
 
-- On the **tip** of the feature branch, set exactly one beta tag: `7.0/<VERSION>.beta.<n>` matching `version.h` (e.g. `7.0/7.0.11.beta.11`).
-- **Remove** any existing tag for that same version pointing at an older commit on the branch before moving the tag to the tip.
-- Do not leave stale beta tags for superseded tips on the same version line.
+- **Do not** tag the feature branch for a release that is not yet on `main`.
+- After **merge to `main`**, tag the release commit (e.g. `7.0/7.0.11` matching `version.h`).
 
-## Global pin
+## Global pin (`global` repo)
 
-- After snacclib7 commits are final on the feature branch, update `libs/snacclib7` in the `global` repo on the matching feature branch (single pin commit preferred).
+- **After** esnacc is merged to `main` (and tagged if applicable): update `libs/snacclib7` in `global` on a branch targeting `master`/`main`.
+- Do **not** pin `global` to a pre-merge esnacc feature-branch tip for a version that is not on `main` yet.
+- Rebuild `esnacc7.exe` into `global/buildtools/` from the merged `main` commit before or with the pin MR.
