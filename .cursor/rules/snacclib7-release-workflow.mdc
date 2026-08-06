@@ -1,0 +1,27 @@
+---
+description: esnacc version bumps, tags, and release workflow on feature branches
+alwaysApply: true
+---
+
+# snacclib7 release workflow
+
+## No release-notes markdown files
+
+- **Do not** add or commit `release-notes-*.md` (or any markdown release-notes files).
+- Document behavior in commit messages, Jira, or MR description instead.
+
+## Version (`version.h`)
+
+- **Once per feature branch:** when opening the branch, compare `version.h` on `main` and bump **one** patch (or agreed minor) — set `RELDATE` to the current date (`DD.MM.YYYY`).
+- **Do not** bump again on the same branch while `main` is still behind that version.
+- **Before opening the MR:** refresh `RELDATE` in `version.h` to the current date (no version number change unless `main` has shipped and a new release is intentional).
+
+## Git tags
+
+- On the **tip** of the feature branch, set exactly one beta tag: `7.0/<VERSION>.beta.<n>` matching `version.h` (e.g. `7.0/7.0.11.beta.11`).
+- **Remove** any existing tag for that same version pointing at an older commit on the branch before moving the tag to the tip.
+- Do not leave stale beta tags for superseded tips on the same version line.
+
+## Global pin
+
+- After snacclib7 commits are final on the feature branch, update `libs/snacclib7` in the `global` repo on the matching feature branch (single pin commit preferred).

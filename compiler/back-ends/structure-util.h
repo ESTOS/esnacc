@@ -62,6 +62,14 @@ bool IsDeprecatedFlaggedMember(Module* mod, const TypeDef* td, const char* szEle
 bool IsDeprecatedFlaggedSequence(Module* mod, const char* szSequenceName);
 bool IsDeprecatedFlaggedOperation(Module* mod, const char* szOperationName);
 
+// @ignorevalidation on SEQUENCE/OPERATION: skip selected ValidationLevel checks (bitmask).
+bool IsIgnoreValidationExemptSequence(Module* mod, const char* szSequenceName, int validationCheck);
+bool IsIgnoreValidationExemptOperation(Module* mod, const char* szOperationName, int validationCheck);
+
+// True when a type or operation is exempt from a ValidationLevel check (@deprecated or matching @ignorevalidation bit).
+bool IsValidationExemptSequence(Module* mod, const char* szSequenceName, int validationCheck);
+bool IsValidationExemptOperation(Module* mod, const char* szOperationName, int validationCheck);
+
 // Returns true when an element is flagged as deprecated AND shall not be written to the output
 bool IsDeprecatedNoOutputModule(Module* mod);
 bool IsDeprecatedNoOutputMember(Module* mod, const TypeDef* td, const char* szElement);

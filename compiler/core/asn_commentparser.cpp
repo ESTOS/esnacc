@@ -1,6 +1,7 @@
 #include "asn_commentparser.h"
 #include "asn-stringconvert.h"
 #include "filetype.h"
+#include "snacc-validation-rules.h"
 #include "../../snacc.h"
 #include "time_helpers.h"
 #include <stdio.h>
@@ -8,6 +9,7 @@
 #include <string>
 #include <list>
 #include <string.h>
+#include <string_view>
 #include <time.h>
 #include <vector>
 #include <assert.h>
@@ -16,6 +18,21 @@
 #endif
 
 const std::string WHITESPACE = " \n\r\t\f\v";
+
+namespace
+{
+constexpr std::string_view kTagBrief = "@brief";
+constexpr std::string_view kTagLong = "@long";
+constexpr std::string_view kTagPrivate = "@private";
+constexpr std::string_view kTagDeprecated = "@deprecated";
+constexpr std::string_view kTagAdded = "@added";
+constexpr std::string_view kTagIgnoreValidation = "@ignorevalidation";
+constexpr std::string_view kTagCategory = "@category";
+constexpr std::string_view kTagLogfilter = "@logfilter";
+constexpr std::string_view kTagLinked = "@linked";
+constexpr std::string_view kTagClear = "@clear";
+constexpr std::string_view kCommentIgnoredPrefix = "-- ~";
+} // namespace
 
 bool isFiltered(const ETypeComment& comment)
 {
@@ -71,6 +88,19 @@ std::string trim(const std::string& s)
 {
 	return rtrim(ltrim(s));
 }
+
+namespace
+{
+[[nodiscard]] std::string remainderAfterTag(std::string_view line, std::string_view tag)
+{
+	return std::string(line.substr(tag.size()));
+}
+
+[[nodiscard]] std::string trimmedRemainderAfterTag(std::string_view line, std::string_view tag)
+{
+	return trim(remainderAfterTag(line, tag));
+}
+} // namespace
 
 /**
  * Converts a unix time into something readable
@@ -239,24 +269,24 @@ void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType
 	int nEmptyLines = 0;
 	for (auto el = commentList.begin(); el != commentList.end(); el++)
 	{
-		std::string strLine = *el;
-		if (strLine.substr(0, 6) == "@brief")
+		std::string strLine = trim(*el);
+		if (strLine.starts_with(kTagBrief))
 		{
 			nEmptyLines = 0;
 			bInLong = false;
 			bInBrief = true;
-			strLine = trim(strLine.substr(6));
+			strLine = trimmedRemainderAfterTag(strLine, kTagBrief);
 			pType->strShort_UTF8 += escapeJsonString(strLine);
 		}
-		else if (strLine.substr(0, 5) == "@long")
+		else if (strLine.starts_with(kTagLong))
 		{
 			nEmptyLines = 0;
 			bInBrief = false;
 			bInLong = true;
-			strLine = trim(strLine.substr(5));
+			strLine = trimmedRemainderAfterTag(strLine, kTagLong);
 			pType->strLong_UTF8 += escapeJsonString(strLine);
 		}
-		else if (strLine.substr(0, 8) == "@private")
+		else if (strLine.starts_with(kTagPrivate))
 		{
 			nEmptyLines = 0;
 			pType->iPrivate = 1;
@@ -264,38 +294,51 @@ void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType
 			// bInLong = false;
 			// bInBrief = false;
 		}
-		else if (strLine.substr(0, 11) == "@deprecated")
+		else if (strLine.starts_with(kTagDeprecated))
 		{
 			nEmptyLines = 0;
-			pType->handleDeprecated(strLine.substr(11));
+			pType->handleDeprecated(remainderAfterTag(strLine, kTagDeprecated));
 			// We do not change the flags here, the keyword @deprecated may lead or follow any comment
 			// bInLong = false;
 			// bInBrief = false;
 		}
-		else if (strLine.substr(0, 6) == "@added")
+		else if (strLine.starts_with(kTagAdded))
 		{
 			nEmptyLines = 0;
-			pType->handleAdded(strLine.substr(6));
+			pType->handleAdded(remainderAfterTag(strLine, kTagAdded));
 			// We do not change the flags here, the keyword @deprecated may lead or follow any comment
 			// bInLong = false;
 			// bInBrief = false;
 		}
-		else if (strLine.substr(0, 9) == "@category")
+		else if (strLine.starts_with(kTagIgnoreValidation))
 		{
 			nEmptyLines = 0;
-			strLine = trim(strLine.substr(9));
+			std::string strRules = trimmedRemainderAfterTag(strLine, kTagIgnoreValidation);
+			std::string strError;
+			const unsigned int nMask = ParseIgnoreValidationRulesSpec(strRules, &strError);
+			if (!nMask)
+			{
+				fprintf(stderr, "*** %s: %s ***\n", strRules.empty() ? "@ignorevalidation" : "@ignorevalidation rule error", strError.c_str());
+				snacc_exit("Invalid @ignorevalidation tag.");
+			}
+			pType->m_nIgnoreValidationMask |= nMask;
+		}
+		else if (strLine.starts_with(kTagCategory))
+		{
+			nEmptyLines = 0;
+			strLine = trimmedRemainderAfterTag(strLine, kTagCategory);
 			// strLine += "\n";
 			pType->strCategory_UTF8 = escapeJsonString(strLine);
 			bInLong = false;
 			bInBrief = false;
 		}
-		else if (strLine.substr(0, 10) == "@logfilter")
+		else if (strLine.starts_with(kTagLogfilter))
 		{
 			nEmptyLines = 0;
 			EModuleComment* pModuleComment = static_cast<EModuleComment*>(pType);
 			if (pModuleComment)
 			{
-				strLine = trim(strLine.substr(10));
+				strLine = trimmedRemainderAfterTag(strLine, kTagLogfilter);
 				pModuleComment->strLogFilter = explode(strLine, ';');
 			}
 		}
@@ -360,39 +403,39 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 
 	for (auto el = commentList.begin(); el != commentList.end(); el++)
 	{
-		std::string strLine = *el;
-		if (strLine.substr(0, 6) == "@brief")
+		std::string strLine = trim(*el);
+		if (strLine.starts_with(kTagBrief))
 		{
 			last = eLast::_brief;
-			strLine = trim(strLine.substr(6));
+			strLine = trimmedRemainderAfterTag(strLine, kTagBrief);
 			pType->strShort_UTF8 += escapeJsonString(strLine);
 		}
-		else if (strLine.substr(0, 8) == "@private")
+		else if (strLine.starts_with(kTagPrivate))
 		{
 			last = eLast::_private;
 			pType->iPrivate = 1;
 		}
-		else if (strLine.substr(0, 11) == "@deprecated")
+		else if (strLine.starts_with(kTagDeprecated))
 		{
 			last = eLast::_deprecated;
-			pType->handleDeprecated(strLine.substr(11));
+			pType->handleDeprecated(remainderAfterTag(strLine, kTagDeprecated));
 		}
-		else if (strLine.substr(0, 6) == "@added")
+		else if (strLine.starts_with(kTagAdded))
 		{
 			last = eLast::_added;
-			pType->handleAdded(strLine.substr(6));
+			pType->handleAdded(remainderAfterTag(strLine, kTagAdded));
 		}
-		else if (strLine.substr(0, 7) == "@linked")
+		else if (strLine.starts_with(kTagLinked))
 		{
 			last = eLast::_linked;
-			strLine = trim(strLine.substr(7));
+			strLine = trimmedRemainderAfterTag(strLine, kTagLinked);
 			pType->strLinkedType_UTF8 += escapeJsonString(strLine);
 		}
-		else if (strLine.substr(0, 5) == "@long")
+		else if (strLine.starts_with(kTagLong))
 		{
 			// in case someone added a long comment to a member variable we add the content to the short
 			last = eLast::_brief;
-			strLine = trim(strLine.substr(5));
+			strLine = trimmedRemainderAfterTag(strLine, kTagLong);
 			if (!pType->strShort_UTF8.empty())
 				pType->strShort_UTF8 += escapeJsonString("\n");
 			pType->strShort_UTF8 += escapeJsonString(strLine);
@@ -432,7 +475,7 @@ int EAsnStackElementFile::ProcessLine(const char* szModuleName, const char* szRa
 	{
 		if (!szComment.empty())
 		{
-			if (szComment.substr(0, 6) == "@clear")
+			if (szComment.starts_with(kTagClear))
 				m_CollectComments.clear();
 			else
 				m_CollectComments.push_back(szComment);
@@ -504,7 +547,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 	{
 		if (!szComment.empty())
 		{
-			if (szComment.substr(0, 6) == "@clear")
+			if (szComment.starts_with(kTagClear))
 				m_CollectComments.clear();
 			else
 				m_CollectComments.push_back(szComment);
@@ -1136,7 +1179,7 @@ void EAsnCommentParser::FilterFiles()
 			auto strElements = explode(strFileContent, '\n', false, false);
 			for (auto& strElement : strElements)
 			{
-				if ((strElement.length() > 4 && strElement.substr(0, 5) == "-- ~ ") || (strElement.length() == 4 && strElement.substr(0, 4) == "-- ~"))
+				if (strElement.starts_with(kCommentIgnoredPrefix))
 					continue;
 
 				strElement += "\n";
@@ -1171,7 +1214,7 @@ int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
 		strLine = trim(strLine);
 
 		// Comments only have the first leading space removed
-		if (strComment.substr(0, 1) == " ")
+		if (strComment.starts_with(' '))
 			strComment = strComment.substr(1, strComment.size() - 1);
 
 		// strComment.TrimRight();
@@ -1180,7 +1223,7 @@ int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
 			strComment = " ";
 
 		// A comment starting with ~ is ignored
-		if (strComment.substr(0, 1) == "~")
+		if (strComment.starts_with('~'))
 			strComment.clear();
 	}
 	replaceAll(strLine, "\t", " ");

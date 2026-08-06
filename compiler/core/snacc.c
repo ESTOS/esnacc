@@ -53,6 +53,7 @@ char* bVDAGlobalDLLExport = (char*)0;
 #include "define.h"
 #include "snacc-util.h"
 #include "snacc-validators.h"
+#include "snacc-validation-rules.h"
 #include "filetype.h"
 #include "../back-ends/structure-util.h"
 #include "../back-ends/str-util.h"
@@ -261,15 +262,9 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "  -nodeprecated   do not generate code that is marked as deprecated (any date)\n");
 	fprintf(fp, "  -nodeprecated:Day.Month.Year  do not generate code that has been marked deprecated prior to this date\n");
 	fprintf(fp, "  -ValidationLevel n - Sets a specific validation rule set for the asn1 files. Default is that all of the following checks are applied\n");
-	fprintf(fp, "   0 no validation\n");
-	fprintf(fp, "   1 Validates that operationIDs are not used twice\n");
-	fprintf(fp, "   2 Validates that operation arguments, results and errors are sequences or choices (only types are extendable) (@deprecated are not validated)\n");
-	fprintf(fp, "   4 Validates that errors are of the same type to generalize error handling (@deprecated are not validated)\n");
-	fprintf(fp, "   8 Validates that all sequences contain ... to allow extending them (@deprecated are not validated)\n");
-	fprintf(fp, "   16 Validates that only allow types from the esnacc_whiteliste.txt are used (@deprecated are not validated)\n");
-	fprintf(fp, "   32 Ensure that invokes are specified with argument, result and error where events only consists of an argument (@deprecated are not validated)\n");
-	fprintf(fp, "   64 Ensure that optional parameters are not encoded implicit (context specific, with number) and explicit (without) in the same object (@deprecated are not validated)\n");
-	fprintf(fp, "   128 Ensure that optional parameters are always encoded implicit and never explicit (@deprecated are not validated)\n");
+	fprintf(fp, "   @deprecated exempts a type/operation from all checks below. @ignorevalidation exempts only the named rules (see below).\n");
+	PrintValidationLevelHelp(fp);
+	PrintIgnoreValidationRuleNames(fp);
 	fprintf(fp, "  -versionfile - the compiler writes a version file for the highest version found (requires interfaceversion.txt)\n");
 	fprintf(fp, "  -utf8   write output files with UTF-8 encoding (default: system codepage / Windows-1252)\n");
 	fprintf(fp, "  -utf8bom   write a UTF-8 BOM at the start of each output file (implies -utf8)\n");

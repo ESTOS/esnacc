@@ -31,6 +31,7 @@ extern "C"
 		long long i64Added;
 		long long i64Deprecated;
 		const char* szDeprecated;
+		int iIgnoreValidation; /* bitmask; see snacc-validation-rules.h */
 	} asnoperationcomment;
 
 	typedef struct _asnsequencecomment
@@ -43,6 +44,7 @@ extern "C"
 		long long i64Added;
 		long long i64Deprecated;
 		const char* szDeprecated;
+		int iIgnoreValidation; /* bitmask; see snacc-validation-rules.h */
 	} asnsequencecomment;
 
 	typedef struct _asnmembercomment

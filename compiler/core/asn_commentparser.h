@@ -64,6 +64,8 @@ public:
 class ETypeComment : public EDeprecated, public EAdded
 {
 public:
+	virtual ~ETypeComment() = default;
+
 	// Name of the strCategory
 	std::string strCategory_UTF8;
 	std::string strCategory_ASCII;
@@ -78,6 +80,8 @@ public:
 	std::string strLong_ASCII;
 	// Type is private
 	int iPrivate = 0;
+	// Bitmask of ValidationLevel checks to skip (see snacc-validation-rules.h). 0 = not set.
+	unsigned int m_nIgnoreValidationMask = 0;
 	// Interal flag that stores whether the UTF8 value has already been converted to ascii (is done on access)
 	bool m_bConvertedToAscii = false;
 };

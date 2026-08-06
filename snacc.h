@@ -8,7 +8,14 @@
 #define NULL 0
 #endif
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 void snacc_exit_now(const char* szMethod, const char* szMessage, ...);
+#ifdef __cplusplus
+}
+#endif
 #define snacc_exit(szMessage, ...)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
 	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
 		snacc_exit_now(__func__, szMessage, ##__VA_ARGS__);                                                                                                                                                                                                                                                                                                                                                                                                                                                        \

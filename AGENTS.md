@@ -111,6 +111,15 @@ See [.cursor/rules/test-specification-first.mdc](.cursor/rules/test-specificatio
 - When writing tests, focus on specifying the API — not on getting a green suite.
 - **Only exception:** the user explicitly asks to change tests, change product code, or revise the spec.
 
+## Version and tags (`version.h`)
+
+See [.cursor/rules/snacclib7-release-workflow.mdc](.cursor/rules/snacclib7-release-workflow.mdc).
+
+- Bump version **once** when opening a feature branch (compare to `main`); do not re-bump while `main` is still behind.
+- Refresh `RELDATE` before opening the MR.
+- Tag tip with `7.0/<version>.beta.<n>`; move or replace stale tags for that version.
+- **No** `release-notes-*.md` files.
+
 ## Related repositories
 
 - [esnacc-openapi-sdk](https://github.com/ESTOS/esnacc-openapi-sdk) — Swagger UI integration for generated OpenAPI output
