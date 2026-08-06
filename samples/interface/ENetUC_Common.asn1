@@ -114,6 +114,7 @@ AsnSystemTime ::= REAL
 -- AsnNetDatabaseContact is widly used almost everywhere in the API. It contains the contact data of a contact and from which databse it comes from.
 -- All fields in this sequence are optional, because not every field must have content, but the sequence is broadly used, so every field which is 
 -- not transmitted saves bandwidth.
+-- @ignorevalidation no-asn-optional-parameters
 AsnNetDatabaseContact ::= SEQUENCE
 {
 	u8sFound							[0] UTF8String OPTIONAL,
