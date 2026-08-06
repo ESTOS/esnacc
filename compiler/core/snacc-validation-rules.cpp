@@ -1,5 +1,7 @@
 #include "snacc-validation-rules.h"
 
+#include "../../c-lib/include/asn-config.h"
+#include "../../c-lib/include/platform-functions.h"
 #include <cctype>
 #include <cstring>
 #include <string>
@@ -7,6 +9,22 @@
 
 namespace
 {
+	/**
+	 * Case-insensitive ASCII compare for @ignorevalidation rule tokens.
+	 * Uses mytolower (platform-functions) so MSVC and GCC/Clang builds share the same path.
+	 */
+	bool equalsIgnoreCase(const std::string& left, const char* pszRight)
+	{
+		const char* pszRightSafe = pszRight ? pszRight : "";
+		std::string leftCopy(left);
+		std::string rightCopy(pszRightSafe);
+		if (!leftCopy.empty())
+			mytolower(&leftCopy[0]);
+		if (!rightCopy.empty())
+			mytolower(&rightCopy[0]);
+		return leftCopy == rightCopy;
+	}
+
 	struct SValidationRuleAlias
 	{
 		const char* pszAlias;
@@ -73,7 +91,7 @@ namespace
 	{
 		for (const SnaccValidationRuleDesc& rule : g_canonicalRules)
 		{
-			if (_stricmp(token.c_str(), rule.pszTagName) == 0)
+			if (equalsIgnoreCase(token, rule.pszTagName))
 			{
 				*pBit = rule.nBit;
 				return true;
@@ -86,7 +104,7 @@ namespace
 	{
 		for (const SValidationRuleAlias& alias : g_ruleAliases)
 		{
-			if (_stricmp(token.c_str(), alias.pszAlias) == 0)
+			if (equalsIgnoreCase(token, alias.pszAlias))
 			{
 				*pBit = static_cast<unsigned int>(alias.check);
 				return true;
@@ -171,7 +189,7 @@ unsigned int ParseIgnoreValidationRulesSpec(const char* pszSpec, char* pszError,
 	std::string error;
 	const unsigned int mask = parseIgnoreValidationRulesSpecInternal(pszSpec ? pszSpec : "", &error);
 	if (!mask && pszError && cbError > 0 && !error.empty())
-		strncpy_s(pszError, cbError, error.c_str(), _TRUNCATE);
+		strcpy_s(pszError, cbError, error.c_str());
 	return mask;
 }
 
