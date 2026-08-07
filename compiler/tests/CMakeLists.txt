@@ -46,5 +46,5 @@ target_include_directories(interface-baseline-tests PRIVATE
 	"${CMAKE_SOURCE_DIR}/c-lib/include"
 )
 target_compile_definitions(interface-baseline-tests PRIVATE COMPILER)
-target_link_libraries(interface-baseline-tests PRIVATE GTest::gtest_main)
+target_link_libraries(interface-baseline-tests PRIVATE GTest::gtest_main c-lib)
 gtest_discover_tests(interface-baseline-tests)

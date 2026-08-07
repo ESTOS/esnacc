@@ -25,6 +25,7 @@ CI builds on **Ubuntu** as well as Windows. Do **not** call MSVC-only CRT APIs (
 2. **Never** assume `_WIN32` for compiler core logic; Windows-only code belongs behind `#ifdef _WIN32` with a portable default.
 3. After editing portable code, verify **CMake Release build** (and `ctest` when tests exist) — local MSVC success alone is not enough.
 4. When adding file I/O in the compiler core, prefer **`myfopen`** (via `fopen_s` macro) over direct `fopen`.
+5. **Unit tests** that compile compiler `.c` sources directly (not via the `compiler` target) must also link **`c-lib`** (or at least `c-lib/src/platform-functions.c`) when those sources use `fopen_s` / `asn-config.h` on Linux.
 
 ## Agent checklist
 
