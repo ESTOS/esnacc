@@ -25,6 +25,8 @@
 #include "../../../c-lib/include/asn-incl.h"
 #include "../../core/asn1module.h"
 #include "../../core/asn_comments.h"
+#include "../../core/interface_baseline.h"
+#include "../../core/module_version_emit.h"
 #include "../../core/time_helpers.h"
 #include "../comment-util.h"
 #include "../structure-util.h"
@@ -1229,15 +1231,7 @@ void PrintSwiftCodeOne(FILE* src, ModuleList* mods, Module* m, long longJmpVal, 
 		Dash2Underscore(szModuleName, 512);
 		fprintf(src, "struct %s_Version\n", szModuleName);
 		fprintf(src, "{\n");
-		char* szISODate = ConvertUnixTimeToISO(lModulePatchVersion);
-		fprintf(src, "    let lastChange = Date(iso8601String:\"%s\") ?? .distantPast\n", szISODate);
-		free(szISODate);
-		fprintf(src, "    let majorVersion = %i\n", gMajorInterfaceVersion);
-		fprintf(src, "    let minorVersion = 0\n");
-		char* szNumericDate = ConvertUnixTimeToNumericDate(lModulePatchVersion);
-		fprintf(src, "    let patchVersion = %s\n", szNumericDate);
-		fprintf(src, "    let version = \"%i.0.%s\"\n", gMajorInterfaceVersion, szNumericDate);
-		free(szNumericDate);
+		EmitAnnotatedModuleVersionFields(src, ModuleVersionEmitSwiftStruct, NULL, "    ", gMajorInterfaceVersion, lModulePatchVersion);
 		fprintf(src, "}\n\n");
 	}
 
@@ -1429,15 +1423,7 @@ void PrintSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 			fprintf(versionFile, "import Foundation\n\n");
 			fprintf(versionFile, "struct Asn1InterfaceVersion\n");
 			fprintf(versionFile, "{\n");
-			char* szISODate = ConvertUnixTimeToISO(lMaxPatchVersion);
-			fprintf(versionFile, "    let lastChange = Date(iso8601String:\"%s\") ?? .distantPast\n", szISODate);
-			free(szISODate);
-			fprintf(versionFile, "    let majorVersion = %i\n", gMajorInterfaceVersion);
-			fprintf(versionFile, "    let minorVersion = 0\n");
-			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxPatchVersion);
-			fprintf(versionFile, "    let patchVersion = %s\n", szNumericDate);
-			fprintf(versionFile, "    let version = \"%i.0.%s\"\n", gMajorInterfaceVersion, szNumericDate);
-			free(szNumericDate);
+			EmitAnnotatedModuleVersionFields(versionFile, ModuleVersionEmitSwiftStruct, NULL, "    ", gMajorInterfaceVersion, lMaxPatchVersion);
 			fprintf(versionFile, "}\n");
 			fclose(versionFile);
 		}

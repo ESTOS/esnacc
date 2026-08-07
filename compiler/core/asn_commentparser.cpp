@@ -1,4 +1,5 @@
 #include "asn_commentparser.h"
+#include "asn_comments.h"
 #include "asn-stringconvert.h"
 #include "filetype.h"
 #include "snacc-validation-rules.h"
@@ -1015,6 +1016,42 @@ int EAsnCommentParser::ParseFileForComments(FILE* fp, const char* szModuleName, 
 	fseek(fp, type == UTF8WITHBOM ? 3 : 0, SEEK_SET);
 
 	return 0; // NO Error
+}
+
+void EAsnCommentParser::RegisterFilterSource(const char* szSourcePath, const char* szModuleName, enum EFILETYPE type)
+{
+	if (!gFilterASN1Files || !szSourcePath || !szModuleName)
+		return;
+
+	m_FilterSourceFiles.emplace_back(szSourcePath, szModuleName, type);
+}
+
+void EAsnCommentParser::RebuildFilteredAsnFiles()
+{
+	if (m_FilterSourceFiles.empty())
+		return;
+
+	ClearAsnCommentStateForRebuild();
+	m_FilteredFileContents.clear();
+
+	for (const auto& sourceFile : m_FilterSourceFiles)
+	{
+		FILE* fp = nullptr;
+#ifdef _WIN32
+		if (fopen_s(&fp, sourceFile.m_strSourcePath.c_str(), "r") != 0)
+			fp = nullptr;
+#else
+		fp = fopen(sourceFile.m_strSourcePath.c_str(), "r");
+#endif
+		if (!fp)
+		{
+			perror("fopen");
+			continue;
+		}
+
+		ParseFileForComments(fp, sourceFile.m_strModuleName.c_str(), sourceFile.m_eFileType);
+		fclose(fp);
+	}
 }
 
 class ImportSegment

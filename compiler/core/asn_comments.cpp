@@ -1,6 +1,7 @@
 #include "asn_comments.h"
 #include "asn_commentparser.h"
 #include "asn-stringconvert.h"
+#include "interface_baseline.h"
 #include "../../snacc.h"
 
 extern "C"
@@ -17,6 +18,28 @@ extern "C"
 	void FilterFiles()
 	{
 		parser.FilterFiles();
+	}
+
+	void RegisterFilterSourceFile(const char* szSourcePath, const char* szModuleName, enum EFILETYPE type)
+	{
+		parser.RegisterFilterSource(szSourcePath, szModuleName, type);
+	}
+
+	void RebuildFilteredAsnFilesIfNeeded(void)
+	{
+		if (!gInterfaceBaselineAutoResolved || !gFilterASN1Files)
+			return;
+
+		gInterfaceBaselineAutoResolved = 0;
+		parser.RebuildFilteredAsnFiles();
+	}
+
+	void ClearAsnCommentStateForRebuild(void)
+	{
+		gComments.mapModules.clear();
+		gComments.mapOperations.clear();
+		gComments.mapSequences.clear();
+		glMaxModulePatchVersion = -1;
 	}
 
 	const char* GetFirstModuleLogFileFilter(const char* szModuleName)
@@ -141,6 +164,34 @@ extern "C"
 		}
 
 		return glMaxModulePatchVersion;
+	}
+
+	/**
+	 * Scans parsed ASN.1 comments for the newest @deprecated timestamp in the current compile scope.
+	 */
+	long long GetMaxDeprecatedTimestamp()
+	{
+		long long i64MaxDeprecated = 0;
+
+		auto considerDeprecated = [&i64MaxDeprecated](long long i64Deprecated) {
+			if (i64Deprecated > 0 && i64Deprecated > i64MaxDeprecated)
+				i64MaxDeprecated = i64Deprecated;
+		};
+
+		for (const auto& moduleComment : gComments.mapModules)
+			considerDeprecated(moduleComment.second.i64Deprecated);
+
+		for (const auto& operationComment : gComments.mapOperations)
+			considerDeprecated(operationComment.second.i64Deprecated);
+
+		for (const auto& sequenceComment : gComments.mapSequences)
+		{
+			considerDeprecated(sequenceComment.second.i64Deprecated);
+			for (const auto& memberComment : sequenceComment.second.mapMembers)
+				considerDeprecated(memberComment.second.i64Deprecated);
+		}
+
+		return i64MaxDeprecated;
 	}
 
 	int GetOperationComment_UTF8(const char* szModuleName, const char* szOpName, asnoperationcomment* pcomment)

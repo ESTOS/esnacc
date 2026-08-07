@@ -1,0 +1,14 @@
+# deprecatedbaseline.txt — optional API baseline for esnacc
+#
+# Uncomment the first non-comment line to pin a baseline date (same formats as
+# @deprecated / @added in ASN.1 comments, e.g. DD.MM.YYYY).
+#
+# When set, esnacc uses this value to:
+#   - label generated module versions (YYYYMMDD.0.<max @added>)
+#   - exclude symbols deprecated on or before this date by default
+#
+# Leave all dates commented to publish the full interface from this file set.
+# Override per invocation with: -nodeprecated:DD.MM.YYYY
+#
+# Example:
+# 01.01.2024

@@ -81,6 +81,7 @@ add_subdirectory(compiler)
 
 if(BUILD_TESTING)
 	add_subdirectory(cpp-lib/tests)
+	add_subdirectory(compiler/tests)
 	add_subdirectory(samples/ts-microservice)
 endif()
 

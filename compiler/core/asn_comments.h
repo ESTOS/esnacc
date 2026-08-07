@@ -60,6 +60,9 @@ extern "C"
 	// Parse for Comments
 	extern int ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type);
 	extern void FilterFiles();
+	extern void RegisterFilterSourceFile(const char* szSourcePath, const char* szModuleName, enum EFILETYPE type);
+	extern void RebuildFilteredAsnFilesIfNeeded(void);
+	extern void ClearAsnCommentStateForRebuild(void);
 
 	// Get LogFilter Attributes (if any) call recurring until it returns 0
 	extern const char* GetFirstModuleLogFileFilter(const char* szModuleName);
@@ -80,6 +83,8 @@ extern "C"
 	extern long long GetModulePatchVersion(const char* szModuleName);
 	// Retrieve the highest minor Version of all module
 	extern long long GetMaxModulePatchVersion();
+	// Highest @deprecated unix timestamp across parsed ASN.1 comments (0 if none)
+	extern long long GetMaxDeprecatedTimestamp();
 
 #ifdef __cplusplus
 }

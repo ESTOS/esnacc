@@ -1,0 +1,19 @@
+Baseline-Test
+	{ 1 3 6 1 4 1 10924 9999 99 }
+
+DEFINITIONS
+IMPLICIT TAGS ::=
+BEGIN
+
+-- @deprecated 15.06.2024
+asnDeprecatedOp OPERATION
+	ARGUMENT	arg NULL
+	RESULT		res NULL
+::= 9001
+
+asnCurrentOp OPERATION
+	ARGUMENT	arg NULL
+	RESULT		res NULL
+::= 9002
+
+END

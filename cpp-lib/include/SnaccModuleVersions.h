@@ -6,8 +6,8 @@
 
 /*
  * Starting with esnacc 6 you may use a special syntax to get versioned asn1 files
- * When the compiler parses the asn1 files it looks for an interfaceversion.txt file which
- * contains the major interface version for the asn1 files
+ * When the compiler parses the asn1 files it looks for a deprecatedbaseline.txt file which
+ * contains the API baseline for the asn1 files (YYYYMMDD date or legacy integer major version)
  * Within the different asn1 files you may add asn1 comments like this
  * -- @added 06.03.2024
  *
@@ -15,11 +15,18 @@
  * The compiler then collects these information and takes the highest value as version information
  * for the asn1 module
  *
- * The full version is build using
- * majorversion.0.patchversion
+ * The full version uses semver MAJOR.MINOR.PATCH:
+ *   {baseline}.{0}.{maxAdded}
  *
- * majorversion is a simple integer
- * patchversion is the reverse date representation as numbers e.g. 31.12.2024 would be 20241231
+ * MAJOR (MODULE_MAJOR_VERSION) - API baseline from deprecatedbaseline.txt or -nodeprecated
+ *   (YYYYMMDD when dated, legacy integer major, or 0 when no dated baseline).
+ * MINOR (MODULE_MINOR_VERSION) - semver placeholder; always 0 in current esnacc releases.
+ * PATCH (MODULE_PATCH_VERSION) - newest @added in the module as YYYYMMDD (module activity,
+ *   not a traditional semver bugfix increment).
+ *
+ * MODULE_LASTCHANGE / MODULE_BASELINE - ISO dates for @added activity and API baseline.
+ * MODULE_MAJOR_VERSION / MODULE_MINOR_VERSION / MODULE_PATCH_VERSION / MODULE_VERSION -
+ * semver fields with identical names in all generated backends.
  */
 
 /*
@@ -40,7 +47,7 @@ private:
 	std::string m_strModuleName;
 	// The patch version as __int64 value (value of the @added timestamp, so unix time since 1970)
 	long long m_llPatchVersion = 0;
-	// The major version of the interface (as defined by the interfaceversion.txt)
+	// The major/baseline version of the interface (from deprecatedbaseline.txt or -nodeprecated baseline)
 	int m_iMajorVersion = 0;
 };
 

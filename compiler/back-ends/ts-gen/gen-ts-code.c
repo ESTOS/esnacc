@@ -29,6 +29,8 @@
 #include "gen-ts-converter.h"
 #include "gen-ts-rose.h"
 #include "../../core/asn_comments.h"
+#include "../../core/interface_baseline.h"
+#include "../../core/module_version_emit.h"
 #include "../../core/time_helpers.h"
 #include <inttypes.h>
 #include <assert.h>
@@ -1033,15 +1035,7 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 			fprintf(versionFile, "\n");
 			long long lMaxPatchVersion = GetMaxModulePatchVersion();
 			fprintf(versionFile, "export class Asn1InterfaceVersion {\n");
-			char* szISODate = ConvertUnixTimeToISO(lMaxPatchVersion);
-			fprintf(versionFile, "\tpublic static lastChange = \"%s\";\n", szISODate);
-			free(szISODate);
-			fprintf(versionFile, "\tpublic static majorVersion = %i;\n", gMajorInterfaceVersion);
-			fprintf(versionFile, "\tpublic static minorVersion = 0;\n");
-			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxPatchVersion);
-			fprintf(versionFile, "\tpublic static patchVersion = %s;\n", szNumericDate);
-			fprintf(versionFile, "\tpublic static version = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
-			free(szNumericDate);
+			EmitAnnotatedModuleVersionFields(versionFile, ModuleVersionEmitTsClassStatic, NULL, "\t", gMajorInterfaceVersion, lMaxPatchVersion);
 			fprintf(versionFile, "}\n");
 			fclose(versionFile);
 		}
