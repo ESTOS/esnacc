@@ -1,6 +1,7 @@
 #include "interface_baseline.h"
 #include "time_helpers.h"
 #include "../../snacc.h"
+#include "../../c-lib/include/asn-config.h"
 #include "asn_comments.h"
 #include <ctype.h>
 #include <stdlib.h>

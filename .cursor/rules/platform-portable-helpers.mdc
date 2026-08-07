@@ -1,0 +1,35 @@
+---
+description: Use platform-independent helper headers in esnacc C/C++ code (asn-config, platform-functions, time_helpers, cpp_c_helper)
+alwaysApply: true
+---
+
+# Platform-Portable Helpers (esnacc)
+
+CI builds on **Ubuntu** as well as Windows. Do **not** call MSVC-only CRT APIs (`strcpy_s`, `strcat_s`, `fopen_s`, `_MAX_PATH`, …) directly in new or edited compiler/c-lib code without going through the existing portability layer.
+
+## Required includes
+
+| Need | Include | Notes |
+|------|---------|-------|
+| Safe string/file macros on Linux | `c-lib/include/asn-config.h` | Maps `strcpy_s`, `strcat_s`, `sprintf_s`, `fopen_s`, `_MAX_PATH`, `_mkdir`, … on non-`_WIN32` |
+| Portable `fopen` wrapper | `c-lib/include/platform-functions.h` | `myfopen`, `mytolower` (also pulled in via `asn-config.h` on Linux) |
+| ASN.1 date ↔ unix time | `compiler/core/time_helpers.h` | `ConvertDateToUnixTime`, `ConvertUnixTimeToISO`, `ConvertUnixTimeToNumericDate`, … |
+| Paths, directories, file cache | `compiler/core/cpp_c_helper.h` | `getDirectoryWithDelimiterFromPath`, `createDirectories`, `findFiles`, `writeFile`, … |
+| C++ path/file utilities | `compiler/core/cpp_helper.h` | C++ helpers used from `.cpp` back-ends |
+
+**Pattern:** mirror `compiler/core/time_helpers.c` and `compiler/core/snacc-validation-rules.cpp` — include `asn-config.h` from `c-lib/include/` in any new `.c` / `.cpp` under `compiler/` that uses `_s` string functions or `_MAX_PATH`.
+
+## Rules
+
+1. **Never** add raw `fopen` / `strcpy` / `strcat` shims in a single file — extend or use `asn-config.h` / `platform-functions.c` instead.
+2. **Never** assume `_WIN32` for compiler core logic; Windows-only code belongs behind `#ifdef _WIN32` with a portable default.
+3. After editing portable code, verify **CMake Release build** (and `ctest` when tests exist) — local MSVC success alone is not enough.
+4. When adding file I/O in the compiler core, prefer **`myfopen`** (via `fopen_s` macro) over direct `fopen`.
+
+## Agent checklist
+
+Before finishing a compiler/c-lib change that touches strings, paths, or files:
+
+- [ ] Includes `asn-config.h` if using `*_s` CRT helpers or `_MAX_PATH`
+- [ ] Uses `time_helpers.h` for date parsing/formatting (not ad-hoc `strftime`/`sscanf`)
+- [ ] Uses `cpp_c_helper.h` / `cpp_helper.h` for directory creation and path normalization when applicable

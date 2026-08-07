@@ -96,6 +96,7 @@ Requirements and IDE-specific steps are in [docs/build.md](docs/build.md). CMake
 
 - Preserve existing line endings and formatting in edited files.
 - Prefer the smallest correct change; match surrounding code style.
+- **Platform portability:** use shared helpers (`asn-config.h`, `platform-functions.h`, `time_helpers.h`, `cpp_c_helper.h`) — never MSVC-only CRT calls in portable compiler code. See [.cursor/rules/platform-portable-helpers.mdc](.cursor/rules/platform-portable-helpers.mdc).
 - Generated output shape is defined by ASN.1 inputs plus the relevant `compiler/back-ends/*-gen` implementation — read both before changing behavior.
 - When documentation and code disagree, verify against `samples/` and tests before updating docs.
 - **Document new types and members** at the definition site (purpose, usage, ownership). See [.cursor/rules/living-documentation.mdc](.cursor/rules/living-documentation.mdc).
