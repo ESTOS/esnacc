@@ -8,6 +8,8 @@
 
 #include "../../../c-lib/include/print.h"
 #include "../../core/asn_comments.h"
+#include "../../core/interface_baseline.h"
+#include "../../core/module_version_emit.h"
 #include "../../core/time_helpers.h"
 #include "../tag-util.h" /* get GetTags/FreeTags/CountTags/TagByteLen */
 #include "../str-util.h"
@@ -844,11 +846,7 @@ void PrintKotlinCode(ModuleList* allMods)
 		{
 			long long lMaxPatchVersion = GetMaxModulePatchVersion();
 			fprintf(src, "object Asn1InterfaceVersion {\n");
-			fprintf(src, "\tconst val lastChange: String = \"%s\"\n", ConvertUnixTimeToISO(lMaxPatchVersion));
-			fprintf(src, "\tconst val majorVersion: Int = %i\n", gMajorInterfaceVersion);
-			fprintf(src, "\tconst val minorVersion: Int = 0\n");
-			fprintf(src, "\tconst val patchVersion: Long = %lld\n", lMaxPatchVersion);
-			fprintf(src, "\tconst val version: String = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lMaxPatchVersion);
+			EmitAnnotatedModuleVersionFields(src, ModuleVersionEmitKotlinObject, NULL, "\t", gMajorInterfaceVersion, lMaxPatchVersion);
 			fprintf(src, "}\n");
 			fclose(src);
 		}
@@ -895,11 +893,7 @@ void PrintKotlinCodeOneModule(ModuleList* mods, Module* m)
 		{
 			long long lModulePatchVersion = GetModulePatchVersion(m->moduleName);
 			fprintf(src, "object %s {\n", m->moduleName);
-			fprintf(src, "\tconst val lastChange: String = \"%s\"\n", ConvertUnixTimeToISO(lModulePatchVersion));
-			fprintf(src, "\tconst val majorVersion: Int = %i\n", gMajorInterfaceVersion);
-			fprintf(src, "\tconst val minorVersion: Int = 0\n");
-			fprintf(src, "\tconst val patchVersion: Long = %lld\n", lModulePatchVersion);
-			fprintf(src, "\tconst val version: String = \"%i.%lld.0\"\n", gMajorInterfaceVersion, lModulePatchVersion);
+			EmitAnnotatedModuleVersionFields(src, ModuleVersionEmitKotlinObject, NULL, "\t", gMajorInterfaceVersion, lModulePatchVersion);
 			fprintf(src, "}\n");
 			fclose(src);
 		}

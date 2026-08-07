@@ -23,6 +23,8 @@
 
 #include "gen-jsondoc-code.h"
 #include "../../core/asn_comments.h"
+#include "../../core/interface_baseline.h"
+#include "../../core/module_version_emit.h"
 #include "../../core/time_helpers.h"
 #include "../str-util.h"
 
@@ -717,15 +719,14 @@ void PrintJsonDocModule(FILE* src, ModuleList* mods, Module* m)
 	{
 		fprintf(src, ",\n\t\t\"version\": {");
 		long long lModulePatchVersion = GetModulePatchVersion(m->moduleName);
-		char* szISODate = ConvertUnixTimeToISO(lModulePatchVersion);
-		fprintf(src, "\n\t\t\t\"lastChange\": \"%s\"", szISODate);
-		free(szISODate);
-		fprintf(src, ",\n\t\t\t\"majorVersion\": %i", gMajorInterfaceVersion);
-		fprintf(src, ",\n\t\t\t\"minorVersion\": 0");
-		char* szNumericDate = ConvertUnixTimeToNumericDate(lModulePatchVersion);
-		fprintf(src, ",\n\t\t\t\"patchVersion\": %s", szNumericDate);
-		fprintf(src, ",\n\t\t\t\"version\": \"%i.0.%s\"", gMajorInterfaceVersion, szNumericDate);
-		free(szNumericDate);
+		fprintf(src, "\n\t\t\t");
+		EmitAnnotatedModuleVersionFields(
+			src,
+			ModuleVersionEmitJsonDocVersionObject,
+			NULL,
+			"\t\t\t",
+			gMajorInterfaceVersion,
+			lModulePatchVersion);
 		fprintf(src, "\n\t\t}");
 	}
 
@@ -847,7 +848,7 @@ void PrintJsonDocCode(ModuleList* allMods)
 	int fNameConflict = FALSE;
 
 	{
-		char* szFileName = MakeFileName("interfaceversion", ".txt");
+		char* szFileName = MakeFileName("deprecatedbaseline", ".txt");
 		FILE* src = NULL;
 		if (fopen_s(&src, szFileName, "wt") != 0 || src == NULL)
 		{

@@ -31,6 +31,8 @@
 #include "cxxconstraints.h"
 #include "cxxmultipleconstraints.h"
 #include "../../core/asn_comments.h"
+#include "../../core/interface_baseline.h"
+#include "../../core/module_version_emit.h"
 #include "../../core/time_helpers.h"
 #include <inttypes.h>
 
@@ -4762,25 +4764,6 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 	PrintHdrComment(hdr, m);
 	PrintConditionalIncludeOpen(hdr, m->cxxHdrFileName);
 
-	if (gMajorInterfaceVersion >= 0)
-	{
-		long long lMinorModuleVersion = GetModulePatchVersion(m->moduleName);
-		char szModuleNameUpper[513] = {0};
-		strcpy_s(szModuleNameUpper, 512, m->moduleName);
-		Str2UCase(szModuleNameUpper, 512);
-		Dash2Underscore(szModuleNameUpper, 512);
-
-		char* szISODate = ConvertUnixTimeToISO(lMinorModuleVersion);
-		fprintf(hdr, "#define %s_MODULE_LASTCHANGE = \"%s\"\n", szModuleNameUpper, szISODate);
-		free(szISODate);
-		fprintf(hdr, "#define %s_MODULE_MAJOR_VERSION = %i\n", szModuleNameUpper, gMajorInterfaceVersion);
-		fprintf(hdr, "#define %s_MODULE_MINOR_VERSION = 0\n", szModuleNameUpper);
-		char* szNumericDate = ConvertUnixTimeToNumericDate(lMinorModuleVersion);
-		fprintf(hdr, "#define %s_MODULE_PATCH_VERSION = %s\n", szModuleNameUpper, szNumericDate);
-		fprintf(hdr, "#define %s_MODULE_VERSION = \"%i.0.%s\"\n\n", szModuleNameUpper, gMajorInterfaceVersion, szNumericDate);
-		free(szNumericDate);
-	}
-
 	if (genCodeCPPPrintPCHInclude == 2)
 		fprintf(src, "#include \"pch.h\"\n");
 	else if (genCodeCPPPrintPCHInclude)
@@ -4896,6 +4879,17 @@ void PrintCxxCode(FILE* src, FILE* hdr, if_META(MetaNameStyle printMeta _AND_) i
 			fprintf(src, "namespace SNACC{\n");
 		}
 		fprintf(hdr, "#endif\n\n");
+	}
+
+	if (gMajorInterfaceVersion >= 0)
+	{
+		long long lMinorModuleVersion = GetModulePatchVersion(m->moduleName);
+		char szModuleNameUpper[513] = {0};
+		strcpy_s(szModuleNameUpper, 512, m->moduleName);
+		Str2UCase(szModuleNameUpper, 512);
+		Dash2Underscore(szModuleNameUpper, 512);
+
+		EmitAnnotatedModuleVersionFields(hdr, ModuleVersionEmitCppHeader, szModuleNameUpper, NULL, gMajorInterfaceVersion, lMinorModuleVersion);
 	}
 
 	if (bVDAGlobalDLLExport)

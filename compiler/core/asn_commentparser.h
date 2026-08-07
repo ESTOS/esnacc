@@ -143,6 +143,20 @@ public:
 	enum EFILETYPE m_eFileType;
 };
 
+class EFilterSourceFile
+{
+public:
+	EFilterSourceFile(const std::string& strSourcePath, const std::string& strModuleName, const EFILETYPE eFileType)
+		: m_strSourcePath(strSourcePath)
+		, m_strModuleName(strModuleName)
+		, m_eFileType(eFileType)
+	{
+	}
+	std::string m_strSourcePath;
+	std::string m_strModuleName;
+	enum EFILETYPE m_eFileType;
+};
+
 class EAsnCommentParser
 {
 public:
@@ -150,6 +164,10 @@ public:
 	int ParseFileForComments(FILE* fp, const char* szModuleName, const enum EFILETYPE type);
 	// Handles the second step in filtering files (remove the imports)
 	void FilterFiles();
+	// Records a source file for optional rebuild after baseline auto-resolve
+	void RegisterFilterSource(const char* szSourcePath, const char* szModuleName, enum EFILETYPE type);
+	// Re-parses registered sources when -nodeprecated was resolved after the first pass
+	void RebuildFilteredAsnFiles();
 
 	std::list<EAsnStackElement*> m_stack;
 
@@ -161,6 +179,7 @@ private:
 	// In the first approach we filter all the elements that are flagged filtered
 	// In the second approach we filter all imports that point to a private or deprecated object
 	std::list<EFilteredAsnFile> m_FilteredFileContents;
+	std::list<EFilterSourceFile> m_FilterSourceFiles;
 };
 
 // Element on the Parser Stack

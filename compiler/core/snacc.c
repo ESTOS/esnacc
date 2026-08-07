@@ -60,6 +60,8 @@ char* bVDAGlobalDLLExport = (char*)0;
 #include "efileressources.h"
 #include "cpp_c_helper.h"
 #include "time_helpers.h"
+#include "interface_baseline.h"
+#include "module_version_emit.h"
 #if META
 #include "meta.h"
 #endif
@@ -165,20 +167,15 @@ int gPrivateSymbols = 1;
 int gNodeVersion = 22;
 
 // Defines the major interface version the interfaces are built with
-// The version is read from a file interfaceversion.txt when the first asn1 is read
-int gMajorInterfaceVersion = -1;
+// The version is read from deprecatedbaseline.txt when the first asn1 is read (optional file)
+// Defaults to 0 when no baseline date is configured.
+int gMajorInterfaceVersion = 0;
 
 // jan 10.1.2023 - if set deprecated symbols are removed from the generated code
-//  The value contains a timestamp, either specified by the command line or set to 1 (if nodeprecated has been set!)
-//  The comment parser reads @deprecated flags in association to sequences, attributes and operations and stores them with the comment content
-//  When we parse the @deprecated flags in the asn1 we also search for a timestamp next to it -> the value is converted to unix time and used for deprecated comparison
-//  If no timestamp is found next to the deprecate a warning is generated to add a timestamp -> the unix time stamp value expressing the deprecation is set to 1 and used for deprecated comparison
-
-// If the command line contains nodeprecated you may add a timestamp to the command line parameter: e.g. nodeprecated:31.05.2023
-// This value is converted to unix timestamp and stored in gi64NoDeprecatedSymbols
-// If no value has been specified all deprecated objects shall get remove from the output and therefore gi64NoDeprecatedSymbols is set to 1
-
-// Any deprecated information from a sequence, attribute or operation comment lower or equal than the gi64NoDeprecatedSymbols will get removed
+//  The value contains a unix timestamp from -nodeprecated:date, deprecatedbaseline.txt (date form),
+//  or the newest @deprecated in the compile scope when -nodeprecated is given without a date.
+//  Legacy deprecatedbaseline.txt integers label majorVersion only and do not set the cutoff.
+//  gi64NoDeprecatedSymbols == 1 still means strip all deprecated symbols (legacy bare -nodeprecated before BUILDSYS-636).
 long long gi64NoDeprecatedSymbols = 0;
 
 // jan 11.1.2023 - Default level for validating the content of the asn1 files is all checks that the tool knows
@@ -259,13 +256,14 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "  -filter Filters the asn1 files (needs no private and or nodeprecated flags beeign set)\n");
 	fprintf(fp, "  -node:21   Defines the node version the stub will be generated for. Defaults to 22\n");
 	fprintf(fp, "  -noprivate   do not generate code that is marked as private\n");
-	fprintf(fp, "  -nodeprecated   do not generate code that is marked as deprecated (any date)\n");
-	fprintf(fp, "  -nodeprecated:Day.Month.Year  do not generate code that has been marked deprecated prior to this date\n");
+	fprintf(fp, "  -nodeprecated   exclude deprecated symbols using the newest @deprecated date in the ASN.1 scope\n");
+	fprintf(fp, "  -nodeprecated:Day.Month.Year  exclude symbols deprecated on or before this date (overrides deprecatedbaseline.txt)\n");
+	fprintf(fp, "  deprecatedbaseline.txt may contain a baseline date (same formats as @deprecated) or a legacy integer major version\n");
 	fprintf(fp, "  -ValidationLevel n - Sets a specific validation rule set for the asn1 files. Default is that all of the following checks are applied\n");
 	fprintf(fp, "   @deprecated exempts a type/operation from all checks below. @ignorevalidation exempts only the named rules (see below).\n");
 	PrintValidationLevelHelp(fp);
 	PrintIgnoreValidationRuleNames(fp);
-	fprintf(fp, "  -versionfile - the compiler writes a version file for the highest version found (requires interfaceversion.txt)\n");
+	fprintf(fp, "  -versionfile - the compiler writes a combined Asn1InterfaceVersion file for the compile scope\n");
 	fprintf(fp, "  -utf8   write output files with UTF-8 encoding (default: system codepage / Windows-1252)\n");
 	fprintf(fp, "  -utf8bom   write a UTF-8 BOM at the start of each output file (implies -utf8)\n");
 	fprintf(fp, "  -h   prints this msg\n");
@@ -665,11 +663,12 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 								Usage(argv[0], stderr);
 								return 1;
 							}
-							gi64NoDeprecatedSymbols = i64Result;
+							gCliNodeprecatedExplicit = 1;
+							ApplyDeprecatedCutoffUnix(i64Result);
 						}
 						else
 						{
-							gi64NoDeprecatedSymbols = 1;
+							gNodeprecatedAutoResolve = 1;
 						}
 						currArg++;
 					}
@@ -928,51 +927,19 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 			char* szDirectory = getFilePath(file.filePath);
 			if (szDirectory)
 			{
-				char szPath[_MAX_PATH] = {0};
-				strcpy_s(szPath, _MAX_PATH - 1, szDirectory);
-				strcat_s(szPath, _MAX_PATH - 1, "interfaceversion.txt");
-				FILE* pFile = NULL;
-				if (fopen_s(&pFile, szPath, "r") == 0 && pFile)
-				{
-					while (true)
-					{
-						char szLine[128] = {0};
-						if (fgets(szLine, sizeof(szLine), pFile))
-						{
-							// Trim leading whitespaces or empty lines (just \r \n)
-							int start = 0;
-							while (isspace((unsigned char)szLine[start]))
-								start++;
-
-							if (strlen(&szLine[start]) && szLine[start] != '#' && szLine[start] != '/')
-							{
-								gMajorInterfaceVersion = atoi(&szLine[start]);
-								break;
-							}
-						}
-						else
-							break;
-					}
-					fclose(pFile);
-				}
+				LoadDeprecatedBaselineFile(szDirectory);
 				if (gFilterASN1Files)
 				{
-					// We have the folder path. We need to copy the esnacc_whitelist.txt nd the interfaceversion.txt
-					{
-						char szTarget[_MAX_PATH] = {0};
-						strcat_s(szTarget, _MAX_PATH - 1, gszOutputPath);
-						strcat_s(szTarget, _MAX_PATH - 1, "interfaceversion.txt");
-						copy_file(szPath, szTarget);
-					}
-					{
-						char szTarget[_MAX_PATH] = {0};
-						strcat_s(szTarget, _MAX_PATH - 1, gszOutputPath);
-						strcat_s(szTarget, _MAX_PATH - 1, "esnacc_whitelist.txt");
-						strcpy_s(szPath, _MAX_PATH - 1, szDirectory);
-						strcat_s(szPath, _MAX_PATH - 1, "esnacc_whitelist.txt");
-						copy_file(szPath, szTarget);
-					}
+					CopyDeprecatedBaselineFile(szDirectory, gszOutputPath);
+					char szPath[_MAX_PATH] = {0};
+					char szTarget[_MAX_PATH] = {0};
+					strcpy_s(szPath, _MAX_PATH - 1, szDirectory);
+					strcat_s(szPath, _MAX_PATH - 1, "esnacc_whitelist.txt");
+					strcat_s(szTarget, _MAX_PATH - 1, gszOutputPath);
+					strcat_s(szTarget, _MAX_PATH - 1, "esnacc_whitelist.txt");
+					copy_file(szPath, szTarget);
 				}
+				free(szDirectory);
 			}
 		}
 
@@ -988,6 +955,9 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 		tmpModHndl = (Module**)AsnListAppend(allMods);
 		*tmpModHndl = currMod;
 	}
+
+	ResolveInterfaceBaselineAfterParse();
+	RebuildFilteredAsnFilesIfNeeded();
 
 	// If we are filtering we now just need to write the contents of the file parser
 	if (gFilterASN1Files)
@@ -1356,6 +1326,8 @@ Module* ParseAsn1File(const char* fileName, short ImportFlag, int parseComments)
 		// Parse the comments in this file...
 		char* szModuleName = MakeModuleName(fileName);
 		parseResult = ParseFileForComments(fPtr, szModuleName, fileType);
+		if (gFilterASN1Files)
+			RegisterFilterSourceFile(fileName, szModuleName, fileType);
 		free(szModuleName);
 		if (parseResult != 0)
 		{
@@ -1644,15 +1616,13 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 
 			fprintf(versionFile, "struct Asn1InterfaceVersion\n");
 			fprintf(versionFile, "{\n");
-			char* szISODate = ConvertUnixTimeToISO(lMaxPatchVersion);
-			fprintf(versionFile, "\tstatic constexpr const char* lastChange = \"%s\";\n", szISODate);
-			free(szISODate);
-			fprintf(versionFile, "\tstatic constexpr int majorVersion = %i;\n", gMajorInterfaceVersion);
-			fprintf(versionFile, "\tstatic constexpr int minorVersion = 0;\n");
-			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxPatchVersion);
-			fprintf(versionFile, "\tstatic constexpr long long patchVersion = %s;\n", szNumericDate);
-			fprintf(versionFile, "\tstatic constexpr const char* version = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
-			free(szNumericDate);
+			EmitAnnotatedModuleVersionFields(
+				versionFile,
+				ModuleVersionEmitCppInterfaceVersionStruct,
+				NULL,
+				"\t",
+				gMajorInterfaceVersion,
+				lMaxPatchVersion);
 			fprintf(versionFile, "};\n\n");
 
 			fprintf(versionFile, "#ifndef NO_NAMESPACE\n");

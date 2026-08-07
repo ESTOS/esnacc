@@ -8,6 +8,8 @@
 
 #include "../../../c-lib/include/print.h"
 #include "../../core/asn_comments.h"
+#include "../../core/interface_baseline.h"
+#include "../../core/module_version_emit.h"
 #include "../../core/time_helpers.h"
 #include "../tag-util.h" /* get GetTags/FreeTags/CountTags/TagByteLen */
 #include "../str-util.h"
@@ -761,16 +763,7 @@ void PrintJAVACode(ModuleList* allMods)
 		{
 			long long lMaxPatchVersion = GetMaxModulePatchVersion();
 			fprintf(src, "public class Asn1InterfaceVersion {\n");
-
-			char* szISODate = ConvertUnixTimeToISO(lMaxPatchVersion);
-			fprintf(src, "\tpublic static final String lastChange = \"%s\";\n", szISODate);
-			free(szISODate);
-			fprintf(src, "\tpublic static final int majorVersion = %i;\n", gMajorInterfaceVersion);
-			fprintf(src, "\tpublic static final int minorVersion = 0;\n");
-			char* szNumericDate = ConvertUnixTimeToNumericDate(lMaxPatchVersion);
-			fprintf(src, "\tpublic static final long patchVersion = %s;\n", szNumericDate);
-			fprintf(src, "\tpublic static final String version = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
-			free(szNumericDate);
+			EmitAnnotatedModuleVersionFields(src, ModuleVersionEmitJavaClass, NULL, "\t", gMajorInterfaceVersion, lMaxPatchVersion);
 			fprintf(src, "}\n");
 			fclose(src);
 		}
@@ -817,16 +810,7 @@ void PrintJAVACodeOneModule(ModuleList* mods, Module* m)
 		{
 			long long lModulePatchVersion = GetModulePatchVersion(m->moduleName);
 			fprintf(src, "public class %s {\n", m->moduleName);
-
-			char* szISODate = ConvertUnixTimeToISO(lModulePatchVersion);
-			fprintf(src, "\tpublic static final String lastChange = \"%s\";\n", szISODate);
-			free(szISODate);
-			fprintf(src, "\tpublic static final int majorVersion = %i;\n", gMajorInterfaceVersion);
-			fprintf(src, "\tpublic static final int minorVersion = 0;\n");
-			char* szNumericDate = ConvertUnixTimeToNumericDate(lModulePatchVersion);
-			fprintf(src, "\tpublic static final long patchVersion = %s;\n", szNumericDate);
-			fprintf(src, "\tpublic static final String version = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
-			free(szNumericDate);
+			EmitAnnotatedModuleVersionFields(src, ModuleVersionEmitJavaClass, NULL, "\t", gMajorInterfaceVersion, lModulePatchVersion);
 			fprintf(src, "}\n");
 			fclose(src);
 		}
