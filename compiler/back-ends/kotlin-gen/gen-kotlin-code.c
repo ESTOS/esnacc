@@ -836,22 +836,6 @@ void PrintKotlinCode(ModuleList* allMods)
 	 */
 	fNames = NewObjList();
 
-	if (gMajorInterfaceVersion >= 0)
-	{
-		char szFileName[_MAX_PATH] = {0};
-		strcpy_s(szFileName, _MAX_PATH - 1, gszOutputPath);
-		strcat_s(szFileName, _MAX_PATH - 1, "Asn1InterfaceVersion");
-		FILE* src = getKotlinFilePointer(szFileName);
-		if (src)
-		{
-			long long lMaxPatchVersion = GetMaxModulePatchVersion();
-			fprintf(src, "object Asn1InterfaceVersion {\n");
-			EmitAnnotatedModuleVersionFields(src, ModuleVersionEmitKotlinObject, NULL, "\t", gMajorInterfaceVersion, lMaxPatchVersion);
-			fprintf(src, "}\n");
-			fclose(src);
-		}
-	}
-
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
 		if (ObjIsDefined(fNames, currMod->ROSESrcJAVAFileName, StrObjCmp))

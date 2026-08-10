@@ -1019,29 +1019,6 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 		FreeDefinedObjs(&fNames);
 	}
 
-	if (gMajorInterfaceVersion >= 0 && genVersionFile)
-	{
-		FILE* versionFile = NULL;
-		char* szVersionFile = MakeFileName("Asn1InterfaceVersion.ts", "");
-		if (fopen_s(&versionFile, szVersionFile, "wt") != 0 || versionFile == NULL)
-			perror("fopen");
-		else
-		{
-			fprintf(versionFile, "/*\n");
-			write_snacc_header(versionFile, " * ");
-			fprintf(versionFile, "*/\n\n");
-			fprintf(versionFile, DPRINT_DISABLE);
-			fprintf(versionFile, ESLINT_DISABLE);
-			fprintf(versionFile, "\n");
-			long long lMaxPatchVersion = GetMaxModulePatchVersion();
-			fprintf(versionFile, "export class Asn1InterfaceVersion {\n");
-			EmitAnnotatedModuleVersionFields(versionFile, ModuleVersionEmitTsClassStatic, NULL, "\t", gMajorInterfaceVersion, lMaxPatchVersion);
-			fprintf(versionFile, "}\n");
-			fclose(versionFile);
-		}
-		free(szVersionFile);
-	}
-
 	FILE* typesFile = NULL;
 	char* szTypes = MakeFileName("types.ts", "");
 	if (fopen_s(&typesFile, szTypes, "wt") != 0 || typesFile == NULL)

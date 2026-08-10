@@ -184,9 +184,6 @@ int giValidationLevel = 0xffffffff;
 // Write comments to the target files on true (parsing is always enabled)
 int giWriteComments = 0;
 
-// Write a combined version file
-int genVersionFile = FALSE;
-
 // Defines whether we write commonsJS or ESM typescript code
 int genTSESMCode = FALSE;
 
@@ -263,7 +260,6 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "   @deprecated exempts a type/operation from all checks below. @ignorevalidation exempts only the named rules (see below).\n");
 	PrintValidationLevelHelp(fp);
 	PrintIgnoreValidationRuleNames(fp);
-	fprintf(fp, "  -versionfile - the compiler writes a combined Asn1InterfaceVersion file for the compile scope\n");
 	fprintf(fp, "  -utf8   write output files with UTF-8 encoding (default: system codepage / Windows-1252)\n");
 	fprintf(fp, "  -utf8bom   write a UTF-8 BOM at the start of each output file (implies -utf8)\n");
 	fprintf(fp, "  -h   prints this msg\n");
@@ -509,12 +505,7 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 					}
 					break;
 				case 'v':
-					if (strcmp(argument + 1, "versionfile") == 0)
-					{
-						genVersionFile = 1;
-						currArg++;
-					}
-					else if (strcmp(argument + 1, "v") == 0)
+					if (strcmp(argument + 1, "v") == 0)
 					{
 						genValueCode = TRUE;
 						currArg++;
@@ -1592,47 +1583,6 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 			fprintf(meta.srcfp, "//\n");
 		}
 #endif
-	}
-
-	if (gMajorInterfaceVersion >= 0 && genVersionFile)
-	{
-		FILE* versionFile = NULL;
-		char* szVersionFile = MakeFileName("Asn1InterfaceVersion.h", "");
-		if (fopen_s(&versionFile, szVersionFile, "wt") != 0 || versionFile == NULL)
-			perror("fopen");
-		else
-		{
-			WriteUTF8BOM(versionFile);
-			long long lMaxPatchVersion = GetMaxModulePatchVersion();
-			write_snacc_header(versionFile, "// ");
-			fprintf(versionFile, "\n");
-			fprintf(versionFile, "// clang-format off\n\n");
-			fprintf(versionFile, "#ifndef ASN1_INTERFACE_VERSION_H\n");
-			fprintf(versionFile, "#define ASN1_INTERFACE_VERSION_H\n\n");
-			fprintf(versionFile, "#ifndef NO_NAMESPACE\n");
-			fprintf(versionFile, "namespace SNACC\n");
-			fprintf(versionFile, "{\n");
-			fprintf(versionFile, "#endif\n\n");
-
-			fprintf(versionFile, "struct Asn1InterfaceVersion\n");
-			fprintf(versionFile, "{\n");
-			EmitAnnotatedModuleVersionFields(
-				versionFile,
-				ModuleVersionEmitCppInterfaceVersionStruct,
-				NULL,
-				"\t",
-				gMajorInterfaceVersion,
-				lMaxPatchVersion);
-			fprintf(versionFile, "};\n\n");
-
-			fprintf(versionFile, "#ifndef NO_NAMESPACE\n");
-			fprintf(versionFile, "}\n");
-			fprintf(versionFile, "#endif\n\n");
-
-			fprintf(versionFile, "#endif");
-			fclose(versionFile);
-		}
-		free(szVersionFile);
 	}
 
 	FOR_EACH_LIST_ELMT(currMod, allMods)

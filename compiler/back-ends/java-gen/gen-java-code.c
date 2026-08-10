@@ -753,22 +753,6 @@ void PrintJAVACode(ModuleList* allMods)
 	 */
 	fNames = NewObjList();
 
-	if (gMajorInterfaceVersion >= 0 && genVersionFile)
-	{
-		char szFileName[_MAX_PATH] = {0};
-		strcpy_s(szFileName, _MAX_PATH - 1, gszOutputPath);
-		strcat_s(szFileName, _MAX_PATH - 1, "Asn1InterfaceVersion");
-		FILE* src = getJavaFilePointer(szFileName);
-		if (src)
-		{
-			long long lMaxPatchVersion = GetMaxModulePatchVersion();
-			fprintf(src, "public class Asn1InterfaceVersion {\n");
-			EmitAnnotatedModuleVersionFields(src, ModuleVersionEmitJavaClass, NULL, "\t", gMajorInterfaceVersion, lMaxPatchVersion);
-			fprintf(src, "}\n");
-			fclose(src);
-		}
-	}
-
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
 		if (ObjIsDefined(fNames, currMod->ROSESrcJAVAFileName, StrObjCmp))
