@@ -4,6 +4,7 @@
 /*! Requires std::map */
 #include <set>
 #include <map>
+#include <unordered_map>
 #include <memory>
 #include <functional>
 #include <string>
@@ -115,25 +116,39 @@ typedef std::map<long, std::unique_ptr<SnaccROSEPendingOperation>> SnaccROSEPend
 
 class SnaccROSEBase;
 
-// Helper class for OperationID / Name lookup
-// All generated interfaces register their OperationIDs in this class
-class SnaccRoseOperationLookup
+/*! Per-operation @added / @deprecated metadata (unix seconds; 0 = not annotated). */
+struct SnaccOpVersionInfo
 {
-public:
-	static const char* LookUpName(unsigned int uiOpID);
-	static unsigned int LookUpID(const char* szOpName);
-	static void RegisterOperation(unsigned int uiOpID, const char* szOpName, unsigned int uiInterfaceID);
-	static unsigned int LookUpInterfaceID(unsigned int uiOpID);
-	// check if at least one Operation has been registerd
-	static bool Initialized();
-	// Cleanup all registered Operations (can be called during shutdown)
-	static void CleanUp();
-
-private:
-	static inline std::map<std::string, unsigned int> m_mapOpToID;
-	static inline std::map<unsigned int, std::string> m_mapIDToOp;
-	static inline std::map<unsigned int, unsigned int> m_mapIDToInterface;
+	long long m_llAddedUnix = 0;
+	long long m_llDeprecatedUnix = 0;
 };
+
+/*! Loaded module snapshot for negotiate / introspection on one ROSE stub instance. */
+struct SnaccLoadedModuleInfo
+{
+	std::string m_strModuleName;
+	std::string m_strVersion;
+	std::unordered_map<unsigned int, SnaccOpVersionInfo> m_invokes;
+	std::unordered_map<unsigned int, SnaccOpVersionInfo> m_events;
+};
+
+using SnaccLoadedModuleMap = std::unordered_map<std::string, SnaccLoadedModuleInfo>;
+
+class SnaccROSESender;
+
+/*! Registers one ROSE operation on a stub sender (generated code entry point). */
+void SnaccRoseRegisterOperationOnSender(
+	SnaccROSESender* pSender,
+	unsigned int uiOpID,
+	const char* szOpName,
+	unsigned int uiInterfaceID,
+	const char* szModuleName,
+	long long llAddedUnix,
+	long long llDeprecatedUnix,
+	bool bIsEvent);
+
+/*! Registers module version metadata on a stub sender (generated code entry point). */
+void SnaccRoseRegisterModuleVersionOnSender(SnaccROSESender* pSender, const char* szModuleName, const char* szVersion);
 
 #define SNACC_TE_BER SNACC::TransportEncoding::BER
 #define SNACC_TE_JSON SNACC::TransportEncoding::JSON
@@ -223,6 +238,43 @@ public:
 
 	/* Retrieve the log level - do we need to log something */
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) override = 0;
+
+	/*! Registers module version wire string (MODULE_VERSION) for this stub instance. */
+	void RegisterModuleVersion(const char* szModuleName, const char* szVersion);
+
+	/*! Registers one ROSE operation (invoke or event) on this stub instance. */
+	void RegisterOperation(
+		unsigned int uiOpID,
+		const char* szOpName,
+		unsigned int uiInterfaceID,
+		const char* szModuleName,
+		long long llAddedUnix,
+		long long llDeprecatedUnix,
+		bool bIsEvent);
+
+	/*! Removes one operation from this stub registry. */
+	void UnregisterOperation(unsigned int uiOpID);
+
+	/*! Removes a module and all of its operations from this stub registry. */
+	void UnregisterModule(const char* szModuleName);
+
+	/*! Clears all module and operation registrations on this stub (tests / shutdown). */
+	void ClearRegisteredOperations();
+
+	/*! True when at least one operation is registered on this stub. */
+	bool HasRegisteredOperations() const;
+
+	/*! Snapshot of modules and operations registered on this stub. */
+	const SnaccLoadedModuleMap& GetLoadedModules() const;
+
+	/*! Resolves operation name from operation id on this stub. */
+	const char* LookUpName(unsigned int uiOpID) const;
+
+	/*! Resolves operation id from operation name on this stub. */
+	unsigned int LookUpID(const char* szOpName) const;
+
+	/*! Resolves generated interface id (m_iid) from operation id on this stub. */
+	unsigned int LookUpInterfaceID(unsigned int uiOpID) const;
 
 	/*! Writes JSON encoded log messages to the log file
 		bOutbound = true in case the log entry is related to an outbound message
@@ -410,7 +462,7 @@ private:
 		unsigned int m_uiOperationID = 0;
 		std::string m_strOperationName;
 
-		static std::optional<InboundInvokeRejectContext> TryFrom(const SNACC::ROSEMessage& message);
+		static std::optional<InboundInvokeRejectContext> TryFrom(const SNACC::ROSEMessage& message, const SnaccROSEBase& stub);
 		bool CanSendReject() const;
 		const char* OperationNameCStr() const;
 	};
@@ -508,6 +560,12 @@ private:
 	 * ctx - contextual data for the invoke
 	 */
 	long Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, SnaccInvokeContext& ctx, size_t* pstRequestData = nullptr);
+
+	std::map<std::string, unsigned int> m_mapOpToID;
+	std::map<unsigned int, std::string> m_mapIDToOp;
+	std::map<unsigned int, unsigned int> m_mapIDToInterface;
+	SnaccLoadedModuleMap m_loadedModules;
+	std::unordered_map<unsigned int, std::pair<std::string, bool>> m_mapIDToModuleKind;
 };
 
 #endif //_SnaccROSEBase_h_

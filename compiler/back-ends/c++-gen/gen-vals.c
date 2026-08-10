@@ -64,6 +64,8 @@
 #include "../../../c-lib/include/asn-incl.h"
 #include "../../core/asn1module.h"
 #include "../str-util.h"
+#include "../structure-util.h"
+#include "../../core/asn_comments.h"
 #include "rules.h"
 
 extern char* bVDAGlobalDLLExport;
@@ -74,7 +76,7 @@ void PrintCxxOidValue(FILE* f, CxxRules* r, AsnOid* oid, int parenOrQuote);
 void PrintCxxIntValue(FILE* f, CxxRules* r, AsnInt oid);
 static void PrintCxxValueDefsName(FILE* f, CxxRules* r, ValueDef* v);
 
-int PrintROSEOperationRegistration(FILE* src, CxxRules* r, ValueDef* v)
+int PrintROSEOperationRegistration(FILE* src, CxxRules* r, Module* mod, ValueDef* v, const char* szSenderExpr)
 {
 	/* just do ints */
 	if (v->value->basicValue->choiceId != BASICVALUE_INTEGER)
@@ -86,13 +88,29 @@ int PrintROSEOperationRegistration(FILE* src, CxxRules* r, ValueDef* v)
 	if (v->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
 		return 0;
 
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
+	if (!GetROSEDetails(mod, v, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
+		return 0;
+
+	const bool bIsEvent = pszResult == NULL;
+	long long llAddedUnix = 0;
+	long long llDeprecatedUnix = 0;
+	asnoperationcomment comment;
+	if (GetOperationComment_UTF8(mod->moduleName, v->definedName, &comment))
+	{
+		llAddedUnix = comment.i64Added;
+		llDeprecatedUnix = comment.i64Deprecated;
+	}
+
 	/*
 	 * put instantiation in src file
 	 */
-	fprintf(src, "\tSnaccRoseOperationLookup::RegisterOperation(");
+	fprintf(src, "\tSnaccRoseRegisterOperationOnSender(%s, ", szSenderExpr ? szSenderExpr : "nullptr");
 	fprintf(src, "%d, \"", v->value->basicValue->a.integer);
 	PrintCxxValueDefsName(src, r, v);
-	fprintf(src, "\", m_iid);\n");
+	fprintf(src, "\", m_iid, \"%s\", %lldLL, %lldLL, %s);\n", mod->moduleName, llAddedUnix, llDeprecatedUnix, bIsEvent ? "true" : "false");
 
 	return 1;
 }

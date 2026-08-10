@@ -141,9 +141,9 @@ class SnaccInvokeContextInit
 {
 public:
 	/*! @param szOperationName Optional. Inbound: synthetic name or resolved via lookup from
-		@p pInvoke. Outbound: stored when provided (deprecated stub default context);
+		@p pInvoke on @p pStubForLookup when set. Outbound: stored when provided (deprecated stub default context);
 		omit for normal outbound contexts (use CreateOutboundInvokeContext()). */
-	SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke = nullptr, const char* szOperationName = nullptr);
+	SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke = nullptr, const char* szOperationName = nullptr, const SnaccROSEBase* pStubForLookup = nullptr);
 
 	const SnaccInvokeDirection m_direction{};
 	const SNACC::ROSEInvoke* m_pInvoke{};
@@ -208,7 +208,7 @@ public:
 	/*! Returns the typed error buffer supplied to SetAsyncCompletion(). */
 	SNACC::AsnType* AsyncErrorBuffer() const;
 
-	/*! Inbound: canonical name from SnaccRoseOperationLookup. Outbound: set only when
+	/*! Inbound: canonical name from this stub registry. Outbound: set only when
 		passed explicitly to SnaccInvokeContextInit (e.g. deprecated stub). Send/telemetry
 		still use the stub literal at SendInvoke/SendEvent. */
 	const std::string& OperationName() const;

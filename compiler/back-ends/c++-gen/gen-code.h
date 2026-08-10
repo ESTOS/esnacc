@@ -38,7 +38,7 @@ void PrintCxxValueExtern(FILE* hdr, CxxRules* r, ValueDef* v);
 char* LookupNamespace(Type* t, ModuleList* mods);
 void PrintROSEAnyCode(FILE* src, FILE* hdr, CxxRules* r, ModuleList* mods, Module* m);
 void PrintROSEOperationDefines(FILE* hdr, CxxRules* r, ValueDef* v, int bCS);
-int PrintROSEOperationRegistration(FILE* src, CxxRules* r, ValueDef* v);
+int PrintROSEOperationRegistration(FILE* src, CxxRules* r, Module* mod, ValueDef* v, const char* szSenderExpr);
 
 extern char* bVDAGlobalDLLExport;
 extern int gNO_NAMESPACE;

@@ -1,6 +1,7 @@
 #include "../include/SnaccROSEBase.h"
 #include "../include/SNACCROSE.h"
 #include "snacc-assert.h"
+#include <vector>
 #include <stdio.h>
 #include <wchar.h>
 #include <iomanip>
@@ -28,23 +29,29 @@ namespace
 {
 	/*! Outbound operation name for telemetry, logging, and JSON encode.
 	 * The generated stub literal is authoritative; lookup by operationID is only a fallback. */
-	const char* ResolveOperationNameFromStub(const char* szStubOperationName, unsigned int uiOperationID)
+	const char* ResolveOperationNameFromStub(const char* szStubOperationName, unsigned int uiOperationID, const SnaccROSEBase* pStub)
 	{
 		if (szStubOperationName && szStubOperationName[0] != '\0')
 			return szStubOperationName;
 
-		const char* szLookupName = SnaccRoseOperationLookup::LookUpName(uiOperationID);
+		if (!pStub)
+			return "";
+
+		const char* szLookupName = pStub->LookUpName(uiOperationID);
 		return szLookupName ? szLookupName : "";
 	}
 
 	/*! Inbound SnaccInvokeContext operation name from operationID only.
 	 * Wire operationName is not used; szExplicitName is for synthetic inbound paths without a decoded invoke. */
-	std::string ResolveInboundContextOperationName(const SNACC::ROSEInvoke& invoke, const char* szExplicitName)
+	std::string ResolveInboundContextOperationName(const SNACC::ROSEInvoke& invoke, const char* szExplicitName, const SnaccROSEBase* pStub)
 	{
 		if (szExplicitName && szExplicitName[0] != '\0')
 			return szExplicitName;
 
-		const char* szLookupName = SnaccRoseOperationLookup::LookUpName(invoke.operationID);
+		if (!pStub)
+			return "";
+
+		const char* szLookupName = pStub->LookUpName(invoke.operationID);
 		if (szLookupName)
 			return szLookupName;
 
@@ -53,12 +60,12 @@ namespace
 
 	/*! When the client sends operationID 0 with operationName (JSON pattern), resolve the
 	 * real ID from the lookup map so stub dispatch and context naming use operationID. */
-	void PrepareInboundInvokeOperationId(SNACC::ROSEInvoke& invoke)
+	void PrepareInboundInvokeOperationId(SNACC::ROSEInvoke& invoke, const SnaccROSEBase& stub)
 	{
 		if (invoke.operationID || !invoke.operationName)
 			return;
 
-		const unsigned int uiResolvedOperationId = SnaccRoseOperationLookup::LookUpID(invoke.operationName->getASCII().c_str());
+		const unsigned int uiResolvedOperationId = stub.LookUpID(invoke.operationName->getASCII().c_str());
 		if (uiResolvedOperationId)
 			invoke.operationID = uiResolvedOperationId;
 	}
@@ -66,13 +73,13 @@ namespace
 	/*! Fills SnaccInvokeContextInit::m_strOperationName. Outbound: uses @p szOperationName
 	 * when provided (e.g. deprecated stub default context); otherwise empty. Inbound: lookup
 	 * from operationID or explicit synthetic name. */
-	std::string MakeInvokeContextOperationName(SnaccInvokeDirection direction, const SNACC::ROSEInvoke* pInvoke, const char* szOperationName)
+	std::string MakeInvokeContextOperationName(SnaccInvokeDirection direction, const SNACC::ROSEInvoke* pInvoke, const char* szOperationName, const SnaccROSEBase* pStub)
 	{
 		if (direction == SnaccInvokeDirection::OUTBOUND)
 			return (szOperationName && szOperationName[0] != '\0') ? szOperationName : std::string{};
 
 		if (pInvoke)
-			return ResolveInboundContextOperationName(*pInvoke, szOperationName);
+			return ResolveInboundContextOperationName(*pInvoke, szOperationName, pStub);
 
 		return szOperationName ? szOperationName : "";
 	}
@@ -254,10 +261,10 @@ namespace
 	};
 } // namespace
 
-SnaccInvokeContextInit::SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke /*= nullptr*/, const char* szOperationName /*= nullptr*/)
+SnaccInvokeContextInit::SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke /*= nullptr*/, const char* szOperationName /*= nullptr*/, const SnaccROSEBase* pStubForLookup /*= nullptr*/)
 	: m_direction(direction),
 	  m_pInvoke(pInvoke),
-	  m_strOperationName(MakeInvokeContextOperationName(direction, pInvoke, szOperationName))
+	  m_strOperationName(MakeInvokeContextOperationName(direction, pInvoke, szOperationName, pStubForLookup))
 {
 }
 
@@ -391,7 +398,7 @@ std::string getPrettyPrinted(const SJson::Value& value)
 	return SJson::writeString(wbuilder, value);
 }
 
-std::optional<SnaccROSEBase::InboundInvokeRejectContext> SnaccROSEBase::InboundInvokeRejectContext::TryFrom(const SNACC::ROSEMessage& message)
+std::optional<SnaccROSEBase::InboundInvokeRejectContext> SnaccROSEBase::InboundInvokeRejectContext::TryFrom(const SNACC::ROSEMessage& message, const SnaccROSEBase& stub)
 {
 	if (message.choiceId != ROSEMessage::invokeCid || !message.invoke)
 		return std::nullopt;
@@ -399,9 +406,9 @@ std::optional<SnaccROSEBase::InboundInvokeRejectContext> SnaccROSEBase::InboundI
 	InboundInvokeRejectContext ctx;
 	ctx.m_invokeId = pInvoke->invokeID;
 	SNACC::ROSEInvoke invokeCopy = *pInvoke;
-	PrepareInboundInvokeOperationId(invokeCopy);
+	PrepareInboundInvokeOperationId(invokeCopy, stub);
 	ctx.m_uiOperationID = invokeCopy.operationID;
-	ctx.m_strOperationName = ResolveInboundContextOperationName(invokeCopy, nullptr);
+	ctx.m_strOperationName = ResolveInboundContextOperationName(invokeCopy, nullptr, &stub);
 	return ctx;
 }
 
@@ -591,24 +598,62 @@ SnaccTelemetryData::Stage GetOutboundUnhandledStageFromResult(const long lRoseRe
 }
 
 // check if at least one Operation has been registerd
-bool SnaccRoseOperationLookup::Initialized()
+namespace
 {
-	return m_mapOpToID.empty() ? false : true;
+SnaccROSEBase* AsRoseBase(SnaccROSESender* pSender)
+{
+	return dynamic_cast<SnaccROSEBase*>(pSender);
+}
+} // namespace
+
+void SnaccRoseRegisterOperationOnSender(
+	SnaccROSESender* pSender,
+	unsigned int uiOpID,
+	const char* szOpName,
+	unsigned int uiInterfaceID,
+	const char* szModuleName,
+	long long llAddedUnix,
+	long long llDeprecatedUnix,
+	bool bIsEvent)
+{
+	if (SnaccROSEBase* pStub = AsRoseBase(pSender))
+		pStub->RegisterOperation(uiOpID, szOpName, uiInterfaceID, szModuleName, llAddedUnix, llDeprecatedUnix, bIsEvent);
 }
 
-void SnaccRoseOperationLookup::CleanUp()
+void SnaccRoseRegisterModuleVersionOnSender(SnaccROSESender* pSender, const char* szModuleName, const char* szVersion)
 {
-	m_mapOpToID.clear();
-	m_mapIDToOp.clear();
-	m_mapIDToInterface.clear();
+	if (SnaccROSEBase* pStub = AsRoseBase(pSender))
+		pStub->RegisterModuleVersion(szModuleName, szVersion);
 }
 
-void SnaccRoseOperationLookup::RegisterOperation(unsigned int uiOpID, const char* szOpName, unsigned int uiInterfaceID)
+void SnaccROSEBase::RegisterModuleVersion(const char* szModuleName, const char* szVersion)
 {
-#ifdef _DEBUG
+	if (!szModuleName || !szVersion)
+		return;
+
+	auto& module = m_loadedModules[szModuleName];
+	module.m_strModuleName = szModuleName;
+	module.m_strVersion = szVersion;
+}
+
+void SnaccROSEBase::RegisterOperation(
+	unsigned int uiOpID,
+	const char* szOpName,
+	unsigned int uiInterfaceID,
+	const char* szModuleName,
+	long long llAddedUnix,
+	long long llDeprecatedUnix,
+	bool bIsEvent)
+{
+	if (!szOpName || !szModuleName)
+		return;
+
 	if (m_mapIDToOp.find(uiOpID) != m_mapIDToOp.end())
+		return;
+
+#ifdef _DEBUG
+	if (m_mapOpToID.find(szOpName) != m_mapOpToID.end())
 	{
-		// In case we land here we have two operations using the same operationID
 		ASSERT(0);
 	}
 #endif
@@ -616,27 +661,91 @@ void SnaccRoseOperationLookup::RegisterOperation(unsigned int uiOpID, const char
 	m_mapOpToID[szOpName] = uiOpID;
 	m_mapIDToOp[uiOpID] = szOpName;
 	m_mapIDToInterface[uiOpID] = uiInterfaceID;
+	m_mapIDToModuleKind[uiOpID] = {szModuleName, bIsEvent};
+
+	auto& module = m_loadedModules[szModuleName];
+	module.m_strModuleName = szModuleName;
+
+	SnaccOpVersionInfo info;
+	info.m_llAddedUnix = llAddedUnix;
+	info.m_llDeprecatedUnix = llDeprecatedUnix;
+	if (bIsEvent)
+		module.m_events[uiOpID] = info;
+	else
+		module.m_invokes[uiOpID] = info;
 }
 
-unsigned int SnaccRoseOperationLookup::LookUpInterfaceID(unsigned int uiOpID)
+void SnaccROSEBase::UnregisterOperation(unsigned int uiOpID)
 {
-	const auto it = m_mapIDToInterface.find(uiOpID);
-	if (it != m_mapIDToInterface.end())
-		return it->second;
+	const auto moduleKindIt = m_mapIDToModuleKind.find(uiOpID);
+	if (moduleKindIt != m_mapIDToModuleKind.end())
+	{
+		auto moduleIt = m_loadedModules.find(moduleKindIt->second.first);
+		if (moduleIt != m_loadedModules.end())
+		{
+			if (moduleKindIt->second.second)
+				moduleIt->second.m_events.erase(uiOpID);
+			else
+				moduleIt->second.m_invokes.erase(uiOpID);
+		}
+		m_mapIDToModuleKind.erase(moduleKindIt);
+	}
 
-	return 0;
+	const auto idIt = m_mapIDToOp.find(uiOpID);
+	if (idIt != m_mapIDToOp.end())
+	{
+		m_mapOpToID.erase(idIt->second);
+		m_mapIDToOp.erase(idIt);
+	}
+
+	m_mapIDToInterface.erase(uiOpID);
 }
 
-const char* SnaccRoseOperationLookup::LookUpName(unsigned int uiOpID)
+void SnaccROSEBase::UnregisterModule(const char* szModuleName)
+{
+	if (!szModuleName)
+		return;
+
+	std::vector<unsigned int> opIds;
+	for (const auto& entry : m_mapIDToModuleKind)
+	{
+		if (entry.second.first == szModuleName)
+			opIds.push_back(entry.first);
+	}
+
+	for (const unsigned int uiOpID : opIds)
+		UnregisterOperation(uiOpID);
+
+	m_loadedModules.erase(szModuleName);
+}
+
+void SnaccROSEBase::ClearRegisteredOperations()
+{
+	m_mapOpToID.clear();
+	m_mapIDToOp.clear();
+	m_mapIDToInterface.clear();
+	m_mapIDToModuleKind.clear();
+	m_loadedModules.clear();
+}
+
+bool SnaccROSEBase::HasRegisteredOperations() const
+{
+	return !m_mapIDToOp.empty();
+}
+
+const SnaccLoadedModuleMap& SnaccROSEBase::GetLoadedModules() const
+{
+	return m_loadedModules;
+}
+
+const char* SnaccROSEBase::LookUpName(unsigned int uiOpID) const
 {
 	const auto it = m_mapIDToOp.find(uiOpID);
 	if (it != m_mapIDToOp.end())
 		return it->second.c_str();
 
 #ifdef _DEBUG
-	// This may only happen if the other side calls a method we are not aware of
-	// We handle it here as assert as it should not happen in development
-	static std::mutex s_mutex; // prevents multiple threads to write to the log at the same time
+	static std::mutex s_mutex;
 	static std::set<int> s_unknownOpIDsAlreadyNotified;
 	std::lock_guard<std::mutex> lock(s_mutex);
 	if (!s_unknownOpIDsAlreadyNotified.contains(uiOpID))
@@ -649,10 +758,22 @@ const char* SnaccRoseOperationLookup::LookUpName(unsigned int uiOpID)
 	return nullptr;
 }
 
-unsigned int SnaccRoseOperationLookup::LookUpID(const char* szOpName)
+unsigned int SnaccROSEBase::LookUpID(const char* szOpName) const
 {
+	if (!szOpName)
+		return 0;
+
 	const auto it = m_mapOpToID.find(szOpName);
 	if (it != m_mapOpToID.end())
+		return it->second;
+
+	return 0;
+}
+
+unsigned int SnaccROSEBase::LookUpInterfaceID(unsigned int uiOpID) const
+{
+	const auto it = m_mapIDToInterface.find(uiOpID);
+	if (it != m_mapIDToInterface.end())
 		return it->second;
 
 	return 0;
@@ -948,7 +1069,7 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 					try
 					{
 						pMessage->BDec(buffer, bytesDecoded);
-						rejectCtx = InboundInvokeRejectContext::TryFrom(*pMessage);
+						rejectCtx = InboundInvokeRejectContext::TryFrom(*pMessage, *this);
 						if (bLogTransportData)
 							LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, nullptr, nullptr);
 
@@ -976,7 +1097,7 @@ bool SnaccROSEBase::OnBinaryDataBlockResult(const char* lpBytes, unsigned long l
 							if (!pMessage->JDec(value))
 								throw InvalidTagException("ROSEMessage", "decode failed: ROSEMessage", STACK_ENTRY);
 
-							rejectCtx = InboundInvokeRejectContext::TryFrom(*pMessage);
+							rejectCtx = InboundInvokeRejectContext::TryFrom(*pMessage, *this);
 							if (bLogTransportData)
 								LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, lSize, pMessage.get(), &value);
 
@@ -1110,7 +1231,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long ulSize,
 					try
 					{
 						pMessage->BDec(buffer, bytesDecoded);
-						rejectCtx = InboundInvokeRejectContext::TryFrom(*pMessage);
+						rejectCtx = InboundInvokeRejectContext::TryFrom(*pMessage, *this);
 						if (bLogTransportData)
 							LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, lpBytes, ulSize, nullptr, nullptr);
 
@@ -1137,7 +1258,7 @@ void SnaccROSEBase::OnBinaryDataBlock(const char* lpBytes, unsigned long ulSize,
 						{
 							if (!pMessage->JDec(value))
 								throw InvalidTagException("ROSEMessage", "decode failed: ROSEMessage", STACK_ENTRY);
-							rejectCtx = InboundInvokeRejectContext::TryFrom(*pMessage);
+							rejectCtx = InboundInvokeRejectContext::TryFrom(*pMessage, *this);
 							if (bLogTransportData)
 								LogTransportData(false, m_eTransportEncoding, nullptr, lpBytes, ulSize, pMessage.get(), &value);
 							OnROSEMessage(std::move(pMessage), true, ulSize);
@@ -1183,7 +1304,7 @@ bool SnaccROSEBase::OnROSEMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, 
 		case ROSEMessage::invokeCid:
 			{
 				auto& invoke = *pMessage->invoke;
-				PrepareInboundInvokeOperationId(invoke);
+				PrepareInboundInvokeOperationId(invoke, *this);
 				if (bAllowAllInvokes || m_multithreadInvokeIDs.find(invoke.operationID) != m_multithreadInvokeIDs.end())
 				{
 					if (invoke.operationID || invoke.operationName)
@@ -1378,8 +1499,8 @@ void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage
 	std::string strResponse;
 	long lResult = ROSE_REJECT_UNKNOWNOPERATION;
 	auto& invoke = *pMessage->invoke;
-	PrepareInboundInvokeOperationId(invoke);
-	SnaccInvokeContextInit init(SnaccInvokeDirection::INBOUND, &invoke);
+	PrepareInboundInvokeOperationId(invoke, *this);
+	SnaccInvokeContextInit init(SnaccInvokeDirection::INBOUND, &invoke, nullptr, this);
 	auto pCtx = CreateInvokeContext(init);
 	const char* szOperationName = pCtx->OperationNameCStr();
 	auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::INBOUND, invoke.operationID, szOperationName, ulMessageSize);
@@ -1569,7 +1690,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	const auto chronoCreated = std::chrono::steady_clock::now();
-	const char* szResolvedOperationName = ResolveOperationNameFromStub(szOperationName, pInvoke->operationID);
+	const char* szResolvedOperationName = ResolveOperationNameFromStub(szOperationName, pInvoke->operationID, this);
 	if (!pCtx)
 		pCtx = CreateInvokeContext(SnaccInvokeContextInit(SnaccInvokeDirection::OUTBOUND, pInvoke));
 	auto& ctx = *pCtx;
@@ -1605,7 +1726,7 @@ bool SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 						szOperationName = strOperationName.c_str();
 				}
 				if (!szOperationName)
-					szOperationName = ResolveOperationNameFromStub(nullptr, pMsg->invoke->operationID);
+					szOperationName = ResolveOperationNameFromStub(nullptr, pMsg->invoke->operationID, this);
 			}
 
 			// JSON logging is requested
@@ -1670,7 +1791,7 @@ bool SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	const auto chronoCreated = std::chrono::steady_clock::now();
-	const char* szResolvedOperationName = ResolveOperationNameFromStub(szOperationName, pInvoke->operationID);
+	const char* szResolvedOperationName = ResolveOperationNameFromStub(szOperationName, pInvoke->operationID, this);
 
 	// Ensure that we always have a ctx
 	if (!pCtx)
@@ -1912,7 +2033,7 @@ void SnaccROSEBase::StopWatchdogThread()
 long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	const auto chronoCreated = std::chrono::steady_clock::now();
-	const char* szResolvedOperationName = ResolveOperationNameFromStub(szOperationName, pInvoke->operationID);
+	const char* szResolvedOperationName = ResolveOperationNameFromStub(szOperationName, pInvoke->operationID, this);
 
 	if (!pCtx)
 		pCtx = CreateInvokeContext(SnaccInvokeContextInit(SnaccInvokeDirection::OUTBOUND, pInvoke));
@@ -2334,7 +2455,7 @@ long SnaccROSEBase::DecodeInvoke(const SNACC::ROSEMessage& invokeMessage, SNACC:
 					szOperationName = strOperationName.c_str();
 				}
 				if (!szOperationName)
-					szOperationName = ResolveOperationNameFromStub(nullptr, logInvoke.operationID);
+					szOperationName = ResolveOperationNameFromStub(nullptr, logInvoke.operationID, this);
 				LogTransportData(false, SNACC::TransportEncoding::BER, szOperationName, nullptr, 0, &logMsg, nullptr);
 				// As we hand back the result object to the outer world (function argument) we need to set it to NULL to prevent deletion if we discard the inserted object
 				logInvoke.argument->value = NULL;

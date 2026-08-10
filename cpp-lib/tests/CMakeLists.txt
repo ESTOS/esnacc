@@ -56,6 +56,7 @@ add_executable(cpp-lib-sample-runtime-tests
 	invoke_context_tests.cpp
 	logging_tests.cpp
 	logical_failure_tests.cpp
+	module_registry_tests.cpp
 	public_api_tests.cpp
 	telemetry_tests.cpp
 	transport_failure_tests.cpp

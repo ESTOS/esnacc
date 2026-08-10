@@ -748,28 +748,28 @@ namespace sample_runtime_tests
 
 	TEST(InvokeContextInitTest, InboundInitResolvesOperationNameFromInvokeLookup)
 	{
-		SnaccRoseOperationLookup::CleanUp();
-		SnaccRoseOperationLookup::RegisterOperation(43210, "asnTestInboundName", 1);
+		RuntimeEndpoint endpoint{L"InvokeContextLookup", "invoke-context-session"};
+		endpoint.RegisterOperation(43210, "asnTestInboundName", 1, "TestModule", 0, 0, false);
 
 		ROSEInvoke invoke;
 		invoke.invokeID = 1;
 		invoke.operationID = 43210;
 		invoke.operationName = UTF8String::CreateNewFromASCII("wrongWireName");
 
-		const SnaccInvokeContextInit init(SnaccInvokeDirection::INBOUND, &invoke);
+		const SnaccInvokeContextInit init(SnaccInvokeDirection::INBOUND, &invoke, nullptr, &endpoint);
 		EXPECT_EQ("asnTestInboundName", init.m_strOperationName);
 
 		const auto pCtx = SnaccInvokeContext::Create(init);
 		ASSERT_NE(nullptr, pCtx);
 		EXPECT_EQ("asnTestInboundName", pCtx->OperationName());
 
-		SnaccRoseOperationLookup::CleanUp();
+		endpoint.ClearRegisteredOperations();
 	}
 
 	TEST(InvokeContextInitTest, InboundResolvesOperationIdFromNameThenCanonicalContextName)
 	{
-		SnaccRoseOperationLookup::CleanUp();
-		SnaccRoseOperationLookup::RegisterOperation(43210, "asnTestInboundName", 1);
+		RuntimeEndpoint endpoint{L"InvokeContextLookup", "invoke-context-session"};
+		endpoint.RegisterOperation(43210, "asnTestInboundName", 1, "TestModule", 0, 0, false);
 
 		ROSEInvoke invoke;
 		invoke.invokeID = 1;
@@ -777,14 +777,14 @@ namespace sample_runtime_tests
 		invoke.operationName = UTF8String::CreateNewFromASCII("asnTestInboundName");
 
 		if (invoke.operationName && invoke.operationID == 0)
-			invoke.operationID = SnaccRoseOperationLookup::LookUpID(invoke.operationName->getASCII().c_str());
+			invoke.operationID = endpoint.LookUpID(invoke.operationName->getASCII().c_str());
 		ASSERT_EQ(43210u, static_cast<unsigned int>(invoke.operationID));
 
-		const auto pCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::INBOUND, &invoke));
+		const auto pCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::INBOUND, &invoke, nullptr, &endpoint));
 		ASSERT_NE(nullptr, pCtx);
 		EXPECT_EQ("asnTestInboundName", pCtx->OperationName());
 
-		SnaccRoseOperationLookup::CleanUp();
+		endpoint.ClearRegisteredOperations();
 	}
 
 } // namespace sample_runtime_tests
