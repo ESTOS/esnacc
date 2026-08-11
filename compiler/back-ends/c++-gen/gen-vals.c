@@ -76,7 +76,7 @@ void PrintCxxOidValue(FILE* f, CxxRules* r, AsnOid* oid, int parenOrQuote);
 void PrintCxxIntValue(FILE* f, CxxRules* r, AsnInt oid);
 static void PrintCxxValueDefsName(FILE* f, CxxRules* r, ValueDef* v);
 
-int PrintROSEOperationRegistration(FILE* src, CxxRules* r, Module* mod, ValueDef* v, const char* szSenderExpr)
+int PrintROSEOperationRegistration(FILE* src, CxxRules* r, Module* mod, ValueDef* v)
 {
 	/* just do ints */
 	if (v->value->basicValue->choiceId != BASICVALUE_INTEGER)
@@ -95,22 +95,34 @@ int PrintROSEOperationRegistration(FILE* src, CxxRules* r, Module* mod, ValueDef
 		return 0;
 
 	const bool bIsEvent = pszResult == NULL;
-	long long llAddedUnix = 0;
-	long long llDeprecatedUnix = 0;
+	unsigned long long ullAddedUnix = 0;
+	unsigned long long ullDeprecatedUnix = 0;
 	asnoperationcomment comment;
 	if (GetOperationComment_UTF8(mod->moduleName, v->definedName, &comment))
 	{
-		llAddedUnix = comment.i64Added;
-		llDeprecatedUnix = comment.i64Deprecated;
+		if (comment.i64Added > 0)
+			ullAddedUnix = (unsigned long long)comment.i64Added;
+		if (comment.i64Deprecated > 0)
+			ullDeprecatedUnix = (unsigned long long)comment.i64Deprecated;
 	}
 
 	/*
 	 * put instantiation in src file
 	 */
-	fprintf(src, "\tSnaccRoseRegisterOperationOnSender(%s, ", szSenderExpr ? szSenderExpr : "nullptr");
+	fprintf(src, "\tRegisterOperation(");
 	fprintf(src, "%d, \"", v->value->basicValue->a.integer);
 	PrintCxxValueDefsName(src, r, v);
-	fprintf(src, "\", m_iid, \"%s\", %lldLL, %lldLL, %s);\n", mod->moduleName, llAddedUnix, llDeprecatedUnix, bIsEvent ? "true" : "false");
+	fprintf(src, "\"");
+	if (bIsEvent)
+	{
+		if (ullAddedUnix != 0 || ullDeprecatedUnix != 0)
+			fprintf(src, ", true, %lluULL, %lluULL", ullAddedUnix, ullDeprecatedUnix);
+		else
+			fprintf(src, ", true");
+	}
+	else if (ullAddedUnix != 0 || ullDeprecatedUnix != 0)
+		fprintf(src, ", false, %lluULL, %lluULL", ullAddedUnix, ullDeprecatedUnix);
+	fprintf(src, ");\n");
 
 	return 1;
 }

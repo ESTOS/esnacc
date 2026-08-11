@@ -606,24 +606,23 @@ SnaccROSEBase* AsRoseBase(SnaccROSESender* pSender)
 }
 } // namespace
 
-void SnaccRoseRegisterOperationOnSender(
-	SnaccROSESender* pSender,
+void SnaccROSEComponent::RegisterModuleVersion(const char* szModuleName, const char* szVersion)
+{
+	if (SnaccROSEBase* pStub = AsRoseBase(m_pSB))
+		pStub->RegisterModuleVersion(szModuleName, szVersion);
+}
+
+void SnaccROSEComponent::RegisterOperation(
 	unsigned int uiOpID,
 	const char* szOpName,
 	unsigned int uiInterfaceID,
 	const char* szModuleName,
-	long long llAddedUnix,
-	long long llDeprecatedUnix,
-	bool bIsEvent)
+	bool bIsEvent,
+	unsigned long long ullAddedUnix,
+	unsigned long long ullDeprecatedUnix)
 {
-	if (SnaccROSEBase* pStub = AsRoseBase(pSender))
-		pStub->RegisterOperation(uiOpID, szOpName, uiInterfaceID, szModuleName, llAddedUnix, llDeprecatedUnix, bIsEvent);
-}
-
-void SnaccRoseRegisterModuleVersionOnSender(SnaccROSESender* pSender, const char* szModuleName, const char* szVersion)
-{
-	if (SnaccROSEBase* pStub = AsRoseBase(pSender))
-		pStub->RegisterModuleVersion(szModuleName, szVersion);
+	if (SnaccROSEBase* pStub = AsRoseBase(m_pSB))
+		pStub->RegisterOperation(uiOpID, szOpName, uiInterfaceID, szModuleName, bIsEvent, ullAddedUnix, ullDeprecatedUnix);
 }
 
 void SnaccROSEBase::RegisterModuleVersion(const char* szModuleName, const char* szVersion)
@@ -641,9 +640,9 @@ void SnaccROSEBase::RegisterOperation(
 	const char* szOpName,
 	unsigned int uiInterfaceID,
 	const char* szModuleName,
-	long long llAddedUnix,
-	long long llDeprecatedUnix,
-	bool bIsEvent)
+	bool bIsEvent,
+	unsigned long long ullAddedUnix,
+	unsigned long long ullDeprecatedUnix)
 {
 	if (!szOpName || !szModuleName)
 		return;
@@ -667,8 +666,8 @@ void SnaccROSEBase::RegisterOperation(
 	module.m_strModuleName = szModuleName;
 
 	SnaccOpVersionInfo info;
-	info.m_llAddedUnix = llAddedUnix;
-	info.m_llDeprecatedUnix = llDeprecatedUnix;
+	info.m_ullAddedUnix = ullAddedUnix;
+	info.m_ullDeprecatedUnix = ullDeprecatedUnix;
 	if (bIsEvent)
 		module.m_events[uiOpID] = info;
 	else

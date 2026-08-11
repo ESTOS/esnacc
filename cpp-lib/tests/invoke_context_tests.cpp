@@ -749,7 +749,7 @@ namespace sample_runtime_tests
 	TEST(InvokeContextInitTest, InboundInitResolvesOperationNameFromInvokeLookup)
 	{
 		RuntimeEndpoint endpoint{L"InvokeContextLookup", "invoke-context-session"};
-		endpoint.RegisterOperation(43210, "asnTestInboundName", 1, "TestModule", 0, 0, false);
+		endpoint.RegisterOperation(43210, "asnTestInboundName", 1, "TestModule", false);
 
 		ROSEInvoke invoke;
 		invoke.invokeID = 1;
@@ -769,7 +769,7 @@ namespace sample_runtime_tests
 	TEST(InvokeContextInitTest, InboundResolvesOperationIdFromNameThenCanonicalContextName)
 	{
 		RuntimeEndpoint endpoint{L"InvokeContextLookup", "invoke-context-session"};
-		endpoint.RegisterOperation(43210, "asnTestInboundName", 1, "TestModule", 0, 0, false);
+		endpoint.RegisterOperation(43210, "asnTestInboundName", 1, "TestModule", false);
 
 		ROSEInvoke invoke;
 		invoke.invokeID = 1;

@@ -294,7 +294,7 @@ TEST(PublicApiSmokeTest, OperationLookupRegistersAndCleansUp)
 	ObservedRuntimeEndpoint endpoint{L"LookupEndpoint", "lookup-session"};
 	EXPECT_FALSE(endpoint.HasRegisteredOperations());
 
-	endpoint.RegisterOperation(3210, "testOperation", 77, "TestModule", 0, 0, false);
+	endpoint.RegisterOperation(3210, "testOperation", 77, "TestModule", false);
 	EXPECT_TRUE(endpoint.HasRegisteredOperations());
 	EXPECT_EQ(3210u, endpoint.LookUpID("testOperation"));
 	ASSERT_NE(nullptr, endpoint.LookUpName(3210));

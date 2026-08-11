@@ -119,8 +119,8 @@ class SnaccROSEBase;
 /*! Per-operation @added / @deprecated metadata (unix seconds; 0 = not annotated). */
 struct SnaccOpVersionInfo
 {
-	long long m_llAddedUnix = 0;
-	long long m_llDeprecatedUnix = 0;
+	unsigned long long m_ullAddedUnix = 0;
+	unsigned long long m_ullDeprecatedUnix = 0;
 };
 
 /*! Loaded module snapshot for negotiate / introspection on one ROSE stub instance. */
@@ -133,22 +133,6 @@ struct SnaccLoadedModuleInfo
 };
 
 using SnaccLoadedModuleMap = std::unordered_map<std::string, SnaccLoadedModuleInfo>;
-
-class SnaccROSESender;
-
-/*! Registers one ROSE operation on a stub sender (generated code entry point). */
-void SnaccRoseRegisterOperationOnSender(
-	SnaccROSESender* pSender,
-	unsigned int uiOpID,
-	const char* szOpName,
-	unsigned int uiInterfaceID,
-	const char* szModuleName,
-	long long llAddedUnix,
-	long long llDeprecatedUnix,
-	bool bIsEvent);
-
-/*! Registers module version metadata on a stub sender (generated code entry point). */
-void SnaccRoseRegisterModuleVersionOnSender(SnaccROSESender* pSender, const char* szModuleName, const char* szVersion);
 
 #define SNACC_TE_BER SNACC::TransportEncoding::BER
 #define SNACC_TE_JSON SNACC::TransportEncoding::JSON
@@ -248,9 +232,9 @@ public:
 		const char* szOpName,
 		unsigned int uiInterfaceID,
 		const char* szModuleName,
-		long long llAddedUnix,
-		long long llDeprecatedUnix,
-		bool bIsEvent);
+		bool bIsEvent = false,
+		unsigned long long ullAddedUnix = 0,
+		unsigned long long ullDeprecatedUnix = 0);
 
 	/*! Removes one operation from this stub registry. */
 	void UnregisterOperation(unsigned int uiOpID);

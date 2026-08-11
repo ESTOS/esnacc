@@ -4584,16 +4584,16 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(hdr, "\t%s(SnaccROSESender* pBase);\n", m->ROSEClassName);
 	fprintf(src, "%s::%s(SnaccROSESender* pBase) : SnaccROSEComponent(pBase)\n", m->ROSEClassName, m->ROSEClassName);
 	fprintf(src, "{\n");
-	fprintf(src, "\tif (pBase)\n");
-	fprintf(src, "\t\tRegisterOperations(pBase);\n");
+	fprintf(src, "\tif (m_pSB)\n");
+	fprintf(src, "\t\tRegisterOperations();\n");
 	fprintf(src, "}\n\n");
 
 	// Function for triggering the registration of all Operations (name/id)
 	fprintf(hdr, "\t// Registers all known operations on the ROSE stub instance\n");
-	fprintf(hdr, "\tstatic void RegisterOperations(SnaccROSESender* pSender);\n");
-	fprintf(src, "void %s::RegisterOperations(SnaccROSESender* pSender)\n", m->ROSEClassName);
+	fprintf(hdr, "\tvoid RegisterOperations();\n");
+	fprintf(src, "void %s::RegisterOperations()\n", m->ROSEClassName);
 	fprintf(src, "{\n");
-	fprintf(src, "\tif (!pSender)\n");
+	fprintf(src, "\tif (!m_pSB)\n");
 	fprintf(src, "\t\treturn;\n");
 	if (gMajorInterfaceVersion >= 0)
 	{
@@ -4601,7 +4601,7 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 		char* szNumericDate = ConvertUnixTimeToNumericDate(lPatchVersion);
 		if (szNumericDate)
 		{
-			fprintf(src, "\tSnaccRoseRegisterModuleVersionOnSender(pSender, \"%s\", \"%i.0.%s\");\n", m->moduleName, gMajorInterfaceVersion, szNumericDate);
+			fprintf(src, "\tRegisterModuleVersion(\"%s\", \"%i.0.%s\");\n", m->moduleName, gMajorInterfaceVersion, szNumericDate);
 			free(szNumericDate);
 		}
 	}
@@ -4609,11 +4609,21 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	{
 		if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 			continue;
-		if (PrintROSEOperationRegistration(src, r, m, vd, "pSender") && !iFirstIIDFound)
+		if (PrintROSEOperationRegistration(src, r, m, vd) && !iFirstIIDFound)
 		{
 			iFirstIIDFound = 1;
 			fprintf(hdr, "\tstatic const int m_iid = %d;\n", vd->value->basicValue->a.integer);
 		}
+	}
+
+	if (iFirstIIDFound)
+	{
+		fprintf(hdr, "protected:\n");
+		fprintf(hdr, "\tvoid RegisterOperation(unsigned int uiOpID, const char* szOpName, bool bIsEvent = false, unsigned long long ullAddedUnix = 0, unsigned long long ullDeprecatedUnix = 0)\n");
+		fprintf(hdr, "\t{\n");
+		fprintf(hdr, "\t\tSnaccROSEComponent::RegisterOperation(uiOpID, szOpName, m_iid, \"%s\", bIsEvent, ullAddedUnix, ullDeprecatedUnix);\n", m->moduleName);
+		fprintf(hdr, "\t}\n\n");
+		fprintf(hdr, "public:\n");
 	}
 
 	fprintf(src, "}\n\n");

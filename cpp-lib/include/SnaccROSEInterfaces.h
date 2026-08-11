@@ -385,6 +385,19 @@ public:
 	}
 
 protected:
+	/*! Registers module version metadata on the ROSE stub referenced by @c m_pSB. */
+	void RegisterModuleVersion(const char* szModuleName, const char* szVersion);
+
+	/*! Registers one ROSE operation on the ROSE stub referenced by @c m_pSB. */
+	void RegisterOperation(
+		unsigned int uiOpID,
+		const char* szOpName,
+		unsigned int uiInterfaceID,
+		const char* szModuleName,
+		bool bIsEvent = false,
+		unsigned long long ullAddedUnix = 0,
+		unsigned long long ullDeprecatedUnix = 0);
+
 	SnaccROSESender* m_pSB;
 };
 

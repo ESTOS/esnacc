@@ -11,14 +11,14 @@ const char* kSettingsModuleName = "ENetUC_Settings_Manager";
 void ExpectOpInfo(const SnaccOpVersionInfo& info, const bool bExpectAdded, const bool bExpectDeprecated)
 {
 	if (bExpectAdded)
-		EXPECT_GT(info.m_llAddedUnix, 0);
+		EXPECT_GT(info.m_ullAddedUnix, 0u);
 	else
-		EXPECT_EQ(0, info.m_llAddedUnix);
+		EXPECT_EQ(0u, info.m_ullAddedUnix);
 
 	if (bExpectDeprecated)
-		EXPECT_GT(info.m_llDeprecatedUnix, 0);
+		EXPECT_GT(info.m_ullDeprecatedUnix, 0u);
 	else
-		EXPECT_EQ(0, info.m_llDeprecatedUnix);
+		EXPECT_EQ(0u, info.m_ullDeprecatedUnix);
 }
 } // namespace
 
