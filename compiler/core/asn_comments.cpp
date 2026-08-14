@@ -216,6 +216,7 @@ extern "C"
 			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 			pcomment->iIgnoreValidation = static_cast<int>(comment.m_nIgnoreValidationMask);
+			pcomment->iDeprecatedSuccessorInvalid = comment.iDeprecatedSuccessorInvalid;
 			return 1;
 		}
 		return 0;
@@ -252,6 +253,7 @@ extern "C"
 			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
 			pcomment->iIgnoreValidation = static_cast<int>(comment.m_nIgnoreValidationMask);
+			pcomment->iDeprecatedSuccessorInvalid = comment.iDeprecatedSuccessorInvalid;
 			return 1;
 		}
 		return 0;
@@ -280,6 +282,7 @@ extern "C"
 			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
 			pcomment->iIgnoreValidation = static_cast<int>(comment.m_nIgnoreValidationMask);
+			pcomment->iDeprecatedSuccessorInvalid = comment.iDeprecatedSuccessorInvalid;
 			return 1;
 		}
 		return 0;
@@ -316,6 +319,7 @@ extern "C"
 			pcomment->i64Deprecated = comment.i64Deprecated;
 			pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
 			pcomment->iIgnoreValidation = static_cast<int>(comment.m_nIgnoreValidationMask);
+			pcomment->iDeprecatedSuccessorInvalid = comment.iDeprecatedSuccessorInvalid;
 			return 1;
 		}
 		return 0;
@@ -344,6 +348,7 @@ extern "C"
 				pcomment->i64Added = comment.i64Added;
 				pcomment->i64Deprecated = comment.i64Deprecated;
 				pcomment->szDeprecated = comment.strDeprecated_UTF8.c_str();
+				pcomment->iDeprecatedSuccessorInvalid = comment.iDeprecatedSuccessorInvalid;
 				return 1;
 			}
 		}
@@ -378,6 +383,7 @@ extern "C"
 				pcomment->i64Added = comment.i64Added;
 				pcomment->i64Deprecated = comment.i64Deprecated;
 				pcomment->szDeprecated = comment.strDeprecated_ASCII.c_str();
+				pcomment->iDeprecatedSuccessorInvalid = comment.iDeprecatedSuccessorInvalid;
 				return 1;
 			}
 		}

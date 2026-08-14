@@ -62,6 +62,7 @@ char* bVDAGlobalDLLExport = (char*)0;
 #include "time_helpers.h"
 #include "interface_baseline.h"
 #include "module_version_emit.h"
+#include "snacc-deprecated-successor.h"
 #if META
 #include "meta.h"
 #endif
@@ -260,6 +261,7 @@ void Usage PARAMS((prgName, fp), char* prgName _AND_ FILE* fp)
 	fprintf(fp, "   @deprecated exempts a type/operation from all checks below. @ignorevalidation exempts only the named rules (see below).\n");
 	PrintValidationLevelHelp(fp);
 	PrintIgnoreValidationRuleNames(fp);
+	PrintDeprecatedSuccessorHelp(fp);
 	fprintf(fp, "  -utf8   write output files with UTF-8 encoding (default: system codepage / Windows-1252)\n");
 	fprintf(fp, "  -utf8bom   write a UTF-8 BOM at the start of each output file (implies -utf8)\n");
 	fprintf(fp, "  -h   prints this msg\n");

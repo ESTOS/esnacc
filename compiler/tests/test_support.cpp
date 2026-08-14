@@ -39,13 +39,19 @@ ProcessResult RunProcess(const std::filesystem::path& executable, const std::vec
 	for (const std::string& arg : args)
 		command << ' ' << QuoteArgument(arg);
 
+	const std::filesystem::path outputFile = workingDirectory / ".esnacc_process_output.txt";
+	std::error_code removeEc;
+
 #ifdef _WIN32
-	std::string commandLine = "cd /d " + QuoteArgument(workingDirectory.string()) + " && " + command.str() + " 2>&1";
+	std::string commandLine = "cd /d " + QuoteArgument(workingDirectory.string()) + " && " + command.str() + " > " + QuoteArgument(outputFile.string()) + " 2>&1";
 	result.exitCode = std::system(commandLine.c_str());
 #else
-	std::string commandLine = "cd " + QuoteArgument(workingDirectory.string()) + " && " + command.str() + " 2>&1";
+	std::string commandLine = "cd " + QuoteArgument(workingDirectory.string()) + " && " + command.str() + " > " + QuoteArgument(outputFile.string()) + " 2>&1";
 	result.exitCode = std::system(commandLine.c_str());
 #endif
+
+	result.output = ReadFileToString(outputFile);
+	std::filesystem::remove(outputFile, removeEc);
 
 	return result;
 }

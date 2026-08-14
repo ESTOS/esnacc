@@ -206,6 +206,8 @@ void printMemberComment(FILE* src, const Module* m, const TypeDef* td, const cha
 					if (szComment)
 						fprintf(src, " %s", szComment);
 					fprintf(src, "%s\n", szSuffix);
+					if (comment.iDeprecatedSuccessorInvalid)
+						fprintf(src, "%s @deprecated-successor-invalid%s\n", szPrefix, szSuffix);
 					free(szTime);
 				}
 				if (comment.i64Added)
@@ -335,6 +337,8 @@ bool printOperationComment(FILE* src, const Module* m, const char* szOperationNa
 					if (szComment)
 						fprintf(src, " %s", szComment);
 					fprintf(src, "\n");
+					if (comment.iDeprecatedSuccessorInvalid)
+						fprintf(src, "%s @deprecated-successor-invalid\n", szPrefix);
 					free(szTime);
 				}
 				if (comment.i64Added)
@@ -409,6 +413,8 @@ void printSequenceComment(FILE* src, const Module* m, const TypeDef* td, enum CO
 					if (szComment)
 						fprintf(src, " %s", szComment);
 					fprintf(src, "\n");
+					if (comment.iDeprecatedSuccessorInvalid)
+						fprintf(src, "%s @deprecated-successor-invalid\n", szPrefix);
 					free(szTime);
 				}
 				if (comment.i64Added)

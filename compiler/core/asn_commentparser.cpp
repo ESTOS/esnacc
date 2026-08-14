@@ -3,6 +3,7 @@
 #include "asn-stringconvert.h"
 #include "filetype.h"
 #include "snacc-validation-rules.h"
+#include "snacc-deprecated-successor.h"
 #include "../../snacc.h"
 #include "time_helpers.h"
 #include <stdio.h>
@@ -14,11 +15,12 @@
 #include <time.h>
 #include <vector>
 #include <assert.h>
+#include <set>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
 
-const std::string WHITESPACE = " \n\r\t\f\v";
+std::string escapeJsonString(const std::string& input);
 
 namespace
 {
@@ -33,6 +35,39 @@ constexpr std::string_view kTagLogfilter = "@logfilter";
 constexpr std::string_view kTagLinked = "@linked";
 constexpr std::string_view kTagClear = "@clear";
 constexpr std::string_view kCommentIgnoredPrefix = "-- ~";
+
+const std::string WHITESPACE = " \n\r\t\f\v";
+
+void pushCollectedComment(std::list<std::string>& comments, std::list<int>& commentLines, const std::string& comment, int lineNo)
+{
+	comments.push_back(comment);
+	commentLines.push_back(lineNo);
+}
+
+void applyDeprecatedSuccessorFields(EDeprecated& deprecated, const DeprecatedSuccessorFields& fields)
+{
+	if (!fields.parsed)
+		return;
+
+	deprecated.bSuccessorParsed = true;
+	deprecated.successorScope = fields.scope;
+	deprecated.successorSymbol = fields.symbol;
+	deprecated.successorQualifier = fields.qualifier;
+	if (!fields.proseAfter.empty())
+		deprecated.strDeprecated_UTF8 = escapeJsonString(fields.proseAfter);
+}
+
+void warnDeprecatedSuccessorIfNeeded(EDeprecated& deprecated, const char* szFileName, const char* szSymbolName)
+{
+	if (deprecated.i64Deprecated <= 0)
+		return;
+
+	if (!deprecated.bSuccessorParsed || deprecated.iDeprecatedSuccessorInvalid)
+	{
+		deprecated.iDeprecatedSuccessorInvalid = 1;
+		EmitDeprecatedSuccessorMissingWarning(szFileName, deprecated.iDeprecatedLine, szSymbolName);
+	}
+}
 } // namespace
 
 bool isFiltered(const ETypeComment& comment)
@@ -127,11 +162,11 @@ char* ConvertUnixTimeToReverseTimeString(const long long tmUnixTime)
 	return szBuffer;
 }
 
-void EDeprecated::handleDeprecated(const std::string& strParsedLine)
+void EDeprecated::handleDeprecated(const std::string& strParsedLine, int lineNo)
 {
 	std::string strComment = trim(strParsedLine);
 	// Check is ther a date in the value?
-	// @deprecated 1.1.2023 Some comment
+	// @deprecated 1.1.2023 -> Symbol
 	auto pos = strComment.find(" ");
 	if (pos == std::string::npos)
 		pos = strComment.length();
@@ -149,14 +184,47 @@ void EDeprecated::handleDeprecated(const std::string& strParsedLine)
 			strComment = trim(strComment.substr(strDate.length()));
 		}
 	}
-	if (strComment.length())
-		strDeprecated_UTF8 = escapeJsonString(strComment);
+
+	DeprecatedSuccessorFields fields;
+	std::string textWithoutSuccessor;
+	if (FindAndParseDeprecatedSuccessorInText(strComment, fields, textWithoutSuccessor))
+		applyDeprecatedSuccessorFields(*this, fields);
+	else
+		textWithoutSuccessor = strComment;
+
+	if (textWithoutSuccessor.length())
+		strDeprecated_UTF8 = escapeJsonString(textWithoutSuccessor);
 
 	if (i64Deprecated <= 0)
 	{
 		fprintf(stderr, "WARNING - @deprecated flag is missing or has a broken timestamp. '%s'", strComment.c_str());
 		i64Deprecated = 1;
 	}
+
+	if (lineNo > 0)
+		iDeprecatedLine = lineNo;
+}
+
+void EDeprecated::tryParseSuccessorArrowLine(const std::string& strLine, int lineNo)
+{
+	DeprecatedSuccessorFields fields;
+	if (!ParseDeprecatedSuccessorArrowLine(trim(strLine), fields))
+		return;
+
+	if (bSuccessorParsed)
+	{
+		iDeprecatedSuccessorInvalid = 1;
+		return;
+	}
+
+	applyDeprecatedSuccessorFields(*this, fields);
+	if (lineNo > 0)
+		iDeprecatedLine = lineNo;
+}
+
+void EDeprecated::finishDeprecatedSuccessorCommentBlock(const char* szFileName, const char* szSymbolName)
+{
+	warnDeprecatedSuccessorIfNeeded(*this, szFileName, szSymbolName);
 }
 
 void EAdded::handleAdded(const std::string& strParsedLine)
@@ -257,7 +325,12 @@ std::string escapeJsonString(const std::string& input)
 	return ss.str();
 }
 
-void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType)
+void convertCommentList(
+	std::list<std::string>& commentList,
+	std::list<int>& commentLines,
+	ETypeComment* pType,
+	const char* szFileName,
+	const char* szSymbolName)
 {
 	if (!pType)
 	{
@@ -267,9 +340,12 @@ void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType
 	}
 	bool bInLong = true;
 	bool bInBrief = false;
+	bool bAwaitingSuccessor = false;
 	int nEmptyLines = 0;
+	auto lineIt = commentLines.begin();
 	for (auto el = commentList.begin(); el != commentList.end(); el++)
 	{
+		const int lineNo = lineIt != commentLines.end() ? *lineIt++ : 0;
 		std::string strLine = trim(*el);
 		if (strLine.starts_with(kTagBrief))
 		{
@@ -298,7 +374,10 @@ void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType
 		else if (strLine.starts_with(kTagDeprecated))
 		{
 			nEmptyLines = 0;
-			pType->handleDeprecated(remainderAfterTag(strLine, kTagDeprecated));
+			bAwaitingSuccessor = false;
+			pType->handleDeprecated(trimmedRemainderAfterTag(strLine, kTagDeprecated), lineNo);
+			if (!pType->bSuccessorParsed)
+				bAwaitingSuccessor = true;
 			// We do not change the flags here, the keyword @deprecated may lead or follow any comment
 			// bInLong = false;
 			// bInBrief = false;
@@ -345,6 +424,12 @@ void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType
 		}
 		else
 		{
+			if (bAwaitingSuccessor && trim(strLine).starts_with("->"))
+			{
+				pType->tryParseSuccessorArrowLine(strLine, lineNo);
+				bAwaitingSuccessor = !pType->bSuccessorParsed;
+			}
+
 			strLine = trim(strLine);
 			if (bInLong)
 			{
@@ -386,9 +471,16 @@ void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType
 		pType->strLong_UTF8 += escapeJsonString("\n");
 	if (!pType->strShort_UTF8.empty())
 		pType->strShort_UTF8 += escapeJsonString("\n");
+
+	pType->finishDeprecatedSuccessorCommentBlock(szFileName, szSymbolName);
 }
 
-void convertMemberCommentList(std::list<std::string>& commentList, EStructMemberComment* pType)
+void convertMemberCommentList(
+	std::list<std::string>& commentList,
+	std::list<int>& commentLines,
+	EStructMemberComment* pType,
+	const char* szFileName,
+	const char* szSymbolName)
 {
 	enum class eLast
 	{
@@ -401,9 +493,12 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 	};
 
 	eLast last = eLast::_unknown;
+	bool bAwaitingSuccessor = false;
+	auto lineIt = commentLines.begin();
 
 	for (auto el = commentList.begin(); el != commentList.end(); el++)
 	{
+		const int lineNo = lineIt != commentLines.end() ? *lineIt++ : 0;
 		std::string strLine = trim(*el);
 		if (strLine.starts_with(kTagBrief))
 		{
@@ -419,7 +514,10 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 		else if (strLine.starts_with(kTagDeprecated))
 		{
 			last = eLast::_deprecated;
-			pType->handleDeprecated(remainderAfterTag(strLine, kTagDeprecated));
+			bAwaitingSuccessor = false;
+			pType->handleDeprecated(trimmedRemainderAfterTag(strLine, kTagDeprecated), lineNo);
+			if (!pType->bSuccessorParsed)
+				bAwaitingSuccessor = true;
 		}
 		else if (strLine.starts_with(kTagAdded))
 		{
@@ -443,6 +541,12 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 		}
 		else
 		{
+			if (bAwaitingSuccessor && trim(strLine).starts_with("->"))
+			{
+				pType->tryParseSuccessorArrowLine(strLine, lineNo);
+				bAwaitingSuccessor = !pType->bSuccessorParsed;
+			}
+
 			strLine = trim(strLine);
 			if (last == eLast::_brief)
 			{
@@ -466,6 +570,8 @@ void convertMemberCommentList(std::list<std::string>& commentList, EStructMember
 			}
 		}
 	}
+
+	pType->finishDeprecatedSuccessorCommentBlock(szFileName, szSymbolName);
 }
 
 int EAsnStackElementFile::ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state)
@@ -477,9 +583,12 @@ int EAsnStackElementFile::ProcessLine(const char* szModuleName, const char* szRa
 		if (!szComment.empty())
 		{
 			if (szComment.starts_with(kTagClear))
+			{
 				m_CollectComments.clear();
+				m_CollectCommentLines.clear();
+			}
 			else
-				m_CollectComments.push_back(szComment);
+				pushCollectedComment(m_CollectComments, m_CollectCommentLines, szComment, m_pParser->m_iSourceLine);
 		}
 		return 0;
 	}
@@ -493,8 +602,15 @@ int EAsnStackElementFile::ProcessLine(const char* szModuleName, const char* szRa
 		if (strBegin == "BEGIN")
 		{
 			EAsnStackElementModule* el = new EAsnStackElementModule(m_pParser);
-			el->SetModuleProperties(m_strModuleName.c_str(), m_strModuleName.c_str(), m_strModuleASN1Name.c_str(), m_CollectComments);
+			el->SetModuleProperties(
+				m_strModuleName.c_str(),
+				m_strModuleName.c_str(),
+				m_strModuleName.c_str(),
+				m_strModuleASN1Name.c_str(),
+				m_CollectComments,
+				m_CollectCommentLines);
 			m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 			m_pParser->m_stack.push_back(el);
 
 			return 0;
@@ -509,12 +625,18 @@ int EAsnStackElementFile::ProcessLine(const char* szModuleName, const char* szRa
 	return 0;
 }
 
-void EAsnStackElementModule::SetModuleProperties(const char* szTypeName, const char* szCategory, const char* szASN1ModuleName, std::list<std::string>& listComments)
+void EAsnStackElementModule::SetModuleProperties(
+	const char* szFileName,
+	const char* szTypeName,
+	const char* szCategory,
+	const char* szASN1ModuleName,
+	std::list<std::string>& listComments,
+	std::list<int>& listCommentLines)
 {
 	m_ModuleComment.strTypeName_UTF8 = szTypeName;
 	m_ModuleComment.strCategory_UTF8 = szCategory;
 	m_ModuleComment.m_strASN1ModuleName = szASN1ModuleName;
-	convertCommentList(listComments, &m_ModuleComment);
+	convertCommentList(listComments, listCommentLines, &m_ModuleComment, szFileName, szTypeName);
 }
 
 int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state)
@@ -531,6 +653,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 
 		m_ModuleComment.setModuleName(strKey.c_str());
 		gComments.mapModules[strKey] = m_ModuleComment;
+		m_pParser->ValidateDeprecatedSuccessorsForModule(szModuleName);
 
 		if (isFiltered(m_ModuleComment))
 			state = EElementState::end_and_filtered;
@@ -549,9 +672,12 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 		if (!szComment.empty())
 		{
 			if (szComment.starts_with(kTagClear))
+			{
 				m_CollectComments.clear();
+				m_CollectCommentLines.clear();
+			}
 			else
-				m_CollectComments.push_back(szComment);
+				pushCollectedComment(m_CollectComments, m_CollectCommentLines, szComment, m_pParser->m_iSourceLine);
 		}
 		return 0;
 	}
@@ -620,6 +746,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 			el->m_comment.strTypeName_UTF8 = strType;
 			el->m_comment.strCategory_UTF8 = m_ModuleComment.strCategory_UTF8;
 			el->commentsBefore = m_CollectComments;
+			el->commentsBeforeLines = m_CollectCommentLines;
 
 			szLine.clear();
 			EElementState elementState = EElementState::not_yet_ended;
@@ -633,46 +760,51 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 			delete el;
 
 			m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 			return 0;
 		}
 		else if (strBasicType1 == "SEQUENCE" && (strBasicType2 == "" || strBasicType2 == "{"))
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
+			el->SetSequenceProperties(strBasicType2 == "{", szModuleName, strType.c_str(), &m_ModuleComment, m_CollectComments, m_CollectCommentLines);
 
 			m_pParser->m_stack.push_back(el);
 
 			m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 			return 0;
 		}
 		else if (strBasicType1 == "ENUMERATED" && (strBasicType2 == "" || strBasicType2 == "{"))
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
+			el->SetSequenceProperties(strBasicType2 == "{", szModuleName, strType.c_str(), &m_ModuleComment, m_CollectComments, m_CollectCommentLines);
 
 			m_pParser->m_stack.push_back(el);
 
 			m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 			return 0;
 		}
 		else if (strBasicType1 == "BIT" && strBasicType2 == "STRING")
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
+			el->SetSequenceProperties(strBasicType2 == "{", szModuleName, strType.c_str(), &m_ModuleComment, m_CollectComments, m_CollectCommentLines);
 
 			m_pParser->m_stack.push_back(el);
 
 			m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 			return 0;
 		}
 		else if (strBasicType1 == "CHOICE" && (strBasicType2 == "" || strBasicType2 == "{"))
 		{
 			EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-			el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), &m_ModuleComment, m_CollectComments);
+			el->SetSequenceProperties(strBasicType2 == "{", szModuleName, strType.c_str(), &m_ModuleComment, m_CollectComments, m_CollectCommentLines);
 
 			m_pParser->m_stack.push_back(el);
 
 			m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 			return 0;
 		}
 		else
@@ -681,7 +813,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 			ESequenceComment comment;
 			comment.strTypeName_UTF8 = strType;
 			comment.strCategory_UTF8 = m_ModuleComment.strCategory_UTF8;
-			convertCommentList(m_CollectComments, &comment);
+			convertCommentList(m_CollectComments, m_CollectCommentLines, &comment, szModuleName, strType.c_str());
 
 			if (!isFiltered(comment))
 				m_strFilteredFileContent += m_strRawSourceFileIncrement;
@@ -696,6 +828,7 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 			gComments.mapSequences[strKey] = comment;
 
 			m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 			return 0;
 		}
 	}
@@ -709,21 +842,23 @@ int EAsnStackElementModule::ProcessLine(const char* szModuleName, const char* sz
 		if (iterTokens != tokens.end() && *iterTokens == "OPERATION")
 		{
 			EAsnStackElementOperation* el = new EAsnStackElementOperation(m_pParser);
-			el->SetOperationProperties(strType.c_str(), &m_ModuleComment, m_CollectComments);
+			el->SetOperationProperties(szModuleName, strType.c_str(), &m_ModuleComment, m_CollectComments, m_CollectCommentLines);
 			m_pParser->m_stack.push_back(el);
 			m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 			return 0;
 		}
 		else
 		{
 			ESequenceComment comment;
-			convertCommentList(m_CollectComments, &comment);
+			convertCommentList(m_CollectComments, m_CollectCommentLines, &comment, szModuleName, strType.c_str());
 			if (!isFiltered(comment))
 			{
 				m_strFilteredFileContent += m_strRawSourceFileIncrement;
 				m_strRawSourceFileIncrement.clear();
 			}
 			m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 		}
 
 		return 0;
@@ -737,7 +872,13 @@ bool EAsnStackElementModule::isModuleFiltered() const
 	return isFiltered(m_ModuleComment);
 }
 
-void EAsnStackElementSequence::SetSequenceProperties(bool bOpenBracket, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments)
+void EAsnStackElementSequence::SetSequenceProperties(
+	bool bOpenBracket,
+	const char* szFileName,
+	const char* szTypeName,
+	EModuleComment* pmodcomment,
+	std::list<std::string>& listComments,
+	std::list<int>& listCommentLines)
 {
 	bOpenBracketFound = bOpenBracket;
 	m_comment.strTypeName_UTF8 = szTypeName;
@@ -746,7 +887,7 @@ void EAsnStackElementSequence::SetSequenceProperties(bool bOpenBracket, const ch
 	m_comment.i64Deprecated = pmodcomment->i64Deprecated;
 	m_comment.i64Added = pmodcomment->i64Added;
 	m_pmodcomment = pmodcomment;
-	convertCommentList(listComments, &m_comment);
+	convertCommentList(listComments, listCommentLines, &m_comment, szFileName, szTypeName);
 }
 
 int EAsnStackElementSequence::ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state)
@@ -770,7 +911,7 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, const char* 
 	if (szLine.empty())
 	{
 		if (!szComment.empty())
-			m_CollectComments.push_back(szComment);
+			pushCollectedComment(m_CollectComments, m_CollectCommentLines, szComment, m_pParser->m_iSourceLine);
 		return 0;
 	}
 
@@ -790,11 +931,11 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, const char* 
 			replaceAll(strMember, "-", "_");
 
 			if (szComment.size())
-				m_CollectComments.push_back(szComment);
+				pushCollectedComment(m_CollectComments, m_CollectCommentLines, szComment, m_pParser->m_iSourceLine);
 
 			EStructMemberComment member;
 
-			convertMemberCommentList(m_CollectComments, &member);
+			convertMemberCommentList(m_CollectComments, m_CollectCommentLines, &member, szModuleName, strMember.c_str());
 			m_comment.mapMembers[strMember] = member;
 
 			if (!isFiltered(member))
@@ -821,48 +962,54 @@ int EAsnStackElementSequence::ProcessLine(const char* szModuleName, const char* 
 				el->m_comment.strTypeName_UTF8 = strType;
 				el->m_comment.strCategory_UTF8 = m_comment.strCategory_UTF8;
 				el->commentsBefore = m_CollectComments;
+			el->commentsBeforeLines = m_CollectCommentLines;
 
 				m_pParser->m_stack.push_back(el);
 
 				m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 				return 0;
 			}
 			else if (strBasicType1 == "SEQUENCE" && (strBasicType2 == "" || strBasicType2 == "{"))
 			{
 				std::string strType = m_comment.strTypeName_UTF8 + "Seq";
 				EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-				el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
+				el->SetSequenceProperties(strBasicType2 == "{", szModuleName, strType.c_str(), m_pmodcomment, m_CollectComments, m_CollectCommentLines);
 
 				m_pParser->m_stack.push_back(el);
 
 				m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 				return 0;
 			}
 			else if (strBasicType1 == "ENUMERATED" && (strBasicType2 == "" || strBasicType2 == "{"))
 			{
 				std::string strType = m_comment.strTypeName_UTF8 + "Enum";
 				EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-				el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
+				el->SetSequenceProperties(strBasicType2 == "{", szModuleName, strType.c_str(), m_pmodcomment, m_CollectComments, m_CollectCommentLines);
 
 				m_pParser->m_stack.push_back(el);
 
 				m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 				return 0;
 			}
 			else if (strBasicType1 == "CHOICE" && (strBasicType2 == "" || strBasicType2 == "{"))
 			{
 				std::string strType = m_comment.strTypeName_UTF8 + "Choice";
 				EAsnStackElementSequence* el = new EAsnStackElementSequence(m_pParser);
-				el->SetSequenceProperties(strBasicType2 == "{", strType.c_str(), m_pmodcomment, m_CollectComments);
+				el->SetSequenceProperties(strBasicType2 == "{", szModuleName, strType.c_str(), m_pmodcomment, m_CollectComments, m_CollectCommentLines);
 
 				m_pParser->m_stack.push_back(el);
 
 				m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 				return 0;
 			}
 			else
 			{
 				m_CollectComments.clear();
+			m_CollectCommentLines.clear();
 			}
 		}
 	}
@@ -902,8 +1049,9 @@ int EAsnStackElementSequenceOf::ProcessLine(const char* szModuleName, const char
 
 	// sequence of is complete on the next line anyway
 	// add comments before the sequence...
-	convertCommentList(commentsBefore, &m_comment);
+	convertCommentList(commentsBefore, commentsBeforeLines, &m_comment, szModuleName, m_comment.strTypeName_UTF8.c_str());
 	commentsBefore.clear();
+	commentsBeforeLines.clear();
 
 	std::string strKey = szModuleName;
 	const auto pos = strKey.find_first_of(".");
@@ -926,14 +1074,19 @@ int EAsnStackElementSequenceOf::ProcessLine(const char* szModuleName, const char
 	return 0;
 }
 
-void EAsnStackElementOperation::SetOperationProperties(const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments)
+void EAsnStackElementOperation::SetOperationProperties(
+	const char* szFileName,
+	const char* szTypeName,
+	EModuleComment* pmodcomment,
+	std::list<std::string>& listComments,
+	std::list<int>& listCommentLines)
 {
 	m_comment.strTypeName_UTF8 = szTypeName;
 	m_comment.strCategory_UTF8 = pmodcomment->strCategory_UTF8;
 	m_comment.iPrivate = pmodcomment->iPrivate;
 	m_comment.i64Deprecated = pmodcomment->i64Deprecated;
 	m_comment.i64Added = pmodcomment->i64Added;
-	convertCommentList(listComments, &m_comment);
+	convertCommentList(listComments, listCommentLines, &m_comment, szFileName, szTypeName);
 }
 
 int EAsnStackElementOperation::ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state)
@@ -977,6 +1130,7 @@ int EAsnCommentParser::ParseFileForComments(FILE* fp, const char* szModuleName, 
 	// set to beginning of file
 	fseek(fp, type == UTF8WITHBOM ? 3 : 0, SEEK_SET);
 
+	m_iSourceLine = 0;
 	m_stack.clear();
 
 	m_stack.push_back(new EAsnStackElementFile(this, szModuleName));
@@ -1160,6 +1314,65 @@ std::string EAsnCommentParser::FilterImports(const std::string& strImports)
 	return strResult;
 }
 
+void EAsnCommentParser::ValidateDeprecatedSuccessorsForModule(const char* szModuleName)
+{
+	if (!szModuleName)
+		return;
+
+	std::string moduleKey = szModuleName;
+	const auto dotPos = moduleKey.find_first_of(".");
+	if (dotPos != std::string::npos)
+		moduleKey = moduleKey.substr(0, dotPos);
+
+	const std::string prefix = moduleKey + "::";
+	std::set<std::string> localSymbols;
+	for (const auto& operationComment : gComments.mapOperations)
+	{
+		if (operationComment.first.rfind(prefix, 0) != 0)
+			continue;
+		localSymbols.insert(operationComment.second.strTypeName_UTF8);
+	}
+	for (const auto& sequenceComment : gComments.mapSequences)
+	{
+		if (sequenceComment.first.rfind(prefix, 0) != 0)
+			continue;
+		localSymbols.insert(sequenceComment.second.strTypeName_UTF8);
+	}
+
+	const auto checkDeprecated = [&](const EDeprecated& deprecated, const char* pszSymbolName)
+	{
+		if (deprecated.i64Deprecated <= 0 || !deprecated.bSuccessorParsed)
+			return;
+		if (deprecated.successorScope != EDeprecatedSuccessorSameFile)
+			return;
+		if (localSymbols.find(deprecated.successorSymbol) == localSymbols.end())
+			EmitDeprecatedSuccessorNotInFileWarning(
+				szModuleName,
+				deprecated.iDeprecatedLine,
+				pszSymbolName,
+				deprecated.successorSymbol.c_str());
+	};
+
+	for (const auto& operationComment : gComments.mapOperations)
+	{
+		if (operationComment.first.rfind(prefix, 0) != 0)
+			continue;
+		checkDeprecated(operationComment.second, operationComment.second.strTypeName_UTF8.c_str());
+	}
+	for (const auto& sequenceComment : gComments.mapSequences)
+	{
+		if (sequenceComment.first.rfind(prefix, 0) != 0)
+			continue;
+		checkDeprecated(sequenceComment.second, sequenceComment.second.strTypeName_UTF8.c_str());
+		for (const auto& memberComment : sequenceComment.second.mapMembers)
+			checkDeprecated(memberComment.second, memberComment.first.c_str());
+	}
+
+	const auto moduleIt = gComments.mapModules.find(moduleKey);
+	if (moduleIt != gComments.mapModules.end())
+		checkDeprecated(moduleIt->second, moduleIt->second.strTypeName_UTF8.c_str());
+}
+
 void EAsnCommentParser::FilterFiles()
 {
 	if (!gFilterASN1Files)
@@ -1235,6 +1448,7 @@ void EAsnCommentParser::FilterFiles()
 
 int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
 {
+	++m_iSourceLine;
 	int iResult = 1; // error
 
 	std::string strLine(szLine);
