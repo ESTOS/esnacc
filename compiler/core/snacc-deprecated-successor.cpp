@@ -143,6 +143,31 @@ void EmitDeprecatedSuccessorNotInFileWarning(
 		pszSuccessor);
 }
 
+void EmitDeprecatedSuccessorNotInModuleWarning(
+	const char* pszFileName,
+	int lineNo,
+	const char* pszSymbolName,
+	const char* pszSuccessorQualifier,
+	const char* pszSuccessorSymbol,
+	const char* pszResolvedModuleName)
+{
+	const char* pszFile = pszFileName ? pszFileName : "<unknown>";
+	const char* pszSymbol = pszSymbolName ? pszSymbolName : "<unknown>";
+	const char* pszQualifier = pszSuccessorQualifier ? pszSuccessorQualifier : "<unknown>";
+	const char* pszSuccessor = pszSuccessorSymbol ? pszSuccessorSymbol : "<unknown>";
+	const char* pszModule = pszResolvedModuleName ? pszResolvedModuleName : "<unknown>";
+	const int reportedLine = lineNo > 0 ? lineNo : 1;
+	fprintf(
+		stderr,
+		"warning: %s:%d %s: @deprecated successor '%s::%s' is not defined in loaded module '%s'\n",
+		pszFile,
+		reportedLine,
+		pszSymbol,
+		pszQualifier,
+		pszSuccessor,
+		pszModule);
+}
+
 extern "C" void PrintDeprecatedSuccessorHelp(FILE* fp)
 {
 	if (!fp)
@@ -154,5 +179,8 @@ extern "C" void PrintDeprecatedSuccessorHelp(FILE* fp)
 	fprintf(fp, "     -- @deprecated Day.Month.Year -> OtherModule::Symbol\n");
 	fprintf(fp, "     -- @deprecated Day.Month.Year -> OtherRepo::Symbol\n");
 	fprintf(fp, "     Arrow may be on the @deprecated line or the next -- comment line above the definition.\n");
+	fprintf(fp, "     Unqualified successors must exist in the same file; qualified successors are checked when the\n");
+	fprintf(fp, "     target module is part of the current esnacc invocation (UCWeb:: maps to loaded EUCWeb_* modules).\n");
+	fprintf(fp, "     Validation applies to operations and SEQUENCE/CHOICE types only, not SEQUENCE or ENUMERATED members.\n");
 	fprintf(fp, "     Legacy prose (see Symbol, moved to, file paths) without -> triggers a warning.\n");
 }

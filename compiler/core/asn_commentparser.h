@@ -184,8 +184,10 @@ public:
 	void RegisterFilterSource(const char* szSourcePath, const char* szModuleName, enum EFILETYPE type);
 	// Re-parses registered sources when -nodeprecated was resolved after the first pass
 	void RebuildFilteredAsnFiles();
-	// Warn-only validation of same-file @deprecated successors after a module is fully parsed
+	// Warn-only validation of @deprecated successors after a module is fully parsed (same file)
 	void ValidateDeprecatedSuccessorsForModule(const char* szModuleName);
+	// Warn-only validation of qualified @deprecated successors after all modules are parsed
+	void ValidateAllDeprecatedSuccessors();
 
 	std::list<EAsnStackElement*> m_stack;
 	int m_iSourceLine = 0;

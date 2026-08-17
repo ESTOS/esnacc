@@ -34,6 +34,11 @@ extern "C"
 		parser.RebuildFilteredAsnFiles();
 	}
 
+	void ValidateAllDeprecatedSuccessors(void)
+	{
+		parser.ValidateAllDeprecatedSuccessors();
+	}
+
 	void ClearAsnCommentStateForRebuild(void)
 	{
 		gComments.mapModules.clear();

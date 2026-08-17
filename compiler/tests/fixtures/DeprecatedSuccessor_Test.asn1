@@ -42,4 +42,22 @@ asnSuccessorOnNextLine OPERATION
 	RESULT		res NULL
 ::= 9106
 
+-- @deprecated 07.01.2024 -> DeprecatedSuccessor_Ref::asnValidTarget
+asnValidCrossModule OPERATION
+	ARGUMENT	arg NULL
+	RESULT		res NULL
+::= 9107
+
+-- @deprecated 08.01.2024 -> DeprecatedSuccessor_Ref::asnMissingInRef
+asnInvalidCrossModule OPERATION
+	ARGUMENT	arg NULL
+	RESULT		res NULL
+::= 9108
+
+AsnEnumMemberDeprecationEnum ::= ENUMERATED
+{
+	eLegacyEnumValue(1),	-- @deprecated 10.01.2024 legacy prose without canonical arrow
+	eValidEnumValue(2)	-- @deprecated 11.01.2024 -> (none)
+}
+
 END

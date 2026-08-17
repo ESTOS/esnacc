@@ -16,6 +16,7 @@
 #include <vector>
 #include <assert.h>
 #include <set>
+#include <map>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -67,6 +68,152 @@ void warnDeprecatedSuccessorIfNeeded(EDeprecated& deprecated, const char* szFile
 		deprecated.iDeprecatedSuccessorInvalid = 1;
 		EmitDeprecatedSuccessorMissingWarning(szFileName, deprecated.iDeprecatedLine, szSymbolName);
 	}
+}
+
+std::string normalizeModuleKey(const char* szModuleName)
+{
+	if (!szModuleName)
+		return {};
+	std::string moduleKey = szModuleName;
+	const auto dotPos = moduleKey.find_first_of(".");
+	if (dotPos != std::string::npos)
+		moduleKey = moduleKey.substr(0, dotPos);
+	return moduleKey;
+}
+
+std::set<std::string> collectLocalSymbolsForModule(const std::string& moduleKey)
+{
+	const std::string prefix = moduleKey + "::";
+	std::set<std::string> localSymbols;
+	for (const auto& operationComment : gComments.mapOperations)
+	{
+		if (operationComment.first.rfind(prefix, 0) != 0)
+			continue;
+		localSymbols.insert(operationComment.second.strTypeName_UTF8);
+	}
+	for (const auto& sequenceComment : gComments.mapSequences)
+	{
+		if (sequenceComment.first.rfind(prefix, 0) != 0)
+			continue;
+		localSymbols.insert(sequenceComment.second.strTypeName_UTF8);
+	}
+	return localSymbols;
+}
+
+using ModuleSymbolIndex = std::map<std::string, std::set<std::string>>;
+
+ModuleSymbolIndex buildModuleSymbolIndex()
+{
+	ModuleSymbolIndex index;
+	for (const auto& operationComment : gComments.mapOperations)
+	{
+		const auto sep = operationComment.first.find("::");
+		if (sep == std::string::npos)
+			continue;
+		index[operationComment.first.substr(0, sep)].insert(operationComment.second.strTypeName_UTF8);
+	}
+	for (const auto& sequenceComment : gComments.mapSequences)
+	{
+		const auto sep = sequenceComment.first.find("::");
+		if (sep == std::string::npos)
+			continue;
+		index[sequenceComment.first.substr(0, sep)].insert(sequenceComment.second.strTypeName_UTF8);
+	}
+	return index;
+}
+
+std::vector<std::string> resolveLoadedSuccessorModules(const std::string& qualifier, const ModuleSymbolIndex& moduleSymbols)
+{
+	std::vector<std::string> resolvedModules;
+	if (qualifier.empty())
+		return resolvedModules;
+
+	if (moduleSymbols.find(qualifier) != moduleSymbols.end())
+	{
+		resolvedModules.push_back(qualifier);
+		return resolvedModules;
+	}
+
+	if (qualifier == "UCWeb")
+	{
+		for (const auto& moduleEntry : moduleSymbols)
+		{
+			if (moduleEntry.first.rfind("EUCWeb_", 0) == 0)
+				resolvedModules.push_back(moduleEntry.first);
+		}
+	}
+
+	return resolvedModules;
+}
+
+bool successorExistsInModules(
+	const std::string& successorSymbol,
+	const std::vector<std::string>& moduleKeys,
+	const ModuleSymbolIndex& moduleSymbols)
+{
+	for (const auto& moduleKey : moduleKeys)
+	{
+		const auto moduleIt = moduleSymbols.find(moduleKey);
+		if (moduleIt == moduleSymbols.end())
+			continue;
+		if (moduleIt->second.find(successorSymbol) != moduleIt->second.end())
+			return true;
+	}
+	return false;
+}
+
+std::string formatResolvedModuleLabel(const std::string& qualifier, const std::vector<std::string>& moduleKeys)
+{
+	if (moduleKeys.size() == 1)
+		return moduleKeys.front();
+	if (qualifier == "UCWeb")
+		return "UCWeb (EUCWeb_*)";
+	return qualifier;
+}
+
+void validateSameFileDeprecatedSuccessor(
+	const EDeprecated& deprecated,
+	const char* pszFileName,
+	const char* pszSymbolName,
+	const std::set<std::string>& localSymbols)
+{
+	if (deprecated.i64Deprecated <= 0 || !deprecated.bSuccessorParsed)
+		return;
+	if (deprecated.successorScope != EDeprecatedSuccessorSameFile)
+		return;
+	if (localSymbols.find(deprecated.successorSymbol) == localSymbols.end())
+		EmitDeprecatedSuccessorNotInFileWarning(
+			pszFileName,
+			deprecated.iDeprecatedLine,
+			pszSymbolName,
+			deprecated.successorSymbol.c_str());
+}
+
+void validateQualifiedDeprecatedSuccessor(
+	const EDeprecated& deprecated,
+	const char* pszFileName,
+	const char* pszSymbolName,
+	const ModuleSymbolIndex& moduleSymbols)
+{
+	if (deprecated.i64Deprecated <= 0 || !deprecated.bSuccessorParsed)
+		return;
+	if (deprecated.successorScope != EDeprecatedSuccessorQualified)
+		return;
+
+	const std::vector<std::string> resolvedModules = resolveLoadedSuccessorModules(deprecated.successorQualifier, moduleSymbols);
+	if (resolvedModules.empty())
+		return;
+
+	if (successorExistsInModules(deprecated.successorSymbol, resolvedModules, moduleSymbols))
+		return;
+
+	EmitDeprecatedSuccessorNotInModuleWarning(
+		pszFileName,
+		deprecated.iDeprecatedLine,
+		pszSymbolName,
+		deprecated.successorQualifier.c_str(),
+		deprecated.successorSymbol.c_str(),
+		formatResolvedModuleLabel(deprecated.successorQualifier, resolvedModules).c_str());
 }
 } // namespace
 
@@ -571,7 +718,7 @@ void convertMemberCommentList(
 		}
 	}
 
-	pType->finishDeprecatedSuccessorCommentBlock(szFileName, szSymbolName);
+	// SEQUENCE / ENUMERATED / CHOICE members: @deprecated successor arrows are context-specific and not validated.
 }
 
 int EAsnStackElementFile::ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state)
@@ -1319,38 +1466,13 @@ void EAsnCommentParser::ValidateDeprecatedSuccessorsForModule(const char* szModu
 	if (!szModuleName)
 		return;
 
-	std::string moduleKey = szModuleName;
-	const auto dotPos = moduleKey.find_first_of(".");
-	if (dotPos != std::string::npos)
-		moduleKey = moduleKey.substr(0, dotPos);
-
+	const std::string moduleKey = normalizeModuleKey(szModuleName);
 	const std::string prefix = moduleKey + "::";
-	std::set<std::string> localSymbols;
-	for (const auto& operationComment : gComments.mapOperations)
-	{
-		if (operationComment.first.rfind(prefix, 0) != 0)
-			continue;
-		localSymbols.insert(operationComment.second.strTypeName_UTF8);
-	}
-	for (const auto& sequenceComment : gComments.mapSequences)
-	{
-		if (sequenceComment.first.rfind(prefix, 0) != 0)
-			continue;
-		localSymbols.insert(sequenceComment.second.strTypeName_UTF8);
-	}
+	const std::set<std::string> localSymbols = collectLocalSymbolsForModule(moduleKey);
 
 	const auto checkDeprecated = [&](const EDeprecated& deprecated, const char* pszSymbolName)
 	{
-		if (deprecated.i64Deprecated <= 0 || !deprecated.bSuccessorParsed)
-			return;
-		if (deprecated.successorScope != EDeprecatedSuccessorSameFile)
-			return;
-		if (localSymbols.find(deprecated.successorSymbol) == localSymbols.end())
-			EmitDeprecatedSuccessorNotInFileWarning(
-				szModuleName,
-				deprecated.iDeprecatedLine,
-				pszSymbolName,
-				deprecated.successorSymbol.c_str());
+		validateSameFileDeprecatedSuccessor(deprecated, szModuleName, pszSymbolName, localSymbols);
 	};
 
 	for (const auto& operationComment : gComments.mapOperations)
@@ -1364,13 +1486,47 @@ void EAsnCommentParser::ValidateDeprecatedSuccessorsForModule(const char* szModu
 		if (sequenceComment.first.rfind(prefix, 0) != 0)
 			continue;
 		checkDeprecated(sequenceComment.second, sequenceComment.second.strTypeName_UTF8.c_str());
-		for (const auto& memberComment : sequenceComment.second.mapMembers)
-			checkDeprecated(memberComment.second, memberComment.first.c_str());
 	}
 
 	const auto moduleIt = gComments.mapModules.find(moduleKey);
 	if (moduleIt != gComments.mapModules.end())
 		checkDeprecated(moduleIt->second, moduleIt->second.strTypeName_UTF8.c_str());
+}
+
+void EAsnCommentParser::ValidateAllDeprecatedSuccessors()
+{
+	const ModuleSymbolIndex moduleSymbols = buildModuleSymbolIndex();
+	if (moduleSymbols.empty())
+		return;
+
+	const auto checkDeprecated = [&](const EDeprecated& deprecated, const char* pszFileName, const char* pszSymbolName)
+	{
+		validateQualifiedDeprecatedSuccessor(deprecated, pszFileName, pszSymbolName, moduleSymbols);
+	};
+
+	for (const auto& moduleComment : gComments.mapModules)
+		checkDeprecated(moduleComment.second, moduleComment.first.c_str(), moduleComment.second.strTypeName_UTF8.c_str());
+
+	for (const auto& operationComment : gComments.mapOperations)
+	{
+		const auto sep = operationComment.first.find("::");
+		if (sep == std::string::npos)
+			continue;
+		const std::string moduleKey = operationComment.first.substr(0, sep);
+		checkDeprecated(
+			operationComment.second,
+			moduleKey.c_str(),
+			operationComment.second.strTypeName_UTF8.c_str());
+	}
+
+	for (const auto& sequenceComment : gComments.mapSequences)
+	{
+		const auto sep = sequenceComment.first.find("::");
+		if (sep == std::string::npos)
+			continue;
+		const std::string moduleKey = sequenceComment.first.substr(0, sep);
+		checkDeprecated(sequenceComment.second, moduleKey.c_str(), sequenceComment.second.strTypeName_UTF8.c_str());
+	}
 }
 
 void EAsnCommentParser::FilterFiles()

@@ -66,6 +66,8 @@ extern "C"
 	extern void RegisterFilterSourceFile(const char* szSourcePath, const char* szModuleName, enum EFILETYPE type);
 	extern void RebuildFilteredAsnFilesIfNeeded(void);
 	extern void ClearAsnCommentStateForRebuild(void);
+	/** Warn-only check of qualified @deprecated successors against loaded modules. */
+	extern void ValidateAllDeprecatedSuccessors(void);
 
 	// Get LogFilter Attributes (if any) call recurring until it returns 0
 	extern const char* GetFirstModuleLogFileFilter(const char* szModuleName);

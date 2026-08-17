@@ -43,6 +43,13 @@ void EmitDeprecatedSuccessorNotInFileWarning(
 	int lineNo,
 	const char* pszSymbolName,
 	const char* pszSuccessorSymbol);
+void EmitDeprecatedSuccessorNotInModuleWarning(
+	const char* pszFileName,
+	int lineNo,
+	const char* pszSymbolName,
+	const char* pszSuccessorQualifier,
+	const char* pszSuccessorSymbol,
+	const char* pszResolvedModuleName);
 #endif
 
 #endif /* SNACC_DEPRECATED_SUCCESSOR_H */

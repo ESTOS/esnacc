@@ -1,0 +1,13 @@
+EUCWeb-Successor-Test
+	{ 1 3 6 1 4 1 10924 9999 96 }
+
+DEFINITIONS
+IMPLICIT TAGS ::=
+BEGIN
+
+asnGetTime OPERATION
+	ARGUMENT	arg NULL
+	RESULT		res NULL
+::= 9601
+
+END
