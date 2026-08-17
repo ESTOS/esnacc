@@ -642,7 +642,7 @@ public:
 	// Generic interface-id based dispatcher used by all tests in this harness.
 	long OnInvoke(std::unique_ptr<ROSEMessage>& pMsg, SnaccInvokeContext& ctx, std::string& strResponse) override
 	{
-		const unsigned int interfaceId = SnaccRoseOperationLookup::LookUpInterfaceID(pMsg->invoke->operationID);
+		const unsigned int interfaceId = LookUpInterfaceID(pMsg->invoke->operationID);
 		const auto it = m_modules.find(interfaceId);
 		if (it == m_modules.end())
 			return ROSE_REJECT_UNKNOWNOPERATION;
@@ -1223,20 +1223,6 @@ inline void LoopbackTransport::FlushQueuedMessages()
 class RuntimeTestBase : public ::testing::Test
 {
 protected:
-	// Registers generated operation ids once for the whole fixture hierarchy.
-	static void SetUpTestSuite()
-	{
-		SnaccRoseOperationLookup::CleanUp();
-		ENetUC_Settings_ManagerROSE::RegisterOperations();
-		ENetUC_Event_ManagerROSE::RegisterOperations();
-	}
-
-	// Resets the global operation registry after the suite is finished.
-	static void TearDownTestSuite()
-	{
-		SnaccRoseOperationLookup::CleanUp();
-	}
-
 	// Constructs all modules around the already constructed client/server hosts.
 	RuntimeTestBase()
 		: m_telemetryRecorder(),

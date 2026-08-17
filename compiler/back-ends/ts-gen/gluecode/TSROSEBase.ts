@@ -410,6 +410,24 @@ export enum ELogSeverity {
 }
 
 /**
+ * Per-operation @added / @deprecated metadata (unix seconds; 0 = not annotated).
+ */
+export interface IOpVersionInfo {
+	addedUnix: number;
+	deprecatedUnix: number;
+}
+
+/**
+ * Module snapshot for negotiate / introspection on one stub instance.
+ */
+export interface ILoadedModuleInfo {
+	moduleName: string;
+	version: string;
+	invokes: Map<number, IOpVersionInfo>;
+	events: Map<number, IOpVersionInfo>;
+}
+
+/**
  * Defines the interface the logger has to fullfill in order to handle log messages from the rose stub
  */
 export interface IROSELogger {
@@ -443,10 +461,16 @@ export interface IASN1Transport {
 		requesthandler: unknown,
 		operationID: number,
 		operationName: string,
+		moduleName: string,
+		addedUnix: number,
+		deprecatedUnix: number,
+		isEvent: boolean,
 	): void;
 	unregisterOperation(operationID: number): void;
-	registerModuleVersion(moduleName: string, majorVersion: number, minorVersion: number): void;
+	unregisterModule(moduleName: string): void;
+	registerModuleVersion(moduleName: string, version: string): void;
 	unregisterModuleVersion(moduleName: string): void;
+	getLoadedModules(): ReadonlyMap<string, ILoadedModuleInfo>;
 	getInvokeContextParams(
 		context: Partial<ISendInvokeContextParams> | undefined,
 		operationID: number,

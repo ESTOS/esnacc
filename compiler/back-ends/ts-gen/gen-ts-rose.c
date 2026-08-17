@@ -472,17 +472,39 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 	fprintf(src, "\t */\n");
 
 	fprintf(src, "\tpublic setHandler(handler: Partial<I%s_Handler>): void {\n", m->ROSEClassName);
+	if (gMajorInterfaceVersion >= 0)
+		fprintf(src, "\t\tthis.transport.registerModuleVersion(%s.MODULE_NAME, %s.MODULE_VERSION);\n", GetNameSpace(m), GetNameSpace(m));
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
-		if (IsROSEValueDef(m, vd))
-			fprintf(src, "\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\");\n", vd->definedName, vd->definedName);
-	}
+		if (!IsROSEValueDef(m, vd))
+			continue;
 
-	if (gMajorInterfaceVersion >= 0)
-	{
-		long long lPatchVersion = GetModulePatchVersion(m->moduleName);
-		fprintf(src, "\t\tthis.transport.registerModuleVersion(\"%s\", %i, %lld);\n", m->moduleName, gMajorInterfaceVersion, lPatchVersion);
+		const char* pszArgument = NULL;
+		const char* pszResult = NULL;
+		const char* pszError = NULL;
+		if (!GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
+			continue;
+
+		const bool bIsEvent = pszResult == NULL;
+		long long llAddedUnix = 0;
+		long long llDeprecatedUnix = 0;
+		asnoperationcomment comment;
+		if (GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment))
+		{
+			llAddedUnix = comment.i64Added;
+			llDeprecatedUnix = comment.i64Deprecated;
+		}
+
+		fprintf(
+			src,
+			"\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\", %s.MODULE_NAME, %lld, %lld, %s);\n",
+			vd->definedName,
+			vd->definedName,
+			GetNameSpace(m),
+			llAddedUnix,
+			llDeprecatedUnix,
+			bIsEvent ? "true" : "false");
 	}
 
 	fprintf(src, "\t}\n");
@@ -496,15 +518,7 @@ void PrintTSROSERemoveHandler(FILE* src, Module* m)
 	fprintf(src, "\t */\n");
 
 	fprintf(src, "\tpublic removeHandler(): void {\n");
-	ValueDef* vd;
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
-	{
-		if (IsROSEValueDef(m, vd))
-			fprintf(src, "\t\tthis.transport.unregisterOperation(OperationIDs.OPID_%s);\n", vd->definedName);
-	}
-	if (gMajorInterfaceVersion >= 0)
-		fprintf(src, "\t\tthis.transport.unregisterModuleVersion(\"%s\");\n", m->moduleName);
-
+	fprintf(src, "\t\tthis.transport.unregisterModule(%s.MODULE_NAME);\n", GetNameSpace(m));
 	fprintf(src, "\t}\n");
 }
 
@@ -848,9 +862,6 @@ void PrintTSROSEInterfaceCode(FILE* src, ModuleList* mods, Module* m)
 	// Import definition
 	PrintTSROSEImport(src, mods, m);
 
-	// Root types
-	PrintTSRootTypes(src, m, "ROSEInterface");
-
 	// ClientInterface definition
 	PrintTSROSEInterface(src, mods, m);
 
@@ -905,7 +916,7 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t */\n");
 	fprintf(src, "\tpublic getLogData(): IASN1LogData {\n");
 	fprintf(src, "\t\treturn {\n");
-	fprintf(src, "\t\t\tclassName: MODULE_NAME\n");
+	fprintf(src, "\t\t\tclassName: \"%s\"\n", m->ROSEClassName);
 	fprintf(src, "\t\t};\n");
 	fprintf(src, "\t}\n\n");
 
@@ -980,7 +991,6 @@ void PrintTSROSECode(FILE* src, ModuleList* mods, Module* m)
 {
 	PrintTSROSEHeader(src, m, false);
 	PrintTSROSEImports(src, mods, m);
-	PrintTSRootTypes(src, m, "ROSE");
 	PrintTSROSEOperationDefines(src, m, m->valueDefs);
 	PrintTSROSEModuleComment(src, m);
 	PrintTSROSEClass(src, mods, m);

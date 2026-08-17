@@ -6,6 +6,7 @@
 #include <list>
 #include <vector>
 #include "filetype.h"
+#include "snacc-deprecated-successor.h"
 
 std::string escapeJsonString(const std::string& input);
 enum class EElementState
@@ -21,19 +22,29 @@ enum class EElementState
 class EDeprecated
 {
 public:
-	void handleDeprecated(const std::string& strParsedLine);
+	void handleDeprecated(const std::string& strParsedLine, int lineNo = 0);
+	void tryParseSuccessorArrowLine(const std::string& strLine, int lineNo = 0);
+	void finishDeprecatedSuccessorCommentBlock(const char* szFileName, const char* szSymbolName);
 	// Type is deprecated, the value shows the time in unix time when the property has been flagged deprecated
 
-	// @deprecated [optional] 1.1.2023 [optional] comment
+	// @deprecated [optional] 1.1.2023 [optional] -> (none) | -> Symbol | -> Qualifier::Symbol
 	// e.g.
-	// @deprecated 1.1.2023 Superseeded by method xyz
+	// @deprecated 1.1.2023 -> asnKeepAlive
+	// @deprecated 1.1.2023 -> (none) optional comment
 
 	// If no time has been specified the value is set to 1
 	// The value is compared with the global gi64NoDeprecatedSymbols to validate whether the symbol shall get excluded or not for the output
 	long long i64Deprecated = 0;
-	// Deprecated comment - text that was written behing the @deprecated flag
+	// Deprecated comment - prose after canonical successor arrow (legacy prose when arrow missing)
 	std::string strDeprecated_UTF8;
 	std::string strDeprecated_ASCII;
+	// Parsed canonical @deprecated successor (warn-only validation; does not affect filtering)
+	EDeprecatedSuccessorScope successorScope = EDeprecatedSuccessorUnset;
+	std::string successorSymbol;
+	std::string successorQualifier;
+	bool bSuccessorParsed = false;
+	int iDeprecatedSuccessorInvalid = 0;
+	int iDeprecatedLine = 0;
 };
 
 class EAdded
@@ -125,7 +136,12 @@ private:
 	std::string m_strModuleName;
 };
 
-void convertCommentList(std::list<std::string>& commentList, ETypeComment* pType);
+void convertCommentList(
+	std::list<std::string>& commentList,
+	std::list<int>& commentLines,
+	ETypeComment* pType,
+	const char* szFileName,
+	const char* szSymbolName);
 
 class EAsnStackElement;
 
@@ -168,8 +184,13 @@ public:
 	void RegisterFilterSource(const char* szSourcePath, const char* szModuleName, enum EFILETYPE type);
 	// Re-parses registered sources when -nodeprecated was resolved after the first pass
 	void RebuildFilteredAsnFiles();
+	// Warn-only validation of @deprecated successors after a module is fully parsed (same file)
+	void ValidateDeprecatedSuccessorsForModule(const char* szModuleName);
+	// Warn-only validation of qualified @deprecated successors after all modules are parsed
+	void ValidateAllDeprecatedSuccessors();
 
 	std::list<EAsnStackElement*> m_stack;
+	int m_iSourceLine = 0;
 
 private:
 	int ProcessLine(const char* szModuleName, const char* szLine);
@@ -229,6 +250,7 @@ public:
 
 private:
 	std::list<std::string> m_CollectComments;
+	std::list<int> m_CollectCommentLines;
 };
 
 class EAsnStackElementModule : public EAsnStackElement
@@ -242,13 +264,20 @@ public:
 
 	virtual int ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state) override;
 
-	void SetModuleProperties(const char* szTypeName, const char* szCategory, const char* szASN1ModuleName, std::list<std::string>& listComments);
+	void SetModuleProperties(
+		const char* szFileName,
+		const char* szTypeName,
+		const char* szCategory,
+		const char* szASN1ModuleName,
+		std::list<std::string>& listComments,
+		std::list<int>& listCommentLines);
 
 	bool isModuleFiltered() const;
 
 private:
 	bool m_bWaitForSemiColon = false;
 	std::list<std::string> m_CollectComments;
+	std::list<int> m_CollectCommentLines;
 
 	EModuleComment m_ModuleComment;
 };
@@ -268,10 +297,17 @@ public:
 	//{ has been found
 	bool bOpenBracketFound = false;
 
-	void SetSequenceProperties(bool bOpenBracket, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
+	void SetSequenceProperties(
+		bool bOpenBracket,
+		const char* szFileName,
+		const char* szTypeName,
+		EModuleComment* pmodcomment,
+		std::list<std::string>& listComments,
+		std::list<int>& listCommentLines);
 
 	// collected comments during parsing
 	std::list<std::string> m_CollectComments;
+	std::list<int> m_CollectCommentLines;
 
 	ESequenceComment m_comment;
 	EModuleComment* m_pmodcomment;
@@ -290,6 +326,7 @@ public:
 
 	// List of comment lines before the element
 	std::list<std::string> commentsBefore;
+	std::list<int> commentsBeforeLines;
 
 	ESequenceComment m_comment;
 };
@@ -305,7 +342,12 @@ public:
 
 	virtual int ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state) override;
 
-	void SetOperationProperties(const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments);
+	void SetOperationProperties(
+		const char* szFileName,
+		const char* szTypeName,
+		EModuleComment* pmodcomment,
+		std::list<std::string>& listComments,
+		std::list<int>& listCommentLines);
 
 private:
 	EOperationComment m_comment;

@@ -1,0 +1,13 @@
+DeprecatedSuccessor-Ref
+	{ 1 3 6 1 4 1 10924 9999 97 }
+
+DEFINITIONS
+IMPLICIT TAGS ::=
+BEGIN
+
+asnValidTarget OPERATION
+	ARGUMENT	arg NULL
+	RESULT		res NULL
+::= 9001
+
+END

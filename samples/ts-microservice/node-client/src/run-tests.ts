@@ -9,11 +9,14 @@ import {
 	assertInvokeResult,
 	createEventIntegration,
 	createSettingsIntegration,
+	EventCollector,
+	IntegrationClient,
 	releaseIntegration,
 	waitForCount,
 } from "./integration_client.js";
 import * as ENetUC_Event_Manager from "./stub/ENetUC_Event_Manager.js";
 import * as ENetUC_Settings_Manager from "./stub/ENetUC_Settings_Manager.js";
+import { ENetUC_Settings_ManagerROSE } from "./stub/ENetUC_Settings_ManagerROSE.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
 import {
 	assertNodeServerTestLayout,
@@ -25,6 +28,26 @@ const testDir = path.dirname(fileURLToPath(import.meta.url));
 const nodeClientRoot = path.resolve(testDir, "..");
 const { nodeServerRoot, testPort, logDirectory } = resolveIntegrationRunnerEnv(nodeClientRoot);
 assertNodeServerTestLayout(nodeServerRoot);
+
+describe("loaded module registry", () => {
+	test("getLoadedModules reflects setHandler registration", () => {
+		const client = new IntegrationClient(testPort, EASN1TransportEncoding.JSON);
+		const collector = new EventCollector();
+		const settingsRose = new ENetUC_Settings_ManagerROSE(client, true);
+		settingsRose.setHandler(collector);
+
+		const modules = client.getLoadedModules();
+		assert.equal(modules.size, 1);
+		const module = modules.get(ENetUC_Settings_Manager.MODULE_NAME);
+		assert.ok(module);
+		assert.ok(module.version.length > 0);
+		assert.ok(module.invokes.has(4100));
+		assert.ok(module.invokes.has(4101));
+		assert.ok(module.events.has(4150));
+		assert.ok((module.invokes.get(4100)?.addedUnix ?? 0) > 0);
+		assert.ok((module.invokes.get(4102)?.deprecatedUnix ?? 0) > 0);
+	});
+});
 
 const transportEncodings = [{ label: "JSON", encoding: EASN1TransportEncoding.JSON }, {
 	label: "BER",

@@ -23,6 +23,8 @@ import {
 	IASN1Transport,
 	IInvokeContextBase,
 	IInvokeHandler,
+	ILoadedModuleInfo,
+	IOpVersionInfo,
 	IReceiveInvokeContext,
 	IROSELogger,
 	ISendInvokeContext,
@@ -58,6 +60,14 @@ class Handler {
 	public readonly operationID: number;
 	// The operation name as specified in the ASN.1 Description
 	public readonly operationName: string;
+	// ASN.1 module that owns this operation
+	public readonly moduleName: string;
+	// @added unix timestamp from ASN.1 comments (0 = none)
+	public readonly addedUnix: number;
+	// @deprecated unix timestamp from ASN.1 comments (0 = none)
+	public readonly deprecatedUnix: number;
+	// True for ROSE events (operations without a result type)
+	public readonly isEvent: boolean;
 	// This is the object/handler which actually implements the called functionality
 	public readonly requesthandler: never;
 
@@ -74,11 +84,19 @@ class Handler {
 		requesthandler: never,
 		operationID: number,
 		operationName: string,
+		moduleName: string,
+		addedUnix: number,
+		deprecatedUnix: number,
+		isEvent: boolean,
 	) {
 		this.oninvokehandler = oninvokehandler;
 		this.requesthandler = requesthandler;
 		this.operationID = operationID;
 		this.operationName = operationName;
+		this.moduleName = moduleName;
+		this.addedUnix = addedUnix;
+		this.deprecatedUnix = deprecatedUnix;
+		this.isEvent = isEvent;
 	}
 }
 
@@ -281,8 +299,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 	// Holds all registered invoke handlers
 	private handlersByID = new Map<number, Handler>();
 	private handlersByName = new Map<string, Handler>();
-	// Holds all loaded modules with their version information
-	private moduleVersionsByName = new Map<string, IModuleVersionInformation>();
+	// Holds all loaded modules with operations registered on this stub
+	private loadedModulesByName = new Map<string, ILoadedModuleInfo>();
 	// The Logger Callback which must be set with the SetLogger Method
 	protected logger?: IROSELogger;
 	// Logs the raw transport (inbound before decoding, outbound after encoding)
@@ -359,15 +377,57 @@ export abstract class TSASN1Base implements IASN1Transport {
 		requesthandler: never,
 		operationID: number,
 		operationName: string,
+		moduleName: string,
+		addedUnix: number,
+		deprecatedUnix: number,
+		isEvent: boolean,
 	): void {
 		if (!this.handlersByID.has(operationID)) {
-			const handler = new Handler(oninvokehandler, requesthandler, operationID, operationName);
+			const handler = new Handler(
+				oninvokehandler,
+				requesthandler,
+				operationID,
+				operationName,
+				moduleName,
+				addedUnix,
+				deprecatedUnix,
+				isEvent,
+			);
 			this.handlersByID.set(operationID, handler);
 			this.handlersByName.set(operationName, handler);
+			this.trackRegisteredOperation(operationID, moduleName, addedUnix, deprecatedUnix, isEvent);
 		} else {
 			// trying to re-register a handler for an already registered operationID, this should not happen and indicates a problem in the calling code
 			debugger;
 		}
+	}
+
+	/**
+	 * Records operation metadata on the loaded-module registry for this stub.
+	 */
+	private trackRegisteredOperation(
+		operationID: number,
+		moduleName: string,
+		addedUnix: number,
+		deprecatedUnix: number,
+		isEvent: boolean,
+	): void {
+		let module = this.loadedModulesByName.get(moduleName);
+		if (!module) {
+			module = {
+				moduleName,
+				version: "",
+				invokes: new Map<number, IOpVersionInfo>(),
+				events: new Map<number, IOpVersionInfo>(),
+			};
+			this.loadedModulesByName.set(moduleName, module);
+		}
+
+		const info: IOpVersionInfo = { addedUnix, deprecatedUnix };
+		if (isEvent)
+			module.events.set(operationID, info);
+		else
+			module.invokes.set(operationID, info);
 	}
 
 	/**
@@ -379,7 +439,26 @@ export abstract class TSASN1Base implements IASN1Transport {
 		if (handler) {
 			this.handlersByID.delete(operationID);
 			this.handlersByName.delete(handler.operationName);
+			const module = this.loadedModulesByName.get(handler.moduleName);
+			if (module) {
+				if (handler.isEvent)
+					module.events.delete(operationID);
+				else
+					module.invokes.delete(operationID);
+			}
 		}
+	}
+
+	/**
+	 * Removes a module and all of its registered operations from this stub.
+	 */
+	public unregisterModule(moduleName: string): void {
+		for (const operationID of [...this.handlersByID.keys()]) {
+			const handler = this.handlersByID.get(operationID);
+			if (handler?.moduleName === moduleName)
+				this.unregisterOperation(operationID);
+		}
+		this.loadedModulesByName.delete(moduleName);
 	}
 
 	/**
@@ -390,14 +469,19 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param majorVersion - major Version of the module
 	 * @param minorVersion - minor Version of the module
 	 */
-	public registerModuleVersion(moduleName: string, majorVersion: number, minorVersion: number): void {
-		const versionInformation: IModuleVersionInformation = {
-			moduleName,
-			majorVersion,
-			minorVersion,
-			version: `${majorVersion}.${minorVersion}`,
-		};
-		this.moduleVersionsByName.set(moduleName, versionInformation);
+	public registerModuleVersion(moduleName: string, version: string): void {
+		let module = this.loadedModulesByName.get(moduleName);
+		if (!module) {
+			module = {
+				moduleName,
+				version,
+				invokes: new Map<number, IOpVersionInfo>(),
+				events: new Map<number, IOpVersionInfo>(),
+			};
+			this.loadedModulesByName.set(moduleName, module);
+		} else {
+			module.version = version;
+		}
 	}
 
 	/**
@@ -406,7 +490,14 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @param moduleName - name of the module to unregisters
 	 */
 	public unregisterModuleVersion(moduleName: string): void {
-		this.moduleVersionsByName.delete(moduleName);
+		this.unregisterModule(moduleName);
+	}
+
+	/**
+	 * Returns modules and operations registered on this stub instance.
+	 */
+	public getLoadedModules(): ReadonlyMap<string, ILoadedModuleInfo> {
+		return this.loadedModulesByName;
 	}
 
 	/**
@@ -416,7 +507,19 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @returns the version information
 	 */
 	public getModuleVersion(moduleName: string): IModuleVersionInformation | undefined {
-		return this.moduleVersionsByName.get(moduleName);
+		const module = this.loadedModulesByName.get(moduleName);
+		if (!module || !module.version)
+			return undefined;
+
+		const parts = module.version.split(".");
+		const majorVersion = parts.length > 0 ? Number(parts[0]) : 0;
+		const minorVersion = parts.length > 2 ? Number(parts[2]) : 0;
+		return {
+			moduleName,
+			majorVersion: Number.isFinite(majorVersion) ? majorVersion : 0,
+			minorVersion: Number.isFinite(minorVersion) ? minorVersion : 0,
+			version: module.version,
+		};
 	}
 
 	/**
@@ -428,15 +531,18 @@ export abstract class TSASN1Base implements IASN1Transport {
 		let module: IModuleVersionInformation | undefined;
 		let majorVersion = -1;
 		let minorVersion = -1;
-		for (const mod of this.moduleVersionsByName.values()) {
-			if (mod.majorVersion > majorVersion) {
-				majorVersion = mod.majorVersion;
-				minorVersion = mod.minorVersion;
-				module = mod;
-			} else if (mod.majorVersion === majorVersion && mod.minorVersion > minorVersion) {
-				majorVersion = mod.majorVersion;
-				minorVersion = mod.minorVersion;
-				module = mod;
+		for (const loaded of this.loadedModulesByName.values()) {
+			const versionInfo = this.getModuleVersion(loaded.moduleName);
+			if (!versionInfo)
+				continue;
+			if (versionInfo.majorVersion > majorVersion) {
+				majorVersion = versionInfo.majorVersion;
+				minorVersion = versionInfo.minorVersion;
+				module = versionInfo;
+			} else if (versionInfo.majorVersion === majorVersion && versionInfo.minorVersion > minorVersion) {
+				majorVersion = versionInfo.majorVersion;
+				minorVersion = versionInfo.minorVersion;
+				module = versionInfo;
 			}
 		}
 		return module;

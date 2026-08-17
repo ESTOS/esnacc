@@ -105,7 +105,6 @@ extern "C"
 	extern int gFilterASN1Files;
 	extern int giValidationLevel;
 	extern int giWriteComments;
-	extern int genVersionFile;
 	extern int genTSESMCode;
 	extern int genUTF8Output;
 	extern int genUTF8BOM;

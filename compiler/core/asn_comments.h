@@ -32,6 +32,7 @@ extern "C"
 		long long i64Deprecated;
 		const char* szDeprecated;
 		int iIgnoreValidation; /* bitmask; see snacc-validation-rules.h */
+		int iDeprecatedSuccessorInvalid;
 	} asnoperationcomment;
 
 	typedef struct _asnsequencecomment
@@ -45,6 +46,7 @@ extern "C"
 		long long i64Deprecated;
 		const char* szDeprecated;
 		int iIgnoreValidation; /* bitmask; see snacc-validation-rules.h */
+		int iDeprecatedSuccessorInvalid;
 	} asnsequencecomment;
 
 	typedef struct _asnmembercomment
@@ -55,6 +57,7 @@ extern "C"
 		long long i64Added;
 		long long i64Deprecated;
 		const char* szDeprecated;
+		int iDeprecatedSuccessorInvalid;
 	} asnmembercomment;
 
 	// Parse for Comments
@@ -63,6 +66,8 @@ extern "C"
 	extern void RegisterFilterSourceFile(const char* szSourcePath, const char* szModuleName, enum EFILETYPE type);
 	extern void RebuildFilteredAsnFilesIfNeeded(void);
 	extern void ClearAsnCommentStateForRebuild(void);
+	/** Warn-only check of qualified @deprecated successors against loaded modules. */
+	extern void ValidateAllDeprecatedSuccessors(void);
 
 	// Get LogFilter Attributes (if any) call recurring until it returns 0
 	extern const char* GetFirstModuleLogFileFilter(const char* szModuleName);

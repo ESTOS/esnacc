@@ -141,9 +141,9 @@ class SnaccInvokeContextInit
 {
 public:
 	/*! @param szOperationName Optional. Inbound: synthetic name or resolved via lookup from
-		@p pInvoke. Outbound: stored when provided (deprecated stub default context);
+		@p pInvoke on @p pStubForLookup when set. Outbound: stored when provided (deprecated stub default context);
 		omit for normal outbound contexts (use CreateOutboundInvokeContext()). */
-	SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke = nullptr, const char* szOperationName = nullptr);
+	SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke = nullptr, const char* szOperationName = nullptr, const SnaccROSEBase* pStubForLookup = nullptr);
 
 	const SnaccInvokeDirection m_direction{};
 	const SNACC::ROSEInvoke* m_pInvoke{};
@@ -208,7 +208,7 @@ public:
 	/*! Returns the typed error buffer supplied to SetAsyncCompletion(). */
 	SNACC::AsnType* AsyncErrorBuffer() const;
 
-	/*! Inbound: canonical name from SnaccRoseOperationLookup. Outbound: set only when
+	/*! Inbound: canonical name from this stub registry. Outbound: set only when
 		passed explicitly to SnaccInvokeContextInit (e.g. deprecated stub). Send/telemetry
 		still use the stub literal at SendInvoke/SendEvent. */
 	const std::string& OperationName() const;
@@ -385,6 +385,19 @@ public:
 	}
 
 protected:
+	/*! Registers module version metadata on the ROSE stub referenced by @c m_pSB. */
+	void RegisterModuleVersion(const char* szModuleName, const char* szVersion);
+
+	/*! Registers one ROSE operation on the ROSE stub referenced by @c m_pSB. */
+	void RegisterOperation(
+		unsigned int uiOpID,
+		const char* szOpName,
+		unsigned int uiInterfaceID,
+		const char* szModuleName,
+		bool bIsEvent = false,
+		unsigned long long ullAddedUnix = 0,
+		unsigned long long ullDeprecatedUnix = 0);
+
 	SnaccROSESender* m_pSB;
 };
 

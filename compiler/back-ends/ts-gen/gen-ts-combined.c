@@ -59,7 +59,11 @@ void PrintTSEscaped(FILE* src, const char* szData)
 void PrintTSRootTypes(FILE* src, Module* mod, const char* szSuffix)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
-	fprintf(src, "export const MODULE_NAME = \"%s%s\";\n", mod->moduleName, szSuffix ? szSuffix : "");
+	// ASN.1 module identity and version belong on the base types file only (not Converter/ROSE artifacts).
+	if (szSuffix && szSuffix[0])
+		return;
+
+	fprintf(src, "export const MODULE_NAME = \"%s\";\n", mod->moduleName);
 
 	if (gMajorInterfaceVersion >= 0)
 	{

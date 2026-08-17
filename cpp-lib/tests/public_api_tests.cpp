@@ -261,8 +261,6 @@ TEST(PublicApiSmokeTest, ConfigureFileLoggingWritesAndCanBeDisabled)
 {
 	ObservedRuntimeEndpoint endpoint{L"FileLoggingEndpoint", "file-session"};
 	TransportProbe transport;
-	SnaccRoseOperationLookup::CleanUp();
-	ENetUC_Settings_ManagerROSE::RegisterOperations();
 	endpoint.SetTransportEncoding(TransportEncoding::JSON_NO_HEADING);
 	endpoint.SetSnaccROSETransport(&transport);
 	endpoint.SetLogLevels(EAsnLogLevel::JSON, EAsnLogLevel::JSON);
@@ -289,26 +287,25 @@ TEST(PublicApiSmokeTest, ConfigureFileLoggingWritesAndCanBeDisabled)
 	EXPECT_NE(std::string::npos, fileContents.find("file-log-user"));
 
 	std::filesystem::remove(logPath);
-	SnaccRoseOperationLookup::CleanUp();
 }
 
 TEST(PublicApiSmokeTest, OperationLookupRegistersAndCleansUp)
 {
-	SnaccRoseOperationLookup::CleanUp();
-	EXPECT_FALSE(SnaccRoseOperationLookup::Initialized());
+	ObservedRuntimeEndpoint endpoint{L"LookupEndpoint", "lookup-session"};
+	EXPECT_FALSE(endpoint.HasRegisteredOperations());
 
-	SnaccRoseOperationLookup::RegisterOperation(3210, "testOperation", 77);
-	EXPECT_TRUE(SnaccRoseOperationLookup::Initialized());
-	EXPECT_EQ(3210u, SnaccRoseOperationLookup::LookUpID("testOperation"));
-	ASSERT_NE(nullptr, SnaccRoseOperationLookup::LookUpName(3210));
-	EXPECT_STREQ("testOperation", SnaccRoseOperationLookup::LookUpName(3210));
-	EXPECT_EQ(77u, SnaccRoseOperationLookup::LookUpInterfaceID(3210));
+	endpoint.RegisterOperation(3210, "testOperation", 77, "TestModule", false);
+	EXPECT_TRUE(endpoint.HasRegisteredOperations());
+	EXPECT_EQ(3210u, endpoint.LookUpID("testOperation"));
+	ASSERT_NE(nullptr, endpoint.LookUpName(3210));
+	EXPECT_STREQ("testOperation", endpoint.LookUpName(3210));
+	EXPECT_EQ(77u, endpoint.LookUpInterfaceID(3210));
 
-	SnaccRoseOperationLookup::CleanUp();
-	EXPECT_FALSE(SnaccRoseOperationLookup::Initialized());
-	EXPECT_EQ(0u, SnaccRoseOperationLookup::LookUpID("testOperation"));
-	EXPECT_EQ(nullptr, SnaccRoseOperationLookup::LookUpName(3210));
-	EXPECT_EQ(0u, SnaccRoseOperationLookup::LookUpInterfaceID(3210));
+	endpoint.ClearRegisteredOperations();
+	EXPECT_FALSE(endpoint.HasRegisteredOperations());
+	EXPECT_EQ(0u, endpoint.LookUpID("testOperation"));
+	EXPECT_EQ(nullptr, endpoint.LookUpName(3210));
+	EXPECT_EQ(0u, endpoint.LookUpInterfaceID(3210));
 }
 
 TEST(PublicApiSmokeTest, TelemetryDebugTextCoversGroupedRejectReasons)

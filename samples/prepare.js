@@ -94,7 +94,6 @@ function runCompiler(compiler, outputDir, compilerArgs, asn1Files) {
 		...compilerArgs,
 		`-node:${NODE_VERSION}`,
 		"-comments",
-		"-versionfile",
 		...asn1Files,
 	];
 	const result = spawnSync(compiler, args, {

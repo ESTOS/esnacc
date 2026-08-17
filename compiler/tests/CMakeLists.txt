@@ -34,6 +34,35 @@ gtest_discover_tests(compiler-cli-tests
 		ENVIRONMENT "ESNACC_EXECUTABLE=$<TARGET_FILE:compiler>"
 )
 
+add_executable(deprecated-successor-tests
+	deprecated_successor_tests.cpp
+	"${CMAKE_SOURCE_DIR}/compiler/core/snacc-deprecated-successor.cpp"
+)
+target_include_directories(deprecated-successor-tests PRIVATE
+	"${CMAKE_SOURCE_DIR}"
+	"${CMAKE_SOURCE_DIR}/compiler/core"
+	"${CMAKE_SOURCE_DIR}/c-lib/include"
+)
+target_link_libraries(deprecated-successor-tests PRIVATE GTest::gtest_main c-lib)
+gtest_discover_tests(deprecated-successor-tests)
+
+add_executable(deprecated-successor-cli-tests
+	deprecated_successor_cli_tests.cpp
+	test_support.cpp
+	test_work_dir.cpp
+)
+target_include_directories(deprecated-successor-cli-tests PRIVATE
+	"${CMAKE_CURRENT_BINARY_DIR}"
+	"${CMAKE_SOURCE_DIR}"
+	"${CMAKE_SOURCE_DIR}/compiler/core"
+)
+target_link_libraries(deprecated-successor-cli-tests PRIVATE GTest::gtest_main)
+add_dependencies(deprecated-successor-cli-tests compiler)
+gtest_discover_tests(deprecated-successor-cli-tests
+	PROPERTIES
+		ENVIRONMENT "ESNACC_EXECUTABLE=$<TARGET_FILE:compiler>"
+)
+
 add_executable(interface-baseline-tests
 	interface_baseline_tests.cpp
 	"${CMAKE_CURRENT_SOURCE_DIR}/../core/interface_baseline.c"

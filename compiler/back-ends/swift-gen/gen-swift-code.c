@@ -1409,26 +1409,6 @@ void PrintSwiftCode(ModuleList* allMods, long longJmpVal, int genTypes, int genV
 	DefinedObj* fNames;
 	int fNameConflict = FALSE;
 
-	if (gMajorInterfaceVersion >= 0 && genVersionFile)
-	{
-		FILE* versionFile = NULL;
-		char szFileName[_MAX_PATH] = {0};
-		strcpy_s(szFileName, _MAX_PATH - 1, gszOutputPath);
-		strcat_s(szFileName, _MAX_PATH - 1, "Asn1InterfaceVersion.swift");
-		if (fopen_s(&versionFile, szFileName, "wt") != 0 || versionFile == NULL)
-			perror("fopen");
-		else
-		{
-			long long lMaxPatchVersion = GetMaxModulePatchVersion();
-			fprintf(versionFile, "import Foundation\n\n");
-			fprintf(versionFile, "struct Asn1InterfaceVersion\n");
-			fprintf(versionFile, "{\n");
-			EmitAnnotatedModuleVersionFields(versionFile, ModuleVersionEmitSwiftStruct, NULL, "    ", gMajorInterfaceVersion, lMaxPatchVersion);
-			fprintf(versionFile, "}\n");
-			fclose(versionFile);
-		}
-	}
-
 	/*
 	 * Make names for each module's encoder/decoder src and hdr files
 	 * so import references can be made via include files

@@ -5,7 +5,7 @@ DEFINITIONS
 IMPLICIT TAGS ::=
 BEGIN
 
--- @deprecated 15.06.2024
+-- @deprecated 15.06.2024 -> (none)
 asnDeprecatedOp OPERATION
 	ARGUMENT	arg NULL
 	RESULT		res NULL
