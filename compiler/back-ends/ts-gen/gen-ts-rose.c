@@ -473,7 +473,7 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 
 	fprintf(src, "\tpublic setHandler(handler: Partial<I%s_Handler>): void {\n", m->ROSEClassName);
 	if (gMajorInterfaceVersion >= 0)
-		fprintf(src, "\t\tthis.transport.registerModuleVersion(MODULE_NAME, MODULE_VERSION);\n");
+		fprintf(src, "\t\tthis.transport.registerModuleVersion(%s.MODULE_NAME, %s.MODULE_VERSION);\n", GetNameSpace(m), GetNameSpace(m));
 	ValueDef* vd;
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
@@ -498,9 +498,10 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 
 		fprintf(
 			src,
-			"\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\", MODULE_NAME, %lld, %lld, %s);\n",
+			"\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\", %s.MODULE_NAME, %lld, %lld, %s);\n",
 			vd->definedName,
 			vd->definedName,
+			GetNameSpace(m),
 			llAddedUnix,
 			llDeprecatedUnix,
 			bIsEvent ? "true" : "false");
@@ -517,7 +518,7 @@ void PrintTSROSERemoveHandler(FILE* src, Module* m)
 	fprintf(src, "\t */\n");
 
 	fprintf(src, "\tpublic removeHandler(): void {\n");
-	fprintf(src, "\t\tthis.transport.unregisterModule(MODULE_NAME);\n");
+	fprintf(src, "\t\tthis.transport.unregisterModule(%s.MODULE_NAME);\n", GetNameSpace(m));
 	fprintf(src, "\t}\n");
 }
 
@@ -861,9 +862,6 @@ void PrintTSROSEInterfaceCode(FILE* src, ModuleList* mods, Module* m)
 	// Import definition
 	PrintTSROSEImport(src, mods, m);
 
-	// Root types
-	PrintTSRootTypes(src, m, "ROSEInterface");
-
 	// ClientInterface definition
 	PrintTSROSEInterface(src, mods, m);
 
@@ -918,7 +916,7 @@ void PrintTSROSEClass(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t */\n");
 	fprintf(src, "\tpublic getLogData(): IASN1LogData {\n");
 	fprintf(src, "\t\treturn {\n");
-	fprintf(src, "\t\t\tclassName: MODULE_NAME\n");
+	fprintf(src, "\t\t\tclassName: \"%s\"\n", m->ROSEClassName);
 	fprintf(src, "\t\t};\n");
 	fprintf(src, "\t}\n\n");
 
@@ -993,7 +991,6 @@ void PrintTSROSECode(FILE* src, ModuleList* mods, Module* m)
 {
 	PrintTSROSEHeader(src, m, false);
 	PrintTSROSEImports(src, mods, m);
-	PrintTSRootTypes(src, m, "ROSE");
 	PrintTSROSEOperationDefines(src, m, m->valueDefs);
 	PrintTSROSEModuleComment(src, m);
 	PrintTSROSEClass(src, mods, m);

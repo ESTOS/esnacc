@@ -1629,9 +1629,6 @@ void PrintTSConverterCode(FILE* src, ModuleList* mods, Module* m, long longJmpVa
 	// Includes
 	PrintTSConverterImports(src, mods, m);
 
-	// Root types
-	PrintTSRootTypes(src, m, "_Converter");
-
 	TypeDef* td;
 	FOR_EACH_LIST_ELMT(td, m->typeDefs)
 	{
