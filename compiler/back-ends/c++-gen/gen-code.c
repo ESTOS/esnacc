@@ -4529,6 +4529,7 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	PrintConditionalIncludeOpen(hdrInterface, m->ROSEHdrInterfaceFileName);
 
 	fprintf(hdr, "#include <%sSnaccROSEInterfaces.h>\n", szCppHeaderIncludePath);
+	fprintf(hdr, "#include <%sSnaccRoseOperationLookup.h>\n", szCppHeaderIncludePath);
 
 	fprintf(hdrInterface, "#include <%sSnaccROSEInterfaces.h>\n", szCppHeaderIncludePath);
 	fprintf(hdrInterface, "#include \"%s\"\n", RemovePath(m->ROSEHdrForwardDeclFileName));
@@ -4540,6 +4541,7 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(src, "#include \"%s\"\n", RemovePath(m->ROSEHdrInterfaceFileName));
 	fprintf(src, "#include <utility>\n");
 	fprintf(src, "#include <%sSnaccROSEBase.h>\n", szCppHeaderIncludePath);
+	fprintf(src, "#include <%sSnaccRoseOperationLookup.h>\n", szCppHeaderIncludePath);
 	fprintf(src, "#include <%sSNACCROSE.h>\n", szCppHeaderIncludePath);
 	fprintf(src, "#include <%sSNACCDeprecated.h>\n", szCppHeaderIncludePath);
 	if (gMajorInterfaceVersion >= 0)
@@ -4584,24 +4586,21 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(hdr, "\t%s(SnaccROSESender* pBase);\n", m->ROSEClassName);
 	fprintf(src, "%s::%s(SnaccROSESender* pBase) : SnaccROSEComponent(pBase)\n", m->ROSEClassName, m->ROSEClassName);
 	fprintf(src, "{\n");
-	fprintf(src, "\tif (m_pSB)\n");
-	fprintf(src, "\t\tRegisterOperations();\n");
 	fprintf(src, "}\n\n");
 
 	// Function for triggering the registration of all Operations (name/id)
-	fprintf(hdr, "\t// Registers all known operations on the ROSE stub instance\n");
-	fprintf(hdr, "\tvoid RegisterOperations();\n");
-	fprintf(src, "void %s::RegisterOperations()\n", m->ROSEClassName);
+	fprintf(hdr, "\t// Registers all known operations on a listener lookup table at startup (UCAAS-1485)\n");
+	fprintf(hdr, "\tstatic void RegisterOperations(SnaccRoseOperationLookup& lookup);\n");
+
+	fprintf(src, "void %s::RegisterOperations(SnaccRoseOperationLookup& lookup)\n", m->ROSEClassName);
 	fprintf(src, "{\n");
-	fprintf(src, "\tif (!m_pSB)\n");
-	fprintf(src, "\t\treturn;\n");
 	if (gMajorInterfaceVersion >= 0)
 	{
 		long long lPatchVersion = GetModulePatchVersion(m->moduleName);
 		char* szNumericDate = ConvertUnixTimeToNumericDate(lPatchVersion);
 		if (szNumericDate)
 		{
-			fprintf(src, "\tRegisterModuleVersion(\"%s\", \"%i.0.%s\");\n", m->moduleName, gMajorInterfaceVersion, szNumericDate);
+			fprintf(src, "\tlookup.RegisterModuleVersion(\"%s\", \"%i.0.%s\");\n", m->moduleName, gMajorInterfaceVersion, szNumericDate);
 			free(szNumericDate);
 		}
 	}
@@ -4609,12 +4608,13 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	{
 		if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 			continue;
-		if (PrintROSEOperationRegistration(src, r, m, vd) && !iFirstIIDFound)
+		if (PrintROSEOperationRegistrationLookup(src, r, m, vd) && !iFirstIIDFound)
 		{
 			iFirstIIDFound = 1;
 			fprintf(hdr, "\tstatic const int m_iid = %d;\n", vd->value->basicValue->a.integer);
 		}
 	}
+	fprintf(src, "}\n\n");
 
 	if (iFirstIIDFound)
 	{
@@ -4626,7 +4626,6 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 		fprintf(hdr, "public:\n");
 	}
 
-	fprintf(src, "}\n\n");
 	fflush(src);
 	fflush(hdr);
 

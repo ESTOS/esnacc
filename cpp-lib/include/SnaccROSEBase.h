@@ -16,6 +16,7 @@
 #include <wchar.h>
 #include <optional>
 #include "SnaccROSEInterfaces.h"
+#include "SnaccRoseOperationLookup.h"
 #include "SnaccTelemetry.h"
 #include "syncevent.h"
 
@@ -116,24 +117,6 @@ typedef std::map<long, std::unique_ptr<SnaccROSEPendingOperation>> SnaccROSEPend
 
 class SnaccROSEBase;
 
-/*! Per-operation @added / @deprecated metadata (unix seconds; 0 = not annotated). */
-struct SnaccOpVersionInfo
-{
-	unsigned long long m_ullAddedUnix = 0;
-	unsigned long long m_ullDeprecatedUnix = 0;
-};
-
-/*! Loaded module snapshot for negotiate / introspection on one ROSE stub instance. */
-struct SnaccLoadedModuleInfo
-{
-	std::string m_strModuleName;
-	std::string m_strVersion;
-	std::unordered_map<unsigned int, SnaccOpVersionInfo> m_invokes;
-	std::unordered_map<unsigned int, SnaccOpVersionInfo> m_events;
-};
-
-using SnaccLoadedModuleMap = std::unordered_map<std::string, SnaccLoadedModuleInfo>;
-
 #define SNACC_TE_BER SNACC::TransportEncoding::BER
 #define SNACC_TE_JSON SNACC::TransportEncoding::JSON
 
@@ -164,8 +147,9 @@ using SnaccLoadedModuleMap = std::unordered_map<std::string, SnaccLoadedModuleIn
 class SnaccROSEBase : public SnaccROSESender, public SnaccTelemetryCallback
 {
 public:
-	SnaccROSEBase(const wchar_t* szClassName);
-	SnaccROSEBase(const wchar_t* szClassName, const std::set<int>& multithreadInvokeIDs);
+	/*! @p operationLookup is borrowed for the lifetime of this stub (listener-owned, sealed after startup). */
+	SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperationLookup& operationLookup);
+	SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperationLookup& operationLookup, const std::set<int>& multithreadInvokeIDs);
 	virtual ~SnaccROSEBase(void);
 
 	/*
@@ -223,41 +207,28 @@ public:
 	/* Retrieve the log level - do we need to log something */
 	virtual SNACC::EAsnLogLevel GetLogLevel(const bool bOutbound) override = 0;
 
-	/*! Registers module version wire string (MODULE_VERSION) for this stub instance. */
-	void RegisterModuleVersion(const char* szModuleName, const char* szVersion);
+	/*! Read-only operation lookup shared by this stub (UCAAS-1485). */
+	const SnaccRoseOperationLookup& OperationLookup() const
+	{
+		return m_operationLookup;
+	}
 
-	/*! Registers one ROSE operation (invoke or event) on this stub instance. */
-	void RegisterOperation(
-		unsigned int uiOpID,
-		const char* szOpName,
-		unsigned int uiInterfaceID,
-		const char* szModuleName,
-		bool bIsEvent = false,
-		unsigned long long ullAddedUnix = 0,
-		unsigned long long ullDeprecatedUnix = 0);
+	/*! Startup registration and tests only. Asserts when the lookup table is sealed. */
+	SnaccRoseOperationLookup& OperationLookupForRegistration();
 
-	/*! Removes one operation from this stub registry. */
-	void UnregisterOperation(unsigned int uiOpID);
-
-	/*! Removes a module and all of its operations from this stub registry. */
-	void UnregisterModule(const char* szModuleName);
-
-	/*! Clears all module and operation registrations on this stub (tests / shutdown). */
-	void ClearRegisteredOperations();
-
-	/*! True when at least one operation is registered on this stub. */
+	/*! True when at least one operation is registered on the lookup table. */
 	bool HasRegisteredOperations() const;
 
-	/*! Snapshot of modules and operations registered on this stub. */
+	/*! Snapshot of modules and operations on the lookup table. */
 	const SnaccLoadedModuleMap& GetLoadedModules() const;
 
-	/*! Resolves operation name from operation id on this stub. */
+	/*! Resolves operation name from operation id via the lookup table. */
 	const char* LookUpName(unsigned int uiOpID) const;
 
-	/*! Resolves operation id from operation name on this stub. */
+	/*! Resolves operation id from operation name via the lookup table. */
 	unsigned int LookUpID(const char* szOpName) const;
 
-	/*! Resolves generated interface id (m_iid) from operation id on this stub. */
+	/*! Resolves generated interface id (m_iid) from operation id via the lookup table. */
 	unsigned int LookUpInterfaceID(unsigned int uiOpID) const;
 
 	/*! Writes JSON encoded log messages to the log file
@@ -545,11 +516,8 @@ private:
 	 */
 	long Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, SnaccInvokeContext& ctx, size_t* pstRequestData = nullptr);
 
-	std::map<std::string, unsigned int> m_mapOpToID;
-	std::map<unsigned int, std::string> m_mapIDToOp;
-	std::map<unsigned int, unsigned int> m_mapIDToInterface;
-	SnaccLoadedModuleMap m_loadedModules;
-	std::unordered_map<unsigned int, std::pair<std::string, bool>> m_mapIDToModuleKind;
+	// Borrowed listener lookup table; must outlive this stub and be sealed before accepts (UCAAS-1485).
+	const SnaccRoseOperationLookup& m_operationLookup;
 };
 
 #endif //_SnaccROSEBase_h_

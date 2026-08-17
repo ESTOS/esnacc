@@ -398,9 +398,12 @@ Each helper detaches borrowed pointers in its destructor.
    outbound stubs default to `CreateInvokeContext(SnaccInvokeContextInit(OUTBOUND,
    invoke, operationName))` so `SNACCDeprecated::DeprecatedASN1Method` can read
    `OperationName()` on the context.
-2. **Lookup map:** `SnaccRoseOperationLookup::LookUpName()` is a parachute when
-   the stub name is absent on outbound paths. Registration in the lookup map is
-   optional but required for inbound context naming when only `operationID` is known.
+2. **Lookup table (UCAAS-1485):** `SnaccRoseOperationLookup` holds operation id/name/interface
+   mappings for one listener context. Fill at startup via
+   `ENetUC_*ROSE::RegisterOperations(lookup)` (static; no stub instances required),
+   then call `Seal()`. Mounting a generated `*ROSE` component does not register operations. `SnaccROSEBase` borrows a const lookup reference for the stub
+   lifetime; lookup after seal needs no locking. Outbound stub literals remain authoritative;
+   lookup by operationID is the inbound parachute when only the id is known.
 3. **Inbound invokes:** `operationID` is authoritative for dispatch. When the client
    sends `operationID: 0` with `operationName`, `PrepareInboundInvokeOperationId`
    resolves the ID via `LookUpID` before stub dispatch and before the invoke context

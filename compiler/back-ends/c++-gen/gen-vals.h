@@ -5,5 +5,6 @@ void PrintCxxValueDef(FILE* src, CxxRules* r, ValueDef* v);
 void PrintCxxValueExtern(FILE* hdr, CxxRules* r, ValueDef* v);
 void PrintROSEOperationDefines(FILE* hdr, CxxRules* r, ValueDef* v, int bCS);
 int PrintROSEOperationRegistration(FILE* src, CxxRules* r, Module* mod, ValueDef* v);
+int PrintROSEOperationRegistrationLookup(FILE* src, CxxRules* r, Module* mod, ValueDef* v);
 
 #endif

@@ -127,6 +127,54 @@ int PrintROSEOperationRegistration(FILE* src, CxxRules* r, Module* mod, ValueDef
 	return 1;
 }
 
+int PrintROSEOperationRegistrationLookup(FILE* src, CxxRules* r, Module* mod, ValueDef* v)
+{
+	/* just do ints */
+	if (v->value->basicValue->choiceId != BASICVALUE_INTEGER)
+		return 0;
+
+	if (v->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
+		return 0;
+
+	if (v->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
+		return 0;
+
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
+	if (!GetROSEDetails(mod, v, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, false))
+		return 0;
+
+	const bool bIsEvent = pszResult == NULL;
+	unsigned long long ullAddedUnix = 0;
+	unsigned long long ullDeprecatedUnix = 0;
+	asnoperationcomment comment;
+	if (GetOperationComment_UTF8(mod->moduleName, v->definedName, &comment))
+	{
+		if (comment.i64Added > 0)
+			ullAddedUnix = (unsigned long long)comment.i64Added;
+		if (comment.i64Deprecated > 0)
+			ullDeprecatedUnix = (unsigned long long)comment.i64Deprecated;
+	}
+
+	fprintf(src, "\tlookup.RegisterOperation(");
+	fprintf(src, "%d, \"", v->value->basicValue->a.integer);
+	PrintCxxValueDefsName(src, r, v);
+	fprintf(src, "\", m_iid, \"%s\"", mod->moduleName);
+	if (bIsEvent)
+	{
+		if (ullAddedUnix != 0 || ullDeprecatedUnix != 0)
+			fprintf(src, ", true, %lluULL, %lluULL", ullAddedUnix, ullDeprecatedUnix);
+		else
+			fprintf(src, ", true");
+	}
+	else if (ullAddedUnix != 0 || ullDeprecatedUnix != 0)
+		fprintf(src, ", false, %lluULL, %lluULL", ullAddedUnix, ullDeprecatedUnix);
+	fprintf(src, ");\n");
+
+	return 1;
+}
+
 void PrintROSEOperationDefines(FILE* hdr, CxxRules* r, ValueDef* v, int bCS)
 {
 	/* just do ints */

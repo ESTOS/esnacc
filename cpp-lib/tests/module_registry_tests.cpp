@@ -22,11 +22,14 @@ void ExpectOpInfo(const SnaccOpVersionInfo& info, const bool bExpectAdded, const
 }
 } // namespace
 
-TEST(ModuleRegistryTest, GeneratedModuleRegistersOnlyOnMountedStub)
+TEST(ModuleRegistryTest, StaticRegistrationPopulatesOnlyTargetLookup)
 {
-	RuntimeEndpoint endpointA{L"RegistryEndpointA", "registry-a"};
-	RuntimeEndpoint endpointB{L"RegistryEndpointB", "registry-b"};
+	SnaccRoseOperationLookup lookupA;
+	SnaccRoseOperationLookup lookupB;
+	RuntimeEndpoint endpointA{L"RegistryEndpointA", "registry-a", lookupA};
+	RuntimeEndpoint endpointB{L"RegistryEndpointB", "registry-b", lookupB};
 
+	ENetUC_Settings_ManagerROSE::RegisterOperations(lookupA);
 	ENetUC_Settings_ManagerROSE settingsOnA(&endpointA);
 
 	EXPECT_TRUE(endpointA.HasRegisteredOperations());
@@ -48,7 +51,9 @@ TEST(ModuleRegistryTest, GeneratedModuleRegistersOnlyOnMountedStub)
 
 TEST(ModuleRegistryTest, RegisteredMetadataMatchesLoadedModuleSnapshot)
 {
-	RuntimeEndpoint endpoint{L"RegistryMetadata", "registry-metadata"};
+	SnaccRoseOperationLookup lookup;
+	RuntimeEndpoint endpoint{L"RegistryMetadata", "registry-metadata", lookup};
+	ENetUC_Settings_ManagerROSE::RegisterOperations(lookup);
 	ENetUC_Settings_ManagerROSE settings(&endpoint);
 
 	const auto& modules = endpoint.GetLoadedModules();
@@ -75,8 +80,10 @@ TEST(ModuleRegistryTest, RegisteredMetadataMatchesLoadedModuleSnapshot)
 
 TEST(ModuleRegistryTest, RuntimeFixtureKeepsClientAndServerRegistriesSeparate)
 {
-	RuntimeEndpoint server{L"RegistryServer", "registry-server"};
-	RuntimeEndpoint client{L"RegistryClient", "registry-client"};
+	SnaccRoseOperationLookup serverLookup;
+	SnaccRoseOperationLookup clientLookup;
+	RuntimeEndpoint server{L"RegistryServer", "registry-server", serverLookup};
+	RuntimeEndpoint client{L"RegistryClient", "registry-client", clientLookup};
 	server.ConnectTo(client);
 	client.ConnectTo(server);
 

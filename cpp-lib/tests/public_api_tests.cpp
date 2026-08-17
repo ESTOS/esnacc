@@ -33,7 +33,10 @@ struct DecodeErrorObservation
 class DecodeObservedRuntimeEndpoint : public ObservedRuntimeEndpoint
 {
 public:
-	using ObservedRuntimeEndpoint::ObservedRuntimeEndpoint;
+	DecodeObservedRuntimeEndpoint(const wchar_t* className, const std::string& sessionId, SnaccRoseOperationLookup& operationLookup)
+		: ObservedRuntimeEndpoint(className, sessionId, operationLookup)
+	{
+	}
 
 	void ClearDecodeErrors()
 	{
@@ -89,7 +92,8 @@ std::string GetMalformedPayloadForApiTest(const TransportEncoding encoding)
 
 void AssertOnBinaryDataBlockResultDecodeErrorsInvokeHook(const TransportEncoding encoding)
 {
-	DecodeObservedRuntimeEndpoint endpoint{L"DecodeHookEndpoint", "decode-hook-session"};
+	SnaccRoseOperationLookup lookup;
+	DecodeObservedRuntimeEndpoint endpoint{L"DecodeHookEndpoint", "decode-hook-session", lookup};
 	endpoint.SetTransportEncoding(encoding);
 	endpoint.SetLogLevels(EAsnLogLevel::JSON_AND_BER, EAsnLogLevel::JSON_AND_BER);
 
@@ -172,7 +176,8 @@ protected:
 
 TEST(PublicApiSmokeTest, TransportEncodingCanBeSetAndReadBack)
 {
-	ObservedRuntimeEndpoint endpoint{L"ApiEndpoint", "api-session"};
+	SnaccRoseOperationLookup lookup;
+	ObservedRuntimeEndpoint endpoint{L"ApiEndpoint", "api-session", lookup};
 
 	EXPECT_TRUE(endpoint.SetTransportEncoding(TransportEncoding::BER));
 	EXPECT_EQ(TransportEncoding::BER, endpoint.GetTransportEncoding());
@@ -182,7 +187,8 @@ TEST(PublicApiSmokeTest, TransportEncodingCanBeSetAndReadBack)
 
 TEST(PublicApiSmokeTest, SetSnaccROSETransportRoutesOutboundBytes)
 {
-	ObservedRuntimeEndpoint endpoint{L"TransportEndpoint", "transport-session"};
+	SnaccRoseOperationLookup lookup;
+	ObservedRuntimeEndpoint endpoint{L"TransportEndpoint", "transport-session", lookup};
 	TransportProbe transport;
 	endpoint.SetTransportEncoding(TransportEncoding::JSON_NO_HEADING);
 	endpoint.SetSnaccROSETransport(&transport);
@@ -259,7 +265,8 @@ TEST_F(PublicApiRuntimeTest, StopProcessingBlocksInboundDispatchUntilReEnabled)
 
 TEST(PublicApiSmokeTest, ConfigureFileLoggingWritesAndCanBeDisabled)
 {
-	ObservedRuntimeEndpoint endpoint{L"FileLoggingEndpoint", "file-session"};
+	SnaccRoseOperationLookup lookup;
+	ObservedRuntimeEndpoint endpoint{L"FileLoggingEndpoint", "file-session", lookup};
 	TransportProbe transport;
 	endpoint.SetTransportEncoding(TransportEncoding::JSON_NO_HEADING);
 	endpoint.SetSnaccROSETransport(&transport);
@@ -291,7 +298,8 @@ TEST(PublicApiSmokeTest, ConfigureFileLoggingWritesAndCanBeDisabled)
 
 TEST(PublicApiSmokeTest, OperationLookupRegistersAndCleansUp)
 {
-	ObservedRuntimeEndpoint endpoint{L"LookupEndpoint", "lookup-session"};
+	SnaccRoseOperationLookup lookup;
+	ObservedRuntimeEndpoint endpoint{L"LookupEndpoint", "lookup-session", lookup};
 	EXPECT_FALSE(endpoint.HasRegisteredOperations());
 
 	endpoint.RegisterOperation(3210, "testOperation", 77, "TestModule", false);
@@ -306,6 +314,19 @@ TEST(PublicApiSmokeTest, OperationLookupRegistersAndCleansUp)
 	EXPECT_EQ(0u, endpoint.LookUpID("testOperation"));
 	EXPECT_EQ(nullptr, endpoint.LookUpName(3210));
 	EXPECT_EQ(0u, endpoint.LookUpInterfaceID(3210));
+}
+
+TEST(PublicApiSmokeTest, OperationLookupIgnoresRegistrationAfterSeal)
+{
+	SnaccRoseOperationLookup lookup;
+	lookup.RegisterOperation(100u, "asnBeforeSeal", 1u, "TestModule", false);
+	lookup.Seal();
+	EXPECT_TRUE(lookup.IsSealed());
+	EXPECT_STREQ("asnBeforeSeal", lookup.LookUpName(100u));
+
+	lookup.RegisterOperation(200u, "asnAfterSeal", 1u, "TestModule", false);
+	EXPECT_EQ(nullptr, lookup.LookUpName(200u));
+	EXPECT_EQ(0u, lookup.LookUpID("asnAfterSeal"));
 }
 
 TEST(PublicApiSmokeTest, TelemetryDebugTextCoversGroupedRejectReasons)

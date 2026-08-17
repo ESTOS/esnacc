@@ -229,7 +229,8 @@ namespace sample_runtime_tests
 
 		void AssertNoTransportReturnsTransportFailedForInvoke(const TransportEncoding encoding)
 		{
-			ObservedRuntimeEndpoint endpoint{L"NoTransportEndpoint", "solo-session"};
+			SnaccRoseOperationLookup lookup;
+			ObservedRuntimeEndpoint endpoint{L"NoTransportEndpoint", "solo-session", lookup};
 			endpoint.SetEncoding(encoding);
 			SettingsServiceModule serviceModule(endpoint);
 			ENetUC_Settings_ManagerROSE component(&endpoint);
@@ -249,7 +250,8 @@ namespace sample_runtime_tests
 
 		void AssertNoTransportReturnsTransportFailedForEvent(const TransportEncoding encoding)
 		{
-			ObservedRuntimeEndpoint endpoint{L"NoTransportEndpoint", "solo-session"};
+			SnaccRoseOperationLookup lookup;
+			ObservedRuntimeEndpoint endpoint{L"NoTransportEndpoint", "solo-session", lookup};
 			endpoint.SetEncoding(encoding);
 			SettingsServiceModule serviceModule(endpoint);
 			ENetUC_Settings_ManagerROSE component(&endpoint);
@@ -748,7 +750,8 @@ namespace sample_runtime_tests
 
 	TEST(InvokeContextInitTest, InboundInitResolvesOperationNameFromInvokeLookup)
 	{
-		RuntimeEndpoint endpoint{L"InvokeContextLookup", "invoke-context-session"};
+		SnaccRoseOperationLookup lookup;
+		RuntimeEndpoint endpoint{L"InvokeContextLookup", "invoke-context-session", lookup};
 		endpoint.RegisterOperation(43210, "asnTestInboundName", 1, "TestModule", false);
 
 		ROSEInvoke invoke;
@@ -768,7 +771,8 @@ namespace sample_runtime_tests
 
 	TEST(InvokeContextInitTest, InboundResolvesOperationIdFromNameThenCanonicalContextName)
 	{
-		RuntimeEndpoint endpoint{L"InvokeContextLookup", "invoke-context-session"};
+		SnaccRoseOperationLookup lookup;
+		RuntimeEndpoint endpoint{L"InvokeContextLookup", "invoke-context-session", lookup};
 		endpoint.RegisterOperation(43210, "asnTestInboundName", 1, "TestModule", false);
 
 		ROSEInvoke invoke;
