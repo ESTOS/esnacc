@@ -506,7 +506,7 @@ public:
 		  m_strSessionId(sessionId),
 		  m_wstrSessionId(ToWide(sessionId))
 	{
-		StopProcessing(false);
+		ResumeRoseProcessing();
 	}
 
 	/*! Test helper: registers operations on this endpoint's lookup table (before Seal). */

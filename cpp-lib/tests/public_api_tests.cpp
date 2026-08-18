@@ -223,10 +223,10 @@ TEST(PublicApiSmokeTest, OnBinaryDataBlockResultDecodeErrorsInvokeHookJson)
 	AssertOnBinaryDataBlockResultDecodeErrorsInvokeHook(TransportEncoding::JSON);
 }
 
-TEST_F(PublicApiRuntimeTest, StopProcessingBlocksNewOutboundInvokesAndEvents)
+TEST_F(PublicApiRuntimeTest, PauseRoseProcessingBlocksNewOutboundInvokesAndEvents)
 {
 	InitializeEndpoints(TransportEncoding::JSON);
-	m_client.StopProcessing(true);
+	m_client.PauseRoseProcessing();
 
 	AsnGetSettingsArgument argument;
 	AsnGetSettingsResult result;
@@ -242,10 +242,10 @@ TEST_F(PublicApiRuntimeTest, StopProcessingBlocksNewOutboundInvokesAndEvents)
 	EXPECT_EQ(ROSE_TE_SHUTDOWN, eventResult);
 }
 
-TEST_F(PublicApiRuntimeTest, StopProcessingBlocksInboundDispatchUntilReEnabled)
+TEST_F(PublicApiRuntimeTest, PauseRoseProcessingBlocksInboundDispatchUntilResumed)
 {
 	InitializeEndpoints(TransportEncoding::JSON);
-	m_server.StopProcessing(true);
+	m_server.PauseRoseProcessing();
 
 	AsnSetSettingsArgument argument;
 	SetSettingsValues(argument.settings, true, "server-should-ignore");
@@ -256,7 +256,7 @@ TEST_F(PublicApiRuntimeTest, StopProcessingBlocksInboundDispatchUntilReEnabled)
 	EXPECT_NE(ROSE_NOERROR, blockedResult);
 	EXPECT_EQ(0, ClientSettingsEventCount());
 
-	m_server.StopProcessing(false);
+	m_server.ResumeRoseProcessing();
 
 	const long resumedResult = m_clientSettingsModule.InvokeSetSettings(&argument, &result, &error, 250);
 	EXPECT_EQ(ROSE_NOERROR, resumedResult);

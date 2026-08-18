@@ -755,20 +755,25 @@ void SnaccROSEBase::SetTelemetryCallback(SnaccTelemetryCallback* pTelemetryCallB
 
 SnaccROSEBase::~SnaccROSEBase(void)
 {
-	StopProcessing(true);
+	PauseRoseProcessing();
 	StopWatchdogThread();
 	ConfigureFileLogging(nullptr);
 }
 
-void SnaccROSEBase::StopProcessing(bool bStop /*= true*/)
+void SnaccROSEBase::PauseRoseProcessing()
 {
 	{
 		std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
-		m_bProcessingAllowed = bStop ? false : true;
+		m_bProcessingAllowed = false;
 	}
 
-	if (bStop)
-		CompleteAllPendingOperations();
+	CompleteAllPendingOperations();
+}
+
+void SnaccROSEBase::ResumeRoseProcessing()
+{
+	std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+	m_bProcessingAllowed = true;
 }
 
 void SnaccROSEBase::SetMaxInvokeWaitTime(long lMaxInvokeWait)

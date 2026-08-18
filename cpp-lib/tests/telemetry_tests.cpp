@@ -339,7 +339,7 @@ protected:
 		});
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(25));
-		m_client.StopProcessing(true);
+		m_client.PauseRoseProcessing();
 
 		EXPECT_EQ(ROSE_TE_SHUTDOWN, pendingInvoke.get());
 
@@ -465,7 +465,7 @@ protected:
 		ASSERT_EQ(ROSE_NOERROR, sendResult);
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(25));
-		m_client.StopProcessing(true);
+		m_client.PauseRoseProcessing();
 
 		ASSERT_TRUE(latch.WaitFor(std::chrono::milliseconds(500)));
 

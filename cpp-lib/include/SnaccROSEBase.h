@@ -133,7 +133,8 @@ class SnaccROSEBase;
 		Implement the ISnaccROSETransport:
 		- virtual SendBinaryDataBlockEx should be overwritten and the data should be submitted (e.g. TCP Outbound)
 
-	- During shutdown call StopProcessing to complete any pending operations.
+	- On transport disconnect call PauseRoseProcessing() to complete pending operations.
+	- On a new transport session call ResumeRoseProcessing() before negotiate/login traffic.
 
 	Dependencies:
 	-Snacc lib
@@ -163,11 +164,14 @@ public:
 		Wait time in milliseconds */
 	void SetMaxInvokeWaitTime(long lMaxInvokeWait);
 
-	/*! Shutdown.
-		Call this function to stop processing any more Invokes.
-		All pending operations will be completed and new function calls will be blocked.
-		All Functions return a ROSE_TE_SHUTDOWN */
-	void StopProcessing(bool bStop = true);
+	/*! Ends the current transport ROSE session: blocks new invokes/events and completes
+		pending operations with ROSE_TE_SHUTDOWN. Pair with ResumeRoseProcessing() when
+		the same stub instance reconnects. */
+	void PauseRoseProcessing();
+
+	/*! Re-opens ROSE processing after PauseRoseProcessing() (e.g. transport reconnect).
+		Does not complete or resurrect pending operations from the prior session. */
+	void ResumeRoseProcessing();
 
 	/*! Input of the binary data
 		This processes results and Invokes that are in the list of MultiThreadedInvokeIDs.
@@ -445,7 +449,7 @@ private:
 	const std::wstring m_strClassName;
 	/*! Maximum wait time (milliseconds) for a function to return default: 20000 ms*/
 	long m_lMaxInvokeWait{20000};
-	/*! Are we currently active or was StopProcessing called */
+	/*! False while PauseRoseProcessing() shutdown gate is active for this transport session. */
 	bool m_bProcessingAllowed{true};
 	/*! The counter for the InvokeIds */
 	long m_lInvokeCounter{};
