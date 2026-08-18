@@ -37,7 +37,7 @@ namespace
 		if (!pStub)
 			return "";
 
-		const char* szLookupName = pStub->LookUpName(uiOperationID);
+		const char* szLookupName = pStub->OperationLookup().LookUpName(uiOperationID);
 		return szLookupName ? szLookupName : "";
 	}
 
@@ -51,7 +51,7 @@ namespace
 		if (!pStub)
 			return "";
 
-		const char* szLookupName = pStub->LookUpName(invoke.operationID);
+		const char* szLookupName = pStub->OperationLookup().LookUpName(invoke.operationID);
 		if (szLookupName)
 			return szLookupName;
 
@@ -65,7 +65,7 @@ namespace
 		if (invoke.operationID || !invoke.operationName)
 			return;
 
-		const unsigned int uiResolvedOperationId = stub.LookUpID(invoke.operationName->getASCII().c_str());
+		const unsigned int uiResolvedOperationId = stub.OperationLookup().LookUpID(invoke.operationName->getASCII().c_str());
 		if (uiResolvedOperationId)
 			invoke.operationID = uiResolvedOperationId;
 	}
@@ -598,18 +598,12 @@ SnaccTelemetryData::Stage GetOutboundUnhandledStageFromResult(const long lRoseRe
 }
 
 // check if at least one Operation has been registerd
-namespace
-{
-SnaccROSEBase* AsRoseBase(SnaccROSESender* pSender)
-{
-	return dynamic_cast<SnaccROSEBase*>(pSender);
-}
-} // namespace
-
 void SnaccROSEComponent::RegisterModuleVersion(const char* szModuleName, const char* szVersion)
 {
-	if (SnaccROSEBase* pStub = AsRoseBase(m_pSB))
-		pStub->RegisterModuleVersion(szModuleName, szVersion);
+	if (auto* pHost = dynamic_cast<SnaccRoseOperationLookupRegistrationHost*>(m_pSB))
+		pHost->OperationLookup().RegisterModuleVersion(szModuleName, szVersion);
+	else if (auto* pStub = dynamic_cast<SnaccROSEBase*>(m_pSB))
+		pStub->OperationLookupForRegistration().RegisterModuleVersion(szModuleName, szVersion);
 }
 
 void SnaccROSEComponent::RegisterOperation(
@@ -621,161 +615,44 @@ void SnaccROSEComponent::RegisterOperation(
 	unsigned long long ullAddedUnix,
 	unsigned long long ullDeprecatedUnix)
 {
-	if (SnaccROSEBase* pStub = AsRoseBase(m_pSB))
-		pStub->RegisterOperation(uiOpID, szOpName, uiInterfaceID, szModuleName, bIsEvent, ullAddedUnix, ullDeprecatedUnix);
+	if (auto* pHost = dynamic_cast<SnaccRoseOperationLookupRegistrationHost*>(m_pSB))
+		pHost->OperationLookup().RegisterOperation(uiOpID, szOpName, uiInterfaceID, szModuleName, bIsEvent, ullAddedUnix, ullDeprecatedUnix);
+	else if (auto* pStub = dynamic_cast<SnaccROSEBase*>(m_pSB))
+		pStub->OperationLookupForRegistration().RegisterOperation(uiOpID, szOpName, uiInterfaceID, szModuleName, bIsEvent, ullAddedUnix, ullDeprecatedUnix);
 }
 
-void SnaccROSEBase::RegisterModuleVersion(const char* szModuleName, const char* szVersion)
+SnaccRoseOperationLookup& SnaccROSEBase::OperationLookupForRegistration()
 {
-	if (!szModuleName || !szVersion)
-		return;
-
-	auto& module = m_loadedModules[szModuleName];
-	module.m_strModuleName = szModuleName;
-	module.m_strVersion = szVersion;
-}
-
-void SnaccROSEBase::RegisterOperation(
-	unsigned int uiOpID,
-	const char* szOpName,
-	unsigned int uiInterfaceID,
-	const char* szModuleName,
-	bool bIsEvent,
-	unsigned long long ullAddedUnix,
-	unsigned long long ullDeprecatedUnix)
-{
-	if (!szOpName || !szModuleName)
-		return;
-
-	if (m_mapIDToOp.find(uiOpID) != m_mapIDToOp.end())
-		return;
-
 #ifdef _DEBUG
-	if (m_mapOpToID.find(szOpName) != m_mapOpToID.end())
-	{
+	if (m_operationLookup.IsSealed())
 		ASSERT(0);
-	}
 #endif
-
-	m_mapOpToID[szOpName] = uiOpID;
-	m_mapIDToOp[uiOpID] = szOpName;
-	m_mapIDToInterface[uiOpID] = uiInterfaceID;
-	m_mapIDToModuleKind[uiOpID] = {szModuleName, bIsEvent};
-
-	auto& module = m_loadedModules[szModuleName];
-	module.m_strModuleName = szModuleName;
-
-	SnaccOpVersionInfo info;
-	info.m_ullAddedUnix = ullAddedUnix;
-	info.m_ullDeprecatedUnix = ullDeprecatedUnix;
-	if (bIsEvent)
-		module.m_events[uiOpID] = info;
-	else
-		module.m_invokes[uiOpID] = info;
-}
-
-void SnaccROSEBase::UnregisterOperation(unsigned int uiOpID)
-{
-	const auto moduleKindIt = m_mapIDToModuleKind.find(uiOpID);
-	if (moduleKindIt != m_mapIDToModuleKind.end())
-	{
-		auto moduleIt = m_loadedModules.find(moduleKindIt->second.first);
-		if (moduleIt != m_loadedModules.end())
-		{
-			if (moduleKindIt->second.second)
-				moduleIt->second.m_events.erase(uiOpID);
-			else
-				moduleIt->second.m_invokes.erase(uiOpID);
-		}
-		m_mapIDToModuleKind.erase(moduleKindIt);
-	}
-
-	const auto idIt = m_mapIDToOp.find(uiOpID);
-	if (idIt != m_mapIDToOp.end())
-	{
-		m_mapOpToID.erase(idIt->second);
-		m_mapIDToOp.erase(idIt);
-	}
-
-	m_mapIDToInterface.erase(uiOpID);
-}
-
-void SnaccROSEBase::UnregisterModule(const char* szModuleName)
-{
-	if (!szModuleName)
-		return;
-
-	std::vector<unsigned int> opIds;
-	for (const auto& entry : m_mapIDToModuleKind)
-	{
-		if (entry.second.first == szModuleName)
-			opIds.push_back(entry.first);
-	}
-
-	for (const unsigned int uiOpID : opIds)
-		UnregisterOperation(uiOpID);
-
-	m_loadedModules.erase(szModuleName);
-}
-
-void SnaccROSEBase::ClearRegisteredOperations()
-{
-	m_mapOpToID.clear();
-	m_mapIDToOp.clear();
-	m_mapIDToInterface.clear();
-	m_mapIDToModuleKind.clear();
-	m_loadedModules.clear();
+	return const_cast<SnaccRoseOperationLookup&>(m_operationLookup);
 }
 
 bool SnaccROSEBase::HasRegisteredOperations() const
 {
-	return !m_mapIDToOp.empty();
+	return m_operationLookup.HasRegisteredOperations();
 }
 
 const SnaccLoadedModuleMap& SnaccROSEBase::GetLoadedModules() const
 {
-	return m_loadedModules;
+	return m_operationLookup.GetLoadedModules();
 }
 
 const char* SnaccROSEBase::LookUpName(unsigned int uiOpID) const
 {
-	const auto it = m_mapIDToOp.find(uiOpID);
-	if (it != m_mapIDToOp.end())
-		return it->second.c_str();
-
-#ifdef _DEBUG
-	static std::mutex s_mutex;
-	static std::set<int> s_unknownOpIDsAlreadyNotified;
-	std::lock_guard<std::mutex> lock(s_mutex);
-	if (!s_unknownOpIDsAlreadyNotified.contains(uiOpID))
-	{
-		s_unknownOpIDsAlreadyNotified.insert(uiOpID);
-		fprintf(stderr, "An unknown operation with operationID %d was called.\n", uiOpID);
-	}
-#endif
-
-	return nullptr;
+	return m_operationLookup.LookUpName(uiOpID);
 }
 
 unsigned int SnaccROSEBase::LookUpID(const char* szOpName) const
 {
-	if (!szOpName)
-		return 0;
-
-	const auto it = m_mapOpToID.find(szOpName);
-	if (it != m_mapOpToID.end())
-		return it->second;
-
-	return 0;
+	return m_operationLookup.LookUpID(szOpName);
 }
 
 unsigned int SnaccROSEBase::LookUpInterfaceID(unsigned int uiOpID) const
 {
-	const auto it = m_mapIDToInterface.find(uiOpID);
-	if (it != m_mapIDToInterface.end())
-		return it->second;
-
-	return 0;
+	return m_operationLookup.LookUpInterfaceID(uiOpID);
 }
 
 SnaccROSEPendingOperation::SnaccROSEPendingOperation(long lInvokeID, unsigned int uiOperationID, const char* szOperationName)
@@ -858,13 +735,15 @@ void SnaccROSEPendingOperation::FinalizeTelemetry(long lFinalRoseResult, std::sh
 	m_pTelemetry->finalize(SnaccTelemetryData::Outcome::DISPATCHED, SnaccTelemetryData::Stage::OUTBOUND_WAIT, SnaccTelemetryData::Reason::WAIT_SKIPPED, m_lRoseResult, std::nullopt, std::move(pctx));
 }
 
-SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName)
-	: m_strClassName(szClassName)
+SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperationLookup& operationLookup)
+	: m_strClassName(szClassName),
+	  m_operationLookup(operationLookup)
 {
 }
 
-SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName, const std::set<int>& multithreadInvokeIDs)
+SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperationLookup& operationLookup, const std::set<int>& multithreadInvokeIDs)
 	: m_strClassName(szClassName),
+	  m_operationLookup(operationLookup),
 	  m_multithreadInvokeIDs(multithreadInvokeIDs)
 {
 }
@@ -876,20 +755,25 @@ void SnaccROSEBase::SetTelemetryCallback(SnaccTelemetryCallback* pTelemetryCallB
 
 SnaccROSEBase::~SnaccROSEBase(void)
 {
-	StopProcessing(true);
+	PauseRoseProcessing();
 	StopWatchdogThread();
 	ConfigureFileLogging(nullptr);
 }
 
-void SnaccROSEBase::StopProcessing(bool bStop /*= true*/)
+void SnaccROSEBase::PauseRoseProcessing()
 {
 	{
 		std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
-		m_bProcessingAllowed = bStop ? false : true;
+		m_bProcessingAllowed = false;
 	}
 
-	if (bStop)
-		CompleteAllPendingOperations();
+	CompleteAllPendingOperations();
+}
+
+void SnaccROSEBase::ResumeRoseProcessing()
+{
+	std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+	m_bProcessingAllowed = true;
 }
 
 void SnaccROSEBase::SetMaxInvokeWaitTime(long lMaxInvokeWait)

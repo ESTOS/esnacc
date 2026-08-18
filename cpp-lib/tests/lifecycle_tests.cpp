@@ -8,14 +8,14 @@ class LifecycleRuntimeTest : public RuntimeTestBase
 {
 protected:
 	// Verifies that stopping the client runtime completes a blocked invoke with shutdown.
-	void AssertStopProcessingCompletesPendingInvokeWithShutdown(const TransportEncoding encoding)
+	void AssertPauseRoseProcessingCompletesPendingInvokeWithShutdown(const TransportEncoding encoding)
 	{
 		InitializeEndpoints(encoding);
 		m_server.Transport().EnqueueAction(TransportAction::Queue());
 		auto pendingInvoke = InvokeGetSettingsAsync(1000);
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(25));
-		m_client.StopProcessing(true);
+		m_client.PauseRoseProcessing();
 
 		EXPECT_EQ(ROSE_TE_SHUTDOWN, pendingInvoke.get());
 	}
@@ -36,15 +36,15 @@ protected:
 };
 
 // Runs the shutdown-during-pending-invoke scenario over BER.
-TEST_F(LifecycleRuntimeTest, StopProcessingCompletesPendingInvokeWithShutdownBer)
+TEST_F(LifecycleRuntimeTest, PauseRoseProcessingCompletesPendingInvokeWithShutdownBer)
 {
-	AssertStopProcessingCompletesPendingInvokeWithShutdown(TransportEncoding::BER);
+	AssertPauseRoseProcessingCompletesPendingInvokeWithShutdown(TransportEncoding::BER);
 }
 
 // Runs the shutdown-during-pending-invoke scenario over JSON.
-TEST_F(LifecycleRuntimeTest, StopProcessingCompletesPendingInvokeWithShutdownJson)
+TEST_F(LifecycleRuntimeTest, PauseRoseProcessingCompletesPendingInvokeWithShutdownJson)
 {
-	AssertStopProcessingCompletesPendingInvokeWithShutdown(TransportEncoding::JSON);
+	AssertPauseRoseProcessingCompletesPendingInvokeWithShutdown(TransportEncoding::JSON);
 }
 
 // Runs the fresh-fixture recovery scenario over BER.

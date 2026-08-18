@@ -501,12 +501,36 @@ class RuntimeEndpoint : public SnaccROSEBase
 {
 public:
 	// Creates one connection host with a stable logical session id for tests.
-	RuntimeEndpoint(const wchar_t* className, const std::string& sessionId)
-		: SnaccROSEBase(className),
+	RuntimeEndpoint(const wchar_t* className, const std::string& sessionId, SnaccRoseOperationLookup& operationLookup)
+		: SnaccROSEBase(className, operationLookup),
 		  m_strSessionId(sessionId),
 		  m_wstrSessionId(ToWide(sessionId))
 	{
-		StopProcessing(false);
+		ResumeRoseProcessing();
+	}
+
+	/*! Test helper: registers operations on this endpoint's lookup table (before Seal). */
+	void RegisterOperation(
+		unsigned int uiOpID,
+		const char* szOpName,
+		unsigned int uiInterfaceID,
+		const char* szModuleName,
+		bool bIsEvent = false,
+		unsigned long long ullAddedUnix = 0,
+		unsigned long long ullDeprecatedUnix = 0)
+	{
+		OperationLookupForRegistration().RegisterOperation(uiOpID, szOpName, uiInterfaceID, szModuleName, bIsEvent, ullAddedUnix, ullDeprecatedUnix);
+	}
+
+	/*! Test helper: clears this endpoint's lookup table (before Seal). */
+	void ClearRegisteredOperations()
+	{
+		OperationLookupForRegistration().ClearRegisteredOperations();
+	}
+
+	SnaccRoseOperationLookup& MutableOperationLookup()
+	{
+		return OperationLookupForRegistration();
 	}
 
 	// Attaches a loopback transport that forwards outbound data to the peer host.
@@ -675,7 +699,10 @@ private:
 class ObservedRuntimeEndpoint : public RuntimeEndpoint
 {
 public:
-	using RuntimeEndpoint::RuntimeEndpoint;
+	ObservedRuntimeEndpoint(const wchar_t* className, const std::string& sessionId, SnaccRoseOperationLookup& operationLookup)
+		: RuntimeEndpoint(className, sessionId, operationLookup)
+	{
+	}
 
 	// Configures the active log levels independently for inbound and outbound traffic.
 	void SetLogLevels(const EAsnLogLevel inbound, const EAsnLogLevel outbound)
@@ -800,6 +827,7 @@ public:
 		: m_endpoint(endpoint),
 		  m_component(&endpoint)
 	{
+		ENetUC_Settings_ManagerROSE::RegisterOperations(m_endpoint.MutableOperationLookup());
 		m_endpoint.RegisterModule(*this);
 	}
 
@@ -894,6 +922,7 @@ public:
 		: m_endpoint(endpoint),
 		  m_component(&endpoint)
 	{
+		ENetUC_Settings_ManagerROSE::RegisterOperations(m_endpoint.MutableOperationLookup());
 		m_endpoint.RegisterModule(*this);
 	}
 
@@ -1029,6 +1058,7 @@ public:
 		: m_endpoint(endpoint),
 		  m_component(&endpoint)
 	{
+		ENetUC_Event_ManagerROSE::RegisterOperations(m_endpoint.MutableOperationLookup());
 		m_endpoint.RegisterModule(*this);
 	}
 
@@ -1102,6 +1132,7 @@ public:
 		: m_endpoint(endpoint),
 		  m_component(&endpoint)
 	{
+		ENetUC_Event_ManagerROSE::RegisterOperations(m_endpoint.MutableOperationLookup());
 		m_endpoint.RegisterModule(*this);
 	}
 
@@ -1394,8 +1425,10 @@ protected:
 
 	TelemetryRecorder m_telemetryRecorder;   // collects callback records emitted by SnaccROSEBase
 	ScopedTelemetryCapture m_telemetryScope; // keeps telemetry callback capture installed for the fixture lifetime
-	ObservedRuntimeEndpoint m_server{L"LoopbackServer", "server-session"}; // server-side session host used by all tests
-	ObservedRuntimeEndpoint m_client{L"LoopbackClient", "client-session"}; // client-side session host used by all tests
+	SnaccRoseOperationLookup m_serverLookup; // listener lookup table for server session host
+	SnaccRoseOperationLookup m_clientLookup; // listener lookup table for client session host
+	ObservedRuntimeEndpoint m_server{L"LoopbackServer", "server-session", m_serverLookup}; // server-side session host used by all tests
+	ObservedRuntimeEndpoint m_client{L"LoopbackClient", "client-session", m_clientLookup}; // client-side session host used by all tests
 	SettingsServiceModule m_serverSettingsModule; // server module handling settings invokes
 	SettingsClientModule m_clientSettingsModule;  // client module issuing settings invokes and receiving settings events
 	EventServiceModule m_serverEventModule;       // server module handling event-manager invokes

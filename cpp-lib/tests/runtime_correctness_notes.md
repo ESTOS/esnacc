@@ -32,7 +32,7 @@ Primary reference points:
 
 | Area | Status | Semantics | Primary tests |
 | --- | --- | --- | --- |
-| `StopProcessing()` shutdown gate | Implemented | Refuse new outbound work; block inbound handler dispatch; complete pending ops with `ROSE_TE_SHUTDOWN` | `PublicApiRuntimeTest.StopProcessingBlocks*`, `LifecycleRuntimeTest.StopProcessing*` |
+| Transport-session ROSE gate | Implemented | `PauseRoseProcessing` / `ResumeRoseProcessing` | `PublicApiRuntimeTest.PauseRoseProcessingBlocks*`, `LifecycleRuntimeTest.PauseRoseProcessing*` |
 | Fire-and-forget (`iTimeout == 0`) telemetry | Implemented | `Outcome::DISPATCHED` + `Reason::WAIT_SKIPPED`, not `UNHANDLED` | `TelemetryRuntimeTest.WaitSkippedTelemetry*` |
 | Response payload decode telemetry | Implemented | Caller-visible `ROSE_RE_DECODE_FAILED` drives `UNHANDLED` + `DECODE_FAILED`, not envelope kind | `TelemetryRuntimeTest.*PayloadDecodeFailureTelemetry*` |
 | Inbound decode failures and ROSE rejects | Implemented | Garbage wire silent; targeted reject only after envelope decode | `InvokeContextRuntimeTest.UnparsableInbound*`, section 5 |
@@ -40,25 +40,22 @@ Primary reference points:
 | Inbound `ROSEMessage` ownership | Implemented | `unique_ptr` at decode sites; `std::move` through dispatch | Section 6; `InvokeContextRuntimeTest` suite |
 | Outbound encode / `Send()` ownership | Implemented | RAII encode helpers detach borrowed arms on scope exit (including encode exceptions) | Section 7; outbound encode-failure tests in `InvokeContextRuntimeTest` |
 
-## 1. `StopProcessing()` Shutdown Contract
+## 1. Transport-session ROSE processing gate (`PauseRoseProcessing` / `ResumeRoseProcessing`)
 
 ### Status: implemented
 
 ### Public contract
 
-`SnaccROSEBase` documents shutdown as a hard stop:
+Preferred API on `SnaccROSEBase`:
 
-```152:156:cpp-lib/include/SnaccROSEBase.h
-	/*! Shutdown.
-		Call this function to stop processing any more Invokes.
-		All pending operations will be completed and new function calls will be blocked.
-		All Functions return a ROSE_TE_SHUTDOWN */
-	void StopProcessing(bool bStop = true);
-```
+- `PauseRoseProcessing()` — end the current transport ROSE session (block new
+  work, complete pending ops with `ROSE_TE_SHUTDOWN`).
+- `ResumeRoseProcessing()` — reopen processing on the same stub instance (e.g.
+  after transport reconnect). Does not resurrect ops from the prior session.
 
 ### Intended behavior
 
-Treat `StopProcessing(true)` as a real runtime shutdown gate:
+Treat `PauseRoseProcessing()` as a transport-session shutdown gate:
 
 1. New outbound invokes and events must fail fast with `ROSE_TE_SHUTDOWN`.
 2. Pending operations must still be completed with `ROSE_TE_SHUTDOWN`.
@@ -66,29 +63,15 @@ Treat `StopProcessing(true)` as a real runtime shutdown gate:
    handlers while shutdown is active.
 4. Late inbound responses that arrive after pending operations were force-
    completed may be ignored, but they must not resurrect completed work.
-5. `StopProcessing(false)` re-enables processing; callers must treat that as an
-   explicit restart, not an incidental side effect.
+5. `ResumeRoseProcessing()` re-enables processing; callers must invoke it
+   explicitly when starting a new transport session on a reused stub (pair with
+   `PauseRoseProcessing()` on disconnect).
 
 ### Implementation
 
-`StopProcessing(true)` clears `m_bProcessingAllowed` and completes all pending
-operations with `ROSE_TE_SHUTDOWN`:
-
-```605:628:cpp-lib/src/SnaccROSEBase.cpp
-void SnaccROSEBase::StopProcessing(bool bStop /*= true*/)
-{
-	{
-		std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
-		m_bProcessingAllowed = bStop ? false : true;
-	}
-
-	if (bStop)
-		CompleteAllPendingOperations();
-}
-...
-	for (auto it = m_PendingOperations.begin(); it != m_PendingOperations.end(); it++)
-		it->second->CompleteOperation(ROSE_TE_SHUTDOWN);
-```
+`PauseRoseProcessing()` clears `m_bProcessingAllowed` and completes all pending
+operations with `ROSE_TE_SHUTDOWN`. `ResumeRoseProcessing()` sets
+`m_bProcessingAllowed` back to true without touching pending operations.
 
 Outbound choke points check `IsProcessingAllowed()` before creating pending
 operations or sending:
@@ -117,10 +100,10 @@ while shutdown is active.
 
 ### Tests that enforce this
 
-- `PublicApiRuntimeTest.StopProcessingBlocksNewOutboundInvokesAndEvents`
-- `PublicApiRuntimeTest.StopProcessingBlocksInboundDispatchUntilReEnabled`
-- `LifecycleRuntimeTest.StopProcessingCompletesPendingInvokeWithShutdownBer`
-- `LifecycleRuntimeTest.StopProcessingCompletesPendingInvokeWithShutdownJson`
+- `PublicApiRuntimeTest.PauseRoseProcessingBlocksNewOutboundInvokesAndEvents`
+- `PublicApiRuntimeTest.PauseRoseProcessingBlocksInboundDispatchUntilResumed`
+- `LifecycleRuntimeTest.PauseRoseProcessingCompletesPendingInvokeWithShutdownBer`
+- `LifecycleRuntimeTest.PauseRoseProcessingCompletesPendingInvokeWithShutdownJson`
 - `LifecycleRuntimeTest.PendingInvokeCanRecoverAfterShutdownOnNextFixtureSetupBer`
 - `LifecycleRuntimeTest.PendingInvokeCanRecoverAfterShutdownOnNextFixtureSetupJson`
 
@@ -398,9 +381,12 @@ Each helper detaches borrowed pointers in its destructor.
    outbound stubs default to `CreateInvokeContext(SnaccInvokeContextInit(OUTBOUND,
    invoke, operationName))` so `SNACCDeprecated::DeprecatedASN1Method` can read
    `OperationName()` on the context.
-2. **Lookup map:** `SnaccRoseOperationLookup::LookUpName()` is a parachute when
-   the stub name is absent on outbound paths. Registration in the lookup map is
-   optional but required for inbound context naming when only `operationID` is known.
+2. **Lookup table (UCAAS-1485):** `SnaccRoseOperationLookup` holds operation id/name/interface
+   mappings for one listener context. Fill at startup via
+   `ENetUC_*ROSE::RegisterOperations(lookup)` (static; no stub instances required),
+   then call `Seal()`. Mounting a generated `*ROSE` component does not register operations. `SnaccROSEBase` borrows a const lookup reference for the stub
+   lifetime; lookup after seal needs no locking. Outbound stub literals remain authoritative;
+   lookup by operationID is the inbound parachute when only the id is known.
 3. **Inbound invokes:** `operationID` is authoritative for dispatch. When the client
    sends `operationID: 0` with `operationName`, `PrepareInboundInvokeOperationId`
    resolves the ID via `LookUpID` before stub dispatch and before the invoke context
