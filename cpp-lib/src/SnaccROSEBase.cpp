@@ -655,6 +655,55 @@ unsigned int SnaccROSEBase::LookUpInterfaceID(unsigned int uiOpID) const
 	return m_operationLookup.LookUpInterfaceID(uiOpID);
 }
 
+void SnaccROSEBase::SetRemoteCapabilityMode(const SnaccRemoteCapabilityMode mode)
+{
+	m_remoteCapabilityMode = mode;
+}
+
+SnaccRemoteCapabilityMode SnaccROSEBase::GetRemoteCapabilityMode() const
+{
+	return m_remoteCapabilityMode;
+}
+
+void SnaccROSEBase::ApplyRemoteModuleCapabilities(const SnaccLoadedModuleMap& remote)
+{
+	m_remoteModuleCapabilities = remote;
+	m_bRemoteModuleCapabilitiesSet = true;
+}
+
+void SnaccROSEBase::ClearRemoteModuleCapabilities()
+{
+	m_remoteModuleCapabilities.clear();
+	m_bRemoteModuleCapabilitiesSet = false;
+}
+
+bool SnaccROSEBase::HasRemoteModuleCapabilities() const
+{
+	return m_bRemoteModuleCapabilitiesSet;
+}
+
+bool SnaccROSEBase::InternalIsRemoteOperationSupported(const unsigned int uiOpId) const
+{
+	const char* szModuleName = m_operationLookup.LookUpModuleName(uiOpId);
+	if (!szModuleName)
+		return false;
+
+	const auto moduleIt = m_remoteModuleCapabilities.find(szModuleName);
+	if (moduleIt == m_remoteModuleCapabilities.end())
+		return false;
+
+	return moduleIt->second.m_invokes.find(uiOpId) != moduleIt->second.m_invokes.end();
+}
+
+bool SnaccROSEBase::IsSupportedOperation(const unsigned int uiOpId) const
+{
+#ifdef _DEBUG
+	if (!m_bRemoteModuleCapabilitiesSet)
+		ASSERT(0);
+#endif
+	return InternalIsRemoteOperationSupported(uiOpId);
+}
+
 SnaccROSEPendingOperation::SnaccROSEPendingOperation(long lInvokeID, unsigned int uiOperationID, const char* szOperationName)
 	: m_lInvokeID(lInvokeID),
 	  m_uiOperationID(uiOperationID),
@@ -1694,6 +1743,14 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResu
 		return ROSE_TE_SHUTDOWN;
 	}
 
+	if (m_remoteCapabilityMode == SnaccRemoteCapabilityMode::Enabled && m_bRemoteModuleCapabilitiesSet && !InternalIsRemoteOperationSupported(pInvoke->operationID))
+	{
+		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
+		telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::LOCAL_REJECT, ROSE_REJECT_REMOTENOTCAPABLE, std::nullopt, std::move(pCtx));
+		OnInvokeProcessed(telemetry);
+		return ROSE_REJECT_REMOTENOTCAPABLE;
+	}
+
 	auto& pendingOP = AddPendingOperation(pInvoke->invokeID, pInvoke->operationID, szResolvedOperationName);
 
 	size_t stRequestData = 0;
@@ -1946,6 +2003,20 @@ long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 		if (shutdownCallback)
 			shutdownCallback(ROSE_TE_SHUTDOWN, *pCtx);
 		return ROSE_TE_SHUTDOWN;
+	}
+
+	if (m_remoteCapabilityMode == SnaccRemoteCapabilityMode::Enabled && m_bRemoteModuleCapabilitiesSet && !InternalIsRemoteOperationSupported(pInvoke->operationID))
+	{
+		SnaccInvokeAsyncCallback rejectCallback;
+		if (!bFireAndForget && pCtx->HasAsyncCompletion())
+			rejectCallback = pCtx->AsyncCallback();
+
+		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
+		telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::LOCAL_REJECT, ROSE_REJECT_REMOTENOTCAPABLE, std::nullopt, pCtx);
+		OnInvokeProcessed(telemetry);
+		if (rejectCallback)
+			rejectCallback(ROSE_REJECT_REMOTENOTCAPABLE, *pCtx);
+		return ROSE_REJECT_REMOTENOTCAPABLE;
 	}
 
 	auto& pendingOP = AddPendingOperation(pInvoke->invokeID, pInvoke->operationID, szResolvedOperationName);

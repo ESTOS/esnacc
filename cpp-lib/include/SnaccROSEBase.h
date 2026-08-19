@@ -235,6 +235,20 @@ public:
 	/*! Resolves generated interface id (m_iid) from operation id via the lookup table. */
 	unsigned int LookUpInterfaceID(unsigned int uiOpID) const;
 
+	/*! Configures whether outbound invokes are gated on a negotiate snapshot. Default Disabled. */
+	void SetRemoteCapabilityMode(SnaccRemoteCapabilityMode mode);
+	SnaccRemoteCapabilityMode GetRemoteCapabilityMode() const;
+
+	/*! Stores the peer module snapshot from asnNegotiateInterface (or equivalent). */
+	void ApplyRemoteModuleCapabilities(const SnaccLoadedModuleMap& remote);
+	void ClearRemoteModuleCapabilities();
+
+	/*! True after ApplyRemoteModuleCapabilities() was called (even when the map is empty). */
+	bool HasRemoteModuleCapabilities() const;
+
+	/*! True when the negotiate snapshot offers this invoke OPID. Debug ASSERT when !HasRemoteModuleCapabilities(). */
+	bool IsSupportedOperation(unsigned int uiOpId) const;
+
 	/*! Writes JSON encoded log messages to the log file
 		bOutbound = true in case the log entry is related to an outbound message
 		bException = true in case this is an exception based error message
@@ -442,6 +456,9 @@ private:
 	void HandleInboundUnknownEncodingDecodeFailure(const char* lpBytes, unsigned long ulMessageSize, bool& bLogTransportData);
 	void HandleInboundOuterDecodeFailure(unsigned long ulMessageSize, const char* szException, const char* szMethod, std::optional<int> errorCode = std::nullopt);
 
+	/*! Returns true when the applied remote snapshot lists @p uiOpId as a supported invoke. */
+	bool InternalIsRemoteOperationSupported(unsigned int uiOpId) const;
+
 	// The central process wide telemetry callback
 	static inline SnaccTelemetryCallback* m_pTelemetryCallback{};
 
@@ -501,6 +518,10 @@ private:
 
 	// Transport Encoding to be used
 	SNACC::TransportEncoding m_eTransportEncoding{SNACC::TransportEncoding::UNKNOWN};
+
+	SnaccRemoteCapabilityMode m_remoteCapabilityMode{SnaccRemoteCapabilityMode::Disabled};
+	SnaccLoadedModuleMap m_remoteModuleCapabilities;
+	bool m_bRemoteModuleCapabilitiesSet{false};
 
 	// Detects the encoding from the transport data (used for inbound data)
 	SNACC::TransportEncoding DetectEncoding(const char* lpBytes, unsigned long ulSize) const;

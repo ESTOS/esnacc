@@ -271,6 +271,10 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * If no timeout was specified we resolve in undefined to cleanup the promise object
 	 */
 	public async sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
+		const localReject = this.tryRejectRemoteNotCapable(data.invoke);
+		if (localReject)
+			return localReject;
+
 		return new Promise((resolve): void => {
 			let resolveUndefined = true;
 

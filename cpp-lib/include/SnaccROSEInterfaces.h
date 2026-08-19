@@ -118,6 +118,8 @@ const long ROSE_REJECT_AUTHENTICATION_USER_TEMPORARY_LOCKED_OUT = 0x00000B00;
 const long ROSE_REJECT_AUTHENTICATION_USER_LOCKED_OUT = 0x00000C00;
 //! The invoke requires an argument but it was not specified
 const long ROSE_REJECT_ARGUMENT_MISSING = 0x00000D00;
+//! Local stub rejected before send: peer negotiate snapshot does not offer this invoke OPID
+const long ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00;
 
 //! ROSE Server side ROSEError answers:
 //! ROSEError Message received

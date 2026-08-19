@@ -143,6 +143,15 @@ unsigned int SnaccRoseOperationLookup::LookUpInterfaceID(unsigned int uiOpID) co
 	return 0;
 }
 
+const char* SnaccRoseOperationLookup::LookUpModuleName(unsigned int uiOpID) const
+{
+	const auto it = m_mapIDToModuleKind.find(uiOpID);
+	if (it != m_mapIDToModuleKind.end())
+		return it->second.first.c_str();
+
+	return nullptr;
+}
+
 SnaccRoseOperationLookupRegistrationHost::SnaccRoseOperationLookupRegistrationHost(SnaccRoseOperationLookup& operationLookup)
 	: m_operationLookup(operationLookup)
 {
