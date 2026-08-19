@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
 	ASN1ClassInstanceType,
-	EASN1TransportEncoding,
 	TSASN1Base,
 } from "./TSASN1Base.js";
+import { EASN1TransportEncoding } from "./TSInvokeContext.js";
 import {
 	CustomInvokeProblemEnum,
 	RemoteCapabilityMode,
@@ -117,6 +117,40 @@ test("clearRemoteModuleCapabilities stops gating", async () => {
 	]));
 	transport.setRemoteCapabilityMode(RemoteCapabilityMode.Enabled);
 	transport.clearRemoteModuleCapabilities();
+
+	await transport.sendInvoke({
+		invoke: createInvoke(100, "asnInvoke"),
+		invokeContext: transport.getInvokeContextParams(undefined, 100, "asnInvoke", false),
+		payLoad: new Uint8Array(),
+	} as IASN1InvokeData);
+
+	assert.equal(transport.sendInvokeCount, 1);
+});
+
+test("disabled with snapshot does not gate sendInvoke", async () => {
+	const transport = new TestTransport();
+	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 0, 0, false);
+	transport.applyRemoteModuleCapabilities(buildRemoteModuleCapabilities([
+		{ moduleName: "TestModule", version: "1.0.0", invokeOpIds: [200] },
+	]));
+	transport.setRemoteCapabilityMode(RemoteCapabilityMode.Disabled);
+
+	await transport.sendInvoke({
+		invoke: createInvoke(100, "asnInvoke"),
+		invokeContext: transport.getInvokeContextParams(undefined, 100, "asnInvoke", false),
+		payLoad: new Uint8Array(),
+	} as IASN1InvokeData);
+
+	assert.equal(transport.sendInvokeCount, 1);
+});
+
+test("enabled with supported op id sends invoke", async () => {
+	const transport = new TestTransport();
+	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 0, 0, false);
+	transport.applyRemoteModuleCapabilities(buildRemoteModuleCapabilities([
+		{ moduleName: "TestModule", version: "1.0.0", invokeOpIds: [100] },
+	]));
+	transport.setRemoteCapabilityMode(RemoteCapabilityMode.Enabled);
 
 	await transport.sendInvoke({
 		invoke: createInvoke(100, "asnInvoke"),

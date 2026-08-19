@@ -655,6 +655,11 @@ unsigned int SnaccROSEBase::LookUpInterfaceID(unsigned int uiOpID) const
 	return m_operationLookup.LookUpInterfaceID(uiOpID);
 }
 
+const char* SnaccROSEBase::LookUpModuleName(unsigned int uiOpID) const
+{
+	return m_operationLookup.LookUpModuleName(uiOpID);
+}
+
 void SnaccROSEBase::SetRemoteCapabilityMode(const SnaccRemoteCapabilityMode mode)
 {
 	m_remoteCapabilityMode = mode;

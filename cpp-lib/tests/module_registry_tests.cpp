@@ -76,6 +76,8 @@ TEST(ModuleRegistryTest, RegisteredMetadataMatchesLoadedModuleSnapshot)
 	EXPECT_EQ(4100u, endpoint.LookUpID("asnGetSettings"));
 	EXPECT_STREQ("asnGetSettings", endpoint.LookUpName(4100u));
 	EXPECT_EQ(ENetUC_Settings_ManagerROSE::m_iid, endpoint.LookUpInterfaceID(4100u));
+	EXPECT_STREQ(kSettingsModuleName, endpoint.LookUpModuleName(4100u));
+	EXPECT_EQ(nullptr, endpoint.LookUpModuleName(9999u));
 }
 
 TEST(ModuleRegistryTest, RuntimeFixtureKeepsClientAndServerRegistriesSeparate)

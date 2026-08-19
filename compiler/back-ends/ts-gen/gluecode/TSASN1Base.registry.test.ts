@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
 	ASN1ClassInstanceType,
-	EASN1TransportEncoding,
 	TSASN1Base,
 } from "./TSASN1Base.js";
+import { EASN1TransportEncoding } from "./TSInvokeContext.js";
 import type { IASN1InvokeData } from "./TSROSEBase.js";
 import type { ROSEError, ROSEReject, ROSEResult } from "./SNACCROSE.js";
 
@@ -66,4 +66,15 @@ test("separate stub instances keep separate registries", () => {
 	assert.equal(transportB.getLoadedModules().size, 1);
 	assert.ok(transportA.getLoadedModules().has("ModuleA"));
 	assert.ok(!transportA.getLoadedModules().has("ModuleB"));
+});
+
+test("lookUpName lookUpID and lookUpModuleName resolve registered operations", () => {
+	const transport = new TestTransport();
+	transport.registerModuleVersion("TestModule", "1.0.0");
+	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 0, 0, false);
+
+	assert.equal(transport.lookUpName(100), "asnInvoke");
+	assert.equal(transport.lookUpID("asnInvoke"), 100);
+	assert.equal(transport.lookUpModuleName(100), "TestModule");
+	assert.equal(transport.lookUpModuleName(999), undefined);
 });

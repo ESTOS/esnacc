@@ -92,7 +92,7 @@ TEST_F(RemoteCapabilityRuntimeTest, EnabledWithoutSnapshotDoesNotGateInvoke)
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_NOERROR, roseResult);
-	EXPECT_GE(m_client.Transport().TransportSendCount(), 1u);
+	EXPECT_GE(ClientOutboundTransportObservation().TransportSendCount(), 1u);
 }
 
 TEST_F(RemoteCapabilityRuntimeTest, EnabledWithUnsupportedOpIdReturnsRemoteNotCapable)
@@ -103,7 +103,7 @@ TEST_F(RemoteCapabilityRuntimeTest, EnabledWithUnsupportedOpIdReturnsRemoteNotCa
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_REJECT_REMOTENOTCAPABLE, roseResult);
-	EXPECT_EQ(0u, m_server.InboundObservation().TransportSendCount());
+	EXPECT_EQ(0u, ServerInboundObservation().TransportSendCount());
 }
 
 TEST_F(RemoteCapabilityRuntimeTest, EnabledWithSupportedOpIdSendsInvoke)
@@ -114,7 +114,7 @@ TEST_F(RemoteCapabilityRuntimeTest, EnabledWithSupportedOpIdSendsInvoke)
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_NOERROR, roseResult);
-	EXPECT_GE(m_client.Transport().TransportSendCount(), 1u);
+	EXPECT_GE(ClientOutboundTransportObservation().TransportSendCount(), 1u);
 }
 
 TEST_F(RemoteCapabilityRuntimeTest, DisabledWithSnapshotDoesNotGateInvoke)
@@ -125,7 +125,7 @@ TEST_F(RemoteCapabilityRuntimeTest, DisabledWithSnapshotDoesNotGateInvoke)
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_NOERROR, roseResult);
-	EXPECT_GE(m_client.Transport().TransportSendCount(), 1u);
+	EXPECT_GE(ClientOutboundTransportObservation().TransportSendCount(), 1u);
 }
 
 TEST_F(RemoteCapabilityRuntimeTest, ClearRemoteCapabilitiesStopsGating)
@@ -137,7 +137,7 @@ TEST_F(RemoteCapabilityRuntimeTest, ClearRemoteCapabilitiesStopsGating)
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_NOERROR, roseResult);
-	EXPECT_GE(m_client.Transport().TransportSendCount(), 1u);
+	EXPECT_GE(ClientOutboundTransportObservation().TransportSendCount(), 1u);
 }
 
 TEST_F(RemoteCapabilityRuntimeTest, IsSupportedOperationReflectsAppliedSnapshot)

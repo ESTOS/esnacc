@@ -235,6 +235,9 @@ public:
 	/*! Resolves generated interface id (m_iid) from operation id via the lookup table. */
 	unsigned int LookUpInterfaceID(unsigned int uiOpID) const;
 
+	/*! Resolves ASN.1 module name owning the given operation id via the lookup table. */
+	const char* LookUpModuleName(unsigned int uiOpID) const;
+
 	/*! Configures whether outbound invokes are gated on a negotiate snapshot. Default Disabled. */
 	void SetRemoteCapabilityMode(SnaccRemoteCapabilityMode mode);
 	SnaccRemoteCapabilityMode GetRemoteCapabilityMode() const;
