@@ -24,6 +24,19 @@ Outputs (defaults):
 | Compiler (`esnacc` / `esnaccd`) | `output/bin/` |
 | C++ library (`esnacc_cpp_lib`) | `output/libx64/` (x64) or `output/lib/` (x86) |
 
+### Ensure compiler is up to date (no Node)
+
+Scripts under `scripts/` configure CMake if needed, run `cmake --build --target compiler` (CMake/MSBuild only rebuild when inputs changed), and resolve the path from `CMakeCache.txt` (`COMPILER_OUTPUT_PATH` / `COMPILER_OUTPUT_NAME`).
+
+| Platform | Entry point |
+|----------|-------------|
+| Windows (CMD) | `scripts\ensure_compiler.bat` — sets `SNACC_COMPILER` and prepends its directory to `PATH` |
+| Linux / macOS | `scripts/ensure_compiler.sh` — use `--export` to emit shell `export` lines |
+
+Environment variables: `SNACCLIB7_ROOT`, `SNACC_CMAKE_BUILD_DIR`, `SNACC_CMAKE_GENERATOR`, `SNACC_CONFIGURATION`, `SNACC_SKIP_COMPILER_BUILD`, `SNACC_FORCE_COMPILER_BUILD`, `SNACC_COMPILER`.
+
+`samples/prepare.bat`, `samples/prepare.sh`, and `ROSE/makesnaccrose.bat` call these helpers before running Node or invoking the compiler directly.
+
 ### CMake variables
 
 | Variable | Purpose |
