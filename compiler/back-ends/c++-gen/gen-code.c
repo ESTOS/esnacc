@@ -4584,6 +4584,43 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 
 	// Constructor
 	fprintf(hdr, "\t%s(SnaccROSESender* pBase);\n", m->ROSEClassName);
+
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (IsDeprecatedNoOutputOperation(m, vd->definedName))
+			continue;
+		if (vd->value->basicValue->choiceId != BASICVALUE_INTEGER)
+			continue;
+		if (vd->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
+			continue;
+		if (vd->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
+			continue;
+		if (!iFirstIIDFound)
+		{
+			iFirstIIDFound = 1;
+			fprintf(hdr, "\tstatic const int m_iid = %d;\n", vd->value->basicValue->a.integer);
+		}
+		break;
+	}
+
+	fprintf(src, "namespace\n{\n");
+	fprintf(src, "constexpr const char kModuleName[] = \"%s\";\n", m->moduleName);
+	if (gMajorInterfaceVersion >= 0)
+	{
+		long long lPatchVersion = GetModulePatchVersion(m->moduleName);
+		char* szNumericDate = ConvertUnixTimeToNumericDate(lPatchVersion);
+		if (szNumericDate)
+		{
+			fprintf(src, "constexpr const char kModuleVersion[] = \"%i.0.%s\";\n", gMajorInterfaceVersion, szNumericDate);
+			free(szNumericDate);
+		}
+		else
+			fprintf(src, "constexpr const char kModuleVersion[] = \"\";\n");
+	}
+	else
+		fprintf(src, "constexpr const char kModuleVersion[] = \"\";\n");
+	fprintf(src, "} // namespace\n\n");
+
 	fprintf(src, "%s::%s(SnaccROSESender* pBase) : SnaccROSEComponent(pBase)\n", m->ROSEClassName, m->ROSEClassName);
 	fprintf(src, "{\n");
 	fprintf(src, "}\n\n");
@@ -4595,36 +4632,14 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(src, "void %s::RegisterOperations(SnaccRoseOperationLookup& lookup)\n", m->ROSEClassName);
 	fprintf(src, "{\n");
 	if (gMajorInterfaceVersion >= 0)
-	{
-		long long lPatchVersion = GetModulePatchVersion(m->moduleName);
-		char* szNumericDate = ConvertUnixTimeToNumericDate(lPatchVersion);
-		if (szNumericDate)
-		{
-			fprintf(src, "\tlookup.RegisterModuleVersion(\"%s\", \"%i.0.%s\");\n", m->moduleName, gMajorInterfaceVersion, szNumericDate);
-			free(szNumericDate);
-		}
-	}
+		fprintf(src, "\tRegisterModuleVersion(lookup, kModuleName, kModuleVersion);\n");
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (IsDeprecatedNoOutputOperation(m, vd->definedName))
 			continue;
-		if (PrintROSEOperationRegistrationLookup(src, r, m, vd) && !iFirstIIDFound)
-		{
-			iFirstIIDFound = 1;
-			fprintf(hdr, "\tstatic const int m_iid = %d;\n", vd->value->basicValue->a.integer);
-		}
+		PrintROSEOperationRegistration(src, r, m, vd);
 	}
 	fprintf(src, "}\n\n");
-
-	if (iFirstIIDFound)
-	{
-		fprintf(hdr, "protected:\n");
-		fprintf(hdr, "\tvoid RegisterOperation(unsigned int uiOpID, const char* szOpName, bool bIsEvent = false, unsigned long long ullAddedUnix = 0, unsigned long long ullDeprecatedUnix = 0)\n");
-		fprintf(hdr, "\t{\n");
-		fprintf(hdr, "\t\tSnaccROSEComponent::RegisterOperation(uiOpID, szOpName, m_iid, \"%s\", bIsEvent, ullAddedUnix, ullDeprecatedUnix);\n", m->moduleName);
-		fprintf(hdr, "\t}\n\n");
-		fprintf(hdr, "public:\n");
-	}
 
 	fflush(src);
 	fflush(hdr);

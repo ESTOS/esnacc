@@ -65,6 +65,30 @@ export enum CustomInvokeProblemEnum {
 	messageTooBig = 501,
 	// The stub received an empty ROSEreject without details.
 	emptyRejectMessage = 502,
+	// Local stub rejected before send: peer negotiate snapshot does not offer this invoke OPID
+	remoteNotCapable = 0xE00,
+}
+
+/** Client-local SendInvoke result: peer negotiate snapshot does not offer this invoke OPID. */
+export const ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00;
+
+/**
+ * Debug-only assert with a human-readable message (console.assert in Node/browser).
+ * Use snaccAssert(check, msg) for preconditions or snaccAssertFail(msg) when already in an error path.
+ */
+export function snaccAssert(condition: boolean, message: string): void {
+	console.assert(condition, message);
+}
+
+/** Debug-only assert for a known error path (always fails when asserts are enabled). */
+export function snaccAssertFail(message: string): void {
+	console.assert(false, message);
+}
+
+/** Controls outbound invoke gating against a negotiate snapshot on TSASN1Base. */
+export enum RemoteCapabilityMode {
+	Disabled = 0,
+	Enabled = 1,
 }
 
 /**
@@ -415,6 +439,8 @@ export enum ELogSeverity {
 export interface IOpVersionInfo {
 	addedUnix: number;
 	deprecatedUnix: number;
+	/** Set during local registerOperation; absent on remote negotiate snapshots. */
+	opName?: string;
 }
 
 /**
@@ -471,6 +497,15 @@ export interface IASN1Transport {
 	registerModuleVersion(moduleName: string, version: string): void;
 	unregisterModuleVersion(moduleName: string): void;
 	getLoadedModules(): ReadonlyMap<string, ILoadedModuleInfo>;
+	lookUpName(operationID: number): string | undefined;
+	lookUpID(operationName: string): number | undefined;
+	lookUpModuleName(operationID: number): string | undefined;
+	setRemoteCapabilityMode(mode: RemoteCapabilityMode): void;
+	getRemoteCapabilityMode(): RemoteCapabilityMode;
+	applyRemoteModuleCapabilities(remote: ReadonlyMap<string, ILoadedModuleInfo>): void;
+	clearRemoteModuleCapabilities(): void;
+	hasRemoteModuleCapabilities(): boolean;
+	isSupportedOperation(operationID: number): boolean;
 	getInvokeContextParams(
 		context: Partial<ISendInvokeContextParams> | undefined,
 		operationID: number,

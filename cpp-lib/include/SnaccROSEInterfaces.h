@@ -6,6 +6,8 @@
 #include <optional>
 #include <string>
 
+class SnaccRoseOperationLookup;
+
 namespace SNACC
 {
 	class AsnType;
@@ -118,6 +120,8 @@ const long ROSE_REJECT_AUTHENTICATION_USER_TEMPORARY_LOCKED_OUT = 0x00000B00;
 const long ROSE_REJECT_AUTHENTICATION_USER_LOCKED_OUT = 0x00000C00;
 //! The invoke requires an argument but it was not specified
 const long ROSE_REJECT_ARGUMENT_MISSING = 0x00000D00;
+//! Local stub rejected before send: peer negotiate snapshot does not offer this invoke OPID
+const long ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00;
 
 //! ROSE Server side ROSEError answers:
 //! ROSEError Message received
@@ -374,8 +378,7 @@ private:
 	for all generated ROSE Protocol Handlers (V2) that need OnInvoke
 	*/
 
-/*! SnaccROSEComponent is the base class for all generated ROSE Protocol Handlers (V2)
- */
+/*! SnaccROSEComponent is the base class for all generated ROSE Protocol Handlers (V2). */
 class SnaccROSEComponent
 {
 public:
@@ -385,11 +388,11 @@ public:
 	}
 
 protected:
-	/*! Registers module version metadata on the lookup table referenced by @c m_pSB. */
-	void RegisterModuleVersion(const char* szModuleName, const char* szVersion);
+	/*! Registers module version metadata on a startup lookup table (static RegisterOperations). */
+	static void RegisterModuleVersion(SnaccRoseOperationLookup& lookup, const char* szModuleName, const char* szModuleVersion);
 
-	/*! Registers one ROSE operation on the lookup table referenced by @c m_pSB (UCAAS-1485). */
-	void RegisterOperation(unsigned int uiOpID, const char* szOpName, unsigned int uiInterfaceID, const char* szModuleName, bool bIsEvent = false, unsigned long long ullAddedUnix = 0, unsigned long long ullDeprecatedUnix = 0);
+	/*! Registers one operation on a startup lookup table (static RegisterOperations). */
+	static void RegisterOperation(SnaccRoseOperationLookup& lookup, unsigned int uiInterfaceId, const char* szModuleName, unsigned int uiOpID, const char* szOpName, bool bIsEvent = false, unsigned long long ullAddedUnix = 0, unsigned long long ullDeprecatedUnix = 0);
 
 	SnaccROSESender* m_pSB;
 };

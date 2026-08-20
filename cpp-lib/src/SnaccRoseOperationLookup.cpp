@@ -67,6 +67,10 @@ void SnaccRoseOperationLookup::RegisterOperation(
 	SnaccOpVersionInfo info;
 	info.m_ullAddedUnix = ullAddedUnix;
 	info.m_ullDeprecatedUnix = ullDeprecatedUnix;
+#ifdef _DEBUG
+	if (szOpName)
+		info.m_strOpName = szOpName;
+#endif
 	if (bIsEvent)
 		module.m_events[uiOpID] = info;
 	else
@@ -141,6 +145,15 @@ unsigned int SnaccRoseOperationLookup::LookUpInterfaceID(unsigned int uiOpID) co
 		return it->second;
 
 	return 0;
+}
+
+const char* SnaccRoseOperationLookup::LookUpModuleName(unsigned int uiOpID) const
+{
+	const auto it = m_mapIDToModuleKind.find(uiOpID);
+	if (it != m_mapIDToModuleKind.end())
+		return it->second.first.c_str();
+
+	return nullptr;
 }
 
 SnaccRoseOperationLookupRegistrationHost::SnaccRoseOperationLookupRegistrationHost(SnaccRoseOperationLookup& operationLookup)

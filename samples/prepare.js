@@ -32,19 +32,16 @@ function fileIsExecutable(filePath) {
 }
 
 function resolveCompiler() {
-	if (process.env.SNACC_COMPILER) {
-		return path.resolve(process.env.SNACC_COMPILER);
-	}
-	if (process.env.CMAKE_COMPILER_TARGET) {
-		return path.resolve(process.env.CMAKE_COMPILER_TARGET);
+	for (const value of [process.env.SNACC_COMPILER, process.env.ESNACC_EXECUTABLE, process.env.CMAKE_COMPILER_TARGET]) {
+		if (value && fs.existsSync(value)) {
+			return path.resolve(value);
+		}
 	}
 
 	const searchDirs = [
 		path.join(SAMPLES_DIR, "..", "output", "bin"),
 		BIN_DIR,
-		path.join(SAMPLES_DIR, "..", "..", "..", "buildtools"),
 	];
-
 	for (const dir of searchDirs) {
 		for (const name of COMPILER_CANDIDATES) {
 			const candidate = path.join(dir, name);
@@ -113,7 +110,7 @@ function runCompiler(compiler, outputDir, compilerArgs, asn1Files) {
 function generateStubs() {
 	const compiler = resolveCompiler();
 	if (!compiler) {
-		console.error("error: esnacc compiler not found. Build esnacc first, then run prepare.bat (Windows) or ./prepare.sh (Linux).");
+		console.error("error: esnacc compiler not found. Run scripts/ensure_compiler.bat or scripts/ensure_compiler.sh first, or use prepare.bat / prepare.sh.");
 		return 1;
 	}
 

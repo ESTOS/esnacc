@@ -29,6 +29,9 @@ import {
 	IROSELogger,
 	ISendInvokeContext,
 	ReceiveInvokeContext,
+	RemoteCapabilityMode,
+	snaccAssert,
+	snaccAssertFail,
 	ASN1ByteArray,
 	ROSEBase,
 } from "./TSROSEBase.js";
@@ -301,6 +304,10 @@ export abstract class TSASN1Base implements IASN1Transport {
 	private handlersByName = new Map<string, Handler>();
 	// Holds all loaded modules with operations registered on this stub
 	private loadedModulesByName = new Map<string, ILoadedModuleInfo>();
+	// Peer negotiate snapshot applied on this stub (client/server outbound gating)
+	private remoteModuleCapabilitiesByName = new Map<string, ILoadedModuleInfo>();
+	private remoteModuleCapabilitiesSet = false;
+	private remoteCapabilityMode = RemoteCapabilityMode.Disabled;
 	// The Logger Callback which must be set with the SetLogger Method
 	protected logger?: IROSELogger;
 	// Logs the raw transport (inbound before decoding, outbound after encoding)
@@ -395,7 +402,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			);
 			this.handlersByID.set(operationID, handler);
 			this.handlersByName.set(operationName, handler);
-			this.trackRegisteredOperation(operationID, moduleName, addedUnix, deprecatedUnix, isEvent);
+			this.trackRegisteredOperation(operationID, operationName, moduleName, addedUnix, deprecatedUnix, isEvent);
 		} else {
 			// trying to re-register a handler for an already registered operationID, this should not happen and indicates a problem in the calling code
 			debugger;
@@ -407,6 +414,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 */
 	private trackRegisteredOperation(
 		operationID: number,
+		operationName: string,
 		moduleName: string,
 		addedUnix: number,
 		deprecatedUnix: number,
@@ -423,7 +431,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			this.loadedModulesByName.set(moduleName, module);
 		}
 
-		const info: IOpVersionInfo = { addedUnix, deprecatedUnix };
+		const info: IOpVersionInfo = { addedUnix, deprecatedUnix, opName: operationName };
 		if (isEvent)
 			module.events.set(operationID, info);
 		else
@@ -498,6 +506,120 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 */
 	public getLoadedModules(): ReadonlyMap<string, ILoadedModuleInfo> {
 		return this.loadedModulesByName;
+	}
+
+	/**
+	 * Resolves operation name from operation id via the registered handlers.
+	 */
+	public lookUpName(operationID: number): string | undefined {
+		return this.handlersByID.get(operationID)?.operationName;
+	}
+
+	/**
+	 * Resolves operation id from operation name via the registered handlers.
+	 */
+	public lookUpID(operationName: string): number | undefined {
+		return this.handlersByName.get(operationName)?.operationID;
+	}
+
+	/**
+	 * Resolves ASN.1 module name owning the given operation id on this stub.
+	 */
+	public lookUpModuleName(operationID: number): string | undefined {
+		return this.handlersByID.get(operationID)?.moduleName;
+	}
+
+	/**
+	 * Configures whether outbound invokes are gated on a negotiate snapshot. Default Disabled.
+	 */
+	public setRemoteCapabilityMode(mode: RemoteCapabilityMode): void {
+		this.remoteCapabilityMode = mode;
+	}
+
+	/**
+	 * Returns the current remote capability gating mode for outbound invokes.
+	 */
+	public getRemoteCapabilityMode(): RemoteCapabilityMode {
+		return this.remoteCapabilityMode;
+	}
+
+	/**
+	 * Stores the peer module snapshot from asnNegotiateInterface (or equivalent).
+	 */
+	public applyRemoteModuleCapabilities(remote: ReadonlyMap<string, ILoadedModuleInfo>): void {
+		this.remoteModuleCapabilitiesByName = new Map(
+			[...remote.entries()].map(([moduleName, moduleInfo]) => [
+				moduleName,
+				{
+					moduleName: moduleInfo.moduleName,
+					version: moduleInfo.version,
+					invokes: new Map(moduleInfo.invokes),
+					events: new Map(moduleInfo.events),
+				},
+			]),
+		);
+		this.remoteModuleCapabilitiesSet = true;
+	}
+
+	/**
+	 * Clears the applied remote capability snapshot (disconnect / legacy fallback).
+	 */
+	public clearRemoteModuleCapabilities(): void {
+		this.remoteModuleCapabilitiesByName.clear();
+		this.remoteModuleCapabilitiesSet = false;
+	}
+
+	/**
+	 * True after applyRemoteModuleCapabilities() was called (even when the map is empty).
+	 */
+	public hasRemoteModuleCapabilities(): boolean {
+		return this.remoteModuleCapabilitiesSet;
+	}
+
+	/**
+	 * Returns true when the negotiate snapshot offers this invoke OPID.
+	 * Debug assert when hasRemoteModuleCapabilities() is false.
+	 */
+	public isSupportedOperation(operationID: number): boolean {
+		snaccAssert(
+			this.remoteModuleCapabilitiesSet,
+			"isSupportedOperation requires applyRemoteModuleCapabilities first",
+		);
+		return this.internalIsRemoteOperationSupported(operationID);
+	}
+
+	/**
+	 * Local reject for outbound invokes blocked by remote capability gating.
+	 * Events (invokeID 99999) are never gated here.
+	 */
+	protected tryRejectRemoteNotCapable(invoke: ROSEInvoke): ROSEReject | undefined {
+		if (invoke.invokeID === 99999)
+			return undefined;
+		if (this.remoteCapabilityMode !== RemoteCapabilityMode.Enabled || !this.remoteModuleCapabilitiesSet)
+			return undefined;
+		if (this.internalIsRemoteOperationSupported(invoke.operationID))
+			return undefined;
+		snaccAssertFail(
+			`Outbound invoke blocked: operation not offered by remote (${invoke.operationName}, ${invoke.operationID})`,
+		);
+		return createInvokeReject(
+			invoke,
+			CustomInvokeProblemEnum.remoteNotCapable,
+			`Operation ${invoke.operationName} (${invoke.operationID}) is not offered by the remote peer`,
+		);
+	}
+
+	/**
+	 * Returns true when the applied remote snapshot lists the invoke OPID for its module.
+	 */
+	private internalIsRemoteOperationSupported(operationID: number): boolean {
+		const moduleName = this.lookUpModuleName(operationID);
+		if (!moduleName)
+			return false;
+		const module = this.remoteModuleCapabilitiesByName.get(moduleName);
+		if (!module)
+			return false;
+		return module.invokes.has(operationID);
 	}
 
 	/**

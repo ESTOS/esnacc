@@ -109,8 +109,9 @@ int PrintROSEOperationRegistration(FILE* src, CxxRules* r, Module* mod, ValueDef
 	/*
 	 * put instantiation in src file
 	 */
-	fprintf(src, "\tRegisterOperation(");
-	fprintf(src, "%d, \"", v->value->basicValue->a.integer);
+	fprintf(src, "\tRegisterOperation(lookup, m_iid, kModuleName, OPID_");
+	PrintCxxValueDefsName(src, r, v);
+	fprintf(src, ", \"");
 	PrintCxxValueDefsName(src, r, v);
 	fprintf(src, "\"");
 	if (bIsEvent)
@@ -158,7 +159,9 @@ int PrintROSEOperationRegistrationLookup(FILE* src, CxxRules* r, Module* mod, Va
 	}
 
 	fprintf(src, "\tlookup.RegisterOperation(");
-	fprintf(src, "%d, \"", v->value->basicValue->a.integer);
+	fprintf(src, "OPID_");
+	PrintCxxValueDefsName(src, r, v);
+	fprintf(src, ", \"");
 	PrintCxxValueDefsName(src, r, v);
 	fprintf(src, "\", m_iid, \"%s\"", mod->moduleName);
 	if (bIsEvent)
