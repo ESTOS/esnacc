@@ -4,7 +4,7 @@ import test from "node:test";
 import {
 	buildRemoteModuleCapabilities,
 	buildRemoteModuleCapabilitiesFromAsn,
-} from "./workdir/gluecode/TSModuleCapabilities.js";
+} from "./workdir/TSModuleCapabilities.js";
 
 test("buildRemoteModuleCapabilities populates invoke and event op ids", () => {
 	const remote = buildRemoteModuleCapabilities([

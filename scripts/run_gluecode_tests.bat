@@ -5,7 +5,7 @@ set "SCRIPT_DIR=%~dp0"
 set "REPO_ROOT=%SCRIPT_DIR%.."
 set "GLUE_DIR=%REPO_ROOT%\compiler\back-ends\ts-gen\gluecode"
 set "TEST_DIR=%REPO_ROOT%\compiler\back-ends\ts-gen\tests"
-set "WORKDIR=%TEST_DIR%\workdir\gluecode"
+set "WORKDIR=%TEST_DIR%\workdir"
 set "STUB_DIR=%REPO_ROOT%\samples\ts-microservice\node-client\src\stub"
 set "NODE_MODULES=%REPO_ROOT%\samples\ts-microservice\node-client\node_modules"
 

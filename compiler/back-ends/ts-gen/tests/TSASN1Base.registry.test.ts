@@ -4,10 +4,10 @@ import test from "node:test";
 import {
 	ASN1ClassInstanceType,
 	TSASN1Base,
-} from "./workdir/gluecode/TSASN1Base.js";
-import { EASN1TransportEncoding } from "./workdir/gluecode/TSInvokeContext.js";
-import type { IASN1InvokeData } from "./workdir/gluecode/TSROSEBase.js";
-import type { ROSEError, ROSEReject, ROSEResult } from "./workdir/gluecode/SNACCROSE.js";
+} from "./workdir/TSASN1Base.js";
+import { EASN1TransportEncoding } from "./workdir/TSInvokeContext.js";
+import type { IASN1InvokeData } from "./workdir/TSROSEBase.js";
+import type { ROSEError, ROSEReject, ROSEResult } from "./workdir/SNACCROSE.js";
 
 class TestTransport extends TSASN1Base {
 	public constructor() {

@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 GLUE_DIR="$REPO_ROOT/compiler/back-ends/ts-gen/gluecode"
 TEST_DIR="$REPO_ROOT/compiler/back-ends/ts-gen/tests"
-WORKDIR="$TEST_DIR/workdir/gluecode"
+WORKDIR="$TEST_DIR/workdir"
 STUB_DIR="$REPO_ROOT/samples/ts-microservice/node-client/src/stub"
 NODE_MODULES="$REPO_ROOT/samples/ts-microservice/node-client/node_modules"
 
