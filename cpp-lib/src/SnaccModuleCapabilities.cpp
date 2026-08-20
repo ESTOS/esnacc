@@ -2,7 +2,7 @@
 
 namespace
 {
-void ApplyOpIds(const int* pOpIds, const size_t stOpIdCount, std::unordered_map<unsigned int, SnaccOpVersionInfo>& inOutOps)
+void ApplyOpIds(const int* pOpIds, const size_t stOpIdCount, std::map<unsigned int, SnaccOpVersionInfo>& inOutOps)
 {
 	if (!pOpIds)
 		return;

@@ -69,6 +69,12 @@ TEST(ModuleRegistryTest, RegisteredMetadataMatchesLoadedModuleSnapshot)
 	ExpectOpInfo(module.m_invokes.at(4100u), true, false);
 	ExpectOpInfo(module.m_invokes.at(4101u), false, false);
 	ExpectOpInfo(module.m_invokes.at(4102u), false, true);
+#ifdef _DEBUG
+	EXPECT_STREQ(endpoint.LookUpName(4100u), module.m_invokes.at(4100u).m_strOpName.c_str());
+	EXPECT_STREQ(endpoint.LookUpName(4101u), module.m_invokes.at(4101u).m_strOpName.c_str());
+	EXPECT_STREQ(endpoint.LookUpName(4102u), module.m_invokes.at(4102u).m_strOpName.c_str());
+	EXPECT_STREQ(endpoint.LookUpName(4150u), module.m_events.at(4150u).m_strOpName.c_str());
+#endif
 
 	ASSERT_NE(module.m_events.end(), module.m_events.find(4150u));
 	ExpectOpInfo(module.m_events.at(4150u), false, false);

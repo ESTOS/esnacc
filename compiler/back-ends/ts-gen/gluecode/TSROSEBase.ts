@@ -439,6 +439,8 @@ export enum ELogSeverity {
 export interface IOpVersionInfo {
 	addedUnix: number;
 	deprecatedUnix: number;
+	/** Set during local registerOperation; absent on remote negotiate snapshots. */
+	opName?: string;
 }
 
 /**

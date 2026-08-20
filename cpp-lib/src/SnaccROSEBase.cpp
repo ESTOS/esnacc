@@ -598,20 +598,18 @@ SnaccTelemetryData::Stage GetOutboundUnhandledStageFromResult(const long lRoseRe
 }
 
 // check if at least one Operation has been registerd
-void SnaccROSEComponent::RegisterModuleVersion(const char* szModuleName, const char* szVersion)
+void SnaccROSEComponent::RegisterModuleVersion(SnaccRoseOperationLookup& lookup, const char* szModuleName, const char* szModuleVersion)
 {
-	if (auto* pHost = dynamic_cast<SnaccRoseOperationLookupRegistrationHost*>(m_pSB))
-		pHost->OperationLookup().RegisterModuleVersion(szModuleName, szVersion);
-	else if (auto* pStub = dynamic_cast<SnaccROSEBase*>(m_pSB))
-		pStub->OperationLookupForRegistration().RegisterModuleVersion(szModuleName, szVersion);
+	if (szModuleName && szModuleVersion && *szModuleVersion)
+		lookup.RegisterModuleVersion(szModuleName, szModuleVersion);
 }
 
-void SnaccROSEComponent::RegisterOperation(unsigned int uiOpID, const char* szOpName, unsigned int uiInterfaceID, const char* szModuleName, bool bIsEvent, unsigned long long ullAddedUnix, unsigned long long ullDeprecatedUnix)
+void SnaccROSEComponent::RegisterOperation(SnaccRoseOperationLookup& lookup, unsigned int uiInterfaceId, const char* szModuleName, unsigned int uiOpID, const char* szOpName, bool bIsEvent, unsigned long long ullAddedUnix, unsigned long long ullDeprecatedUnix)
 {
-	if (auto* pHost = dynamic_cast<SnaccRoseOperationLookupRegistrationHost*>(m_pSB))
-		pHost->OperationLookup().RegisterOperation(uiOpID, szOpName, uiInterfaceID, szModuleName, bIsEvent, ullAddedUnix, ullDeprecatedUnix);
-	else if (auto* pStub = dynamic_cast<SnaccROSEBase*>(m_pSB))
-		pStub->OperationLookupForRegistration().RegisterOperation(uiOpID, szOpName, uiInterfaceID, szModuleName, bIsEvent, ullAddedUnix, ullDeprecatedUnix);
+	if (!szModuleName || !szOpName)
+		return;
+
+	lookup.RegisterOperation(uiOpID, szOpName, uiInterfaceId, szModuleName, bIsEvent, ullAddedUnix, ullDeprecatedUnix);
 }
 
 SnaccRoseOperationLookup& SnaccROSEBase::OperationLookupForRegistration()

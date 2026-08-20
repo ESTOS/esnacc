@@ -6,6 +6,8 @@
 #include <optional>
 #include <string>
 
+class SnaccRoseOperationLookup;
+
 namespace SNACC
 {
 	class AsnType;
@@ -376,8 +378,7 @@ private:
 	for all generated ROSE Protocol Handlers (V2) that need OnInvoke
 	*/
 
-/*! SnaccROSEComponent is the base class for all generated ROSE Protocol Handlers (V2)
- */
+/*! SnaccROSEComponent is the base class for all generated ROSE Protocol Handlers (V2). */
 class SnaccROSEComponent
 {
 public:
@@ -387,11 +388,11 @@ public:
 	}
 
 protected:
-	/*! Registers module version metadata on the lookup table referenced by @c m_pSB. */
-	void RegisterModuleVersion(const char* szModuleName, const char* szVersion);
+	/*! Registers module version metadata on a startup lookup table (static RegisterOperations). */
+	static void RegisterModuleVersion(SnaccRoseOperationLookup& lookup, const char* szModuleName, const char* szModuleVersion);
 
-	/*! Registers one ROSE operation on the lookup table referenced by @c m_pSB (UCAAS-1485). */
-	void RegisterOperation(unsigned int uiOpID, const char* szOpName, unsigned int uiInterfaceID, const char* szModuleName, bool bIsEvent = false, unsigned long long ullAddedUnix = 0, unsigned long long ullDeprecatedUnix = 0);
+	/*! Registers one operation on a startup lookup table (static RegisterOperations). */
+	static void RegisterOperation(SnaccRoseOperationLookup& lookup, unsigned int uiInterfaceId, const char* szModuleName, unsigned int uiOpID, const char* szOpName, bool bIsEvent = false, unsigned long long ullAddedUnix = 0, unsigned long long ullDeprecatedUnix = 0);
 
 	SnaccROSESender* m_pSB;
 };

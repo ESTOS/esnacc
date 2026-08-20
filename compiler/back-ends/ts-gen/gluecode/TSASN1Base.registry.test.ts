@@ -46,7 +46,9 @@ test("registerOperation metadata appears in getLoadedModules", () => {
 	assert.equal(module.version, "20240101.0.20240506");
 	assert.equal(module.invokes.get(100)?.addedUnix, 1714968000);
 	assert.equal(module.invokes.get(100)?.deprecatedUnix, 0);
+	assert.equal(module.invokes.get(100)?.opName, "asnInvoke");
 	assert.equal(module.events.get(200)?.deprecatedUnix, 1715054400);
+	assert.equal(module.events.get(200)?.opName, "asnEvent");
 
 	transport.unregisterModule("TestModule");
 	assert.equal(transport.getLoadedModules().size, 0);

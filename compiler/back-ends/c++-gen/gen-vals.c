@@ -109,8 +109,7 @@ int PrintROSEOperationRegistration(FILE* src, CxxRules* r, Module* mod, ValueDef
 	/*
 	 * put instantiation in src file
 	 */
-	fprintf(src, "\tRegisterOperation(");
-	fprintf(src, "%d, \"", v->value->basicValue->a.integer);
+	fprintf(src, "\tRegisterOperation(lookup, m_iid, kModuleName, %d, \"", v->value->basicValue->a.integer);
 	PrintCxxValueDefsName(src, r, v);
 	fprintf(src, "\"");
 	if (bIsEvent)

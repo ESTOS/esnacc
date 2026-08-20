@@ -402,7 +402,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			);
 			this.handlersByID.set(operationID, handler);
 			this.handlersByName.set(operationName, handler);
-			this.trackRegisteredOperation(operationID, moduleName, addedUnix, deprecatedUnix, isEvent);
+			this.trackRegisteredOperation(operationID, operationName, moduleName, addedUnix, deprecatedUnix, isEvent);
 		} else {
 			// trying to re-register a handler for an already registered operationID, this should not happen and indicates a problem in the calling code
 			debugger;
@@ -414,6 +414,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 */
 	private trackRegisteredOperation(
 		operationID: number,
+		operationName: string,
 		moduleName: string,
 		addedUnix: number,
 		deprecatedUnix: number,
@@ -430,7 +431,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			this.loadedModulesByName.set(moduleName, module);
 		}
 
-		const info: IOpVersionInfo = { addedUnix, deprecatedUnix };
+		const info: IOpVersionInfo = { addedUnix, deprecatedUnix, opName: operationName };
 		if (isEvent)
 			module.events.set(operationID, info);
 		else

@@ -14,6 +14,10 @@ struct SnaccOpVersionInfo
 {
 	unsigned long long m_ullAddedUnix = 0;
 	unsigned long long m_ullDeprecatedUnix = 0;
+#ifdef _DEBUG
+	/*! Local registration only; empty for remote negotiate snapshots. */
+	std::string m_strOpName;
+#endif
 };
 
 /*! Loaded module snapshot for negotiate / introspection on one lookup table. */
@@ -21,11 +25,11 @@ struct SnaccLoadedModuleInfo
 {
 	std::string m_strModuleName;
 	std::string m_strVersion;
-	std::unordered_map<unsigned int, SnaccOpVersionInfo> m_invokes;
-	std::unordered_map<unsigned int, SnaccOpVersionInfo> m_events;
+	std::map<unsigned int, SnaccOpVersionInfo> m_invokes;
+	std::map<unsigned int, SnaccOpVersionInfo> m_events;
 };
 
-using SnaccLoadedModuleMap = std::unordered_map<std::string, SnaccLoadedModuleInfo>;
+using SnaccLoadedModuleMap = std::map<std::string, SnaccLoadedModuleInfo>;
 
 /*! Controls outbound invoke gating against a negotiate snapshot on SnaccROSEBase. */
 enum class SnaccRemoteCapabilityMode

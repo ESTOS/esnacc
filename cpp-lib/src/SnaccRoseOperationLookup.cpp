@@ -67,6 +67,10 @@ void SnaccRoseOperationLookup::RegisterOperation(
 	SnaccOpVersionInfo info;
 	info.m_ullAddedUnix = ullAddedUnix;
 	info.m_ullDeprecatedUnix = ullDeprecatedUnix;
+#ifdef _DEBUG
+	if (szOpName)
+		info.m_strOpName = szOpName;
+#endif
 	if (bIsEvent)
 		module.m_events[uiOpID] = info;
 	else
