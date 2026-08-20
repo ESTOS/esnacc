@@ -37,7 +37,7 @@ Environment variables: `SNACCLIB7_ROOT`, `SNACC_CMAKE_BUILD_DIR`, `SNACC_CMAKE_G
 
 `samples/prepare.bat`, `samples/prepare.sh`, and `ROSE/makesnaccrose.bat` call these helpers before running Node or invoking the compiler directly.
 
-Gluecode unit tests (registry + remote capability): run `scripts/run_gluecode_tests.bat` (Windows) or `scripts/run_gluecode_tests.sh` (Linux) after `samples/prepare` has installed node-client dependencies.
+TypeScript gluecode unit tests live under `compiler/back-ends/ts-gen/tests/` (registry + remote capability). Run `scripts/run_gluecode_tests.bat` (Windows) or `scripts/run_gluecode_tests.sh` (Linux) after `samples/prepare` has installed node-client dependencies.
 
 ### CMake variables
 

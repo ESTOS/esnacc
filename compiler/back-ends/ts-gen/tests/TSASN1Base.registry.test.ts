@@ -1,13 +1,13 @@
-// Run: npx tsx compiler/back-ends/ts-gen/gluecode/TSASN1Base.registry.test.ts
+// Run: npx tsx compiler/back-ends/ts-gen/tests/TSASN1Base.registry.test.ts
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
 	ASN1ClassInstanceType,
 	TSASN1Base,
-} from "./TSASN1Base.js";
-import { EASN1TransportEncoding } from "./TSInvokeContext.js";
-import type { IASN1InvokeData } from "./TSROSEBase.js";
-import type { ROSEError, ROSEReject, ROSEResult } from "./SNACCROSE.js";
+} from "../gluecode/TSASN1Base.js";
+import { EASN1TransportEncoding } from "../gluecode/TSInvokeContext.js";
+import type { IASN1InvokeData } from "../gluecode/TSROSEBase.js";
+import type { ROSEError, ROSEReject, ROSEResult } from "../gluecode/SNACCROSE.js";
 
 class TestTransport extends TSASN1Base {
 	public constructor() {

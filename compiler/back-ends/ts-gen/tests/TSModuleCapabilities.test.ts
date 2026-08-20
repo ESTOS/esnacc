@@ -1,10 +1,10 @@
-// Run: npx tsx compiler/back-ends/ts-gen/gluecode/TSModuleCapabilities.test.ts
+// Run: npx tsx compiler/back-ends/ts-gen/tests/TSModuleCapabilities.test.ts
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
 	buildRemoteModuleCapabilities,
 	buildRemoteModuleCapabilitiesFromAsn,
-} from "./TSModuleCapabilities.js";
+} from "../gluecode/TSModuleCapabilities.js";
 
 test("buildRemoteModuleCapabilities populates invoke and event op ids", () => {
 	const remote = buildRemoteModuleCapabilities([

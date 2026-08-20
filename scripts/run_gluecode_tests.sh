@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 GLUE_DIR="$REPO_ROOT/compiler/back-ends/ts-gen/gluecode"
+TEST_DIR="$REPO_ROOT/compiler/back-ends/ts-gen/tests"
 STUB_DIR="$REPO_ROOT/samples/ts-microservice/node-client/src/stub"
 NODE_MODULES="$REPO_ROOT/samples/ts-microservice/node-client/node_modules"
 
@@ -34,5 +35,5 @@ for test_file in \
 	TSModuleCapabilities.test.ts
 do
 	echo "Running $test_file ..."
-	npx --yes tsx "$GLUE_DIR/$test_file"
+	npx --yes tsx "$TEST_DIR/$test_file"
 done
