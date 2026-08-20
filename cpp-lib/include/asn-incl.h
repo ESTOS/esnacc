@@ -863,9 +863,50 @@ public:
 		return "AsnInt";
 	}
 
+	/*! Legacy implicit conversion to 32-bit signed int; prefer GetInt() in new code. */
 	operator AsnIntType() const;
 
+	/*! Returns the INTEGER as a 32-bit signed @c int. Throws if the encoded value does not fit. */
+	int GetInt() const;
+
+	/*! Returns the INTEGER as @c long (width is platform-dependent). Throws if the encoded value does not fit in @c long long before narrowing. */
+	long GetLong() const;
+
+	/*! Returns the INTEGER as 64-bit signed. Throws if the encoded value does not fit. Same as GetLongLong(). */
+	long long GetInt64() const
+	{
+		return GetLongLong();
+	}
+
+	/*! Returns the INTEGER as 64-bit signed. Prefer GetInt64() in new code. */
 	long long GetLongLong() const;
+
+	/*! Returns the INTEGER as a 32-bit @c unsigned int. Throws if negative or out of range. */
+	unsigned int GetUInt() const;
+
+	/*! Returns the INTEGER as @c unsigned long. Throws if negative or out of range. */
+	unsigned long GetULong() const;
+
+	/*! Returns the INTEGER as 64-bit unsigned. Throws if negative. Values above @c LLONG_MAX cannot be represented via the signed decode path. */
+	unsigned long long GetUInt64() const;
+
+	/*! Non-throwing @c GetInt(); returns @c false when the value does not fit in @c int. */
+	bool TryGetInt(int& out) const;
+
+	/*! Non-throwing @c GetLong(); returns @c false when the value does not fit @c long. */
+	bool TryGetLong(long& out) const;
+
+	/*! Non-throwing @c GetInt64(); returns @c false when the encoded value does not fit in 64-bit signed. */
+	bool TryGetInt64(long long& out) const;
+
+	/*! Non-throwing @c GetUInt(); returns @c false when negative or out of @c unsigned int range. */
+	bool TryGetUInt(unsigned int& out) const;
+
+	/*! Non-throwing @c GetULong(); returns @c false when negative or out of @c unsigned long range. */
+	bool TryGetULong(unsigned long& out) const;
+
+	/*! Non-throwing @c GetUInt64(); returns @c false when negative or not representable via the signed decode path. */
+	bool TryGetUInt64(unsigned long long& out) const;
 
 	bool operator==(AsnIntType o) const;
 	bool operator!=(AsnIntType o) const

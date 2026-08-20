@@ -319,7 +319,38 @@
 
 #include "../include/asn-incl.h"
 
+#include <cstdio>
+#include <limits>
 #include <vector>
+
+namespace
+{
+	void SnaccThrowIfNegativeInt64(long long llValue)
+	{
+		if (llValue < 0)
+			throw EXCEPT("integer is negative", INTEGER_ERROR);
+	}
+
+	void SnaccThrowIfInt64Exceeds(long long llValue, long long llMaxInclusive, const char* szTargetType)
+	{
+		if (llValue > llMaxInclusive)
+		{
+			char szMessage[128];
+			snprintf(szMessage, sizeof(szMessage), "integer is too big for conversion to %s", szTargetType);
+			throw EXCEPT(szMessage, INTEGER_ERROR);
+		}
+	}
+
+	bool SnaccInt64FitsSignedRange(long long llValue, long long llMinInclusive, long long llMaxInclusive)
+	{
+		return llValue >= llMinInclusive && llValue <= llMaxInclusive;
+	}
+
+	bool SnaccInt64FitsUnsignedRange(long long llValue, long long llMaxInclusive)
+	{
+		return llValue >= 0 && llValue <= llMaxInclusive;
+	}
+} // namespace
 
 _BEGIN_SNACC_NAMESPACE
 
@@ -657,62 +688,144 @@ AsnInt& AsnInt::operator=(const AsnInt& that)
 //
 AsnInt::operator AsnIntType() const
 {
-	FUNC("AsnInt::operator AsnIntType");
+	return GetInt();
+}
 
-	AsnIntType iResult = 0;
+int AsnInt::GetInt() const
+{
+	int iResult = 0;
+	if (!TryGetInt(iResult))
+		throw EXCEPT("integer is too big for conversion to int", INTEGER_ERROR);
+	return iResult;
+}
 
-	if (m_len > sizeof(AsnIntType))
-		throw EXCEPT("integer is too big for conversion to AsnIntType", INTEGER_ERROR);
+bool AsnInt::TryGetInt(int& out) const
+{
+	if (m_len > sizeof(int))
+		return false;
 
-	// If big int is negative initialize result to -1
-	//
-	if ((m_bytes[0] >> 7 == 1))
+	int iResult = 0;
+
+	if (m_len > 0 && (m_bytes[0] >> 7 == 1))
 		iResult = -1;
 
 	if (m_len > 0)
 	{
-		/*
-		 * write from buffer into AsnIntType
-		 */
 		for (unsigned int i = 0; i < m_len; i++)
 			iResult = (iResult << 8) | (AsnUIntType)(m_bytes[i]);
 	}
-	else
-	{
-		iResult = 0;
-	}
 
-	return iResult;
+	out = iResult;
+	return true;
+}
+
+long AsnInt::GetLong() const
+{
+	long lResult = 0;
+	if (!TryGetLong(lResult))
+		throw EXCEPT("integer is too big for conversion to long", INTEGER_ERROR);
+	return lResult;
+}
+
+bool AsnInt::TryGetLong(long& out) const
+{
+	long long llValue = 0;
+	if (!TryGetInt64(llValue))
+		return false;
+	if (!SnaccInt64FitsSignedRange(llValue, static_cast<long long>(std::numeric_limits<long>::min()), static_cast<long long>(std::numeric_limits<long>::max())))
+		return false;
+	out = static_cast<long>(llValue);
+	return true;
+}
+
+unsigned int AsnInt::GetUInt() const
+{
+	long long llValue = 0;
+	if (!TryGetInt64(llValue))
+		throw EXCEPT("integer is too big for conversion to unsigned int", INTEGER_ERROR);
+	SnaccThrowIfNegativeInt64(llValue);
+	SnaccThrowIfInt64Exceeds(llValue, static_cast<long long>(std::numeric_limits<unsigned int>::max()), "unsigned int");
+	return static_cast<unsigned int>(llValue);
+}
+
+bool AsnInt::TryGetUInt(unsigned int& out) const
+{
+	long long llValue = 0;
+	if (!TryGetInt64(llValue))
+		return false;
+	if (!SnaccInt64FitsUnsignedRange(llValue, static_cast<long long>(std::numeric_limits<unsigned int>::max())))
+		return false;
+	out = static_cast<unsigned int>(llValue);
+	return true;
+}
+
+unsigned long AsnInt::GetULong() const
+{
+	long long llValue = 0;
+	if (!TryGetInt64(llValue))
+		throw EXCEPT("integer is too big for conversion to unsigned long", INTEGER_ERROR);
+	SnaccThrowIfNegativeInt64(llValue);
+	SnaccThrowIfInt64Exceeds(llValue, static_cast<long long>(std::numeric_limits<unsigned long>::max()), "unsigned long");
+	return static_cast<unsigned long>(llValue);
+}
+
+bool AsnInt::TryGetULong(unsigned long& out) const
+{
+	long long llValue = 0;
+	if (!TryGetInt64(llValue))
+		return false;
+	if (!SnaccInt64FitsUnsignedRange(llValue, static_cast<long long>(std::numeric_limits<unsigned long>::max())))
+		return false;
+	out = static_cast<unsigned long>(llValue);
+	return true;
+}
+
+unsigned long long AsnInt::GetUInt64() const
+{
+	long long llValue = 0;
+	if (!TryGetInt64(llValue))
+		throw EXCEPT("integer is too big for conversion to unsigned long long", INTEGER_ERROR);
+	SnaccThrowIfNegativeInt64(llValue);
+	return static_cast<unsigned long long>(llValue);
+}
+
+bool AsnInt::TryGetUInt64(unsigned long long& out) const
+{
+	long long llValue = 0;
+	if (!TryGetInt64(llValue))
+		return false;
+	if (llValue < 0)
+		return false;
+	out = static_cast<unsigned long long>(llValue);
+	return true;
 }
 
 long long AsnInt::GetLongLong() const
 {
-	FUNC("AsnInt::operator long long");
+	long long llResult = 0;
+	if (!TryGetInt64(llResult))
+		throw EXCEPT("integer is too big for conversion to long long", INTEGER_ERROR);
+	return llResult;
+}
+
+bool AsnInt::TryGetInt64(long long& out) const
+{
+	if (m_len > sizeof(long long))
+		return false;
 
 	long long iResult = 0;
 
-	if (m_len > sizeof(long long))
-		throw EXCEPT("integer is too big for conversion to AsnIntType", INTEGER_ERROR);
-
-	// If big int is negative initialize result to -1
-	//
-	if ((m_bytes[0] >> 7 == 1))
+	if (m_len > 0 && (m_bytes[0] >> 7 == 1))
 		iResult = -1;
 
 	if (m_len > 0)
 	{
-		/*
-		 * write from buffer into AsnIntType
-		 */
 		for (unsigned int i = 0; i < m_len; i++)
 			iResult = (iResult << 8) | (AsnUIntType)(m_bytes[i]);
 	}
-	else
-	{
-		iResult = 0;
-	}
 
-	return iResult;
+	out = iResult;
+	return true;
 }
 // Set AsnInt from a buffer.  Buffer is assumed to be a proper
 // ASN.1 integer.
