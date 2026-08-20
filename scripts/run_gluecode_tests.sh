@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 GLUE_DIR="$REPO_ROOT/compiler/back-ends/ts-gen/gluecode"
 TEST_DIR="$REPO_ROOT/compiler/back-ends/ts-gen/tests"
+WORKDIR="$TEST_DIR/workdir/gluecode"
 STUB_DIR="$REPO_ROOT/samples/ts-microservice/node-client/src/stub"
 NODE_MODULES="$REPO_ROOT/samples/ts-microservice/node-client/node_modules"
 
@@ -14,20 +15,15 @@ if [[ ! -d "$NODE_MODULES/@estos/asn1ts" ]]; then
 fi
 
 export NODE_PATH="$NODE_MODULES"
-COPIED_FIXTURE=0
 cleanup() {
-	if [[ "$COPIED_FIXTURE" -eq 1 ]]; then
-		rm -f "$GLUE_DIR/ENetUC_Common.ts" "$GLUE_DIR/ENetUC_Common_Converter.ts"
-	fi
+	rm -rf "$TEST_DIR/workdir"
 }
 trap cleanup EXIT
 
-for fixture in ENetUC_Common.ts ENetUC_Common_Converter.ts; do
-	if [[ ! -f "$GLUE_DIR/$fixture" ]]; then
-		cp "$STUB_DIR/$fixture" "$GLUE_DIR/$fixture"
-		COPIED_FIXTURE=1
-	fi
-done
+rm -rf "$TEST_DIR/workdir"
+mkdir -p "$WORKDIR"
+cp "$GLUE_DIR"/* "$WORKDIR/"
+cp "$STUB_DIR/ENetUC_Common.ts" "$STUB_DIR/ENetUC_Common_Converter.ts" "$WORKDIR/"
 
 for test_file in \
 	TSASN1Base.registry.test.ts \

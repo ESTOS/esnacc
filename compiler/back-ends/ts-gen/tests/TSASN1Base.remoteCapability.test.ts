@@ -4,16 +4,16 @@ import test from "node:test";
 import {
 	ASN1ClassInstanceType,
 	TSASN1Base,
-} from "../gluecode/TSASN1Base.js";
-import { EASN1TransportEncoding } from "../gluecode/TSInvokeContext.js";
+} from "./workdir/gluecode/TSASN1Base.js";
+import { EASN1TransportEncoding } from "./workdir/gluecode/TSInvokeContext.js";
 import {
 	CustomInvokeProblemEnum,
 	RemoteCapabilityMode,
 	ROSE_REJECT_REMOTENOTCAPABLE,
-} from "../gluecode/TSROSEBase.js";
-import { buildRemoteModuleCapabilities } from "../gluecode/TSModuleCapabilities.js";
-import type { IASN1InvokeData } from "../gluecode/TSROSEBase.js";
-import type { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from "../gluecode/SNACCROSE.js";
+} from "./workdir/gluecode/TSROSEBase.js";
+import { buildRemoteModuleCapabilities } from "./workdir/gluecode/TSModuleCapabilities.js";
+import type { IASN1InvokeData } from "./workdir/gluecode/TSROSEBase.js";
+import type { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from "./workdir/gluecode/SNACCROSE.js";
 
 class TestTransport extends TSASN1Base {
 	public sendInvokeCount = 0;
