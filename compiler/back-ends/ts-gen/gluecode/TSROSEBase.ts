@@ -72,6 +72,19 @@ export enum CustomInvokeProblemEnum {
 /** Client-local SendInvoke result: peer negotiate snapshot does not offer this invoke OPID. */
 export const ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00;
 
+/**
+ * Debug-only assert with a human-readable message (console.assert in Node/browser).
+ * Use snaccAssert(check, msg) for preconditions or snaccAssertFail(msg) when already in an error path.
+ */
+export function snaccAssert(condition: boolean, message: string): void {
+	console.assert(condition, message);
+}
+
+/** Debug-only assert for a known error path (always fails when asserts are enabled). */
+export function snaccAssertFail(message: string): void {
+	console.assert(false, message);
+}
+
 /** Controls outbound invoke gating against a negotiate snapshot on TSASN1Base. */
 export enum RemoteCapabilityMode {
 	Disabled = 0,

@@ -30,6 +30,8 @@ import {
 	ISendInvokeContext,
 	ReceiveInvokeContext,
 	RemoteCapabilityMode,
+	snaccAssert,
+	snaccAssertFail,
 	ASN1ByteArray,
 	ROSEBase,
 } from "./TSROSEBase.js";
@@ -578,7 +580,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * Debug assert when hasRemoteModuleCapabilities() is false.
 	 */
 	public isSupportedOperation(operationID: number): boolean {
-		console.assert(
+		snaccAssert(
 			this.remoteModuleCapabilitiesSet,
 			"isSupportedOperation requires applyRemoteModuleCapabilities first",
 		);
@@ -596,6 +598,9 @@ export abstract class TSASN1Base implements IASN1Transport {
 			return undefined;
 		if (this.internalIsRemoteOperationSupported(invoke.operationID))
 			return undefined;
+		snaccAssertFail(
+			`Outbound invoke blocked: operation not offered by remote (${invoke.operationName}, ${invoke.operationID})`,
+		);
 		return createInvokeReject(
 			invoke,
 			CustomInvokeProblemEnum.remoteNotCapable,

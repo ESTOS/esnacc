@@ -16,13 +16,13 @@ using namespace SNACC;
 
 namespace
 {
-int ResolveInvokeTimeoutMs(const SnaccInvokeContext& ctx, long lMaxInvokeWait)
-{
-	const int iTimeout = ctx.InvokeTimeout();
-	if (iTimeout == -1)
-		return static_cast<int>(lMaxInvokeWait);
-	return iTimeout;
-}
+	int ResolveInvokeTimeoutMs(const SnaccInvokeContext& ctx, long lMaxInvokeWait)
+	{
+		const int iTimeout = ctx.InvokeTimeout();
+		if (iTimeout == -1)
+			return static_cast<int>(lMaxInvokeWait);
+		return iTimeout;
+	}
 } // namespace
 
 namespace
@@ -540,7 +540,7 @@ const char* strstr_limited(const char* haystack, const char* needle, size_t limi
 	}
 	catch (...)
 	{
-		ASSERT(0);
+		ASSERT_FAILED("Unhandled exception caught");
 	}
 
 	return NULL;
@@ -606,14 +606,7 @@ void SnaccROSEComponent::RegisterModuleVersion(const char* szModuleName, const c
 		pStub->OperationLookupForRegistration().RegisterModuleVersion(szModuleName, szVersion);
 }
 
-void SnaccROSEComponent::RegisterOperation(
-	unsigned int uiOpID,
-	const char* szOpName,
-	unsigned int uiInterfaceID,
-	const char* szModuleName,
-	bool bIsEvent,
-	unsigned long long ullAddedUnix,
-	unsigned long long ullDeprecatedUnix)
+void SnaccROSEComponent::RegisterOperation(unsigned int uiOpID, const char* szOpName, unsigned int uiInterfaceID, const char* szModuleName, bool bIsEvent, unsigned long long ullAddedUnix, unsigned long long ullDeprecatedUnix)
 {
 	if (auto* pHost = dynamic_cast<SnaccRoseOperationLookupRegistrationHost*>(m_pSB))
 		pHost->OperationLookup().RegisterOperation(uiOpID, szOpName, uiInterfaceID, szModuleName, bIsEvent, ullAddedUnix, ullDeprecatedUnix);
@@ -623,10 +616,7 @@ void SnaccROSEComponent::RegisterOperation(
 
 SnaccRoseOperationLookup& SnaccROSEBase::OperationLookupForRegistration()
 {
-#ifdef _DEBUG
-	if (m_operationLookup.IsSealed())
-		ASSERT(0);
-#endif
+	ASSERT(!m_operationLookup.IsSealed(), "m_operationLookup is already sealed");
 	return const_cast<SnaccRoseOperationLookup&>(m_operationLookup);
 }
 
@@ -702,10 +692,7 @@ bool SnaccROSEBase::InternalIsRemoteOperationSupported(const unsigned int uiOpId
 
 bool SnaccROSEBase::IsSupportedOperation(const unsigned int uiOpId) const
 {
-#ifdef _DEBUG
-	if (!m_bRemoteModuleCapabilitiesSet)
-		ASSERT(0);
-#endif
+	ASSERT(m_bRemoteModuleCapabilitiesSet, "isSupportedOperation requires ApplyRemoteModuleCapabilities first");
 	return InternalIsRemoteOperationSupported(uiOpId);
 }
 
@@ -843,12 +830,10 @@ void SnaccROSEBase::CompleteAllPendingOperations()
 		std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
 
 		for (const auto& entry : m_PendingOperations)
-		{
 			if (entry.second->m_bAsyncInvoke)
 				asyncInvokeIds.push_back(entry.second->m_lInvokeID);
 			else
 				entry.second->CompleteOperation(ROSE_TE_SHUTDOWN);
-		}
 	}
 
 	for (const long invokeID : asyncInvokeIds)
@@ -1121,7 +1106,7 @@ std::string SnaccROSEBase::GetEncoded(const SNACC::TransportEncoding encoding, c
 			}
 			break;
 		default:
-			ASSERT(false);
+			ASSERT_FAILED("Invalid encoding provided %u", (unsigned int)encoding);
 			throw std::runtime_error("invalid encoding");
 			break;
 	}
@@ -1133,7 +1118,7 @@ SNACC::TransportEncoding SnaccROSEBase::DetectEncoding(const char* lpBytes, unsi
 	if (!ulSize)
 		return SNACC::TransportEncoding::UNKNOWN;
 
-	unsigned char byFirst = (unsigned char)*lpBytes;
+	unsigned char byFirst = (unsigned char)lpBytes[0];
 	if (byFirst == 0xA1 || byFirst == 0xA2 || byFirst == 0xA3 || byFirst == 0xA4)
 		return SNACC::TransportEncoding::BER;
 	else if (byFirst == 'J')
@@ -1142,7 +1127,7 @@ SNACC::TransportEncoding SnaccROSEBase::DetectEncoding(const char* lpBytes, unsi
 		return SNACC::TransportEncoding::JSON_NO_HEADING;
 	else
 	{
-		ASSERT(false);
+		ASSERT_FAILED("Could not detect encoding from data %02x", byFirst);
 		return SNACC::TransportEncoding::UNKNOWN;
 	}
 }
@@ -1617,7 +1602,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 		// You need to specify the transport encoding when the connection is setup
 		// The connection is no longer defaulting to BER. This needs to be set explicit.
 		// Inbound connections adopt the encoding as soon as the first payload is received
-		ASSERT(0);
+		ASSERT_FAILED("Invalid m_eTransportEncoding %u", (unsigned int)m_eTransportEncoding);
 		throw std::runtime_error("invalid m_eTransportEncoding");
 	}
 
@@ -1750,6 +1735,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResu
 
 	if (m_remoteCapabilityMode == SnaccRemoteCapabilityMode::Enabled && m_bRemoteModuleCapabilitiesSet && !InternalIsRemoteOperationSupported(pInvoke->operationID))
 	{
+		ASSERT_FAILED("Outbound invoke blocked: operation %s (%u) is not offered by the remote peer", szResolvedOperationName ? szResolvedOperationName : "?", pInvoke->operationID.GetUInt());
 		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
 		telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::LOCAL_REJECT, ROSE_REJECT_REMOTENOTCAPABLE, std::nullopt, std::move(pCtx));
 		OnInvokeProcessed(telemetry);
@@ -1850,9 +1836,7 @@ void SnaccROSEBase::FinishAsyncInvoke(long invokeID, long lRoseResult, std::uniq
 	long lFinalRoseResult = lRoseResult;
 	std::shared_ptr<SnaccInvokeContext> pCtx = pending->m_pAsyncContext;
 	if (pending->m_pAnswerMessage && pCtx)
-	{
 		lFinalRoseResult = HandleInvokeResult(lFinalRoseResult, *pending->m_pAnswerMessage, pCtx->AsyncResultBuffer(), pCtx->AsyncErrorBuffer(), *pCtx);
-	}
 
 	pending->EnsureOutboundTelemetry();
 
@@ -1990,9 +1974,7 @@ long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 	ASSERT(!bFireAndForget || !pCtx->HasAsyncCompletion());
 
 	if (!bFireAndForget && !pCtx->HasAsyncCompletion())
-	{
 		pCtx->SetAsyncCompletion([](long, SnaccInvokeContext&) {}, pResult, pError);
-	}
 
 	auto& ctx = *pCtx;
 
@@ -2012,6 +1994,7 @@ long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 
 	if (m_remoteCapabilityMode == SnaccRemoteCapabilityMode::Enabled && m_bRemoteModuleCapabilitiesSet && !InternalIsRemoteOperationSupported(pInvoke->operationID))
 	{
+		ASSERT_FAILED("Outbound invoke blocked: operation %s (%u) is not offered by the remote peer", szResolvedOperationName ? szResolvedOperationName : "?", pInvoke->operationID.GetUInt());
 		SnaccInvokeAsyncCallback rejectCallback;
 		if (!bFireAndForget && pCtx->HasAsyncCompletion())
 			rejectCallback = pCtx->AsyncCallback();
@@ -2561,7 +2544,7 @@ bool SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bException, 
 			{
 				// No length was handed over
 				// When trying to get the length from a zero terminated string it looks like we ran into memory we are not allowed to read
-				ASSERT(false);
+				ASSERT(0);
 			}
 		}
 
@@ -2604,7 +2587,7 @@ bool SnaccROSEBase::PrintJSONToLog(const bool bOutbound, const bool bException, 
 	}
 	catch (...)
 	{
-		ASSERT(false);
+		ASSERT(0);
 	}
 	return false;
 }
