@@ -29,7 +29,7 @@ import {
 	IROSELogger,
 	ISendInvokeContext,
 	ReceiveInvokeContext,
-	RemoteCapabilityMode,
+	ClientInvokeBlockPolicy,
 	snaccAssert,
 	snaccAssertFail,
 	ASN1ByteArray,
@@ -307,7 +307,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	// Peer negotiate snapshot applied on this stub (client/server outbound gating)
 	private remoteModuleCapabilitiesByName = new Map<string, ILoadedModuleInfo>();
 	private remoteModuleCapabilitiesSet = false;
-	private remoteCapabilityMode = RemoteCapabilityMode.Disabled;
+	private clientInvokeBlockPolicy = ClientInvokeBlockPolicy.NeverBlock;
 	// The Logger Callback which must be set with the SetLogger Method
 	protected logger?: IROSELogger;
 	// Logs the raw transport (inbound before decoding, outbound after encoding)
@@ -530,23 +530,23 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * Configures whether outbound invokes are gated on a negotiate snapshot. Default Disabled.
+	 * Configures blocking of outbound invokes not offered by the peer snapshot. Default NeverBlock.
 	 */
-	public setRemoteCapabilityMode(mode: RemoteCapabilityMode): void {
-		this.remoteCapabilityMode = mode;
+	public setClientInvokeBlockPolicy(policy: ClientInvokeBlockPolicy): void {
+		this.clientInvokeBlockPolicy = policy;
 	}
 
 	/**
-	 * Returns the current remote capability gating mode for outbound invokes.
+	 * Returns the current client invoke block policy for outbound invokes.
 	 */
-	public getRemoteCapabilityMode(): RemoteCapabilityMode {
-		return this.remoteCapabilityMode;
+	public getClientInvokeBlockPolicy(): ClientInvokeBlockPolicy {
+		return this.clientInvokeBlockPolicy;
 	}
 
 	/**
 	 * Stores the peer module snapshot from asnNegotiateInterface (or equivalent).
 	 */
-	public applyRemoteModuleCapabilities(remote: ReadonlyMap<string, ILoadedModuleInfo>): void {
+	public setRemoteModuleCapabilities(remote: ReadonlyMap<string, ILoadedModuleInfo>): void {
 		this.remoteModuleCapabilitiesByName = new Map(
 			[...remote.entries()].map(([moduleName, moduleInfo]) => [
 				moduleName,
@@ -570,7 +570,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * True after applyRemoteModuleCapabilities() was called (even when the map is empty).
+	 * True after setRemoteModuleCapabilities() was called (even when the map is empty).
 	 */
 	public hasRemoteModuleCapabilities(): boolean {
 		return this.remoteModuleCapabilitiesSet;
@@ -583,19 +583,19 @@ export abstract class TSASN1Base implements IASN1Transport {
 	public isSupportedOperation(operationID: number): boolean {
 		snaccAssert(
 			this.remoteModuleCapabilitiesSet,
-			"isSupportedOperation requires applyRemoteModuleCapabilities first",
+			"isSupportedOperation requires setRemoteModuleCapabilities first",
 		);
 		return this.internalIsRemoteOperationSupported(operationID);
 	}
 
 	/**
-	 * Local reject for outbound invokes blocked by remote capability gating.
+	 * Local reject for outbound invokes blocked by ClientInvokeBlockPolicy.
 	 * Events (invokeID 99999) are never gated here.
 	 */
 	protected tryRejectRemoteNotCapable(invoke: ROSEInvoke): ROSEReject | undefined {
 		if (invoke.invokeID === 99999)
 			return undefined;
-		if (this.remoteCapabilityMode !== RemoteCapabilityMode.Enabled || !this.remoteModuleCapabilitiesSet)
+		if (this.clientInvokeBlockPolicy !== ClientInvokeBlockPolicy.BlockUnsupportedOperations || !this.remoteModuleCapabilitiesSet)
 			return undefined;
 		if (this.internalIsRemoteOperationSupported(invoke.operationID))
 			return undefined;

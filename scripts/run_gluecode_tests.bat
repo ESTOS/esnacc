@@ -25,7 +25,7 @@ copy /Y "%STUB_DIR%\ENetUC_Common_Converter.ts" "%WORKDIR%\" >nul
 
 for %%T in (
 	TSASN1Base.registry.test.ts
-	TSASN1Base.remoteCapability.test.ts
+	TSASN1Base.clientInvokeBlockPolicy.test.ts
 	TSModuleCapabilities.test.ts
 ) do (
 	echo Running %%T ...

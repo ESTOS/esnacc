@@ -238,15 +238,15 @@ public:
 	/*! Resolves ASN.1 module name owning the given operation id via the lookup table. */
 	const char* LookUpModuleName(unsigned int uiOpID) const;
 
-	/*! Configures whether outbound invokes are gated on a negotiate snapshot. Default Disabled. */
-	void SetRemoteCapabilityMode(SnaccRemoteCapabilityMode mode);
-	SnaccRemoteCapabilityMode GetRemoteCapabilityMode() const;
+	/*! Configures blocking of outbound invokes not offered by the peer snapshot. Default NeverBlock. */
+	void SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy policy);
+	SnaccClientInvokeBlockPolicy GetClientInvokeBlockPolicy() const;
 
 	/*! Stores the peer module snapshot from asnNegotiateInterface (or equivalent). */
-	void ApplyRemoteModuleCapabilities(const SnaccLoadedModuleMap& remote);
+	void SetRemoteModuleCapabilities(const SnaccLoadedModuleMap& remote);
 	void ClearRemoteModuleCapabilities();
 
-	/*! True after ApplyRemoteModuleCapabilities() was called (even when the map is empty). */
+	/*! True after SetRemoteModuleCapabilities() was called (even when the map is empty). */
 	bool HasRemoteModuleCapabilities() const;
 
 	/*! True when the negotiate snapshot offers this invoke OPID. Debug ASSERT when !HasRemoteModuleCapabilities(). */
@@ -522,7 +522,7 @@ private:
 	// Transport Encoding to be used
 	SNACC::TransportEncoding m_eTransportEncoding{SNACC::TransportEncoding::UNKNOWN};
 
-	SnaccRemoteCapabilityMode m_remoteCapabilityMode{SnaccRemoteCapabilityMode::Disabled};
+	SnaccClientInvokeBlockPolicy m_clientInvokeBlockPolicy{SnaccClientInvokeBlockPolicy::NeverBlock};
 	SnaccLoadedModuleMap m_remoteModuleCapabilities;
 	bool m_bRemoteModuleCapabilitiesSet{false};
 

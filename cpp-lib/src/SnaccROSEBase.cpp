@@ -648,17 +648,17 @@ const char* SnaccROSEBase::LookUpModuleName(unsigned int uiOpID) const
 	return m_operationLookup.LookUpModuleName(uiOpID);
 }
 
-void SnaccROSEBase::SetRemoteCapabilityMode(const SnaccRemoteCapabilityMode mode)
+void SnaccROSEBase::SetClientInvokeBlockPolicy(const SnaccClientInvokeBlockPolicy policy)
 {
-	m_remoteCapabilityMode = mode;
+	m_clientInvokeBlockPolicy = policy;
 }
 
-SnaccRemoteCapabilityMode SnaccROSEBase::GetRemoteCapabilityMode() const
+SnaccClientInvokeBlockPolicy SnaccROSEBase::GetClientInvokeBlockPolicy() const
 {
-	return m_remoteCapabilityMode;
+	return m_clientInvokeBlockPolicy;
 }
 
-void SnaccROSEBase::ApplyRemoteModuleCapabilities(const SnaccLoadedModuleMap& remote)
+void SnaccROSEBase::SetRemoteModuleCapabilities(const SnaccLoadedModuleMap& remote)
 {
 	m_remoteModuleCapabilities = remote;
 	m_bRemoteModuleCapabilitiesSet = true;
@@ -690,7 +690,7 @@ bool SnaccROSEBase::InternalIsRemoteOperationSupported(const unsigned int uiOpId
 
 bool SnaccROSEBase::IsSupportedOperation(const unsigned int uiOpId) const
 {
-	ASSERT(m_bRemoteModuleCapabilitiesSet, "isSupportedOperation requires ApplyRemoteModuleCapabilities first");
+	ASSERT(m_bRemoteModuleCapabilitiesSet, "isSupportedOperation requires SetRemoteModuleCapabilities first");
 	return InternalIsRemoteOperationSupported(uiOpId);
 }
 
@@ -1731,7 +1731,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResu
 		return ROSE_TE_SHUTDOWN;
 	}
 
-	if (m_remoteCapabilityMode == SnaccRemoteCapabilityMode::Enabled && m_bRemoteModuleCapabilitiesSet && !InternalIsRemoteOperationSupported(pInvoke->operationID))
+	if (m_clientInvokeBlockPolicy == SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations && m_bRemoteModuleCapabilitiesSet && !InternalIsRemoteOperationSupported(pInvoke->operationID))
 	{
 		ASSERT_FAILED("Outbound invoke blocked: operation %s (%u) is not offered by the remote peer", szResolvedOperationName ? szResolvedOperationName : "?", pInvoke->operationID.GetUInt());
 		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
@@ -1990,7 +1990,7 @@ long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 		return ROSE_TE_SHUTDOWN;
 	}
 
-	if (m_remoteCapabilityMode == SnaccRemoteCapabilityMode::Enabled && m_bRemoteModuleCapabilitiesSet && !InternalIsRemoteOperationSupported(pInvoke->operationID))
+	if (m_clientInvokeBlockPolicy == SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations && m_bRemoteModuleCapabilitiesSet && !InternalIsRemoteOperationSupported(pInvoke->operationID))
 	{
 		ASSERT_FAILED("Outbound invoke blocked: operation %s (%u) is not offered by the remote peer", szResolvedOperationName ? szResolvedOperationName : "?", pInvoke->operationID.GetUInt());
 		SnaccInvokeAsyncCallback rejectCallback;

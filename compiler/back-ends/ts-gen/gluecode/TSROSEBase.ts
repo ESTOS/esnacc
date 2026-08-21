@@ -85,10 +85,10 @@ export function snaccAssertFail(message: string): void {
 	console.assert(false, message);
 }
 
-/** Controls outbound invoke gating against a negotiate snapshot on TSASN1Base. */
-export enum RemoteCapabilityMode {
-	Disabled = 0,
-	Enabled = 1,
+/** Controls whether outbound client invokes are blocked when absent from the negotiate snapshot. */
+export enum ClientInvokeBlockPolicy {
+	NeverBlock = 0,
+	BlockUnsupportedOperations = 1,
 }
 
 /**
@@ -500,9 +500,9 @@ export interface IASN1Transport {
 	lookUpName(operationID: number): string | undefined;
 	lookUpID(operationName: string): number | undefined;
 	lookUpModuleName(operationID: number): string | undefined;
-	setRemoteCapabilityMode(mode: RemoteCapabilityMode): void;
-	getRemoteCapabilityMode(): RemoteCapabilityMode;
-	applyRemoteModuleCapabilities(remote: ReadonlyMap<string, ILoadedModuleInfo>): void;
+	setClientInvokeBlockPolicy(policy: ClientInvokeBlockPolicy): void;
+	getClientInvokeBlockPolicy(): ClientInvokeBlockPolicy;
+	setRemoteModuleCapabilities(remote: ReadonlyMap<string, ILoadedModuleInfo>): void;
 	clearRemoteModuleCapabilities(): void;
 	hasRemoteModuleCapabilities(): boolean;
 	isSupportedOperation(operationID: number): boolean;

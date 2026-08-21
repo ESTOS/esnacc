@@ -1,4 +1,4 @@
-// Run: npx tsx compiler/back-ends/ts-gen/tests/TSASN1Base.remoteCapability.test.ts
+// Run: npx tsx compiler/back-ends/ts-gen/tests/TSASN1Base.clientInvokeBlockPolicy.test.ts
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
@@ -8,7 +8,7 @@ import {
 import { EASN1TransportEncoding } from "./workdir/TSInvokeContext.js";
 import {
 	CustomInvokeProblemEnum,
-	RemoteCapabilityMode,
+	ClientInvokeBlockPolicy,
 	ROSE_REJECT_REMOTENOTCAPABLE,
 } from "./workdir/TSROSEBase.js";
 import { buildRemoteModuleCapabilities } from "./workdir/TSModuleCapabilities.js";
@@ -63,10 +63,10 @@ test("lookUpName and lookUpModuleName resolve registered handlers", () => {
 	assert.equal(transport.lookUpModuleName(100), "TestModule");
 });
 
-test("enabled without snapshot does not gate sendInvoke", async () => {
+test("blockUnsupportedOperations without snapshot does not block sendInvoke", async () => {
 	const transport = new TestTransport();
 	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 0, 0, false);
-	transport.setRemoteCapabilityMode(RemoteCapabilityMode.Enabled);
+	transport.setClientInvokeBlockPolicy(ClientInvokeBlockPolicy.BlockUnsupportedOperations);
 
 	await transport.sendInvoke({
 		invoke: createInvoke(100, "asnInvoke"),
@@ -77,13 +77,13 @@ test("enabled without snapshot does not gate sendInvoke", async () => {
 	assert.equal(transport.sendInvokeCount, 1);
 });
 
-test("enabled with unsupported op id returns remoteNotCapable reject", async () => {
+test("blockUnsupportedOperations with unsupported op id returns remoteNotCapable reject", async () => {
 	const transport = new TestTransport();
 	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 0, 0, false);
-	transport.applyRemoteModuleCapabilities(buildRemoteModuleCapabilities([
+	transport.setRemoteModuleCapabilities(buildRemoteModuleCapabilities([
 		{ moduleName: "TestModule", version: "1.0.0", invokeOpIds: [200] },
 	]));
-	transport.setRemoteCapabilityMode(RemoteCapabilityMode.Enabled);
+	transport.setClientInvokeBlockPolicy(ClientInvokeBlockPolicy.BlockUnsupportedOperations);
 
 	const result = await transport.sendInvoke({
 		invoke: createInvoke(100, "asnInvoke"),
@@ -100,7 +100,7 @@ test("enabled with unsupported op id returns remoteNotCapable reject", async () 
 test("isSupportedOperation reflects applied snapshot", () => {
 	const transport = new TestTransport();
 	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 0, 0, false);
-	transport.applyRemoteModuleCapabilities(buildRemoteModuleCapabilities([
+	transport.setRemoteModuleCapabilities(buildRemoteModuleCapabilities([
 		{ moduleName: "TestModule", version: "1.0.0", invokeOpIds: [100] },
 	]));
 
@@ -109,13 +109,13 @@ test("isSupportedOperation reflects applied snapshot", () => {
 	assert.equal(transport.isSupportedOperation(200), false);
 });
 
-test("clearRemoteModuleCapabilities stops gating", async () => {
+test("clearRemoteModuleCapabilities stops blocking", async () => {
 	const transport = new TestTransport();
 	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 0, 0, false);
-	transport.applyRemoteModuleCapabilities(buildRemoteModuleCapabilities([
+	transport.setRemoteModuleCapabilities(buildRemoteModuleCapabilities([
 		{ moduleName: "TestModule", version: "1.0.0", invokeOpIds: [200] },
 	]));
-	transport.setRemoteCapabilityMode(RemoteCapabilityMode.Enabled);
+	transport.setClientInvokeBlockPolicy(ClientInvokeBlockPolicy.BlockUnsupportedOperations);
 	transport.clearRemoteModuleCapabilities();
 
 	await transport.sendInvoke({
@@ -127,13 +127,13 @@ test("clearRemoteModuleCapabilities stops gating", async () => {
 	assert.equal(transport.sendInvokeCount, 1);
 });
 
-test("disabled with snapshot does not gate sendInvoke", async () => {
+test("neverBlock with snapshot does not block sendInvoke", async () => {
 	const transport = new TestTransport();
 	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 0, 0, false);
-	transport.applyRemoteModuleCapabilities(buildRemoteModuleCapabilities([
+	transport.setRemoteModuleCapabilities(buildRemoteModuleCapabilities([
 		{ moduleName: "TestModule", version: "1.0.0", invokeOpIds: [200] },
 	]));
-	transport.setRemoteCapabilityMode(RemoteCapabilityMode.Disabled);
+	transport.setClientInvokeBlockPolicy(ClientInvokeBlockPolicy.NeverBlock);
 
 	await transport.sendInvoke({
 		invoke: createInvoke(100, "asnInvoke"),
@@ -144,13 +144,13 @@ test("disabled with snapshot does not gate sendInvoke", async () => {
 	assert.equal(transport.sendInvokeCount, 1);
 });
 
-test("enabled with supported op id sends invoke", async () => {
+test("blockUnsupportedOperations with supported op id sends invoke", async () => {
 	const transport = new TestTransport();
 	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 0, 0, false);
-	transport.applyRemoteModuleCapabilities(buildRemoteModuleCapabilities([
+	transport.setRemoteModuleCapabilities(buildRemoteModuleCapabilities([
 		{ moduleName: "TestModule", version: "1.0.0", invokeOpIds: [100] },
 	]));
-	transport.setRemoteCapabilityMode(RemoteCapabilityMode.Enabled);
+	transport.setClientInvokeBlockPolicy(ClientInvokeBlockPolicy.BlockUnsupportedOperations);
 
 	await transport.sendInvoke({
 		invoke: createInvoke(100, "asnInvoke"),

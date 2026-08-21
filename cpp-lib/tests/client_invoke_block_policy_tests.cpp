@@ -43,7 +43,7 @@ SnaccLoadedModuleMap BuildRemoteSnapshotWithoutGetSettings()
 }
 } // namespace
 
-class RemoteCapabilityRuntimeTest : public RuntimeTestBase
+class ClientInvokeBlockPolicyRuntimeTest : public RuntimeTestBase
 {
 protected:
 	void InitializeConnectedEndpoints()
@@ -85,54 +85,54 @@ TEST(RemoteCapabilityModuleHelperTest, BuildRemoteModuleCapabilitiesPopulatesInv
 	EXPECT_NE(module.m_events.end(), module.m_events.find(4150u));
 }
 
-TEST_F(RemoteCapabilityRuntimeTest, EnabledWithoutSnapshotDoesNotGateInvoke)
+TEST_F(ClientInvokeBlockPolicyRuntimeTest, BlockUnsupportedOperationsWithoutSnapshotDoesNotBlockInvoke)
 {
 	InitializeConnectedEndpoints();
-	m_client.SetRemoteCapabilityMode(SnaccRemoteCapabilityMode::Enabled);
+	m_client.SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations);
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_NOERROR, roseResult);
 	EXPECT_GE(ClientOutboundTransportObservation().TransportSendCount(), 1u);
 }
 
-TEST_F(RemoteCapabilityRuntimeTest, EnabledWithUnsupportedOpIdReturnsRemoteNotCapable)
+TEST_F(ClientInvokeBlockPolicyRuntimeTest, BlockUnsupportedOperationsWithUnsupportedOpIdReturnsRemoteNotCapable)
 {
 	InitializeConnectedEndpoints();
-	m_client.ApplyRemoteModuleCapabilities(BuildRemoteSnapshotWithoutGetSettings());
-	m_client.SetRemoteCapabilityMode(SnaccRemoteCapabilityMode::Enabled);
+	m_client.SetRemoteModuleCapabilities(BuildRemoteSnapshotWithoutGetSettings());
+	m_client.SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations);
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_REJECT_REMOTENOTCAPABLE, roseResult);
 	EXPECT_EQ(0u, ServerInboundObservation().TransportSendCount());
 }
 
-TEST_F(RemoteCapabilityRuntimeTest, EnabledWithSupportedOpIdSendsInvoke)
+TEST_F(ClientInvokeBlockPolicyRuntimeTest, BlockUnsupportedOperationsWithSupportedOpIdSendsInvoke)
 {
 	InitializeConnectedEndpoints();
-	m_client.ApplyRemoteModuleCapabilities(BuildRemoteSnapshotWithGetSettingsOnly());
-	m_client.SetRemoteCapabilityMode(SnaccRemoteCapabilityMode::Enabled);
+	m_client.SetRemoteModuleCapabilities(BuildRemoteSnapshotWithGetSettingsOnly());
+	m_client.SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations);
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_NOERROR, roseResult);
 	EXPECT_GE(ClientOutboundTransportObservation().TransportSendCount(), 1u);
 }
 
-TEST_F(RemoteCapabilityRuntimeTest, DisabledWithSnapshotDoesNotGateInvoke)
+TEST_F(ClientInvokeBlockPolicyRuntimeTest, NeverBlockWithSnapshotDoesNotBlockInvoke)
 {
 	InitializeConnectedEndpoints();
-	m_client.ApplyRemoteModuleCapabilities(BuildRemoteSnapshotWithoutGetSettings());
-	m_client.SetRemoteCapabilityMode(SnaccRemoteCapabilityMode::Disabled);
+	m_client.SetRemoteModuleCapabilities(BuildRemoteSnapshotWithoutGetSettings());
+	m_client.SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy::NeverBlock);
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_NOERROR, roseResult);
 	EXPECT_GE(ClientOutboundTransportObservation().TransportSendCount(), 1u);
 }
 
-TEST_F(RemoteCapabilityRuntimeTest, ClearRemoteCapabilitiesStopsGating)
+TEST_F(ClientInvokeBlockPolicyRuntimeTest, ClearRemoteCapabilitiesStopsBlocking)
 {
 	InitializeConnectedEndpoints();
-	m_client.ApplyRemoteModuleCapabilities(BuildRemoteSnapshotWithoutGetSettings());
-	m_client.SetRemoteCapabilityMode(SnaccRemoteCapabilityMode::Enabled);
+	m_client.SetRemoteModuleCapabilities(BuildRemoteSnapshotWithoutGetSettings());
+	m_client.SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations);
 	m_client.ClearRemoteModuleCapabilities();
 
 	const long roseResult = InvokeGetSettingsOnClient();
@@ -140,13 +140,13 @@ TEST_F(RemoteCapabilityRuntimeTest, ClearRemoteCapabilitiesStopsGating)
 	EXPECT_GE(ClientOutboundTransportObservation().TransportSendCount(), 1u);
 }
 
-TEST_F(RemoteCapabilityRuntimeTest, IsSupportedOperationReflectsAppliedSnapshot)
+TEST_F(ClientInvokeBlockPolicyRuntimeTest, IsSupportedOperationReflectsAppliedSnapshot)
 {
 	SnaccRoseOperationLookup lookup;
-	RuntimeEndpoint endpoint{L"RemoteCapabilityQuery", "remote-capability-query", lookup};
+	RuntimeEndpoint endpoint{L"ClientInvokeBlockPolicyQuery", "client-invoke-block-policy-query", lookup};
 	ENetUC_Settings_ManagerROSE::RegisterOperations(lookup);
 
-	endpoint.ApplyRemoteModuleCapabilities(BuildRemoteSnapshotWithGetSettingsOnly());
+	endpoint.SetRemoteModuleCapabilities(BuildRemoteSnapshotWithGetSettingsOnly());
 	EXPECT_TRUE(endpoint.HasRemoteModuleCapabilities());
 	EXPECT_TRUE(endpoint.IsSupportedOperation(4100u));
 	EXPECT_FALSE(endpoint.IsSupportedOperation(4101u));

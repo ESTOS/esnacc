@@ -31,11 +31,11 @@ struct SnaccLoadedModuleInfo
 
 using SnaccLoadedModuleMap = std::map<std::string, SnaccLoadedModuleInfo>;
 
-/*! Controls outbound invoke gating against a negotiate snapshot on SnaccROSEBase. */
-enum class SnaccRemoteCapabilityMode
+/*! Controls whether outbound client invokes are blocked when absent from the negotiate snapshot. */
+enum class SnaccClientInvokeBlockPolicy
 {
-	Disabled,
-	Enabled,
+	NeverBlock,
+	BlockUnsupportedOperations,
 };
 
 /*! Immutable operation-id lookup table after Seal().
