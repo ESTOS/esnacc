@@ -355,6 +355,51 @@ public:
 	 * szSessionID - the SessionID (this propery is filled by subclassing from the concrete class in case we are handling multiple clients via one connection)
 	 */
 	virtual long EncodeError(unsigned int uiInvokeID, const SNACC::AsnType* pError, std::string& strResponse, const wchar_t* szSessionID = nullptr) = 0;
+
+	/*! @name Per-session event and invoke subscription (server dispatch)
+	 * Default implementations are permissive (no filtering) for clients and stubs.
+	 * Server connections override to gate outbound events and server-to-client invokes.
+	 * @{ */
+
+	/*! @return True when @p uiEventOpId is in the session subscribed-event set. */
+	virtual bool IsSubscribedEvent(unsigned int uiEventOpId) const
+	{
+		(void)uiEventOpId;
+		return true;
+	}
+
+	/*! @return True when @p uiInvokeOpId is in the session supported-invoke set. */
+	virtual bool IsSupportedInvoke(unsigned int uiInvokeOpId) const
+	{
+		(void)uiInvokeOpId;
+		return true;
+	}
+
+	virtual void ClearAllRoseSessionSubscriptions() {}
+
+	virtual void ClearSubscribedEvents(int moduleIid)
+	{
+		(void)moduleIid;
+	}
+
+	virtual void ClearSupportedInvokes(int moduleIid)
+	{
+		(void)moduleIid;
+	}
+
+	virtual void AddSubscribedEvent(int moduleIid, unsigned int uiEventOpId)
+	{
+		(void)moduleIid;
+		(void)uiEventOpId;
+	}
+
+	virtual void AddSupportedInvoke(int moduleIid, unsigned int uiInvokeOpId)
+	{
+		(void)moduleIid;
+		(void)uiInvokeOpId;
+	}
+
+	/** @} */
 };
 
 class SnaccScopedInvokeMessage
@@ -382,9 +427,56 @@ private:
 class SnaccROSEComponent
 {
 public:
-	SnaccROSEComponent(SnaccROSESender* pSB)
+	explicit SnaccROSEComponent(SnaccROSESender* pSB)
+		: m_pSB(pSB)
 	{
-		m_pSB = pSB;
+	}
+
+	/*! Forwards to @ref SnaccROSESender subscription hooks on @c m_pSB. */
+	bool IsSubscribedEvent(unsigned int uiEventOpId) const
+	{
+		return m_pSB ? m_pSB->IsSubscribedEvent(uiEventOpId) : true;
+	}
+
+	/*! Forwards to @ref SnaccROSESender subscription hooks on @c m_pSB. */
+	bool IsSupportedInvoke(unsigned int uiInvokeOpId) const
+	{
+		return m_pSB ? m_pSB->IsSupportedInvoke(uiInvokeOpId) : true;
+	}
+
+	/*! Forwards to @ref SnaccROSESender subscription hooks on @c m_pSB. */
+	void ClearAllRoseSessionSubscriptions() const
+	{
+		if (m_pSB)
+			m_pSB->ClearAllRoseSessionSubscriptions();
+	}
+
+	/*! Forwards to @ref SnaccROSESender subscription hooks on @c m_pSB. */
+	void ClearSubscribedEvents(int moduleIid) const
+	{
+		if (m_pSB)
+			m_pSB->ClearSubscribedEvents(moduleIid);
+	}
+
+	/*! Forwards to @ref SnaccROSESender subscription hooks on @c m_pSB. */
+	void ClearSupportedInvokes(int moduleIid) const
+	{
+		if (m_pSB)
+			m_pSB->ClearSupportedInvokes(moduleIid);
+	}
+
+	/*! Forwards to @ref SnaccROSESender subscription hooks on @c m_pSB. */
+	void AddSubscribedEvent(int moduleIid, unsigned int uiEventOpId) const
+	{
+		if (m_pSB)
+			m_pSB->AddSubscribedEvent(moduleIid, uiEventOpId);
+	}
+
+	/*! Forwards to @ref SnaccROSESender subscription hooks on @c m_pSB. */
+	void AddSupportedInvoke(int moduleIid, unsigned int uiInvokeOpId) const
+	{
+		if (m_pSB)
+			m_pSB->AddSupportedInvoke(moduleIid, uiEventOpId);
 	}
 
 protected:
