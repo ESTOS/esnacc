@@ -27,7 +27,9 @@ cp "$STUB_DIR/ENetUC_Common.ts" "$STUB_DIR/ENetUC_Common_Converter.ts" "$WORKDIR
 
 for test_file in \
 	TSASN1Base.registry.test.ts \
-	TSASN1Base.clientInvokeBlockPolicy.test.ts \
+	TSASN1Base.invokeBlockPolicy.test.ts \
+	TSASN1Base.roseSessionSubscription.test.ts \
+	TSASN1Base.pauseRoseProcessing.test.ts \
 	TSModuleCapabilities.test.ts
 do
 	echo "Running $test_file ..."

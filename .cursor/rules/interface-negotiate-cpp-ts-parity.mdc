@@ -12,6 +12,10 @@ Applies to **remote capabilities**, **asnNegotiateInterface**, and **client-side
 
 | C++ (`cpp-lib/`) | TypeScript (`compiler/back-ends/ts-gen/gluecode/`) |
 |------------------|------------------------------------------------------|
+| `ISnaccRoseSessionSubscription`, `SnaccROSESender`, `SnaccROSEComponent` | `IRoseSessionSubscription`, `IASN1Transport`, `ROSEBase`, `RoseSessionSubscriptionStore` |
+| `SetOperationBlockPolicy` / `IsOperationBlocked` | `setOperationBlockPolicy` / `isOperationBlocked` |
+| `CompleteIfProcessingShutdown` / `CompleteIfOperationBlocked` on `SendEvent` / `SendInvoke` | `completeIfProcessingShutdown` / `completeIfOperationBlocked` on `handleEvent` / `handleInvoke` and `sendInvoke` |
+| `PauseRoseProcessing` / `ResumeRoseProcessing` / `LookUpInterfaceID` on `SnaccROSEBase` | `pauseRoseProcessing` / `resumeRoseProcessing` / `lookUpInterfaceID` on `TSASN1Base` |
 | `SnaccROSEBase`, `SnaccModuleCapabilities`, `SnaccRoseOperationLookup` | `TSASN1Base`, `TSModuleCapabilities`, `TSROSEBase` |
 | `cpp-lib/tests/` (runtime / capability tests) | `compiler/back-ends/ts-gen/tests/` |
 

@@ -573,6 +573,8 @@ SnaccTelemetryData::Reason GetUnhandledReasonFromResult(const long lRoseResult)
 			return SnaccTelemetryData::Reason::TIMEOUT;
 		case ROSE_TE_SHUTDOWN:
 			return SnaccTelemetryData::Reason::SHUTDOWN;
+		case ROSE_REJECT_REMOTENOTCAPABLE:
+			return SnaccTelemetryData::Reason::OUTBOUND_BLOCKED;
 		case ROSE_RE_DECODE_FAILED:
 			return SnaccTelemetryData::Reason::DECODE_FAILED;
 		case ROSE_RE_INVALID_ANSWER:
@@ -648,14 +650,64 @@ const char* SnaccROSEBase::LookUpModuleName(unsigned int uiOpID) const
 	return m_operationLookup.LookUpModuleName(uiOpID);
 }
 
-void SnaccROSEBase::SetClientInvokeBlockPolicy(const SnaccClientInvokeBlockPolicy policy)
+void SnaccROSESender::SetOperationBlockPolicy(const SnaccOperationBlockPolicy policy)
 {
-	m_clientInvokeBlockPolicy = policy;
+	m_operationBlockPolicy = policy;
 }
 
-SnaccClientInvokeBlockPolicy SnaccROSEBase::GetClientInvokeBlockPolicy() const
+SnaccOperationBlockPolicy SnaccROSESender::GetOperationBlockPolicy() const
 {
-	return m_clientInvokeBlockPolicy;
+	return m_operationBlockPolicy;
+}
+
+bool SnaccROSESender::HasSessionSubscriptionState() const
+{
+	return m_bSessionSubscriptionStateSet;
+}
+
+void SnaccROSESender::MarkSessionSubscriptionStateSet()
+{
+	m_bSessionSubscriptionStateSet = true;
+}
+
+bool SnaccROSESender::IsOperationBlocked(const unsigned int uiOpId, const bool bIsEvent) const
+{
+	if (m_operationBlockPolicy != SnaccOperationBlockPolicy::BlockUnsupportedOperations)
+		return false;
+
+	if (bIsEvent)
+	{
+		if (!m_bSessionSubscriptionStateSet)
+			return false;
+		if (IsSubscribedEvent(uiOpId))
+			return false;
+		ASSERT_FAILED("Outbound event blocked: operation id %u is not subscribed for this session", uiOpId);
+		return true;
+	}
+
+	if (m_bSessionSubscriptionStateSet && !IsSupportedInvoke(uiOpId))
+	{
+		ASSERT_FAILED("Outbound invoke blocked: operation id %u is not supported for this session", uiOpId);
+		return true;
+	}
+
+	if (OutboundBlockHasRemoteCapabilities() && !OutboundBlockIsRemoteOperationSupported(uiOpId))
+	{
+		ASSERT_FAILED("Outbound invoke blocked: operation id %u is not offered by the remote peer", uiOpId);
+		return true;
+	}
+
+	return false;
+}
+
+bool SnaccROSEBase::OutboundBlockHasRemoteCapabilities() const
+{
+	return m_bRemoteModuleCapabilitiesSet;
+}
+
+bool SnaccROSEBase::OutboundBlockIsRemoteOperationSupported(const unsigned int uiOpId) const
+{
+	return InternalIsRemoteOperationSupported(uiOpId);
 }
 
 void SnaccROSEBase::SetRemoteModuleCapabilities(const SnaccLoadedModuleMap& remote)
@@ -1607,6 +1659,40 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 	return lRoseResult;
 }
 
+void SnaccROSEBase::ReportOutboundBlocked(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, const long lRoseResult, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
+{
+	const auto chronoCreated = std::chrono::steady_clock::now();
+	const char* szResolvedOperationName = ResolveOperationNameFromStub(szOperationName, pInvoke->operationID, this);
+	if (!pCtx)
+		pCtx = CreateInvokeContext(SnaccInvokeContextInit(SnaccInvokeDirection::OUTBOUND, pInvoke));
+
+	auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
+	telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::OUTBOUND_BLOCKED, lRoseResult, std::nullopt, std::move(pCtx));
+	OnInvokeProcessed(telemetry);
+}
+
+bool SnaccROSEBase::CompleteIfOperationBlocked(SNACC::ROSEInvoke* pInvoke, const char* szResolvedOperationName, const bool bIsEvent, std::shared_ptr<SnaccInvokeContext> pCtx, long& outRoseResult)
+{
+	if (!IsOperationBlocked(pInvoke->operationID.GetUInt(), bIsEvent))
+		return false;
+
+	outRoseResult = ROSE_REJECT_REMOTENOTCAPABLE;
+	ReportOutboundBlocked(pInvoke, szResolvedOperationName, outRoseResult, pCtx);
+	return true;
+}
+
+bool SnaccROSEBase::CompleteIfProcessingShutdown(SNACC::ROSEInvoke* pInvoke, const char* szResolvedOperationName, const std::chrono::steady_clock::time_point chronoCreated, std::shared_ptr<SnaccInvokeContext> pCtx, long& outRoseResult)
+{
+	if (IsProcessingAllowed())
+		return false;
+
+	outRoseResult = ROSE_TE_SHUTDOWN;
+	auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
+	telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::SHUTDOWN, outRoseResult, std::nullopt, std::move(pCtx));
+	OnInvokeProcessed(telemetry);
+	return true;
+}
+
 long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	const auto chronoCreated = std::chrono::steady_clock::now();
@@ -1616,7 +1702,15 @@ long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperatio
 	auto& ctx = *pCtx;
 
 	size_t stRequestData = 0;
-	const long lRoseResult = IsProcessingAllowed() ? Send(pInvoke, szResolvedOperationName, ctx, &stRequestData) : ROSE_TE_SHUTDOWN;
+
+	long lRoseResult = ROSE_NOERROR;
+	if (CompleteIfProcessingShutdown(pInvoke, szResolvedOperationName, chronoCreated, pCtx, lRoseResult))
+		return lRoseResult;
+
+	if (CompleteIfOperationBlocked(pInvoke, szResolvedOperationName, true, pCtx, lRoseResult))
+		return lRoseResult;
+
+	lRoseResult = Send(pInvoke, szResolvedOperationName, ctx, &stRequestData);
 	auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, stRequestData, chronoCreated);
 	telemetry->finalize(lRoseResult == ROSE_NOERROR ? SnaccTelemetryData::Outcome::EVENT : SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, lRoseResult == ROSE_NOERROR ? SnaccTelemetryData::Reason::LOCAL_EVENT : GetUnhandledReasonFromResult(lRoseResult), lRoseResult, std::nullopt, pCtx);
 	OnInvokeProcessed(telemetry);
@@ -1723,27 +1817,17 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResu
 	auto& ctx = *pCtx;
 	const int iTimeout = ResolveInvokeTimeoutMs(ctx, m_lMaxInvokeWait);
 
-	if (!IsProcessingAllowed())
-	{
-		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
-		telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::SHUTDOWN, ROSE_TE_SHUTDOWN, std::nullopt, std::move(pCtx));
-		OnInvokeProcessed(telemetry);
-		return ROSE_TE_SHUTDOWN;
-	}
+	long lRoseResult = ROSE_NOERROR;
+	if (CompleteIfProcessingShutdown(pInvoke, szResolvedOperationName, chronoCreated, pCtx, lRoseResult))
+		return lRoseResult;
 
-	if (m_clientInvokeBlockPolicy == SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations && m_bRemoteModuleCapabilitiesSet && !InternalIsRemoteOperationSupported(pInvoke->operationID))
-	{
-		ASSERT_FAILED("Outbound invoke blocked: operation %s (%u) is not offered by the remote peer", szResolvedOperationName ? szResolvedOperationName : "?", pInvoke->operationID.GetUInt());
-		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
-		telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::LOCAL_REJECT, ROSE_REJECT_REMOTENOTCAPABLE, std::nullopt, std::move(pCtx));
-		OnInvokeProcessed(telemetry);
-		return ROSE_REJECT_REMOTENOTCAPABLE;
-	}
+	if (CompleteIfOperationBlocked(pInvoke, szResolvedOperationName, false, pCtx, lRoseResult))
+		return lRoseResult;
 
 	auto& pendingOP = AddPendingOperation(pInvoke->invokeID, pInvoke->operationID, szResolvedOperationName);
 
 	size_t stRequestData = 0;
-	long lRoseResult = Send(pInvoke, szResolvedOperationName, ctx, &stRequestData);
+	lRoseResult = Send(pInvoke, szResolvedOperationName, ctx, &stRequestData);
 	pendingOP.m_pTelemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, stRequestData, chronoCreated);
 
 	if (lRoseResult == 0)
@@ -1976,33 +2060,25 @@ long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 
 	auto& ctx = *pCtx;
 
-	if (!IsProcessingAllowed())
+	long lRoseResult = ROSE_NOERROR;
+	if (CompleteIfProcessingShutdown(pInvoke, szResolvedOperationName, chronoCreated, pCtx, lRoseResult))
 	{
 		SnaccInvokeAsyncCallback shutdownCallback;
 		if (!bFireAndForget && pCtx->HasAsyncCompletion())
 			shutdownCallback = pCtx->AsyncCallback();
-
-		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
-		telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::SHUTDOWN, ROSE_TE_SHUTDOWN, std::nullopt, pCtx);
-		OnInvokeProcessed(telemetry);
 		if (shutdownCallback)
-			shutdownCallback(ROSE_TE_SHUTDOWN, *pCtx);
-		return ROSE_TE_SHUTDOWN;
+			shutdownCallback(lRoseResult, *pCtx);
+		return lRoseResult;
 	}
 
-	if (m_clientInvokeBlockPolicy == SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations && m_bRemoteModuleCapabilitiesSet && !InternalIsRemoteOperationSupported(pInvoke->operationID))
+	if (CompleteIfOperationBlocked(pInvoke, szResolvedOperationName, false, pCtx, lRoseResult))
 	{
-		ASSERT_FAILED("Outbound invoke blocked: operation %s (%u) is not offered by the remote peer", szResolvedOperationName ? szResolvedOperationName : "?", pInvoke->operationID.GetUInt());
 		SnaccInvokeAsyncCallback rejectCallback;
 		if (!bFireAndForget && pCtx->HasAsyncCompletion())
 			rejectCallback = pCtx->AsyncCallback();
-
-		auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
-		telemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::LOCAL_REJECT, ROSE_REJECT_REMOTENOTCAPABLE, std::nullopt, pCtx);
-		OnInvokeProcessed(telemetry);
 		if (rejectCallback)
-			rejectCallback(ROSE_REJECT_REMOTENOTCAPABLE, *pCtx);
-		return ROSE_REJECT_REMOTENOTCAPABLE;
+			rejectCallback(lRoseResult, *pCtx);
+		return lRoseResult;
 	}
 
 	auto& pendingOP = AddPendingOperation(pInvoke->invokeID, pInvoke->operationID, szResolvedOperationName);
@@ -2023,7 +2099,7 @@ long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 	}
 
 	size_t stRequestData = 0;
-	const long lRoseResult = Send(pInvoke, szResolvedOperationName, ctx, &stRequestData);
+	lRoseResult = Send(pInvoke, szResolvedOperationName, ctx, &stRequestData);
 	(void)stRequestData;
 
 	if (bFireAndForget)

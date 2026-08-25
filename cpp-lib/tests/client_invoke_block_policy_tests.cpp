@@ -88,7 +88,7 @@ TEST(RemoteCapabilityModuleHelperTest, BuildRemoteModuleCapabilitiesPopulatesInv
 TEST_F(ClientInvokeBlockPolicyRuntimeTest, BlockUnsupportedOperationsWithoutSnapshotDoesNotBlockInvoke)
 {
 	InitializeConnectedEndpoints();
-	m_client.SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations);
+	m_client.SetOperationBlockPolicy(SnaccOperationBlockPolicy::BlockUnsupportedOperations);
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_NOERROR, roseResult);
@@ -99,7 +99,7 @@ TEST_F(ClientInvokeBlockPolicyRuntimeTest, BlockUnsupportedOperationsWithUnsuppo
 {
 	InitializeConnectedEndpoints();
 	m_client.SetRemoteModuleCapabilities(BuildRemoteSnapshotWithoutGetSettings());
-	m_client.SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations);
+	m_client.SetOperationBlockPolicy(SnaccOperationBlockPolicy::BlockUnsupportedOperations);
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_REJECT_REMOTENOTCAPABLE, roseResult);
@@ -110,7 +110,7 @@ TEST_F(ClientInvokeBlockPolicyRuntimeTest, BlockUnsupportedOperationsWithSupport
 {
 	InitializeConnectedEndpoints();
 	m_client.SetRemoteModuleCapabilities(BuildRemoteSnapshotWithGetSettingsOnly());
-	m_client.SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations);
+	m_client.SetOperationBlockPolicy(SnaccOperationBlockPolicy::BlockUnsupportedOperations);
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_NOERROR, roseResult);
@@ -121,7 +121,7 @@ TEST_F(ClientInvokeBlockPolicyRuntimeTest, NeverBlockWithSnapshotDoesNotBlockInv
 {
 	InitializeConnectedEndpoints();
 	m_client.SetRemoteModuleCapabilities(BuildRemoteSnapshotWithoutGetSettings());
-	m_client.SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy::NeverBlock);
+	m_client.SetOperationBlockPolicy(SnaccOperationBlockPolicy::NeverBlock);
 
 	const long roseResult = InvokeGetSettingsOnClient();
 	EXPECT_EQ(ROSE_NOERROR, roseResult);
@@ -132,7 +132,7 @@ TEST_F(ClientInvokeBlockPolicyRuntimeTest, ClearRemoteCapabilitiesStopsBlocking)
 {
 	InitializeConnectedEndpoints();
 	m_client.SetRemoteModuleCapabilities(BuildRemoteSnapshotWithoutGetSettings());
-	m_client.SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy::BlockUnsupportedOperations);
+	m_client.SetOperationBlockPolicy(SnaccOperationBlockPolicy::BlockUnsupportedOperations);
 	m_client.ClearRemoteModuleCapabilities();
 
 	const long roseResult = InvokeGetSettingsOnClient();

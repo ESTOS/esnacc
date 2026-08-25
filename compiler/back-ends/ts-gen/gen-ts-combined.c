@@ -65,6 +65,26 @@ void PrintTSRootTypes(FILE* src, Module* mod, const char* szSuffix)
 
 	fprintf(src, "export const MODULE_NAME = \"%s\";\n", mod->moduleName);
 
+	{
+		ValueDef* vd;
+		int iFirstIIDFound = 0;
+		FOR_EACH_LIST_ELMT(vd, mod->valueDefs)
+		{
+			if (vd->value->basicValue->choiceId != BASICVALUE_INTEGER)
+				continue;
+			if (vd->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
+				continue;
+			if (vd->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
+				continue;
+			if (!iFirstIIDFound)
+			{
+				iFirstIIDFound = 1;
+				fprintf(src, "export const MODULE_IID = %d;\n", vd->value->basicValue->a.integer);
+			}
+			break;
+		}
+	}
+
 	if (gMajorInterfaceVersion >= 0)
 	{
 		long long lMinorModuleVersion = GetModulePatchVersion(mod->moduleName);

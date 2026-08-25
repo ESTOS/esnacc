@@ -31,13 +31,6 @@ struct SnaccLoadedModuleInfo
 
 using SnaccLoadedModuleMap = std::map<std::string, SnaccLoadedModuleInfo>;
 
-/*! Controls whether outbound client invokes are blocked when absent from the negotiate snapshot. */
-enum class SnaccClientInvokeBlockPolicy
-{
-	NeverBlock,
-	BlockUnsupportedOperations,
-};
-
 /*! Immutable operation-id lookup table after Seal().
 	Fill at listener startup; share one instance across all connections on that listener.
 	Lookup is read-only and needs no locking once sealed. */

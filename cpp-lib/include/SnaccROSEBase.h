@@ -238,10 +238,6 @@ public:
 	/*! Resolves ASN.1 module name owning the given operation id via the lookup table. */
 	const char* LookUpModuleName(unsigned int uiOpID) const;
 
-	/*! Configures blocking of outbound invokes not offered by the peer snapshot. Default NeverBlock. */
-	void SetClientInvokeBlockPolicy(SnaccClientInvokeBlockPolicy policy);
-	SnaccClientInvokeBlockPolicy GetClientInvokeBlockPolicy() const;
-
 	/*! Stores the peer module snapshot from asnNegotiateInterface (or equivalent). */
 	void SetRemoteModuleCapabilities(const SnaccLoadedModuleMap& remote);
 	void ClearRemoteModuleCapabilities();
@@ -364,6 +360,12 @@ public:
 	virtual long HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessage& responseMsg, SNACC::AsnType* pResult, SNACC::AsnType* pError, SnaccInvokeContext& ctx) override;
 
 	/**
+	 * Records telemetry for an outbound operation stopped by invoke block policy.
+	 * Does not send on the wire. @p lRoseResult is the value returned to the stub caller.
+	 */
+	void ReportOutboundBlocked(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, long lRoseResult, std::shared_ptr<SnaccInvokeContext> pCtx = {});
+
+	/**
 	 * An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
 	 *
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
@@ -462,6 +464,15 @@ private:
 	/*! Returns true when the applied remote snapshot lists @p uiOpId as a supported invoke. */
 	bool InternalIsRemoteOperationSupported(unsigned int uiOpId) const;
 
+	bool OutboundBlockHasRemoteCapabilities() const override;
+	bool OutboundBlockIsRemoteOperationSupported(unsigned int uiOpId) const override;
+
+	/*! Asserts via IsOperationBlocked, sets outRoseResult to ROSE_REJECT_REMOTENOTCAPABLE, records telemetry. Returns true when send must stop. */
+	bool CompleteIfOperationBlocked(SNACC::ROSEInvoke* pInvoke, const char* szResolvedOperationName, bool bIsEvent, std::shared_ptr<SnaccInvokeContext> pCtx, long& outRoseResult);
+
+	/*! When PauseRoseProcessing() is active: sets outRoseResult to ROSE_TE_SHUTDOWN, records telemetry. Returns true when send must stop. */
+	bool CompleteIfProcessingShutdown(SNACC::ROSEInvoke* pInvoke, const char* szResolvedOperationName, std::chrono::steady_clock::time_point chronoCreated, std::shared_ptr<SnaccInvokeContext> pCtx, long& outRoseResult);
+
 	// The central process wide telemetry callback
 	static inline SnaccTelemetryCallback* m_pTelemetryCallback{};
 
@@ -522,7 +533,6 @@ private:
 	// Transport Encoding to be used
 	SNACC::TransportEncoding m_eTransportEncoding{SNACC::TransportEncoding::UNKNOWN};
 
-	SnaccClientInvokeBlockPolicy m_clientInvokeBlockPolicy{SnaccClientInvokeBlockPolicy::NeverBlock};
 	SnaccLoadedModuleMap m_remoteModuleCapabilities;
 	bool m_bRemoteModuleCapabilitiesSet{false};
 

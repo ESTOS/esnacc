@@ -4,9 +4,12 @@
 
 namespace
 {
-class RecordingRoseSender : public SnaccROSESender
+class RecordingSubscriptionSender : public SnaccROSESender
 {
 public:
+	unsigned int subscribedEventOpId = 0;
+	unsigned int supportedInvokeOpId = 0;
+
 	std::shared_ptr<SnaccInvokeContext> CreateInvokeContext(const SnaccInvokeContextInit& init) override
 	{
 		(void)init;
@@ -73,34 +76,46 @@ public:
 		return uiEventOpId == subscribedEventOpId;
 	}
 
-	void AddSubscribedEvent(int moduleIid, unsigned int uiEventOpId) override
+	bool IsSupportedInvoke(unsigned int uiInvokeOpId) const override
 	{
-		lastModuleIid = moduleIid;
-		subscribedEventOpId = uiEventOpId;
-	}
-
-	int lastModuleIid = 0;
-	unsigned int subscribedEventOpId = 0;
-};
-
-class TestRoseComponent : public SnaccROSEComponent
-{
-public:
-	explicit TestRoseComponent(SnaccROSESender* pSender)
-		: SnaccROSEComponent(pSender)
-	{
+		return uiInvokeOpId == supportedInvokeOpId;
 	}
 };
-} // namespace
 
-TEST(RoseSessionSubscription, SnaccROSEComponentForwardsToSender)
+TEST(ServerInvokeBlockPolicyTest, BlockWithoutStateDoesNotBlock)
 {
-	RecordingRoseSender sender;
-	TestRoseComponent component(&sender);
-
-	EXPECT_FALSE(component.IsSubscribedEvent(2109));
-	component.AddSubscribedEvent(2104, 2109);
-	EXPECT_EQ(2104, sender.lastModuleIid);
-	EXPECT_TRUE(component.IsSubscribedEvent(2109));
-	EXPECT_FALSE(component.IsSubscribedEvent(2170));
+	RecordingSubscriptionSender sender;
+	sender.SetOperationBlockPolicy(SnaccOperationBlockPolicy::BlockUnsupportedOperations);
+	EXPECT_FALSE(sender.IsOperationBlocked(2109, true));
+	EXPECT_FALSE(sender.IsOperationBlocked(2109, false));
 }
+
+TEST(ServerInvokeBlockPolicyTest, BlockWithStateBlocksUnsubscribedEvent)
+{
+	RecordingSubscriptionSender sender;
+	sender.SetOperationBlockPolicy(SnaccOperationBlockPolicy::BlockUnsupportedOperations);
+	sender.MarkSessionSubscriptionStateSet();
+	sender.subscribedEventOpId = 2170;
+	EXPECT_TRUE(sender.IsOperationBlocked(2109, true));
+	EXPECT_FALSE(sender.IsOperationBlocked(2170, true));
+}
+
+TEST(ServerInvokeBlockPolicyTest, BlockWithStateBlocksUnsupportedInvoke)
+{
+	RecordingSubscriptionSender sender;
+	sender.SetOperationBlockPolicy(SnaccOperationBlockPolicy::BlockUnsupportedOperations);
+	sender.MarkSessionSubscriptionStateSet();
+	sender.supportedInvokeOpId = 3001;
+	EXPECT_TRUE(sender.IsOperationBlocked(3002, false));
+	EXPECT_FALSE(sender.IsOperationBlocked(3001, false));
+}
+
+TEST(ServerInvokeBlockPolicyTest, NeverBlockDoesNotBlock)
+{
+	RecordingSubscriptionSender sender;
+	sender.SetOperationBlockPolicy(SnaccOperationBlockPolicy::NeverBlock);
+	sender.MarkSessionSubscriptionStateSet();
+	EXPECT_FALSE(sender.IsOperationBlocked(2109, true));
+	EXPECT_FALSE(sender.IsOperationBlocked(2109, false));
+}
+} // namespace

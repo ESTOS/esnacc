@@ -498,9 +498,10 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 
 		fprintf(
 			src,
-			"\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\", %s.MODULE_NAME, %lld, %lld, %s);\n",
+			"\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\", %s.MODULE_NAME, %s.MODULE_IID, %lld, %lld, %s);\n",
 			vd->definedName,
 			vd->definedName,
+			GetNameSpace(m),
 			GetNameSpace(m),
 			llAddedUnix,
 			llDeprecatedUnix,
