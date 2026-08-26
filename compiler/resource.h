@@ -16,6 +16,8 @@
 #define TS_DEPRECATED_CALLBACK			1010
 #define TS_INVOKE_CONTEXT				1011
 #define DELPHI_ASN1_TYPES				1012
+#define TS_ROSE_SESSION_SUBSCRIPTION	1013
+#define TS_ROSE_SESSION_SUBSCRIPTION_STORE 1014
 
 // Next default values for new objects
 //

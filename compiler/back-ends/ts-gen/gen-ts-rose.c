@@ -81,6 +81,18 @@ void SaveTSROSEFilesToOutputDirectory(const int genRoseStubs, const char* szPath
 		{
 			char szFileName[_MAX_PATH] = {0};
 			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "IRoseSessionSubscription.ts");
+			SaveResourceToFile(ETS_ROSE_SESSION_SUBSCRIPTION, szFileName);
+		}
+		{
+			char szFileName[_MAX_PATH] = {0};
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "RoseSessionSubscriptionStore.ts");
+			SaveResourceToFile(ETS_ROSE_SESSION_SUBSCRIPTION_STORE, szFileName);
+		}
+		{
+			char szFileName[_MAX_PATH] = {0};
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
 			strcat_s(szFileName, _MAX_PATH - 1, "SNACCROSE.ts");
 			SaveResourceToFile(ETS_SNACCROSE, szFileName);
 		}
