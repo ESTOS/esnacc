@@ -31,13 +31,6 @@ struct SnaccLoadedModuleInfo
 
 using SnaccLoadedModuleMap = std::map<std::string, SnaccLoadedModuleInfo>;
 
-/*! Controls outbound invoke gating against a negotiate snapshot on SnaccROSEBase. */
-enum class SnaccRemoteCapabilityMode
-{
-	Disabled,
-	Enabled,
-};
-
 /*! Immutable operation-id lookup table after Seal().
 	Fill at listener startup; share one instance across all connections on that listener.
 	Lookup is read-only and needs no locking once sealed. */

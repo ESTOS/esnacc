@@ -1,6 +1,8 @@
 #ifndef _SnaccROSEInterfaces_h_
 #define _SnaccROSEInterfaces_h_
 
+#include "ISnaccRoseSessionSubscription.h"
+
 #include <functional>
 #include <memory>
 #include <optional>
@@ -240,9 +242,17 @@ protected:
 	SNACC::AsnType* m_pAsyncError{};
 };
 
-/*! SnaccROSESender is the interface that is used to dispatch inbound invokes and events
- */
-class SnaccROSESender
+/*! Controls whether outbound operations are blocked when absent from the peer/session capability snapshot. */
+enum class SnaccOperationBlockPolicy
+{
+	NeverBlock,
+	BlockUnsupportedOperations,
+};
+
+/*! SnaccROSESender is the transport-facing interface for generated ROSE stubs: send outbound
+	invokes and events, decode inbound invokes, and encode invoke responses.
+	Also implements ISnaccRoseSessionSubscription; base methods assert until overridden. */
+class SnaccROSESender : public virtual ISnaccRoseSessionSubscription
 {
 public:
 	virtual std::shared_ptr<SnaccInvokeContext> CreateInvokeContext(const SnaccInvokeContextInit& init) = 0;
@@ -336,6 +346,20 @@ public:
 	 */
 	virtual long SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) = 0;
 
+	/*! Configures blocking of outbound operations not covered by session subscription or negotiate state. Default NeverBlock. */
+	void SetOperationBlockPolicy(SnaccOperationBlockPolicy policy);
+
+	SnaccOperationBlockPolicy GetOperationBlockPolicy() const;
+
+	/*! True after MarkSessionSubscriptionStateSet() (typically when a subscribe handler updates session OPIDs). */
+	bool HasSessionSubscriptionState() const;
+
+	/*! Marks session subscription state as initialized; call from SetSubscribedEvents and related overrides. */
+	void MarkSessionSubscriptionStateSet();
+
+	/*! True when BlockUnsupportedOperations is active, capability state is set, and the outbound op is not allowed. */
+	bool IsOperationBlocked(unsigned int uiOpId, bool bIsEvent) const;
+
 	/*
 	 * Encodes a result as repsonse to an invoke
 	 *
@@ -355,6 +379,34 @@ public:
 	 * szSessionID - the SessionID (this propery is filled by subclassing from the concrete class in case we are handling multiple clients via one connection)
 	 */
 	virtual long EncodeError(unsigned int uiInvokeID, const SNACC::AsnType* pError, std::string& strResponse, const wchar_t* szSessionID = nullptr) = 0;
+
+	/* ISnaccRoseSessionSubscription — assert in debug when not overridden (server must implement). */
+	void ClearAllSubscriptions() override;
+	void ClearSubscribedEvents(int moduleIid) override;
+	void ClearSupportedInvokes(int moduleIid) override;
+	void SetSubscribedEvents(int moduleIid, const std::list<int>& eventOpIds) override;
+	void AddSubscribedEvent(int moduleIid, unsigned int uiEventOpId) override;
+	void AddSupportedInvoke(int moduleIid, unsigned int uiInvokeOpId) override;
+	void SetSupportedInvokes(int moduleIid, const std::list<int>& invokeOpIds) override;
+	bool IsSubscribedEvent(unsigned int uiEventOpId) const override;
+	bool IsSupportedInvoke(unsigned int uiInvokeOpId) const override;
+
+protected:
+	/*! Override on client transports that apply asnNegotiateInterface snapshots. */
+	virtual bool OutboundBlockHasRemoteCapabilities() const
+	{
+		return false;
+	}
+
+	/*! Override on client transports; consulted when OutboundBlockHasRemoteCapabilities() is true. */
+	virtual bool OutboundBlockIsRemoteOperationSupported(unsigned int uiOpId) const
+	{
+		(void)uiOpId;
+		return true;
+	}
+
+	SnaccOperationBlockPolicy m_operationBlockPolicy{SnaccOperationBlockPolicy::NeverBlock};
+	bool m_bSessionSubscriptionStateSet{false};
 };
 
 class SnaccScopedInvokeMessage
@@ -382,10 +434,21 @@ private:
 class SnaccROSEComponent
 {
 public:
-	SnaccROSEComponent(SnaccROSESender* pSB)
+	explicit SnaccROSEComponent(SnaccROSESender* pSB)
+		: m_pSB(pSB)
 	{
-		m_pSB = pSB;
 	}
+
+	/* Forwards ISnaccRoseSessionSubscription to m_pSB. */
+	bool IsSubscribedEvent(unsigned int uiEventOpId) const;
+	bool IsSupportedInvoke(unsigned int uiInvokeOpId) const;
+	void ClearAllSubscriptions() const;
+	void ClearSubscribedEvents(int moduleIid) const;
+	void ClearSupportedInvokes(int moduleIid) const;
+	void SetSubscribedEvents(int moduleIid, const std::list<int>& eventOpIds) const;
+	void AddSubscribedEvent(int moduleIid, unsigned int uiEventOpId) const;
+	void AddSupportedInvoke(int moduleIid, unsigned int uiInvokeOpId) const;
+	void SetSupportedInvokes(int moduleIid, const std::list<int>& invokeOpIds) const;
 
 protected:
 	/*! Registers module version metadata on a startup lookup table (static RegisterOperations). */

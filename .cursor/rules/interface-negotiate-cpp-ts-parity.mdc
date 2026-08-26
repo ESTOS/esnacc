@@ -1,0 +1,32 @@
+---
+description: Interface negotiate and remote-offer gating — keep C++ and TypeScript gluecode in sync
+globs: cpp-lib/**/*,compiler/back-ends/ts-gen/**/*
+alwaysApply: false
+---
+
+# Interface negotiate — C++ and TypeScript together
+
+Applies to **remote capabilities**, **asnNegotiateInterface**, and **client-side gating** of outbound invokes based on what the peer advertised.
+
+## Paired surfaces (change both in one task)
+
+| C++ (`cpp-lib/`) | TypeScript (`compiler/back-ends/ts-gen/gluecode/`) |
+|------------------|------------------------------------------------------|
+| `ISnaccRoseSessionSubscription`, `SnaccROSESender`, `SnaccROSEComponent` | `IRoseSessionSubscription`, `IASN1Transport`, `ROSEBase`, `RoseSessionSubscriptionStore` |
+| `SetOperationBlockPolicy` / `IsOperationBlocked` | `setOperationBlockPolicy` / `isOperationBlocked` |
+| `CompleteIfProcessingShutdown` / `CompleteIfOperationBlocked` on `SendEvent` / `SendInvoke` | `completeIfProcessingShutdown` / `completeIfOperationBlocked` on `handleEvent` / `handleInvoke` and `sendInvoke` |
+| `PauseRoseProcessing` / `ResumeRoseProcessing` / `LookUpInterfaceID` on `SnaccROSEBase` | `pauseRoseProcessing` / `resumeRoseProcessing` / `lookUpInterfaceID` on `TSASN1Base` |
+| `SnaccROSEBase`, `SnaccModuleCapabilities`, `SnaccRoseOperationLookup` | `TSASN1Base`, `TSModuleCapabilities`, `TSROSEBase` |
+| `cpp-lib/tests/` (runtime / capability tests) | `compiler/back-ends/ts-gen/tests/` |
+
+Do **not** land C++-only or TS-only halves of the same behavior. Tests on both sides move together when semantics change.
+
+## Naming
+
+- **Ask the user** before introducing or renaming public API (types, enums, methods, flags).
+- Propose 1–2 options with a one-line rationale; **do not implement renames** until they pick one.
+
+## Branching
+
+- Feature work on a ticket branch (e.g. `feature/UCAAS-1486`) in this repo.
+- ProCall / `global` pin updates follow after the agreed API is stable — not as a workaround for missing TS or C++ work here.

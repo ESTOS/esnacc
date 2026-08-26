@@ -58,7 +58,9 @@ add_executable(cpp-lib-sample-runtime-tests
 	logical_failure_tests.cpp
 	module_registry_tests.cpp
 	public_api_tests.cpp
-	remote_capability_tests.cpp
+	client_invoke_block_policy_tests.cpp
+	rose_session_subscription_tests.cpp
+	server_invoke_block_policy_tests.cpp
 	telemetry_tests.cpp
 	transport_failure_tests.cpp
 	lifecycle_tests.cpp

@@ -111,7 +111,9 @@ public:
 		// The lifecycle ended around an authentication reject.
 		REJECT_AUTHENTICATION = 18,
 		// Fallback value in case the exact failure reason could not be classified.
-		UNKNOWN_FAILURE = 19
+		UNKNOWN_FAILURE = 19,
+		// Outbound send was skipped because invoke block policy rejected the operation.
+		OUTBOUND_BLOCKED = 20
 	};
 
 	// Returns a short debug-friendly text for the enum value.

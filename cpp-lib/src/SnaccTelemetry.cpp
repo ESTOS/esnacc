@@ -104,6 +104,8 @@ const char* SnaccTelemetryData::GetDebugText(Reason reason)
 			return "REJECT_AUTHENTICATION";
 		case Reason::UNKNOWN_FAILURE:
 			return "UNKNOWN_FAILURE";
+		case Reason::OUTBOUND_BLOCKED:
+			return "OUTBOUND_BLOCKED";
 		default:
 			ASSERT(0);
 			return "INVALID_REASON";

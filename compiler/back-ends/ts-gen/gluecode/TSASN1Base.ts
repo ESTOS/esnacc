@@ -29,9 +29,10 @@ import {
 	IROSELogger,
 	ISendInvokeContext,
 	ReceiveInvokeContext,
-	RemoteCapabilityMode,
+	OperationBlockPolicy,
 	snaccAssert,
 	snaccAssertFail,
+	ROSE_TE_SHUTDOWN,
 	ASN1ByteArray,
 	ROSEBase,
 } from "./TSROSEBase.js";
@@ -65,6 +66,8 @@ class Handler {
 	public readonly operationName: string;
 	// ASN.1 module that owns this operation
 	public readonly moduleName: string;
+	// Generated module interface id (m_iid / MODULE_IID)
+	public readonly moduleInterfaceId: number;
 	// @added unix timestamp from ASN.1 comments (0 = none)
 	public readonly addedUnix: number;
 	// @deprecated unix timestamp from ASN.1 comments (0 = none)
@@ -88,6 +91,7 @@ class Handler {
 		operationID: number,
 		operationName: string,
 		moduleName: string,
+		moduleInterfaceId: number,
 		addedUnix: number,
 		deprecatedUnix: number,
 		isEvent: boolean,
@@ -97,6 +101,7 @@ class Handler {
 		this.operationID = operationID;
 		this.operationName = operationName;
 		this.moduleName = moduleName;
+		this.moduleInterfaceId = moduleInterfaceId;
 		this.addedUnix = addedUnix;
 		this.deprecatedUnix = deprecatedUnix;
 		this.isEvent = isEvent;
@@ -221,6 +226,20 @@ export class PendingInvoke {
 	}
 
 	/**
+	 * Called from TSASN1Base when pauseRoseProcessing() completes pending operations with ROSE_TE_SHUTDOWN.
+	 */
+	public completed_shutdown(): void {
+		this.clearTimeout();
+		const reject = new ROSEReject({
+			invokedID: { invokedID: this.invoke.invokeID },
+			sessionID: this.invoke.sessionID,
+			details: "transport shutdown",
+			reject: { invokeProblem: ROSE_TE_SHUTDOWN },
+		});
+		this.resolve(reject);
+	}
+
+	/**
 	 * Called from the TSASN1Base if a timeout occured and the regular answer has not jet been provided
 	 */
 	public complete_timedout(): void {
@@ -307,7 +326,10 @@ export abstract class TSASN1Base implements IASN1Transport {
 	// Peer negotiate snapshot applied on this stub (client/server outbound gating)
 	private remoteModuleCapabilitiesByName = new Map<string, ILoadedModuleInfo>();
 	private remoteModuleCapabilitiesSet = false;
-	private remoteCapabilityMode = RemoteCapabilityMode.Disabled;
+	private operationBlockPolicy = OperationBlockPolicy.NeverBlock;
+	private sessionSubscriptionStateSet = false;
+	private roseProcessingAllowed = true;
+	private interfaceIdsByOpId = new Map<number, number>();
 	// The Logger Callback which must be set with the SetLogger Method
 	protected logger?: IROSELogger;
 	// Logs the raw transport (inbound before decoding, outbound after encoding)
@@ -385,6 +407,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 		operationID: number,
 		operationName: string,
 		moduleName: string,
+		moduleInterfaceId: number,
 		addedUnix: number,
 		deprecatedUnix: number,
 		isEvent: boolean,
@@ -396,12 +419,14 @@ export abstract class TSASN1Base implements IASN1Transport {
 				operationID,
 				operationName,
 				moduleName,
+				moduleInterfaceId,
 				addedUnix,
 				deprecatedUnix,
 				isEvent,
 			);
 			this.handlersByID.set(operationID, handler);
 			this.handlersByName.set(operationName, handler);
+			this.interfaceIdsByOpId.set(operationID, moduleInterfaceId);
 			this.trackRegisteredOperation(operationID, operationName, moduleName, addedUnix, deprecatedUnix, isEvent);
 		} else {
 			// trying to re-register a handler for an already registered operationID, this should not happen and indicates a problem in the calling code
@@ -447,6 +472,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 		if (handler) {
 			this.handlersByID.delete(operationID);
 			this.handlersByName.delete(handler.operationName);
+			this.interfaceIdsByOpId.delete(operationID);
 			const module = this.loadedModulesByName.get(handler.moduleName);
 			if (module) {
 				if (handler.isEvent)
@@ -530,23 +556,148 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * Configures whether outbound invokes are gated on a negotiate snapshot. Default Disabled.
+	 * Resolves generated module interface id (MODULE_IID) from operation id via the registry.
 	 */
-	public setRemoteCapabilityMode(mode: RemoteCapabilityMode): void {
-		this.remoteCapabilityMode = mode;
+	public lookUpInterfaceID(operationID: number): number {
+		return this.interfaceIdsByOpId.get(operationID) ?? 0;
 	}
 
 	/**
-	 * Returns the current remote capability gating mode for outbound invokes.
+	 * Ends the current transport ROSE session: blocks new work and completes pending invokes with shutdown.
 	 */
-	public getRemoteCapabilityMode(): RemoteCapabilityMode {
-		return this.remoteCapabilityMode;
+	public pauseRoseProcessing(): void {
+		this.roseProcessingAllowed = false;
+		this.completeAllPendingOperations();
+	}
+
+	/**
+	 * Re-opens ROSE processing after pauseRoseProcessing() (e.g. transport reconnect).
+	 */
+	public resumeRoseProcessing(): void {
+		this.roseProcessingAllowed = true;
+	}
+
+	/**
+	 * False while pauseRoseProcessing() shutdown gate is active for this transport session.
+	 */
+	public isProcessingAllowed(): boolean {
+		return this.roseProcessingAllowed;
+	}
+
+	/** Clears all subscribed events and supported invokes for this session. Server transports must override. */
+	public clearAllSubscriptions(): void {
+		snaccAssertFail("clearAllSubscriptions not implemented on this transport");
+	}
+
+	/** Removes subscribed server-to-client event OPIDs for moduleIid only. Server transports must override. */
+	public clearSubscribedEvents(_moduleIid: number): void {
+		snaccAssertFail("clearSubscribedEvents not implemented on this transport");
+	}
+
+	/** Removes supported server-to-client invoke OPIDs for moduleIid only. Server transports must override. */
+	public clearSupportedInvokes(_moduleIid: number): void {
+		snaccAssertFail("clearSupportedInvokes not implemented on this transport");
+	}
+
+	/** Replaces the subscribed event OPID set for moduleIid. Server transports must override. */
+	public setSubscribedEvents(_moduleIid: number, _eventOpIds: readonly number[]): void {
+		snaccAssertFail("setSubscribedEvents not implemented on this transport");
+	}
+
+	/** Adds one subscribed event OPID for moduleIid. Server transports must override. */
+	public addSubscribedEvent(_moduleIid: number, _eventOpId: number): void {
+		snaccAssertFail("addSubscribedEvent not implemented on this transport");
+	}
+
+	/** Replaces the supported invoke OPID set for moduleIid. Server transports must override. */
+	public setSupportedInvokes(_moduleIid: number, _invokeOpIds: readonly number[]): void {
+		snaccAssertFail("setSupportedInvokes not implemented on this transport");
+	}
+
+	/** Adds one supported invoke OPID for moduleIid. Server transports must override. */
+	public addSupportedInvoke(_moduleIid: number, _invokeOpId: number): void {
+		snaccAssertFail("addSupportedInvoke not implemented on this transport");
+	}
+
+	/** True when eventOpId is in the effective subscribed-event set. Server transports must override. */
+	public isSubscribedEvent(_eventOpId: number): boolean {
+		snaccAssertFail("isSubscribedEvent not implemented on this transport");
+		return false;
+	}
+
+	/** True when invokeOpId is in the supported server-to-client invoke set. Server transports must override. */
+	public isSupportedInvoke(_invokeOpId: number): boolean {
+		snaccAssertFail("isSupportedInvoke not implemented on this transport");
+		return false;
+	}
+
+	/**
+	 * Configures blocking of outbound operations not covered by session subscription or negotiate state. Default NeverBlock.
+	 */
+	public setOperationBlockPolicy(policy: OperationBlockPolicy): void {
+		this.operationBlockPolicy = policy;
+	}
+
+	/**
+	 * Returns the current outbound operation block policy.
+	 */
+	public getOperationBlockPolicy(): OperationBlockPolicy {
+		return this.operationBlockPolicy;
+	}
+
+	/**
+	 * True after markSessionSubscriptionStateSet() (typically when subscribe handlers update session OPIDs).
+	 */
+	public hasSessionSubscriptionState(): boolean {
+		return this.sessionSubscriptionStateSet;
+	}
+
+	/**
+	 * Marks session subscription state as initialized; call from setSubscribedEvents and related overrides.
+	 */
+	public markSessionSubscriptionStateSet(): void {
+		this.sessionSubscriptionStateSet = true;
+	}
+
+	/**
+	 * True when BlockUnsupportedOperations is active, capability state is set, and the outbound op is not allowed.
+	 */
+	public isOperationBlocked(operationID: number, isEvent: boolean): boolean {
+		if (this.operationBlockPolicy !== OperationBlockPolicy.BlockUnsupportedOperations)
+			return false;
+
+		if (isEvent) {
+			if (!this.sessionSubscriptionStateSet)
+				return false;
+			if (this.isSubscribedEvent(operationID))
+				return false;
+			snaccAssertFail(
+				`Outbound event blocked: operation id ${operationID} is not subscribed for this session`,
+			);
+			return true;
+		}
+
+		if (this.sessionSubscriptionStateSet && !this.isSupportedInvoke(operationID)) {
+			snaccAssertFail(
+				`Outbound invoke blocked: operation id ${operationID} is not supported for this session`,
+			);
+			return true;
+		}
+
+		if (this.remoteModuleCapabilitiesSet && !this.internalIsRemoteOperationSupported(operationID)) {
+			snaccAssertFail(
+				`Outbound invoke blocked: operation id ${operationID} is not offered by the remote peer`,
+			);
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
 	 * Stores the peer module snapshot from asnNegotiateInterface (or equivalent).
 	 */
-	public applyRemoteModuleCapabilities(remote: ReadonlyMap<string, ILoadedModuleInfo>): void {
+	public setRemoteModuleCapabilities(remote: ReadonlyMap<string, ILoadedModuleInfo>): void {
 		this.remoteModuleCapabilitiesByName = new Map(
 			[...remote.entries()].map(([moduleName, moduleInfo]) => [
 				moduleName,
@@ -570,7 +721,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * True after applyRemoteModuleCapabilities() was called (even when the map is empty).
+	 * True after setRemoteModuleCapabilities() was called (even when the map is empty).
 	 */
 	public hasRemoteModuleCapabilities(): boolean {
 		return this.remoteModuleCapabilitiesSet;
@@ -583,30 +734,48 @@ export abstract class TSASN1Base implements IASN1Transport {
 	public isSupportedOperation(operationID: number): boolean {
 		snaccAssert(
 			this.remoteModuleCapabilitiesSet,
-			"isSupportedOperation requires applyRemoteModuleCapabilities first",
+			"isSupportedOperation requires setRemoteModuleCapabilities first",
 		);
 		return this.internalIsRemoteOperationSupported(operationID);
 	}
 
 	/**
-	 * Local reject for outbound invokes blocked by remote capability gating.
-	 * Events (invokeID 99999) are never gated here.
+	 * Asserts via isOperationBlocked when BlockUnsupportedOperations is active.
+	 * Returns a local remoteNotCapable reject when the stub must stop (events and invokes). Otherwise undefined.
+	 * Call from handleEvent / handleInvoke before encodeInvoke (parity with C++ CompleteIfOperationBlocked).
 	 */
-	protected tryRejectRemoteNotCapable(invoke: ROSEInvoke): ROSEReject | undefined {
-		if (invoke.invokeID === 99999)
+	public completeIfOperationBlocked(
+		operationID: number,
+		operationName: string,
+		isEvent: boolean,
+		invokeID = 0,
+	): ROSEReject | undefined {
+		if (!this.isOperationBlocked(operationID, isEvent))
 			return undefined;
-		if (this.remoteCapabilityMode !== RemoteCapabilityMode.Enabled || !this.remoteModuleCapabilitiesSet)
-			return undefined;
-		if (this.internalIsRemoteOperationSupported(invoke.operationID))
-			return undefined;
-		snaccAssertFail(
-			`Outbound invoke blocked: operation not offered by remote (${invoke.operationName}, ${invoke.operationID})`,
-		);
 		return createInvokeReject(
-			invoke,
+			{ invokeID: isEvent ? 99999 : invokeID, operationID, operationName } as ROSEInvoke,
 			CustomInvokeProblemEnum.remoteNotCapable,
-			`Operation ${invoke.operationName} (${invoke.operationID}) is not offered by the remote peer`,
+			`Operation ${operationName} (${operationID}) is not supported for outbound send`,
 		);
+	}
+
+	/**
+	 * When pauseRoseProcessing() is active: returns a local shutdown reject. Otherwise undefined.
+	 * Call from handleInvoke / sendInvoke before encode or send (parity with C++ CompleteIfProcessingShutdown).
+	 */
+	public completeIfProcessingShutdown(invoke: ROSEInvoke): ROSEReject | undefined {
+		if (this.roseProcessingAllowed)
+			return undefined;
+		return createInvokeReject(invoke, ROSE_TE_SHUTDOWN, "ROSE transport processing is paused");
+	}
+
+	/**
+	 * Completes all pending synchronous/async invokes with ROSE_TE_SHUTDOWN (parity with C++ CompleteAllPendingOperations).
+	 */
+	protected completeAllPendingOperations(): void {
+		for (const pending of this.pendingInvokes.values())
+			pending.completed_shutdown();
+		this.pendingInvokes.clear();
 	}
 
 	/**
@@ -761,6 +930,9 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 * @returns undefined or, if bSendEventSynchronous has been set true when the event was sent
 	 */
 	public sendEvent(data: IASN1InvokeData): undefined | boolean {
+		if (!this.isProcessingAllowed())
+			return data.invokeContext?.bSendEventSynchronous ? false : undefined;
+
 		if (data.invokeContext?.bSendEventSynchronous)
 			return this.sendEventSync(data);
 		else {
@@ -853,8 +1025,6 @@ export abstract class TSASN1Base implements IASN1Transport {
 				if (message.invoke.operationName)
 					invokeContext.operationName = message.invoke.operationName;
 				else {
-					// In case the client did not provide an operationName, look it up
-					// This only works if we have a registered handler for the operation
 					const handler = this.getHandlerById(invokeContext.operationID);
 					if (handler)
 						invokeContext.operationName = handler.operationName;
@@ -873,9 +1043,12 @@ export abstract class TSASN1Base implements IASN1Transport {
 			else
 				this.logTransport(rawData, "receive", "in", invokeContext);
 
-			if (message.invoke)
-				result = await this.onROSEInvoke(message.invoke, invokeContext);
-			else if (message.result)
+			if (message.invoke) {
+				if (!this.isProcessingAllowed())
+					result = createInvokeReject(message.invoke, ROSE_TE_SHUTDOWN, "ROSE transport processing is paused");
+				else
+					result = await this.onROSEInvoke(message.invoke, invokeContext);
+			} else if (message.result)
 				result = await this.onROSEResult(message.result, invokeContext);
 			else if (message.error)
 				result = await this.onROSEError(message.error, invokeContext);

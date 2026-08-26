@@ -36,8 +36,8 @@ const noopHandler = {
 test("registerOperation metadata appears in getLoadedModules", () => {
 	const transport = new TestTransport();
 	transport.registerModuleVersion("TestModule", "20240101.0.20240506");
-	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 1714968000, 0, false);
-	transport.registerOperation(noopHandler, noopHandler as never, 200, "asnEvent", "TestModule", 0, 1715054400, true);
+	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 100, 1714968000, 0, false);
+	transport.registerOperation(noopHandler, noopHandler as never, 200, "asnEvent", "TestModule", 100, 0, 1715054400, true);
 
 	const modules = transport.getLoadedModules();
 	assert.equal(modules.size, 1);
@@ -59,10 +59,10 @@ test("separate stub instances keep separate registries", () => {
 	const transportB = new TestTransport();
 
 	transportA.registerModuleVersion("ModuleA", "1.0.1");
-	transportA.registerOperation(noopHandler, noopHandler as never, 10, "opA", "ModuleA", 0, 0, false);
+	transportA.registerOperation(noopHandler, noopHandler as never, 10, "opA", "ModuleA", 10, 0, 0, false);
 
 	transportB.registerModuleVersion("ModuleB", "2.0.2");
-	transportB.registerOperation(noopHandler, noopHandler as never, 20, "opB", "ModuleB", 0, 0, true);
+	transportB.registerOperation(noopHandler, noopHandler as never, 20, "opB", "ModuleB", 20, 0, 0, true);
 
 	assert.equal(transportA.getLoadedModules().size, 1);
 	assert.equal(transportB.getLoadedModules().size, 1);
@@ -73,10 +73,11 @@ test("separate stub instances keep separate registries", () => {
 test("lookUpName lookUpID and lookUpModuleName resolve registered operations", () => {
 	const transport = new TestTransport();
 	transport.registerModuleVersion("TestModule", "1.0.0");
-	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 0, 0, false);
+	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 100, 0, 0, false);
 
 	assert.equal(transport.lookUpName(100), "asnInvoke");
 	assert.equal(transport.lookUpID("asnInvoke"), 100);
 	assert.equal(transport.lookUpModuleName(100), "TestModule");
-	assert.equal(transport.lookUpModuleName(999), undefined);
+	assert.equal(transport.lookUpInterfaceID(100), 100);
+	assert.equal(transport.lookUpInterfaceID(999), 0);
 });

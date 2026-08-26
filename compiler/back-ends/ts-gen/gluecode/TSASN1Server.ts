@@ -70,6 +70,9 @@ export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 	 * @returns true when the event was sent
 	 */
 	public sendEventSync(data: IASN1InvokeData): boolean {
+		if (!this.isProcessingAllowed())
+			return false;
+
 		if (this.connectionhandler && data.invokeContext.clientConnectionID) {
 			const client = this.connectionhandler.getClientConnection(data.invokeContext.clientConnectionID);
 			if (client) {
@@ -135,9 +138,9 @@ export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 	 * If no timeout was specified we resolve in undefined to cleanup the promise object
 	 */
 	public async sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
-		const localReject = this.tryRejectRemoteNotCapable(data.invoke);
-		if (localReject)
-			return localReject;
+		const shutdownReject = this.completeIfProcessingShutdown(data.invoke);
+		if (shutdownReject)
+			return shutdownReject;
 
 		const clientConnectionID = data.invokeContext.clientConnectionID || data.invoke.sessionID;
 		if (!clientConnectionID) {

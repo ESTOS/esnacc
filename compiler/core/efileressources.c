@@ -22,6 +22,8 @@ INCBIN(BIN_SNACCROSE, "compiler/back-ends/ts-gen/gluecode/SNACCROSE.ts");
 INCBIN(BIN_SNACCROSE_CONVERTER, "compiler/back-ends/ts-gen/gluecode/SNACCROSE_Converter.ts");
 INCBIN(BIN_INVOKE_CONTEXT, "compiler/back-ends/ts-gen/gluecode/TSInvokeContext.ts");
 INCBIN(BIN_DEPRECATED_CALLBACK, "compiler/back-ends/ts-gen/gluecode/TSDeprecatedCallback.ts");
+INCBIN(BIN_ROSE_SESSION_SUBSCRIPTION, "compiler/back-ends/ts-gen/gluecode/IRoseSessionSubscription.ts");
+INCBIN(BIN_ROSE_SESSION_SUBSCRIPTION_STORE, "compiler/back-ends/ts-gen/gluecode/RoseSessionSubscriptionStore.ts");
 
 INCBIN(BIN_EDELPHI_ASN1_YPES, "compiler/back-ends/delphi-gen/gluecode/DelphiAsn1Types.pas");
 #endif // _WIN32
@@ -98,6 +100,12 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 			break;
 		case ETS_INVOKE_CONTEXT:
 			SaveIncBinToFile(gBIN_INVOKE_CONTEXTData, gBIN_INVOKE_CONTEXTSize, szFileName);
+			break;
+		case ETS_ROSE_SESSION_SUBSCRIPTION:
+			SaveIncBinToFile(gBIN_ROSE_SESSION_SUBSCRIPTIONData, gBIN_ROSE_SESSION_SUBSCRIPTIONSize, szFileName);
+			break;
+		case ETS_ROSE_SESSION_SUBSCRIPTION_STORE:
+			SaveIncBinToFile(gBIN_ROSE_SESSION_SUBSCRIPTION_STOREData, gBIN_ROSE_SESSION_SUBSCRIPTION_STORESize, szFileName);
 			break;
 		case EDELPHI_ASN1_TYPES:
 			SaveIncBinToFile(gBIN_EDELPHI_ASN1_YPESData, gBIN_EDELPHI_ASN1_YPESSize, szFileName);

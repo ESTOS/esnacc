@@ -25,10 +25,13 @@ copy /Y "%STUB_DIR%\ENetUC_Common_Converter.ts" "%WORKDIR%\" >nul
 
 for %%T in (
 	TSASN1Base.registry.test.ts
-	TSASN1Base.remoteCapability.test.ts
+	TSASN1Base.invokeBlockPolicy.test.ts
+	TSASN1Base.roseSessionSubscription.test.ts
+	TSASN1Base.pauseRoseProcessing.test.ts
 	TSModuleCapabilities.test.ts
 ) do (
 	echo Running %%T ...
+	set "NODE_PATH=%NODE_MODULES%"
 	npx --yes tsx "%TEST_DIR%\%%T"
 	if errorlevel 1 set "EXIT_CODE=1"
 )

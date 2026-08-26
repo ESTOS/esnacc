@@ -28,6 +28,7 @@ import {
 	IReceiveInvokeContextParams,
 	ISendInvokeContextParams,
 } from "./TSInvokeContext.js";
+import type { IRoseSessionSubscription } from "./IRoseSessionSubscription.js";
 
 /**
  * The socket might be a node or browser websocket or a node raw tcp socket, thus we cast it to any
@@ -72,6 +73,9 @@ export enum CustomInvokeProblemEnum {
 /** Client-local SendInvoke result: peer negotiate snapshot does not offer this invoke OPID. */
 export const ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00;
 
+/** Transport-layer shutdown (parity with C++ ROSE_TE_SHUTDOWN). */
+export const ROSE_TE_SHUTDOWN = 0x00000002;
+
 /**
  * Debug-only assert with a human-readable message (console.assert in Node/browser).
  * Use snaccAssert(check, msg) for preconditions or snaccAssertFail(msg) when already in an error path.
@@ -85,10 +89,10 @@ export function snaccAssertFail(message: string): void {
 	console.assert(false, message);
 }
 
-/** Controls outbound invoke gating against a negotiate snapshot on TSASN1Base. */
-export enum RemoteCapabilityMode {
-	Disabled = 0,
-	Enabled = 1,
+/** Controls whether outbound operations are blocked when absent from the peer/session capability snapshot. */
+export enum OperationBlockPolicy {
+	NeverBlock = 0,
+	BlockUnsupportedOperations = 1,
 }
 
 /**
@@ -479,7 +483,7 @@ export interface IInvokeHandler {
 /**
  * Defines the interface the transport layer has to fullfill
  */
-export interface IASN1Transport {
+export interface IASN1Transport extends IRoseSessionSubscription {
 	sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
 	sendEvent(data: IASN1InvokeData): undefined | boolean;
 	registerOperation(
@@ -488,6 +492,7 @@ export interface IASN1Transport {
 		operationID: number,
 		operationName: string,
 		moduleName: string,
+		moduleInterfaceId: number,
 		addedUnix: number,
 		deprecatedUnix: number,
 		isEvent: boolean,
@@ -500,9 +505,23 @@ export interface IASN1Transport {
 	lookUpName(operationID: number): string | undefined;
 	lookUpID(operationName: string): number | undefined;
 	lookUpModuleName(operationID: number): string | undefined;
-	setRemoteCapabilityMode(mode: RemoteCapabilityMode): void;
-	getRemoteCapabilityMode(): RemoteCapabilityMode;
-	applyRemoteModuleCapabilities(remote: ReadonlyMap<string, ILoadedModuleInfo>): void;
+	lookUpInterfaceID(operationID: number): number;
+	pauseRoseProcessing(): void;
+	resumeRoseProcessing(): void;
+	isProcessingAllowed(): boolean;
+	setOperationBlockPolicy(policy: OperationBlockPolicy): void;
+	getOperationBlockPolicy(): OperationBlockPolicy;
+	hasSessionSubscriptionState(): boolean;
+	markSessionSubscriptionStateSet(): void;
+	isOperationBlocked(operationID: number, isEvent: boolean): boolean;
+	completeIfProcessingShutdown(invoke: ROSEInvoke): ROSEReject | undefined;
+	completeIfOperationBlocked(
+		operationID: number,
+		operationName: string,
+		isEvent: boolean,
+		invokeID?: number,
+	): ROSEReject | undefined;
+	setRemoteModuleCapabilities(remote: ReadonlyMap<string, ILoadedModuleInfo>): void;
 	clearRemoteModuleCapabilities(): void;
 	hasRemoteModuleCapabilities(): boolean;
 	isSupportedOperation(operationID: number): boolean;
@@ -742,6 +761,51 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		this.handleEvents = handleEvents;
 	}
 
+	/** Forwards to transport; see IRoseSessionSubscription. */
+	public setSubscribedEvents(moduleIid: number, opIds: readonly number[]): void {
+		this.transport.setSubscribedEvents(moduleIid, opIds);
+	}
+
+	/** Forwards to transport; see IRoseSessionSubscription. */
+	public addSubscribedEvent(moduleIid: number, opId: number): void {
+		this.transport.addSubscribedEvent(moduleIid, opId);
+	}
+
+	/** Forwards to transport; see IRoseSessionSubscription. */
+	public clearSubscribedEvents(moduleIid: number): void {
+		this.transport.clearSubscribedEvents(moduleIid);
+	}
+
+	/** Forwards to transport; see IRoseSessionSubscription. */
+	public clearAllSubscriptions(): void {
+		this.transport.clearAllSubscriptions();
+	}
+
+	/** Forwards to transport; see IRoseSessionSubscription. */
+	public clearSupportedInvokes(moduleIid: number): void {
+		this.transport.clearSupportedInvokes(moduleIid);
+	}
+
+	/** Forwards to transport; see IRoseSessionSubscription. */
+	public setSupportedInvokes(moduleIid: number, invokeOpIds: readonly number[]): void {
+		this.transport.setSupportedInvokes(moduleIid, invokeOpIds);
+	}
+
+	/** Forwards to transport; see IRoseSessionSubscription. */
+	public addSupportedInvoke(moduleIid: number, invokeOpId: number): void {
+		this.transport.addSupportedInvoke(moduleIid, invokeOpId);
+	}
+
+	/** Forwards to transport; see IRoseSessionSubscription. */
+	public isSubscribedEvent(opId: number): boolean {
+		return this.transport.isSubscribedEvent(opId);
+	}
+
+	/** Forwards to transport; see IRoseSessionSubscription. */
+	public isSupportedInvoke(opId: number): boolean {
+		return this.transport.isSupportedInvoke(opId);
+	}
+
 	/**
 	 * Starts event dispatching. Dispatches queued events first and then sets the flag to handle them directly.
 	 */
@@ -975,6 +1039,12 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		argumentConverter: IConverter,
 		invokeContext?: ISendInvokeContextParams,
 	): undefined | boolean {
+		if (!this.transport.isProcessingAllowed())
+			return invokeContext?.bSendEventSynchronous ? false : undefined;
+
+		if (this.transport.completeIfOperationBlocked(operationID, operationName, true))
+			return invokeContext?.bSendEventSynchronous ? false : undefined;
+
 		// Encodes the argument and the ROSEInvoke envelop
 		const result = this.encodeInvoke(argument, operationID, operationName, argumentConverter, true, invokeContext);
 		if (result instanceof AsnInvokeProblem)
@@ -1008,6 +1078,18 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		invokeContext?: ISendInvokeContextParams,
 		errorConverter: IConverter = ENetUC_Common_Converter.AsnRequestError_Converter,
 	): Promise<T | U | AsnInvokeProblem> {
+		const shutdownReject = this.transport.completeIfProcessingShutdown({
+			invokeID: 0,
+			operationID,
+			operationName,
+		} as ROSEInvoke);
+		if (shutdownReject)
+			return handleRoseReject(shutdownReject);
+
+		const blocked = this.transport.completeIfOperationBlocked(operationID, operationName, false);
+		if (blocked instanceof ROSEReject)
+			return handleRoseReject(blocked);
+
 		const result = this.encodeInvoke(argument, operationID, operationName, argumentConverter, false, invokeContext);
 		if (result instanceof AsnInvokeProblem)
 			return result;
