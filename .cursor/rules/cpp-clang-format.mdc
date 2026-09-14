@@ -50,7 +50,20 @@ clang-format --dry-run -Werror path/to/TouchedFile.cpp
 - Do **not** format generated sample stubs under `samples/ts-microservice/*/src/stub/` unless explicitly requested.
 - Do **not** format vendored third-party trees such as `cpp-lib/jsoncpp/` unless explicitly requested.
 - Do **not** format flex/bison generated sources under `compiler/` unless explicitly requested.
+- Do **not** format paths listed in `.clang-format-ignore` (for example `compiler/core/asn_commentparser.cpp`).
 - Respect `// clang-format off` / `on` regions and files that intentionally disable formatting (for example `compiler/resource.h`).
+
+## Baseline / bulk format
+
+When the user asks for a repo-wide formatting sweep:
+
+```powershell
+pwsh ./scripts/clang-format-all.ps1
+```
+
+```bash
+./scripts/clang-format-all.sh
+```
 
 ## Completion check
 

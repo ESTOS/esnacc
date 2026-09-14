@@ -1,0 +1,8 @@
+# Legacy layout; reformat intentionally in a dedicated change.
+compiler/core/asn_commentparser.cpp
+
+# Vendored third-party (uses its own .clang-format).
+cpp-lib/jsoncpp/**
+
+# Generated sample stubs.
+samples/ts-microservice/**/src/stub/**
