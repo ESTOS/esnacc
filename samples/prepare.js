@@ -91,7 +91,9 @@ function listAsn1Files() {
  * for logging before spawnSync runs the compiler.
  */
 function formatCommandLine(command, args) {
-	const quote = (arg) => /[\s"]/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg;
+	const quote = (arg) => /[\s"]/.test(arg)
+		? `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`
+		: arg;
 	return [command, ...args].map(quote).join(" ");
 }
 
