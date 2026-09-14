@@ -112,7 +112,6 @@ void PrintCValueExtern PARAMS((hdr, r, v), FILE* hdr _AND_ CRules* r _AND_ Value
 
 void PrintCValueInstantiation PARAMS((f, r, v), FILE* f _AND_ CRules* r _AND_ Value* v)
 {
-
 	/* needs work - just do ints, bools and oids for now */
 	switch (v->basicValue->choiceId)
 	{
@@ -154,7 +153,7 @@ void PrintCValueInstantiation PARAMS((f, r, v), FILE* f _AND_ CRules* r _AND_ Va
 						if (pvalueRef->link->value && pvalueRef->link->value->basicValue && pvalueRef->link->value->basicValue->choiceId == BASICVALUE_INTEGER)
 							iValue = pvalueRef->link->value->basicValue->a.integer;
 					} // END IF LOCALVALUEREF (recursed)
-				}	  // END IF LOCALVALUEREF under LCOALVALUEREF
+				} // END IF LOCALVALUEREF under LCOALVALUEREF
 				fprintf(f, "%d", iValue);
 			} // END if LocalValueRef type.
 			break;

@@ -38,18 +38,8 @@ struct DeprecatedSuccessorFields
 bool ParseDeprecatedSuccessorArrowLine(const std::string& trimmedLine, DeprecatedSuccessorFields& fields);
 bool FindAndParseDeprecatedSuccessorInText(const std::string& text, DeprecatedSuccessorFields& fields, std::string& textWithoutSuccessor);
 void EmitDeprecatedSuccessorMissingWarning(const char* pszFileName, int lineNo, const char* pszSymbolName);
-void EmitDeprecatedSuccessorNotInFileWarning(
-	const char* pszFileName,
-	int lineNo,
-	const char* pszSymbolName,
-	const char* pszSuccessorSymbol);
-void EmitDeprecatedSuccessorNotInModuleWarning(
-	const char* pszFileName,
-	int lineNo,
-	const char* pszSymbolName,
-	const char* pszSuccessorQualifier,
-	const char* pszSuccessorSymbol,
-	const char* pszResolvedModuleName);
+void EmitDeprecatedSuccessorNotInFileWarning(const char* pszFileName, int lineNo, const char* pszSymbolName, const char* pszSuccessorSymbol);
+void EmitDeprecatedSuccessorNotInModuleWarning(const char* pszFileName, int lineNo, const char* pszSymbolName, const char* pszSuccessorQualifier, const char* pszSuccessorSymbol, const char* pszResolvedModuleName);
 #endif
 
 #endif /* SNACC_DEPRECATED_SUCCESSOR_H */

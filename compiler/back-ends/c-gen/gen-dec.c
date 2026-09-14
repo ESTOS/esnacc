@@ -514,7 +514,6 @@ static void PrintCElmtDecodeCode PARAMS((src, td, parent, t, elmtLevel, totalLev
 
 	if (!tmpType->extensionAddition)
 	{
-
 		if (tmpType->basicType->choiceId == BASICTYPE_ANY)
 		{
 			fprintf(src, "/* ANY - Fix Me ! */\n");
@@ -696,7 +695,6 @@ static void PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, total
 	{
 		if (!e->type->extensionAddition)
 		{
-
 			elmtLevel = initialElmtLevel + 1;
 			tagLevel = initialTagLevel + 1;
 			if ((e->type == NULL) || (e->type->cTypeRefInfo == NULL))
@@ -764,7 +762,6 @@ static void PrintCSetDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, total
 				AsnListNext(tags); /* set curr to 2nd tag */
 				FOR_REST_LIST_ELMT(tag, tags)
 				{
-
 					codeStr = DetermineCode(tag, NULL, 0); // RWC;Code2UnivCodeStr (tag->code);
 					classStr = Class2ClassStr(tag->tclass);
 					formStr = Form2FormStr(tag->form);
@@ -1114,7 +1111,6 @@ static void PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, total
 				}
 				else
 				{
-
 					tagLevel = initialTagLevel + 2;
 					fprintf(src, "        tagId%d = %sDecTag (b, &totalElmtsLen%d, env);\n\n", tagLevel, GetEncRulePrefix(), totalLevel);
 					if (tag->tclass == UNIV)
@@ -1272,7 +1268,6 @@ static void PrintCSeqDecodeCode PARAMS((src, td, parent, elmts, elmtLevel, total
 		}
 		else if (!e->type->optional && (e->type->defaultVal == NULL))
 		{
-
 			fprintf(src, "    }\n"); /* end of tag check if */
 			fprintf(src, "    else\n");
 			fprintf(src, "        longjmp (env, %d);\n", (int)(*longJmpValG)--);

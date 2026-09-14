@@ -1165,9 +1165,9 @@ bool ValidateNoOptionalParamsBag(ModuleList* allMods)
 				}
 
 				fprintf(stderr,
-				        "- %s uses legacy AsnOptionalParameters (optionalParams bag); use dedicated [n] OPTIONAL fields instead "
-				        "(@ignorevalidation no-asn-optional-parameters only for grandfathered types)\n",
-				        td->definedName);
+						"- %s uses legacy AsnOptionalParameters (optionalParams bag); use dedicated [n] OPTIONAL fields instead "
+						"(@ignorevalidation no-asn-optional-parameters only for grandfathered types)\n",
+						td->definedName);
 				nWeHaveErrors++;
 				iErrorCounter++;
 			}

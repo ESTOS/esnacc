@@ -4,93 +4,93 @@
 
 namespace
 {
-class RecordingRoseSender : public SnaccROSESender
-{
-public:
-	std::shared_ptr<SnaccInvokeContext> CreateInvokeContext(const SnaccInvokeContextInit& init) override
+	class RecordingRoseSender : public SnaccROSESender
 	{
-		(void)init;
-		return {};
-	}
+	public:
+		std::shared_ptr<SnaccInvokeContext> CreateInvokeContext(const SnaccInvokeContextInit& init) override
+		{
+			(void)init;
+			return {};
+		}
 
-	long GetNextInvokeID() override
+		long GetNextInvokeID() override
+		{
+			return 1;
+		}
+
+		SNACC::EAsnLogLevel GetLogLevel(const bool /*bOutbound*/) override
+		{
+			return SNACC::EAsnLogLevel::DISABLED;
+		}
+
+		bool LogTransportData(const bool /*bOutbound*/, const SNACC::TransportEncoding /*encoding*/, const char* /*szOperationName*/, const char* /*szData*/, const size_t /*size*/, const SNACC::ROSEMessage* /*pMsg*/, const SJson::Value* /*pParsedValue*/) override
+		{
+			return false;
+		}
+
+		long SendInvoke(SNACC::ROSEInvoke* /*pInvoke*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
+		{
+			return ROSE_NOERROR;
+		}
+
+		long SendInvokeAsync(SNACC::ROSEInvoke* /*pInvoke*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
+		{
+			return ROSE_NOERROR;
+		}
+
+		long HandleInvokeResult(long /*lRoseResult*/, const SNACC::ROSEMessage& /*responseMsg*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/, SnaccInvokeContext& /*ctx*/) override
+		{
+			return ROSE_NOERROR;
+		}
+
+		long HandleOnInvokeResult(SNACC::InvokeResult /*invokeResult*/, const SNACC::ROSEInvoke& /*invoke*/, SnaccInvokeContext& /*ctx*/, std::string& /*strResponse*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/) override
+		{
+			return ROSE_NOERROR;
+		}
+
+		long DecodeInvoke(const SNACC::ROSEMessage& /*invokeMessage*/, SNACC::AsnType* /*pArgument*/) override
+		{
+			return ROSE_NOERROR;
+		}
+
+		long SendEvent(SNACC::ROSEInvoke* /*pInvoke*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
+		{
+			return ROSE_NOERROR;
+		}
+
+		long EncodeResult(unsigned int /*uiInvokeID*/, const SNACC::AsnType* /*pResult*/, std::string& /*strResponse*/, const wchar_t* /*szSessionID*/) override
+		{
+			return ROSE_NOERROR;
+		}
+
+		long EncodeError(unsigned int /*uiInvokeID*/, const SNACC::AsnType* /*pError*/, std::string& /*strResponse*/, const wchar_t* /*szSessionID*/) override
+		{
+			return ROSE_NOERROR;
+		}
+
+		bool IsSubscribedEvent(unsigned int uiEventOpId) const override
+		{
+			return uiEventOpId == subscribedEventOpId;
+		}
+
+		void AddSubscribedEvent(int moduleIid, unsigned int uiEventOpId) override
+		{
+			lastModuleIid = moduleIid;
+			subscribedEventOpId = uiEventOpId;
+		}
+
+		int lastModuleIid = 0;
+		unsigned int subscribedEventOpId = 0;
+	};
+
+	class TestRoseComponent : public SnaccROSEComponent
 	{
-		return 1;
-	}
-
-	SNACC::EAsnLogLevel GetLogLevel(const bool /*bOutbound*/) override
-	{
-		return SNACC::EAsnLogLevel::DISABLED;
-	}
-
-	bool LogTransportData(const bool /*bOutbound*/, const SNACC::TransportEncoding /*encoding*/, const char* /*szOperationName*/, const char* /*szData*/, const size_t /*size*/, const SNACC::ROSEMessage* /*pMsg*/, const SJson::Value* /*pParsedValue*/) override
-	{
-		return false;
-	}
-
-	long SendInvoke(SNACC::ROSEInvoke* /*pInvoke*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
-	{
-		return ROSE_NOERROR;
-	}
-
-	long SendInvokeAsync(SNACC::ROSEInvoke* /*pInvoke*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
-	{
-		return ROSE_NOERROR;
-	}
-
-	long HandleInvokeResult(long /*lRoseResult*/, const SNACC::ROSEMessage& /*responseMsg*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/, SnaccInvokeContext& /*ctx*/) override
-	{
-		return ROSE_NOERROR;
-	}
-
-	long HandleOnInvokeResult(SNACC::InvokeResult /*invokeResult*/, const SNACC::ROSEInvoke& /*invoke*/, SnaccInvokeContext& /*ctx*/, std::string& /*strResponse*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/) override
-	{
-		return ROSE_NOERROR;
-	}
-
-	long DecodeInvoke(const SNACC::ROSEMessage& /*invokeMessage*/, SNACC::AsnType* /*pArgument*/) override
-	{
-		return ROSE_NOERROR;
-	}
-
-	long SendEvent(SNACC::ROSEInvoke* /*pInvoke*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
-	{
-		return ROSE_NOERROR;
-	}
-
-	long EncodeResult(unsigned int /*uiInvokeID*/, const SNACC::AsnType* /*pResult*/, std::string& /*strResponse*/, const wchar_t* /*szSessionID*/) override
-	{
-		return ROSE_NOERROR;
-	}
-
-	long EncodeError(unsigned int /*uiInvokeID*/, const SNACC::AsnType* /*pError*/, std::string& /*strResponse*/, const wchar_t* /*szSessionID*/) override
-	{
-		return ROSE_NOERROR;
-	}
-
-	bool IsSubscribedEvent(unsigned int uiEventOpId) const override
-	{
-		return uiEventOpId == subscribedEventOpId;
-	}
-
-	void AddSubscribedEvent(int moduleIid, unsigned int uiEventOpId) override
-	{
-		lastModuleIid = moduleIid;
-		subscribedEventOpId = uiEventOpId;
-	}
-
-	int lastModuleIid = 0;
-	unsigned int subscribedEventOpId = 0;
-};
-
-class TestRoseComponent : public SnaccROSEComponent
-{
-public:
-	explicit TestRoseComponent(SnaccROSESender* pSender)
-		: SnaccROSEComponent(pSender)
-	{
-	}
-};
+	public:
+		explicit TestRoseComponent(SnaccROSESender* pSender)
+			: SnaccROSEComponent(pSender)
+		{
+		}
+	};
 } // namespace
 
 TEST(RoseSessionSubscription, SnaccROSEComponentForwardsToSender)

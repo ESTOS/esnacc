@@ -1057,7 +1057,6 @@ static void PrintDelphiPropertyImplementation(FILE* src, ModuleList* mods, Modul
 
 static void PrintDelphiImplementationCode(FILE* src, Module* m, TypeDef* td)
 {
-
 	// class name comment: { ClassName }
 	fprintf(src, "{ %s }\n", td->definedName);
 	fprintf(src, "\n");

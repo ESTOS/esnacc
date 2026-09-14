@@ -363,12 +363,10 @@ void PrintSeqKotlinDataSequence(ModuleList* mods, Module* mod, TypeDef* td)
 	fprintf(src, "\n");
 
 	printSequenceComment(src, mod, td, COMMENTSTYLE_JAVA);
-	if (strcmp("AsnRequestError", name) == 0) {
+	if (strcmp("AsnRequestError", name) == 0)
 		fprintf(src, "@Serializable(with = AsnRequestErrorSerializer::class)\n");
-	}
-	else {
+	else
 		fprintf(src, "@Serializable\n");
-	}
 	/* ponytail: Kotlin forbids empty data class; empty ASN SEQUENCE → plain open class */
 	if (fieldCount == 0)
 		fprintf(src, "open class %s : java.io.Serializable {\n", name);
@@ -756,7 +754,8 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 
 		fprintf(src, "  @OptIn(InternalSerializationApi::class)\n");
 		fprintf(src, "  override fun getArgumentJson(): JsonObject {\n");
-		if (pszArgument) {
+		if (pszArgument)
+		{
 			fprintf(src, "    if (asnArgument != null) {\n");
 			fprintf(src, "      val localArg: %s = asnArgument!!\n", pszArgument);
 			fprintf(src, "      val element = kJson.encodeToJsonElement<%s>(%s.serializer(), localArg)\n", pszArgument, pszArgument);
@@ -766,7 +765,8 @@ void PrintKotlinOperationClass(Module* mod, ValueDef* vd)
 			fprintf(src, "    }\n");
 			fprintf(src, "  }\n");
 		}
-		else {
+		else
+		{
 			fprintf(src, "    return JsonObject(mapOf())\n");
 			fprintf(src, "  }\n");
 		}

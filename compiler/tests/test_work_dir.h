@@ -16,7 +16,10 @@ public:
 	TestWorkDir(const TestWorkDir&) = delete;
 	TestWorkDir& operator=(const TestWorkDir&) = delete;
 
-	const std::filesystem::path& path() const { return m_path; }
+	const std::filesystem::path& path() const
+	{
+		return m_path;
+	}
 
 	void CopyFixture(const std::filesystem::path& fixturePath) const;
 	void WriteDeprecatedBaseline(const std::filesystem::path& baselineFixturePath) const;

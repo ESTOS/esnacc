@@ -403,7 +403,6 @@ int CvtUTFToISO(AsnOcts* utf_stringa, wchar_t** wchar_ptr)
  */
 int cvt_WCStrtoLDAP(wchar_t* in_string, char** char_ptr, int flip)
 {
-
 	bool quoted = false; /* Flag telling us if we are in a quoted string */
 	int hex_val = 0;	 /* Temporary hex value returned from sprintf */
 	int quote_count = 0; /* Quote counter */
@@ -512,7 +511,6 @@ int cvt_WCStrtoLDAP(wchar_t* in_string, char** char_ptr, int flip)
 /* Format char pointer with RFC 2253 to a char pointer */
 int cvt_LDAPtoStr(char* in_string, char** char_ptr)
 {
-
 	bool quoted = false;   /* Flag telling us if we are in a quoted string */
 	int hex_val = 0;	   /* Temporary hex value returned from sprintf */
 	int quote_count = 0;   /* Quote counter */

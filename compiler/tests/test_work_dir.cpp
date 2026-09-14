@@ -7,16 +7,16 @@
 
 namespace
 {
-std::filesystem::path CreateUniqueTempDir()
-{
-	std::random_device device;
-	std::mt19937 generator(device());
-	std::uniform_int_distribution<int> distribution(0, 0xFFFFFF);
+	std::filesystem::path CreateUniqueTempDir()
+	{
+		std::random_device device;
+		std::mt19937 generator(device());
+		std::uniform_int_distribution<int> distribution(0, 0xFFFFFF);
 
-	auto dir = std::filesystem::temp_directory_path() / ("esnacc-cli-test-" + std::to_string(distribution(generator)));
-	std::filesystem::create_directories(dir);
-	return dir;
-}
+		auto dir = std::filesystem::temp_directory_path() / ("esnacc-cli-test-" + std::to_string(distribution(generator)));
+		std::filesystem::create_directories(dir);
+		return dir;
+	}
 } // namespace
 
 TestWorkDir::TestWorkDir()

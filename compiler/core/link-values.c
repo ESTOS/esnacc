@@ -141,7 +141,6 @@ int LinkValueRefs PARAMS((m), ModuleList* m)
 
 	FOR_EACH_LIST_ELMT(currMod, m)
 	{
-
 		asn1SrcFileNameG = currMod->asn1SrcFileName;
 
 		/*
@@ -245,7 +244,6 @@ void ValueLinkImportLists PARAMS((m), ModuleList* m)
 
 void ValueLinkTypeDef PARAMS((m, currMod, head), ModuleList* m _AND_ Module* currMod _AND_ TypeDef* head)
 {
-
 	if (head == NULL)
 		return;
 
@@ -301,7 +299,6 @@ void ValueLinkElmtType PARAMS((m, currMod, head, n), ModuleList* m _AND_ Module*
 
 void ValueLinkBasicType PARAMS((m, currMod, head, type, bt), ModuleList* m _AND_ Module* currMod _AND_ TypeDef* head _AND_ Type* type _AND_ BasicType* bt)
 {
-
 	if (bt == NULL)
 		return;
 
@@ -553,7 +550,6 @@ void ValueLinkValueDef PARAMS((m, currMod, v), ModuleList* m _AND_ Module* currM
 
 void ValueLinkValue PARAMS((m, currMod, head, valuesType, v), ModuleList* m _AND_ Module* currMod _AND_ ValueDef* head _AND_ Type* valuesType _AND_ Value* v)
 {
-
 	if (v == NULL)
 		return;
 
@@ -890,7 +886,6 @@ void ValueLinkMtsasExtensionMacroType PARAMS((m, currMod, head, t, bt, ext), Mod
 
 void ValueLinkMtsasExtensionAttributeMacroType PARAMS((m, currMod, head, t, bt, ext), ModuleList* m _AND_ Module* currMod _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasExtensionAttributeMacroType* ext)
 {
-
 	if (ext != NULL)
 		ValueLinkType(m, currMod, head, ext->type);
 } /* ValueLinkMtsasExtensionAttributeMacroType */
@@ -909,7 +904,6 @@ void ValueLinkMtsasTokenDataMacroType PARAMS((m, currMod, head, t, bt, tok), Mod
 
 void ValueLinkMtsasSecurityCategoryMacroType PARAMS((m, currMod, head, t, bt, sec), ModuleList* m _AND_ Module* currMod _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasSecurityCategoryMacroType* sec)
 {
-
 	if (sec != NULL)
 		ValueLinkType(m, currMod, head, sec->type);
 } /* ValueLinkMtsasSecurityCategoryMacroType */

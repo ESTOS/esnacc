@@ -316,8 +316,7 @@ void TypeLinkImportLists PARAMS((m), ModuleList* m)
 } /* TypeLinkImportLists */
 
 void // Deepak: 04/Mar/2003
-	TypeLinkObjectAssignments
-	PARAMS((m, currMod, oa), ModuleList* m _AND_ Module* currMod _AND_ ObjectAssignment* oa)
+	TypeLinkObjectAssignments PARAMS((m, currMod, oa), ModuleList* m _AND_ Module* currMod _AND_ ObjectAssignment* oa)
 {
 	ObjectAssignmentField* oaf;
 	TypeDef* tmpTypeDef;
@@ -427,8 +426,7 @@ void // Deepak: 04/Mar/2003
 } /* LinkTypeDef */
 
 void // Deepak: 04/Mar/2003
-	TypeLinkObjectAssignmentField
-	PARAMS((m, currMod, head, field), ModuleList* m _AND_ Module* currMod _AND_ ObjectAssignment* head _AND_ ObjectAssignmentField* field)
+	TypeLinkObjectAssignmentField PARAMS((m, currMod, head, field), ModuleList* m _AND_ Module* currMod _AND_ ObjectAssignment* head _AND_ ObjectAssignmentField* field)
 {
 	TypeOrValue* tOrV;
 
@@ -443,8 +441,7 @@ void // Deepak: 04/Mar/2003
 }
 
 void // Deepak: 04/Mar/2003
-	TypeLinkObjectSetAssignments
-	PARAMS((m, currMod, head), ModuleList* m _AND_ Module* currMod _AND_ ObjectSetAssignment* head)
+	TypeLinkObjectSetAssignments PARAMS((m, currMod, head), ModuleList* m _AND_ Module* currMod _AND_ ObjectSetAssignment* head)
 {
 	TypeOrValue* tOrV;
 	TypeDef* tmpTypeDef;
@@ -1097,7 +1094,7 @@ void TypeLinkSubtypes PARAMS((m, currMod, head, currType, s), ModuleList* m _AND
 			break;
 
 		case SUBTYPE_NOT:
-			TypeLinkSubtypes(m, currMod, head, currType, s->a.not );
+			TypeLinkSubtypes(m, currMod, head, currType, s->a.not);
 
 		default:
 			fprintf(errFileG, "TypeLinkSubtypes: ERROR - unknown Subtype id\n");

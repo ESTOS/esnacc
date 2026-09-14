@@ -677,25 +677,25 @@ int main PARAMS((argc, argv), int argc _AND_ char** argv)
 						novolatilefuncs = TRUE;
 						currArg++;
 					}
-				else
-					goto error;
-				break;
-			case 'u':
-				if (strcmp(argument + 1, "utf8") == 0)
-				{
-					genUTF8Output = TRUE;
-					currArg++;
-				}
-				else if (strcmp(argument + 1, "utf8bom") == 0)
-				{
-					genUTF8Output = TRUE;
-					genUTF8BOM = TRUE;
-					currArg++;
-				}
-				else
-					goto error;
-				break;
-			case 'c':
+					else
+						goto error;
+					break;
+				case 'u':
+					if (strcmp(argument + 1, "utf8") == 0)
+					{
+						genUTF8Output = TRUE;
+						currArg++;
+					}
+					else if (strcmp(argument + 1, "utf8bom") == 0)
+					{
+						genUTF8Output = TRUE;
+						genUTF8BOM = TRUE;
+						currArg++;
+					}
+					else
+						goto error;
+					break;
+				case 'c':
 					if (strcmp(argument + 1, "comments") == 0)
 						giWriteComments = TRUE;
 					else
@@ -1482,8 +1482,9 @@ void GenCSCode(ModuleList* allMods, int genROSECSDecoders)
 		{
 			if (genROSECSDecoders) // CS
 			{
-			if (fopen_s(&srcFilePtr, currMod->ROSESrcCSFileName, "wt") != 0 || srcFilePtr == NULL)				{
-				perror("fopen ROSE");
+				if (fopen_s(&srcFilePtr, currMod->ROSESrcCSFileName, "wt") != 0 || srcFilePtr == NULL)
+				{
+					perror("fopen ROSE");
 				}
 				else
 				{
@@ -1633,21 +1634,21 @@ void GenCxxCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValue
 
 				if (HasROSEOperations(currMod))
 				{
-				fopen_s(&hdrFilePtr, currMod->ROSEHdrFileName, "wt");
-				fopen_s(&srcFilePtr, currMod->ROSESrcFileName, "wt");
-				fopen_s(&hdrInterfaceFilePtr, currMod->ROSEHdrInterfaceFileName, "wt");
+					fopen_s(&hdrFilePtr, currMod->ROSEHdrFileName, "wt");
+					fopen_s(&srcFilePtr, currMod->ROSESrcFileName, "wt");
+					fopen_s(&hdrInterfaceFilePtr, currMod->ROSEHdrInterfaceFileName, "wt");
 
-				if ((hdrFilePtr == NULL) || (srcFilePtr == NULL) || (hdrInterfaceFilePtr == NULL))
-				{
-					perror("fopen ROSE");
-				}
-				else
-				{
-					saveMods = allMods->curr;
-					WriteUTF8BOM(hdrFilePtr);
-					WriteUTF8BOM(srcFilePtr);
-					WriteUTF8BOM(hdrInterfaceFilePtr);
-					PrintROSECode(srcFilePtr, hdrFilePtr, hdrInterfaceFilePtr, allMods, currMod, &cxxRulesG, szCppHeaderIncludePath);
+					if ((hdrFilePtr == NULL) || (srcFilePtr == NULL) || (hdrInterfaceFilePtr == NULL))
+					{
+						perror("fopen ROSE");
+					}
+					else
+					{
+						saveMods = allMods->curr;
+						WriteUTF8BOM(hdrFilePtr);
+						WriteUTF8BOM(srcFilePtr);
+						WriteUTF8BOM(hdrInterfaceFilePtr);
+						PrintROSECode(srcFilePtr, hdrFilePtr, hdrInterfaceFilePtr, allMods, currMod, &cxxRulesG, szCppHeaderIncludePath);
 						allMods->curr = saveMods;
 
 						fclose(hdrFilePtr);

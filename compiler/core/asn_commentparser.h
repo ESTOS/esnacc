@@ -136,12 +136,7 @@ private:
 	std::string m_strModuleName;
 };
 
-void convertCommentList(
-	std::list<std::string>& commentList,
-	std::list<int>& commentLines,
-	ETypeComment* pType,
-	const char* szFileName,
-	const char* szSymbolName);
+void convertCommentList(std::list<std::string>& commentList, std::list<int>& commentLines, ETypeComment* pType, const char* szFileName, const char* szSymbolName);
 
 class EAsnStackElement;
 
@@ -163,9 +158,9 @@ class EFilterSourceFile
 {
 public:
 	EFilterSourceFile(const std::string& strSourcePath, const std::string& strModuleName, const EFILETYPE eFileType)
-		: m_strSourcePath(strSourcePath)
-		, m_strModuleName(strModuleName)
-		, m_eFileType(eFileType)
+		: m_strSourcePath(strSourcePath),
+		  m_strModuleName(strModuleName),
+		  m_eFileType(eFileType)
 	{
 	}
 	std::string m_strSourcePath;
@@ -264,13 +259,7 @@ public:
 
 	virtual int ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state) override;
 
-	void SetModuleProperties(
-		const char* szFileName,
-		const char* szTypeName,
-		const char* szCategory,
-		const char* szASN1ModuleName,
-		std::list<std::string>& listComments,
-		std::list<int>& listCommentLines);
+	void SetModuleProperties(const char* szFileName, const char* szTypeName, const char* szCategory, const char* szASN1ModuleName, std::list<std::string>& listComments, std::list<int>& listCommentLines);
 
 	bool isModuleFiltered() const;
 
@@ -297,13 +286,7 @@ public:
 	//{ has been found
 	bool bOpenBracketFound = false;
 
-	void SetSequenceProperties(
-		bool bOpenBracket,
-		const char* szFileName,
-		const char* szTypeName,
-		EModuleComment* pmodcomment,
-		std::list<std::string>& listComments,
-		std::list<int>& listCommentLines);
+	void SetSequenceProperties(bool bOpenBracket, const char* szFileName, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments, std::list<int>& listCommentLines);
 
 	// collected comments during parsing
 	std::list<std::string> m_CollectComments;
@@ -342,12 +325,7 @@ public:
 
 	virtual int ProcessLine(const char* szModuleName, const char* szRawSourceLine, std::string& szLine, std::string& szComment, EElementState& state) override;
 
-	void SetOperationProperties(
-		const char* szFileName,
-		const char* szTypeName,
-		EModuleComment* pmodcomment,
-		std::list<std::string>& listComments,
-		std::list<int>& listCommentLines);
+	void SetOperationProperties(const char* szFileName, const char* szTypeName, EModuleComment* pmodcomment, std::list<std::string>& listComments, std::list<int>& listCommentLines);
 
 private:
 	EOperationComment m_comment;

@@ -508,16 +508,7 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 			llDeprecatedUnix = comment.i64Deprecated;
 		}
 
-		fprintf(
-			src,
-			"\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\", %s.MODULE_NAME, %s.MODULE_IID, %lld, %lld, %s);\n",
-			vd->definedName,
-			vd->definedName,
-			GetNameSpace(m),
-			GetNameSpace(m),
-			llAddedUnix,
-			llDeprecatedUnix,
-			bIsEvent ? "true" : "false");
+		fprintf(src, "\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\", %s.MODULE_NAME, %s.MODULE_IID, %lld, %lld, %s);\n", vd->definedName, vd->definedName, GetNameSpace(m), GetNameSpace(m), llAddedUnix, llDeprecatedUnix, bIsEvent ? "true" : "false");
 	}
 
 	fprintf(src, "\t}\n");
@@ -682,7 +673,7 @@ void PrintTSROSEOnEventSwitchCase(FILE* src, ModuleList* mods, Module* m)
 	fprintf(src, "\t\t// If the class says do not handle events and the override flag in the ctx has not been set, add the event to the que, otherwise we dispatch it\n");
 	fprintf(src, "\t\tif (!this.handleEvents && !ctx?.handleEvent) {\n");
 	fprintf(src, "\t\t\tthis.transport.log(ELogSeverity.debug, \"Adding event to queue\", \"onEvent\", this, { operationName: invoke.operationName, operationID: invoke.operationID });\n");
-			fprintf(src, "\t\t\tthis.cachedEvents.push({ invoke, invokeContext: ctx, handler });\n");
+	fprintf(src, "\t\t\tthis.cachedEvents.push({ invoke, invokeContext: ctx, handler });\n");
 	fprintf(src, "\t\t\treturn;\n");
 	fprintf(src, "\t\t}\n\n");
 

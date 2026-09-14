@@ -336,7 +336,6 @@ void ErrChkBasicType PARAMS((m, td, parent, tnt, type), Module* m _AND_ TypeDef*
 
 			if ((parent != NULL) && ((refdTypeId == BASICTYPE_ANY) || (refdTypeId == BASICTYPE_ANYDEFINEDBY)))
 			{
-
 				/*
 				 * give a warning.  It is stupid to have an ANY DEFINED
 				 * BY type in a SET since they are not ordered and hence
@@ -465,7 +464,6 @@ void ErrChkBasicType PARAMS((m, td, parent, tnt, type), Module* m _AND_ TypeDef*
 				}
 				else
 				{
-
 					PrintErrLoc(m->asn1SrcFileName, (long)type->lineNo);
 					fprintf(errFileG, "ERROR - Field referenced by ANY DEFINED BY type must be of INTEGER or OBJECT IDENTIFIER type.\n");
 					m->status = MOD_ERROR;

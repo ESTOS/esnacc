@@ -323,7 +323,6 @@ void ExpBufResetInReadMode PARAMS((b), ExpBuf** b)
 		retVal = nextPtr;
 	if (nextPtr != NULL)
 	{
-
 		while (nextPtr)
 		{
 			nextPtr->curr = nextPtr->dataStart;

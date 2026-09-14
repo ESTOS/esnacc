@@ -304,7 +304,6 @@ void PrintEXTERNALChoice PARAMS((f, v, indent), FILE* f _AND_ EXTERNALChoice* v 
 
 void FreeEXTERNALChoice PARAMS((v), EXTERNALChoice* v)
 {
-
 	if (v == NULL)
 		return;
 	switch (v->choiceId)
@@ -490,7 +489,6 @@ void PrintEXTERNAL PARAMS((f, v, indent), FILE* f _AND_ EXTERNAL* v _AND_ unsign
 
 void FreeEXTERNAL PARAMS((v), EXTERNAL* v)
 {
-
 	if (v == NULL)
 		return;
 	if (ASNOID_PRESENT((&v->direct_reference)))

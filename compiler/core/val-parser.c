@@ -415,7 +415,6 @@ int ParseOidValue PARAMS((mods, m, vd, t, vStr, eof, result), ModuleList* mods _
 			SkipWht(vStr, eof);
 			if (**vStr == '(')
 			{
-
 				(*vStr)++; /* skip opening ( */
 				SkipWht(vStr, eof);
 
