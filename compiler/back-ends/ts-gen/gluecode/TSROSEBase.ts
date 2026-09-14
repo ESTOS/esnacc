@@ -1161,9 +1161,8 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param handler - the handling class that holds the method (used to bind the method to the class instance and to call setLogContext)
 	 * @param method - the handling method that receives the request if the argument has been decoded
 	 * @param invokeContext - the invokeContext which has already been prefilled with session related details
-	 * @returns the answer for the other side (either the result on succes or a ROSEError or ROSEReject
 	 */
-	public async handleOnEvent(
+	public handleOnEvent(
 		invoke: ROSEInvoke,
 		operationID: number,
 		argumentClass: IASN1DataClass,
@@ -1172,9 +1171,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		method: IOnEventMethod<any> | undefined,
 		invokeContext: IReceiveInvokeContext,
-	): Promise<ROSEReject | undefined> {
-		let result: ROSEReject | undefined;
-
+	): void {
 		const converterErrors = new ConverterErrors();
 		const operationName = this.getNameForOperationID(operationID);
 
@@ -1195,16 +1192,10 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				if (handler.setLogContext)
 					handler.setLogContext(argument, invokeContext);
 				method(argument, invokeContext);
-				return undefined;
-			} else if(invokeContext.invokeID != 99999) {
-				// Only send a reject for invokes and not for events
-				result = createInvokeReject(
-					invoke,
-					InvokeProblemenum.unrecognisedOperation,
-					`${operationName} is not implemented`,
-				);
 			}
 		} else {
+			// If you land here, check the payLoad what the other side has sent to us
+			debugger;
 			const diagnostic = converterErrors.getDiagnostic();
 			const payLoad = ROSEBase.getDebugPayload(invoke.argument);
 			this.transport.log(ELogSeverity.error, "Could not decode OnEvent argument", methodName, this, {
@@ -1213,15 +1204,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				expected_type: argumentClass.type,
 				diagnostic,
 			});
-			// If you land here, check the payLoad what the other side has sent to us
-			debugger;
-			result = createInvokeReject(invoke, InvokeProblemenum.mistypedArgument, diagnostic);
 		}
-
-		if (result)
-			this.transport.logReject(methodName, this, result, invoke, invokeContext, false);
-
-		return result;
 	}
 
 	/**

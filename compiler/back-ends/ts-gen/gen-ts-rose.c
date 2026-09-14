@@ -580,7 +580,7 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 				GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment);
 				fprintf(src, "\t\t\t\tTSDeprecatedCallback.deprecatedMethod(%lld, this.getLogData().className, \"%s\", \"IN\", ctx);\n", comment.i64Deprecated, pszFunction);
 			}
-			fprintf(src, "\t\t\t\treturn await this.handleOnEvent(invoke, ");
+			fprintf(src, "\t\t\t\tthis.handleOnEvent(invoke, ");
 			fprintf(src, "OperationIDs.OPID_%s, ", pszFunction);
 			fprintf(src, "%s.%s, ", szArgumentNS, pszArgument);
 			if (argumentMod == m)
@@ -590,6 +590,7 @@ void PrintTSROSEOnInvokeswitchCaseEntry(FILE* src, ModuleList* mods, int bEvents
 			fprintf(src, "handler, ");
 			fprintf(src, "handler.onEvent_%s, ", pszFunction);
 			fprintf(src, "ctx);\n");
+			fprintf(src, "\t\t\t\treturn;\n");
 		}
 	}
 }
