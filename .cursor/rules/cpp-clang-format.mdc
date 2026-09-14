@@ -1,0 +1,57 @@
+---
+description: Mandatory clang-format for every C++ edit in this repository
+globs: **/*.{h,hpp,hxx,c,cc,cpp,cxx}
+alwaysApply: true
+---
+
+# C++ Formatting (clang-format)
+
+After **every** C++ edit — before reporting done or committing — run `clang-format` on **all touched** `.h`/`.hpp`/`.cpp`/`.c` files. Do not skip this step.
+
+## Config and tool
+
+- Style: repo root `.clang-format` (requires clang-format **18+**).
+- Windows: resolve executable with `scripts/resolve-clang-format.ps1` (Clang Power Tools LLVM, then `C:\Program Files\LLVM\bin`, then `PATH`).
+- Linux/macOS: use `clang-format` on `PATH` (must be major version 18+).
+
+## Required workflow
+
+1. Finish the code change.
+2. Format only files you edited (no repo-wide sweeps unless the user asks).
+3. Re-read the diff; formatting must be part of the final output.
+4. If files were staged, re-stage after formatting.
+
+### Windows (agents)
+
+```powershell
+. ./scripts/resolve-clang-format.ps1
+$clangFormat = Resolve-ClangFormat
+& $clangFormat -i path/to/TouchedFile.h path/to/TouchedFile.cpp
+```
+
+### Linux / macOS (agents)
+
+```bash
+clang-format -i path/to/TouchedFile.h path/to/TouchedFile.cpp
+```
+
+Verify with `--dry-run -Werror` when unsure:
+
+```powershell
+& $clangFormat --dry-run -Werror path/to/TouchedFile.cpp
+```
+
+```bash
+clang-format --dry-run -Werror path/to/TouchedFile.cpp
+```
+
+## Scope limits
+
+- Do **not** format generated sample stubs under `samples/ts-microservice/*/src/stub/` unless explicitly requested.
+- Do **not** format vendored third-party trees such as `cpp-lib/jsoncpp/` unless explicitly requested.
+- Do **not** format flex/bison generated sources under `compiler/` unless explicitly requested.
+- Respect `// clang-format off` / `on` regions and files that intentionally disable formatting (for example `compiler/resource.h`).
+
+## Completion check
+
+A C++ task is **not finished** until every touched source/header file passes `clang-format --dry-run -Werror`.
