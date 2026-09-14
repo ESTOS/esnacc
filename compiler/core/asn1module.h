@@ -711,7 +711,7 @@ typedef struct Subtype
 		struct SubtypeValue* single; /* [0] SubtypeValue */
 		SubtypeList*and;			 /* [1] IMPLICIT SubtypeList */
 		SubtypeList* or ;			 /* [2] IMPLICIT SubtypeList */
-		struct Subtype * not ;		 /* [3] Subtype */
+		struct Subtype * not;		 /* [3] Subtype */
 	} a;
 } Subtype;
 

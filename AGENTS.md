@@ -94,6 +94,7 @@ Requirements and IDE-specific steps are in [docs/build.md](docs/build.md). CMake
 
 ## Working conventions
 
+- **C++ formatting:** after every C++ edit, run `clang-format` on all touched `.h`/`.cpp`/`.c` files before finishing (repo root `.clang-format`, clang-format 18+). See [.cursor/rules/cpp-clang-format.mdc](.cursor/rules/cpp-clang-format.mdc); on Windows use `scripts/resolve-clang-format.ps1`. Repo-wide baseline: `scripts/clang-format-all.ps1` / `scripts/clang-format-all.sh` (respects `.clang-format-ignore`).
 - Preserve existing line endings and formatting in edited files.
 - Prefer the smallest correct change; match surrounding code style.
 - **Platform portability:** use shared helpers (`asn-config.h`, `platform-functions.h`, `time_helpers.h`, `cpp_c_helper.h`) — never MSVC-only CRT calls in portable compiler code. See [.cursor/rules/platform-portable-helpers.mdc](.cursor/rules/platform-portable-helpers.mdc).

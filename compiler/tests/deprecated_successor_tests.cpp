@@ -6,12 +6,12 @@
 
 namespace
 {
-DeprecatedSuccessorFields parseArrow(const char* pszLine)
-{
-	DeprecatedSuccessorFields fields;
-	EXPECT_TRUE(ParseDeprecatedSuccessorArrowLine(pszLine ? pszLine : "", fields));
-	return fields;
-}
+	DeprecatedSuccessorFields parseArrow(const char* pszLine)
+	{
+		DeprecatedSuccessorFields fields;
+		EXPECT_TRUE(ParseDeprecatedSuccessorArrowLine(pszLine ? pszLine : "", fields));
+		return fields;
+	}
 } // namespace
 
 TEST(DeprecatedSuccessorParserTest, ParsesNoneWithOptionalComment)

@@ -35,9 +35,28 @@ constexpr std::string_view kTagCategory = "@category";
 constexpr std::string_view kTagLogfilter = "@logfilter";
 constexpr std::string_view kTagLinked = "@linked";
 constexpr std::string_view kTagClear = "@clear";
-constexpr std::string_view kCommentIgnoredPrefix = "-- ~";
 
 const std::string WHITESPACE = " \n\r\t\f\v";
+
+/**
+ * Returns true when a source line is an ASN.1 comment omitted from filtered output:
+ * "--~", "-- ~", "--\t~", etc. (optional leading whitespace before "--" is allowed).
+ */
+[[nodiscard]] bool isIgnoredTildeCommentLine(std::string_view line)
+{
+	size_t start = 0;
+	while (start < line.size() && WHITESPACE.find(line[start]) != std::string::npos)
+		++start;
+
+	if (start + 2 > line.size() || line[start] != '-' || line[start + 1] != '-')
+		return false;
+
+	size_t pos = start + 2;
+	while (pos < line.size() && WHITESPACE.find(line[pos]) != std::string::npos)
+		++pos;
+
+	return pos < line.size() && line[pos] == '~';
+}
 
 void pushCollectedComment(std::list<std::string>& comments, std::list<int>& commentLines, const std::string& comment, int lineNo)
 {
@@ -1585,7 +1604,7 @@ void EAsnCommentParser::FilterFiles()
 			auto strElements = explode(strFileContent, '\n', false, false);
 			for (auto& strElement : strElements)
 			{
-				if (strElement.starts_with(kCommentIgnoredPrefix))
+				if (isIgnoredTildeCommentLine(strElement))
 					continue;
 
 				strElement += "\n";
@@ -1620,8 +1639,8 @@ int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
 
 		strLine = trim(strLine);
 
-		// Comments only have the first leading space removed
-		if (strComment.starts_with(' '))
+		// Comments only have the first leading whitespace removed
+		if (!strComment.empty() && WHITESPACE.find(strComment[0]) != std::string::npos)
 			strComment = strComment.substr(1, strComment.size() - 1);
 
 		// strComment.TrimRight();
@@ -1629,7 +1648,7 @@ int EAsnCommentParser::ProcessLine(const char* szModuleName, const char* szLine)
 		if (strComment.empty())
 			strComment = " ";
 
-		// A comment starting with ~ is ignored
+		// A comment starting with ~ is ignored (--~, -- ~, --\t~, ...)
 		if (strComment.starts_with('~'))
 			strComment.clear();
 	}

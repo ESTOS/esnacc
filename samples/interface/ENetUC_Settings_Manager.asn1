@@ -39,14 +39,14 @@ AsnSomeSettings ::= SEQUENCE
 -- ~ FUNCTION ~~~~~~~~~~~~~~~~ asnGetSettings ~~~~~~~~~~~~~~~~~~~~~~~~
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--- @brief Argument for the asnGetSettings method
--- @added 06.05.2024
+-- 				@brief Argument for the asnGetSettings method
+--           @added 06.05.2024
 AsnGetSettingsArgument ::= SEQUENCE
 {
 	...
 }
 
--- @brief Result for the asnGetSettings method
+-- 									@brief Result for the asnGetSettings method
 AsnGetSettingsResult ::= SEQUENCE
 {
 	-- @added 06.05.2024
@@ -54,8 +54,8 @@ AsnGetSettingsResult ::= SEQUENCE
 	...
 }
 
--- @brief Method to retrieve settings from the server side
--- @added 06.05.2024
+--@brief Method to retrieve settings from the server side
+--				@added 06.05.2024
 asnGetSettings OPERATION
 	ARGUMENT	arg AsnGetSettingsArgument
 	RESULT		res AsnGetSettingsResult
@@ -92,14 +92,14 @@ asnSetSettings OPERATION
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -- @brief Argument for the asnGetSettingsOld method
--- @deprecated 06.05.2024
+--	@deprecated 06.05.2024 -> AsnGetSettingsArgument
 AsnGetSettingsArgumentOld ::= SEQUENCE
 {
 	...
 }
 
 -- @brief Result for the asnGetSettingsOld method
--- @deprecated 06.05.2024
+--	@deprecated 06.05.2024 -> AsnGetSettingsResult
 AsnGetSettingsResultOld ::= SEQUENCE
 {
 	settings							AsnSomeSettings,
@@ -107,7 +107,7 @@ AsnGetSettingsResultOld ::= SEQUENCE
 }
 
 -- @brief Method to retrieve settings from the server side
--- @deprecated 06.05.2024
+--	@deprecated 06.05.2024 -> asnGetSettings
 asnGetSettingsOld OPERATION
 	ARGUMENT	arg AsnGetSettingsArgumentOld
 	RESULT		res AsnGetSettingsResultOld

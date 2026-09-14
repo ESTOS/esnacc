@@ -7,41 +7,41 @@
 
 namespace
 {
-constexpr const char* kDeprecatedOperation = "asnDeprecatedOp OPERATION";
-constexpr const char* kCurrentOperation = "asnCurrentOp OPERATION";
+	constexpr const char* kDeprecatedOperation = "asnDeprecatedOp OPERATION";
+	constexpr const char* kCurrentOperation = "asnCurrentOp OPERATION";
 
-std::filesystem::path InputModulePath(const TestWorkDir& workDir)
-{
-	return workDir.path() / "Baseline_Test.asn1";
-}
+	std::filesystem::path InputModulePath(const TestWorkDir& workDir)
+	{
+		return workDir.path() / "Baseline_Test.asn1";
+	}
 
-std::filesystem::path FilterOutputPath(const TestWorkDir& workDir)
-{
-	return workDir.path() / "out" / "Baseline_Test.asn1";
-}
+	std::filesystem::path FilterOutputPath(const TestWorkDir& workDir)
+	{
+		return workDir.path() / "out" / "Baseline_Test.asn1";
+	}
 
-std::filesystem::path CodegenHeaderPath(const TestWorkDir& workDir)
-{
-	return workDir.path() / "out" / "Baseline_Test.h";
-}
+	std::filesystem::path CodegenHeaderPath(const TestWorkDir& workDir)
+	{
+		return workDir.path() / "out" / "Baseline_Test.h";
+	}
 
-ProcessResult RunEsnaccFilter(const TestWorkDir& workDir, const std::vector<std::string>& extraArgs)
-{
-	std::filesystem::create_directories(workDir.path() / "out");
+	ProcessResult RunEsnaccFilter(const TestWorkDir& workDir, const std::vector<std::string>& extraArgs)
+	{
+		std::filesystem::create_directories(workDir.path() / "out");
 
-	std::vector<std::string> args = {"-C", "-filter", "-o", (workDir.path() / "out").string(), InputModulePath(workDir).string()};
-	args.insert(args.end(), extraArgs.begin(), extraArgs.end());
-	return RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
-}
+		std::vector<std::string> args = {"-C", "-filter", "-o", (workDir.path() / "out").string(), InputModulePath(workDir).string()};
+		args.insert(args.end(), extraArgs.begin(), extraArgs.end());
+		return RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
+	}
 
-ProcessResult RunEsnaccCodegen(const TestWorkDir& workDir, const std::vector<std::string>& extraArgs)
-{
-	std::filesystem::create_directories(workDir.path() / "out");
+	ProcessResult RunEsnaccCodegen(const TestWorkDir& workDir, const std::vector<std::string>& extraArgs)
+	{
+		std::filesystem::create_directories(workDir.path() / "out");
 
-	std::vector<std::string> args = {"-C", "-o", (workDir.path() / "out").string(), InputModulePath(workDir).string()};
-	args.insert(args.end(), extraArgs.begin(), extraArgs.end());
-	return RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
-}
+		std::vector<std::string> args = {"-C", "-o", (workDir.path() / "out").string(), InputModulePath(workDir).string()};
+		args.insert(args.end(), extraArgs.begin(), extraArgs.end());
+		return RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
+	}
 } // namespace
 
 TEST(CompilerCliParameterTest, NodeprecatedAutoUsesNewestDeprecatedDate)
@@ -156,8 +156,7 @@ TEST(CompilerCliParameterTest, NoprivateRemovesPrivateOperationsFromFilterOutput
 
 	const std::string modulePath = InputModulePath(workDir).string();
 	std::string moduleText = ReadFileToString(InputModulePath(workDir));
-	const std::string privateBlock =
-		"\n-- @private\nasnPrivateOp OPERATION\n\tARGUMENT\targ NULL\n\tRESULT\t\tres NULL\n::= 9003\n";
+	const std::string privateBlock = "\n-- @private\nasnPrivateOp OPERATION\n\tARGUMENT\targ NULL\n\tRESULT\t\tres NULL\n::= 9003\n";
 	ASSERT_FALSE(moduleText.empty());
 	moduleText.insert(moduleText.find("asnCurrentOp OPERATION"), privateBlock);
 	{
@@ -167,12 +166,7 @@ TEST(CompilerCliParameterTest, NoprivateRemovesPrivateOperationsFromFilterOutput
 
 	std::filesystem::create_directories(workDir.path() / "out");
 	std::vector<std::string> args = {
-		"-C",
-		"-filter",
-		"-noprivate",
-		"-o",
-		(workDir.path() / "out").string(),
-		InputModulePath(workDir).string(),
+		"-C", "-filter", "-noprivate", "-o", (workDir.path() / "out").string(), InputModulePath(workDir).string(),
 	};
 	const ProcessResult result = RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
 	ASSERT_EQ(result.exitCode, 0) << result.output;

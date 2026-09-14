@@ -16,18 +16,18 @@
 
 namespace
 {
-std::string QuoteArgument(const std::string& arg)
-{
-	std::string quoted = "\"";
-	for (const char ch : arg)
+	std::string QuoteArgument(const std::string& arg)
 	{
-		if (ch == '"')
-			quoted += "\\\"";
-		quoted += ch;
+		std::string quoted = "\"";
+		for (const char ch : arg)
+		{
+			if (ch == '"')
+				quoted += "\\\"";
+			quoted += ch;
+		}
+		quoted += '"';
+		return quoted;
 	}
-	quoted += '"';
-	return quoted;
-}
 } // namespace
 
 ProcessResult RunProcess(const std::filesystem::path& executable, const std::vector<std::string>& args, const std::filesystem::path& workingDirectory)

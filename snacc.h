@@ -12,7 +12,7 @@
 extern "C"
 {
 #endif
-void snacc_exit_now(const char* szMethod, const char* szMessage, ...);
+	void snacc_exit_now(const char* szMethod, const char* szMessage, ...);
 #ifdef __cplusplus
 }
 #endif

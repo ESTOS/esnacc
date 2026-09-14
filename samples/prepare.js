@@ -86,6 +86,17 @@ function listAsn1Files() {
 		.map((name) => path.join(INTERFACE_DIR, name));
 }
 
+/**
+ * Formats a compiler executable and its arguments as a single shell-style command line
+ * for logging before spawnSync runs the compiler.
+ */
+function formatCommandLine(command, args) {
+	const quote = (arg) => /[\s"]/.test(arg)
+		? `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`
+		: arg;
+	return [command, ...args].map(quote).join(" ");
+}
+
 function runCompiler(compiler, outputDir, compilerArgs, asn1Files) {
 	const args = [
 		...compilerArgs,
@@ -93,6 +104,7 @@ function runCompiler(compiler, outputDir, compilerArgs, asn1Files) {
 		"-comments",
 		...asn1Files,
 	];
+	console.log(formatCommandLine(compiler, args));
 	const result = spawnSync(compiler, args, {
 		cwd: outputDir,
 		stdio: "inherit",

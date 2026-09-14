@@ -246,7 +246,6 @@ static void PrintCFreeDeclaration PARAMS((src, td), FILE* src _AND_ TypeDef* td)
 
 static void PrintCFreeDefine PARAMS((hdr, td), FILE* hdr _AND_ TypeDef* td)
 {
-
 	fprintf(hdr, "#define %s %s ", td->cTypeDefInfo->freeRoutineName, td->type->cTypeRefInfo->freeRoutineName);
 
 	/*

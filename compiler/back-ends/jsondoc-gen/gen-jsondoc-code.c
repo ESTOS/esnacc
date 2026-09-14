@@ -720,13 +720,7 @@ void PrintJsonDocModule(FILE* src, ModuleList* mods, Module* m)
 		fprintf(src, ",\n\t\t\"version\": {");
 		long long lModulePatchVersion = GetModulePatchVersion(m->moduleName);
 		fprintf(src, "\n\t\t\t");
-		EmitAnnotatedModuleVersionFields(
-			src,
-			ModuleVersionEmitJsonDocVersionObject,
-			NULL,
-			"\t\t\t",
-			gMajorInterfaceVersion,
-			lModulePatchVersion);
+		EmitAnnotatedModuleVersionFields(src, ModuleVersionEmitJsonDocVersionObject, NULL, "\t\t\t", gMajorInterfaceVersion, lModulePatchVersion);
 		fprintf(src, "\n\t\t}");
 	}
 

@@ -89,7 +89,6 @@ static int indentStepG = 4;
  */
 void PrintModule PARAMS((f, mod), FILE* f _AND_ Module* mod)
 {
-
 	if (mod->status == MOD_ERROR)
 	{
 		fprintf(f, "WARNING: this module contains errors\n");
@@ -165,7 +164,6 @@ void PrintExports PARAMS((f, m), FILE* f _AND_ Module* m)
 
 void PrintOid PARAMS((f, oid), FILE* f _AND_ OID* oid)
 {
-
 	if (oid == NULL)
 		return;
 
@@ -283,7 +281,6 @@ void PrintType PARAMS((f, head, t), FILE* f _AND_ TypeDef* head _AND_ Type* t)
 
 	FOR_EACH_LIST_ELMT(tag, t->tags)
 	{
-
 		if (!((tag->tclass == UNIV) && (tag->code == LIBTYPE_GET_UNIV_TAG_CODE(t->basicType->choiceId))))
 		{
 			PrintTag(f, tag);
@@ -330,7 +327,6 @@ void PrintBasicType PARAMS((f, head, t, bt), FILE* f _AND_ TypeDef* head _AND_ T
 {
 	switch (bt->choiceId)
 	{
-
 		case BASICTYPE_SEQUENCE:
 			fprintf(f, "SEQUENCE\n");
 			INDENT(f, indentG);
@@ -669,7 +665,6 @@ void PrintElmtTypes PARAMS((f, head, t, e), FILE* f _AND_ TypeDef* head _AND_ Ty
 	last = (NamedType*)LAST_LIST_ELMT(e);
 	FOR_EACH_LIST_ELMT(nt, e)
 	{
-
 		PrintElmtType(f, head, t, nt);
 		if (nt != last)
 		{
@@ -1095,7 +1090,7 @@ void PrintSubtype PARAMS((f, head, t, s), FILE* f _AND_ TypeDef* head _AND_ Type
 
 		case SUBTYPE_NOT:
 			fprintf(f, "NOT (");
-			PrintSubtype(f, head, t, s->a.not );
+			PrintSubtype(f, head, t, s->a.not);
 			fprintf(f, ")");
 			break;
 
@@ -1664,7 +1659,6 @@ void PrintMtsasExtensionsMacroType PARAMS((f, head, t, bt, exts), FILE* f _AND_ 
 
 void PrintMtsasExtensionMacroType PARAMS((f, head, t, bt, ext), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasExtensionMacroType* ext)
 {
-
 	fprintf(f, "EXTENSION");
 
 	indentG += indentStepG;
@@ -1710,7 +1704,6 @@ void PrintMtsasExtensionMacroType PARAMS((f, head, t, bt, ext), FILE* f _AND_ Ty
 
 void PrintMtsasExtensionAttributeMacroType PARAMS((f, head, t, bt, ext), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasExtensionAttributeMacroType* ext)
 {
-
 	fprintf(f, "EXTENSION-ATTRIBUTE");
 	if (ext->type != NULL)
 	{
@@ -1726,7 +1719,6 @@ void PrintMtsasExtensionAttributeMacroType PARAMS((f, head, t, bt, ext), FILE* f
 
 void PrintMtsasTokenMacroType PARAMS((f, head, t, bt, tok), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasTokenMacroType* tok)
 {
-
 	fprintf(f, "TOKEN");
 	if (tok->type != NULL)
 	{
@@ -1740,7 +1732,6 @@ void PrintMtsasTokenMacroType PARAMS((f, head, t, bt, tok), FILE* f _AND_ TypeDe
 
 void PrintMtsasTokenDataMacroType PARAMS((f, head, t, bt, tok), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasTokenDataMacroType* tok)
 {
-
 	fprintf(f, "TOKEN-DATA");
 	if (tok->type != NULL)
 	{
@@ -1755,7 +1746,6 @@ void PrintMtsasTokenDataMacroType PARAMS((f, head, t, bt, tok), FILE* f _AND_ Ty
 
 void PrintMtsasSecurityCategoryMacroType PARAMS((f, head, t, bt, sec), FILE* f _AND_ TypeDef* head _AND_ Type* t _AND_ BasicType* bt _AND_ MtsasSecurityCategoryMacroType* sec)
 {
-
 	fprintf(f, "SECURITY-CATEGORY");
 	if (sec->type != NULL)
 	{
@@ -1779,7 +1769,6 @@ void PrintAsnObjectMacroType PARAMS((f, head, t, bt, obj), FILE* f _AND_ TypeDef
 
 	if ((obj->ports != NULL) && !LIST_EMPTY(obj->ports))
 	{
-
 		fprintf(f, "\n");
 		INDENT(f, indentG);
 		fprintf(f, "PORTS\n");

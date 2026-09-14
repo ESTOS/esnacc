@@ -7,55 +7,41 @@
 
 namespace
 {
-std::filesystem::path InputModulePath(const TestWorkDir& workDir)
-{
-	return workDir.path() / "DeprecatedSuccessor_Test.asn1";
-}
+	std::filesystem::path InputModulePath(const TestWorkDir& workDir)
+	{
+		return workDir.path() / "DeprecatedSuccessor_Test.asn1";
+	}
 
-std::filesystem::path RefModulePath(const TestWorkDir& workDir)
-{
-	return workDir.path() / "DeprecatedSuccessor_Ref.asn1";
-}
+	std::filesystem::path RefModulePath(const TestWorkDir& workDir)
+	{
+		return workDir.path() / "DeprecatedSuccessor_Ref.asn1";
+	}
 
-std::filesystem::path UcWebModulePath(const TestWorkDir& workDir)
-{
-	return workDir.path() / "EUCWeb_Successor_Test.asn1";
-}
+	std::filesystem::path UcWebModulePath(const TestWorkDir& workDir)
+	{
+		return workDir.path() / "EUCWeb_Successor_Test.asn1";
+	}
 
-ProcessResult RunEsnaccOnDeprecatedSuccessorFixture(const TestWorkDir& workDir)
-{
-	std::filesystem::create_directories(workDir.path() / "out");
-	std::vector<std::string> args = {
-		"-C",
-		"-o",
-		(workDir.path() / "out").string(),
-		InputModulePath(workDir).string()};
-	return RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
-}
+	ProcessResult RunEsnaccOnDeprecatedSuccessorFixture(const TestWorkDir& workDir)
+	{
+		std::filesystem::create_directories(workDir.path() / "out");
+		std::vector<std::string> args = {"-C", "-o", (workDir.path() / "out").string(), InputModulePath(workDir).string()};
+		return RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
+	}
 
-ProcessResult RunEsnaccOnDeprecatedSuccessorFixtureWithRefs(const TestWorkDir& workDir)
-{
-	std::filesystem::create_directories(workDir.path() / "out");
-	std::vector<std::string> args = {
-		"-C",
-		"-o",
-		(workDir.path() / "out").string(),
-		RefModulePath(workDir).string(),
-		InputModulePath(workDir).string()};
-	return RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
-}
+	ProcessResult RunEsnaccOnDeprecatedSuccessorFixtureWithRefs(const TestWorkDir& workDir)
+	{
+		std::filesystem::create_directories(workDir.path() / "out");
+		std::vector<std::string> args = {"-C", "-o", (workDir.path() / "out").string(), RefModulePath(workDir).string(), InputModulePath(workDir).string()};
+		return RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
+	}
 
-ProcessResult RunEsnaccOnDeprecatedSuccessorFixtureWithUcWeb(const TestWorkDir& workDir)
-{
-	std::filesystem::create_directories(workDir.path() / "out");
-	std::vector<std::string> args = {
-		"-C",
-		"-o",
-		(workDir.path() / "out").string(),
-		UcWebModulePath(workDir).string(),
-		InputModulePath(workDir).string()};
-	return RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
-}
+	ProcessResult RunEsnaccOnDeprecatedSuccessorFixtureWithUcWeb(const TestWorkDir& workDir)
+	{
+		std::filesystem::create_directories(workDir.path() / "out");
+		std::vector<std::string> args = {"-C", "-o", (workDir.path() / "out").string(), UcWebModulePath(workDir).string(), InputModulePath(workDir).string()};
+		return RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
+	}
 } // namespace
 
 TEST(DeprecatedSuccessorCliTest, ValidCanonicalNotationProducesNoSuccessorWarnings)

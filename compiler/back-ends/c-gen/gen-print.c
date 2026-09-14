@@ -343,7 +343,6 @@ static void PrintCSeqPrintRoutine PARAMS((src, hdr, r, mods, m, td), FILE* src _
 
 static void PrintCSetOfPrintRoutine PARAMS((src, hdr, r, mods, m, td), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ ModuleList* mods _AND_ Module* m _AND_ TypeDef* td)
 {
-
 	PrintCPrintPrototype(hdr, td);
 
 	PrintCPrintDeclaration(src, td);
@@ -373,7 +372,6 @@ static void PrintCSetOfPrintRoutine PARAMS((src, hdr, r, mods, m, td), FILE* src
 
 static void PrintCSeqOfPrintRoutine PARAMS((src, hdr, r, mods, m, td), FILE* src _AND_ FILE* hdr _AND_ CRules* r _AND_ ModuleList* mods _AND_ Module* m _AND_ TypeDef* td)
 {
-
 	PrintCPrintPrototype(hdr, td);
 
 	PrintCPrintDeclaration(src, td);

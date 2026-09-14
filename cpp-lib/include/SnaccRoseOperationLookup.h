@@ -43,14 +43,7 @@ public:
 	void RegisterModuleVersion(const char* szModuleName, const char* szVersion);
 
 	/*! Registers one invoke or event before Seal(). Duplicate operation ids are ignored. */
-	void RegisterOperation(
-		unsigned int uiOpID,
-		const char* szOpName,
-		unsigned int uiInterfaceID,
-		const char* szModuleName,
-		bool bIsEvent = false,
-		unsigned long long ullAddedUnix = 0,
-		unsigned long long ullDeprecatedUnix = 0);
+	void RegisterOperation(unsigned int uiOpID, const char* szOpName, unsigned int uiInterfaceID, const char* szModuleName, bool bIsEvent = false, unsigned long long ullAddedUnix = 0, unsigned long long ullDeprecatedUnix = 0);
 
 	/*! Test-only reset before Seal(). Production tables should Seal() after startup registration. */
 	void ClearRegisteredOperations();

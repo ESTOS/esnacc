@@ -533,7 +533,6 @@ static int PrintOpenApiOperation(FILE* src, Module* mod, ValueDef* vd)
 			const char* rep[] = {"\\n\\n", "", 0};
 			if (strlen(comment.szShort) != 0)
 			{
-
 				char* szShort = replace_multi(comment.szShort, &orig[0], &rep[0]);
 				if (szShort != NULL)
 				{
@@ -658,7 +657,6 @@ void PrintOpenApiInfo(FILE* src, ModuleList* mods, Module* m)
 		const char* rep[] = {"\\n\\n", "", 0};
 		if (strlen(comment.szShort) != 0)
 		{
-
 			char* szShort = replace_multi(comment.szShort, &orig[0], &rep[0]);
 			if (szShort != NULL)
 			{

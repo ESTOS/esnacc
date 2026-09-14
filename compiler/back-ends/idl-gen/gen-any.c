@@ -59,7 +59,6 @@ void PrintIDLAnyHashInitRoutine PROTO((FILE * idl, ModuleList* mods, Module* m, 
 
 void PrintIDLAnyCode PARAMS((idl, r, mods, m), FILE* idl _AND_ IDLRules* r _AND_ ModuleList* mods _AND_ Module* m)
 {
-
 	if (!m->hasAnys)
 		return;
 

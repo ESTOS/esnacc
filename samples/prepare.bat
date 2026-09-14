@@ -11,9 +11,9 @@ if defined SNACC_NO_PAUSE exit /b %EXIT_CODE%
 echo.
 if %EXIT_CODE% NEQ 0 (
 	echo Prepare failed with exit code %EXIT_CODE%.
-	pause
 ) else (
-	echo Prepare finished. Closing in 10 seconds...
-	timeout /t 10
+	echo Prepare finished.
 )
+timeout /t 10
+echo Closing in 10 seconds...
 exit /b %EXIT_CODE%

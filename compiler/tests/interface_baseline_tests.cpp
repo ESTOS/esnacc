@@ -28,7 +28,10 @@ extern "C"
 class InterfaceBaselineTest : public ::testing::Test
 {
 protected:
-	void SetUp() override { ResetInterfaceBaselineStateForTests(); }
+	void SetUp() override
+	{
+		ResetInterfaceBaselineStateForTests();
+	}
 };
 
 TEST_F(InterfaceBaselineTest, LoadDeprecatedBaselineFileIgnoresMissingFile)
@@ -42,10 +45,7 @@ TEST_F(InterfaceBaselineTest, LoadDeprecatedBaselineFileIgnoresCommentOnlyFile)
 {
 	const std::filesystem::path tempDir = std::filesystem::temp_directory_path() / "esnacc-baseline-load-test";
 	std::filesystem::create_directories(tempDir);
-	std::filesystem::copy_file(
-		std::filesystem::path(FIXTURES_DIR) / "deprecatedbaseline_comments_only.txt",
-		tempDir / DEPRECATED_BASELINE_FILENAME,
-		std::filesystem::copy_options::overwrite_existing);
+	std::filesystem::copy_file(std::filesystem::path(FIXTURES_DIR) / "deprecatedbaseline_comments_only.txt", tempDir / DEPRECATED_BASELINE_FILENAME, std::filesystem::copy_options::overwrite_existing);
 
 	EXPECT_EQ(LoadDeprecatedBaselineFile(tempDir.string().c_str()), 0);
 	EXPECT_EQ(gMajorInterfaceVersion, 0);

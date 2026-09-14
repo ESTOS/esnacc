@@ -233,7 +233,6 @@ static void PrintROSEInvokeCS(FILE* hdr, FILE* src, Module* m, int bEvents, Valu
 			// Are there errors inside?
 			if (pszError)
 			{
-
 				// Source
 				fprintf(src, "\t\tpublic long Invoke_%s(%s argument, %s result, %s error, int iTimeout)\n", vd->definedName, pszArgument, pszResult, pszError);
 				fprintf(src, "\t\t{\n");
@@ -298,7 +297,6 @@ void PrintROSECSCode(FILE* src, ModuleList* mods, Module* m)
 	 */
 	if (gNO_NAMESPACE == 0)
 	{
-
 		if (gAlternateNamespaceString)
 		{
 			fprintf(src, "namespace %s \n", gAlternateNamespaceString);

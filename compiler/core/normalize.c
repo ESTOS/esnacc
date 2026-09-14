@@ -780,8 +780,7 @@ TypeDef* AddConsTypeDef PARAMS((m, td, t, bt, suffix), Module* m _AND_ TypeDef* 
  * to a new  top level typdef of the CHOICE/SET/SEQ
  */
 TypeDef* // Deepak: 14/Mar/2003
-	AddConsObjectAssignment
-	PARAMS((m, oa, t, bt, suffix), Module* m _AND_ ObjectAssignment* oa _AND_ Type* t _AND_ BasicType* bt _AND_ const char* suffix)
+	AddConsObjectAssignment PARAMS((m, oa, t, bt, suffix), Module* m _AND_ ObjectAssignment* oa _AND_ Type* t _AND_ BasicType* bt _AND_ const char* suffix)
 {
 	TypeDef* newDef;
 	TypeDef** typeDefHndl;

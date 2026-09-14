@@ -28,8 +28,7 @@ void SNACCDeprecated::DeprecatedASN1Object(const long long i64DeprecatedSince, c
 	m_pCallback->DeprecatedASN1Object(i64DeprecatedSince, szModuleName, szObjectName, callStack);
 }
 
-void SNACCDeprecated::DeprecatedASN1Method(const long long i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction,
-	SnaccInvokeContext& ctx)
+void SNACCDeprecated::DeprecatedASN1Method(const long long i64DeprecatedSince, const char* szModuleName, const char* szMethodName, const SNACCDeprecatedNotifyCallDirection direction, SnaccInvokeContext& ctx)
 {
 	if (!m_pCallback)
 		return;

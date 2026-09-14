@@ -1,26 +1,26 @@
-# C++ skeleton for Bison
+#C++ skeleton for Bison
 
-# Copyright (C) 2002-2012 Free Software Foundation, Inc.
+#Copyright(C) 2002 - 2012 Free Software Foundation, Inc.
 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+#This program is free software : you can redistribute it and / or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+#GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#You should have received a copy of the GNU General Public License
+#along with this program.If not, see < http: // www.gnu.org/licenses/>.
 
 m4_include(b4_pkgdatadir/[c++.m4])
 
 m4_define([b4_parser_class_name],
           [b4_percent_define_get([[parser_class_name]])])
 
-# The header is mandatory.
+#The header is mandatory.
 b4_defines_if([],
               [b4_fatal([b4_skeleton[: using %%defines is mandatory]])])
 
@@ -59,9 +59,9 @@ b4_copyright([Skeleton interface for Bison LALR(1) parsers in C++],
   /// A Bison parser.
   class ]b4_parser_class_name[
   {
-  public:
-    /// Symbol semantic values.
-#ifndef ]b4_api_PREFIX[STYPE
+public:
+	/// Symbol semantic values.
+#ifndef] b4_api_PREFIX[STYPE
 ]m4_ifdef([b4_stype],
 [    union semantic_type
     {
@@ -71,7 +71,7 @@ b4_user_stype
 [[    typedef int semantic_type;]],
 [[    typedef ]b4_api_PREFIX[STYPE semantic_type;]])])[
 #else
-    typedef ]b4_api_PREFIX[STYPE semantic_type;
+	typedef ]b4_api_PREFIX[STYPE semantic_type;
 #endif
     /// Symbol locations.
     typedef ]b4_percent_define_get([[api.location.type]],
@@ -92,7 +92,7 @@ b4_user_stype
     /// \returns  0 iff parsing succeeded.
     virtual int parse ();
 
-#if ]b4_api_PREFIX[DEBUG
+#if ] b4_api_PREFIX[DEBUG
     /// The current debugging stream.
     std::ostream& debug_stream () const;
     /// Set the current debugging stream.
@@ -117,7 +117,7 @@ b4_user_stype
     /// \param tok     the lookahead token.
     virtual std::string yysyntax_error_ (int yystate, int tok);
 
-#if ]b4_api_PREFIX[DEBUG
+#if ] b4_api_PREFIX[DEBUG
     /// \brief Report a symbol value on the debug stream.
     /// \param yytype       The token type.
     /// \param yyvaluep     Its semantic value.
@@ -255,9 +255,9 @@ b4_user_stype
 ]b4_percent_define_flag_if([[global_tokens_and_yystype]],
 [b4_token_defines(b4_tokens)
 
-#ifndef ]b4_api_PREFIX[STYPE
- /* Redirection for backward compatibility.  */
-# define ]b4_api_PREFIX[STYPE b4_namespace_ref::b4_parser_class_name::semantic_type
+#ifndef] b4_api_PREFIX[STYPE
+/* Redirection for backward compatibility.  */
+#define] b4_api_PREFIX[STYPE b4_namespace_ref::b4_parser_class_name::semantic_type
 #endif
 ])[
 ]b4_percent_code_get([[provides]])[
@@ -288,67 +288,74 @@ m4_if(b4_prefix, [yy], [],
 ]b4_null_define[
 
 #ifndef YY_
-# if defined YYENABLE_NLS && YYENABLE_NLS
-#  if ENABLE_NLS
-#   include <libintl.h> /* FIXME: INFRINGES ON USER NAME SPACE */
-#   define YY_(msgid) dgettext ("bison-runtime", msgid)
-#  endif
-# endif
-# ifndef YY_
-#  define YY_(msgid) msgid
-# endif
+#if defined YYENABLE_NLS && YYENABLE_NLS
+#if ENABLE_NLS
+#include <libintl.h> /* FIXME: INFRINGES ON USER NAME SPACE */
+#define YY_(msgid) dgettext("bison-runtime", msgid)
+#endif
+#endif
+#ifndef YY_
+#define YY_(msgid) msgid
+#endif
 #endif
 
 #define YYRHSLOC(Rhs, K) ((Rhs)[K])
 ]b4_yylloc_default_define[
 
 /* Suppress unused-variable warnings by "using" E.  */
-#define YYUSE(e) ((void) (e))
+#define YYUSE(e) ((void)(e))
 
 /* Enable debugging if requested.  */
-#if ]b4_api_PREFIX[DEBUG
+#if ] b4_api_PREFIX[DEBUG
 
 /* A pseudo ostream that takes yydebug_ into account.  */
-# define YYCDEBUG if (yydebug_) (*yycdebug_)
+#define YYCDEBUG                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+	if (yydebug_)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \
+	(*yycdebug_)
 
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location)	\
-do {							\
-  if (yydebug_)						\
-    {							\
-      *yycdebug_ << Title << ' ';			\
-      yy_symbol_print_ ((Type), (Value), (Location));	\
-      *yycdebug_ << std::endl;				\
-    }							\
-} while (false)
+#define YY_SYMBOL_PRINT(Title, Type, Value, Location)                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+	do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		if (yydebug_)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+			*yycdebug_ << Title << ' ';                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+			yy_symbol_print_((Type), (Value), (Location));                                                                                                                                                                                                                                                                                                                                                                                                                                                         \
+			*yycdebug_ << std::endl;                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+		}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+	} while (false)
 
-# define YY_REDUCE_PRINT(Rule)		\
-do {					\
-  if (yydebug_)				\
-    yy_reduce_print_ (Rule);		\
-} while (false)
+#define YY_REDUCE_PRINT(Rule)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
+	do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		if (yydebug_)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+			yy_reduce_print_(Rule);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+	} while (false)
 
-# define YY_STACK_PRINT()		\
-do {					\
-  if (yydebug_)				\
-    yystack_print_ ();			\
-} while (false)
+#define YY_STACK_PRINT()                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+	do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		if (yydebug_)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+			yystack_print_();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
+	} while (false)
 
 #else /* !]b4_api_PREFIX[DEBUG */
 
-# define YYCDEBUG if (false) std::cerr
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location) YYUSE(Type)
-# define YY_REDUCE_PRINT(Rule)        static_cast<void>(0)
-# define YY_STACK_PRINT()             static_cast<void>(0)
+#define YYCDEBUG                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+	if (false)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+	std::cerr
+#define YY_SYMBOL_PRINT(Title, Type, Value, Location) YYUSE(Type)
+#define YY_REDUCE_PRINT(Rule) static_cast<void>(0)
+#define YY_STACK_PRINT() static_cast<void>(0)
 
 #endif /* !]b4_api_PREFIX[DEBUG */
 
-#define yyerrok		(yyerrstatus_ = 0)
-#define yyclearin	(yychar = yyempty_)
+#define yyerrok (yyerrstatus_ = 0)
+#define yyclearin (yychar = yyempty_)
 
-#define YYACCEPT	goto yyacceptlab
-#define YYABORT		goto yyabortlab
-#define YYERROR		goto yyerrorlab
-#define YYRECOVERING()  (!!yyerrstatus_)
+#define YYACCEPT goto yyacceptlab
+#define YYABORT goto yyabortlab
+#define YYERROR goto yyerrorlab
+#define YYRECOVERING() (!!yyerrstatus_)
 
 ]b4_namespace_open[]b4_error_verbose_if([[
 
@@ -360,43 +367,43 @@ do {					\
   std::string
   ]b4_parser_class_name[::yytnamerr_ (const char *yystr)
   {
-    if (*yystr == '"')
-      {
-        std::string yyr = "";
-        char const *yyp = yystr;
+	if (*yystr == '"')
+	{
+		std::string yyr = "";
+		char const* yyp = yystr;
 
-        for (;;)
-          switch (*++yyp)
-            {
-            case '\'':
-            case ',':
-              goto do_not_strip_quotes;
+		for (;;)
+			switch (*++yyp)
+			{
+				case '\'':
+				case ',':
+					goto do_not_strip_quotes;
 
-            case '\\':
-              if (*++yyp != '\\')
-                goto do_not_strip_quotes;
-              /* Fall through.  */
-            default:
-              yyr += *yyp;
-              break;
+				case '\\':
+					if (*++yyp != '\\')
+						goto do_not_strip_quotes;
+					/* Fall through.  */
+				default:
+					yyr += *yyp;
+					break;
 
-            case '"':
-              return yyr;
-            }
-      do_not_strip_quotes: ;
-      }
+				case '"':
+					return yyr;
+			}
+	do_not_strip_quotes:;
+	}
 
-    return yystr;
+	return yystr;
   }
 ]])[
 
   /// Build a parser object.
   ]b4_parser_class_name::b4_parser_class_name[ (]b4_parse_param_decl[)]m4_ifset([b4_parse_param], [
     :])[
-#if ]b4_api_PREFIX[DEBUG
+#if ] b4_api_PREFIX[DEBUG
     ]m4_ifset([b4_parse_param], [  ], [ :])[yydebug_ (false),
       yycdebug_ (&std::cerr)]m4_ifset([b4_parse_param], [,])[
-#endif]b4_parse_param_cons[
+#endif] b4_parse_param_cons[
   {
   }
 
@@ -404,7 +411,7 @@ do {					\
   {
   }
 
-#if ]b4_api_PREFIX[DEBUG
+#if ] b4_api_PREFIX[DEBUG
   /*--------------------------------.
   | Print this symbol on YYOUTPUT.  |
   `--------------------------------*/
@@ -413,17 +420,17 @@ do {					\
   ]b4_parser_class_name[::yy_symbol_value_print_ (int yytype,
 			   const semantic_type* yyvaluep, const location_type* yylocationp)
   {
-    YYUSE (yylocationp);
-    YYUSE (yyvaluep);
-    std::ostream& yyo = debug_stream ();
-    std::ostream& yyoutput = yyo;
-    YYUSE (yyoutput);
-    switch (yytype)
-      {
+	YYUSE(yylocationp);
+	YYUSE(yyvaluep);
+	std::ostream& yyo = debug_stream();
+	std::ostream& yyoutput = yyo;
+	YYUSE(yyoutput);
+	switch (yytype)
+	{
   ]m4_map([b4_symbol_actions], m4_defn([b4_symbol_printers]))dnl
 [       default:
 	  break;
-      }
+	}
   }
 
 
@@ -431,11 +438,9 @@ do {					\
   ]b4_parser_class_name[::yy_symbol_print_ (int yytype,
 			   const semantic_type* yyvaluep, const location_type* yylocationp)
   {
-    *yycdebug_ << (yytype < yyntokens_ ? "token" : "nterm")
-	       << ' ' << yytname_[yytype] << " ("
-	       << *yylocationp << ": ";
-    yy_symbol_value_print_ (yytype, yyvaluep, yylocationp);
-    *yycdebug_ << ')';
+	*yycdebug_ << (yytype < yyntokens_ ? "token" : "nterm") << ' ' << yytname_[yytype] << " (" << *yylocationp << ": ";
+	yy_symbol_value_print_(yytype, yyvaluep, yylocationp);
+	*yycdebug_ << ')';
   }
 #endif
 
@@ -443,104 +448,104 @@ do {					\
   ]b4_parser_class_name[::yydestruct_ (const char* yymsg,
 			   int yytype, semantic_type* yyvaluep, location_type* yylocationp)
   {
-    YYUSE (yylocationp);
-    YYUSE (yymsg);
-    YYUSE (yyvaluep);
+	YYUSE(yylocationp);
+	YYUSE(yymsg);
+	YYUSE(yyvaluep);
 
-    if (yymsg)
-      YY_SYMBOL_PRINT (yymsg, yytype, yyvaluep, yylocationp);
+	if (yymsg)
+		YY_SYMBOL_PRINT(yymsg, yytype, yyvaluep, yylocationp);
 
-    switch (yytype)
-      {
+	switch (yytype)
+	{
   ]m4_map([b4_symbol_actions], m4_defn([b4_symbol_destructors]))[
 	default:
 	  break;
-      }
+	}
   }
 
   void
   ]b4_parser_class_name[::yypop_ (unsigned int n)
   {
-    yystate_stack_.pop (n);
-    yysemantic_stack_.pop (n);
-    yylocation_stack_.pop (n);
+	yystate_stack_.pop(n);
+	yysemantic_stack_.pop(n);
+	yylocation_stack_.pop(n);
   }
 
-#if ]b4_api_PREFIX[DEBUG
+#if ] b4_api_PREFIX[DEBUG
   std::ostream&
   ]b4_parser_class_name[::debug_stream () const
   {
-    return *yycdebug_;
+	return *yycdebug_;
   }
 
   void
   ]b4_parser_class_name[::set_debug_stream (std::ostream& o)
   {
-    yycdebug_ = &o;
+	yycdebug_ = &o;
   }
 
 
   ]b4_parser_class_name[::debug_level_type
   ]b4_parser_class_name[::debug_level () const
   {
-    return yydebug_;
+	return yydebug_;
   }
 
   void
   ]b4_parser_class_name[::set_debug_level (debug_level_type l)
   {
-    yydebug_ = l;
+	yydebug_ = l;
   }
 #endif
 
   inline bool
   ]b4_parser_class_name[::yy_pact_value_is_default_ (int yyvalue)
   {
-    return yyvalue == yypact_ninf_;
+	return yyvalue == yypact_ninf_;
   }
 
   inline bool
   ]b4_parser_class_name[::yy_table_value_is_error_ (int yyvalue)
   {
-    return yyvalue == yytable_ninf_;
+	return yyvalue == yytable_ninf_;
   }
 
   int
   ]b4_parser_class_name[::parse ()
   {
-    /// Lookahead and lookahead in internal form.
-    int yychar = yyempty_;
-    int yytoken = 0;
+	/// Lookahead and lookahead in internal form.
+	int yychar = yyempty_;
+	int yytoken = 0;
 
-    // State.
-    int yyn;
-    int yylen = 0;
-    int yystate = 0;
+	// State.
+	int yyn;
+	int yylen = 0;
+	int yystate = 0;
 
-    // Error handling.
-    int yynerrs_ = 0;
-    int yyerrstatus_ = 0;
+	// Error handling.
+	int yynerrs_ = 0;
+	int yyerrstatus_ = 0;
 
-    /// Semantic value of the lookahead.
-    static semantic_type yyval_default;
-    semantic_type yylval = yyval_default;
-    /// Location of the lookahead.
-    location_type yylloc;
-    /// The locations where the error started and ended.
-    location_type yyerror_range[3];
+	/// Semantic value of the lookahead.
+	static semantic_type yyval_default;
+	semantic_type yylval = yyval_default;
+	/// Location of the lookahead.
+	location_type yylloc;
+	/// The locations where the error started and ended.
+	location_type yyerror_range[3];
 
-    /// $$.
-    semantic_type yyval;
-    /// @@$.
-    location_type yyloc;
+	/// $$.
+	semantic_type yyval;
+	/// @@$.
+	location_type yyloc;
 
-    int yyresult;
+	int yyresult;
 
-    // FIXME: This shoud be completely indented.  It is not yet to
-    // avoid gratuitous conflicts when merging into the master branch.
-    try
-      {
-    YYCDEBUG << "Starting parse" << std::endl;
+	// FIXME: This shoud be completely indented.  It is not yet to
+	// avoid gratuitous conflicts when merging into the master branch.
+	try
+	{
+		YYCDEBUG << "Starting parse" << std::endl;
 
 ]m4_ifdef([b4_initial_action], [
 b4_dollar_pushdef([yylval], [], [yylloc])dnl
@@ -580,8 +585,8 @@ b4_dollar_popdef])[]dnl
     /* Read a lookahead token.  */
     if (yychar == yyempty_)
       {
-        YYCDEBUG << "Reading a token: ";
-        yychar = ]b4_c_function_call([yylex], [int],
+			YYCDEBUG << "Reading a token: ";
+		yychar = ]b4_c_function_call([yylex], [int],
                                      [b4_api_PREFIX[STYPE*], [&yylval]][]dnl
 b4_locations_if([, [[location*], [&yylloc]]])dnl
 m4_ifdef([b4_lex_param], [, ]b4_lex_param))[;
@@ -590,13 +595,13 @@ m4_ifdef([b4_lex_param], [, ]b4_lex_param))[;
     /* Convert token to internal form.  */
     if (yychar <= yyeof_)
       {
-	yychar = yytoken = yyeof_;
-	YYCDEBUG << "Now at end of input." << std::endl;
+			yychar = yytoken = yyeof_;
+			YYCDEBUG << "Now at end of input." << std::endl;
       }
     else
       {
-	yytoken = yytranslate_ (yychar);
-	YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc);
+			yytoken = yytranslate_(yychar);
+			YY_SYMBOL_PRINT("Next token is", yytoken, &yylval, &yylloc);
       }
 
     /* If the proper action on seeing token YYTOKEN is to reduce or to
@@ -609,10 +614,10 @@ m4_ifdef([b4_lex_param], [, ]b4_lex_param))[;
     yyn = yytable_[yyn];
     if (yyn <= 0)
       {
-	if (yy_table_value_is_error_ (yyn))
-	  goto yyerrlab;
-	yyn = -yyn;
-	goto yyreduce;
+			if (yy_table_value_is_error_(yyn))
+				goto yyerrlab;
+			yyn = -yyn;
+			goto yyreduce;
       }
 
     /* Shift the lookahead token.  */
@@ -659,15 +664,15 @@ m4_ifdef([b4_lex_param], [, ]b4_lex_param))[;
 
     // Compute the default @@$.
     {
-      slice<location_type, location_stack_type> slice (yylocation_stack_, yylen);
-      YYLLOC_DEFAULT (yyloc, slice, yylen);
+			slice<location_type, location_stack_type> slice(yylocation_stack_, yylen);
+			YYLLOC_DEFAULT(yyloc, slice, yylen);
     }
 
     // Perform the reduction.
     YY_REDUCE_PRINT (yyn);
     switch (yyn)
       {
-        ]b4_user_actions[
+		]b4_user_actions[
       default:
         break;
       }
@@ -713,28 +718,28 @@ m4_ifdef([b4_lex_param], [, ]b4_lex_param))[;
     /* If not already recovering from an error, report this error.  */
     if (!yyerrstatus_)
       {
-	++yynerrs_;
-	if (yychar == yyempty_)
-	  yytoken = yyempty_;
-	error (yylloc, yysyntax_error_ (yystate, yytoken));
+			++yynerrs_;
+			if (yychar == yyempty_)
+				yytoken = yyempty_;
+			error(yylloc, yysyntax_error_(yystate, yytoken));
       }
 
     yyerror_range[1] = yylloc;
     if (yyerrstatus_ == 3)
       {
-        /* If just tried and failed to reuse lookahead token after an
-           error, discard it.  */
-        if (yychar <= yyeof_)
-          {
-            /* Return failure if at end of input.  */
-            if (yychar == yyeof_)
-              YYABORT;
-          }
-        else
-          {
-            yydestruct_ ("Error: discarding", yytoken, &yylval, &yylloc);
-            yychar = yyempty_;
-          }
+			/* If just tried and failed to reuse lookahead token after an
+			   error, discard it.  */
+			if (yychar <= yyeof_)
+			{
+				/* Return failure if at end of input.  */
+				if (yychar == yyeof_)
+					YYABORT;
+			}
+			else
+			{
+				yydestruct_("Error: discarding", yytoken, &yylval, &yylloc);
+				yychar = yyempty_;
+			}
       }
 
     /* Else will try to reuse lookahead token after shifting the error
@@ -769,29 +774,27 @@ m4_ifdef([b4_lex_param], [, ]b4_lex_param))[;
 
     for (;;)
       {
-	yyn = yypact_[yystate];
-	if (!yy_pact_value_is_default_ (yyn))
-	{
-	  yyn += yyterror_;
-	  if (0 <= yyn && yyn <= yylast_ && yycheck_[yyn] == yyterror_)
-	    {
-	      yyn = yytable_[yyn];
-	      if (0 < yyn)
-		break;
-	    }
-	}
+			yyn = yypact_[yystate];
+			if (!yy_pact_value_is_default_(yyn))
+			{
+				yyn += yyterror_;
+				if (0 <= yyn && yyn <= yylast_ && yycheck_[yyn] == yyterror_)
+				{
+					yyn = yytable_[yyn];
+					if (0 < yyn)
+						break;
+				}
+			}
 
-	/* Pop the current state because it cannot handle the error token.  */
-	if (yystate_stack_.height () == 1)
-	  YYABORT;
+			/* Pop the current state because it cannot handle the error token.  */
+			if (yystate_stack_.height() == 1)
+				YYABORT;
 
-	yyerror_range[1] = yylocation_stack_[0];
-	yydestruct_ ("Error: popping",
-		     yystos_[yystate],
-		     &yysemantic_stack_[0], &yylocation_stack_[0]);
-	yypop_ ();
-	yystate = yystate_stack_[0];
-	YY_STACK_PRINT ();
+			yyerror_range[1] = yylocation_stack_[0];
+			yydestruct_("Error: popping", yystos_[yystate], &yysemantic_stack_[0], &yylocation_stack_[0]);
+			yypop_();
+			yystate = yystate_stack_[0];
+			YY_STACK_PRINT();
       }
 
     yyerror_range[2] = yylloc;
@@ -821,11 +824,10 @@ m4_ifdef([b4_lex_param], [, ]b4_lex_param))[;
   yyreturn:
     if (yychar != yyempty_)
       {
-        /* Make sure we have latest lookahead translation.  See comments
-           at user semantic actions for why this is necessary.  */
-        yytoken = yytranslate_ (yychar);
-        yydestruct_ ("Cleanup: discarding lookahead", yytoken, &yylval,
-                     &yylloc);
+			/* Make sure we have latest lookahead translation.  See comments
+			   at user semantic actions for why this is necessary.  */
+			yytoken = yytranslate_(yychar);
+			yydestruct_("Cleanup: discarding lookahead", yytoken, &yylval, &yylloc);
       }
 
     /* Do not reclaim the symbols of the rule which action triggered
@@ -833,40 +835,33 @@ m4_ifdef([b4_lex_param], [, ]b4_lex_param))[;
     yypop_ (yylen);
     while (1 < yystate_stack_.height ())
       {
-        yydestruct_ ("Cleanup: popping",
-                     yystos_[yystate_stack_[0]],
-                     &yysemantic_stack_[0],
-                     &yylocation_stack_[0]);
-        yypop_ ();
+			yydestruct_("Cleanup: popping", yystos_[yystate_stack_[0]], &yysemantic_stack_[0], &yylocation_stack_[0]);
+			yypop_();
       }
 
     return yyresult;
-    }
-    catch (...)
-      {
-        YYCDEBUG << "Exception caught: cleaning lookahead and stack"
-                 << std::endl;
-        // Do not try to display the values of the reclaimed symbols,
-        // as their printer might throw an exception.
-        if (yychar != yyempty_)
-          {
-            /* Make sure we have latest lookahead translation.  See
-               comments at user semantic actions for why this is
-               necessary.  */
-            yytoken = yytranslate_ (yychar);
-            yydestruct_ (YY_NULL, yytoken, &yylval, &yylloc);
-          }
+	}
+	catch (...)
+	{
+		YYCDEBUG << "Exception caught: cleaning lookahead and stack" << std::endl;
+		// Do not try to display the values of the reclaimed symbols,
+		// as their printer might throw an exception.
+		if (yychar != yyempty_)
+		{
+			/* Make sure we have latest lookahead translation.  See
+			   comments at user semantic actions for why this is
+			   necessary.  */
+			yytoken = yytranslate_(yychar);
+			yydestruct_(YY_NULL, yytoken, &yylval, &yylloc);
+		}
 
-        while (1 < yystate_stack_.height ())
-          {
-            yydestruct_ (YY_NULL,
-                         yystos_[yystate_stack_[0]],
-                         &yysemantic_stack_[0],
-                         &yylocation_stack_[0]);
-            yypop_ ();
-          }
-        throw;
-      }
+		while (1 < yystate_stack_.height())
+		{
+			yydestruct_(YY_NULL, yystos_[yystate_stack_[0]], &yysemantic_stack_[0], &yylocation_stack_[0]);
+			yypop_();
+		}
+		throw;
+	}
   }
 
   // Generate an error message.
@@ -911,45 +906,44 @@ b4_error_verbose_if([int yystate, int yytoken],
     */
     if (yytoken != yyempty_)
       {
-        yyarg[yycount++] = yytname_[yytoken];
-        int yyn = yypact_[yystate];
-        if (!yy_pact_value_is_default_ (yyn))
-          {
-            /* Start YYX at -YYN if negative to avoid negative indexes in
-               YYCHECK.  In other words, skip the first -YYN actions for
-               this state because they are default actions.  */
-            int yyxbegin = yyn < 0 ? -yyn : 0;
-            /* Stay within bounds of both yycheck and yytname.  */
-            int yychecklim = yylast_ - yyn + 1;
-            int yyxend = yychecklim < yyntokens_ ? yychecklim : yyntokens_;
-            for (int yyx = yyxbegin; yyx < yyxend; ++yyx)
-              if (yycheck_[yyx + yyn] == yyx && yyx != yyterror_
-                  && !yy_table_value_is_error_ (yytable_[yyx + yyn]))
-                {
-                  if (yycount == YYERROR_VERBOSE_ARGS_MAXIMUM)
-                    {
-                      yycount = 1;
-                      break;
-                    }
-                  else
-                    yyarg[yycount++] = yytname_[yyx];
-                }
-          }
+		yyarg[yycount++] = yytname_[yytoken];
+		int yyn = yypact_[yystate];
+		if (!yy_pact_value_is_default_(yyn))
+		{
+			/* Start YYX at -YYN if negative to avoid negative indexes in
+			   YYCHECK.  In other words, skip the first -YYN actions for
+			   this state because they are default actions.  */
+			int yyxbegin = yyn < 0 ? -yyn : 0;
+			/* Stay within bounds of both yycheck and yytname.  */
+			int yychecklim = yylast_ - yyn + 1;
+			int yyxend = yychecklim < yyntokens_ ? yychecklim : yyntokens_;
+			for (int yyx = yyxbegin; yyx < yyxend; ++yyx)
+				if (yycheck_[yyx + yyn] == yyx && yyx != yyterror_ && !yy_table_value_is_error_(yytable_[yyx + yyn]))
+				{
+					if (yycount == YYERROR_VERBOSE_ARGS_MAXIMUM)
+					{
+						yycount = 1;
+						break;
+					}
+					else
+						yyarg[yycount++] = yytname_[yyx];
+				}
+		}
       }
 
     char const* yyformat = YY_NULL;
     switch (yycount)
       {
-#define YYCASE_(N, S)                         \
-        case N:                               \
-          yyformat = S;                       \
-        break
-        YYCASE_(0, YY_("syntax error"));
-        YYCASE_(1, YY_("syntax error, unexpected %s"));
-        YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
-        YYCASE_(3, YY_("syntax error, unexpected %s, expecting %s or %s"));
-        YYCASE_(4, YY_("syntax error, unexpected %s, expecting %s or %s or %s"));
-        YYCASE_(5, YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s"));
+#define YYCASE_(N, S)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+	case N:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+		yyformat = S;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		break
+		YYCASE_(0, YY_("syntax error"));
+		YYCASE_(1, YY_("syntax error, unexpected %s"));
+		YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
+		YYCASE_(3, YY_("syntax error, unexpected %s, expecting %s or %s"));
+		YYCASE_(4, YY_("syntax error, unexpected %s, expecting %s or %s or %s"));
+		YYCASE_(5, YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s"));
 #undef YYCASE_
       }
 
@@ -958,8 +952,8 @@ b4_error_verbose_if([int yystate, int yytoken],
     for (char const* yyp = yyformat; *yyp; ++yyp)
       if (yyp[0] == '%' && yyp[1] == 's' && yyi < yycount)
         {
-          yyres += yytnamerr_ (yyarg[yyi++]);
-          ++yyp;
+		yyres += yytnamerr_(yyarg[yyi++]);
+		++yyp;
         }
       else
         yyres += *yyp;
@@ -1025,7 +1019,7 @@ b4_error_verbose_if([int yystate, int yytoken],
     ]b4_stos[
   };
 
-#if ]b4_api_PREFIX[DEBUG
+#if ] b4_api_PREFIX[DEBUG
   /* TOKEN_NUMBER_[YYLEX-NUM] -- Internal symbol number corresponding
      to YYLEX-NUM.  */
   const ]b4_int_type_for([b4_toknum])[
@@ -1085,25 +1079,23 @@ b4_error_verbose_if([int yystate, int yytoken],
   void
   ]b4_parser_class_name[::yystack_print_ ()
   {
-    *yycdebug_ << "Stack now";
-    for (state_stack_type::const_iterator i = yystate_stack_.begin ();
-	 i != yystate_stack_.end (); ++i)
-      *yycdebug_ << ' ' << *i;
-    *yycdebug_ << std::endl;
+	*yycdebug_ << "Stack now";
+	for (state_stack_type::const_iterator i = yystate_stack_.begin(); i != yystate_stack_.end(); ++i)
+		*yycdebug_ << ' ' << *i;
+	*yycdebug_ << std::endl;
   }
 
   // Report on the debug stream that the rule \a yyrule is going to be reduced.
   void
   ]b4_parser_class_name[::yy_reduce_print_ (int yyrule)
   {
-    unsigned int yylno = yyrline_[yyrule];
-    int yynrhs = yyr2_[yyrule];
-    /* Print the symbols being reduced, and their result.  */
-    *yycdebug_ << "Reducing stack by rule " << yyrule - 1
-	       << " (line " << yylno << "):" << std::endl;
-    /* The symbols being reduced.  */
-    for (int yyi = 0; yyi < yynrhs; yyi++)
-      YY_SYMBOL_PRINT ("   $" << yyi + 1 << " =",
+	unsigned int yylno = yyrline_[yyrule];
+	int yynrhs = yyr2_[yyrule];
+	/* Print the symbols being reduced, and their result.  */
+	*yycdebug_ << "Reducing stack by rule " << yyrule - 1 << " (line " << yylno << "):" << std::endl;
+	/* The symbols being reduced.  */
+	for (int yyi = 0; yyi < yynrhs; yyi++)
+	  YY_SYMBOL_PRINT ("   $" << yyi + 1 << " =",
 		       yyrhs_[yyprhs_[yyrule] + yyi],
 		       &]b4_rhs_value(yynrhs, yyi + 1)[,
 		       &]b4_rhs_location(yynrhs, yyi + 1)[);
@@ -1114,16 +1106,16 @@ b4_error_verbose_if([int yystate, int yytoken],
   ]b4_parser_class_name[::token_number_type
   ]b4_parser_class_name[::yytranslate_ (int t)
   {
-    static
+	static
     const token_number_type
     translate_table[] =
     {
       ]b4_translate[
     };
-    if ((unsigned int) t <= yyuser_token_number_max_)
-      return translate_table[t];
-    else
-      return yyundef_token_;
+	if ((unsigned int)t <= yyuser_token_number_max_)
+		return translate_table[t];
+	else
+		return yyundef_token_;
   }
 
   const int ]b4_parser_class_name[::yyeof_ = 0;

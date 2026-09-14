@@ -31,7 +31,7 @@ INCBIN(BIN_EDELPHI_ASN1_YPES, "compiler/back-ends/delphi-gen/gluecode/DelphiAsn1
 #ifndef _WIN32
 void SaveIncBinToFile(const unsigned char* szData, const unsigned int size, const char* szFileName)
 {
-	writeFile( (const char *)szData, size, szFileName, genTSESMCode ? true : false, gNodeVersion);
+	writeFile((const char*)szData, size, szFileName, genTSESMCode ? true : false, gNodeVersion);
 }
 #endif
 

@@ -161,8 +161,7 @@ static void PrintCEncoderTableConsElmtTypes PROTO((FILE * src, FILE* hdr, Module
 static void PrintCEncoderTableConsElmtType PROTO((FILE * src, FILE* hdr, Module* m, TypeDef* td, NamedType* n));
 
 void // Deepak: 25/Mar/2003
-	PrintCTableConstraintEncoder
-	PARAMS((src, hdr, m, td), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td)
+	PrintCTableConstraintEncoder PARAMS((src, hdr, m, td), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td)
 {
 	fprintf(hdr, "%s %s%s_TableCons(%s %s,%s *v);\n", returnTypeG, GetEncRulePrefix(), td->cTypeDefInfo->encodeRoutineName, bufTypeNameG, bufNameG, td->cTypeDefInfo->cTypeName);
 	fprintf(hdr, "\n");
@@ -184,8 +183,7 @@ void // Deepak: 25/Mar/2003
 } /* PrintCTableConstraintEncoder */
 
 static void // Deepak: 25/Mar/2003
-	PrintCEncoderTableConsType
-	PARAMS((src, hdr, m, td, t, nt), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ NamedType* nt)
+	PrintCEncoderTableConsType PARAMS((src, hdr, m, td, t, nt), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ NamedType* nt)
 {
 	if (t == NULL)
 		return;
@@ -195,8 +193,7 @@ static void // Deepak: 25/Mar/2003
 } /* PrintCEncoderTableConsType */
 
 static void // Deepak: 25/Mar/2003
-	PrintCEncoderTableConsBasicType
-	PARAMS((src, hdr, m, td, t, nt, bt), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ NamedType* nt _AND_ BasicType* bt)
+	PrintCEncoderTableConsBasicType PARAMS((src, hdr, m, td, t, nt, bt), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ Type* t _AND_ NamedType* nt _AND_ BasicType* bt)
 {
 	if (bt == NULL)
 		return;
@@ -241,8 +238,7 @@ static void // Deepak: 25/Mar/2003
 } /* PrintCEncoderTableConsBasicType */
 
 static void // Deepak: 25/Mar/2003
-	PrintCEncoderTableConsElmtTypes
-	PARAMS((src, hdr, m, td, e), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ NamedTypeList* e)
+	PrintCEncoderTableConsElmtTypes PARAMS((src, hdr, m, td, e), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ NamedTypeList* e)
 {
 	NamedType* n;
 
@@ -254,8 +250,7 @@ static void // Deepak: 25/Mar/2003
 } /* PrintCEncoderTableConsElmtTypes */
 
 static void // Deepak: 25/Mar/2003
-	PrintCEncoderTableConsElmtType
-	PARAMS((src, hdr, m, td, n), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ NamedType* n)
+	PrintCEncoderTableConsElmtType PARAMS((src, hdr, m, td, n), FILE* src _AND_ FILE* hdr _AND_ Module* m _AND_ TypeDef* td _AND_ NamedType* n)
 {
 	if (n->type->tableConstraint)
 	{
@@ -575,7 +570,6 @@ static void PrintCElmtsEncodeCode PARAMS((src, td, parent, elmts, level, varName
 	 */
 	if (GetEncRulesType() == DER && parent->basicType->choiceId == BASICTYPE_SET)
 	{
-
 		/* Put all the elements in the array */
 		elmtlist = (NamedType**)Asn1Alloc(sizeof(NamedType*) * AsnListCount(elmts));
 		FOR_EACH_LIST_ELMT(e, elmts)
@@ -886,7 +880,6 @@ static void PrintCListEncoderCode PARAMS((src, td, t, level, varName), FILE* src
 	 */
 	switch (ctri->cTypeId)
 	{
-
 		case C_TYPEREF:
 			tmpType = ResolveImportedType(t->basicType->a.setOf);
 

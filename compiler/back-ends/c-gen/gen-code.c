@@ -295,8 +295,7 @@ void PrintConstraintValueCheckingCode PARAMS((src, td, t, nt), FILE* src _AND_ T
 } /* PrintConstraintValueCheckingCode */
 
 static void // Deepak: 24/Mar/2003
-	PrintCHdrObjectDeclaration_and_Init
-	PARAMS((hdr, m, r), FILE* hdr _AND_ Module* m _AND_ CRules* r)
+	PrintCHdrObjectDeclaration_and_Init PARAMS((hdr, m, r), FILE* hdr _AND_ Module* m _AND_ CRules* r)
 {
 	ObjectAssignment* oa;
 	ObjectSetAssignment* osa;

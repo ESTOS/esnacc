@@ -1,24 +1,24 @@
-                                                             -*- C -*-
+															 -*- C -*-
 
-# Yacc compatible skeleton for Bison
+#Yacc compatible skeleton for Bison
 
-# Copyright (C) 1984, 1989-1990, 2000-2012 Free Software Foundation,
-# Inc.
+#Copyright(C) 1984, 1989 - 1990, 2000 - 2012 Free Software Foundation,
+#Inc.
 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+#This program is free software : you can redistribute it and / or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+#GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#You should have received a copy of the GNU General Public License
+#along with this program.If not, see < http: // www.gnu.org/licenses/>.
 
-# Check the value of %define api.push-pull.
+#Check the value of % define api.push - pull.
 b4_percent_define_default([[api.push-pull]], [[pull]])
 b4_percent_define_check_values([[[[api.push-pull]],
                                  [[pull]], [[push]], [[both]]]])
@@ -28,16 +28,16 @@ m4_case(b4_percent_define_get([[api.push-pull]]),
         [pull], [m4_define([b4_push_flag], [[0]])],
         [push], [m4_define([b4_pull_flag], [[0]])])
 
-# Handle BISON_USE_PUSH_FOR_PULL for the test suite.  So that push parsing
-# tests function as written, do not let BISON_USE_PUSH_FOR_PULL modify the
-# behavior of Bison at all when push parsing is already requested.
+#Handle BISON_USE_PUSH_FOR_PULL for the test suite.So that push parsing
+#tests function as written, do not let BISON_USE_PUSH_FOR_PULL modify the
+#behavior of Bison at all when push parsing is already requested.
 b4_define_flag_if([use_push_for_pull])
 b4_use_push_for_pull_if([
   b4_push_if([m4_define([b4_use_push_for_pull_flag], [[0]])],
              [m4_define([b4_push_flag], [[1]])])])
 
-# Check the value of %define parse.lac and friends, where LAC stands for
-# lookahead correction.
+#Check the value of % define parse.lac and friends, where LAC stands for
+#lookahead correction.
 b4_percent_define_default([[parse.lac]], [[none]])
 b4_percent_define_default([[parse.lac.es-capacity-initial]], [[20]])
 b4_percent_define_default([[parse.lac.memory-trace]], [[failures]])
@@ -55,7 +55,7 @@ m4_include(b4_pkgdatadir/[c.m4])
 ## Default values.  ##
 ## ---------------- ##
 
-# Stack parameters.
+#Stack parameters.
 m4_define_default([b4_stack_depth_max], [10000])
 m4_define_default([b4_stack_depth_init],  [200])
 
@@ -82,26 +82,25 @@ m4_define([b4_pure_if],
          [2], [$1])])
          [m4_fatal([invalid api.pure value: ]$1)])])
 
-# b4_yyerror_arg_loc_if(ARG)
-# --------------------------
-# Expand ARG iff yyerror is to be given a location as argument.
+#b4_yyerror_arg_loc_if(ARG)
+#-- -- -- -- -- -- -- -- -- -- -- -- --
+#Expand ARG iff yyerror is to be given a location as argument.
 m4_define([b4_yyerror_arg_loc_if],
 [b4_locations_if([m4_case(b4_pure_flag,
                           [1], [m4_ifset([b4_parse_param], [$1])],
                           [2], [$1])])])
 
-# b4_yyerror_args
-# ---------------
-# Arguments passed to yyerror: user args plus yylloc.
+#b4_yyerror_args
+#-- -- -- -- -- -- -- -
+#Arguments passed to yyerror : user args plus yylloc.
 m4_define([b4_yyerror_args],
 [b4_yyerror_arg_loc_if([&yylloc, ])dnl
 m4_ifset([b4_parse_param], [b4_c_args(b4_parse_param), ])])
 
-
-# b4_lex_param
-# ------------
-# Accumulate in b4_lex_param all the yylex arguments.
-# b4_lex_param arrives quoted twice, but we want to keep only one level.
+#b4_lex_param
+#-- -- -- -- -- --
+#Accumulate in b4_lex_param all the yylex arguments.
+#b4_lex_param arrives quoted twice, but we want to keep only one level.
 m4_define([b4_lex_param],
 m4_dquote(b4_pure_if([[[[YYSTYPE *]], [[&yylval]]][]dnl
 b4_locations_if([, [[YYLTYPE *], [&yylloc]]])m4_ifdef([b4_lex_param], [, ])])dnl
@@ -112,12 +111,12 @@ m4_ifdef([b4_lex_param], b4_lex_param)))
 ## Data Types.  ##
 ## ------------ ##
 
-# b4_int_type(MIN, MAX)
-# ---------------------
-# Return the smallest int type able to handle numbers ranging from
-# MIN to MAX (included).  Overwrite the version from c.m4, which
-# uses only C89 types, so that the user can override the shorter
-# types, and so that pre-C89 compilers are handled correctly.
+#b4_int_type(MIN, MAX)
+#-- -- -- -- -- -- -- -- -- -- -
+#Return the smallest int type able to handle numbers ranging from
+#MIN to MAX(included).Overwrite the version from c.m4, which
+#uses only C89 types, so that the user can override the shorter
+#types, and so that pre - C89 compilers are handled correctly.
 m4_define([b4_int_type],
 [m4_if(b4_ints_in($@,      [0],   [255]), [1], [yytype_uint8],
        b4_ints_in($@,   [-128],   [127]), [1], [yytype_int8],
@@ -134,18 +133,16 @@ m4_define([b4_int_type],
 ## Semantic Values.  ##
 ## ----------------- ##
 
-
-# b4_lhs_value([TYPE])
-# --------------------
-# Expansion of $<TYPE>$.
+#b4_lhs_value([TYPE])
+#-- -- -- -- -- -- -- -- -- --
+#Expansion of $ < TYPE> $.
 m4_define([b4_lhs_value],
 [(yyval[]m4_ifval([$1], [.$1]))])
 
-
-# b4_rhs_value(RULE-LENGTH, NUM, [TYPE])
-# --------------------------------------
-# Expansion of $<TYPE>NUM, where the current rule has RULE-LENGTH
-# symbols on RHS.
+#b4_rhs_value(RULE - LENGTH, NUM, [TYPE])
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+#Expansion of $ < TYPE> NUM, where the current rule has RULE - LENGTH
+#symbols on RHS.
 m4_define([b4_rhs_value],
 [(yyvsp@{($2) - ($1)@}m4_ifval([$3], [.$3]))])
 
@@ -155,17 +152,16 @@ m4_define([b4_rhs_value],
 ## Locations.  ##
 ## ----------- ##
 
-# b4_lhs_location()
-# -----------------
-# Expansion of @$.
+#b4_lhs_location()
+#-- -- -- -- -- -- -- -- -
+#Expansion of @$.
 m4_define([b4_lhs_location],
 [(yyloc)])
 
-
-# b4_rhs_location(RULE-LENGTH, NUM)
-# ---------------------------------
-# Expansion of @NUM, where the current rule has RULE-LENGTH symbols
-# on RHS.
+#b4_rhs_location(RULE - LENGTH, NUM)
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
+#Expansion of @NUM, where the current rule has RULE - LENGTH symbols
+#on RHS.
 m4_define([b4_rhs_location],
 [(yylsp@{($2) - ($1)@})])
 
@@ -174,36 +170,32 @@ m4_define([b4_rhs_location],
 ## Declarations.  ##
 ## -------------- ##
 
-# b4_declare_scanner_communication_variables
-# ------------------------------------------
-# Declare the variables that are global, or local to YYPARSE if
-# pure-parser.
+#b4_declare_scanner_communication_variables
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+#Declare the variables that are global, or local to YYPARSE if
+#pure - parser.
 m4_define([b4_declare_scanner_communication_variables], [[
 /* The lookahead symbol.  */
 int yychar;
 
 ]b4_pure_if([[
 #if defined __GNUC__ && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
-/* Suppress an incorrect diagnostic about yylval being uninitialized.  */
-# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN \
-    _Pragma ("GCC diagnostic push") \
-    _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")\
-    _Pragma ("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
-# define YY_IGNORE_MAYBE_UNINITIALIZED_END \
-    _Pragma ("GCC diagnostic pop")
+															 /* Suppress an incorrect diagnostic about yylval being uninitialized.  */
+#define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wuninitialized\"") _Pragma("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
+#define YY_IGNORE_MAYBE_UNINITIALIZED_END _Pragma("GCC diagnostic pop")
 #else
 /* Default value used for initialization, for pacifying older GCCs
    or non-GCC compilers.  */
 static YYSTYPE yyval_default;
-# define YY_INITIAL_VALUE(Value) = Value
-#endif]b4_locations_if([[
+#define YY_INITIAL_VALUE(Value) = Value
+#endif] b4_locations_if([[
 static YYLTYPE yyloc_default][]b4_yyloc_default[;]])])[
 #ifndef YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-# define YY_IGNORE_MAYBE_UNINITIALIZED_END
+#define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
+#define YY_IGNORE_MAYBE_UNINITIALIZED_END
 #endif
 #ifndef YY_INITIAL_VALUE
-# define YY_INITIAL_VALUE(Value) /* Nothing. */
+#define YY_INITIAL_VALUE(Value) /* Nothing. */
 #endif
 
 /* The semantic value of the lookahead symbol.  */
@@ -216,11 +208,10 @@ YYLTYPE yylloc]b4_pure_if([ = yyloc_default], [b4_yyloc_default])[;
 /* Number of syntax errors so far.  */
 int yynerrs;]])])
 
-
-# b4_declare_parser_state_variables
-# ---------------------------------
-# Declare all the variables that are needed to maintain the parser state
-# between calls to yypush_parse.
+#b4_declare_parser_state_variables
+#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
+#Declare all the variables that are needed to maintain the parser state
+#between calls to yypush_parse.
 m4_define([b4_declare_parser_state_variables], [b4_pure_if([[
     /* Number of syntax errors so far.  */
     int yynerrs;
@@ -261,14 +252,13 @@ m4_define([b4_declare_parser_state_variables], [b4_pure_if([[
     yytype_int16 *yyes;
     YYSIZE_T yyes_capacity;]])])
 
-
-# b4_declare_yyparse_push_
-# ------------------------
-# Declaration of yyparse (and dependencies) when using the push parser
-# (including in pull mode).
+#b4_declare_yyparse_push_
+#-- -- -- -- -- -- -- -- -- -- -- --
+#Declaration of yyparse(and dependencies) when using the push parser
+#(including in pull mode).
 m4_define([b4_declare_yyparse_push_],
 [[#ifndef YYPUSH_MORE_DEFINED
-# define YYPUSH_MORE_DEFINED
+#define YYPUSH_MORE_DEFINED
 enum { YYPUSH_MORE = 4 };
 #endif
 
@@ -290,30 +280,28 @@ b4_c_function_decl([b4_prefix[pstate_delete]], [[void]],
                    [[b4_prefix[pstate *ps]], [[ps]]])dnl
 ])
 
-# b4_declare_yyparse_
-# -------------------
-# When not the push parser.
+#b4_declare_yyparse_
+#-- -- -- -- -- -- -- -- -- -
+#When not the push parser.
 m4_define([b4_declare_yyparse_],
 [[#ifdef YYPARSE_PARAM
 ]b4_c_function_decl(b4_prefix[parse], [int],
                     [[void *YYPARSE_PARAM], [YYPARSE_PARAM]])[
 #else /* ! YYPARSE_PARAM */
 ]b4_c_function_decl(b4_prefix[parse], [int], b4_parse_param)[
-#endif /* ! YYPARSE_PARAM */]dnl
+#endif /* ! YYPARSE_PARAM */] dnl
 ])
 
-
-# b4_declare_yyparse
-# ------------------
+#b4_declare_yyparse
+#-- -- -- -- -- -- -- -- --
 m4_define([b4_declare_yyparse],
 [b4_push_if([b4_declare_yyparse_push_],
             [b4_declare_yyparse_])[]dnl
 ])
 
-
-# b4_shared_declarations
-# ----------------------
-# Declaration that might either go into the header (if --defines)
+#b4_shared_declarations
+#-- -- -- -- -- -- -- -- -- -- --
+#Declaration that might either go into the header(if --defines)
 # or open coded in the parser body.
 m4_define([b4_shared_declarations],
 [b4_cpp_guard_open([b4_spec_defines_file])[
@@ -372,12 +360,12 @@ m4_if(b4_api_prefix, [yy], [],
 
 ]b4_null_define[
 
-/* Enabling verbose error messages.  */
+															 /* Enabling verbose error messages.  */
 #ifdef YYERROR_VERBOSE
-# undef YYERROR_VERBOSE
-# define YYERROR_VERBOSE 1
+#undef YYERROR_VERBOSE
+#define YYERROR_VERBOSE 1
 #else
-# define YYERROR_VERBOSE ]b4_error_verbose_flag[
+#define YYERROR_VERBOSE ]b4_error_verbose_flag[
 #endif
 
 ]m4_ifval(m4_quote(b4_spec_defines_file),
@@ -391,7 +379,7 @@ b4_shared_declarations[
 b4_percent_code_get[]dnl
 
 [#ifdef short
-# undef short
+#undef short
 #endif
 
 #ifdef YYTYPE_UINT8
@@ -402,7 +390,7 @@ typedef unsigned char yytype_uint8;
 
 #ifdef YYTYPE_INT8
 typedef YYTYPE_INT8 yytype_int8;
-#elif ]b4_c_modern[
+#elif ] b4_c_modern[
 typedef signed char yytype_int8;
 #else
 typedef short int yytype_int8;
@@ -421,134 +409,132 @@ typedef short int yytype_int16;
 #endif
 
 #ifndef YYSIZE_T
-# ifdef __SIZE_TYPE__
-#  define YYSIZE_T __SIZE_TYPE__
-# elif defined size_t
-#  define YYSIZE_T size_t
-# elif ! defined YYSIZE_T && ]b4_c_modern[
-#  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
-#  define YYSIZE_T size_t
-# else
-#  define YYSIZE_T unsigned int
-# endif
+#ifdef __SIZE_TYPE__
+#define YYSIZE_T __SIZE_TYPE__
+#elif defined size_t
+#define YYSIZE_T size_t
+#elif !defined YYSIZE_T && ] b4_c_modern[
+#include <stddef.h> /* INFRINGES ON USER NAME SPACE */
+#define YYSIZE_T size_t
+#else
+#define YYSIZE_T unsigned int
+#endif
 #endif
 
-#define YYSIZE_MAXIMUM ((YYSIZE_T) -1)
+#define YYSIZE_MAXIMUM ((YYSIZE_T) - 1)
 
 #ifndef YY_
-# if defined YYENABLE_NLS && YYENABLE_NLS
-#  if ENABLE_NLS
-#   include <libintl.h> /* INFRINGES ON USER NAME SPACE */
-#   define YY_(Msgid) dgettext ("bison-runtime", Msgid)
-#  endif
-# endif
-# ifndef YY_
-#  define YY_(Msgid) Msgid
-# endif
+#if defined YYENABLE_NLS && YYENABLE_NLS
+#if ENABLE_NLS
+#include <libintl.h> /* INFRINGES ON USER NAME SPACE */
+#define YY_(Msgid) dgettext("bison-runtime", Msgid)
+#endif
+#endif
+#ifndef YY_
+#define YY_(Msgid) Msgid
+#endif
 #endif
 
-/* Suppress unused-variable warnings by "using" E.  */
-#if ! defined lint || defined __GNUC__
-# define YYUSE(E) ((void) (E))
+															 /* Suppress unused-variable warnings by "using" E.  */
+#if !defined lint || defined __GNUC__
+#define YYUSE(E) ((void)(E))
 #else
-# define YYUSE(E) /* empty */
+#define YYUSE(E) /* empty */
 #endif
 
-/* Identity function, used to suppress warnings about constant conditions.  */
+															 /* Identity function, used to suppress warnings about constant conditions.  */
 #ifndef lint
-# define YYID(N) (N)
+#define YYID(N) (N)
 #else
 ]b4_c_function_def([YYID], [static int], [[int yyi], [yyi]])[
 {
-  return yyi;
+	return yyi;
 }
 #endif
 
-#if ]b4_lac_if([[1]], [[! defined yyoverflow || YYERROR_VERBOSE]])[
+#if ] b4_lac_if([[1]], [[!defined yyoverflow || YYERROR_VERBOSE]])[
 
 /* The parser invokes alloca or malloc; define the necessary symbols.  */]dnl
 b4_push_if([], [b4_lac_if([], [[
 
-# ifdef YYSTACK_USE_ALLOCA
-#  if YYSTACK_USE_ALLOCA
-#   ifdef __GNUC__
-#    define YYSTACK_ALLOC __builtin_alloca
-#   elif defined __BUILTIN_VA_ARG_INCR
-#    include <alloca.h> /* INFRINGES ON USER NAME SPACE */
-#   elif defined _AIX
-#    define YYSTACK_ALLOC __alloca
-#   elif defined _MSC_VER
-#    include <malloc.h> /* INFRINGES ON USER NAME SPACE */
-#    define alloca _alloca
-#   else
-#    define YYSTACK_ALLOC alloca
-#    if ! defined _ALLOCA_H && ! defined EXIT_SUCCESS && ]b4_c_modern[
-#     include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
-      /* Use EXIT_SUCCESS as a witness for stdlib.h.  */
-#     ifndef EXIT_SUCCESS
-#      define EXIT_SUCCESS 0
-#     endif
-#    endif
-#   endif
-#  endif
-# endif]])])[
+#ifdef YYSTACK_USE_ALLOCA
+#if YYSTACK_USE_ALLOCA
+#ifdef __GNUC__
+#define YYSTACK_ALLOC __builtin_alloca
+#elif defined __BUILTIN_VA_ARG_INCR
+#include <alloca.h> /* INFRINGES ON USER NAME SPACE */
+#elif defined _AIX
+#define YYSTACK_ALLOC __alloca
+#elif defined _MSC_VER
+#include <malloc.h> /* INFRINGES ON USER NAME SPACE */
+#define alloca _alloca
+#else
+#define YYSTACK_ALLOC alloca
+#if !defined _ALLOCA_H && !defined EXIT_SUCCESS && ] b4_c_modern[
+#include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+															 /* Use EXIT_SUCCESS as a witness for stdlib.h.  */
+#ifndef EXIT_SUCCESS
+#define EXIT_SUCCESS 0
+#endif
+#endif
+#endif
+#endif
+#endif]])])[
 
-# ifdef YYSTACK_ALLOC
-   /* Pacify GCC's `empty if-body' warning.  */
-#  define YYSTACK_FREE(Ptr) do { /* empty */; } while (YYID (0))
-#  ifndef YYSTACK_ALLOC_MAXIMUM
-    /* The OS might guarantee only one guard page at the bottom of the stack,
-       and a page size can be as small as 4096 bytes.  So we cannot safely
-       invoke alloca (N) if N exceeds 4096.  Use a slightly smaller number
-       to allow for a few compiler-allocated temporary stack slots.  */
-#   define YYSTACK_ALLOC_MAXIMUM 4032 /* reasonable circa 2006 */
-#  endif
-# else
-#  define YYSTACK_ALLOC YYMALLOC
-#  define YYSTACK_FREE YYFREE
-#  ifndef YYSTACK_ALLOC_MAXIMUM
-#   define YYSTACK_ALLOC_MAXIMUM YYSIZE_MAXIMUM
-#  endif
-#  if (defined __cplusplus && ! defined EXIT_SUCCESS \
-       && ! ((defined YYMALLOC || defined malloc) \
-	     && (defined YYFREE || defined free)))
-#   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
-#   ifndef EXIT_SUCCESS
-#    define EXIT_SUCCESS 0
-#   endif
-#  endif
-#  ifndef YYMALLOC
-#   define YYMALLOC malloc
-#   if ! defined malloc && ! defined EXIT_SUCCESS && ]b4_c_modern[
+#ifdef YYSTACK_ALLOC
+															 /* Pacify GCC's `empty if-body' warning.  */
+#define YYSTACK_FREE(Ptr)                                                                                                                                                                                                                                                                                                                                                                                                                             \
+																 do                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+																 { /* empty */                                                                                                                                                                                                                                                                                                                                                                                                                                     \
+																	 ;                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+																 } while (YYID(0))
+#ifndef YYSTACK_ALLOC_MAXIMUM
+															 /* The OS might guarantee only one guard page at the bottom of the stack,
+																and a page size can be as small as 4096 bytes.  So we cannot safely
+																invoke alloca (N) if N exceeds 4096.  Use a slightly smaller number
+																to allow for a few compiler-allocated temporary stack slots.  */
+#define YYSTACK_ALLOC_MAXIMUM 4032 /* reasonable circa 2006 */
+#endif
+#else
+#define YYSTACK_ALLOC YYMALLOC
+#define YYSTACK_FREE YYFREE
+#ifndef YYSTACK_ALLOC_MAXIMUM
+#define YYSTACK_ALLOC_MAXIMUM YYSIZE_MAXIMUM
+#endif
+#if (defined __cplusplus && !defined EXIT_SUCCESS && !((defined YYMALLOC || defined malloc) && (defined YYFREE || defined free)))
+#include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+#ifndef EXIT_SUCCESS
+#define EXIT_SUCCESS 0
+#endif
+#endif
+#ifndef YYMALLOC
+#define YYMALLOC malloc
+#if !defined malloc && !defined EXIT_SUCCESS && ] b4_c_modern[
 void *malloc (YYSIZE_T); /* INFRINGES ON USER NAME SPACE */
-#   endif
-#  endif
-#  ifndef YYFREE
-#   define YYFREE free
-#   if ! defined free && ! defined EXIT_SUCCESS && ]b4_c_modern[
+#endif
+#endif
+#ifndef YYFREE
+#define YYFREE free
+#if !defined free && !defined EXIT_SUCCESS && ] b4_c_modern[
 void free (void *); /* INFRINGES ON USER NAME SPACE */
-#   endif
-#  endif
-# endif]b4_lac_if([[
-# define YYCOPY_NEEDED 1]])[
-#endif]b4_lac_if([], [[ /* ! defined yyoverflow || YYERROR_VERBOSE */]])[
+#endif
+#endif
+#endif] b4_lac_if([[
+#define YYCOPY_NEEDED 1]])[
+#endif] b4_lac_if([], [[/* ! defined yyoverflow || YYERROR_VERBOSE */]])[
 
-
-#if (! defined yyoverflow \
-     && (! defined __cplusplus \
-	 || (]b4_locations_if([[defined ]b4_api_PREFIX[LTYPE_IS_TRIVIAL && ]b4_api_PREFIX[LTYPE_IS_TRIVIAL \
-	     && ]])[defined ]b4_api_PREFIX[STYPE_IS_TRIVIAL && ]b4_api_PREFIX[STYPE_IS_TRIVIAL)))
+#if (!defined yyoverflow && (!defined __cplusplus || (] b4_locations_if([[defined] b4_api_PREFIX[LTYPE_IS_TRIVIAL && ] b4_api_PREFIX[LTYPE_IS_TRIVIAL && ]])[defined] b4_api_PREFIX[STYPE_IS_TRIVIAL && ] b4_api_PREFIX[STYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
 {
-  yytype_int16 yyss_alloc;
-  YYSTYPE yyvs_alloc;]b4_locations_if([
+	yytype_int16 yyss_alloc;
+	YYSTYPE yyvs_alloc;]b4_locations_if([
   YYLTYPE yyls_alloc;])[
 };
 
-/* The size of the maximum gap between one aligned stack and the next.  */
-# define YYSTACK_GAP_MAXIMUM (sizeof (union yyalloc) - 1)
+															 /* The size of the maximum gap between one aligned stack and the next.  */
+#define YYSTACK_GAP_MAXIMUM (sizeof(union yyalloc) - 1)
 
 /* The size of an array large to enough to hold all stacks, each with
    N elements.  */
@@ -560,66 +546,62 @@ union yyalloc
      ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE)) \
       + YYSTACK_GAP_MAXIMUM)])[
 
-# define YYCOPY_NEEDED 1
+#define YYCOPY_NEEDED 1
 
-/* Relocate STACK from its old location to the new one.  The
-   local variables YYSIZE and YYSTACKSIZE give the old and new number of
-   elements in the stack, and YYPTR gives the new location of the
-   stack.  Advance YYPTR to a properly aligned location for the next
-   stack.  */
-# define YYSTACK_RELOCATE(Stack_alloc, Stack)				\
-    do									\
-      {									\
-	YYSIZE_T yynewbytes;						\
-	YYCOPY (&yyptr->Stack_alloc, Stack, yysize);			\
-	Stack = &yyptr->Stack_alloc;					\
-	yynewbytes = yystacksize * sizeof (*Stack) + YYSTACK_GAP_MAXIMUM; \
-	yyptr += yynewbytes / sizeof (*yyptr);				\
-      }									\
-    while (YYID (0))
+															 /* Relocate STACK from its old location to the new one.  The
+																local variables YYSIZE and YYSTACKSIZE give the old and new number of
+																elements in the stack, and YYPTR gives the new location of the
+																stack.  Advance YYPTR to a properly aligned location for the next
+																stack.  */
+#define YYSTACK_RELOCATE(Stack_alloc, Stack)                                                                                                                                                                                                                                                                                                                                                                                                          \
+																 do                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+																 {                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+																	 YYSIZE_T yynewbytes;                                                                                                                                                                                                                                                                                                                                                                                                                          \
+																	 YYCOPY(&yyptr->Stack_alloc, Stack, yysize);                                                                                                                                                                                                                                                                                                                                                                                                   \
+																	 Stack = &yyptr->Stack_alloc;                                                                                                                                                                                                                                                                                                                                                                                                                  \
+																	 yynewbytes = yystacksize * sizeof(*Stack) + YYSTACK_GAP_MAXIMUM;                                                                                                                                                                                                                                                                                                                                                                              \
+																	 yyptr += yynewbytes / sizeof(*yyptr);                                                                                                                                                                                                                                                                                                                                                                                                         \
+																 } while (YYID(0))
 
 #endif
 
 #if defined YYCOPY_NEEDED && YYCOPY_NEEDED
-/* Copy COUNT objects from SRC to DST.  The source and destination do
-   not overlap.  */
-# ifndef YYCOPY
-#  if defined __GNUC__ && 1 < __GNUC__
-#   define YYCOPY(Dst, Src, Count) \
-      __builtin_memcpy (Dst, Src, (Count) * sizeof (*(Src)))
-#  else
-#   define YYCOPY(Dst, Src, Count)              \
-      do                                        \
-        {                                       \
-          YYSIZE_T yyi;                         \
-          for (yyi = 0; yyi < (Count); yyi++)   \
-            (Dst)[yyi] = (Src)[yyi];            \
-        }                                       \
-      while (YYID (0))
-#  endif
-# endif
+															 /* Copy COUNT objects from SRC to DST.  The source and destination do
+																not overlap.  */
+#ifndef YYCOPY
+#if defined __GNUC__ && 1 < __GNUC__
+#define YYCOPY(Dst, Src, Count) __builtin_memcpy(Dst, Src, (Count) * sizeof(*(Src)))
+#else
+#define YYCOPY(Dst, Src, Count)                                                                                                                                                                                                                                                                                                                                                                                                                       \
+																 do                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+																 {                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+																	 YYSIZE_T yyi;                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+																	 for (yyi = 0; yyi < (Count); yyi++)                                                                                                                                                                                                                                                                                                                                                                                                           \
+																		 (Dst)[yyi] = (Src)[yyi];                                                                                                                                                                                                                                                                                                                                                                                                                  \
+																 } while (YYID(0))
+#endif
+#endif
 #endif /* !YYCOPY_NEEDED */
 
-/* YYFINAL -- State number of the termination state.  */
+															 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  ]b4_final_state_number[
-/* YYLAST -- Last index in YYTABLE.  */
+															 /* YYLAST -- Last index in YYTABLE.  */
 #define YYLAST   ]b4_last[
 
-/* YYNTOKENS -- Number of terminals.  */
+															 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  ]b4_tokens_number[
-/* YYNNTS -- Number of nonterminals.  */
+															 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  ]b4_nterms_number[
-/* YYNRULES -- Number of rules.  */
+															 /* YYNRULES -- Number of rules.  */
 #define YYNRULES  ]b4_rules_number[
-/* YYNRULES -- Number of states.  */
+															 /* YYNRULES -- Number of states.  */
 #define YYNSTATES  ]b4_states_number[
 
-/* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
+															 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  ]b4_undef_token_number[
 #define YYMAXUTOK   ]b4_user_token_number_max[
 
-#define YYTRANSLATE(YYX)						\
-  ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
+#define YYTRANSLATE(YYX) ((unsigned int)(YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
 
 /* YYTRANSLATE[YYLEX] -- Bison symbol number corresponding to YYLEX.  */
 static const ]b4_int_type_for([b4_translate])[ yytranslate[] =
@@ -627,7 +609,7 @@ static const ]b4_int_type_for([b4_translate])[ yytranslate[] =
   ]b4_translate[
 };
 
-#if ]b4_api_PREFIX[DEBUG
+#if ] b4_api_PREFIX[DEBUG
 /* YYPRHS[YYN] -- Index of the first RHS symbol of rule number YYN in
    YYRHS.  */
 static const ]b4_int_type_for([b4_prhs])[ yyprhs[] =
@@ -648,7 +630,7 @@ static const ]b4_int_type_for([b4_rline])[ yyrline[] =
 };
 #endif
 
-#if ]b4_api_PREFIX[DEBUG || YYERROR_VERBOSE || ]b4_token_table_flag[
+#if ] b4_api_PREFIX[DEBUG || YYERROR_VERBOSE || ] b4_token_table_flag[
 /* YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
@@ -657,14 +639,14 @@ static const char *const yytname[] =
 };
 #endif
 
-# ifdef YYPRINT
+#ifdef YYPRINT
 /* YYTOKNUM[YYLEX-NUM] -- Internal token number corresponding to
    token YYLEX-NUM.  */
 static const ]b4_int_type_for([b4_toknum])[ yytoknum[] =
 {
   ]b4_toknum[
 };
-# endif
+#endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const ]b4_int_type_for([b4_r1])[ yyr1[] =
@@ -692,8 +674,8 @@ static const ]b4_int_type_for([b4_defgoto])[ yydefgoto[] =
   ]b4_defgoto[
 };
 
-/* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
-   STATE-NUM.  */
+															 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
+																STATE-NUM.  */
 #define YYPACT_NINF ]b4_pact_ninf[
 static const ]b4_int_type_for([b4_pact])[ yypact[] =
 {
@@ -706,19 +688,19 @@ static const ]b4_int_type_for([b4_pgoto])[ yypgoto[] =
   ]b4_pgoto[
 };
 
-/* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
-   positive, shift that token.  If negative, reduce the rule which
-   number is the opposite.  If YYTABLE_NINF, syntax error.  */
+															 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
+																positive, shift that token.  If negative, reduce the rule which
+																number is the opposite.  If YYTABLE_NINF, syntax error.  */
 #define YYTABLE_NINF ]b4_table_ninf[
 static const ]b4_int_type_for([b4_table])[ yytable[] =
 {
   ]b4_table[
 };
 
-#define yypact_value_is_default(Yystate) \
+#define yypact_value_is_default(Yystate)                                                                                                                                                                                                                                                                                                                                                                                                              \
   ]b4_table_value_equals([[pact]], [[Yystate]], [b4_pact_ninf])[
 
-#define yytable_value_is_error(Yytable_value) \
+#define yytable_value_is_error(Yytable_value)                                                                                                                                                                                                                                                                                                                                                                                                         \
   ]b4_table_value_equals([[table]], [[Yytable_value]], [b4_table_ninf])[
 
 static const ]b4_int_type_for([b4_check])[ yycheck[] =
@@ -733,54 +715,53 @@ static const ]b4_int_type_for([b4_stos])[ yystos[] =
   ]b4_stos[
 };
 
-#define yyerrok		(yyerrstatus = 0)
-#define yyclearin	(yychar = YYEMPTY)
-#define YYEMPTY		(-2)
-#define YYEOF		0
+#define yyerrok (yyerrstatus = 0)
+#define yyclearin (yychar = YYEMPTY)
+#define YYEMPTY (-2)
+#define YYEOF 0
 
-#define YYACCEPT	goto yyacceptlab
-#define YYABORT		goto yyabortlab
-#define YYERROR		goto yyerrorlab
+#define YYACCEPT goto yyacceptlab
+#define YYABORT goto yyabortlab
+#define YYERROR goto yyerrorlab
 
+															 /* Like YYERROR except do call yyerror.  This remains here temporarily
+																to ease the transition to the new meaning of YYERROR, for GCC.
+																Once GCC version 2 has supplanted version 1, this can go.  However,
+																YYFAIL appears to be in use.  Nevertheless, it is formally deprecated
+																in Bison 2.4.2's NEWS entry, where a plan to phase it out is
+																discussed.  */
 
-/* Like YYERROR except do call yyerror.  This remains here temporarily
-   to ease the transition to the new meaning of YYERROR, for GCC.
-   Once GCC version 2 has supplanted version 1, this can go.  However,
-   YYFAIL appears to be in use.  Nevertheless, it is formally deprecated
-   in Bison 2.4.2's NEWS entry, where a plan to phase it out is
-   discussed.  */
-
-#define YYFAIL		goto yyerrlab
+#define YYFAIL goto yyerrlab
 #if defined YYFAIL
-  /* This is here to suppress warnings from the GCC cpp's
-     -Wunused-macros.  Normally we don't worry about that warning, but
-     some users do, and we want to make it easy for users to remove
-     YYFAIL uses, which will produce warnings from Bison 2.5.  */
+															 /* This is here to suppress warnings from the GCC cpp's
+																-Wunused-macros.  Normally we don't worry about that warning, but
+																some users do, and we want to make it easy for users to remove
+																YYFAIL uses, which will produce warnings from Bison 2.5.  */
 #endif
 
-#define YYRECOVERING()  (!!yyerrstatus)
+#define YYRECOVERING() (!!yyerrstatus)
 
-#define YYBACKUP(Token, Value)                                  \
-do                                                              \
-  if (yychar == YYEMPTY)                                        \
-    {                                                           \
-      yychar = (Token);                                         \
-      yylval = (Value);                                         \
-      YYPOPSTACK (yylen);                                       \
-      yystate = *yyssp;                                         \]b4_lac_if([[
+#define YYBACKUP(Token, Value)                                                                                                                                                                                                                                                                                                                                                                                                                        \
+																 do                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+																	 if (yychar == YYEMPTY)                                                                                                                                                                                                                                                                                                                                                                                                                        \
+																	 {                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+																		 yychar = (Token);                                                                                                                                                                                                                                                                                                                                                                                                                         \
+																		 yylval = (Value);                                                                                                                                                                                                                                                                                                                                                                                                                         \
+																		 YYPOPSTACK(yylen);                                                                                                                                                                                                                                                                                                                                                                                                                        \
+																		 yystate = *yyssp;                                         \]b4_lac_if([[
       YY_LAC_DISCARD ("YYBACKUP");                              \]])[
-      goto yybackup;                                            \
-    }                                                           \
-  else                                                          \
-    {                                                           \
-      yyerror (]b4_yyerror_args[YY_("syntax error: cannot back up")); \
-      YYERROR;							\
-    }								\
-while (YYID (0))
+      goto yybackup;
+															 }
+															 else
+															 {
+	  yyerror (]b4_yyerror_args[YY_("syntax error: cannot back up"));
+	  YYERROR;
+															 }
+															 while (YYID(0))
 
-/* Error token number */
-#define YYTERROR	1
-#define YYERRCODE	256
+															 /* Error token number */
+#define YYTERROR 1
+#define YYERRCODE 256
 
 ]b4_locations_if([[
 ]b4_yylloc_default_define[
@@ -790,35 +771,37 @@ while (YYID (0))
 
 /* YYLEX -- calling `yylex' with the right arguments.  */
 #ifdef YYLEX_PARAM
-# define YYLEX yylex (]b4_pure_if([&yylval[]b4_locations_if([, &yylloc]), ])[YYLEX_PARAM)
+#define YYLEX yylex (]b4_pure_if([&yylval[]b4_locations_if([, &yylloc]), ])[YYLEX_PARAM)
 #else
-# define YYLEX ]b4_c_function_call([yylex], [int], b4_lex_param)[
+#define YYLEX ]b4_c_function_call([yylex], [int], b4_lex_param)[
 #endif
 
 /* Enable debugging if requested.  */
-#if ]b4_api_PREFIX[DEBUG
+#if ] b4_api_PREFIX[DEBUG
 
-# ifndef YYFPRINTF
-#  include <stdio.h> /* INFRINGES ON USER NAME SPACE */
-#  define YYFPRINTF fprintf
-# endif
+#ifndef YYFPRINTF
+#include <stdio.h> /* INFRINGES ON USER NAME SPACE */
+#define YYFPRINTF fprintf
+#endif
 
-# define YYDPRINTF(Args)			\
-do {						\
-  if (yydebug)					\
-    YYFPRINTF Args;				\
-} while (YYID (0))
+#define YYDPRINTF(Args)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+	do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		if (yydebug)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+			YYFPRINTF Args;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+	} while (YYID(0))
 
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location)			  \
-do {									  \
-  if (yydebug)								  \
-    {									  \
-      YYFPRINTF (stderr, "%s ", Title);					  \
-      yy_symbol_print (stderr,						  \
-		  Type, Value]b4_locations_if([, Location])[]b4_user_args[); \
-      YYFPRINTF (stderr, "\n");						  \
-    }									  \
-} while (YYID (0))
+#define YY_SYMBOL_PRINT(Title, Type, Value, Location)                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+	do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		if (yydebug)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+		{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+			YYFPRINTF(stderr, "%s ", Title);                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+	  yy_symbol_print (stderr,						  \
+		  Type, Value]b4_locations_if([, Location])[]b4_user_args[);                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+			YYFPRINTF(stderr, "\n");                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+		}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+	} while (YYID(0))
 
 ]b4_yy_symbol_print_generate([b4_c_function_def])[
 
@@ -831,20 +814,21 @@ do {									  \
 		   [[yytype_int16 *yybottom], [yybottom]],
 		   [[yytype_int16 *yytop],    [yytop]])[
 {
-  YYFPRINTF (stderr, "Stack now");
-  for (; yybottom <= yytop; yybottom++)
-    {
-      int yybot = *yybottom;
-      YYFPRINTF (stderr, " %d", yybot);
-    }
-  YYFPRINTF (stderr, "\n");
+		YYFPRINTF(stderr, "Stack now");
+		for (; yybottom <= yytop; yybottom++)
+		{
+			int yybot = *yybottom;
+			YYFPRINTF(stderr, " %d", yybot);
+		}
+		YYFPRINTF(stderr, "\n");
 }
 
-# define YY_STACK_PRINT(Bottom, Top)				\
-do {								\
-  if (yydebug)							\
-    yy_stack_print ((Bottom), (Top));				\
-} while (YYID (0))
+#define YY_STACK_PRINT(Bottom, Top)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+	do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		if (yydebug)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+			yy_stack_print((Bottom), (Top));                                                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+	} while (YYID(0))
 
 
 /*------------------------------------------------.
@@ -857,43 +841,42 @@ do {								\
 		   ])[[int yyrule], [yyrule]]m4_ifset([b4_parse_param], [,
 		   b4_parse_param]))[
 {
-  int yynrhs = yyr2[yyrule];
-  int yyi;
-  unsigned long int yylno = yyrline[yyrule];
-  YYFPRINTF (stderr, "Reducing stack by rule %d (line %lu):\n",
-	     yyrule - 1, yylno);
-  /* The symbols being reduced.  */
-  for (yyi = 0; yyi < yynrhs; yyi++)
-    {
-      YYFPRINTF (stderr, "   $%d = ", yyi + 1);
-      yy_symbol_print (stderr, yyrhs[yyprhs[yyrule] + yyi],
+		int yynrhs = yyr2[yyrule];
+		int yyi;
+		unsigned long int yylno = yyrline[yyrule];
+		YYFPRINTF(stderr, "Reducing stack by rule %d (line %lu):\n", yyrule - 1, yylno);
+		/* The symbols being reduced.  */
+		for (yyi = 0; yyi < yynrhs; yyi++)
+		{
+			YYFPRINTF(stderr, "   $%d = ", yyi + 1);
+	  yy_symbol_print (stderr, yyrhs[yyprhs[yyrule] + yyi],
 		       &]b4_rhs_value(yynrhs, yyi + 1)[
 		       ]b4_locations_if([, &]b4_rhs_location(yynrhs, yyi + 1))[]dnl
 		       b4_user_args[);
       YYFPRINTF (stderr, "\n");
-    }
+		}
 }
 
-# define YY_REDUCE_PRINT(Rule)		\
-do {					\
-  if (yydebug)				\
-    yy_reduce_print (yyvsp, ]b4_locations_if([yylsp, ])[Rule]b4_user_args[); \
-} while (YYID (0))
+#define YY_REDUCE_PRINT(Rule)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
+	do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		if (yydebug)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
+	yy_reduce_print (yyvsp, ]b4_locations_if([yylsp, ])[Rule]b4_user_args[);                                                                                                                                                                                                                                                                                                                                                                                                                                       \
+	} while (YYID(0))
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
    multiple parsers can coexist.  */
 int yydebug;
 #else /* !]b4_api_PREFIX[DEBUG */
-# define YYDPRINTF(Args)
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location)
-# define YY_STACK_PRINT(Bottom, Top)
-# define YY_REDUCE_PRINT(Rule)
+#define YYDPRINTF(Args)
+#define YY_SYMBOL_PRINT(Title, Type, Value, Location)
+#define YY_STACK_PRINT(Bottom, Top)
+#define YY_REDUCE_PRINT(Rule)
 #endif /* !]b4_api_PREFIX[DEBUG */
 
-
 /* YYINITDEPTH -- initial size of the parser's stacks.  */
-#ifndef	YYINITDEPTH
-# define YYINITDEPTH ]b4_stack_depth_init[
+#ifndef YYINITDEPTH
+#define YYINITDEPTH ]b4_stack_depth_init[
 #endif
 
 /* YYMAXDEPTH -- maximum size the stacks can grow to (effective only
@@ -904,8 +887,8 @@ int yydebug;
    evaluated with infinite-precision integer arithmetic.  */
 
 #ifndef YYMAXDEPTH
-# define YYMAXDEPTH ]b4_stack_depth_max[
-#endif]b4_lac_if([[
+#define YYMAXDEPTH ]b4_stack_depth_max[
+#endif] b4_lac_if([[
 
 /* Given a state stack such that *YYBOTTOM is its bottom, such that
    *YYTOP is either its top or is YYTOP_EMPTY to indicate an empty
@@ -919,7 +902,7 @@ int yydebug;
    required.  Return 1 if memory is exhausted.  */
 static int
 yy_lac_stack_realloc (YYSIZE_T *yycapacity, YYSIZE_T yyadd,
-#if ]b4_api_PREFIX[DEBUG
+#if ] b4_api_PREFIX[DEBUG
                       char const *yydebug_prefix,
                       char const *yydebug_suffix,
 #endif
@@ -927,46 +910,42 @@ yy_lac_stack_realloc (YYSIZE_T *yycapacity, YYSIZE_T yyadd,
                       yytype_int16 *yybottom_no_free,
                       yytype_int16 **yytop, yytype_int16 *yytop_empty)
 {
-  YYSIZE_T yysize_old =
-    *yytop == yytop_empty ? 0 : *yytop - *yybottom + 1;
-  YYSIZE_T yysize_new = yysize_old + yyadd;
-  if (*yycapacity < yysize_new)
-    {
-      YYSIZE_T yyalloc = 2 * yysize_new;
-      yytype_int16 *yybottom_new;
-      /* Use YYMAXDEPTH for maximum stack size given that the stack
-         should never need to grow larger than the main state stack
-         needs to grow without LAC.  */
-      if (YYMAXDEPTH < yysize_new)
-        {
-          YYDPRINTF ((stderr, "%smax size exceeded%s", yydebug_prefix,
-                      yydebug_suffix));
-          return 1;
-        }
-      if (YYMAXDEPTH < yyalloc)
-        yyalloc = YYMAXDEPTH;
-      yybottom_new =
-        (yytype_int16*) YYSTACK_ALLOC (yyalloc * sizeof *yybottom_new);
-      if (!yybottom_new)
-        {
-          YYDPRINTF ((stderr, "%srealloc failed%s", yydebug_prefix,
-                      yydebug_suffix));
-          return 1;
-        }
-      if (*yytop != yytop_empty)
-        {
-          YYCOPY (yybottom_new, *yybottom, yysize_old);
-          *yytop = yybottom_new + (yysize_old - 1);
-        }
-      if (*yybottom != yybottom_no_free)
-        YYSTACK_FREE (*yybottom);
-      *yybottom = yybottom_new;
-      *yycapacity = yyalloc;]m4_if(b4_percent_define_get([[parse.lac.memory-trace]]),
+		YYSIZE_T yysize_old = *yytop == yytop_empty ? 0 : *yytop - *yybottom + 1;
+		YYSIZE_T yysize_new = yysize_old + yyadd;
+		if (*yycapacity < yysize_new)
+		{
+			YYSIZE_T yyalloc = 2 * yysize_new;
+			yytype_int16* yybottom_new;
+			/* Use YYMAXDEPTH for maximum stack size given that the stack
+			   should never need to grow larger than the main state stack
+			   needs to grow without LAC.  */
+			if (YYMAXDEPTH < yysize_new)
+			{
+				YYDPRINTF((stderr, "%smax size exceeded%s", yydebug_prefix, yydebug_suffix));
+				return 1;
+			}
+			if (YYMAXDEPTH < yyalloc)
+				yyalloc = YYMAXDEPTH;
+			yybottom_new = (yytype_int16*)YYSTACK_ALLOC(yyalloc * sizeof *yybottom_new);
+			if (!yybottom_new)
+			{
+				YYDPRINTF((stderr, "%srealloc failed%s", yydebug_prefix, yydebug_suffix));
+				return 1;
+			}
+			if (*yytop != yytop_empty)
+			{
+				YYCOPY(yybottom_new, *yybottom, yysize_old);
+				*yytop = yybottom_new + (yysize_old - 1);
+			}
+			if (*yybottom != yybottom_no_free)
+				YYSTACK_FREE(*yybottom);
+			*yybottom = yybottom_new;
+			*yycapacity = yyalloc;]m4_if(b4_percent_define_get([[parse.lac.memory-trace]]),
                                    [full], [[
       YYDPRINTF ((stderr, "%srealloc to %lu%s", yydebug_prefix,
                   (unsigned long int) yyalloc, yydebug_suffix));]])[
-    }
-  return 0;
+		}
+		return 0;
 }
 
 /* Establish the initial context for the current lookahead if no initial
@@ -995,24 +974,22 @@ yy_lac_stack_realloc (YYSIZE_T *yycapacity, YYSIZE_T yyadd,
    current lookahead, then check if that lookahead can eventually be
    shifted if syntactic actions continue from the current context.
    Report a syntax error if it cannot.  */
-#define YY_LAC_ESTABLISH                                         \
-do {                                                             \
-  if (!yy_lac_established)                                       \
-    {                                                            \
-      YYDPRINTF ((stderr,                                        \
-                  "LAC: initial context established for %s\n",   \
-                  yytname[yytoken]));                            \
-      yy_lac_established = 1;                                    \
-      {                                                          \
-        int yy_lac_status =                                      \
-          yy_lac (yyesa, &yyes, &yyes_capacity, yyssp, yytoken); \
-        if (yy_lac_status == 2)                                  \
-          goto yyexhaustedlab;                                   \
-        if (yy_lac_status == 1)                                  \
-          goto yyerrlab;                                         \
-      }                                                          \
-    }                                                            \
-} while (YYID (0))
+#define YY_LAC_ESTABLISH                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+	do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		if (!yy_lac_established)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+		{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+			YYDPRINTF((stderr, "LAC: initial context established for %s\n", yytname[yytoken]));                                                                                                                                                                                                                                                                                                                                                                                                                    \
+			yy_lac_established = 1;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+			{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
+				int yy_lac_status = yy_lac(yyesa, &yyes, &yyes_capacity, yyssp, yytoken);                                                                                                                                                                                                                                                                                                                                                                                                                          \
+				if (yy_lac_status == 2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+					goto yyexhaustedlab;                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+				if (yy_lac_status == 1)                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \
+					goto yyerrlab;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \
+			}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
+		}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+	} while (YYID(0))
 
 /* Discard any previous initial lookahead context because of Event,
    which may be a lookahead change or an invalidation of the currently
@@ -1025,19 +1002,19 @@ do {                                                             \
    the parser stacks to try to find a new initial context in which the
    current lookahead is syntactically acceptable.  If it fails to find
    such a context, it discards the lookahead.  */
-#if ]b4_api_PREFIX[DEBUG
-# define YY_LAC_DISCARD(Event)                                           \
-do {                                                                     \
-  if (yy_lac_established)                                                \
-    {                                                                    \
-      if (yydebug)                                                       \
-        YYFPRINTF (stderr, "LAC: initial context discarded due to "      \
-                   Event "\n");                                          \
-      yy_lac_established = 0;                                            \
-    }                                                                    \
-} while (YYID (0))
+#if ] b4_api_PREFIX[DEBUG
+#define YY_LAC_DISCARD(Event)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      \
+	do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             \
+	{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		if (yy_lac_established)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    \
+		{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+			if (yydebug)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           \
+				YYFPRINTF(stderr, "LAC: initial context discarded due to " Event "\n");                                                                                                                                                                                                                                                                                                                                                                                                                            \
+			yy_lac_established = 0;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \
+		}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
+	} while (YYID(0))
 #else
-# define YY_LAC_DISCARD(Event) yy_lac_established = 0
+#define YY_LAC_DISCARD(Event) yy_lac_established = 0
 #endif
 
 /* Given the stack whose top is *YYSSP, return 0 iff YYTOKEN can
@@ -1052,137 +1029,133 @@ static int
 yy_lac (yytype_int16 *yyesa, yytype_int16 **yyes,
         YYSIZE_T *yyes_capacity, yytype_int16 *yyssp, int yytoken)
 {
-  yytype_int16 *yyes_prev = yyssp;
-  yytype_int16 *yyesp = yyes_prev;
-  YYDPRINTF ((stderr, "LAC: checking lookahead %s:", yytname[yytoken]));
-  if (yytoken == YYUNDEFTOK)
-    {
-      YYDPRINTF ((stderr, " Always Err\n"));
-      return 1;
-    }
-  while (1)
-    {
-      int yyrule = yypact[*yyesp];
-      if (yypact_value_is_default (yyrule)
-          || (yyrule += yytoken) < 0 || YYLAST < yyrule
-          || yycheck[yyrule] != yytoken)
-        {
-          yyrule = yydefact[*yyesp];
-          if (yyrule == 0)
-            {
-              YYDPRINTF ((stderr, " Err\n"));
-              return 1;
-            }
-        }
-      else
-        {
-          yyrule = yytable[yyrule];
-          if (yytable_value_is_error (yyrule))
-            {
-              YYDPRINTF ((stderr, " Err\n"));
-              return 1;
-            }
-          if (0 < yyrule)
-            {
-              YYDPRINTF ((stderr, " S%d\n", yyrule));
-              return 0;
-            }
-          yyrule = -yyrule;
-        }
-      {
-        YYSIZE_T yylen = yyr2[yyrule];
-        YYDPRINTF ((stderr, " R%d", yyrule - 1));
-        if (yyesp != yyes_prev)
-          {
-            YYSIZE_T yysize = yyesp - *yyes + 1;
-            if (yylen < yysize)
-              {
-                yyesp -= yylen;
-                yylen = 0;
-              }
-            else
-              {
-                yylen -= yysize;
-                yyesp = yyes_prev;
-              }
-          }
-        if (yylen)
-          yyesp = yyes_prev -= yylen;
-      }
-      {
-        int yystate;
-        {
-          int yylhs = yyr1[yyrule] - YYNTOKENS;
-          yystate = yypgoto[yylhs] + *yyesp;
-          if (yystate < 0 || YYLAST < yystate
-              || yycheck[yystate] != *yyesp)
-            yystate = yydefgoto[yylhs];
-          else
-            yystate = yytable[yystate];
-        }
-        if (yyesp == yyes_prev)
-          {
-            yyesp = *yyes;
-            *yyesp = yystate;
-          }
-        else
-          {
-            if (yy_lac_stack_realloc (yyes_capacity, 1,
-#if ]b4_api_PREFIX[DEBUG
-                                      " (", ")",
+		yytype_int16* yyes_prev = yyssp;
+		yytype_int16* yyesp = yyes_prev;
+		YYDPRINTF((stderr, "LAC: checking lookahead %s:", yytname[yytoken]));
+		if (yytoken == YYUNDEFTOK)
+		{
+			YYDPRINTF((stderr, " Always Err\n"));
+			return 1;
+		}
+		while (1)
+		{
+			int yyrule = yypact[*yyesp];
+			if (yypact_value_is_default(yyrule) || (yyrule += yytoken) < 0 || YYLAST < yyrule || yycheck[yyrule] != yytoken)
+			{
+				yyrule = yydefact[*yyesp];
+				if (yyrule == 0)
+				{
+					YYDPRINTF((stderr, " Err\n"));
+					return 1;
+				}
+			}
+			else
+			{
+				yyrule = yytable[yyrule];
+				if (yytable_value_is_error(yyrule))
+				{
+					YYDPRINTF((stderr, " Err\n"));
+					return 1;
+				}
+				if (0 < yyrule)
+				{
+					YYDPRINTF((stderr, " S%d\n", yyrule));
+					return 0;
+				}
+				yyrule = -yyrule;
+			}
+			{
+				YYSIZE_T yylen = yyr2[yyrule];
+				YYDPRINTF((stderr, " R%d", yyrule - 1));
+				if (yyesp != yyes_prev)
+				{
+					YYSIZE_T yysize = yyesp - *yyes + 1;
+					if (yylen < yysize)
+					{
+						yyesp -= yylen;
+						yylen = 0;
+					}
+					else
+					{
+						yylen -= yysize;
+						yyesp = yyes_prev;
+					}
+				}
+				if (yylen)
+					yyesp = yyes_prev -= yylen;
+			}
+			{
+				int yystate;
+				{
+					int yylhs = yyr1[yyrule] - YYNTOKENS;
+					yystate = yypgoto[yylhs] + *yyesp;
+					if (yystate < 0 || YYLAST < yystate || yycheck[yystate] != *yyesp)
+						yystate = yydefgoto[yylhs];
+					else
+						yystate = yytable[yystate];
+				}
+				if (yyesp == yyes_prev)
+				{
+					yyesp = *yyes;
+					*yyesp = yystate;
+				}
+				else
+				{
+					if (yy_lac_stack_realloc(yyes_capacity, 1,
+#if ] b4_api_PREFIX[DEBUG
+											 " (", ")",
 #endif
-                                      yyes, yyesa, &yyesp, yyes_prev))
-              {
-                YYDPRINTF ((stderr, "\n"));
-                return 2;
-              }
-            *++yyesp = yystate;
-          }
-        YYDPRINTF ((stderr, " G%d", yystate));
-      }
-    }
+											 yyes, yyesa, &yyesp, yyes_prev))
+					{
+						YYDPRINTF((stderr, "\n"));
+						return 2;
+					}
+					*++yyesp = yystate;
+				}
+				YYDPRINTF((stderr, " G%d", yystate));
+			}
+		}
 }]])[
-
 
 #if YYERROR_VERBOSE
 
-# ifndef yystrlen
-#  if defined __GLIBC__ && defined _STRING_H
-#   define yystrlen strlen
-#  else
+#ifndef yystrlen
+#if defined __GLIBC__ && defined _STRING_H
+#define yystrlen strlen
+#else
 /* Return the length of YYSTR.  */
 ]b4_c_function_def([yystrlen], [static YYSIZE_T],
    [[const char *yystr], [yystr]])[
 {
-  YYSIZE_T yylen;
-  for (yylen = 0; yystr[yylen]; yylen++)
-    continue;
-  return yylen;
+		YYSIZE_T yylen;
+		for (yylen = 0; yystr[yylen]; yylen++)
+			continue;
+		return yylen;
 }
-#  endif
-# endif
+#endif
+#endif
 
-# ifndef yystpcpy
-#  if defined __GLIBC__ && defined _STRING_H && defined _GNU_SOURCE
-#   define yystpcpy stpcpy
-#  else
+#ifndef yystpcpy
+#if defined __GLIBC__ && defined _STRING_H && defined _GNU_SOURCE
+#define yystpcpy stpcpy
+#else
 /* Copy YYSRC to YYDEST, returning the address of the terminating '\0' in
    YYDEST.  */
 ]b4_c_function_def([yystpcpy], [static char *],
    [[char *yydest], [yydest]], [[const char *yysrc], [yysrc]])[
 {
-  char *yyd = yydest;
-  const char *yys = yysrc;
+		char* yyd = yydest;
+		const char* yys = yysrc;
 
-  while ((*yyd++ = *yys++) != '\0')
-    continue;
+		while ((*yyd++ = *yys++) != '\0')
+			continue;
 
-  return yyd - 1;
+		return yyd - 1;
 }
-#  endif
-# endif
+#endif
+#endif
 
-# ifndef yytnamerr
+#ifndef yytnamerr
 /* Copy to YYRES the contents of YYSTR after stripping away unnecessary
    quotes and backslashes, so that it's suitable for yyerror.  The
    heuristic is that double-quoting is unnecessary unless the string
@@ -1193,42 +1166,42 @@ yy_lac (yytype_int16 *yyesa, yytype_int16 **yyes,
 static YYSIZE_T
 yytnamerr (char *yyres, const char *yystr)
 {
-  if (*yystr == '"')
-    {
-      YYSIZE_T yyn = 0;
-      char const *yyp = yystr;
+		if (*yystr == '"')
+		{
+			YYSIZE_T yyn = 0;
+			char const* yyp = yystr;
 
-      for (;;)
-	switch (*++yyp)
-	  {
-	  case '\'':
-	  case ',':
-	    goto do_not_strip_quotes;
+			for (;;)
+				switch (*++yyp)
+				{
+					case '\'':
+					case ',':
+						goto do_not_strip_quotes;
 
-	  case '\\':
-	    if (*++yyp != '\\')
-	      goto do_not_strip_quotes;
-	    /* Fall through.  */
-	  default:
-	    if (yyres)
-	      yyres[yyn] = *yyp;
-	    yyn++;
-	    break;
+					case '\\':
+						if (*++yyp != '\\')
+							goto do_not_strip_quotes;
+						/* Fall through.  */
+					default:
+						if (yyres)
+							yyres[yyn] = *yyp;
+						yyn++;
+						break;
 
-	  case '"':
-	    if (yyres)
-	      yyres[yyn] = '\0';
-	    return yyn;
-	  }
-    do_not_strip_quotes: ;
-    }
+					case '"':
+						if (yyres)
+							yyres[yyn] = '\0';
+						return yyn;
+				}
+		do_not_strip_quotes:;
+		}
 
-  if (! yyres)
-    return yystrlen (yystr);
+		if (!yyres)
+			return yystrlen(yystr);
 
-  return yystpcpy (yyres, yystr) - yyres;
+		return yystpcpy(yyres, yystr) - yyres;
 }
-# endif
+#endif
 
 /* Copy into *YYMSG, which is of size *YYMSG_ALLOC, an error message
    about the unexpected token YYTOKEN for the state stack whose top is
@@ -1245,52 +1218,55 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                 ]b4_lac_if([[yytype_int16 *yyesa, yytype_int16 **yyes,
                 YYSIZE_T *yyes_capacity, ]])[yytype_int16 *yyssp, int yytoken)
 {
-  YYSIZE_T yysize0 = yytnamerr (YY_NULL, yytname[yytoken]);
-  YYSIZE_T yysize = yysize0;
-  enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
-  /* Internationalized format string. */
-  const char *yyformat = YY_NULL;
-  /* Arguments of yyformat. */
-  char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
-  /* Number of reported tokens (one for the "unexpected", one per
-     "expected"). */
-  int yycount = 0;
+		YYSIZE_T yysize0 = yytnamerr(YY_NULL, yytname[yytoken]);
+		YYSIZE_T yysize = yysize0;
+		enum
+		{
+			YYERROR_VERBOSE_ARGS_MAXIMUM = 5
+		};
+		/* Internationalized format string. */
+		const char* yyformat = YY_NULL;
+		/* Arguments of yyformat. */
+		char const* yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
+		/* Number of reported tokens (one for the "unexpected", one per
+		   "expected"). */
+		int yycount = 0;
 
-  /* There are many possibilities here to consider:
-     - Assume YYFAIL is not used.  It's too flawed to consider.  See
-       <http://lists.gnu.org/archive/html/bison-patches/2009-12/msg00024.html>
-       for details.  YYERROR is fine as it does not invoke this
-       function.
-     - If this state is a consistent state with a default action, then
-       the only way this function was invoked is if the default action
-       is an error action.  In that case, don't check for expected
-       tokens because there are none.
-     - The only way there can be no lookahead present (in yychar) is if
-       this state is a consistent state with a default action.  Thus,
-       detecting the absence of a lookahead is sufficient to determine
-       that there is no unexpected or expected token to report.  In that
-       case, just report a simple "syntax error".
-     - Don't assume there isn't a lookahead just because this state is a
-       consistent state with a default action.  There might have been a
-       previous inconsistent state, consistent state with a non-default
-       action, or user semantic action that manipulated yychar.]b4_lac_if([[
-       In the first two cases, it might appear that the current syntax
-       error should have been detected in the previous state when yy_lac
-       was invoked.  However, at that time, there might have been a
-       different syntax error that discarded a different initial context
-       during error recovery, leaving behind the current lookahead.]], [[
-     - Of course, the expected token list depends on states to have
-       correct lookahead information, and it depends on the parser not
-       to perform extra reductions after fetching a lookahead from the
-       scanner and before detecting a syntax error.  Thus, state merging
-       (from LALR or IELR) and default reductions corrupt the expected
-       token list.  However, the list is correct for canonical LR with
-       one exception: it will still contain any token that will not be
-       accepted due to an error action in a later state.]])[
-  */
-  if (yytoken != YYEMPTY)
-    {
-      int yyn = yypact[*yyssp];]b4_lac_if([[
+		/* There are many possibilities here to consider:
+		   - Assume YYFAIL is not used.  It's too flawed to consider.  See
+			 <http://lists.gnu.org/archive/html/bison-patches/2009-12/msg00024.html>
+			 for details.  YYERROR is fine as it does not invoke this
+			 function.
+		   - If this state is a consistent state with a default action, then
+			 the only way this function was invoked is if the default action
+			 is an error action.  In that case, don't check for expected
+			 tokens because there are none.
+		   - The only way there can be no lookahead present (in yychar) is if
+			 this state is a consistent state with a default action.  Thus,
+			 detecting the absence of a lookahead is sufficient to determine
+			 that there is no unexpected or expected token to report.  In that
+			 case, just report a simple "syntax error".
+		   - Don't assume there isn't a lookahead just because this state is a
+			 consistent state with a default action.  There might have been a
+			 previous inconsistent state, consistent state with a non-default
+			 action, or user semantic action that manipulated yychar.]b4_lac_if([[
+			 In the first two cases, it might appear that the current syntax
+			 error should have been detected in the previous state when yy_lac
+			 was invoked.  However, at that time, there might have been a
+			 different syntax error that discarded a different initial context
+			 during error recovery, leaving behind the current lookahead.]], [[
+		   - Of course, the expected token list depends on states to have
+			 correct lookahead information, and it depends on the parser not
+			 to perform extra reductions after fetching a lookahead from the
+			 scanner and before detecting a syntax error.  Thus, state merging
+			 (from LALR or IELR) and default reductions corrupt the expected
+			 token list.  However, the list is correct for canonical LR with
+			 one exception: it will still contain any token that will not be
+			 accepted due to an error action in a later state.]])[
+		*/
+		if (yytoken != YYEMPTY)
+		{
+			int yyn = yypact[*yyssp];]b4_lac_if([[
       YYDPRINTF ((stderr, "Constructing syntax error message\n"));]])[
       yyarg[yycount++] = yytname[yytoken];
       if (!yypact_value_is_default (yyn))
@@ -1307,14 +1283,13 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
           for (yyx = 0; yyx < YYNTOKENS; ++yyx)
             if (yyx != YYTERROR && yyx != YYUNDEFTOK)
               {
-                {
-                  int yy_lac_status = yy_lac (yyesa, yyes, yyes_capacity,
-                                              yyssp, yyx);
-                  if (yy_lac_status == 2)
-                    return 2;
-                  if (yy_lac_status == 1)
-                    continue;
-                }]], [[
+					{
+						int yy_lac_status = yy_lac(yyesa, yyes, yyes_capacity, yyssp, yyx);
+						if (yy_lac_status == 2)
+							return 2;
+						if (yy_lac_status == 1)
+							continue;
+					}]], [[
 
           for (yyx = yyxbegin; yyx < yyxend; ++yyx)
             if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR
@@ -1322,77 +1297,75 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
               {]])[
                 if (yycount == YYERROR_VERBOSE_ARGS_MAXIMUM)
                   {
-                    yycount = 1;
-                    yysize = yysize0;
-                    break;
+							yycount = 1;
+							yysize = yysize0;
+							break;
                   }
                 yyarg[yycount++] = yytname[yyx];
                 {
-                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULL, yytname[yyx]);
-                  if (! (yysize <= yysize1
-                         && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
-                    return 2;
-                  yysize = yysize1;
+							YYSIZE_T yysize1 = yysize + yytnamerr(YY_NULL, yytname[yyx]);
+							if (!(yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
+								return 2;
+							yysize = yysize1;
                 }
               }
         }]b4_lac_if([[
-# if ]b4_api_PREFIX[DEBUG
+#if ] b4_api_PREFIX[DEBUG
       else if (yydebug)
         YYFPRINTF (stderr, "No expected tokens.\n");
-# endif]])[
+#endif]])[
     }
 
   switch (yycount)
     {
-# define YYCASE_(N, S)                      \
-      case N:                               \
-        yyformat = S;                       \
-      break
-      YYCASE_(0, YY_("syntax error"));
-      YYCASE_(1, YY_("syntax error, unexpected %s"));
-      YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
-      YYCASE_(3, YY_("syntax error, unexpected %s, expecting %s or %s"));
-      YYCASE_(4, YY_("syntax error, unexpected %s, expecting %s or %s or %s"));
-      YYCASE_(5, YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s"));
-# undef YYCASE_
+#define YYCASE_(N, S)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+	case N:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \
+		yyformat = S;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              \
+		break
+				YYCASE_(0, YY_("syntax error"));
+				YYCASE_(1, YY_("syntax error, unexpected %s"));
+				YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
+				YYCASE_(3, YY_("syntax error, unexpected %s, expecting %s or %s"));
+				YYCASE_(4, YY_("syntax error, unexpected %s, expecting %s or %s or %s"));
+				YYCASE_(5, YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s"));
+#undef YYCASE_
     }
 
   {
-    YYSIZE_T yysize1 = yysize + yystrlen (yyformat);
-    if (! (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
-      return 2;
-    yysize = yysize1;
+				YYSIZE_T yysize1 = yysize + yystrlen(yyformat);
+				if (!(yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
+					return 2;
+				yysize = yysize1;
   }
 
   if (*yymsg_alloc < yysize)
     {
-      *yymsg_alloc = 2 * yysize;
-      if (! (yysize <= *yymsg_alloc
-             && *yymsg_alloc <= YYSTACK_ALLOC_MAXIMUM))
-        *yymsg_alloc = YYSTACK_ALLOC_MAXIMUM;
-      return 1;
+				*yymsg_alloc = 2 * yysize;
+				if (!(yysize <= *yymsg_alloc && *yymsg_alloc <= YYSTACK_ALLOC_MAXIMUM))
+					*yymsg_alloc = YYSTACK_ALLOC_MAXIMUM;
+				return 1;
     }
 
   /* Avoid sprintf, as that infringes on the user's name space.
      Don't have undefined behavior even if the translation
      produced a string with the wrong number of "%s"s.  */
   {
-    char *yyp = *yymsg;
-    int yyi = 0;
-    while ((*yyp = *yyformat) != '\0')
-      if (*yyp == '%' && yyformat[1] == 's' && yyi < yycount)
-        {
-          yyp += yytnamerr (yyp, yyarg[yyi++]);
-          yyformat += 2;
-        }
-      else
-        {
-          yyp++;
-          yyformat++;
-        }
+				char* yyp = *yymsg;
+				int yyi = 0;
+				while ((*yyp = *yyformat) != '\0')
+					if (*yyp == '%' && yyformat[1] == 's' && yyi < yycount)
+					{
+						yyp += yytnamerr(yyp, yyarg[yyi++]);
+						yyformat += 2;
+					}
+					else
+					{
+						yyp++;
+						yyformat++;
+					}
   }
   return 0;
-}
+		}
 #endif /* YYERROR_VERBOSE */
 
 ]b4_yydestruct_generate([b4_c_function_def])[
@@ -1420,8 +1393,8 @@ b4_c_function_def([[yyparse]], [[int]], b4_parse_param)[
   [[[yypstate *yyps]], [[yyps]]]m4_ifset([b4_parse_param], [,
   b4_parse_param]))[
 {
-  int yystatus;
-  yypstate *yyps_local;]b4_pure_if([[
+			int yystatus;
+			yypstate* yyps_local;]b4_pure_if([[
   int yychar;
   YYSTYPE yylval;]b4_locations_if([[
   static YYLTYPE yyloc_default][]b4_yyloc_default[;
@@ -1430,18 +1403,18 @@ b4_c_function_def([[yyparse]], [[int]], b4_parse_param)[
     yyps_local = yyps;
   else
     {
-      yyps_local = yypstate_new ();
-      if (!yyps_local)
-        {]b4_pure_if([[
+				yyps_local = yypstate_new();
+				if (!yyps_local)
+				{]b4_pure_if([[
           yyerror (]b4_yyerror_args[YY_("memory exhausted"));]], [[
           if (!yypstate_allocated)
             yyerror (]b4_yyerror_args[YY_("memory exhausted"));]])[
           return 2;
-        }
+				}
     }
   do {
-    yychar = YYLEX;
-    yystatus =
+				yychar = YYLEX;
+	yystatus =
       yypush_parse (yyps_local]b4_pure_if([[, yychar, &yylval]b4_locations_if([[, &yylloc]])])m4_ifset([b4_parse_param], [, b4_c_args(b4_parse_param)])[);
   } while (yystatus == YYPUSH_MORE);
   if (!yyps)
@@ -1452,7 +1425,7 @@ b4_c_function_def([[yyparse]], [[int]], b4_parse_param)[
 /* Initialize the parser data structure.  */
 ]b4_c_function_def([[yypstate_new]], [[yypstate *]])[
 {
-  yypstate *yyps;]b4_pure_if([], [[
+			yypstate* yyps;]b4_pure_if([], [[
   if (yypstate_allocated)
     return YY_NULL;]])[
   yyps = (yypstate *) malloc (sizeof *yyps);
@@ -1467,18 +1440,18 @@ b4_c_function_def([[yyparse]], [[int]], b4_parse_param)[
                    [[[yypstate *yyps]], [[yyps]]])[
 {
 #ifndef yyoverflow
-  /* If the stack was reallocated but the parse did not complete, then the
-     stack still needs to be freed.  */
-  if (!yyps->yynew && yyps->yyss != yyps->yyssa)
-    YYSTACK_FREE (yyps->yyss);
-#endif]b4_lac_if([[
-  if (!yyps->yynew && yyps->yyes != yyps->yyesa)
-    YYSTACK_FREE (yyps->yyes);]])[
+			/* If the stack was reallocated but the parse did not complete, then the
+			   stack still needs to be freed.  */
+			if (!yyps->yynew && yyps->yyss != yyps->yyssa)
+				YYSTACK_FREE(yyps->yyss);
+#endif] b4_lac_if([[
+			if (!yyps->yynew && yyps->yyes != yyps->yyesa)
+				YYSTACK_FREE(yyps->yyes);]])[
   free (yyps);]b4_pure_if([], [[
   yypstate_allocated = 0;]])[
 }
 ]b4_pure_if([[
-#define ]b4_prefix[nerrs yyps->]b4_prefix[nerrs]])[
+#define] b4_prefix[nerrs yyps->] b4_prefix[nerrs]])[
 #define yystate yyps->yystate
 #define yyerrstatus yyps->yyerrstatus
 #define yyssa yyps->yyssa
@@ -1508,10 +1481,9 @@ b4_c_function_def([[yyparse]], [[int]], b4_parse_param)[
   [[[YYLTYPE *yypushed_loc]], [[yypushed_loc]]]])])m4_ifset([b4_parse_param], [,
   b4_parse_param]))], [[
 
-
-/*----------.
-| yyparse.  |
-`----------*/
+	/*----------.
+	| yyparse.  |
+	`----------*/
 
 #ifdef YYPARSE_PARAM
 ]b4_c_function_def([yyparse], [int],
@@ -1552,8 +1524,8 @@ b4_c_function_def([[yyparse]], [[int]], b4_parse_param)[
 
   if (!yyps->yynew)
     {
-      yyn = yypact[yystate];
-      goto yyread_pushed_token;
+				yyn = yypact[yystate];
+				goto yyread_pushed_token;
     }]])[
 
   yyssp = yyss = yyssa;
@@ -1597,16 +1569,16 @@ b4_locations_if([[  yylsp[0] = ]b4_push_if([b4_pure_if([*])yypushed_loc], [yyllo
 
   if (yyss + yystacksize - 1 <= yyssp)
     {
-      /* Get the current used size of the three stacks, in elements.  */
-      YYSIZE_T yysize = yyssp - yyss + 1;
+				/* Get the current used size of the three stacks, in elements.  */
+				YYSIZE_T yysize = yyssp - yyss + 1;
 
 #ifdef yyoverflow
-      {
-	/* Give user a chance to reallocate the stack.  Use copies of
-	   these so that the &'s don't force the real ones into
-	   memory.  */
-	YYSTYPE *yyvs1 = yyvs;
-	yytype_int16 *yyss1 = yyss;]b4_locations_if([
+				{
+					/* Give user a chance to reallocate the stack.  Use copies of
+					   these so that the &'s don't force the real ones into
+					   memory.  */
+					YYSTYPE* yyvs1 = yyvs;
+					yytype_int16* yyss1 = yyss;]b4_locations_if([
 	YYLTYPE *yyls1 = yyls;])[
 
 	/* Each stack pointer address is followed by the size of the
@@ -1622,36 +1594,35 @@ b4_locations_if([[  yylsp[0] = ]b4_push_if([b4_pure_if([*])yypushed_loc], [yyllo
 	yyls = yyls1;])[
 	yyss = yyss1;
 	yyvs = yyvs1;
-      }
+				}
 #else /* no yyoverflow */
-# ifndef YYSTACK_RELOCATE
-      goto yyexhaustedlab;
-# else
-      /* Extend the stack our own way.  */
-      if (YYMAXDEPTH <= yystacksize)
-	goto yyexhaustedlab;
-      yystacksize *= 2;
-      if (YYMAXDEPTH < yystacksize)
-	yystacksize = YYMAXDEPTH;
+#ifndef YYSTACK_RELOCATE
+			goto yyexhaustedlab;
+#else
+			/* Extend the stack our own way.  */
+			if (YYMAXDEPTH <= yystacksize)
+				goto yyexhaustedlab;
+			yystacksize *= 2;
+			if (YYMAXDEPTH < yystacksize)
+				yystacksize = YYMAXDEPTH;
 
-      {
-	yytype_int16 *yyss1 = yyss;
-	union yyalloc *yyptr =
-	  (union yyalloc *) YYSTACK_ALLOC (YYSTACK_BYTES (yystacksize));
-	if (! yyptr)
-	  goto yyexhaustedlab;
-	YYSTACK_RELOCATE (yyss_alloc, yyss);
-	YYSTACK_RELOCATE (yyvs_alloc, yyvs);]b4_locations_if([
+			{
+				yytype_int16* yyss1 = yyss;
+				union yyalloc* yyptr = (union yyalloc*)YYSTACK_ALLOC(YYSTACK_BYTES(yystacksize));
+				if (!yyptr)
+					goto yyexhaustedlab;
+				YYSTACK_RELOCATE(yyss_alloc, yyss);
+				YYSTACK_RELOCATE(yyvs_alloc, yyvs);]b4_locations_if([
 	YYSTACK_RELOCATE (yyls_alloc, yyls);])[
-#  undef YYSTACK_RELOCATE
+#undef YYSTACK_RELOCATE
 	if (yyss1 != yyssa)
 	  YYSTACK_FREE (yyss1);
-      }
-# endif
+			}
+#endif
 #endif /* no yyoverflow */
 
-      yyssp = yyss + yysize - 1;
-      yyvsp = yyvs + yysize - 1;]b4_locations_if([
+				yyssp = yyss + yysize - 1;
+				yyvsp = yyvs + yysize - 1;]b4_locations_if([
       yylsp = yyls + yysize - 1;])[
 
       YYDPRINTF ((stderr, "Stack size increased to %lu\n",
@@ -1711,13 +1682,13 @@ yyread_pushed_token:]])[
 
   if (yychar <= YYEOF)
     {
-      yychar = yytoken = YYEOF;
-      YYDPRINTF ((stderr, "Now at end of input.\n"));
+				yychar = yytoken = YYEOF;
+				YYDPRINTF((stderr, "Now at end of input.\n"));
     }
   else
     {
-      yytoken = YYTRANSLATE (yychar);
-      YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc);
+				yytoken = YYTRANSLATE(yychar);
+				YY_SYMBOL_PRINT("Next token is", yytoken, &yylval, &yylloc);
     }
 
   /* If the proper action on seeing token YYTOKEN is to reduce or to
@@ -1725,15 +1696,15 @@ yyread_pushed_token:]])[
   yyn += yytoken;
   if (yyn < 0 || YYLAST < yyn || yycheck[yyn] != yytoken)]b4_lac_if([[
     {
-      YY_LAC_ESTABLISH;
-      goto yydefault;
+				YY_LAC_ESTABLISH;
+				goto yydefault;
     }]], [[
     goto yydefault;]])[
   yyn = yytable[yyn];
   if (yyn <= 0)
     {
-      if (yytable_value_is_error (yyn))
-        goto yyerrlab;]b4_lac_if([[
+				if (yytable_value_is_error(yyn))
+					goto yyerrlab;]b4_lac_if([[
       YY_LAC_ESTABLISH;]])[
       yyn = -yyn;
       goto yyreduce;
@@ -1791,18 +1762,18 @@ yyreduce:
   YYLLOC_DEFAULT (yyloc, (yylsp - yylen), yylen);]])[
   YY_REDUCE_PRINT (yyn);]b4_lac_if([[
   {
-    int yychar_backup = yychar;
-    switch (yyn)
-      {
-        ]b4_user_actions[
+				int yychar_backup = yychar;
+				switch (yyn)
+				{
+		]b4_user_actions[
         default: break;
-      }
-    if (yychar_backup != yychar)
-      YY_LAC_DISCARD ("yychar change");
+				}
+				if (yychar_backup != yychar)
+					YY_LAC_DISCARD("yychar change");
   }]], [[
   switch (yyn)
     {
-      ]b4_user_actions[
+	  ]b4_user_actions[
       default: break;
     }]])[
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1851,16 +1822,16 @@ yyerrlab:
   /* If not already recovering from an error, report this error.  */
   if (!yyerrstatus)
     {
-      ++yynerrs;
-#if ! YYERROR_VERBOSE
-      yyerror (]b4_yyerror_args[YY_("syntax error"));
+				++yynerrs;
+#if !YYERROR_VERBOSE
+	  yyerror (]b4_yyerror_args[YY_("syntax error"));
 #else
-# define YYSYNTAX_ERROR yysyntax_error (&yymsg_alloc, &yymsg, \]b4_lac_if([[
-                                        yyesa, &yyes, &yyes_capacity, \]])[
+#define YYSYNTAX_ERROR yysyntax_error (&yymsg_alloc, &yymsg, \]b4_lac_if([[
+										yyesa, &yyes, &yyes_capacity, \]])[
                                         yyssp, yytoken)
       {
-        char const *yymsgp = YY_("syntax error");
-        int yysyntax_error_status;]b4_lac_if([[
+				char const* yymsgp = YY_("syntax error");
+				int yysyntax_error_status;]b4_lac_if([[
         if (yychar != YYEMPTY)
           YY_LAC_ESTABLISH;]])[
         yysyntax_error_status = YYSYNTAX_ERROR;
@@ -1868,26 +1839,26 @@ yyerrlab:
           yymsgp = yymsg;
         else if (yysyntax_error_status == 1)
           {
-            if (yymsg != yymsgbuf)
-              YYSTACK_FREE (yymsg);
-            yymsg = (char *) YYSTACK_ALLOC (yymsg_alloc);
-            if (!yymsg)
-              {
-                yymsg = yymsgbuf;
-                yymsg_alloc = sizeof yymsgbuf;
-                yysyntax_error_status = 2;
-              }
-            else
-              {
-                yysyntax_error_status = YYSYNTAX_ERROR;
-                yymsgp = yymsg;
-              }
+					if (yymsg != yymsgbuf)
+						YYSTACK_FREE(yymsg);
+					yymsg = (char*)YYSTACK_ALLOC(yymsg_alloc);
+					if (!yymsg)
+					{
+						yymsg = yymsgbuf;
+						yymsg_alloc = sizeof yymsgbuf;
+						yysyntax_error_status = 2;
+					}
+					else
+					{
+						yysyntax_error_status = YYSYNTAX_ERROR;
+						yymsgp = yymsg;
+					}
           }
         yyerror (]b4_yyerror_args[yymsgp);
         if (yysyntax_error_status == 2)
           goto yyexhaustedlab;
       }
-# undef YYSYNTAX_ERROR
+#undef YYSYNTAX_ERROR
 #endif
     }
 
@@ -1895,21 +1866,21 @@ yyerrlab:
 
   if (yyerrstatus == 3)
     {
-      /* If just tried and failed to reuse lookahead token after an
-	 error, discard it.  */
+				/* If just tried and failed to reuse lookahead token after an
+			   error, discard it.  */
 
-      if (yychar <= YYEOF)
-	{
-	  /* Return failure if at end of input.  */
-	  if (yychar == YYEOF)
-	    YYABORT;
-	}
-      else
-	{
+				if (yychar <= YYEOF)
+				{
+					/* Return failure if at end of input.  */
+					if (yychar == YYEOF)
+						YYABORT;
+				}
+				else
+				{
 	  yydestruct ("Error: discarding",
 		      yytoken, &yylval]b4_locations_if([, &yylloc])[]b4_user_args[);
 	  yychar = YYEMPTY;
-	}
+				}
     }
 
   /* Else will try to reuse lookahead token after shifting the error
@@ -1946,21 +1917,21 @@ yyerrlab1:
 
   for (;;)
     {
-      yyn = yypact[yystate];
-      if (!yypact_value_is_default (yyn))
-	{
-	  yyn += YYTERROR;
-	  if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == YYTERROR)
-	    {
-	      yyn = yytable[yyn];
-	      if (0 < yyn)
-		break;
-	    }
-	}
+				yyn = yypact[yystate];
+				if (!yypact_value_is_default(yyn))
+				{
+					yyn += YYTERROR;
+					if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == YYTERROR)
+					{
+						yyn = yytable[yyn];
+						if (0 < yyn)
+							break;
+					}
+				}
 
-      /* Pop the current state because it cannot handle the error token.  */
-      if (yyssp == yyss)
-	YYABORT;
+				/* Pop the current state because it cannot handle the error token.  */
+				if (yyssp == yyss)
+					YYABORT;
 
 ]b4_locations_if([[      yyerror_range[1] = *yylsp;]])[
       yydestruct ("Error: popping",
@@ -2005,23 +1976,23 @@ yyabortlab:
   yyresult = 1;
   goto yyreturn;
 
-#if ]b4_lac_if([[1]], [[!defined yyoverflow || YYERROR_VERBOSE]])[
+#if ] b4_lac_if([[1]], [[!defined yyoverflow || YYERROR_VERBOSE]])[
 /*-------------------------------------------------.
 | yyexhaustedlab -- memory exhaustion comes here.  |
 `-------------------------------------------------*/
 yyexhaustedlab:
   yyerror (]b4_yyerror_args[YY_("memory exhausted"));
   yyresult = 2;
-  /* Fall through.  */
+		/* Fall through.  */
 #endif
 
 yyreturn:
   if (yychar != YYEMPTY)
     {
-      /* Make sure we have latest lookahead translation.  See comments at
-         user semantic actions for why this is necessary.  */
-      yytoken = YYTRANSLATE (yychar);
-      yydestruct ("Cleanup: discarding lookahead",
+				/* Make sure we have latest lookahead translation.  See comments at
+				   user semantic actions for why this is necessary.  */
+				yytoken = YYTRANSLATE(yychar);
+	  yydestruct ("Cleanup: discarding lookahead",
                   yytoken, &yylval]b4_locations_if([, &yylloc])[]b4_user_args[);
     }
   /* Do not reclaim the symbols of the rule which action triggered
@@ -2030,14 +2001,14 @@ yyreturn:
   YY_STACK_PRINT (yyss, yyssp);
   while (yyssp != yyss)
     {
-      yydestruct ("Cleanup: popping",
+	  yydestruct ("Cleanup: popping",
 		  yystos[*yyssp], yyvsp]b4_locations_if([, yylsp])[]b4_user_args[);
-      YYPOPSTACK (1);
+	  YYPOPSTACK(1);
     }
 #ifndef yyoverflow
   if (yyss != yyssa)
     YYSTACK_FREE (yyss);
-#endif]b4_lac_if([[
+#endif] b4_lac_if([[
   if (yyes != yyesa)
     YYSTACK_FREE (yyes);]])b4_push_if([[
   yyps->yynew = 1;

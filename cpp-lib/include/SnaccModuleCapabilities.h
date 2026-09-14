@@ -19,14 +19,7 @@ struct SnaccRemoteModuleDetailInput
 };
 
 /*! Merges one module detail into @p inOutRemote (creates the module entry when missing). */
-void SnaccApplyModuleDetailToRemoteCapabilities(
-	const char* szModuleName,
-	const char* szVersion,
-	const int* pInvokeOpIds,
-	size_t stInvokeOpIdCount,
-	const int* pEventOpIds,
-	size_t stEventOpIdCount,
-	SnaccLoadedModuleMap& inOutRemote);
+void SnaccApplyModuleDetailToRemoteCapabilities(const char* szModuleName, const char* szVersion, const int* pInvokeOpIds, size_t stInvokeOpIdCount, const int* pEventOpIds, size_t stEventOpIdCount, SnaccLoadedModuleMap& inOutRemote);
 
 /*! Builds a remote capability map from an array of module detail inputs. Clears @p outRemote first. */
 void SnaccBuildRemoteModuleCapabilities(const SnaccRemoteModuleDetailInput* pDetails, size_t stDetailCount, SnaccLoadedModuleMap& outRemote);

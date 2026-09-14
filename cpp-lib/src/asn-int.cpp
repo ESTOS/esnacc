@@ -710,10 +710,8 @@ bool AsnInt::TryGetInt(int& out) const
 		iResult = -1;
 
 	if (m_len > 0)
-	{
 		for (unsigned int i = 0; i < m_len; i++)
 			iResult = (iResult << 8) | (AsnUIntType)(m_bytes[i]);
-	}
 
 	out = iResult;
 	return true;
@@ -819,10 +817,8 @@ bool AsnInt::TryGetInt64(long long& out) const
 		iResult = -1;
 
 	if (m_len > 0)
-	{
 		for (unsigned int i = 0; i < m_len; i++)
 			iResult = (iResult << 8) | (AsnUIntType)(m_bytes[i]);
-	}
 
 	out = iResult;
 	return true;

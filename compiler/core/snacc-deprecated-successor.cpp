@@ -116,40 +116,19 @@ void EmitDeprecatedSuccessorMissingWarning(const char* pszFileName, int lineNo, 
 	const char* pszFile = pszFileName ? pszFileName : "<unknown>";
 	const char* pszSymbol = pszSymbolName ? pszSymbolName : "<unknown>";
 	const int reportedLine = lineNo > 0 ? lineNo : 1;
-	fprintf(
-		stderr,
-		"warning: %s:%d %s: @deprecated missing canonical successor (expected -> (none), -> Symbol, or -> Repo::Symbol)\n",
-		pszFile,
-		reportedLine,
-		pszSymbol);
+	fprintf(stderr, "warning: %s:%d %s: @deprecated missing canonical successor (expected -> (none), -> Symbol, or -> Repo::Symbol)\n", pszFile, reportedLine, pszSymbol);
 }
 
-void EmitDeprecatedSuccessorNotInFileWarning(
-	const char* pszFileName,
-	int lineNo,
-	const char* pszSymbolName,
-	const char* pszSuccessorSymbol)
+void EmitDeprecatedSuccessorNotInFileWarning(const char* pszFileName, int lineNo, const char* pszSymbolName, const char* pszSuccessorSymbol)
 {
 	const char* pszFile = pszFileName ? pszFileName : "<unknown>";
 	const char* pszSymbol = pszSymbolName ? pszSymbolName : "<unknown>";
 	const char* pszSuccessor = pszSuccessorSymbol ? pszSuccessorSymbol : "<unknown>";
 	const int reportedLine = lineNo > 0 ? lineNo : 1;
-	fprintf(
-		stderr,
-		"warning: %s:%d %s: @deprecated successor '%s' is not defined in this file\n",
-		pszFile,
-		reportedLine,
-		pszSymbol,
-		pszSuccessor);
+	fprintf(stderr, "warning: %s:%d %s: @deprecated successor '%s' is not defined in this file\n", pszFile, reportedLine, pszSymbol, pszSuccessor);
 }
 
-void EmitDeprecatedSuccessorNotInModuleWarning(
-	const char* pszFileName,
-	int lineNo,
-	const char* pszSymbolName,
-	const char* pszSuccessorQualifier,
-	const char* pszSuccessorSymbol,
-	const char* pszResolvedModuleName)
+void EmitDeprecatedSuccessorNotInModuleWarning(const char* pszFileName, int lineNo, const char* pszSymbolName, const char* pszSuccessorQualifier, const char* pszSuccessorSymbol, const char* pszResolvedModuleName)
 {
 	const char* pszFile = pszFileName ? pszFileName : "<unknown>";
 	const char* pszSymbol = pszSymbolName ? pszSymbolName : "<unknown>";
@@ -157,15 +136,7 @@ void EmitDeprecatedSuccessorNotInModuleWarning(
 	const char* pszSuccessor = pszSuccessorSymbol ? pszSuccessorSymbol : "<unknown>";
 	const char* pszModule = pszResolvedModuleName ? pszResolvedModuleName : "<unknown>";
 	const int reportedLine = lineNo > 0 ? lineNo : 1;
-	fprintf(
-		stderr,
-		"warning: %s:%d %s: @deprecated successor '%s::%s' is not defined in loaded module '%s'\n",
-		pszFile,
-		reportedLine,
-		pszSymbol,
-		pszQualifier,
-		pszSuccessor,
-		pszModule);
+	fprintf(stderr, "warning: %s:%d %s: @deprecated successor '%s::%s' is not defined in loaded module '%s'\n", pszFile, reportedLine, pszSymbol, pszQualifier, pszSuccessor, pszModule);
 }
 
 extern "C" void PrintDeprecatedSuccessorHelp(FILE* fp)

@@ -8,16 +8,14 @@
 
 namespace
 {
-void AssertNotSealed(const SnaccRoseOperationLookup& lookup)
-{
-#ifdef _DEBUG
-	if (lookup.IsSealed())
+	void AssertNotSealed(const SnaccRoseOperationLookup& lookup)
 	{
-		ASSERT(0);
-	}
+#ifdef _DEBUG
+		if (lookup.IsSealed())
+			ASSERT(0);
 #endif
-	(void)lookup;
-}
+		(void)lookup;
+	}
 } // namespace
 
 void SnaccRoseOperationLookup::RegisterModuleVersion(const char* szModuleName, const char* szVersion)
@@ -32,14 +30,7 @@ void SnaccRoseOperationLookup::RegisterModuleVersion(const char* szModuleName, c
 	module.m_strVersion = szVersion;
 }
 
-void SnaccRoseOperationLookup::RegisterOperation(
-	unsigned int uiOpID,
-	const char* szOpName,
-	unsigned int uiInterfaceID,
-	const char* szModuleName,
-	bool bIsEvent,
-	unsigned long long ullAddedUnix,
-	unsigned long long ullDeprecatedUnix)
+void SnaccRoseOperationLookup::RegisterOperation(unsigned int uiOpID, const char* szOpName, unsigned int uiInterfaceID, const char* szModuleName, bool bIsEvent, unsigned long long ullAddedUnix, unsigned long long ullDeprecatedUnix)
 {
 	if (!szOpName || !szModuleName || m_bSealed)
 		return;
@@ -51,9 +42,7 @@ void SnaccRoseOperationLookup::RegisterOperation(
 
 #ifdef _DEBUG
 	if (m_mapOpToID.find(szOpName) != m_mapOpToID.end())
-	{
 		ASSERT(0);
-	}
 #endif
 
 	m_mapOpToID[szOpName] = uiOpID;

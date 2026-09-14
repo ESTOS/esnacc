@@ -327,4 +327,3 @@ std::string AsnStringConvert::WideToUTF8(const wchar_t* szWideString)
 	}
 	return strUTF8;
 }
-

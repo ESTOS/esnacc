@@ -115,12 +115,10 @@ int PrintROSEOperationRegistration(FILE* src, CxxRules* r, Module* mod, ValueDef
 	PrintCxxValueDefsName(src, r, v);
 	fprintf(src, "\"");
 	if (bIsEvent)
-	{
 		if (ullAddedUnix != 0 || ullDeprecatedUnix != 0)
 			fprintf(src, ", true, %lluULL, %lluULL", ullAddedUnix, ullDeprecatedUnix);
 		else
 			fprintf(src, ", true");
-	}
 	else if (ullAddedUnix != 0 || ullDeprecatedUnix != 0)
 		fprintf(src, ", false, %lluULL, %lluULL", ullAddedUnix, ullDeprecatedUnix);
 	fprintf(src, ");\n");
@@ -165,12 +163,10 @@ int PrintROSEOperationRegistrationLookup(FILE* src, CxxRules* r, Module* mod, Va
 	PrintCxxValueDefsName(src, r, v);
 	fprintf(src, "\", m_iid, \"%s\"", mod->moduleName);
 	if (bIsEvent)
-	{
 		if (ullAddedUnix != 0 || ullDeprecatedUnix != 0)
 			fprintf(src, ", true, %lluULL, %lluULL", ullAddedUnix, ullDeprecatedUnix);
 		else
 			fprintf(src, ", true");
-	}
 	else if (ullAddedUnix != 0 || ullDeprecatedUnix != 0)
 		fprintf(src, ", false, %lluULL, %lluULL", ullAddedUnix, ullDeprecatedUnix);
 	fprintf(src, ");\n");

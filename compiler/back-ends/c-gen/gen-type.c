@@ -234,7 +234,6 @@ static void PrintCStructElmts PARAMS((f, r, m, td, parent, t), FILE* f _AND_ CRu
 
 	FOR_EACH_LIST_ELMT(et, elmts)
 	{
-
 		ctri = et->type->cTypeRefInfo;
 		fprintf(f, "\t"); /* cheap, fixed indent */
 		PrintCType(f, r, m, td, t, et->type);
@@ -245,10 +244,8 @@ static void PrintCStructElmts PARAMS((f, r, m, td, parent, t), FILE* f _AND_ CRu
 } /* PrintCStructElmts */
 
 static void // Deepak: 17/Apr/2003
-	PrintCMacroTypeElmts
-	PARAMS((f, r, m, td, parent, t), FILE* f _AND_ CRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* t)
+	PrintCMacroTypeElmts PARAMS((f, r, m, td, parent, t), FILE* f _AND_ CRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* t)
 {
-
 	switch (t->basicType->a.macroType->choiceId)
 	{ // This switch case copied from do-macros.c
 		case MACROTYPE_ASNABSTRACTOPERATION:
@@ -267,8 +264,7 @@ static void // Deepak: 17/Apr/2003
 } /* PrintCMacroTypeElmts */
 
 static void // Deepak: 17/Apr/2003
-	PrintCMacroRosOperationElmts
-	PARAMS((f, r, m, td, parent, t, op), FILE* f _AND_ CRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* t _AND_ RosOperationMacroType* op)
+	PrintCMacroRosOperationElmts PARAMS((f, r, m, td, parent, t, op), FILE* f _AND_ CRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* t _AND_ RosOperationMacroType* op)
 {
 	CTRI* ctri;
 	NamedType* et;
@@ -314,8 +310,7 @@ static void // Deepak: 17/Apr/2003
 } /* PrintCMacroRosOperationElmts */
 
 static void // Deepak: 11/Mar/2003
-	PrintCObjectClassElmts
-	PARAMS((f, r, m, td, parent, t), FILE* f _AND_ CRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* t)
+	PrintCObjectClassElmts PARAMS((f, r, m, td, parent, t), FILE* f _AND_ CRules* r _AND_ Module* m _AND_ TypeDef* td _AND_ Type* parent _AND_ Type* t)
 {
 	CTRI* ctri;
 	NamedType* et;
@@ -464,7 +459,6 @@ static void PrintPreTypeDefStuff PARAMS((f, r, m, td, parent, t), FILE* f _AND_ 
 
 	else if ((t->basicType->choiceId == BASICTYPE_SET) || (t->basicType->choiceId == BASICTYPE_SEQUENCE) || (t->basicType->choiceId == BASICTYPE_CHOICE))
 	{
-
 		FOR_EACH_LIST_ELMT(et, t->basicType->a.set)
 		PrintPreTypeDefStuff(f, r, m, td, t, et->type);
 	}
