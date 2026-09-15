@@ -444,11 +444,11 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 | Pause / shutdown gate | `TSASN1Base.pauseRoseProcessing.test.ts` | **Partial** (3 scenarios; lifecycle/async overlap C++-only) |
 | `InvokeWireTimeoutTest` / outbound encode | `TSROSEBase.invokeTimeout.test.ts` | **Aligned** (unit + encode path) |
 | `InvokeContextInitTest` | `TSInvokeContext.init.test.ts` | **Partial** (wire `operationName` vs lookup differs from C++) |
-| `InvokeContextRuntimeTest` (loopback) | — | **Blocked** — needs `sample_runtime_harness.ts` |
+| `InvokeContextRuntimeTest` (loopback) | `TSCallFlow.loopback.test.ts` (subset) | **Partial** — full orphan/malformed matrix C++-only |
 | `OutboundWireInvokeTimeoutReachesInboundHandler*` | — | **Blocked** — TS `receiveHandleROSEMessage` does not copy wire `timeout` into context yet |
-| `call_flow_tests` | `node-client` integration | **Smoke only** (happy path REST/WS) |
-| `logical_failure_tests` | — | **Blocked** — loopback harness |
-| `transport_failure_tests` | — | **Blocked** — loopback harness |
+| `call_flow_tests` | `TSCallFlow.loopback.test.ts` + integration smoke | **Aligned** (loopback; integration smoke separate) |
+| `logical_failure_tests` | `TSLogicalFailure.loopback.test.ts` | **Partial** — TS returns wire `InvokeProblemenum` (not C++ `ROSE_REJECT_*`); BER loopback loses `invokeProblem=1` on reject round-trip (spec failure, see below) |
+| `transport_failure_tests` | `TSTransportFailure.loopback.test.ts` | **Partial** (timeout code `requestTimedOut` vs `ROSE_TE_TIMEOUT`) |
 | `async_invoke_tests` | — | **Blocked** — Promise model; no `SetAsyncCompletion` surface |
 | `logging_tests` | — | **Blocked** — no `ConfigureFileLogging` / transport log-flag API in TS |
 | `telemetry_tests` | — | **Blocked** — no telemetry subsystem in TS glue |
@@ -460,6 +460,13 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 `operationName` when operationID is set. TypeScript `receiveHandleROSEMessage` keeps wire
 `operationName` when present (`TSInvokeContext.init.test.ts`).
 
+**Known TS glue spec failure (BER reject round-trip):** loopback delivery of server
+`ROSEReject` with `invokeProblem = unrecognisedOperation` (1) decodes as an empty reject
+(`AsnInvokeProblem` value 502 / `emptyRejectMessage`). JSON path and BER rejects with
+`invokeProblem = mistypedArgument` (2) round-trip correctly. C++ `logical_failure_tests`
+pass BER for unknown operation and missing handler. Fix target: `RejectProblem` BER
+encode/decode in `SNACCROSE_Converter.ts` (not test harness).
+
 ## 11. TypeScript parity roadmap (implementation blocks)
 
 ### Block A — Done in this pass
@@ -468,13 +475,12 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 - Shared capture transport (`compiler/back-ends/ts-gen/tests/support/rose_test_transport.ts`).
 - Matrix above in this file.
 
-### Block B — Loopback harness (next test infrastructure)
+### Block B — Loopback harness (done in 7.0.18 branch)
 
-1. Add `compiler/back-ends/ts-gen/tests/support/sample_runtime_harness.ts` mirroring C++
-   `sample_runtime_harness.h`: two `TSASN1Base` endpoints, queued transport, handler modes.
-2. Copy minimal generated sample stubs into glue test `workdir/` (or generate via CMake).
-3. Port `call_flow_tests`, `logical_failure_tests`, `transport_failure_tests` scenarios.
-4. Wire glue tests into CMake `ctest` (`snacc-ts-glue`) beside `snacc-ts-integration`.
+1. `compiler/back-ends/ts-gen/tests/support/sample_runtime_harness.ts` — loopback transport + sample modules.
+2. Sample stubs copied in `scripts/run_gluecode_tests.*` (`ENetUC_Settings_Manager`, `ENetUC_Event_Manager`).
+3. `TSCallFlow.loopback.test.ts`, `TSLogicalFailure.loopback.test.ts`, `TSTransportFailure.loopback.test.ts`.
+4. CMake `ctest` target `snacc-ts-glue` (requires `bash` + `snacc-ts-glue-prepare`).
 
 ### Block C — Telemetry in TypeScript (largest product gap)
 

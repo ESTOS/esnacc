@@ -23,7 +23,11 @@ trap cleanup EXIT
 rm -rf "$TEST_DIR/workdir"
 mkdir -p "$WORKDIR"
 cp "$GLUE_DIR"/* "$WORKDIR/"
-cp "$STUB_DIR/ENetUC_Common.ts" "$STUB_DIR/ENetUC_Common_Converter.ts" "$WORKDIR/"
+cp "$STUB_DIR"/ENetUC_Common.ts "$STUB_DIR"/ENetUC_Common_Converter.ts "$WORKDIR/"
+cp "$STUB_DIR"/ENetUC_Settings_Manager.ts "$STUB_DIR"/ENetUC_Settings_Manager_Converter.ts "$WORKDIR/"
+cp "$STUB_DIR"/ENetUC_Settings_ManagerROSE.ts "$STUB_DIR"/ENetUC_Settings_ManagerROSE_Interface.ts "$WORKDIR/"
+cp "$STUB_DIR"/ENetUC_Event_Manager.ts "$STUB_DIR"/ENetUC_Event_Manager_Converter.ts "$WORKDIR/"
+cp "$STUB_DIR"/ENetUC_Event_ManagerROSE.ts "$STUB_DIR"/ENetUC_Event_ManagerROSE_Interface.ts "$WORKDIR/"
 
 for test_file in \
 	TSASN1Base.registry.test.ts \
@@ -32,7 +36,10 @@ for test_file in \
 	TSASN1Base.pauseRoseProcessing.test.ts \
 	TSModuleCapabilities.test.ts \
 	TSROSEBase.invokeTimeout.test.ts \
-	TSInvokeContext.init.test.ts
+	TSInvokeContext.init.test.ts \
+	TSCallFlow.loopback.test.ts \
+	TSLogicalFailure.loopback.test.ts \
+	TSTransportFailure.loopback.test.ts
 do
 	echo "Running $test_file ..."
 	npx --yes tsx "$TEST_DIR/$test_file"

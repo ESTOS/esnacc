@@ -22,6 +22,14 @@ mkdir "%WORKDIR%"
 xcopy /E /I /Y /Q "%GLUE_DIR%\*" "%WORKDIR%\" >nul
 copy /Y "%STUB_DIR%\ENetUC_Common.ts" "%WORKDIR%\" >nul
 copy /Y "%STUB_DIR%\ENetUC_Common_Converter.ts" "%WORKDIR%\" >nul
+copy /Y "%STUB_DIR%\ENetUC_Settings_Manager.ts" "%WORKDIR%\" >nul
+copy /Y "%STUB_DIR%\ENetUC_Settings_Manager_Converter.ts" "%WORKDIR%\" >nul
+copy /Y "%STUB_DIR%\ENetUC_Settings_ManagerROSE.ts" "%WORKDIR%\" >nul
+copy /Y "%STUB_DIR%\ENetUC_Settings_ManagerROSE_Interface.ts" "%WORKDIR%\" >nul
+copy /Y "%STUB_DIR%\ENetUC_Event_Manager.ts" "%WORKDIR%\" >nul
+copy /Y "%STUB_DIR%\ENetUC_Event_Manager_Converter.ts" "%WORKDIR%\" >nul
+copy /Y "%STUB_DIR%\ENetUC_Event_ManagerROSE.ts" "%WORKDIR%\" >nul
+copy /Y "%STUB_DIR%\ENetUC_Event_ManagerROSE_Interface.ts" "%WORKDIR%\" >nul
 
 for %%T in (
 	TSASN1Base.registry.test.ts
@@ -31,6 +39,9 @@ for %%T in (
 	TSModuleCapabilities.test.ts
 	TSROSEBase.invokeTimeout.test.ts
 	TSInvokeContext.init.test.ts
+	TSCallFlow.loopback.test.ts
+	TSLogicalFailure.loopback.test.ts
+	TSTransportFailure.loopback.test.ts
 ) do (
 	echo Running %%T ...
 	set "NODE_PATH=%NODE_MODULES%"
