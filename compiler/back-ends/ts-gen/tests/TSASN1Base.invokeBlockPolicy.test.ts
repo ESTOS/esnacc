@@ -155,3 +155,34 @@ test("completeIfOperationBlocked returns remoteNotCapable for unsupported server
 	assert.ok(reject instanceof ROSEReject);
 	assert.equal(reject.reject.invokeProblem, CustomInvokeProblemEnum.remoteNotCapable);
 });
+
+test("clearRemoteModuleCapabilities stops blocking unsupported invoke", async () => {
+	const transport = new ClientTestTransport();
+	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 100, 0, 0, false);
+	transport.setRemoteModuleCapabilities(buildRemoteModuleCapabilities([
+		{ moduleName: "TestModule", version: "1.0.0", invokeOpIds: [200] },
+	]));
+	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
+	transport.clearRemoteModuleCapabilities();
+
+	await transport.sendInvoke({
+		invoke: createInvoke(100, "asnInvoke"),
+		invokeContext: transport.getInvokeContextParams(undefined, 100, "asnInvoke", false),
+		payLoad: new Uint8Array(),
+	} as IASN1InvokeData);
+
+	assert.equal(transport.sendInvokeCount, 1);
+});
+
+test("isSupportedOperation reflects applied snapshot", () => {
+	const transport = new ClientTestTransport();
+	transport.registerOperation(noopHandler, noopHandler as never, 4100, "asnGetSettings", "TestModule", 100, 0, 0, false);
+	transport.registerOperation(noopHandler, noopHandler as never, 4101, "asnSetSettings", "TestModule", 100, 0, 0, false);
+	transport.setRemoteModuleCapabilities(buildRemoteModuleCapabilities([
+		{ moduleName: "TestModule", version: "1.0.0", invokeOpIds: [4100] },
+	]));
+
+	assert.equal(transport.hasRemoteModuleCapabilities(), true);
+	assert.equal(transport.isSupportedOperation(4100), true);
+	assert.equal(transport.isSupportedOperation(4101), false);
+});

@@ -30,7 +30,9 @@ for test_file in \
 	TSASN1Base.invokeBlockPolicy.test.ts \
 	TSASN1Base.roseSessionSubscription.test.ts \
 	TSASN1Base.pauseRoseProcessing.test.ts \
-	TSModuleCapabilities.test.ts
+	TSModuleCapabilities.test.ts \
+	TSROSEBase.invokeTimeout.test.ts \
+	TSInvokeContext.init.test.ts
 do
 	echo "Running $test_file ..."
 	npx --yes tsx "$TEST_DIR/$test_file"

@@ -6,21 +6,24 @@ entry_for:
   - C++ runtime behavior
   - runtime correctness tests
   - ROSE telemetry and shutdown semantics
-purpose: Record intended C++ runtime semantics and implementation status for ROSE correctness areas exercised by cpp-lib runtime tests.
+purpose: Record intended ROSE runtime semantics (C++ primary; TypeScript and future Kotlin/Swift must match) and implementation status for areas exercised by runtime tests.
 read_when:
   - Changing cpp-lib runtime behavior, telemetry, shutdown, or decode-error handling
   - Adding or reviewing runtime correctness tests
+  - Aligning TypeScript glue or future Kotlin/Swift ROSE runtimes with C++
 related_docs:
   - ../../AGENTS.md
   - ../../ReadMe.md
+  - ../../.cursor/rules/rose-cross-language-parity.mdc
 ---
 
 # Runtime Correctness Notes
 
-This note records the intended semantics for selected `cpp-lib` runtime behaviors
-and whether the current tree implements them. The goal is to align the runtime
-to the public API contract and to common operator expectations rather than
-simply preserving whatever behavior exists today.
+This note records the intended semantics for selected ROSE runtime behaviors
+and whether the current tree implements them. C++ tests are the primary executable
+spec today; TypeScript glue tests and future Kotlin/Swift runtimes must implement
+the same concepts (see `.cursor/rules/rose-cross-language-parity.mdc`). New sections
+should include a **Cross-language parity** bullet naming C++, TS, and planned surfaces.
 
 Primary reference points:
 - `cpp-lib/include/SnaccROSEBase.h`
@@ -424,6 +427,82 @@ Each helper detaches borrowed pointers in its destructor.
    outbound contexts (`CreateOutboundInvokeContext()` / `SendInvokeContext` partial args).
    Three states: unset → connection default; `0` → fire-and-forget; `> 0` → explicit ms (+ wire).
 5. **Backward compatibility:** peers that omit `timeout` behave as today.
+
+## 10. Cross-language runtime test matrix
+
+Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
+`compiler/back-ends/ts-gen/tests/` (run via `scripts/run_gluecode_tests.sh`). Integration smoke:
+`samples/ts-microservice/node-client/`.
+
+| C++ suite / area | TS glue tests | Status |
+| --- | --- | --- |
+| `module_registry_tests` | `TSASN1Base.registry.test.ts` | **Aligned** (static registration nuances C++-only) |
+| `TSModuleCapabilities` / negotiate helper | `TSModuleCapabilities.test.ts` | **Aligned** |
+| `client_invoke_block_policy_tests` | `TSASN1Base.invokeBlockPolicy.test.ts` | **Aligned** (stub gate; loopback runtime C++-only) |
+| `server_invoke_block_policy_tests` | `TSASN1Base.invokeBlockPolicy.test.ts` | **Partial** (subscription path only) |
+| `rose_session_subscription_tests` | `TSASN1Base.roseSessionSubscription.test.ts` | **Partial** (`SnaccROSEComponent` C++-only) |
+| Pause / shutdown gate | `TSASN1Base.pauseRoseProcessing.test.ts` | **Partial** (3 scenarios; lifecycle/async overlap C++-only) |
+| `InvokeWireTimeoutTest` / outbound encode | `TSROSEBase.invokeTimeout.test.ts` | **Aligned** (unit + encode path) |
+| `InvokeContextInitTest` | `TSInvokeContext.init.test.ts` | **Partial** (wire `operationName` vs lookup differs from C++) |
+| `InvokeContextRuntimeTest` (loopback) | — | **Blocked** — needs `sample_runtime_harness.ts` |
+| `OutboundWireInvokeTimeoutReachesInboundHandler*` | — | **Blocked** — TS `receiveHandleROSEMessage` does not copy wire `timeout` into context yet |
+| `call_flow_tests` | `node-client` integration | **Smoke only** (happy path REST/WS) |
+| `logical_failure_tests` | — | **Blocked** — loopback harness |
+| `transport_failure_tests` | — | **Blocked** — loopback harness |
+| `async_invoke_tests` | — | **Blocked** — Promise model; no `SetAsyncCompletion` surface |
+| `logging_tests` | — | **Blocked** — no `ConfigureFileLogging` / transport log-flag API in TS |
+| `telemetry_tests` | — | **Blocked** — no telemetry subsystem in TS glue |
+| `lifecycle_tests` | — | **Blocked** — partial overlap with pause tests |
+| `public_api_tests` (decode hooks, file log) | — | **Blocked** — C++-specific APIs |
+
+**Known TS/C++ behavioral difference (documented, not a test failure):** inbound
+`SnaccInvokeContext` resolves `OperationName()` from operationID lookup and **ignores** wire
+`operationName` when operationID is set. TypeScript `receiveHandleROSEMessage` keeps wire
+`operationName` when present (`TSInvokeContext.init.test.ts`).
+
+## 11. TypeScript parity roadmap (implementation blocks)
+
+### Block A — Done in this pass
+
+- Glue tests for invoke timeout, invoke-context init, remote-capability clear/query.
+- Shared capture transport (`compiler/back-ends/ts-gen/tests/support/rose_test_transport.ts`).
+- Matrix above in this file.
+
+### Block B — Loopback harness (next test infrastructure)
+
+1. Add `compiler/back-ends/ts-gen/tests/support/sample_runtime_harness.ts` mirroring C++
+   `sample_runtime_harness.h`: two `TSASN1Base` endpoints, queued transport, handler modes.
+2. Copy minimal generated sample stubs into glue test `workdir/` (or generate via CMake).
+3. Port `call_flow_tests`, `logical_failure_tests`, `transport_failure_tests` scenarios.
+4. Wire glue tests into CMake `ctest` (`snacc-ts-glue`) beside `snacc-ts-integration`.
+
+### Block C — Telemetry in TypeScript (largest product gap)
+
+Port C++ `SnaccTelemetry.h` / `SnaccTelemetryData` / `SnaccTelemetryCallback` to glue:
+
+| C++ | Proposed TS |
+| --- | --- |
+| `SnaccTelemetryData::Create` / `CreateFinalized` | `SnaccTelemetryData.create` / `createFinalized` |
+| `Direction`, `Stage`, `Outcome`, `Reason` enums | Same names, TS enums |
+| `OnInvokeProcessed` callback | `onInvokeProcessed` on transport or logger sink |
+| `PrepareForTelemetry()` on invoke context | Clone context for telemetry retention (needs pluggable context — Block D) |
+| Outbound/inbound wait, dispatch, decode-failure paths | Hook at same sites as `SnaccROSEBase.cpp` |
+
+Then port `telemetry_tests.cpp` → `TSTelemetry.test.ts` (outcome/reason assertions, not C++ ownership).
+
+### Block D — Invoke context product parity
+
+- Pluggable `createInvokeContext()` on transport (parity with C++ `CreateInvokeContext`).
+- `receiveHandleROSEMessage`: copy wire `timeout` into `ReceiveInvokeContext` (unblocks inbound handler timeout E2E).
+- Align inbound `operationName` resolution with C++ (lookup wins over wire) **or** lock TS behavior in spec.
+
+### Block E — Logging API
+
+- `configureFileLogging`, `OnBinaryDataBlock` log flags, decode-error hooks → port `logging_tests` / `public_api_tests` logging cases.
+
+### Block F — Kotlin / Swift
+
+When Tier A ROSE glue lands, reuse scenario names from this matrix; implement harness per language.
 
 ## Recommended Follow-Up Order
 

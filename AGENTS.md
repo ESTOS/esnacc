@@ -75,6 +75,7 @@ Other backends (C, C#, Java, Kotlin, Swift, Delphi, JavaScript, IDL, JSDoc, Open
 |------|------------|--------------|
 | Change TypeScript generation | `ReadMe.md`, `compiler/back-ends/ts-gen/` | `samples/ts-microservice/` |
 | Change C++ generation or runtime | `ReadMe.md`, `cpp-lib/tests/runtime_correctness_notes.md` | `compiler/back-ends/c++-gen/`, `cpp-lib/` |
+| Cross-language ROSE parity (C++, TS, future Kotlin/Swift) | `.cursor/rules/rose-cross-language-parity.mdc` | Paired impl + tests per tier in that rule |
 | Add/fix a sample | `samples/readme.md` | The specific sample subdirectory |
 | Build or CI for the compiler | [docs/build.md](docs/build.md) | `compiler/CMakeLists.txt`, root `CMakeLists.txt` |
 | OpenAPI / JSDoc output | `FAQ.md` | `compiler/back-ends/openapi-gen/`, `compiler/back-ends/jsondoc-gen/` |
@@ -101,6 +102,7 @@ Requirements and IDE-specific steps are in [docs/build.md](docs/build.md). CMake
 - Generated output shape is defined by ASN.1 inputs plus the relevant `compiler/back-ends/*-gen` implementation — read both before changing behavior.
 - When documentation and code disagree, verify against `samples/` and tests before updating docs.
 - **Document new types and members** at the definition site (purpose, usage, ownership). See [.cursor/rules/living-documentation.mdc](.cursor/rules/living-documentation.mdc).
+- **Cross-language parity:** ROSE runtime behavior, naming, ASN.1 structures, and tests stay aligned across C++, TypeScript, and future Kotlin/Swift runtimes. See [.cursor/rules/rose-cross-language-parity.mdc](.cursor/rules/rose-cross-language-parity.mdc).
 
 ### Tests define the public API (hard constraint)
 

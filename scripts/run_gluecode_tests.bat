@@ -29,6 +29,8 @@ for %%T in (
 	TSASN1Base.roseSessionSubscription.test.ts
 	TSASN1Base.pauseRoseProcessing.test.ts
 	TSModuleCapabilities.test.ts
+	TSROSEBase.invokeTimeout.test.ts
+	TSInvokeContext.init.test.ts
 ) do (
 	echo Running %%T ...
 	set "NODE_PATH=%NODE_MODULES%"

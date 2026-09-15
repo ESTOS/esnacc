@@ -1,0 +1,90 @@
+---
+description: Keep ROSE runtime and ASN.1 surfaces aligned across C++, TypeScript, and future Kotlin/Swift
+globs: cpp-lib/**/*,compiler/back-ends/ts-gen/**/*,compiler/back-ends/kotlin-gen/**/*,compiler/back-ends/swift-gen/**/*,ROSE/**/*
+alwaysApply: false
+---
+
+# ROSE cross-language parity
+
+**Single contract, multiple runtimes.** C++ and TypeScript are maintained today; Kotlin and Swift will follow the same names, structures, concepts, and tests when their ROSE stacks land.
+
+## Source of truth (in order)
+
+1. **ASN.1** (`ROSE/SNACCROSE.asn1`, module `.asn1` files) — wire shapes and field tags.
+2. **Semantics** (`cpp-lib/tests/runtime_correctness_notes.md`) — behavior callers rely on.
+3. **Tests** — executable spec; C++ primary today, TypeScript glue next, future langs when runtimes exist.
+4. **Implementations** — must match 1–3; never invent per-language behavior without updating the spec.
+
+## Tiers
+
+| Tier | Languages | Scope | Parity required |
+|------|-----------|--------|-----------------|
+| **A — ROSE runtime** | C++, TypeScript (now); Kotlin, Swift (future) | Invoke context, encode/decode paths, block policy, negotiate, telemetry, shutdown | **Full** — same concepts, paired tests |
+| **B — Generated stubs** | All backends with codegen | Types, fields, optional/required, enum values from ASN.1 | **Wire-identical** — same names modulo language style |
+| **C — Encode-only backends** | Kotlin, Swift today | BER/JSON codecs, structures | Tier B only until a ROSE glue runtime is added |
+
+When Tier A work ships **C++-only or TS-only**, treat it as incomplete. Kotlin/Swift runtime work must not diverge from the locked Tier A contract.
+
+## Naming (same concept → idiomatic surface)
+
+Map one conceptual API across languages. Do not rename behavior per backend.
+
+| Kind | C++ | TypeScript | Kotlin (future) | Swift (future) |
+|------|-----|------------|-----------------|----------------|
+| Methods | `PascalCase` | `camelCase` | `camelCase` | `camelCase` |
+| Types / classes | `PascalCase` | `PascalCase` | `PascalCase` | `PascalCase` |
+| Members / fields | `m_camelCase` | `camelCase` | `camelCase` | `camelCase` |
+| Constants / enums | `SCREAMING_SNAKE` or scoped enum | `PascalCase` enum members | Kotlin conventions | Swift conventions |
+
+**Example (invoke timeout):** `SetInvokeTimeout` / `ClearInvokeTimeout` / `InvokeTimeout()` ↔ `setInvokeTimeout` / `clearInvokeTimeout` / `invokeTimeout()` ↔ future `setInvokeTimeout` / `clearInvokeTimeout` / `invokeTimeout`.
+
+- **Ask the user** before introducing or renaming **public** API (types, methods, flags). Propose 1–2 options; do not rename until chosen.
+- Prefer **matching words** (`InvokeTimeout`, `OperationBlockPolicy`) even when casing differs.
+
+## Structures
+
+- Add or change fields in **ASN.1 first**, then regenerate stubs (`ROSE/makesnaccrose.bat`, esnacc) for every affected backend.
+- Optional wire fields: same tag, same OPTIONAL semantics, same “omit when absent” rules in every runtime.
+- Generated type names follow existing per-backend conventions; **field identifiers** track ASN.1 names (`timeout`, not `deadlineMs`, unless ASN.1 changes).
+
+## Concepts
+
+These must stay aligned wherever Tier A exists:
+
+- Invoke context (unset vs explicit values, fire-and-forget `0`, connection default when unset)
+- Outbound/inbound invoke and event dispatch, reject/error/result handling
+- `PauseRoseProcessing` / `ResumeRoseProcessing`, operation block policy, session subscription / negotiate
+- Telemetry outcomes and reason codes (same meaning, same triggers)
+- Wire encode rules (e.g. encode `timeout` only when `> 0`, not for events)
+
+Document new cross-cutting behavior in `runtime_correctness_notes.md` with a **“Cross-language parity”** bullet naming C++, TS, and planned Kotlin/Swift surfaces.
+
+## Tests
+
+| Layer | Location | Role |
+|-------|----------|------|
+| C++ runtime spec | `cpp-lib/tests/` | Primary scenario matrix (harness: `test_support/sample_runtime_harness.h`) |
+| TypeScript glue | `compiler/back-ends/ts-gen/tests/` | Same scenarios for gluecode (stub transport / loopback) |
+| Integration | `samples/ts-microservice/node-client/` | End-to-end smoke (not a full duplicate of cpp-lib tests) |
+| Kotlin / Swift | TBD under `compiler/back-ends/*-gen/tests/` when runtimes exist | Mirror Tier A scenarios from C++ names |
+
+**Rules:**
+
+- New Tier A behavior: add or extend tests on **both** C++ and TS before merge when both runtimes are in scope.
+- Test **outcomes** (wire bytes, reject codes, context state, telemetry), not C++-only memory details.
+- Do not weaken tests to match one language; see `test-specification-first.mdc`.
+
+Negotiate/gating pairing table: `.cursor/rules/interface-negotiate-cpp-ts-parity.mdc`.
+
+## Agent workflow
+
+1. Read `runtime_correctness_notes.md` for the behavior area.
+2. Change ASN.1 if wire shape changes; regenerate stubs.
+3. Implement **C++ and TypeScript** in the same task (or same MR series).
+4. Add paired tests; note Kotlin/Swift follow-up in the MR if runtimes do not exist yet.
+5. For Kotlin/Swift stub-only changes, verify generated field names and codecs match Tier B.
+
+## Out of scope
+
+- Product apps (ProCall, UCServer) acting on deadlines — separate tickets.
+- Backends with no ROSE runtime (OpenAPI, JSDoc, IDL) unless the change is pure ASN.1 structure export.
