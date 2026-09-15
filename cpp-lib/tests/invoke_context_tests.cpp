@@ -717,15 +717,26 @@ namespace sample_runtime_tests
 
 		const auto pDefault = m_client.CreateOutboundInvokeContext();
 		ASSERT_TRUE(pDefault);
-		EXPECT_EQ(-1, pDefault->InvokeTimeout());
+		EXPECT_FALSE(pDefault->InvokeTimeout().has_value());
 
 		const auto pFireAndForget = m_client.CreateOutboundInvokeContext(0u);
 		ASSERT_TRUE(pFireAndForget);
-		EXPECT_EQ(0, pFireAndForget->InvokeTimeout());
+		EXPECT_TRUE(pFireAndForget->InvokeTimeout().has_value());
+		EXPECT_EQ(0u, *pFireAndForget->InvokeTimeout());
 
 		const auto pExplicit = m_client.CreateOutboundInvokeContext(250u);
 		ASSERT_TRUE(pExplicit);
-		EXPECT_EQ(250, pExplicit->InvokeTimeout());
+		EXPECT_EQ(250u, *pExplicit->InvokeTimeout());
+	}
+
+	TEST(InvokeWireTimeoutTest, ClearInvokeTimeoutRestoresUnset)
+	{
+		const auto pCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::OUTBOUND));
+		ASSERT_NE(nullptr, pCtx);
+		pCtx->SetInvokeTimeout(250u);
+		EXPECT_EQ(250u, *pCtx->InvokeTimeout());
+		pCtx->ClearInvokeTimeout();
+		EXPECT_FALSE(pCtx->InvokeTimeout().has_value());
 	}
 
 	TEST(InvokeContextInitTest, OutboundInitStoresExplicitOperationName)
@@ -767,6 +778,92 @@ namespace sample_runtime_tests
 		EXPECT_EQ("asnTestInboundName", pCtx->OperationName());
 
 		endpoint.ClearRegisteredOperations();
+	}
+
+	TEST(InvokeWireTimeoutTest, RoseInvokeJsonRoundTripPreservesTimeout)
+	{
+		ROSEInvoke invoke;
+		invoke.invokeID = 1;
+		invoke.operationID = 42;
+		invoke.timeout = new AsnInt(500);
+
+		const SJson::Value json = invoke.JEnc();
+		ROSEInvoke decoded;
+		EXPECT_TRUE(decoded.JDec(json));
+		ASSERT_NE(nullptr, decoded.timeout);
+		EXPECT_EQ(500, static_cast<int>(*decoded.timeout));
+	}
+
+	TEST(InvokeWireTimeoutTest, InboundInitCopiesWireInvokeTimeout)
+	{
+		ROSEInvoke invoke;
+		invoke.invokeID = 1;
+		invoke.operationID = 43210;
+		invoke.timeout = new AsnInt(750);
+
+		const auto pCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::INBOUND, &invoke));
+		ASSERT_NE(nullptr, pCtx);
+		EXPECT_EQ(750u, *pCtx->InvokeTimeout());
+	}
+
+	TEST(InvokeWireTimeoutTest, InboundInitWithoutWireTimeoutLeavesUnset)
+	{
+		ROSEInvoke invoke;
+		invoke.invokeID = 1;
+		invoke.operationID = 43210;
+
+		const auto pCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::INBOUND, &invoke));
+		ASSERT_NE(nullptr, pCtx);
+		EXPECT_FALSE(pCtx->InvokeTimeout().has_value());
+	}
+
+	TEST_F(InvokeContextRuntimeTest, OutboundWireInvokeTimeoutReachesInboundHandlerJson)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		ASSERT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error, 500));
+		EXPECT_TRUE(m_server.InboundObservation().HandlerSnapshot().WasCaptured());
+		EXPECT_EQ(500u, *m_server.InboundObservation().HandlerSnapshot().InvokeTimeout());
+	}
+
+	TEST_F(InvokeContextRuntimeTest, OutboundWireInvokeTimeoutReachesInboundHandlerBer)
+	{
+		InitializeEndpoints(TransportEncoding::BER);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		ASSERT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error, 500));
+		EXPECT_TRUE(m_server.InboundObservation().HandlerSnapshot().WasCaptured());
+		EXPECT_EQ(500u, *m_server.InboundObservation().HandlerSnapshot().InvokeTimeout());
+	}
+
+	TEST_F(InvokeContextRuntimeTest, OutboundDefaultInvokeTimeoutOmitsWireValueOnInbound)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		ASSERT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+		EXPECT_TRUE(m_server.InboundObservation().HandlerSnapshot().WasCaptured());
+		EXPECT_FALSE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
+	}
+
+	TEST_F(InvokeContextRuntimeTest, OutboundFireAndForgetOmitsWireValueOnInbound)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		auto pCtx = m_client.CreateOutboundInvokeContext(0u);
+		ASSERT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pCtx));
+		EXPECT_TRUE(m_server.InboundObservation().HandlerSnapshot().WasCaptured());
+		EXPECT_FALSE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
 	}
 
 	TEST(InvokeContextInitTest, InboundResolvesOperationIdFromNameThenCanonicalContextName)

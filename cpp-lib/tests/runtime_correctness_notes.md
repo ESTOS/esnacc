@@ -377,7 +377,7 @@ Each helper detaches borrowed pointers in its destructor.
    logging, and transport encoding. Normal outbound contexts use
    `CreateOutboundInvokeContext()` (no name on the context). Pass
    `std::optional<unsigned int>` to set invoke timeout in the same call; omit it for the
-   connection default (-1). Generated deprecated
+   connection default (unset). Generated deprecated
    outbound stubs default to `CreateInvokeContext(SnaccInvokeContextInit(OUTBOUND,
    invoke, operationName))` so `SNACCDeprecated::DeprecatedASN1Method` can read
    `OperationName()` on the context.
@@ -400,6 +400,30 @@ Each helper detaches borrowed pointers in its destructor.
 5. **`SnaccInvokeContext::OperationName()`:** inbound from `LookUpName(operationID)`.
    Outbound only when explicitly passed to `SnaccInvokeContextInit` (deprecated stubs).
 6. **`SnaccInvokeContextInit::m_strOperationName`:** mirrors the same rule.
+
+## 9. ROSEInvoke Wire Timeout (BUILDSYS-645)
+
+### Status: implemented (7.0.18)
+
+### Contract
+
+1. **ASN.1:** optional `ROSEInvoke.timeout` (`[4] IMPLICIT INTEGER`) — relative deadline in
+   **milliseconds**. Evaluated on the **server at receive time**:
+   `deadline = T_receive + timeout`. If the server cannot process the invoke in time (e.g.
+   queued behind resource limits) and the deadline has passed after receipt, product code may
+   discard the work without executing the handler and without sending a late
+   result/error/reject for that expired invoke.
+2. **Outbound encoding:** when `InvokeTimeout()` / `invokeTimeout()` is set and **> 0** on a
+   non-event invoke (`invokeID != 99999`), the runtime sets `ROSEInvoke.timeout` before encode.
+   Omit the field when unset (connection default), when set to `0` (fire-and-forget), or for events.
+3. **Inbound context:** when the wire field is present, copy into `SnaccInvokeContext` /
+   `ReceiveInvokeContext` via `InvokeTimeout()` / `invokeTimeout()`; absent field stays unset.
+4. **C++ / TypeScript parity:** `SetInvokeTimeout(unsigned)` / `setInvokeTimeout(number)`,
+   `ClearInvokeTimeout()` / `clearInvokeTimeout()`, `std::optional<unsigned int> InvokeTimeout()`
+   / `invokeTimeout(): number | undefined`, optional constructor param `invokeTimeoutMs` on
+   outbound contexts (`CreateOutboundInvokeContext()` / `SendInvokeContext` partial args).
+   Three states: unset → connection default; `0` → fire-and-forget; `> 0` → explicit ms (+ wire).
+5. **Backward compatibility:** peers that omit `timeout` behave as today.
 
 ## Recommended Follow-Up Order
 

@@ -286,7 +286,8 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 
 			// If this is an invoke
 			if (data.invokeContext.invokeID !== 99999) {
-				const timeout = data.invokeContext?.timeout || this.defaultTimeout;
+				const ctxTimeout = data.invokeContext.invokeTimeout();
+				const timeout = ctxTimeout === undefined ? this.defaultTimeout : ctxTimeout;
 				// Create a completion object if:
 				// - a timeout was provided
 				// - a rest request is processed (we wait until the request has been handled)

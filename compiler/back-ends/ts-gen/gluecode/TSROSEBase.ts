@@ -201,6 +201,10 @@ export type EHttpHeaders = IncomingHttpHeaders;
  * Base interface for the invoke context
  */
 export interface IInvokeContextBase extends IInvokeContextBaseParams {
+	// Milliseconds invoke timeout (undefined when unset or absent on the wire).
+	setInvokeTimeout: (iTimeoutMs: number) => void;
+	clearInvokeTimeout: () => void;
+	invokeTimeout: () => number | undefined;
 	// Set the base ids in one call
 	init: (operationID: number, operationName: string, invokeID?: number) => void;
 	// Which operation id has been called
@@ -222,6 +226,7 @@ class BaseInvokeContext implements IInvokeContextBase {
 	public clientConnectionID: string | undefined;
 	public headers: EHttpHeaders | undefined;
 	public customData: unknown | undefined;
+	private m_invokeTimeout?: number;
 
 	/**
 	 * Constructor for the BaseInvokeContext
@@ -236,6 +241,26 @@ class BaseInvokeContext implements IInvokeContextBase {
 		this.operationName = args?.operationName || "";
 		this.invokeID = args?.invokeID || -1;
 		this.customData = args?.customData;
+		if (args?.invokeTimeoutMs !== undefined)
+			this.setInvokeTimeout(args.invokeTimeoutMs);
+	}
+
+	/**
+	 * Sets the invoke timeout in milliseconds. Outbound values > 0 are encoded on
+	 * ROSEInvoke.timeout (not for events). Inbound contexts are populated from the wire.
+	 */
+	public setInvokeTimeout(iTimeoutMs: number): void {
+		this.m_invokeTimeout = iTimeoutMs;
+	}
+
+	/** Clears a configured timeout so the connection default applies on outbound sends. */
+	public clearInvokeTimeout(): void {
+		this.m_invokeTimeout = undefined;
+	}
+
+	/** Returns the invoke timeout in milliseconds when set; undefined when unset or absent on the wire. */
+	public invokeTimeout(): number | undefined {
+		return this.m_invokeTimeout;
 	}
 
 	/**
@@ -310,6 +335,7 @@ export class ReceiveInvokeContext extends BaseInvokeContext implements IReceiveI
 			invokeID: invoke.invokeID,
 			operationID: invoke.operationID,
 			operationName: invoke.operationName,
+			...(invoke.timeout !== undefined && invoke.timeout > 0 ? { invokeTimeoutMs: invoke.timeout } : {}),
 		});
 	}
 }
@@ -325,7 +351,6 @@ export interface ISendInvokeContext extends ISendInvokeContextParams, IInvokeCon
  * A class holding the properties of the ISendInvokeContext
  */
 export class SendInvokeContext extends BaseInvokeContext implements ISendInvokeContextParams {
-	public timeout?: number;
 	public restTarget?: string;
 	public bSendEventSynchronous?: boolean;
 
@@ -336,7 +361,6 @@ export class SendInvokeContext extends BaseInvokeContext implements ISendInvokeC
 	 */
 	public constructor(args: Partial<ISendInvokeContext>) {
 		super(args);
-		this.timeout = args.timeout;
 		this.restTarget = args.restTarget;
 		this.bSendEventSynchronous = args.bSendEventSynchronous || false;
 	}
@@ -971,20 +995,21 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		// Callback into the transport to get customized invokeContextParams
 		const context = this.transport.getInvokeContextParams(contextParams, operationID, operationName, event);
 
-		// The root ROSE message which is now filled with its own parameters
-		const message = new ROSEMessage();
 		const sessionID = this.transport.getSessionID();
 		const invokeID = event ? 99999 : this.transport.getNextInvokeID();
+		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
+		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
+
+		// The root ROSE message which is now filled with its own parameters
+		const message = new ROSEMessage();
+		const wireTimeoutMs = invokeContext.invokeTimeout();
 		message.invoke = new ROSEInvoke({
 			invokeID,
 			...(sessionID && { sessionID }),
 			operationID,
 			...(context.bAddOperationName && { operationName }),
+			...(!event && wireTimeoutMs !== undefined && wireTimeoutMs > 0 ? { timeout: wireTimeoutMs } : {}),
 		});
-
-		// The encoding is provided by the context or we try to gather it via the connectionID
-		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
-		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
 
 		// Copy the invoke for logging purposes (Contains plain json data)
 		const invoke: ROSEInvoke = { ...message.invoke, argument };

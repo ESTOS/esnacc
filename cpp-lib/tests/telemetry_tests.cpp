@@ -466,7 +466,8 @@ namespace sample_runtime_tests
 			AsnGetSettingsArgument argument;
 			AsnGetSettingsResult syncResult;
 			AsnRequestError syncError;
-			const long syncRoseResult = m_clientSettingsModule.InvokeGetSettings(&argument, &syncResult, &syncError);
+			auto pSyncCtx = m_client.CreateOutboundInvokeContext(500u);
+			const long syncRoseResult = m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &syncResult, &syncError, pSyncCtx);
 			ASSERT_EQ(ROSE_NOERROR, syncRoseResult);
 			const SnaccTelemetryData* pSyncTelemetry = FindOutboundWaitTelemetry(TelemetryEntries(), SnaccTelemetryData::Reason::REMOTE_RESULT);
 			ASSERT_NE(nullptr, pSyncTelemetry);

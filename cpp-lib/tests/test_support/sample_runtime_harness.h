@@ -334,12 +334,14 @@ namespace sample_runtime_tests
 			m_strInvokeSessionId.clear();
 			m_strTelemetryNote.clear();
 			m_strOperationName.clear();
+			m_invokeTimeout.reset();
 		}
 
 		void Capture(const SnaccInvokeContext& ctx)
 		{
 			m_bCaptured = true;
 			m_strOperationName = ctx.OperationName();
+			m_invokeTimeout = ctx.InvokeTimeout();
 			if (const auto* pSessionContext = dynamic_cast<const SessionInvokeContext*>(&ctx))
 			{
 				m_bIsSessionContext = true;
@@ -385,6 +387,11 @@ namespace sample_runtime_tests
 			return m_strOperationName;
 		}
 
+		const std::optional<unsigned int>& InvokeTimeout() const
+		{
+			return m_invokeTimeout;
+		}
+
 	private:
 		bool m_bCaptured = false;
 		bool m_bIsSessionContext = false;
@@ -392,6 +399,7 @@ namespace sample_runtime_tests
 		std::string m_strInvokeSessionId;
 		std::string m_strTelemetryNote;
 		std::string m_strOperationName;
+		std::optional<unsigned int> m_invokeTimeout;
 	};
 
 	// Records inbound handler and transport observations for one server endpoint.
@@ -946,7 +954,7 @@ namespace sample_runtime_tests
 				return m_component.Invoke_asnGetSettings(argument, result, error);
 
 			auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr);
-			pCtx->SetInvokeTimeout(timeoutMs);
+			pCtx->SetInvokeTimeout(static_cast<unsigned int>(timeoutMs));
 			return m_component.Invoke_asnGetSettings(argument, result, error, pCtx);
 		}
 
@@ -971,7 +979,7 @@ namespace sample_runtime_tests
 				return m_component.Invoke_asnSetSettings(argument, result, error);
 
 			auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr);
-			pCtx->SetInvokeTimeout(timeoutMs);
+			pCtx->SetInvokeTimeout(static_cast<unsigned int>(timeoutMs));
 			return m_component.Invoke_asnSetSettings(argument, result, error, pCtx);
 		}
 
@@ -983,7 +991,7 @@ namespace sample_runtime_tests
 			AsnRequestError error;
 			SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), 4999, &argument);
 			auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr());
-			pCtx->SetInvokeTimeout(timeoutMs);
+			pCtx->SetInvokeTimeout(static_cast<unsigned int>(timeoutMs));
 			return m_endpoint.SendInvoke(invokeMsg.GetPtr(), &result, &error, "asnUnknownOperation", std::move(pCtx));
 		}
 
@@ -994,7 +1002,7 @@ namespace sample_runtime_tests
 			invoke.invokeID = m_endpoint.GetNextInvokeID();
 			invoke.operationID = OPID_asnSetSettings;
 			auto pCtx = m_endpoint.CreateSessionInvokeContext(&invoke);
-			pCtx->SetInvokeTimeout(timeoutMs);
+			pCtx->SetInvokeTimeout(static_cast<unsigned int>(timeoutMs));
 			return m_endpoint.SendInvoke(&invoke, result, error, "asnSetSettings", std::move(pCtx));
 		}
 
@@ -1003,7 +1011,7 @@ namespace sample_runtime_tests
 		{
 			SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnSetSettings, wrongArgument);
 			auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr());
-			pCtx->SetInvokeTimeout(timeoutMs);
+			pCtx->SetInvokeTimeout(static_cast<unsigned int>(timeoutMs));
 			return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnSetSettings", std::move(pCtx));
 		}
 
@@ -1154,7 +1162,7 @@ namespace sample_runtime_tests
 				return m_component.Invoke_asnCreateFancyEvents(argument, result, error);
 
 			auto pCtx = m_endpoint.CreateSessionInvokeContext(nullptr);
-			pCtx->SetInvokeTimeout(timeoutMs);
+			pCtx->SetInvokeTimeout(static_cast<unsigned int>(timeoutMs));
 			return m_component.Invoke_asnCreateFancyEvents(argument, result, error, pCtx);
 		}
 
@@ -1170,7 +1178,7 @@ namespace sample_runtime_tests
 		{
 			SnaccScopedInvokeMessage invokeMsg(m_endpoint.GetNextInvokeID(), OPID_asnCreateFancyEvents, wrongArgument);
 			auto pCtx = m_endpoint.CreateSessionInvokeContext(invokeMsg.GetPtr());
-			pCtx->SetInvokeTimeout(timeoutMs);
+			pCtx->SetInvokeTimeout(static_cast<unsigned int>(timeoutMs));
 			return m_endpoint.SendInvoke(invokeMsg.GetPtr(), result, error, "asnCreateFancyEvents", std::move(pCtx));
 		}
 

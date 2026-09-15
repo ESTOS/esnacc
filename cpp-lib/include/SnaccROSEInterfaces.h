@@ -190,12 +190,17 @@ public:
 	// Meaning in OnInvoke_: Original invoke (borrowed, cleared before telemetry retention)
 	// SNACC::ROSEInvoke* pInvoke{};
 
-	/*! Sets the outbound invoke timeout in milliseconds. -1 uses the connection default (m_lMaxInvokeWait).
-		0 is fire-and-forget: dispatch only, no wait and no async completion callback. */
-	void SetInvokeTimeout(int iTimeoutMs);
+	/*! Sets the invoke timeout in milliseconds. 0 is fire-and-forget (dispatch only, no wait and no
+		async completion). Values > 0 are encoded on ROSEInvoke.timeout when sending (not for events).
+		Inbound: populated from the wire when ROSEInvoke.timeout is present. */
+	void SetInvokeTimeout(unsigned int uiTimeoutMs);
 
-	/*! Returns the configured invoke timeout (-1 means use connection default). */
-	int InvokeTimeout() const;
+	/*! Clears a configured timeout so the connection default (m_lMaxInvokeWait) applies on outbound
+		sends. Inbound contexts remain unset when the wire field is absent. */
+	void ClearInvokeTimeout();
+
+	/*! Returns the invoke timeout when set; empty when unset or absent on the wire. */
+	std::optional<unsigned int> InvokeTimeout() const;
 
 	/*! Configures async completion for SendInvokeAsync. Result and error buffers must remain
 		valid until the callback runs or SendInvokeAsync returns a send-time failure.
@@ -236,7 +241,7 @@ protected:
 	virtual void PrepareForTelemetry();
 
 	std::string m_strOperationName;
-	int m_iInvokeTimeout{-1};
+	std::optional<unsigned int> m_invokeTimeout;
 	SnaccInvokeAsyncCallback m_asyncCallback;
 	SNACC::AsnType* m_pAsyncResult{};
 	SNACC::AsnType* m_pAsyncError{};
@@ -260,12 +265,12 @@ public:
 	/*! Pre-configures an outbound invoke context (timeout, async callback, product fields).
 		Delegates to virtual CreateInvokeContext() so product code can supply a derived type.
 		When @p invokeTimeoutMs is set, applies SetInvokeTimeout() on the new context; omit it to
-		leave the connection default (-1). Value 0 selects fire-and-forget dispatch. */
+		leave the connection default. Value 0 selects fire-and-forget dispatch. */
 	std::shared_ptr<SnaccInvokeContext> CreateOutboundInvokeContext(std::optional<unsigned int> invokeTimeoutMs = std::nullopt)
 	{
 		auto pCtx = CreateInvokeContext(SnaccInvokeContextInit(SnaccInvokeDirection::OUTBOUND));
 		if (invokeTimeoutMs.has_value())
-			pCtx->SetInvokeTimeout(static_cast<int>(*invokeTimeoutMs));
+			pCtx->SetInvokeTimeout(*invokeTimeoutMs);
 		return pCtx;
 	}
 
@@ -299,7 +304,7 @@ public:
 	 */
 	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) = 0;
 
-	/** Async outbound invoke. For InvokeTimeout() > 0 (or -1 default), requires SetAsyncCompletion() on pCtx.
+	/** Async outbound invoke. For InvokeTimeout() > 0 (or unset connection default), requires SetAsyncCompletion() on pCtx.
 	 * Returns immediately after send (ROSE_NOERROR) or with a transport/encode failure; completion is
 	 * delivered through the context callback when waiting for a reply.
 	 * InvokeTimeout() == 0 is fire-and-forget (parity with SendInvoke): dispatch only, DISPATCHED/WAIT_SKIPPED

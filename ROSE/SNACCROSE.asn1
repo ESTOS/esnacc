@@ -33,6 +33,12 @@ ROSEInvoke		::=	SEQUENCE {
 	linked-ID [0] IMPLICIT INTEGER OPTIONAL,
 	operationName [2] UTF8String OPTIONAL,
 	authentication [3] ROSEAuthRequest OPTIONAL,
+	-- Relative client-requested deadline in milliseconds.
+	-- Evaluated on the server at receive time: deadline = T_receive + timeout.
+	-- If the server cannot process the invoke in time (e.g. queued behind resource
+	-- limits) and the deadline has passed after receipt, the request is neither
+	-- executed nor answered (no late result/error/reject for that expired work).
+	timeout [4] IMPLICIT INTEGER OPTIONAL,
 	operationID INTEGER,
 	argument ANY OPTIONAL
 }

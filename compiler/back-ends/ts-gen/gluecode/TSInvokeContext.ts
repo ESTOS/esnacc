@@ -25,6 +25,8 @@ export enum EASN1TransportEncoding {
  * Base params for the invoke context
  */
 export interface IInvokeContextBaseParams {
+	// Applied via setInvokeTimeout() when constructing the context (omit = use connection default).
+	invokeTimeoutMs?: number;
 	// Encoding of the message
 	encoding?: EASN1TransportEncoding;
 	// The connection id under which the request was received send
@@ -59,9 +61,6 @@ export interface IReceiveInvokeContextParams extends IInvokeContextBaseParams {
 }
 
 export interface ISendInvokeContextParams extends IInvokeContextBaseParams {
-	// The timeout value the caller wants to wait for a result
-	timeout?: number;
-
 	// Defines the REST-Target for the request (allows to use websocket and rest simultaneously)
 	// Specify a https://rest endpoint
 	// If no target is specified the handler will use the target that has been specified using setTarget
