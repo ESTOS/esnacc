@@ -1095,7 +1095,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 */
 	public async handleInvoke<T, U = ENetUC_Common.AsnRequestError>(
 		argument: object,
-		resultObj: IASN1DataClass,
+		resultObj: object,
 		operationID: number,
 		operationName: string,
 		argumentConverter: IConverter,
