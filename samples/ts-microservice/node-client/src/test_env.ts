@@ -43,11 +43,7 @@ export interface IntegrationRunnerEnv {
 	logDirectory: string;
 }
 
-function assertEnvKeys(
-	env: NodeJS.ProcessEnv,
-	keys: readonly string[],
-	label: string,
-): void {
+function assertEnvKeys(env: NodeJS.ProcessEnv, keys: readonly string[], label: string): void {
 	const missing = keys.filter((key) => {
 		const value = env[key];
 		return value === undefined || value === "";
@@ -60,9 +56,7 @@ function assertEnvKeys(
 	}
 }
 
-export function createMicroserviceServerEnv(
-	options: MicroserviceServerTestEnvOptions,
-): NodeJS.ProcessEnv {
+export function createMicroserviceServerEnv(options: MicroserviceServerTestEnvOptions): NodeJS.ProcessEnv {
 	const env: NodeJS.ProcessEnv = {
 		...process.env,
 		MICROSERVICE_VERSION_BUILD_DATE: options.versionBuildDate ?? "06/30/2026",
@@ -80,11 +74,9 @@ export function createMicroserviceServerEnv(
 }
 
 export function resolveIntegrationRunnerEnv(nodeClientRoot: string): IntegrationRunnerEnv {
-	const nodeServerRoot = process.env.SNACC_TS_SERVER_ROOT
-		?? path.resolve(nodeClientRoot, "../node-server");
+	const nodeServerRoot = process.env.SNACC_TS_SERVER_ROOT ?? path.resolve(nodeClientRoot, "../node-server");
 	const testPort = Number(process.env.SNACC_TS_TEST_PORT ?? "13020");
-	const logDirectory = process.env.SNACC_TS_LOG_DIRECTORY
-		?? path.join(nodeServerRoot, "log", "integration-tests");
+	const logDirectory = process.env.SNACC_TS_LOG_DIRECTORY ?? path.join(nodeServerRoot, "log", "integration-tests");
 
 	const env: NodeJS.ProcessEnv = {
 		...process.env,
@@ -95,9 +87,8 @@ export function resolveIntegrationRunnerEnv(nodeClientRoot: string): Integration
 
 	assertEnvKeys(env, REQUIRED_INTEGRATION_RUNNER_ENV_KEYS, "integration test runner environment");
 
-	if (!Number.isInteger(testPort) || testPort <= 0 || testPort > 65535) {
+	if (!Number.isInteger(testPort) || testPort <= 0 || testPort > 65535)
 		throw new Error(`SNACC_TS_TEST_PORT must be a valid TCP port, got: ${env.SNACC_TS_TEST_PORT}`);
-	}
 
 	return { nodeServerRoot, testPort, logDirectory };
 }

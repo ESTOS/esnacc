@@ -15,6 +15,7 @@ import {
 	INamedType,
 	TSConverter,
 } from "./TSConverterBase.js";
+import { roseDebugBreak } from "./TSBaseUtils.js";
 
 /**
  * Sadly someone added custom written encoders decoders for the custom parameters in the UCServer
@@ -54,7 +55,7 @@ export class EAsnOptionalParametersConverter {
 		const newContext = TSConverter.addEncodeContext(context, parametername, "AsnOptionalParameters");
 
 		if (!newContext?.bUCServerOptionalParams) {
-			debugger;
+			roseDebugBreak();
 			return undefined;
 		}
 
@@ -71,7 +72,7 @@ export class EAsnOptionalParametersConverter {
 				else if (element.value.binarydata !== undefined)
 					result[element.key] = { binarydata: TSConverter.encode64(element.value.binarydata) };
 				else {
-					debugger;
+					roseDebugBreak();
 					errors.push(
 						new ConverterError(
 							ConverterErrorType.PROPERTY_TYPEMISMATCH,

@@ -7,9 +7,55 @@
 		"**/*.vs": true
 	},
 	"editor.formatOnSave": true,
-	"editor.defaultFormatter": "xaver.clang-format",
+	"editor.formatOnSaveMode": "file",
 	"C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+	"[c]": {
+		"editor.defaultFormatter": "xaver.clang-format"
+	},
+	"[cpp]": {
+		"editor.defaultFormatter": "xaver.clang-format"
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "dprint.dprint"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "dprint.dprint"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "dprint.dprint"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "dprint.dprint"
+	},
+	"dprint.path": "./node_modules/.bin/dprint",
+	"cmake.buildDirectory": "${workspaceFolder}/build/x64_vc145",
+	"cmake.configureSettings": {
+		"BUILD_TESTING": "ON",
+		"MSVC_STATIC_RUNTIME": "ON",
+		"SNACC_CTEST_REGISTER_TS": "OFF"
+	},
+	"cmake.buildBeforeRun": true,
+	"cmake.ctest.testConfiguration": "Release",
+	"cmake.ctest.testSuiteDelimiter": "[_.]",
+	"cmake.ctest.testSuiteDelimiterMaxOccurrence": 2,
 	"[html]": {
 		"editor.defaultFormatter": "vscode.html-language-features"
-	}
+	},
+	"typescript.tsdk": "typescript/node_modules/typescript/lib",
+	"typescript.enablePromptUseWorkspaceTsdk": true,
+	"nodejs-testing.include": ["typescript"],
+	"nodejs-testing.exclude": ["**/stub/**", "**/node_modules/**"],
+	"nodejs-testing.pretest": ["node", "${workspaceFolder}/scripts/prepare-ts-glue-stub.mjs"],
+	"nodejs-testing.env": {
+		"NODE_PATH": "${workspaceFolder}/samples/ts-microservice/node-client/node_modules"
+	},
+	"nodejs-testing.extensions": [
+		{
+			"extensions": ["mts", "cts", "ts"],
+			"parameters": [
+				"--import",
+				"./vscode-test-bootstrap.mjs"
+			]
+		}
+	]
 }

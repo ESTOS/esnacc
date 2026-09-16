@@ -4,9 +4,9 @@ name: Build and Test (Ubuntu)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -22,37 +22,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v5
-      with:
-        node-version: "24"
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
 
-    - name: Enable pnpm
-      run: |
-        corepack enable
-        corepack prepare pnpm@11.9.0 --activate
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.9.0 --activate
 
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_TESTING=ON
+      - name: Configure CMake
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_TESTING=ON -DSNACC_CTEST_REGISTER_TS=ON
 
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      - name: Build
+        # Build your program with the given configuration
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: Build TypeScript integration tests
-      run: cmake --build ${{github.workspace}}/build --target snacc-ts-all
+      - name: Build TypeScript integration tests
+        run: cmake --build ${{github.workspace}}/build --target snacc-ts-all
 
-    - name: Run tests (ctest)
-      working-directory: ${{github.workspace}}/build
-      env:
-        SNACC_TS_VERBOSE: "1"
-      # Execute tests defined by the CMake configuration.
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: |
-        ctest --output-on-failure -C ${{env.BUILD_TYPE}} -E snacc-ts-integration
-        ctest --output-on-failure -C ${{env.BUILD_TYPE}} -R snacc-ts-integration -V
-
+      - name: Run tests (ctest)
+        working-directory: ${{github.workspace}}/build
+        env:
+          SNACC_TS_VERBOSE: "1"
+        # Execute tests defined by the CMake configuration.
+        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+        run: |
+          ctest --output-on-failure -C ${{env.BUILD_TYPE}} -E typescript_run_ts_microservice
+          ctest --output-on-failure -C ${{env.BUILD_TYPE}} -R typescript_run_ts_microservice -V

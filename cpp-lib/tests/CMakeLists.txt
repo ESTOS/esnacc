@@ -1,15 +1,5 @@
-include(FetchContent)
-
-find_package(GTest CONFIG QUIET)
-
-if(NOT GTest_FOUND)
-	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-	FetchContent_Declare(
-		googletest
-		URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
-	)
-	FetchContent_MakeAvailable(googletest)
-endif()
+include("${CMAKE_SOURCE_DIR}/cmake/snacc_gtest.cmake")
+include("${CMAKE_SOURCE_DIR}/cmake/snacc_compiler_cpp_test_sources.cmake")
 
 set(SNACC_SAMPLE_TEST_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
 set(SNACC_SAMPLE_ASN1
@@ -50,23 +40,45 @@ add_library(snacc-sample-generated STATIC ${SNACC_SAMPLE_GENERATED_FILES})
 target_include_directories(snacc-sample-generated PUBLIC "${SNACC_SAMPLE_TEST_GENERATED_DIR}" "${CMAKE_SOURCE_DIR}")
 target_link_libraries(snacc-sample-generated PUBLIC snacc_cpp_lib)
 
-add_executable(cpp-lib-sample-runtime-tests
-	async_invoke_tests.cpp
-	call_flow_tests.cpp
-	invoke_context_tests.cpp
-	logging_tests.cpp
-	logical_failure_tests.cpp
-	module_registry_tests.cpp
-	public_api_tests.cpp
-	client_invoke_block_policy_tests.cpp
-	rose_session_subscription_tests.cpp
-	server_invoke_block_policy_tests.cpp
-	telemetry_tests.cpp
-	transport_failure_tests.cpp
-	lifecycle_tests.cpp
+set(SNACC_RUNTIME_CPP_TEST_SOURCES
+	async_invoke/async_invoke_tests.cpp
+	call_flow/call_flow_tests.cpp
+	invoke_block_policy/client_invoke_block_policy_tests.cpp
+	invoke_block_policy/server_invoke_block_policy_tests.cpp
+	invoke_context/invoke_context_tests.cpp
+	lifecycle/lifecycle_tests.cpp
+	logging/logging_tests.cpp
+	logical_failure/logical_failure_tests.cpp
+	module_registry/module_registry_tests.cpp
+	public_api/public_api_tests.cpp
+	rose_session_subscription/rose_session_subscription_tests.cpp
+	telemetry/telemetry_tests.cpp
+	transport_failure/transport_failure_tests.cpp
 )
-target_include_directories(cpp-lib-sample-runtime-tests PRIVATE "${CMAKE_SOURCE_DIR}")
-target_link_libraries(cpp-lib-sample-runtime-tests PRIVATE snacc-sample-generated GTest::gtest_main)
+
+# Single GTest executable: compiler unit tests + cpp-lib ROSE runtime tests.
+add_executable(snacc-cpp-tests
+	${SNACC_RUNTIME_CPP_TEST_SOURCES}
+	${SNACC_COMPILER_CPP_TEST_SOURCES}
+)
+target_include_directories(snacc-cpp-tests PRIVATE
+	"${CMAKE_SOURCE_DIR}"
+	"${CMAKE_CURRENT_SOURCE_DIR}"
+	${SNACC_COMPILER_CPP_TEST_INCLUDE_DIRS}
+)
+target_compile_definitions(snacc-cpp-tests PRIVATE
+	SNACC_GTEST_BINARY
+	${SNACC_COMPILER_CPP_TEST_COMPILE_DEFINITIONS}
+)
+target_link_libraries(snacc-cpp-tests PRIVATE snacc-sample-generated GTest::gtest_main c-lib)
+add_dependencies(snacc-cpp-tests compiler)
 
 include(GoogleTest)
-gtest_discover_tests(cpp-lib-sample-runtime-tests)
+gtest_discover_tests(snacc-cpp-tests
+	PROPERTIES
+		ENVIRONMENT "ESNACC_EXECUTABLE=$<TARGET_FILE:compiler>"
+)
+
+# Backward-compatible alias for scripts and docs that still reference the old target name.
+add_custom_target(cpp-lib-sample-runtime-tests)
+add_dependencies(cpp-lib-sample-runtime-tests snacc-cpp-tests)

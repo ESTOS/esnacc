@@ -26,6 +26,7 @@ the same concepts (see `.cursor/rules/rose-cross-language-parity.mdc`). New sect
 should include a **Cross-language parity** bullet naming C++, TS, and planned surfaces.
 
 Primary reference points:
+
 - `cpp-lib/include/SnaccROSEBase.h`
 - `cpp-lib/include/SnaccROSEInterfaces.h`
 - `cpp-lib/include/SnaccTelemetry.h`
@@ -33,15 +34,15 @@ Primary reference points:
 
 ## Summary
 
-| Area | Status | Semantics | Primary tests |
-| --- | --- | --- | --- |
-| Transport-session ROSE gate | Implemented | `PauseRoseProcessing` / `ResumeRoseProcessing` | `PublicApiRuntimeTest.PauseRoseProcessingBlocks*`, `LifecycleRuntimeTest.PauseRoseProcessing*` |
-| Fire-and-forget (`iTimeout == 0`) telemetry | Implemented | `Outcome::DISPATCHED` + `Reason::WAIT_SKIPPED`, not `UNHANDLED` | `TelemetryRuntimeTest.WaitSkippedTelemetry*` |
-| Response payload decode telemetry | Implemented | Caller-visible `ROSE_RE_DECODE_FAILED` drives `UNHANDLED` + `DECODE_FAILED`, not envelope kind | `TelemetryRuntimeTest.*PayloadDecodeFailureTelemetry*` |
-| Inbound decode failures and ROSE rejects | Implemented | Garbage wire silent; targeted reject only after envelope decode | `InvokeContextRuntimeTest.UnparsableInbound*`, section 5 |
-| `OnBinaryDataBlockResult()` decode-error hooks | Implemented | `OnRoseDecodeError()` and `bAlreadyTransportLogged` parity with `OnBinaryDataBlock()` | `PublicApiSmokeTest.OnBinaryDataBlockResultDecodeErrorsInvokeHook*` |
-| Inbound `ROSEMessage` ownership | Implemented | `unique_ptr` at decode sites; `std::move` through dispatch | Section 6; `InvokeContextRuntimeTest` suite |
-| Outbound encode / `Send()` ownership | Implemented | RAII encode helpers detach borrowed arms on scope exit (including encode exceptions) | Section 7; outbound encode-failure tests in `InvokeContextRuntimeTest` |
+| Area                                           | Status      | Semantics                                                                                      | Primary tests                                                                                  |
+| ---------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Transport-session ROSE gate                    | Implemented | `PauseRoseProcessing` / `ResumeRoseProcessing`                                                 | `PublicApiRuntimeTest.PauseRoseProcessingBlocks*`, `LifecycleRuntimeTest.PauseRoseProcessing*` |
+| Fire-and-forget (`iTimeout == 0`) telemetry    | Implemented | `Outcome::DISPATCHED` + `Reason::WAIT_SKIPPED`, not `UNHANDLED`                                | `TelemetryRuntimeTest.WaitSkippedTelemetry*`                                                   |
+| Response payload decode telemetry              | Implemented | Caller-visible `ROSE_RE_DECODE_FAILED` drives `UNHANDLED` + `DECODE_FAILED`, not envelope kind | `TelemetryRuntimeTest.*PayloadDecodeFailureTelemetry*`                                         |
+| Inbound decode failures and ROSE rejects       | Implemented | Garbage wire silent; targeted reject only after envelope decode                                | `InvokeContextRuntimeTest.UnparsableInbound*`, section 5                                       |
+| `OnBinaryDataBlockResult()` decode-error hooks | Implemented | `OnRoseDecodeError()` and `bAlreadyTransportLogged` parity with `OnBinaryDataBlock()`          | `PublicApiSmokeTest.OnBinaryDataBlockResultDecodeErrorsInvokeHook*`                            |
+| Inbound `ROSEMessage` ownership                | Implemented | `unique_ptr` at decode sites; `std::move` through dispatch                                     | Section 6; `InvokeContextRuntimeTest` suite                                                    |
+| Outbound encode / `Send()` ownership           | Implemented | RAII encode helpers detach borrowed arms on scope exit (including encode exceptions)           | Section 7; outbound encode-failure tests in `InvokeContextRuntimeTest`                         |
 
 ## 1. Transport-session ROSE processing gate (`PauseRoseProcessing` / `ResumeRoseProcessing`)
 
@@ -80,13 +81,13 @@ Outbound choke points check `IsProcessingAllowed()` before creating pending
 operations or sending:
 
 ```1604:1610:cpp-lib/src/SnaccROSEBase.cpp
-	if (!IsProcessingAllowed())
-	{
-		auto telemetry = SnaccTelemetryData::Create(...);
-		telemetry->finalize(..., SnaccTelemetryData::Reason::SHUTDOWN, ROSE_TE_SHUTDOWN, ...);
-		OnInvokeProcessed(telemetry);
-		return ROSE_TE_SHUTDOWN;
-	}
+if (!IsProcessingAllowed())
+{
+	auto telemetry = SnaccTelemetryData::Create(...);
+	telemetry->finalize(..., SnaccTelemetryData::Reason::SHUTDOWN, ROSE_TE_SHUTDOWN, ...);
+	OnInvokeProcessed(telemetry);
+	return ROSE_TE_SHUTDOWN;
+}
 ```
 
 `SendEvent()` uses the same gate and returns `ROSE_TE_SHUTDOWN` without sending.
@@ -94,8 +95,8 @@ operations or sending:
 Inbound invoke/event dispatch is blocked in `OnInvokeMessage()`:
 
 ```1324:1325:cpp-lib/src/SnaccROSEBase.cpp
-	if (!IsProcessingAllowed())
-		lResult = ROSE_TE_SHUTDOWN;
+if (!IsProcessingAllowed())
+	lResult = ROSE_TE_SHUTDOWN;
 ```
 
 Wire data may still be decoded on the receive path; handlers are not reached
@@ -135,7 +136,7 @@ does not wait for a response. `FinalizeTelemetry()` then classifies the
 lifecycle as dispatched, not unhandled:
 
 ```581:581:cpp-lib/src/SnaccROSEBase.cpp
-	m_pTelemetry->finalize(SnaccTelemetryData::Outcome::DISPATCHED, SnaccTelemetryData::Stage::OUTBOUND_WAIT, SnaccTelemetryData::Reason::WAIT_SKIPPED, m_lRoseResult, std::nullopt, std::move(pctx));
+m_pTelemetry->finalize(SnaccTelemetryData::Outcome::DISPATCHED, SnaccTelemetryData::Stage::OUTBOUND_WAIT, SnaccTelemetryData::Reason::WAIT_SKIPPED, m_lRoseResult, std::nullopt, std::move(pctx));
 ```
 
 `SnaccTelemetryData::Outcome::DISPATCHED` and its debug text are defined in
@@ -169,11 +170,11 @@ compares the stored pending-op result with the final caller-visible result and
 prefers the final outcome when they differ:
 
 ```549:552:cpp-lib/src/SnaccROSEBase.cpp
-	if (m_pAnswerMessage && lFinalRoseResult != m_lRoseResult)
-	{
-		m_pTelemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, GetOutboundUnhandledStageFromResult(lFinalRoseResult), GetUnhandledReasonFromResult(lFinalRoseResult), lFinalRoseResult, m_stResponseData, std::move(pctx));
-		return;
-	}
+if (m_pAnswerMessage && lFinalRoseResult != m_lRoseResult)
+{
+	m_pTelemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, GetOutboundUnhandledStageFromResult(lFinalRoseResult), GetUnhandledReasonFromResult(lFinalRoseResult), lFinalRoseResult, m_stResponseData, std::move(pctx));
+	return;
+}
 ```
 
 When payload decode succeeds, envelope kind still drives `RESULT`, `ERR`, or
@@ -198,13 +199,13 @@ from `LogTransportData()` return value before invoking the hook.
 Shared private methods on `SnaccROSEBase` centralize logging, hook invocation,
 optional reject, and telemetry:
 
-| Method | Role |
-| --- | --- |
-| `HandleInboundEnvelopeSnaccDecodeFailure` | `SnaccException` after BER `BDec` or JSON `JDec` |
-| `HandleInboundJsonParseDecodeFailure` | `SJson::Reader::parse` failure |
-| `HandleInboundUnknownEncodingDecodeFailure` | Unknown `m_eTransportEncoding` |
-| `HandleInboundOuterDecodeFailure` | Outer `catch` around the encoding switch |
-| `EmitInboundDecodeFailureTelemetry` | `OnInvokeProcessed` for decode failures |
+| Method                                      | Role                                             |
+| ------------------------------------------- | ------------------------------------------------ |
+| `HandleInboundEnvelopeSnaccDecodeFailure`   | `SnaccException` after BER `BDec` or JSON `JDec` |
+| `HandleInboundJsonParseDecodeFailure`       | `SJson::Reader::parse` failure                   |
+| `HandleInboundUnknownEncodingDecodeFailure` | Unknown `m_eTransportEncoding`                   |
+| `HandleInboundOuterDecodeFailure`           | Outer `catch` around the encoding switch         |
+| `EmitInboundDecodeFailureTelemetry`         | `OnInvokeProcessed` for decode failures          |
 
 `OnBinaryDataBlock()` passes `bSendReject=true` into the envelope helper;
 `OnBinaryDataBlockResult()` passes `bSendReject=false`.
@@ -248,12 +249,12 @@ layers **after** syntactically valid JSON exists.
 Outbound ROSE rejects must be **correlatable and semantically honest**. Do not
 claim `mistypedArgument` when no invoke was successfully decoded.
 
-| Layer | What failed | `bRoseEnvelopeDecoded` | Outbound ROSE reject? |
-| --- | --- | --- | --- |
-| Wire / syntax | BER garbage, JSON `parse` fail, unknown encoding | n/a (no envelope) | **No** — log, `OnRoseDecodeError`, telemetry only |
-| Envelope | `BDec` / `JDec` on `ROSEMessage` did not complete | `false` | **No** |
+| Layer                    | What failed                                        | `bRoseEnvelopeDecoded`      | Outbound ROSE reject?                                                      |
+| ------------------------ | -------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------- |
+| Wire / syntax            | BER garbage, JSON `parse` fail, unknown encoding   | n/a (no envelope)           | **No** — log, `OnRoseDecodeError`, telemetry only                          |
+| Envelope                 | `BDec` / `JDec` on `ROSEMessage` did not complete  | `false`                     | **No**                                                                     |
 | Envelope OK, invoke path | Decode or dispatch failed after envelope succeeded | `true` and `invoke` present | **Yes** on `OnBinaryDataBlock()` — `mistypedArgument` with real `invokeID` |
-| Argument | Operation argument decode in handler path | n/a (handler stage) | **Yes** — `OnInvokeMessage` / handler reject path |
+| Argument                 | Operation argument decode in handler path          | n/a (handler stage)         | **Yes** — `OnInvokeMessage` / handler reject path                          |
 
 Garbage wire therefore gets **no response** on the application ROSE layer (common
 RPC practice: the caller times out; an uncorrelated `invokednull` reject does not
@@ -261,10 +262,10 @@ help a pending client invoke).
 
 ### Intentional asymmetry: `OnBinaryDataBlock()` vs `OnBinaryDataBlockResult()`
 
-| Entry point | Role | Reject on decode failure? |
-| --- | --- | --- |
-| `OnBinaryDataBlock()` | Inbound invokes/events (server receive path) | **May** send targeted `mistypedArgument` when envelope decode succeeded and `invoke` is known |
-| `OnBinaryDataBlockResult()` | Inbound results/errors/rejects (client response path) | **Must not** send rejects for decode failures; log + hook + telemetry only |
+| Entry point                 | Role                                                  | Reject on decode failure?                                                                     |
+| --------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `OnBinaryDataBlock()`       | Inbound invokes/events (server receive path)          | **May** send targeted `mistypedArgument` when envelope decode succeeded and `invoke` is known |
+| `OnBinaryDataBlockResult()` | Inbound results/errors/rejects (client response path) | **Must not** send rejects for decode failures; log + hook + telemetry only                    |
 
 Hook and logging parity between the two paths is required. **Reject parity is not**
 — the response path must not fabricate server-side rejects when a reply cannot be
@@ -302,22 +303,22 @@ If dispatch throws, the outer `catch` uses the snapshot for targeted
 
 `OnROSEMessage()` takes `std::unique_ptr<ROSEMessage>`:
 
-| Stage | Owner |
-| --- | --- |
-| Before envelope decode | Local `unique_ptr` in the decode `try` block |
-| After envelope decode, before `OnROSEMessage` | Local `unique_ptr` + optional `InboundInvokeRejectContext` snapshot |
-| Invoke/event dispatch | `OnInvokeMessage(std::unique_ptr)` — destroyed after dispatch |
-| Matched result/error/reject | `CompletePendingOperation(std::move)` → `m_pAnswerMessage` |
-| Orphan result/error/reject | `CompletePendingOperation()` when lookup fails |
-| `SnaccException` before envelope decode | Local `unique_ptr` destroyed on scope exit |
-| `SnaccException` after envelope decode | `rejectCtx` snapshot drives reject/telemetry; `unique_ptr` destroyed on scope exit |
+| Stage                                         | Owner                                                                              |
+| --------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Before envelope decode                        | Local `unique_ptr` in the decode `try` block                                       |
+| After envelope decode, before `OnROSEMessage` | Local `unique_ptr` + optional `InboundInvokeRejectContext` snapshot                |
+| Invoke/event dispatch                         | `OnInvokeMessage(std::unique_ptr)` — destroyed after dispatch                      |
+| Matched result/error/reject                   | `CompletePendingOperation(std::move)` → `m_pAnswerMessage`                         |
+| Orphan result/error/reject                    | `CompletePendingOperation()` when lookup fails                                     |
+| `SnaccException` before envelope decode       | Local `unique_ptr` destroyed on scope exit                                         |
+| `SnaccException` after envelope decode        | `rejectCtx` snapshot drives reject/telemetry; `unique_ptr` destroyed on scope exit |
 
 Reject policy in decode `catch` blocks:
 
-| Entry point | Send `mistypedArgument` reject? |
-| --- | --- |
-| `OnBinaryDataBlock()` | Yes, when `rejectCtx` is present and invoke ID ≠ 99999 |
-| `OnBinaryDataBlockResult()` | No — telemetry only |
+| Entry point                 | Send `mistypedArgument` reject?                        |
+| --------------------------- | ------------------------------------------------------ |
+| `OnBinaryDataBlock()`       | Yes, when `rejectCtx` is present and invoke ID ≠ 99999 |
+| `OnBinaryDataBlockResult()` | No — telemetry only                                    |
 
 ### Likely code paths
 
@@ -353,13 +354,13 @@ when encode threw.
 
 File-local RAII helpers in `SnaccROSEBase.cpp` (anonymous namespace):
 
-| Helper | Role |
-| --- | --- |
-| `RoseEncodeRejectBorrow` | Binds stack `ROSEReject` into `ROSEMessage` for `EncodeReject` |
-| `RoseEncodeResultEnvelope` | Owns stack `ROSEResult` + encode allocations; borrows result payload |
-| `RoseEncodeErrorEnvelope` | Owns stack `ROSEError` + `AsnAny` wrapper; borrows error payload |
-| `ScopedEncodeInvokeBorrow` | Binds caller `ROSEInvoke` into outbound `ROSEMessage` for `Send` |
-| `ScopedInvokeOperationName` | Adds/removes temporary JSON `operationName` on caller invoke |
+| Helper                      | Role                                                                 |
+| --------------------------- | -------------------------------------------------------------------- |
+| `RoseEncodeRejectBorrow`    | Binds stack `ROSEReject` into `ROSEMessage` for `EncodeReject`       |
+| `RoseEncodeResultEnvelope`  | Owns stack `ROSEResult` + encode allocations; borrows result payload |
+| `RoseEncodeErrorEnvelope`   | Owns stack `ROSEError` + `AsnAny` wrapper; borrows error payload     |
+| `ScopedEncodeInvokeBorrow`  | Binds caller `ROSEInvoke` into outbound `ROSEMessage` for `Send`     |
+| `ScopedInvokeOperationName` | Adds/removes temporary JSON `operationName` on caller invoke         |
 
 Each helper detaches borrowed pointers in its destructor.
 
@@ -431,29 +432,29 @@ Each helper detaches borrowed pointers in its destructor.
 ## 10. Cross-language runtime test matrix
 
 Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
-`compiler/back-ends/ts-gen/tests/` (run via `scripts/run_gluecode_tests.sh`). Integration smoke:
+`typescript/` (run via `scripts/run_gluecode_tests.sh`). Integration smoke:
 `samples/ts-microservice/node-client/`.
 
-| C++ suite / area | TS glue tests | Status |
-| --- | --- | --- |
-| `module_registry_tests` | `TSASN1Base.registry.test.ts` | **Aligned** (static registration nuances C++-only) |
-| `TSModuleCapabilities` / negotiate helper | `TSModuleCapabilities.test.ts` | **Aligned** |
-| `client_invoke_block_policy_tests` | `TSASN1Base.invokeBlockPolicy.test.ts` | **Aligned** (stub gate; loopback runtime C++-only) |
-| `server_invoke_block_policy_tests` | `TSASN1Base.invokeBlockPolicy.test.ts` | **Partial** (subscription path only) |
-| `rose_session_subscription_tests` | `TSASN1Base.roseSessionSubscription.test.ts` | **Partial** (`SnaccROSEComponent` C++-only) |
-| Pause / shutdown gate | `TSASN1Base.pauseRoseProcessing.test.ts` | **Partial** (3 scenarios; lifecycle/async overlap C++-only) |
-| `InvokeWireTimeoutTest` / outbound encode | `TSROSEBase.invokeTimeout.test.ts` | **Aligned** (unit + encode path) |
-| `InvokeContextInitTest` | `TSInvokeContext.init.test.ts` | **Partial** (wire `operationName` vs lookup differs from C++) |
-| `InvokeContextRuntimeTest` (loopback) | `TSCallFlow.loopback.test.ts` (subset) | **Partial** — full orphan/malformed matrix C++-only |
-| `OutboundWireInvokeTimeoutReachesInboundHandler*` | — | **Blocked** — TS `receiveHandleROSEMessage` does not copy wire `timeout` into context yet |
-| `call_flow_tests` | `TSCallFlow.loopback.test.ts` + integration smoke | **Aligned** (loopback; integration smoke separate) |
-| `logical_failure_tests` | `TSLogicalFailure.loopback.test.ts` | **Partial** — TS returns wire `InvokeProblemenum` (not C++ `ROSE_REJECT_*`); BER loopback loses `invokeProblem=1` on reject round-trip (spec failure, see below) |
-| `transport_failure_tests` | `TSTransportFailure.loopback.test.ts` | **Partial** (timeout code `requestTimedOut` vs `ROSE_TE_TIMEOUT`) |
-| `async_invoke_tests` | — | **Blocked** — Promise model; no `SetAsyncCompletion` surface |
-| `logging_tests` | — | **Blocked** — no `ConfigureFileLogging` / transport log-flag API in TS |
-| `telemetry_tests` | — | **Blocked** — no telemetry subsystem in TS glue |
-| `lifecycle_tests` | — | **Blocked** — partial overlap with pause tests |
-| `public_api_tests` (decode hooks, file log) | — | **Blocked** — C++-specific APIs |
+| C++ suite / area                                  | TS glue tests                                     | Status                                                                                                                                                           |
+| ------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `module_registry_tests`                           | `TSASN1Base.registry.test.ts`                     | **Aligned** (static registration nuances C++-only)                                                                                                               |
+| `TSModuleCapabilities` / negotiate helper         | `TSModuleCapabilities.test.ts`                    | **Aligned**                                                                                                                                                      |
+| `client_invoke_block_policy_tests`                | `TSASN1Base.invokeBlockPolicy.test.ts`            | **Aligned** (stub gate; loopback runtime C++-only)                                                                                                               |
+| `server_invoke_block_policy_tests`                | `TSASN1Base.invokeBlockPolicy.test.ts`            | **Partial** (subscription path only)                                                                                                                             |
+| `rose_session_subscription_tests`                 | `TSASN1Base.roseSessionSubscription.test.ts`      | **Partial** (`SnaccROSEComponent` C++-only)                                                                                                                      |
+| Pause / shutdown gate                             | `TSASN1Base.pauseRoseProcessing.test.ts`          | **Partial** (3 scenarios; lifecycle/async overlap C++-only)                                                                                                      |
+| `InvokeWireTimeoutTest` / outbound encode         | `TSROSEBase.invokeTimeout.test.ts`                | **Aligned** (unit + encode path)                                                                                                                                 |
+| `InvokeContextInitTest`                           | `TSInvokeContext.init.test.ts`                    | **Partial** (wire `operationName` vs lookup differs from C++)                                                                                                    |
+| `InvokeContextRuntimeTest` (loopback)             | `TSCallFlow.loopback.test.ts` (subset)            | **Partial** — full orphan/malformed matrix C++-only                                                                                                              |
+| `OutboundWireInvokeTimeoutReachesInboundHandler*` | —                                                 | **Blocked** — TS `receiveHandleROSEMessage` does not copy wire `timeout` into context yet                                                                        |
+| `call_flow_tests`                                 | `TSCallFlow.loopback.test.ts` + integration smoke | **Aligned** (loopback; integration smoke separate)                                                                                                               |
+| `logical_failure_tests`                           | `TSLogicalFailure.loopback.test.ts`               | **Partial** — TS returns wire `InvokeProblemenum` (not C++ `ROSE_REJECT_*`); BER loopback loses `invokeProblem=1` on reject round-trip (spec failure, see below) |
+| `transport_failure_tests`                         | `TSTransportFailure.loopback.test.ts`             | **Partial** (timeout code `requestTimedOut` vs `ROSE_TE_TIMEOUT`)                                                                                                |
+| `async_invoke_tests`                              | —                                                 | **Blocked** — Promise model; no `SetAsyncCompletion` surface                                                                                                     |
+| `logging_tests`                                   | —                                                 | **Blocked** — no `ConfigureFileLogging` / transport log-flag API in TS                                                                                           |
+| `telemetry_tests`                                 | —                                                 | **Blocked** — no telemetry subsystem in TS glue                                                                                                                  |
+| `lifecycle_tests`                                 | —                                                 | **Blocked** — partial overlap with pause tests                                                                                                                   |
+| `public_api_tests` (decode hooks, file log)       | —                                                 | **Blocked** — C++-specific APIs                                                                                                                                  |
 
 **Known TS/C++ behavioral difference (documented, not a test failure):** inbound
 `SnaccInvokeContext` resolves `OperationName()` from operationID lookup and **ignores** wire
@@ -472,27 +473,27 @@ encode/decode in `SNACCROSE_Converter.ts` (not test harness).
 ### Block A — Done in this pass
 
 - Glue tests for invoke timeout, invoke-context init, remote-capability clear/query.
-- Shared capture transport (`compiler/back-ends/ts-gen/tests/support/rose_test_transport.ts`).
+- Shared capture transport (`typescript/support/rose_test_transport.ts`).
 - Matrix above in this file.
 
 ### Block B — Loopback harness (done in 7.0.18 branch)
 
-1. `compiler/back-ends/ts-gen/tests/support/sample_runtime_harness.ts` — loopback transport + sample modules.
+1. `typescript/support/sample_runtime_harness.ts` — loopback transport + sample modules.
 2. Sample stubs copied in `scripts/run_gluecode_tests.*` (`ENetUC_Settings_Manager`, `ENetUC_Event_Manager`).
 3. `TSCallFlow.loopback.test.ts`, `TSLogicalFailure.loopback.test.ts`, `TSTransportFailure.loopback.test.ts`.
-4. CMake `ctest` target `snacc-ts-glue` (requires `bash` + `snacc-ts-glue-prepare`).
+4. CI CMake `ctest` batch (`SNACC_CTEST_REGISTER_TS=ON`): `typescript_run_all_compiler_ts_rose_runtime_loopback_spec_tests` runs the same `typescript/*.test.ts` files via `scripts/run-ts-glue-test-suite.mjs`. Local IDE uses node:test Test Explorer (`nodejs-testing`); BER/JSON matrix cases use top-level `test("… (BER)")` / `test("… (JSON)")` literals so static discovery matches CI (`node --test` registers loop bodies at runtime only).
 
 ### Block C — Telemetry in TypeScript (largest product gap)
 
 Port C++ `SnaccTelemetry.h` / `SnaccTelemetryData` / `SnaccTelemetryCallback` to glue:
 
-| C++ | Proposed TS |
-| --- | --- |
-| `SnaccTelemetryData::Create` / `CreateFinalized` | `SnaccTelemetryData.create` / `createFinalized` |
-| `Direction`, `Stage`, `Outcome`, `Reason` enums | Same names, TS enums |
-| `OnInvokeProcessed` callback | `onInvokeProcessed` on transport or logger sink |
-| `PrepareForTelemetry()` on invoke context | Clone context for telemetry retention (needs pluggable context — Block D) |
-| Outbound/inbound wait, dispatch, decode-failure paths | Hook at same sites as `SnaccROSEBase.cpp` |
+| C++                                                   | Proposed TS                                                               |
+| ----------------------------------------------------- | ------------------------------------------------------------------------- |
+| `SnaccTelemetryData::Create` / `CreateFinalized`      | `SnaccTelemetryData.create` / `createFinalized`                           |
+| `Direction`, `Stage`, `Outcome`, `Reason` enums       | Same names, TS enums                                                      |
+| `OnInvokeProcessed` callback                          | `onInvokeProcessed` on transport or logger sink                           |
+| `PrepareForTelemetry()` on invoke context             | Clone context for telemetry retention (needs pluggable context — Block D) |
+| Outbound/inbound wait, dispatch, decode-failure paths | Hook at same sites as `SnaccROSEBase.cpp`                                 |
 
 Then port `telemetry_tests.cpp` → `TSTelemetry.test.ts` (outcome/reason assertions, not C++ ownership).
 

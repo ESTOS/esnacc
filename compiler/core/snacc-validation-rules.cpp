@@ -1,7 +1,7 @@
 #include "snacc-validation-rules.h"
 
-#include "../../c-lib/include/asn-config.h"
-#include "../../c-lib/include/platform-functions.h"
+#include "asn-config.h"
+#include "platform-functions.h"
 #include <cctype>
 #include <cstring>
 #include <string>

@@ -22,11 +22,13 @@ export interface IAsnModuleDetailLike {
 }
 
 function applyOpIds(opIds: readonly number[] | undefined, target: Map<number, IOpVersionInfo>): void {
-	if (!opIds)
+	if (!opIds) {
 		return;
+	}
 	for (const opId of opIds) {
-		if (opId === 0)
+		if (opId === 0) {
 			continue;
+		}
 		target.set(opId, { addedUnix: 0, deprecatedUnix: 0 });
 	}
 }

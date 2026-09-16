@@ -50,7 +50,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 # build executable and link it with c-static-lib and back-end
 add_executable(compiler ${src_files} ${header_files})
-target_link_libraries (compiler LINK_PUBLIC c-lib)
+target_link_libraries(compiler LINK_PUBLIC c-lib)
+target_include_directories(compiler PRIVATE "${CMAKE_SOURCE_DIR}/c-lib/include")
 
 # Get include paths the compiler needs
 # get all subdriectories of back-ends

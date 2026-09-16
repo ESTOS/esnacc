@@ -60,8 +60,9 @@ export class RoseSessionSubscriptionStore implements IRoseSessionSubscription {
 		opIds: readonly number[],
 	): void {
 		this.clearModuleOpIds(moduleMap, flatOpIds, moduleIid);
-		if (opIds.length === 0)
+		if (opIds.length === 0) {
 			return;
+		}
 
 		const moduleOpIds = new Set<number>();
 		for (const opId of opIds) {
@@ -73,10 +74,12 @@ export class RoseSessionSubscriptionStore implements IRoseSessionSubscription {
 
 	private clearModuleOpIds(moduleMap: Map<number, Set<number>>, flatOpIds: Set<number>, moduleIid: number): void {
 		const previous = moduleMap.get(moduleIid);
-		if (!previous)
+		if (!previous) {
 			return;
-		for (const opId of previous)
+		}
+		for (const opId of previous) {
 			flatOpIds.delete(opId);
+		}
 		moduleMap.delete(moduleIid);
 	}
 }

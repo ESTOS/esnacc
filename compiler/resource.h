@@ -18,6 +18,7 @@
 #define DELPHI_ASN1_TYPES				1012
 #define TS_ROSE_SESSION_SUBSCRIPTION	1013
 #define TS_ROSE_SESSION_SUBSCRIPTION_STORE 1014
+#define TS_BASE_UTILS					1015
 
 // Next default values for new objects
 //

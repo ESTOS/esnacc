@@ -25,7 +25,7 @@
 #include <cpp-lib/include/SNACCROSE.h>
 #include <cpp-lib/include/SnaccROSEBase.h>
 
-namespace sample_runtime_tests
+namespace snacclib
 {
 	using namespace SNACC;
 
@@ -1436,4 +1436,4 @@ namespace sample_runtime_tests
 		EventClientModule m_clientEventModule;												   // client module issuing event invokes and receiving fancy events
 	};
 
-} // namespace sample_runtime_tests
+} // namespace snacclib

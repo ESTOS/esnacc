@@ -29,6 +29,7 @@ import {
 	ISendInvokeContextParams,
 } from "./TSInvokeContext.js";
 import type { IRoseSessionSubscription } from "./IRoseSessionSubscription.js";
+import { roseDebugBreak } from "./TSBaseUtils.js";
 
 /**
  * The socket might be a node or browser websocket or a node raw tcp socket, thus we cast it to any
@@ -444,7 +445,7 @@ export function handleRoseReject(roseReject: ROSEReject): AsnInvokeProblem {
  */
 export function validateIsDedicatedObject(obj: unknown): void {
 	if (Object.prototype.isPrototypeOf.call(Object.getPrototypeOf(obj), Object)) {
-		debugger;
+		roseDebugBreak();
 		// This stub relies on using constructor created objects as we use instanceof in the stub
 		// Thus an object created with {} is not usable here as it fails with the instanceof checks
 		// Simply pass the parameters you have in your {} into the argument of the constructor any everything is fine...
@@ -679,7 +680,7 @@ export function asn1Decode<T>(
 		} else if (typeof argument === "object")
 			jsonData = argument;
 		else
-			debugger;
+			roseDebugBreak();
 		// UCWeb creates an array envelop which is technically wrong so we need to remove that here
 		// All ROSE messages are single sequences
 		if (typeof jsonData === "string" && jsonData.startsWith("["))
@@ -694,7 +695,7 @@ export function asn1Decode<T>(
 			// The encapsulated uses a certain scheme and we need to validate that scheme against the data we received
 			berData = argument.valueBeforeDecodeView;
 		} else {
-			debugger;
+			roseDebugBreak();
 		}
 	} else if (invokeContext.encoding === EASN1TransportEncoding.JSON) {
 		if (argument instanceof Uint8Array)
@@ -706,7 +707,7 @@ export function asn1Decode<T>(
 			else if (type === "object")
 				jsonData = argument;
 			else
-				debugger;
+				roseDebugBreak();
 		}
 	}
 
@@ -754,7 +755,7 @@ export function asn1Encode(
 			return converter.toBER(argument, errors, encodeContext);
 		case undefined:
 		default:
-			debugger;
+			roseDebugBreak();
 	}
 	return undefined;
 }
@@ -925,7 +926,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				diagnostic,
 			});
 			// If you land here, check the payLoad why it could not get encoded
-			debugger;
+			roseDebugBreak();
 			result = createInvokeReject(invoke, CustomInvokeProblemEnum.internalError, "Failed to encode ROSEError object");
 		}
 		return result;
@@ -964,7 +965,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				diagnostic,
 			});
 			// If you land here, check the payLoad why it could not get encoded
-			debugger;
+			roseDebugBreak();
 			result = createInvokeReject(invoke, CustomInvokeProblemEnum.internalError, "Failed to encode ROSEResult object");
 		}
 
@@ -1172,7 +1173,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			diagnostic,
 		});
 		// If you land here, check the payLoad what the other side has replied to our request
-		debugger;
+		roseDebugBreak();
 		return new AsnInvokeProblem(InvokeProblemenum.mistypedArgument, diagnostic);
 	}
 
@@ -1220,7 +1221,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			}
 		} else {
 			// If you land here, check the payLoad what the other side has sent to us
-			debugger;
+			roseDebugBreak();
 			const diagnostic = converterErrors.getDiagnostic();
 			const payLoad = ROSEBase.getDebugPayload(invoke.argument);
 			this.transport.log(ELogSeverity.error, "Could not decode OnEvent argument", methodName, this, {
@@ -1301,7 +1302,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				diagnostic,
 			});
 			// If you land here, check the payLoad what the other side has replied to our request
-			debugger;
+			roseDebugBreak();
 			result = createInvokeReject(invoke, InvokeProblemenum.mistypedArgument, diagnostic);
 		}
 
@@ -1312,7 +1313,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		else if (result instanceof ROSEReject)
 			this.transport.logReject(methodName, this, result, argument, invokeContext, true);
 		else
-			debugger;
+			roseDebugBreak();
 
 		return result;
 	}

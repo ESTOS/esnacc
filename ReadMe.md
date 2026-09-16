@@ -7,37 +7,37 @@
 ## The three blocks
 
 ```
-  .asn1 modules          esnacc compiler          your application
-       │                       │                        ▲
-       └──────►  generated stubs (Invoke_ / OnInvoke_) ─┤
-       └──────►  runtime library (cpp-lib / TS glue) ──┘
+.asn1 modules          esnacc compiler          your application
+     │                       │                        ▲
+     └──────►  generated stubs (Invoke_ / OnInvoke_) ─┤
+     └──────►  runtime library (cpp-lib / TS glue) ──┘
 ```
 
-| Block | What it is | Where |
-|-------|------------|--------|
-| **Compiler** | Parses ASN.1, emits types and ROSE stubs | `compiler/`, `output/bin/esnacc` |
-| **Generated output** | Types, encoders, ROSE stubs, or API docs — per target | Your build output directory |
-| **Runtime** | Transport hooks, invoke context, encode/decode, telemetry | `cpp-lib/`, TS glue under `compiler/back-ends/ts-gen/` |
+| Block                | What it is                                                | Where                                                  |
+| -------------------- | --------------------------------------------------------- | ------------------------------------------------------ |
+| **Compiler**         | Parses ASN.1, emits types and ROSE stubs                  | `compiler/`, `output/bin/esnacc`                       |
+| **Generated output** | Types, encoders, ROSE stubs, or API docs — per target     | Your build output directory                            |
+| **Runtime**          | Transport hooks, invoke context, encode/decode, telemetry | `cpp-lib/`, TS glue under `compiler/back-ends/ts-gen/` |
 
 ## Supported targets
 
 The compiler can emit several kinds of output from the same ASN.1 modules. Feature depth varies by backend; **C++** and **TypeScript** are the fully maintained ROSE stacks.
 
-| Target | Generated output |
-|--------|------------------|
-| **C** | Structure definitions; BER encoder/decoders |
-| **C++** | Structure definitions; JSON and BER encoder/decoders; ROSE client/server stubs |
-| **TypeScript** | Structure definitions; JSON and BER encoder/decoders; ROSE client stubs (Node + browser) and server stubs |
-| **C#** | Structure definitions |
-| **Delphi** | Structure definitions |
-| **Java** | Structure definitions |
-| **Kotlin** | Structure definitions |
-| **JavaScript (JSON)** | Structure definitions |
-| **JavaScript (ES6)** | Structure definitions |
-| **Swift** | Structure definitions |
-| **IDL** | Interface definitions |
-| **JSDoc** | JSON documentation from ASN.1 comments |
-| **OpenAPI** | OpenAPI JSON from ASN.1 comments — use with [esnacc-openapi-sdk](https://github.com/ESTOS/esnacc-openapi-sdk) ([sample](samples/ts-microservice/openapi)) |
+| Target                | Generated output                                                                                                                                          |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **C**                 | Structure definitions; BER encoder/decoders                                                                                                               |
+| **C++**               | Structure definitions; JSON and BER encoder/decoders; ROSE client/server stubs                                                                            |
+| **TypeScript**        | Structure definitions; JSON and BER encoder/decoders; ROSE client stubs (Node + browser) and server stubs                                                 |
+| **C#**                | Structure definitions                                                                                                                                     |
+| **Delphi**            | Structure definitions                                                                                                                                     |
+| **Java**              | Structure definitions                                                                                                                                     |
+| **Kotlin**            | Structure definitions                                                                                                                                     |
+| **JavaScript (JSON)** | Structure definitions                                                                                                                                     |
+| **JavaScript (ES6)**  | Structure definitions                                                                                                                                     |
+| **Swift**             | Structure definitions                                                                                                                                     |
+| **IDL**               | Interface definitions                                                                                                                                     |
+| **JSDoc**             | JSON documentation from ASN.1 comments                                                                                                                    |
+| **OpenAPI**           | OpenAPI JSON from ASN.1 comments — use with [esnacc-openapi-sdk](https://github.com/ESTOS/esnacc-openapi-sdk) ([sample](samples/ts-microservice/openapi)) |
 
 Backends live under `compiler/back-ends/` (`c-gen`, `c++-gen`, `ts-gen`, `cs-gen`, `delphi-gen`, `java-gen`, `kotlin-gen`, `js-gen`, `jses6-gen`, `swift-gen`, `idl-gen`, `jsondoc-gen`, `openapi-gen`, …).
 
@@ -76,22 +76,22 @@ cmake --build .
 Run C++ runtime tests (after build):
 
 ```shell
-cmake --build . --config Release --target cpp-lib-sample-runtime-tests
-./cpp-lib/tests/Release/cpp-lib-sample-runtime-tests    # path may vary by platform
+cmake --build . --config Release --target snacc-cpp-tests
+./cpp-lib/tests/Release/snacc-cpp-tests.exe    # path may vary by platform
 ```
 
 Full build options and IDE workflows: **[docs/build.md](docs/build.md)**.
 
 ## Documentation
 
-| Topic | Document |
-|-------|----------|
-| Repository map and agent routing | [AGENTS.md](AGENTS.md) |
-| Build (CMake, VS, CLion, VS Code, macOS) | [docs/build.md](docs/build.md) |
-| C++ runtime semantics | [cpp-lib/tests/runtime_correctness_notes.md](cpp-lib/tests/runtime_correctness_notes.md) |
-| Samples and integration tests | [samples/readme.md](samples/readme.md) |
-| Background, licensing, capabilities | [FAQ.md](FAQ.md) |
-| OpenAPI + Swagger UI | [esnacc-openapi-sdk](https://github.com/ESTOS/esnacc-openapi-sdk) · [sample](samples/ts-microservice/openapi) |
+| Topic                                    | Document                                                                                                      |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Repository map and agent routing         | [AGENTS.md](AGENTS.md)                                                                                        |
+| Build (CMake, VS, CLion, VS Code, macOS) | [docs/build.md](docs/build.md)                                                                                |
+| C++ runtime semantics                    | [cpp-lib/tests/runtime_correctness_notes.md](cpp-lib/tests/runtime_correctness_notes.md)                      |
+| Samples and integration tests            | [samples/readme.md](samples/readme.md)                                                                        |
+| Background, licensing, capabilities      | [FAQ.md](FAQ.md)                                                                                              |
+| OpenAPI + Swagger UI                     | [esnacc-openapi-sdk](https://github.com/ESTOS/esnacc-openapi-sdk) · [sample](samples/ts-microservice/openapi) |
 
 ## Releases
 

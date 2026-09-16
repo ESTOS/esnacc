@@ -27,6 +27,7 @@ import {
 	ROSEBase,
 	toASN1ByteArray,
 } from "./TSROSEBase.js";
+import { roseDebugBreak } from "./TSBaseUtils.js";
 
 export interface IWebSocketOptions {
 	perMessageDeflate?: boolean;
@@ -220,7 +221,7 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 			case ESocketState.CLOSED:
 				return "CLOSED";
 			default:
-				debugger;
+				roseDebugBreak();
 				return "UNKNOWN";
 		}
 	}

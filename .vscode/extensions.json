@@ -1,10 +1,12 @@
 {
-    "recommendations": [
-        "ms-vscode.cpptools",
-        "ms-vscode.cpptools-extension-pack",
-        "ms-vscode.cpptools-themes",
-        "ms-vscode.cmake-tools",
-        "vadimcn.vscode-lldb",
-		"xaver.clang-format"
-    ]
+	"recommendations": [
+		"ms-vscode.cpptools",
+		"ms-vscode.cpptools-extension-pack",
+		"ms-vscode.cpptools-themes",
+		"ms-vscode.cmake-tools",
+		"vadimcn.vscode-lldb",
+		"xaver.clang-format",
+		"dprint.dprint",
+		"connor4312.nodejs-testing"
+	]
 }

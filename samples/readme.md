@@ -17,20 +17,23 @@ related_docs:
 ---
 
 # Samples
+
 This folder contains samples that show how to use the snacc compiler and the generated runtime code.
 
 ## ts-microservice
+
 A TypeScript microservice sample with three packages under `samples/ts-microservice/`:
 
-| Package | Purpose |
-| --- | --- |
-| `node-server` | Express backend with REST (`/rest`) and WebSocket (`/ws`) entry points for the generated ASN.1 stubs |
-| `browser-client` | Vite-based browser demo with a small HTML UI |
-| `node-client` | Headless Node integration tests (`node:test`) — the CI gate for TypeScript codegen |
+| Package          | Purpose                                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `node-server`    | Express backend with REST (`/rest`) and WebSocket (`/ws`) entry points for the generated ASN.1 stubs |
+| `browser-client` | Vite-based browser demo with a small HTML UI                                                         |
+| `node-client`    | Headless Node integration tests (`node:test`) — the CI gate for TypeScript codegen                   |
 
 `browser-client` and `node-client` talk to `node-server` over the same ASN.1 interface (`samples/interface/*.asn1`). Communication is either REST-like stateless HTTP POST calls or a stateful WebSocket connection for server-to-client events.
 
 ### node-client
+
 `node-client` is not a demo app. It is an automated test runner — similar in spirit to `cpp-lib/tests` for the C++ runtime, but exercising the real HTTP/WebSocket stack:
 
 1. Build `esnacc` and run `samples/prepare.*` (same script CMake uses: stubs + `pnpm install`).

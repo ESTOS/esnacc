@@ -19,35 +19,39 @@ cmake --build .
 
 Outputs (defaults):
 
-| Artifact | Location |
-|----------|----------|
-| Compiler (`esnacc` / `esnaccd`) | `output/bin/` |
-| C++ library (`esnacc_cpp_lib`) | `output/libx64/` (x64) or `output/lib/` (x86) |
+| Artifact                        | Location                                      |
+| ------------------------------- | --------------------------------------------- |
+| Compiler (`esnacc` / `esnaccd`) | `output/bin/`                                 |
+| C++ library (`esnacc_cpp_lib`)  | `output/libx64/` (x64) or `output/lib/` (x86) |
 
 ### Ensure compiler is up to date (no Node)
 
 Scripts under `scripts/` configure CMake if needed, run `cmake --build --target compiler` (CMake/MSBuild only rebuild when inputs changed), and resolve the path from `CMakeCache.txt` (`COMPILER_OUTPUT_PATH` / `COMPILER_OUTPUT_NAME`).
 
-| Platform | Entry point |
-|----------|-------------|
+| Platform      | Entry point                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------ |
 | Windows (CMD) | `scripts\ensure_compiler.bat` — sets `SNACC_COMPILER` and prepends its directory to `PATH` |
-| Linux / macOS | `scripts/ensure_compiler.sh` — use `--export` to emit shell `export` lines |
+| Linux / macOS | `scripts/ensure_compiler.sh` — use `--export` to emit shell `export` lines                 |
 
 Environment variables: `SNACCLIB7_ROOT`, `SNACC_CMAKE_BUILD_DIR`, `SNACC_CMAKE_GENERATOR`, `SNACC_CONFIGURATION`, `SNACC_SKIP_COMPILER_BUILD`, `SNACC_FORCE_COMPILER_BUILD`, `SNACC_COMPILER`.
 
 `samples/prepare.bat`, `samples/prepare.sh`, and `ROSE/makesnaccrose.bat` call these helpers before running Node or invoking the compiler directly.
 
-TypeScript gluecode unit tests live under `compiler/back-ends/ts-gen/tests/` (registry + client invoke block policy). The run scripts assemble an ephemeral `tests/workdir/` copy (gluecode plus sample `ENetUC_Common` stubs) so the source `gluecode/` tree stays compiler-only. Run `scripts/run_gluecode_tests.bat` (Windows) or `scripts/run_gluecode_tests.sh` (Linux) after `samples/prepare` has installed node-client dependencies.
+TypeScript ROSE runtime specs live under repository-root `typescript/` (parity with `cpp-lib/tests/` scenario folders). Compiler C++ unit tests live under `compiler/tests/cpp/`. All C++ GTest cases (compiler + cpp-lib runtime) link into one executable: `snacc-cpp-tests`. Runtime sources live under `cpp-lib/tests/<scenario>/` (e.g. `call_flow/`, `invoke_context/`).
+
+VS Code CMake Tools shows CTest cases in a tree when `cmake.ctest.testSuiteDelimiter` is set (see `.vscode/settings.json`). GTest suite names in `snacc-cpp-tests` are prefixed (`snacclib_CallFlowRuntimeTest`, `Compiler_CliParameterTest`, …). With `cmake.ctest.testSuiteDelimiter: "[_.]"` and `testSuiteDelimiterMaxOccurrence: 2`, Test Explorer shows **snacclib** / **Compiler** → fixture → case. Use `cmake.ctest.testConfiguration: Release` so MSVC multi-config builds do not show `*_NOT_BUILT` placeholder tests for Debug.
+
+JavaScript dependencies use **pnpm only** (`packageManager` in root `package.json`). `npm install` is blocked via a `preinstall` hook (`scripts/enforce-pnpm.mjs`). Enable pnpm with `corepack enable`, then run `pnpm install` at the repository root (workspace includes `typescript/`). The `samples/ts-microservice` tree has its own pnpm workspace and the same guard in each package (`check-pm.js`). The glue run scripts assemble an ephemeral `typescript/stub/` copy (gluecode plus sample stubs) so `compiler/back-ends/ts-gen/gluecode/` stays product-only. Run `scripts/run_gluecode_tests.bat` (Windows) or `scripts/run_gluecode_tests.sh` (Linux) after `samples/prepare` has installed node-client dependencies.
 
 ### CMake variables
 
-| Variable | Purpose |
-|----------|---------|
-| `CPP_LIBRARY_OUTPUT_PATH` | Output directory for the C++ library |
-| `CPP_LIBRARY_OUTPUT_NAME` | Library base name (debug builds append `d`) |
-| `COMPILER_OUTPUT_PATH` | Output directory for the compiler executable |
-| `COMPILER_OUTPUT_NAME` | Release compiler name (default `esnacc`) |
-| `COMPILER_OUTPUT_NAME_DEBUG` | Debug compiler name (default `esnaccd`) |
+| Variable                     | Purpose                                      |
+| ---------------------------- | -------------------------------------------- |
+| `CPP_LIBRARY_OUTPUT_PATH`    | Output directory for the C++ library         |
+| `CPP_LIBRARY_OUTPUT_NAME`    | Library base name (debug builds append `d`)  |
+| `COMPILER_OUTPUT_PATH`       | Output directory for the compiler executable |
+| `COMPILER_OUTPUT_NAME`       | Release compiler name (default `esnacc`)     |
+| `COMPILER_OUTPUT_NAME_DEBUG` | Debug compiler name (default `esnaccd`)      |
 
 ## Visual Studio 2022
 

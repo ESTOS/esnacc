@@ -1,0 +1,9 @@
+packages:
+  - typescript
+
+allowBuilds:
+  dprint: true
+  esbuild: true
+
+minimumReleaseAgeExclude:
+  - "@types/node@24.13.5"

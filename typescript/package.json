@@ -1,0 +1,26 @@
+{
+	"name": "snacc-ts-glue-tests",
+	"private": true,
+	"type": "module",
+	"packageManager": "pnpm@11.9.0",
+	"description": "TS ROSE glue tests. Run scripts/setup-ts-glue-tests once, then pnpm test or VS Code Test Explorer.",
+	"engines": {
+		"pnpm": ">=11",
+		"node": ">=20"
+	},
+	"scripts": {
+		"preinstall": "node ../scripts/enforce-pnpm.mjs",
+		"setup": "node ../scripts/setup-snacc-tests.mjs",
+		"prepare-stub": "node ../scripts/prepare-ts-glue-stub.mjs --clean",
+		"test": "node ../scripts/run-ts-glue-test-suite.mjs",
+		"test:watch": "node ../scripts/prepare-ts-glue-stub.mjs && node --import ../scripts/ts-glue-test-register.mjs --import tsx --test --watch *.test.ts"
+	},
+	"dependencies": {
+		"@estos/asn1ts": "file:../samples/ts-microservice/node-client/node_modules/@estos/asn1ts"
+	},
+	"devDependencies": {
+		"@types/node": "^24.13.5",
+		"tsx": "^4.20.5",
+		"typescript": "^5.9.0"
+	}
+}

@@ -91,9 +91,10 @@ function listAsn1Files() {
  * for logging before spawnSync runs the compiler.
  */
 function formatCommandLine(command, args) {
-	const quote = (arg) => /[\s"]/.test(arg)
-		? `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`
-		: arg;
+	const quote = (arg) =>
+		/[\s"]/.test(arg)
+			? `"${arg.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")}"`
+			: arg;
 	return [command, ...args].map(quote).join(" ");
 }
 
@@ -122,7 +123,9 @@ function runCompiler(compiler, outputDir, compilerArgs, asn1Files) {
 function generateStubs() {
 	const compiler = resolveCompiler();
 	if (!compiler) {
-		console.error("error: esnacc compiler not found. Run scripts/ensure_compiler.bat or scripts/ensure_compiler.sh first, or use prepare.bat / prepare.sh.");
+		console.error(
+			"error: esnacc compiler not found. Run scripts/ensure_compiler.bat or scripts/ensure_compiler.sh first, or use prepare.bat / prepare.sh.",
+		);
 		return 1;
 	}
 

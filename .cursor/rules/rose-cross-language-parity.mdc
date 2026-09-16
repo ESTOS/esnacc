@@ -64,7 +64,7 @@ Document new cross-cutting behavior in `runtime_correctness_notes.md` with a **â
 | Layer | Location | Role |
 |-------|----------|------|
 | C++ runtime spec | `cpp-lib/tests/` | Primary scenario matrix (harness: `test_support/sample_runtime_harness.h`) |
-| TypeScript glue | `compiler/back-ends/ts-gen/tests/` | Same scenarios for gluecode (stub transport / loopback) |
+| TypeScript glue | `typescript/` | Same scenarios for gluecode (stub transport / loopback) |
 | Integration | `samples/ts-microservice/node-client/` | End-to-end smoke (not a full duplicate of cpp-lib tests) |
 | Kotlin / Swift | TBD under `compiler/back-ends/*-gen/tests/` when runtimes exist | Mirror Tier A scenarios from C++ names |
 

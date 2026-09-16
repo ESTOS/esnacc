@@ -36,7 +36,7 @@ import {
 	ASN1ByteArray,
 	ROSEBase,
 } from "./TSROSEBase.js";
-
+import { roseDebugBreak } from "./TSBaseUtils.js";
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
 	className: string;
@@ -430,7 +430,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			this.trackRegisteredOperation(operationID, operationName, moduleName, addedUnix, deprecatedUnix, isEvent);
 		} else {
 			// trying to re-register a handler for an already registered operationID, this should not happen and indicates a problem in the calling code
-			debugger;
+			roseDebugBreak();
 		}
 	}
 
@@ -1510,7 +1510,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			// We want the debugger to catch that behaviour instantly -> so the developer can fix it right away
 			// !!! An exception should NEVER EVER reach this point !!!
 			// Handle all exceptions properly inside the oninvoke methods.
-			debugger;
+			roseDebugBreak();
 			if (error instanceof ENetUC_Common.AsnRequestError) {
 				this.log(
 					ELogSeverity.error,
@@ -1649,7 +1649,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			case ASN1ClassInstanceType.TSASN1NodeClient:
 				return "TSASN1NodeClient";
 			default:
-				debugger;
+				roseDebugBreak();
 				return "";
 		}
 	}

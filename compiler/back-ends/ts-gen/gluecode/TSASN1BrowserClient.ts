@@ -8,6 +8,7 @@
 import { ASN1ClassInstanceType } from "./TSASN1Base.js";
 import { IWebSocketOptions, TSASN1Client } from "./TSASN1Client.js";
 import { EASN1TransportEncoding } from "./TSInvokeContext.js";
+import { roseDebugBreak } from "./TSBaseUtils.js";
 import { ASN1ByteArray, ELogSeverity, IConnectionSocket, ISocketCloseEvent, ISocketConnectedEvent, ISocketErrorEvent, ISocketMessageEvent, toASN1ByteArray } from "./TSROSEBase.js";
 
 /**
@@ -198,7 +199,7 @@ export class TSASN1BrowserClient extends TSASN1Client {
 			return toASN1ByteArray(data);
 
 		this.log(ELogSeverity.error, "exception", "Received unhandled data", this);
-		debugger;
+		roseDebugBreak();
 		return undefined;
 	}
 

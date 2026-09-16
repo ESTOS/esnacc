@@ -19,7 +19,7 @@ This file lists the **negotiate / gating** surfaces that must change together to
 | `CompleteIfProcessingShutdown` / `CompleteIfOperationBlocked` on `SendEvent` / `SendInvoke` | `completeIfProcessingShutdown` / `completeIfOperationBlocked` on `handleEvent` / `handleInvoke` and `sendInvoke` |
 | `PauseRoseProcessing` / `ResumeRoseProcessing` / `LookUpInterfaceID` on `SnaccROSEBase` | `pauseRoseProcessing` / `resumeRoseProcessing` / `lookUpInterfaceID` on `TSASN1Base` |
 | `SnaccROSEBase`, `SnaccModuleCapabilities`, `SnaccRoseOperationLookup` | `TSASN1Base`, `TSModuleCapabilities`, `TSROSEBase` |
-| `cpp-lib/tests/` (runtime / capability tests) | `compiler/back-ends/ts-gen/tests/` |
+| `cpp-lib/tests/` (runtime / capability tests) | `typescript/` |
 
 Do **not** land C++-only or TS-only halves of the same behavior. Tests on both sides move together when semantics change.
 
