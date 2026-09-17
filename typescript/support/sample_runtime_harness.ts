@@ -62,6 +62,8 @@ export class LoopbackTransport extends TSASN1Base {
 	private readonly actions: TransportAction[] = [];
 	private readonly queued: IASN1InvokeData[] = [];
 	public dropNextResponse = false;
+	/** Last HTTP status from handleResult when this transport acted as the ROSE server. */
+	public lastResponseHttpStatus?: number;
 
 	public constructor(sessionId: string, role: "client" | "server") {
 		super(
@@ -97,6 +99,7 @@ export class LoopbackTransport extends TSASN1Base {
 		this.actions.length = 0;
 		this.queued.length = 0;
 		this.dropNextResponse = false;
+		this.lastResponseHttpStatus = undefined;
 	}
 
 	public async sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined> {
@@ -199,6 +202,8 @@ export class LoopbackTransport extends TSASN1Base {
 		}
 
 		const response = await peer.receive(toWireReceivePayload(wire.payLoad), receiveContext);
+		if (response?.httpStatusCode !== undefined)
+			peer.lastResponseHttpStatus = response.httpStatusCode;
 		if (!response?.payLoad) {
 			return LoopbackDelivery.NoResponse;
 		}

@@ -10,6 +10,7 @@ import { IncomingHttpHeaders } from "node:http";
 import * as ENetUC_Common from "./ENetUC_Common.js";
 import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter.js";
 import {
+	GeneralProblemenum,
 	InvokeProblemenum,
 	RejectProblem,
 	ROSEError,
@@ -76,6 +77,102 @@ export const ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00;
 
 /** Transport-layer shutdown (parity with C++ ROSE_TE_SHUTDOWN). */
 export const ROSE_TE_SHUTDOWN = 0x00000002;
+
+/** HTTP status for a successful ROSE invoke (`ROSEResult`). */
+export const ROSE_HTTP_OK = 200;
+
+/** HTTP status for `ROSEError` (application `AsnRequestError`); not used for rejects. */
+export const ROSE_HTTP_APPLICATION_ERROR = 500;
+
+/** Default HTTP status for `ROSEReject` when no specific mapping applies. */
+export const ROSE_HTTP_REJECT_FALLBACK = 502;
+
+/**
+ * Maps a server-side ROSE outcome to HTTP status for REST/fetch transports.
+ * The encoded `ROSEMessage` body is unchanged; see `ROSE_HTTP_STATUS.md`.
+ */
+export function httpStatusFromRoseOutcome(result: ROSEReject | ROSEResult | ROSEError): number {
+	if (result instanceof ROSEResult)
+		return ROSE_HTTP_OK;
+	if (result instanceof ROSEError)
+		return ROSE_HTTP_APPLICATION_ERROR;
+	return httpStatusFromRoseReject(result);
+}
+
+/**
+ * Maps `ROSEReject` to HTTP status. Rejects never use {@link ROSE_HTTP_APPLICATION_ERROR}.
+ */
+export function httpStatusFromRoseReject(reject: ROSEReject): number {
+	const problem = reject.reject;
+	if (!problem)
+		return ROSE_HTTP_REJECT_FALLBACK;
+
+	if (problem.invokeProblem !== undefined)
+		return httpStatusFromInvokeProblem(problem.invokeProblem);
+	if (problem.generalProblem !== undefined)
+		return httpStatusFromGeneralProblem(problem.generalProblem);
+
+	return ROSE_HTTP_REJECT_FALLBACK;
+}
+
+/**
+ * Maps standard and custom `invokeProblem` values to HTTP status.
+ */
+export function httpStatusFromInvokeProblem(invokeProblem: number): number {
+	switch (invokeProblem) {
+		case InvokeProblemenum.duplicateInvocation:
+			return 409;
+		case InvokeProblemenum.unrecognisedOperation:
+			return 501;
+		case InvokeProblemenum.mistypedArgument:
+			return 400;
+		case InvokeProblemenum.resourceLimitation:
+			return 503;
+		case InvokeProblemenum.initiatorReleasing:
+			return 408;
+		case InvokeProblemenum.invalidSessionID:
+		case InvokeProblemenum.authenticationIncomplete:
+		case InvokeProblemenum.authenticationFailed:
+			return 401;
+		case InvokeProblemenum.unrecognisedLinkedID:
+		case InvokeProblemenum.linkedResponseUnexpected:
+		case InvokeProblemenum.unexpectedChildOperation:
+			return ROSE_HTTP_REJECT_FALLBACK;
+		case CustomInvokeProblemEnum.missingResponse:
+			return 504;
+		case CustomInvokeProblemEnum.serviceUnavailable:
+			return 503;
+		case CustomInvokeProblemEnum.requestTimedOut:
+			return 504;
+		case CustomInvokeProblemEnum.internalError:
+			return ROSE_HTTP_REJECT_FALLBACK;
+		case CustomInvokeProblemEnum.messageTooBig:
+			return 413;
+		case CustomInvokeProblemEnum.emptyRejectMessage:
+			return ROSE_HTTP_REJECT_FALLBACK;
+		case CustomInvokeProblemEnum.remoteNotCapable:
+		case ROSE_REJECT_REMOTENOTCAPABLE:
+			return 501;
+		case ROSE_TE_SHUTDOWN:
+			return 503;
+		default:
+			return ROSE_HTTP_REJECT_FALLBACK;
+	}
+}
+
+/**
+ * Maps ROSE `generalProblem` values to HTTP status.
+ */
+export function httpStatusFromGeneralProblem(generalProblem: number): number {
+	switch (generalProblem) {
+		case GeneralProblemenum.unrecognisedAPDU:
+		case GeneralProblemenum.mistypedAPDU:
+		case GeneralProblemenum.badlyStructuredAPDU:
+			return 400;
+		default:
+			return ROSE_HTTP_REJECT_FALLBACK;
+	}
+}
 
 /**
  * Debug-only assert with a human-readable message (console.assert in Node/browser).
