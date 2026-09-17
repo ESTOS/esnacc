@@ -6,7 +6,7 @@
 	"description": "TS ROSE glue tests. Run scripts/setup-ts-glue-tests once, then pnpm test or VS Code Test Explorer.",
 	"engines": {
 		"pnpm": ">=11",
-		"node": ">=20"
+		"node": ">=26"
 	},
 	"scripts": {
 		"preinstall": "node ../scripts/enforce-pnpm.mjs",
@@ -19,7 +19,7 @@
 		"@estos/asn1ts": "^3.2.5"
 	},
 	"devDependencies": {
-		"@types/node": "^24.13.5",
+		"@types/node": "^26.0.0",
 		"tsx": "^4.20.5",
 		"typescript": "^5.9.0"
 	}

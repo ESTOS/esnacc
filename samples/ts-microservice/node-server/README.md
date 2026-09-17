@@ -25,7 +25,7 @@ related_docs:
 
 Features:
 
-- Full TypeScript support (Node 24, `pnpm`)
+- Full TypeScript support (Node 26, `pnpm`)
 - Express routes for REST invokes and WebSocket sessions
 - Generated ASN.1 server stubs (`-RTS_SERVER`, `TSASN1Server`)
 - Handler modules for the sample Settings and Event Manager interfaces
@@ -53,7 +53,7 @@ This is how CI validates that a freshly built `esnacc` produces working TypeScri
 
 # How to start
 
-Prerequisites: Node 24, `pnpm` (via Corepack). From the `samples` folder run `prepare.bat` / `prepare.sh` (generates stubs and installs dependencies).
+Prerequisites: Node 26, `pnpm` (via Corepack). From the `samples` folder run `prepare.bat` / `prepare.sh` (generates stubs and installs dependencies).
 
 ```bash
 cp .env.sample .env   # adjust paths and ports

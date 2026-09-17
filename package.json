@@ -5,7 +5,7 @@
 	"description": "Root dev tooling for the esnacc monorepo (dprint for TypeScript/JSON).",
 	"engines": {
 		"pnpm": ">=11",
-		"node": ">=20"
+		"node": ">=26"
 	},
 	"scripts": {
 		"preinstall": "node scripts/enforce-pnpm.mjs",

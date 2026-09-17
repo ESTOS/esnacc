@@ -8,7 +8,7 @@ const { spawnSync } = require("child_process");
 const SAMPLES_DIR = __dirname;
 const INTERFACE_DIR = path.join(SAMPLES_DIR, "interface");
 const BIN_DIR = path.join(SAMPLES_DIR, "bin");
-const NODE_VERSION = process.env.SNACC_NODE_VERSION || "24";
+const NODE_VERSION = process.env.SNACC_NODE_VERSION || "26";
 
 const PNPM_PACKAGES = [
 	"ts-microservice/browser-client",

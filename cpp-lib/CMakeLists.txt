@@ -3,10 +3,18 @@
 
 add_compile_definitions("SNACCDLL_NONE")
 
-file(GLOB src_files src/*.cpp src/tkAppInit.c jsoncpp/*.cpp)
+file(GLOB snacc_src_files src/*.cpp)
+file(GLOB jsoncpp_src_files jsoncpp/*.cpp)
 file(GLOB header_files **/*.h)
 
-add_library(cpp-lib STATIC ${src_files} ${header_files})
+add_library(cpp-lib STATIC ${snacc_src_files} src/tkAppInit.c ${jsoncpp_src_files} ${header_files})
+
+# Vendored jsoncpp (1.9.5): suppress sign-compare noise in InRange() without touching third-party sources.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	set_source_files_properties(${jsoncpp_src_files} PROPERTIES COMPILE_OPTIONS "-Wno-sign-compare")
+elseif(MSVC)
+	set_source_files_properties(${jsoncpp_src_files} PROPERTIES COMPILE_OPTIONS "/wd4018")
+endif()
 add_library(snacc_cpp_lib ALIAS cpp-lib)
 
 target_include_directories(cpp-lib PUBLIC "include" "${CMAKE_SOURCE_DIR}/c-lib/include")

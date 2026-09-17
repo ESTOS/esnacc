@@ -5,7 +5,7 @@
 	"packageManager": "pnpm@11.9.0",
 	"engines": {
 		"pnpm": ">=11",
-		"node": ">=24"
+		"node": ">=26"
 	},
 	"description": "estos microservice server example",
 	"private": true,

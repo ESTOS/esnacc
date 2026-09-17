@@ -42,4 +42,4 @@ A TypeScript microservice sample with three packages under `samples/ts-microserv
 
 Current coverage includes `asnGetSettings`, `asnSetSettings` round-trips, `asnSettingsChanged` events, and ordered `asnFancyEvent` delivery from `asnCreateFancyEvents`.
 
-See [`ts-microservice/readme.md`](ts-microservice/readme.md) for setup steps (Node 24, `pnpm`, `prepare.*`).
+See [`ts-microservice/readme.md`](ts-microservice/readme.md) for setup steps (Node 26, `pnpm`, `prepare.*`).

@@ -51,7 +51,7 @@
 				"-JTE",
 				"-j",
 				"-RTS_CLIENT_NODE",
-				"-node:24",
+				"-node:26",
 				"-comments",
 				"*.asn1"
 			],

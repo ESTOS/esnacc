@@ -11,8 +11,8 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-  # Silence Node 20 deprecation warnings from actions still tagged node20 until all actions ship node24.
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # Run JavaScript actions (e.g. pnpm/action-setup) on Node 26 instead of deprecated Node 20/24 runtimes.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE26: true
   # GitHub tarball deps (uclogger/ucconfig) invoke npm install with legacy engine ranges.
   NPM_CONFIG_ENGINE_STRICT: "false"
 
@@ -35,7 +35,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: "24"
+          node-version: "26"
           cache: pnpm
 
       - name: Install root pnpm workspace

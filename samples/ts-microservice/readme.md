@@ -33,7 +33,7 @@ Prepare the TypeScript sample packages from the `samples` folder (after building
    - **Windows:** `prepare.bat`
    - **Linux:** `prepare.sh`
 
-This generates stubs (TS + OpenAPI) and runs `pnpm install` for the `ts-microservice` workspace (`browser-client`, `node-server`, `node-client`). Requires **pnpm 11+** and **Node 24+**. Lockfile: `ts-microservice/pnpm-lock.yaml`.
+This generates stubs (TS + OpenAPI) and runs `pnpm install` for the `ts-microservice` workspace (`browser-client`, `node-server`, `node-client`). Requires **pnpm 11+** and **Node 26+**. Lockfile: `ts-microservice/pnpm-lock.yaml`.
 
 CMake/CI uses the same `prepare.js` (with `--frozen-lockfile`) via the `snacc-ts-prepare` target before building and running `typescript_run_ts_microservice_sample_node_client_against_node_server`.
 
@@ -75,7 +75,7 @@ Headless integration tests for the TypeScript stack. This package is the CI coun
 - Browser / Vite UI (see `browser-client`).
 - OpenAPI generation (`openapi/` sample).
 
-**Run locally** (Node 24, `pnpm`):
+**Run locally** (Node 26, `pnpm`):
 
 ```bash
 # 1. Build esnacc, then from samples/: prepare.bat or ./prepare.sh
@@ -88,7 +88,7 @@ In GitHub Actions, the same flow is driven by CMake targets `snacc-ts-prepare`, 
 
 ## Running the browser demo
 
-- Node 24 and VSCode recommended.
+- Node 26 and VSCode recommended.
 - From `samples/`: run `prepare.bat` / `prepare.sh`.
 - **Server:** `cd node-server` → copy `.env.sample` to `.env` → `pnpm run build` → `pnpm run start`
 - **Browser client:** `cd browser-client` → copy `.env.sample` to `.env` → open `microservice_browser_client.code-workspace` → `pnpm start` → launch the browser debug configuration in VSCode
