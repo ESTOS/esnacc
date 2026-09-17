@@ -363,9 +363,9 @@ SnaccInvokeContext::SnaccInvokeContext(const SnaccInvokeContextInit& init)
 }
 
 SnaccInvokeContext::SnaccInvokeContext(const SnaccInvokeContext& other)
-	: m_strOperationName(other.m_strOperationName),
-	  m_lRejectResult(other.m_lRejectResult),
+	: m_lRejectResult(other.m_lRejectResult),
 	  m_bResponseIsError(other.m_bResponseIsError),
+	  m_strOperationName(other.m_strOperationName),
 	  m_invokeTimeout(other.m_invokeTimeout),
 	  m_asyncCallback(other.m_asyncCallback),
 	  m_pAsyncResult(other.m_pAsyncResult),
@@ -879,8 +879,8 @@ SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperatio
 
 SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperationLookup& operationLookup, const std::set<int>& multithreadInvokeIDs)
 	: m_strClassName(szClassName),
-	  m_operationLookup(operationLookup),
-	  m_multithreadInvokeIDs(multithreadInvokeIDs)
+	  m_multithreadInvokeIDs(multithreadInvokeIDs),
+	  m_operationLookup(operationLookup)
 {
 }
 
