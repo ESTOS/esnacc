@@ -10,7 +10,7 @@ import { ConverterErrors } from "./stub/TSConverterBase.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
 import { ReceiveInvokeContext, SendInvokeContext } from "./stub/TSROSEBase.js";
 import { CapturingClientTransport, noopInvokeHandler, TestRose } from "./support/rose_test_transport.js";
-import { roseHandleInvokeTemplate, roseInvoke } from "./support/snacc_test_helpers.js";
+import { roseInvoke } from "./support/snacc_test_helpers.js";
 
 test("CreateOutboundInvokeContextOptionalTimeout: unset, zero, and explicit ms", () => {
 	const unset = new SendInvokeContext({});
@@ -107,7 +107,7 @@ test("OutboundWireInvokeTimeoutEncodesOnInvokeJson", async () => {
 
 	await rose.handleInvoke(
 		argument,
-		roseHandleInvokeTemplate(new ENetUC_Common.AsnOptionalParamChoice({} as ENetUC_Common.AsnOptionalParamChoice)),
+		ENetUC_Common.AsnOptionalParamChoice,
 		4100,
 		"asnTestInvoke",
 		ENetUC_Common_Converter.AsnOptionalParamChoice_Converter,
@@ -147,7 +147,7 @@ test("OutboundDefaultInvokeTimeoutOmitsWireValue", async () => {
 
 	await rose.handleInvoke(
 		argument,
-		roseHandleInvokeTemplate(new ENetUC_Common.AsnOptionalParamChoice({} as ENetUC_Common.AsnOptionalParamChoice)),
+		ENetUC_Common.AsnOptionalParamChoice,
 		4100,
 		"asnTestInvoke",
 		ENetUC_Common_Converter.AsnOptionalParamChoice_Converter,
@@ -178,7 +178,7 @@ test("OutboundFireAndForgetOmitsWireValue", async () => {
 
 	await rose.handleInvoke(
 		argument,
-		roseHandleInvokeTemplate(new ENetUC_Common.AsnOptionalParamChoice({} as ENetUC_Common.AsnOptionalParamChoice)),
+		ENetUC_Common.AsnOptionalParamChoice,
 		4100,
 		"asnTestInvoke",
 		ENetUC_Common_Converter.AsnOptionalParamChoice_Converter,

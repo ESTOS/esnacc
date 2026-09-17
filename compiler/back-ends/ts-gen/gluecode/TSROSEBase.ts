@@ -704,31 +704,6 @@ interface IASN1DataClass {
 	readonly type: string;
 }
 
-/**
- * Resolves the ASN.1 type name for decode-failure logging.
- * Generated client code passes the result *class* (static `type`); tests may pass an
- * instance with `type` attached (see roseHandleInvokeTemplate). Plain instances fall
- * back to the constructor static or name.
- */
-function getAsn1NamedType(ref: object): string {
-	const candidate = ref as {
-		type?: unknown;
-		name?: string;
-		constructor?: { type?: unknown; name?: string };
-	};
-	if (typeof candidate.type === "string" && candidate.type.length > 0)
-		return candidate.type;
-	const ctorType = candidate.constructor?.type;
-	if (typeof ctorType === "string" && ctorType.length > 0)
-		return ctorType;
-	if (typeof ref === "function") {
-		const fn = ref as { name?: string };
-		if (fn.name)
-			return fn.name;
-	}
-	return candidate.constructor?.name ?? "unknown";
-}
-
 // Envelop that holds the handler class that acts on invokes and events
 interface IASN1HandlerClass {
 	setLogContext?(argument: unknown, invokeContext: IReceiveInvokeContext): void;
@@ -1208,7 +1183,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * Handles an outbound invoke, encodes the argument, calls the other side and receives the response
 	 *
 	 * @param argument - the invoke argument
-	 * @param resultObj - the result object
+	 * @param resultDataClass - generated ASN.1 result class (decode-failure log label only)
 	 * @param operationID - the operation ID that has been called
 	 * @param operationName - the operation Name that has been called
 	 * @param argumentConverter - the converter for the argument object into the different encodings
@@ -1219,7 +1194,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 */
 	public async handleInvoke<T, U = ENetUC_Common.AsnRequestError>(
 		argument: object,
-		resultObj: object,
+		resultDataClass: IASN1DataClass,
 		operationID: number,
 		operationName: string,
 		argumentConverter: IConverter,
@@ -1292,7 +1267,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		this.transport.log(ELogSeverity.error, "Could not decode invoke response", method, this, {
 			encoding: context.encoding,
 			payLoad,
-			expected_type: getAsn1NamedType(resultObj),
+			expected_type: resultDataClass.type,
 			diagnostic,
 		});
 		// If you land here, check the payLoad what the other side has replied to our request
@@ -1350,7 +1325,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			this.transport.log(ELogSeverity.error, "Could not decode OnEvent argument", methodName, this, {
 				encoding: invokeContext.encoding,
 				payLoad,
-				expected_type: getAsn1NamedType(argumentClass),
+				expected_type: argumentClass.type,
 				diagnostic,
 			});
 		}
@@ -1421,7 +1396,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			this.transport.log(ELogSeverity.error, "Could not decode OnInvoke argument", methodName, this, {
 				encoding: invokeContext.encoding,
 				payLoad,
-				expected_type: getAsn1NamedType(argumentClass),
+				expected_type: argumentClass.type,
 				diagnostic,
 			});
 			// If you land here, check the payLoad what the other side has replied to our request

@@ -11,7 +11,7 @@ import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
 import { AsnInvokeProblem, handleRoseReject } from "./stub/TSROSEBase.js";
 import { assertAsnRequestError, isRoseReject } from "./support/rose_result_codes.js";
 import { SampleRuntimeHarness } from "./support/sample_runtime_harness.js";
-import { asnGetSettingsResultTemplate, roseHandleInvokeTemplate, roseInvoke } from "./support/snacc_test_helpers.js";
+import { roseInvoke } from "./support/snacc_test_helpers.js";
 
 async function unknownOperationReturnsReject(encoding: EASN1TransportEncoding): Promise<void> {
 	const harness = new SampleRuntimeHarness();
@@ -20,7 +20,7 @@ async function unknownOperationReturnsReject(encoding: EASN1TransportEncoding): 
 
 	const result = await harness.clientSettingsRose.handleInvoke(
 		new ENetUC_Settings_Manager.AsnGetSettingsArgument(),
-		asnGetSettingsResultTemplate(),
+		ENetUC_Settings_Manager.AsnGetSettingsResult,
 		4999,
 		"asnUnknownOperation",
 		ENetUC_Settings_Manager_Converter.AsnGetSettingsArgument_Converter,
@@ -66,9 +66,7 @@ async function mistypedArgumentIsRejected(encoding: EASN1TransportEncoding): Pro
 	const wrong = new ENetUC_Event_Manager.AsnCreateFancyEventsArgument({ iEventDelay: 1, iEventCount: 2 });
 	const result = await harness.clientSettingsRose.handleInvoke(
 		wrong,
-		roseHandleInvokeTemplate(
-			new ENetUC_Settings_Manager.AsnSetSettingsResult({} as ENetUC_Settings_Manager.AsnSetSettingsResult),
-		),
+		ENetUC_Settings_Manager.AsnSetSettingsResult,
 		SettingsOpIds.OPID_asnSetSettings,
 		"asnSetSettings",
 		ENetUC_Event_Manager_Converter.AsnCreateFancyEventsArgument_Converter,
