@@ -28,7 +28,7 @@
 		"not op_mob > 0"
 	],
 	"dependencies": {
-		"@estos/asn1ts": "^3.2.3",
+		"@estos/asn1ts": "^3.2.5",
 		"@types/ws": "^8.18.1",
 		"ts-loader": "^9.6.2",
 		"typescript": "^6.0.3",

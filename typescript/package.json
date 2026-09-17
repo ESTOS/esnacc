@@ -16,7 +16,7 @@
 		"test:watch": "node ../scripts/prepare-ts-glue-stub.mjs && node --import ../scripts/ts-glue-test-register.mjs --import tsx --test --watch *.test.ts"
 	},
 	"dependencies": {
-		"@estos/asn1ts": "file:../samples/ts-microservice/node-client/node_modules/@estos/asn1ts"
+		"@estos/asn1ts": "^3.2.5"
 	},
 	"devDependencies": {
 		"@types/node": "^24.13.5",
