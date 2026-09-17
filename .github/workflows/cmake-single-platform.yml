@@ -24,15 +24,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # package.json declares packageManager: pnpm@11.9.0; setup-node needs pnpm on PATH first.
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: "24"
-
-      - name: Enable pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@11.9.0 --activate
+          cache: pnpm
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
