@@ -18,9 +18,11 @@ if (existsSync(join(nodeModules, "@estos/asn1ts"))) {
 }
 
 const hasLocalTsx = existsSync(join(testDir, "node_modules/tsx/package.json"));
+// Serial test files: parallel workers each import ts-glue-test-register, which
+// copies stub/ and races readers (ENOENT/EBUSY on Windows).
 const args = hasLocalTsx
-	? ["--import", registerUrl, "--import", "tsx", "--test", "*.test.ts"]
-	: ["--yes", "tsx", "--import", registerUrl, "--test", "*.test.ts"];
+	? ["--import", registerUrl, "--import", "tsx", "--test", "--test-concurrency=1", "*.test.ts"]
+	: ["--yes", "tsx", "--import", registerUrl, "--test", "--test-concurrency=1", "*.test.ts"];
 
 const result = hasLocalTsx
 	? spawnSync(process.execPath, args, { cwd: testDir, env, stdio: "inherit", shell: true })
