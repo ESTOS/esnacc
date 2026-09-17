@@ -14,10 +14,10 @@ export function isNodeTestEnvironment(): boolean {
 	if (!proc?.env)
 		return false;
 
-	if (proc.env.SNACC_ROSE_DEBUG_IN_TESTS === "1" || proc.env.SNACC_ROSE_DEBUG_IN_TESTS === "true")
+	if (proc.env["SNACC_ROSE_DEBUG_IN_TESTS"] === "1" || proc.env["SNACC_ROSE_DEBUG_IN_TESTS"] === "true")
 		return false;
 
-	const testContext = proc.env.NODE_TEST_CONTEXT;
+	const testContext = proc.env["NODE_TEST_CONTEXT"];
 	if (testContext !== undefined && testContext !== "")
 		return true;
 
