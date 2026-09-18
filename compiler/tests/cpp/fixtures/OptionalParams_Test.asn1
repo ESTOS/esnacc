@@ -19,4 +19,12 @@ AsnOptionalParam ::= SEQUENCE
 
 AsnOptionalParameters ::= SEQUENCE OF AsnOptionalParam
 
+-- @ignorevalidation no-asn-optional-parameters
+AsnOptionalParamsHolder ::= SEQUENCE
+{
+	name UTF8String,
+	optionalParams [0] AsnOptionalParameters OPTIONAL,
+	...
+}
+
 END

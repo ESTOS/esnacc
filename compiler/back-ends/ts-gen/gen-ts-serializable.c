@@ -33,9 +33,67 @@ void PrintTSSerializableComments(FILE* src, Module* m)
 	fprintf(src, ESLINT_DISABLE);
 }
 
+// Returns true when a field type references AsnOptionalParameters.
+static bool FieldTypeIsAsnOptionalParameters(Type* t)
+{
+	if (!t || !t->basicType)
+		return false;
+
+	if (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+		return strcmp(t->cxxTypeRefInfo->className, "AsnOptionalParameters") == 0;
+
+	if (t->basicType->choiceId == BASICTYPE_LOCALTYPEREF && t->basicType->a.localTypeRef->link)
+		return strcmp(t->basicType->a.localTypeRef->link->definedName, "AsnOptionalParameters") == 0;
+
+	return false;
+}
+
+// Returns true when the module defines or references AsnOptionalParameters in a member field.
+static bool ModuleReferencesAsnOptionalParameters(Module* m)
+{
+	if (ModuleDefinesAsnOptionalParameters(m))
+		return true;
+
+	TypeDef* td;
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+	{
+		Type* type = td->type;
+		if (!type || !type->basicType)
+			continue;
+
+		if (type->basicType->choiceId != BASICTYPE_SEQUENCE && type->basicType->choiceId != BASICTYPE_CHOICE)
+			continue;
+
+		NamedType* e;
+		FOR_EACH_LIST_ELMT(e, type->basicType->a.sequence)
+		{
+			if (FieldTypeIsAsnOptionalParameters(e->type))
+				return true;
+		}
+	}
+
+	return false;
+}
+
+// Emits the serializable union for optional-parameter bags (ASN.1 array or UCServer map).
+static void PrintTSSerializableAsnOptionalParametersMemberType(FILE* hdr, ModuleList* mods, Module* m, Type* t)
+{
+	if (t->basicType->choiceId == BASICTYPE_IMPORTTYPEREF)
+	{
+		Module* mod = GetImportModuleRefByClassName(t->cxxTypeRefInfo->className, mods, m);
+		if (mod)
+			fprintf(hdr, "%s_Serializable.IAsnOptionalParameters | IUCServerOptionalParameters", GetNameSpace(mod));
+	}
+	else
+		fprintf(hdr, "IAsnOptionalParameters | IUCServerOptionalParameters");
+}
+
 void PrintTSSerializableImports(FILE* src, ModuleList* mods, Module* mod)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
+
+	if (ModuleReferencesAsnOptionalParameters(mod))
+		fprintf(src, "import type { IUCServerOptionalParameters } from \"./TSOptionalParamConverter%s\";\n", getCommonJSFileExtension());
 
 	if (!mod->imports)
 		return;
@@ -125,6 +183,11 @@ void PrintTSSerializableMemberType(FILE* hdr, ModuleList* mods, Module* m, TypeD
 			break;
 		case BASICTYPE_IMPORTTYPEREF:
 			{
+				if (FieldTypeIsAsnOptionalParameters(t))
+				{
+					PrintTSSerializableAsnOptionalParametersMemberType(hdr, mods, m, t);
+					break;
+				}
 				mod = GetImportModuleRefByClassName(t->cxxTypeRefInfo->className, mods, m);
 				if (mod)
 				{
@@ -136,6 +199,11 @@ void PrintTSSerializableMemberType(FILE* hdr, ModuleList* mods, Module* m, TypeD
 			}
 		case BASICTYPE_LOCALTYPEREF:
 			{
+				if (FieldTypeIsAsnOptionalParameters(t))
+				{
+					PrintTSSerializableAsnOptionalParametersMemberType(hdr, mods, m, t);
+					break;
+				}
 				char* szIface = GetTSSerializableTypeName(t->basicType->a.localTypeRef->link->definedName);
 				fprintf(hdr, "%s", szIface);
 				free(szIface);

@@ -129,6 +129,8 @@ namespace compiler
 		EXPECT_TRUE(FileContains(converterPath, "import { EAsnOptionalParametersConverter, type IUCServerOptionalParameters } from \"./TSOptionalParamConverter.js\"")) << converter;
 		EXPECT_TRUE(FileContains(converterPath, "OptionalParams_Test_Serializable.IAsnOptionalParameters | IUCServerOptionalParameters | undefined")) << converter;
 		EXPECT_TRUE(FileContains(converterPath, "prepareJSONData<OptionalParams_Test_Serializable.IAsnOptionalParameters | IUCServerOptionalParameters>")) << converter;
+		EXPECT_TRUE(FileContains(converterPath, "if (!Array.isArray(s))")) << converter;
+		EXPECT_TRUE(FileContains(serializablePath, "optionalParams?: IAsnOptionalParameters | IUCServerOptionalParameters")) << serializable;
 	}
 
 } // namespace compiler

@@ -1505,7 +1505,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			else if (strcmp(szConverted, "AsnOptionalParameters") == 0)
 			{
 				fprintf(src, "\n");
-				fprintf(src, "\t\t\tif (s.length === undefined) {\n");
+				fprintf(src, "\t\t\tif (!Array.isArray(s)) {\n");
 				fprintf(src, "\t\t\t\t// Proprietary UCServer AsnOptionalParameters decoding\n");
 				fprintf(src, "\t\t\t\tEAsnOptionalParametersConverter.fromJSON(s, t, errors, context, name, optional);\n");
 				fprintf(src, "\t\t\t} else {");
