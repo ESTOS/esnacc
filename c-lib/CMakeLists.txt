@@ -8,6 +8,7 @@ file(GLOB header_files include/*.h)
 SET_SOURCE_FILES_PROPERTIES(${src_files} PROPERTIES LANGUAGE C)
 # set the build target for the files
 add_library(c-lib STATIC ${src_files} ${header_files})
+target_include_directories(c-lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 # set the name for the library (the d addon for debug has been specified in the root CMakeLists.txt)
 if(C_LIBRARY_OUTPUT_NAME)
 	set_target_properties(c-lib PROPERTIES OUTPUT_NAME ${C_LIBRARY_OUTPUT_NAME})

@@ -17,6 +17,7 @@ import {
 	createInvokeReject,
 	CustomInvokeProblemEnum,
 	ELogSeverity,
+	httpStatusFromRoseOutcome,
 	IASN1InvokeData,
 	IASN1LogCallback,
 	IASN1LogData,
@@ -36,7 +37,7 @@ import {
 	ASN1ByteArray,
 	ROSEBase,
 } from "./TSROSEBase.js";
-
+import { roseDebugBreak } from "./TSBaseUtils.js";
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
 	className: string;
@@ -430,7 +431,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			this.trackRegisteredOperation(operationID, operationName, moduleName, addedUnix, deprecatedUnix, isEvent);
 		} else {
 			// trying to re-register a handler for an already registered operationID, this should not happen and indicates a problem in the calling code
-			debugger;
+			roseDebugBreak();
 		}
 	}
 
@@ -1148,7 +1149,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * Logs the transport data
+	 * Encodes a ROSE server outcome and assigns HTTP status for REST/fetch (see ROSE_HTTP_STATUS.md).
 	 *
 	 * @param result - the result to handle
 	 * @param invokeContext - the invokeContext
@@ -1166,16 +1167,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 
 		let plainResponse: unknown | undefined;
 		const message = new ROSEMessage();
-		let resultValue = 0;
 		if (result instanceof ROSEReject) {
-			if (result.reject?.generalProblem)
-				resultValue = result.reject?.generalProblem;
-			else if (result.reject?.invokeProblem)
-				resultValue = result.reject?.invokeProblem;
-			else if (result.reject?.returnErrorProblem)
-				resultValue = result.reject?.returnErrorProblem;
-			else if (result.reject?.returnResultProblem)
-				resultValue = result.reject?.returnResultProblem;
 			message.reject = result;
 			plainResponse = result;
 		} else if (result instanceof ROSEResult) {
@@ -1184,14 +1176,10 @@ export abstract class TSASN1Base implements IASN1Transport {
 		} else if (result instanceof ROSEError) {
 			message.error = result;
 			message.error.sessionID = invokeContext.clientConnectionID;
-			resultValue = result.error_value;
 			plainResponse = result.error;
 		}
 
-		if (resultValue === 0)
-			resultValue = 200;
-		else if (resultValue <= 200 || resultValue >= 600)
-			resultValue = 500;
+		const resultValue = httpStatusFromRoseOutcome(result);
 
 		// Encode the ROSE message with the embedded result object
 		let payload: object | asn1ts.Sequence | undefined;
@@ -1510,7 +1498,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			// We want the debugger to catch that behaviour instantly -> so the developer can fix it right away
 			// !!! An exception should NEVER EVER reach this point !!!
 			// Handle all exceptions properly inside the oninvoke methods.
-			debugger;
+			roseDebugBreak();
 			if (error instanceof ENetUC_Common.AsnRequestError) {
 				this.log(
 					ELogSeverity.error,
@@ -1649,7 +1637,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			case ASN1ClassInstanceType.TSASN1NodeClient:
 				return "TSASN1NodeClient";
 			default:
-				debugger;
+				roseDebugBreak();
 				return "";
 		}
 	}

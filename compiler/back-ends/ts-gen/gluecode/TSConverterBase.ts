@@ -58,7 +58,6 @@ export class ConverterError {
 			case ConverterErrorType.EXCEPTION_OCCURRED:
 				return "EXCEPTION_OCCURRED";
 			default:
-				debugger;
 				return "unknown";
 		}
 	}

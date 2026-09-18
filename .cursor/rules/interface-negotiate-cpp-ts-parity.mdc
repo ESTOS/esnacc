@@ -1,12 +1,14 @@
 ---
-description: Interface negotiate and remote-offer gating — keep C++ and TypeScript gluecode in sync
+description: Interface negotiate and remote-offer gating — C++/TS pairing (see rose-cross-language-parity)
 globs: cpp-lib/**/*,compiler/back-ends/ts-gen/**/*
 alwaysApply: false
 ---
 
 # Interface negotiate — C++ and TypeScript together
 
-Applies to **remote capabilities**, **asnNegotiateInterface**, and **client-side gating** of outbound invokes based on what the peer advertised.
+General cross-language rules: **`.cursor/rules/rose-cross-language-parity.mdc`**.
+
+This file lists the **negotiate / gating** surfaces that must change together today.
 
 ## Paired surfaces (change both in one task)
 
@@ -17,7 +19,7 @@ Applies to **remote capabilities**, **asnNegotiateInterface**, and **client-side
 | `CompleteIfProcessingShutdown` / `CompleteIfOperationBlocked` on `SendEvent` / `SendInvoke` | `completeIfProcessingShutdown` / `completeIfOperationBlocked` on `handleEvent` / `handleInvoke` and `sendInvoke` |
 | `PauseRoseProcessing` / `ResumeRoseProcessing` / `LookUpInterfaceID` on `SnaccROSEBase` | `pauseRoseProcessing` / `resumeRoseProcessing` / `lookUpInterfaceID` on `TSASN1Base` |
 | `SnaccROSEBase`, `SnaccModuleCapabilities`, `SnaccRoseOperationLookup` | `TSASN1Base`, `TSModuleCapabilities`, `TSROSEBase` |
-| `cpp-lib/tests/` (runtime / capability tests) | `compiler/back-ends/ts-gen/tests/` |
+| `cpp-lib/tests/` (runtime / capability tests) | `typescript/` |
 
 Do **not** land C++-only or TS-only halves of the same behavior. Tests on both sides move together when semantics change.
 

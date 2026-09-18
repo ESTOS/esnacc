@@ -5,7 +5,7 @@
 	"packageManager": "pnpm@11.9.0",
 	"engines": {
 		"pnpm": ">=11",
-		"node": ">=24"
+		"node": ">=26"
 	},
 	"description": "estos microservice server example",
 	"private": true,
@@ -33,7 +33,7 @@
 	},
 	"license": "UNLICENSED",
 	"dependencies": {
-		"@estos/asn1ts": "^3.2.3",
+		"@estos/asn1ts": "^3.2.5",
 		"cors": "^2.8.6",
 		"cross-env": "^10.1.0",
 		"date-fns": "^4.1.0",

@@ -18,10 +18,19 @@ namespace
 {
 	int ResolveInvokeTimeoutMs(const SnaccInvokeContext& ctx, long lMaxInvokeWait)
 	{
-		const int iTimeout = ctx.InvokeTimeout();
-		if (iTimeout == -1)
+		const auto timeout = ctx.InvokeTimeout();
+		if (!timeout.has_value())
 			return static_cast<int>(lMaxInvokeWait);
-		return iTimeout;
+		return static_cast<int>(*timeout);
+	}
+
+	// Encodes ROSEInvoke.timeout only for positive invoke timeouts on non-event invokes.
+	bool ShouldEncodeWireInvokeTimeout(const SnaccInvokeContext& ctx, const SNACC::ROSEInvoke& invoke)
+	{
+		const auto timeout = ctx.InvokeTimeout();
+		if (!timeout.has_value() || *timeout == 0)
+			return false;
+		return static_cast<AsnIntType>(invoke.invokeID) != 99999;
 	}
 } // namespace
 
@@ -259,6 +268,35 @@ namespace
 		// Set only when this scope allocated operationName on the invoke.
 		SNACC::ROSEInvoke* m_pInvoke = nullptr;
 	};
+
+	// Adds ROSEInvoke.timeout for encoding when the invoke context requests a positive deadline.
+	class ScopedInvokeWireTimeout final
+	{
+	public:
+		ScopedInvokeWireTimeout(SNACC::ROSEInvoke& invoke, const SnaccInvokeContext& ctx)
+		{
+			if (!ShouldEncodeWireInvokeTimeout(ctx, invoke) || invoke.timeout)
+				return;
+
+			m_pInvoke = &invoke;
+			invoke.timeout = new AsnInt(static_cast<int>(*ctx.InvokeTimeout()));
+		}
+
+		~ScopedInvokeWireTimeout() noexcept
+		{
+			if (!m_pInvoke || !m_pInvoke->timeout)
+				return;
+
+			delete m_pInvoke->timeout;
+			m_pInvoke->timeout = nullptr;
+		}
+
+		ScopedInvokeWireTimeout(const ScopedInvokeWireTimeout&) = delete;
+		ScopedInvokeWireTimeout& operator=(const ScopedInvokeWireTimeout&) = delete;
+
+	private:
+		SNACC::ROSEInvoke* m_pInvoke = nullptr;
+	};
 } // namespace
 
 SnaccInvokeContextInit::SnaccInvokeContextInit(SnaccInvokeDirection direction, SNACC::ROSEInvoke* pInvoke /*= nullptr*/, const char* szOperationName /*= nullptr*/, const SnaccROSEBase* pStubForLookup /*= nullptr*/)
@@ -320,13 +358,15 @@ const SNACC::ROSEInvoke* SnaccScopedInvokeMessage::GetPtr() const
 SnaccInvokeContext::SnaccInvokeContext(const SnaccInvokeContextInit& init)
 	: m_strOperationName(init.m_strOperationName)
 {
+	if (init.m_direction == SnaccInvokeDirection::INBOUND && init.m_pInvoke && init.m_pInvoke->timeout)
+		m_invokeTimeout = static_cast<unsigned int>(*init.m_pInvoke->timeout);
 }
 
 SnaccInvokeContext::SnaccInvokeContext(const SnaccInvokeContext& other)
-	: m_strOperationName(other.m_strOperationName),
-	  m_lRejectResult(other.m_lRejectResult),
+	: m_lRejectResult(other.m_lRejectResult),
 	  m_bResponseIsError(other.m_bResponseIsError),
-	  m_iInvokeTimeout(other.m_iInvokeTimeout),
+	  m_strOperationName(other.m_strOperationName),
+	  m_invokeTimeout(other.m_invokeTimeout),
 	  m_asyncCallback(other.m_asyncCallback),
 	  m_pAsyncResult(other.m_pAsyncResult),
 	  m_pAsyncError(other.m_pAsyncError)
@@ -344,14 +384,19 @@ SnaccInvokeContext::~SnaccInvokeContext()
 	}
 }
 
-void SnaccInvokeContext::SetInvokeTimeout(int iTimeoutMs)
+void SnaccInvokeContext::SetInvokeTimeout(unsigned int uiTimeoutMs)
 {
-	m_iInvokeTimeout = iTimeoutMs;
+	m_invokeTimeout = uiTimeoutMs;
 }
 
-int SnaccInvokeContext::InvokeTimeout() const
+void SnaccInvokeContext::ClearInvokeTimeout()
 {
-	return m_iInvokeTimeout;
+	m_invokeTimeout.reset();
+}
+
+std::optional<unsigned int> SnaccInvokeContext::InvokeTimeout() const
+{
+	return m_invokeTimeout;
 }
 
 void SnaccInvokeContext::SetAsyncCompletion(SnaccInvokeAsyncCallback callback, SNACC::AsnType* pResult, SNACC::AsnType* pError)
@@ -834,8 +879,8 @@ SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperatio
 
 SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperationLookup& operationLookup, const std::set<int>& multithreadInvokeIDs)
 	: m_strClassName(szClassName),
-	  m_operationLookup(operationLookup),
-	  m_multithreadInvokeIDs(multithreadInvokeIDs)
+	  m_multithreadInvokeIDs(multithreadInvokeIDs),
+	  m_operationLookup(operationLookup)
 {
 }
 
@@ -1613,6 +1658,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 
 	ROSEMessage invokeMsg;
 	const ScopedEncodeInvokeBorrow invokeBorrow(invokeMsg, *pInvoke);
+	const ScopedInvokeWireTimeout wireTimeout(*pInvoke, ctx);
 
 	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
 	{

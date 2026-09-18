@@ -1,0 +1,10 @@
+packages:
+  - typescript
+
+allowBuilds:
+  dprint: true
+  esbuild: true
+
+minimumReleaseAgeExclude:
+  - "@types/node@24.13.5"
+  - '@estos/asn1ts@3.2.5'

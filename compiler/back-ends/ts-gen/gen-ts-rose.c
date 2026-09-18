@@ -121,6 +121,12 @@ void SaveTSROSEFilesToOutputDirectory(const int genRoseStubs, const char* szPath
 		strcat_s(szFileName, _MAX_PATH - 1, "TSInvokeContext.ts");
 		SaveResourceToFile(ETS_INVOKE_CONTEXT, szFileName);
 	}
+	{
+		char szFileName[_MAX_PATH] = {0};
+		strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+		strcat_s(szFileName, _MAX_PATH - 1, "TSBaseUtils.ts");
+		SaveResourceToFile(ETS_BASE_UTILS, szFileName);
+	}
 }
 
 void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)

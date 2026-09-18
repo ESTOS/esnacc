@@ -1,0 +1,40 @@
+---
+description: Keep c-lib (compiler/C target) isolated from cpp-lib (product C++ runtime)
+alwaysApply: true
+---
+
+# c-lib / cpp-lib isolation
+
+`c-lib/` and `cpp-lib/` are **separate deliverables**. Do not couple them in CMake, headers, or symbols.
+
+## Roles
+
+| Library | Consumers | CMake target | Typical output |
+|---------|-----------|--------------|----------------|
+| **c-lib** | `esnacc` compiler, C ASN.1 target, compiler unit tests that compile `.c` sources | `c-lib` | `esnacc_c_lib` / `esnacc_c_libd` |
+| **cpp-lib** | ProCall, global `snacclib7`, generated C++ stubs | `cpp-lib` / `snacc_cpp_lib` | `esnacc_cpp_lib` / `snacclib7D` |
+
+Products link **only** `cpp-lib`. They never link `c-lib`.
+
+## Hard constraints
+
+1. **`cpp-lib/CMakeLists.txt` must not** `target_link_libraries` against `c-lib`, embed `$<TARGET_OBJECTS:c-lib>`, or add `c-lib/include` to `target_include_directories`.
+2. **`cpp-lib/include/` and `cpp-lib/src/` must not** `#include` headers from `c-lib/include/` (e.g. `platform-functions.h`, `c-lib/include/asn-config.h`). Use `cpp-lib/include/asn-config.h` and the CRT (`getenv`, `getenv_s`, etc.) in product code.
+3. **`cpp-lib` public headers must not** reference symbols defined only in `c-lib` (`myfopen`, `mytolower`, `mygetenv`, …).
+4. **Compiler and C-target code** may use `c-lib/include/asn-config.h` and `platform-functions.h` per [platform-portable-helpers.mdc](platform-portable-helpers.mdc).
+5. **Tests** that compile compiler `.c` files (e.g. `interface_baseline.c`, `time_helpers.c`) link `c-lib` on the **test executable** only — not via `cpp-lib`.
+6. **Do not** add `target_link_libraries(cpp-lib PUBLIC c-lib)` to “help” CMake consumers; it breaks the single-lib product contract and does not merge static archives for non-CMake builds.
+
+## Allowed overlap (not coupling)
+
+- Parallel implementations of ASN.1 primitives (e.g. `asn-real.c` vs `asn-real.cpp`) — keep in sync manually; no shared link dependency.
+- Both libraries built from the same top-level `CMakeLists.txt` for developer convenience.
+
+## Agent checklist
+
+Before finishing a change that touches `cpp-lib/` or `c-lib/` CMake or headers:
+
+- [ ] `cpp-lib` builds and links with **no** `c-lib` dependency
+- [ ] No new `#include` from `c-lib/` under `cpp-lib/`
+- [ ] Compiler tests that need `fopen_s` shims still `target_link_libraries(... c-lib)` on the test target
+- [ ] Global/ProCall single-`.lib` consumers need no extra archive

@@ -35,15 +35,15 @@ rg -l "^read_when:" --glob "*.md"
 
 ## Repository map
 
-| Path | What it is | When to work here |
-|------|------------|-------------------|
-| `compiler/` | ASN.1 parser, core compiler, CLI | Compiler behavior, CLI flags, parsing, shared codegen |
-| `compiler/back-ends/` | Per-language code generators (`ts-gen`, `c++-gen`, `c-gen`, `cs-gen`, …) | Generated output for a specific target language |
-| `cpp-lib/` | C++ runtime library (`esnacc_cpp_lib`) | BER/JSON codecs, ROSE runtime, C++ consumer APIs |
-| `c-lib/` | C runtime support | C target runtime and helpers |
-| `ROSE/` | ROSE-related shared material | ROSE protocol/client-server concerns |
-| `samples/` | End-to-end usage examples | Verifying generation, integration patterns, sample apps |
-| `samples/ts-microservice/` | Main TypeScript sample (server, client, browser, OpenAPI) | TypeScript ROSE/REST/WebSocket workflows |
+| Path                       | What it is                                                               | When to work here                                       |
+| -------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------- |
+| `compiler/`                | ASN.1 parser, core compiler, CLI                                         | Compiler behavior, CLI flags, parsing, shared codegen   |
+| `compiler/back-ends/`      | Per-language code generators (`ts-gen`, `c++-gen`, `c-gen`, `cs-gen`, …) | Generated output for a specific target language         |
+| `cpp-lib/`                 | C++ runtime library (`esnacc_cpp_lib`) — **product deliverable**         | BER/JSON codecs, ROSE runtime, C++ consumer APIs (ProCall, global) |
+| `c-lib/`                   | C runtime — **compiler and C-target only** (not linked by products)      | `esnacc` compiler, C ASN.1 backend, compiler unit tests |
+| `ROSE/`                    | ROSE-related shared material                                             | ROSE protocol/client-server concerns                    |
+| `samples/`                 | End-to-end usage examples                                                | Verifying generation, integration patterns, sample apps |
+| `samples/ts-microservice/` | Main TypeScript sample (server, client, browser, OpenAPI)                | TypeScript ROSE/REST/WebSocket workflows                |
 
 Build outputs default under `output/` (compiler binary, libraries).
 
@@ -59,25 +59,26 @@ Other backends (C, C#, Java, Kotlin, Swift, Delphi, JavaScript, IDL, JSDoc, Open
 
 ## Routed documentation index
 
-| Doc | Use when |
-|-----|----------|
-| [ReadMe.md](ReadMe.md) | Repository overview and quick start |
-| [docs/build.md](docs/build.md) | CMake and IDE build instructions |
-| [FAQ.md](FAQ.md) | Compiler background, licensing, capability questions |
-| [samples/readme.md](samples/readme.md) | Running or updating samples |
-| [samples/ts-microservice/readme.md](samples/ts-microservice/readme.md) | TypeScript microservice layout and verification flow |
-| [samples/ts-microservice/node-server/README.md](samples/ts-microservice/node-server/README.md) | Node server handlers, config, generated stub usage |
-| [cpp-lib/tests/runtime_correctness_notes.md](cpp-lib/tests/runtime_correctness_notes.md) | Intended C++ runtime semantics and correctness tests |
+| Doc                                                                                            | Use when                                             |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [ReadMe.md](ReadMe.md)                                                                         | Repository overview and quick start                  |
+| [docs/build.md](docs/build.md)                                                                 | CMake and IDE build instructions                     |
+| [FAQ.md](FAQ.md)                                                                               | Compiler background, licensing, capability questions |
+| [samples/readme.md](samples/readme.md)                                                         | Running or updating samples                          |
+| [samples/ts-microservice/readme.md](samples/ts-microservice/readme.md)                         | TypeScript microservice layout and verification flow |
+| [samples/ts-microservice/node-server/README.md](samples/ts-microservice/node-server/README.md) | Node server handlers, config, generated stub usage   |
+| [cpp-lib/tests/runtime_correctness_notes.md](cpp-lib/tests/runtime_correctness_notes.md)       | Intended C++ runtime semantics and correctness tests |
 
 ## Typical task routing
 
-| Task | Start here | Then inspect |
-|------|------------|--------------|
-| Change TypeScript generation | `ReadMe.md`, `compiler/back-ends/ts-gen/` | `samples/ts-microservice/` |
-| Change C++ generation or runtime | `ReadMe.md`, `cpp-lib/tests/runtime_correctness_notes.md` | `compiler/back-ends/c++-gen/`, `cpp-lib/` |
-| Add/fix a sample | `samples/readme.md` | The specific sample subdirectory |
-| Build or CI for the compiler | [docs/build.md](docs/build.md) | `compiler/CMakeLists.txt`, root `CMakeLists.txt` |
-| OpenAPI / JSDoc output | `FAQ.md` | `compiler/back-ends/openapi-gen/`, `compiler/back-ends/jsondoc-gen/` |
+| Task                                                      | Start here                                                | Then inspect                                                         |
+| --------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------- |
+| Change TypeScript generation                              | `ReadMe.md`, `compiler/back-ends/ts-gen/`                 | `samples/ts-microservice/`                                           |
+| Change C++ generation or runtime                          | `ReadMe.md`, `cpp-lib/tests/runtime_correctness_notes.md` | `compiler/back-ends/c++-gen/`, `cpp-lib/`                            |
+| Cross-language ROSE parity (C++, TS, future Kotlin/Swift) | `.cursor/rules/rose-cross-language-parity.mdc`            | Paired impl + tests per tier in that rule                            |
+| Add/fix a sample                                          | `samples/readme.md`                                       | The specific sample subdirectory                                     |
+| Build or CI for the compiler                              | [docs/build.md](docs/build.md)                            | `compiler/CMakeLists.txt`, root `CMakeLists.txt`                     |
+| OpenAPI / JSDoc output                                    | `FAQ.md`                                                  | `compiler/back-ends/openapi-gen/`, `compiler/back-ends/jsondoc-gen/` |
 
 ## Build quick reference
 
@@ -101,6 +102,8 @@ Requirements and IDE-specific steps are in [docs/build.md](docs/build.md). CMake
 - Generated output shape is defined by ASN.1 inputs plus the relevant `compiler/back-ends/*-gen` implementation — read both before changing behavior.
 - When documentation and code disagree, verify against `samples/` and tests before updating docs.
 - **Document new types and members** at the definition site (purpose, usage, ownership). See [.cursor/rules/living-documentation.mdc](.cursor/rules/living-documentation.mdc).
+- **Cross-language parity:** ROSE runtime behavior, naming, ASN.1 structures, and tests stay aligned across C++, TypeScript, and future Kotlin/Swift runtimes. See [.cursor/rules/rose-cross-language-parity.mdc](.cursor/rules/rose-cross-language-parity.mdc).
+- **c-lib / cpp-lib isolation:** products link only `cpp-lib`; never couple them in CMake or headers. See [.cursor/rules/c-lib-cpp-lib-isolation.mdc](.cursor/rules/c-lib-cpp-lib-isolation.mdc).
 
 ### Tests define the public API (hard constraint)
 

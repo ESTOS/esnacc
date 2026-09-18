@@ -7,10 +7,12 @@ dist/
 *.tsbuildinfo
 **/node_modules/
 **/.pnpm-store/
-compiler/back-ends/ts-gen/tests/workdir/
+package-lock.json
+typescript/stub/
 CMakeCache.txt
 CMakeFiles/
 Makefile
 *.cmake
+!cmake/*.cmake
 c-lib/libesnacc_c_lib.a
 compiler/compiler.aps

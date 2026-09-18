@@ -10,6 +10,7 @@ import { IncomingHttpHeaders } from "node:http";
 import * as ENetUC_Common from "./ENetUC_Common.js";
 import * as ENetUC_Common_Converter from "./ENetUC_Common_Converter.js";
 import {
+	GeneralProblemenum,
 	InvokeProblemenum,
 	RejectProblem,
 	ROSEError,
@@ -29,6 +30,7 @@ import {
 	ISendInvokeContextParams,
 } from "./TSInvokeContext.js";
 import type { IRoseSessionSubscription } from "./IRoseSessionSubscription.js";
+import { roseDebugBreak } from "./TSBaseUtils.js";
 
 /**
  * The socket might be a node or browser websocket or a node raw tcp socket, thus we cast it to any
@@ -75,6 +77,102 @@ export const ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00;
 
 /** Transport-layer shutdown (parity with C++ ROSE_TE_SHUTDOWN). */
 export const ROSE_TE_SHUTDOWN = 0x00000002;
+
+/** HTTP status for a successful ROSE invoke (`ROSEResult`). */
+export const ROSE_HTTP_OK = 200;
+
+/** HTTP status for `ROSEError` (application `AsnRequestError`); not used for rejects. */
+export const ROSE_HTTP_APPLICATION_ERROR = 500;
+
+/** Default HTTP status for `ROSEReject` when no specific mapping applies. */
+export const ROSE_HTTP_REJECT_FALLBACK = 502;
+
+/**
+ * Maps a server-side ROSE outcome to HTTP status for REST/fetch transports.
+ * The encoded `ROSEMessage` body is unchanged; see `ROSE_HTTP_STATUS.md`.
+ */
+export function httpStatusFromRoseOutcome(result: ROSEReject | ROSEResult | ROSEError): number {
+	if (result instanceof ROSEResult)
+		return ROSE_HTTP_OK;
+	if (result instanceof ROSEError)
+		return ROSE_HTTP_APPLICATION_ERROR;
+	return httpStatusFromRoseReject(result);
+}
+
+/**
+ * Maps `ROSEReject` to HTTP status. Rejects never use {@link ROSE_HTTP_APPLICATION_ERROR}.
+ */
+export function httpStatusFromRoseReject(reject: ROSEReject): number {
+	const problem = reject.reject;
+	if (!problem)
+		return ROSE_HTTP_REJECT_FALLBACK;
+
+	if (problem.invokeProblem !== undefined)
+		return httpStatusFromInvokeProblem(problem.invokeProblem);
+	if (problem.generalProblem !== undefined)
+		return httpStatusFromGeneralProblem(problem.generalProblem);
+
+	return ROSE_HTTP_REJECT_FALLBACK;
+}
+
+/**
+ * Maps standard and custom `invokeProblem` values to HTTP status.
+ */
+export function httpStatusFromInvokeProblem(invokeProblem: number): number {
+	switch (invokeProblem) {
+		case InvokeProblemenum.duplicateInvocation:
+			return 409;
+		case InvokeProblemenum.unrecognisedOperation:
+			return 501;
+		case InvokeProblemenum.mistypedArgument:
+			return 400;
+		case InvokeProblemenum.resourceLimitation:
+			return 503;
+		case InvokeProblemenum.initiatorReleasing:
+			return 408;
+		case InvokeProblemenum.invalidSessionID:
+		case InvokeProblemenum.authenticationIncomplete:
+		case InvokeProblemenum.authenticationFailed:
+			return 401;
+		case InvokeProblemenum.unrecognisedLinkedID:
+		case InvokeProblemenum.linkedResponseUnexpected:
+		case InvokeProblemenum.unexpectedChildOperation:
+			return ROSE_HTTP_REJECT_FALLBACK;
+		case CustomInvokeProblemEnum.missingResponse:
+			return 504;
+		case CustomInvokeProblemEnum.serviceUnavailable:
+			return 503;
+		case CustomInvokeProblemEnum.requestTimedOut:
+			return 504;
+		case CustomInvokeProblemEnum.internalError:
+			return ROSE_HTTP_REJECT_FALLBACK;
+		case CustomInvokeProblemEnum.messageTooBig:
+			return 413;
+		case CustomInvokeProblemEnum.emptyRejectMessage:
+			return ROSE_HTTP_REJECT_FALLBACK;
+		case CustomInvokeProblemEnum.remoteNotCapable:
+		case ROSE_REJECT_REMOTENOTCAPABLE:
+			return 501;
+		case ROSE_TE_SHUTDOWN:
+			return 503;
+		default:
+			return ROSE_HTTP_REJECT_FALLBACK;
+	}
+}
+
+/**
+ * Maps ROSE `generalProblem` values to HTTP status.
+ */
+export function httpStatusFromGeneralProblem(generalProblem: number): number {
+	switch (generalProblem) {
+		case GeneralProblemenum.unrecognisedAPDU:
+		case GeneralProblemenum.mistypedAPDU:
+		case GeneralProblemenum.badlyStructuredAPDU:
+			return 400;
+		default:
+			return ROSE_HTTP_REJECT_FALLBACK;
+	}
+}
 
 /**
  * Debug-only assert with a human-readable message (console.assert in Node/browser).
@@ -201,6 +299,10 @@ export type EHttpHeaders = IncomingHttpHeaders;
  * Base interface for the invoke context
  */
 export interface IInvokeContextBase extends IInvokeContextBaseParams {
+	// Milliseconds invoke timeout (undefined when unset or absent on the wire).
+	setInvokeTimeout: (iTimeoutMs: number) => void;
+	clearInvokeTimeout: () => void;
+	invokeTimeout: () => number | undefined;
 	// Set the base ids in one call
 	init: (operationID: number, operationName: string, invokeID?: number) => void;
 	// Which operation id has been called
@@ -222,6 +324,7 @@ class BaseInvokeContext implements IInvokeContextBase {
 	public clientConnectionID: string | undefined;
 	public headers: EHttpHeaders | undefined;
 	public customData: unknown | undefined;
+	private m_invokeTimeout?: number;
 
 	/**
 	 * Constructor for the BaseInvokeContext
@@ -236,6 +339,26 @@ class BaseInvokeContext implements IInvokeContextBase {
 		this.operationName = args?.operationName || "";
 		this.invokeID = args?.invokeID || -1;
 		this.customData = args?.customData;
+		if (args?.invokeTimeoutMs !== undefined)
+			this.setInvokeTimeout(args.invokeTimeoutMs);
+	}
+
+	/**
+	 * Sets the invoke timeout in milliseconds. Outbound values > 0 are encoded on
+	 * ROSEInvoke.timeout (not for events). Inbound contexts are populated from the wire.
+	 */
+	public setInvokeTimeout(iTimeoutMs: number): void {
+		this.m_invokeTimeout = iTimeoutMs;
+	}
+
+	/** Clears a configured timeout so the connection default applies on outbound sends. */
+	public clearInvokeTimeout(): void {
+		this.m_invokeTimeout = undefined;
+	}
+
+	/** Returns the invoke timeout in milliseconds when set; undefined when unset or absent on the wire. */
+	public invokeTimeout(): number | undefined {
+		return this.m_invokeTimeout;
 	}
 
 	/**
@@ -310,6 +433,7 @@ export class ReceiveInvokeContext extends BaseInvokeContext implements IReceiveI
 			invokeID: invoke.invokeID,
 			operationID: invoke.operationID,
 			operationName: invoke.operationName,
+			...(invoke.timeout !== undefined && invoke.timeout > 0 ? { invokeTimeoutMs: invoke.timeout } : {}),
 		});
 	}
 }
@@ -325,7 +449,6 @@ export interface ISendInvokeContext extends ISendInvokeContextParams, IInvokeCon
  * A class holding the properties of the ISendInvokeContext
  */
 export class SendInvokeContext extends BaseInvokeContext implements ISendInvokeContextParams {
-	public timeout?: number;
 	public restTarget?: string;
 	public bSendEventSynchronous?: boolean;
 
@@ -336,7 +459,6 @@ export class SendInvokeContext extends BaseInvokeContext implements ISendInvokeC
 	 */
 	public constructor(args: Partial<ISendInvokeContext>) {
 		super(args);
-		this.timeout = args.timeout;
 		this.restTarget = args.restTarget;
 		this.bSendEventSynchronous = args.bSendEventSynchronous || false;
 	}
@@ -420,7 +542,7 @@ export function handleRoseReject(roseReject: ROSEReject): AsnInvokeProblem {
  */
 export function validateIsDedicatedObject(obj: unknown): void {
 	if (Object.prototype.isPrototypeOf.call(Object.getPrototypeOf(obj), Object)) {
-		debugger;
+		roseDebugBreak();
 		// This stub relies on using constructor created objects as we use instanceof in the stub
 		// Thus an object created with {} is not usable here as it fails with the instanceof checks
 		// Simply pass the parameters you have in your {} into the argument of the constructor any everything is fine...
@@ -581,6 +703,7 @@ export interface IASN1Transport extends IRoseSessionSubscription {
 interface IASN1DataClass {
 	readonly type: string;
 }
+
 // Envelop that holds the handler class that acts on invokes and events
 interface IASN1HandlerClass {
 	setLogContext?(argument: unknown, invokeContext: IReceiveInvokeContext): void;
@@ -655,7 +778,7 @@ export function asn1Decode<T>(
 		} else if (typeof argument === "object")
 			jsonData = argument;
 		else
-			debugger;
+			roseDebugBreak();
 		// UCWeb creates an array envelop which is technically wrong so we need to remove that here
 		// All ROSE messages are single sequences
 		if (typeof jsonData === "string" && jsonData.startsWith("["))
@@ -670,7 +793,7 @@ export function asn1Decode<T>(
 			// The encapsulated uses a certain scheme and we need to validate that scheme against the data we received
 			berData = argument.valueBeforeDecodeView;
 		} else {
-			debugger;
+			roseDebugBreak();
 		}
 	} else if (invokeContext.encoding === EASN1TransportEncoding.JSON) {
 		if (argument instanceof Uint8Array)
@@ -682,7 +805,7 @@ export function asn1Decode<T>(
 			else if (type === "object")
 				jsonData = argument;
 			else
-				debugger;
+				roseDebugBreak();
 		}
 	}
 
@@ -730,7 +853,7 @@ export function asn1Encode(
 			return converter.toBER(argument, errors, encodeContext);
 		case undefined:
 		default:
-			debugger;
+			roseDebugBreak();
 	}
 	return undefined;
 }
@@ -901,7 +1024,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				diagnostic,
 			});
 			// If you land here, check the payLoad why it could not get encoded
-			debugger;
+			roseDebugBreak();
 			result = createInvokeReject(invoke, CustomInvokeProblemEnum.internalError, "Failed to encode ROSEError object");
 		}
 		return result;
@@ -940,7 +1063,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				diagnostic,
 			});
 			// If you land here, check the payLoad why it could not get encoded
-			debugger;
+			roseDebugBreak();
 			result = createInvokeReject(invoke, CustomInvokeProblemEnum.internalError, "Failed to encode ROSEResult object");
 		}
 
@@ -971,20 +1094,21 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		// Callback into the transport to get customized invokeContextParams
 		const context = this.transport.getInvokeContextParams(contextParams, operationID, operationName, event);
 
-		// The root ROSE message which is now filled with its own parameters
-		const message = new ROSEMessage();
 		const sessionID = this.transport.getSessionID();
 		const invokeID = event ? 99999 : this.transport.getNextInvokeID();
+		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
+		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
+
+		// The root ROSE message which is now filled with its own parameters
+		const message = new ROSEMessage();
+		const wireTimeoutMs = invokeContext.invokeTimeout();
 		message.invoke = new ROSEInvoke({
 			invokeID,
 			...(sessionID && { sessionID }),
 			operationID,
 			...(context.bAddOperationName && { operationName }),
+			...(!event && wireTimeoutMs !== undefined && wireTimeoutMs > 0 ? { timeout: wireTimeoutMs } : {}),
 		});
-
-		// The encoding is provided by the context or we try to gather it via the connectionID
-		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
-		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
 
 		// Copy the invoke for logging purposes (Contains plain json data)
 		const invoke: ROSEInvoke = { ...message.invoke, argument };
@@ -1059,7 +1183,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * Handles an outbound invoke, encodes the argument, calls the other side and receives the response
 	 *
 	 * @param argument - the invoke argument
-	 * @param resultObj - the result object
+	 * @param resultDataClass - generated ASN.1 result class (decode-failure log label only)
 	 * @param operationID - the operation ID that has been called
 	 * @param operationName - the operation Name that has been called
 	 * @param argumentConverter - the converter for the argument object into the different encodings
@@ -1070,7 +1194,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 */
 	public async handleInvoke<T, U = ENetUC_Common.AsnRequestError>(
 		argument: object,
-		resultObj: IASN1DataClass,
+		resultDataClass: IASN1DataClass,
 		operationID: number,
 		operationName: string,
 		argumentConverter: IConverter,
@@ -1143,11 +1267,11 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		this.transport.log(ELogSeverity.error, "Could not decode invoke response", method, this, {
 			encoding: context.encoding,
 			payLoad,
-			expected_type: resultObj.type,
+			expected_type: resultDataClass.type,
 			diagnostic,
 		});
 		// If you land here, check the payLoad what the other side has replied to our request
-		debugger;
+		roseDebugBreak();
 		return new AsnInvokeProblem(InvokeProblemenum.mistypedArgument, diagnostic);
 	}
 
@@ -1195,7 +1319,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			}
 		} else {
 			// If you land here, check the payLoad what the other side has sent to us
-			debugger;
+			roseDebugBreak();
 			const diagnostic = converterErrors.getDiagnostic();
 			const payLoad = ROSEBase.getDebugPayload(invoke.argument);
 			this.transport.log(ELogSeverity.error, "Could not decode OnEvent argument", methodName, this, {
@@ -1276,7 +1400,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 				diagnostic,
 			});
 			// If you land here, check the payLoad what the other side has replied to our request
-			debugger;
+			roseDebugBreak();
 			result = createInvokeReject(invoke, InvokeProblemenum.mistypedArgument, diagnostic);
 		}
 
@@ -1287,7 +1411,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		else if (result instanceof ROSEReject)
 			this.transport.logReject(methodName, this, result, argument, invokeContext, true);
 		else
-			debugger;
+			roseDebugBreak();
 
 		return result;
 	}

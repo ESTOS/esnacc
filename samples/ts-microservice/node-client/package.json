@@ -5,7 +5,7 @@
 	"packageManager": "pnpm@11.9.0",
 	"engines": {
 		"pnpm": ">=11",
-		"node": ">=24"
+		"node": ">=26"
 	},
 	"description": "Node integration tests for the estos TypeScript ASN.1 sample",
 	"private": true,
@@ -18,7 +18,7 @@
 	},
 	"license": "UNLICENSED",
 	"dependencies": {
-		"@estos/asn1ts": "^3.2.3",
+		"@estos/asn1ts": "^3.2.5",
 		"ws": "^8.21.0"
 	},
 	"devDependencies": {

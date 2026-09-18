@@ -18,11 +18,7 @@ import * as ENetUC_Event_Manager from "./stub/ENetUC_Event_Manager.js";
 import * as ENetUC_Settings_Manager from "./stub/ENetUC_Settings_Manager.js";
 import { ENetUC_Settings_ManagerROSE } from "./stub/ENetUC_Settings_ManagerROSE.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
-import {
-	assertNodeServerTestLayout,
-	createMicroserviceServerEnv,
-	resolveIntegrationRunnerEnv,
-} from "./test_env.js";
+import { assertNodeServerTestLayout, createMicroserviceServerEnv, resolveIntegrationRunnerEnv } from "./test_env.js";
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const nodeClientRoot = path.resolve(testDir, "..");
@@ -108,12 +104,10 @@ async function startServer(): Promise<void> {
 		appendServerOutput(process.stderr, chunk);
 	});
 	serverProcess.on("exit", (code, signal) => {
-		if (code !== null && code !== 0) {
+		if (code !== null && code !== 0)
 			serverOutput += `\n[node-server exited with code ${code}]`;
-		}
-		if (signal) {
+		if (signal)
 			serverOutput += `\n[node-server terminated by signal ${signal}]`;
-		}
 	});
 
 	await waitForServerReady();

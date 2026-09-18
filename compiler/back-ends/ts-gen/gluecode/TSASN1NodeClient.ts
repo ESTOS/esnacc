@@ -22,6 +22,7 @@ import {
 	ISocketMessageEvent,
 	toASN1ByteArray,
 } from "./TSROSEBase.js";
+import { roseDebugBreak } from "./TSBaseUtils.js";
 import * as ENetUC_Common from "./ENetUC_Common.js";
 
 /**
@@ -318,7 +319,7 @@ export class TSASN1NodeClient extends TSASN1Client {
 			return toASN1ByteArray(Buffer.concat(data));
 		else {
 			this.log(ELogSeverity.error, "exception", "Received unhandled data", this);
-			debugger;
+			roseDebugBreak();
 		}
 		return undefined;
 	}

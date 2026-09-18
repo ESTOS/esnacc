@@ -173,7 +173,8 @@ export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 
 			try {
 				if (data.invoke.invokeID !== 99999) {
-					const timeout = data.invokeContext?.timeout || this.defaultTimeout;
+					const ctxTimeout = data.invokeContext.invokeTimeout();
+					const timeout = ctxTimeout === undefined ? this.defaultTimeout : ctxTimeout;
 					// Create a timer if a timeout was provided
 					const id = data.invoke.invokeID;
 					const timerid = setTimeout((): void => {

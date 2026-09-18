@@ -330,7 +330,7 @@ public:
 	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
 
 	/**
-	 * Async outbound invoke. For InvokeTimeout() > 0 (or -1 default), requires SetAsyncCompletion() on pCtx.
+	 * Async outbound invoke. For InvokeTimeout() > 0 (or unset connection default), requires SetAsyncCompletion() on pCtx.
 	 * InvokeTimeout() == 0 matches SendInvoke fire-and-forget: no watchdog, no completion callback.
 	 */
 	virtual long SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;

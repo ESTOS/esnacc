@@ -8,7 +8,7 @@ const { spawnSync } = require("child_process");
 const SAMPLES_DIR = __dirname;
 const INTERFACE_DIR = path.join(SAMPLES_DIR, "interface");
 const BIN_DIR = path.join(SAMPLES_DIR, "bin");
-const NODE_VERSION = process.env.SNACC_NODE_VERSION || "24";
+const NODE_VERSION = process.env.SNACC_NODE_VERSION || "26";
 
 const PNPM_PACKAGES = [
 	"ts-microservice/browser-client",
@@ -91,9 +91,10 @@ function listAsn1Files() {
  * for logging before spawnSync runs the compiler.
  */
 function formatCommandLine(command, args) {
-	const quote = (arg) => /[\s"]/.test(arg)
-		? `"${arg.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`
-		: arg;
+	const quote = (arg) =>
+		/[\s"]/.test(arg)
+			? `"${arg.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")}"`
+			: arg;
 	return [command, ...args].map(quote).join(" ");
 }
 
@@ -122,7 +123,9 @@ function runCompiler(compiler, outputDir, compilerArgs, asn1Files) {
 function generateStubs() {
 	const compiler = resolveCompiler();
 	if (!compiler) {
-		console.error("error: esnacc compiler not found. Run scripts/ensure_compiler.bat or scripts/ensure_compiler.sh first, or use prepare.bat / prepare.sh.");
+		console.error(
+			"error: esnacc compiler not found. Run scripts/ensure_compiler.bat or scripts/ensure_compiler.sh first, or use prepare.bat / prepare.sh.",
+		);
 		return 1;
 	}
 

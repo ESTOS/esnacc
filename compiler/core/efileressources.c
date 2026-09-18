@@ -21,6 +21,7 @@ INCBIN(BIN_ROSE_BASE, "compiler/back-ends/ts-gen/gluecode/TSROSEBase.ts");
 INCBIN(BIN_SNACCROSE, "compiler/back-ends/ts-gen/gluecode/SNACCROSE.ts");
 INCBIN(BIN_SNACCROSE_CONVERTER, "compiler/back-ends/ts-gen/gluecode/SNACCROSE_Converter.ts");
 INCBIN(BIN_INVOKE_CONTEXT, "compiler/back-ends/ts-gen/gluecode/TSInvokeContext.ts");
+INCBIN(BIN_BASE_UTILS, "compiler/back-ends/ts-gen/gluecode/TSBaseUtils.ts");
 INCBIN(BIN_DEPRECATED_CALLBACK, "compiler/back-ends/ts-gen/gluecode/TSDeprecatedCallback.ts");
 INCBIN(BIN_ROSE_SESSION_SUBSCRIPTION, "compiler/back-ends/ts-gen/gluecode/IRoseSessionSubscription.ts");
 INCBIN(BIN_ROSE_SESSION_SUBSCRIPTION_STORE, "compiler/back-ends/ts-gen/gluecode/RoseSessionSubscriptionStore.ts");
@@ -100,6 +101,9 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 			break;
 		case ETS_INVOKE_CONTEXT:
 			SaveIncBinToFile(gBIN_INVOKE_CONTEXTData, gBIN_INVOKE_CONTEXTSize, szFileName);
+			break;
+		case ETS_BASE_UTILS:
+			SaveIncBinToFile(gBIN_BASE_UTILSData, gBIN_BASE_UTILSSize, szFileName);
 			break;
 		case ETS_ROSE_SESSION_SUBSCRIPTION:
 			SaveIncBinToFile(gBIN_ROSE_SESSION_SUBSCRIPTIONData, gBIN_ROSE_SESSION_SUBSCRIPTIONSize, szFileName);

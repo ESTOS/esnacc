@@ -10,6 +10,19 @@
 #else
 
 #include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if defined(_WIN32)
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+	__declspec(dllimport) int __stdcall IsDebuggerPresent(void);
+#ifdef __cplusplus
+}
+#endif
+#endif
 
 #if defined(_MSC_VER)
 #define DEBUG_BREAK() __debugbreak()
@@ -30,15 +43,88 @@
 #endif
 #endif
 
+// True when a debugger is attached to this process (debug run vs loose run; independent of Debug/Release build).
+SNACC_ASSERT_INLINE int SnaccDebuggerIsAttached(void)
+{
+#if defined(_WIN32)
+	return IsDebuggerPresent() != 0;
+#elif defined(__linux__)
+	FILE* pStatus = fopen("/proc/self/status", "r");
+	if (pStatus == NULL)
+		return 0;
+	char szLine[256];
+	int iTracerPid = 0;
+	while (fgets(szLine, sizeof(szLine), pStatus) != NULL)
+	{
+		if (strncmp(szLine, "TracerPid:", 10) == 0)
+		{
+			iTracerPid = atoi(szLine + 10);
+			break;
+		}
+	}
+	fclose(pStatus);
+	return iTracerPid != 0;
+#else
+	return 0;
+#endif
+}
+
+// Set on snacc-cpp-tests only (see cpp-lib/tests/CMakeLists.txt) so loose GTest runs log to stdout.
+SNACC_ASSERT_INLINE int SnaccIsGTestBinary(void)
+{
+#if defined(SNACC_GTEST_BINARY)
+	return 1;
+#else
+	return 0;
+#endif
+}
+
+// When set, force breakpoints during tests even without a debugger (parity with TS SNACC_ROSE_DEBUG_IN_TESTS).
+SNACC_ASSERT_INLINE int SnaccRoseDebugInTestsEnabled(void)
+{
+#if defined(_WIN32)
+	char szValue[64];
+	size_t cchValue = 0;
+	if (getenv_s(&cchValue, szValue, sizeof(szValue), "SNACC_ROSE_DEBUG_IN_TESTS") != 0 || cchValue == 0)
+		return 0;
+	return szValue[0] != '\0' && strcmp(szValue, "0") != 0;
+#else
+	const char* pszValue = getenv("SNACC_ROSE_DEBUG_IN_TESTS");
+	if (pszValue == NULL || pszValue[0] == '\0' || strcmp(pszValue, "0") == 0)
+		return 0;
+	return 1;
+#endif
+}
+
+// Break only on a debug run (debugger attached) or when SNACC_ROSE_DEBUG_IN_TESTS overrides loose GTest runs.
+SNACC_ASSERT_INLINE int SnaccAssertShouldBreak(void)
+{
+	if (SnaccDebuggerIsAttached())
+		return 1;
+	if (SnaccRoseDebugInTestsEnabled())
+		return 1;
+	return 0;
+}
+
+// Loose GTest runs (no debugger) use stdout so Test Explorer / ctest capture assert diagnostics.
+SNACC_ASSERT_INLINE FILE* SnaccAssertOutputStream(void)
+{
+	if (SnaccIsGTestBinary() && !SnaccDebuggerIsAttached() && !SnaccRoseDebugInTestsEnabled())
+		return stdout;
+	return stderr;
+}
+
 SNACC_ASSERT_INLINE void SnaccAssertImpl(int bCondition, const char* szMessage, const char* szExpr, const char* szFile, int iLine)
 {
 	if (bCondition)
 		return;
+	FILE* pStream = SnaccAssertOutputStream();
 	if (szExpr && szExpr[0] != '\0')
-		fprintf(stderr, "ASSERT failed: %s\n  condition: %s\n  at %s:%d\n", szMessage, szExpr, szFile, iLine);
+		fprintf(pStream, "ASSERT failed: %s\n  condition: %s\n  at %s:%d\n", szMessage, szExpr, szFile, iLine);
 	else
-		fprintf(stderr, "ASSERT failed: %s\n  at %s:%d\n", szMessage, szFile, iLine);
-	DEBUG_BREAK();
+		fprintf(pStream, "ASSERT failed: %s\n  at %s:%d\n", szMessage, szFile, iLine);
+	if (SnaccAssertShouldBreak())
+		DEBUG_BREAK();
 }
 
 SNACC_ASSERT_INLINE void SnaccAssertFailV(const char* szFormat, ...)

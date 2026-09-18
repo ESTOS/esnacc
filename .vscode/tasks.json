@@ -1,0 +1,29 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Setup all tests",
+			"type": "shell",
+			"command": "node",
+			"args": ["scripts/setup-snacc-tests.mjs"],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "Run all tests",
+			"type": "shell",
+			"command": "node",
+			"args": ["scripts/run-all-snacc-tests.mjs"],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		}
+	]
+}

@@ -1,0 +1,18 @@
+{
+	"name": "snacclib7",
+	"private": true,
+	"packageManager": "pnpm@11.9.0",
+	"description": "Root dev tooling for the esnacc monorepo (dprint for TypeScript/JSON).",
+	"engines": {
+		"pnpm": ">=11",
+		"node": ">=26"
+	},
+	"scripts": {
+		"preinstall": "node scripts/enforce-pnpm.mjs",
+		"fmt": "dprint fmt",
+		"fmt:check": "dprint check"
+	},
+	"devDependencies": {
+		"dprint": "^0.55.1"
+	}
+}
