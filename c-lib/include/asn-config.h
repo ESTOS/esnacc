@@ -83,11 +83,6 @@
 #define fopen_s(pFile, filename, mode) myfopen(pFile, filename, mode)
 #endif
 
-#ifndef getenv_s
-#include "platform-functions.h"
-#define getenv_s(buffer_used, buffer, buffer_count, varname) mygetenv(buffer_used, buffer, buffer_count, varname)
-#endif
-
 #endif // _WIN32
 
 #ifdef __cplusplus
