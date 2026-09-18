@@ -220,6 +220,7 @@ typedef struct Module /* SEQUENCE */
 	MyString jsFileName;						/* MyString */
 	MyString tsFileName;						/* MyString */
 	MyString tsConverterFileName;				/* Filename of the typescript encoder decoders */
+	MyString tsSerializableFileName;			/* Filename of the typescript serializable interfaces */
 	MyString baseFileName;						/* MyString filename without extension */
 	MyString baseFilePath;						/* MyString filepath without extension */
 	MyString delphiFileName;					/* MyString */

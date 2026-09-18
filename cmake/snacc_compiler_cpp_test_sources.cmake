@@ -5,6 +5,7 @@ set(SNACC_COMPILER_CPP_TEST_SOURCES
 	"${CMAKE_SOURCE_DIR}/compiler/tests/cpp/deprecated_successor_tests.cpp"
 	"${CMAKE_SOURCE_DIR}/compiler/tests/cpp/deprecated_successor_cli_tests.cpp"
 	"${CMAKE_SOURCE_DIR}/compiler/tests/cpp/interface_baseline_tests.cpp"
+	"${CMAKE_SOURCE_DIR}/compiler/tests/cpp/ts_serializable_codegen_tests.cpp"
 	"${CMAKE_SOURCE_DIR}/compiler/tests/cpp/test_support.cpp"
 	"${CMAKE_SOURCE_DIR}/compiler/tests/cpp/test_work_dir.cpp"
 	"${CMAKE_SOURCE_DIR}/compiler/core/snacc-deprecated-successor.cpp"

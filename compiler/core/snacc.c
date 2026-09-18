@@ -2084,6 +2084,7 @@ void CreateNames(ModuleList* allMods)
 		currMod->jsFileName = MakeJSFileName(currMod->baseFilePath);
 		currMod->tsFileName = MakeTSFileName(currMod->baseFilePath);
 		currMod->tsConverterFileName = MakeTSEncDecFileName(currMod->baseFilePath);
+		currMod->tsSerializableFileName = MakeTSSerializableFileName(currMod->baseFilePath);
 		currMod->idlFileName = MakeIDLFileName(currMod->baseFilePath);
 		currMod->delphiFileName = MakeDelphiFileName(currMod->baseFilePath);
 		currMod->ROSEHdrFileName = MakeROSEHdrFileName(currMod->baseFilePath);
