@@ -11,5 +11,6 @@ void PrintTSConverterCode(FILE* src, ModuleList* mods, Module* m, long longJmpVa
 
 bool ContainsConverters(Module* m);
 bool HasElements(const TypeDef* td);
+bool ModuleDefinesAsnOptionalParameters(Module* m);
 
 #endif // TSCONVERTER_H_INCLUDED

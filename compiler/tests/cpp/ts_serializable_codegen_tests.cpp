@@ -97,4 +97,38 @@ namespace compiler
 		EXPECT_TRUE(FileContains(TypesOutputPath(workDir), "export * as Serializable_Test_Serializable from \"./Serializable_Test_Serializable.js\"")) << ReadFileToString(TypesOutputPath(workDir));
 	}
 
+	TEST(Compiler_TsSerializableCodegenTest, OptionalParametersExposeUcServerSerializableTypes)
+	{
+		TestWorkDir workDir;
+		workDir.CopyFixture(FixtureDirectory() / "OptionalParams_Test.asn1");
+
+		std::filesystem::create_directories(workDir.path() / "out");
+		const ProcessResult result = RunProcess(
+			ResolveEsnaccExecutable(),
+			{
+				"-JTE",
+				"-j",
+				"-o",
+				(workDir.path() / "out").string(),
+				(workDir.path() / "OptionalParams_Test.asn1").string(),
+			},
+			workDir.path());
+		ASSERT_EQ(result.exitCode, 0) << result.output;
+
+		const std::filesystem::path serializablePath = workDir.path() / "out" / "OptionalParams_Test_Serializable.ts";
+		const std::filesystem::path converterPath = workDir.path() / "out" / "OptionalParams_Test_Converter.ts";
+		EXPECT_TRUE(std::filesystem::exists(serializablePath)) << result.output;
+		EXPECT_TRUE(std::filesystem::exists(converterPath)) << result.output;
+
+		const std::string serializable = ReadFileToString(serializablePath);
+		EXPECT_TRUE(FileContains(serializablePath, "export type IAsnOptionalParameters = IAsnOptionalParam[]")) << serializable;
+		EXPECT_TRUE(FileContains(serializablePath, "binarydata?: string")) << serializable;
+		EXPECT_TRUE(FileContains(serializablePath, "export type { IUCServerOptionalParam, IUCServerOptionalParameters } from \"./TSOptionalParamConverter.js\"")) << serializable;
+
+		const std::string converter = ReadFileToString(converterPath);
+		EXPECT_TRUE(FileContains(converterPath, "import { EAsnOptionalParametersConverter, type IUCServerOptionalParameters } from \"./TSOptionalParamConverter.js\"")) << converter;
+		EXPECT_TRUE(FileContains(converterPath, "OptionalParams_Test_Serializable.IAsnOptionalParameters | IUCServerOptionalParameters | undefined")) << converter;
+		EXPECT_TRUE(FileContains(converterPath, "prepareJSONData<OptionalParams_Test_Serializable.IAsnOptionalParameters | IUCServerOptionalParameters>")) << converter;
+	}
+
 } // namespace compiler

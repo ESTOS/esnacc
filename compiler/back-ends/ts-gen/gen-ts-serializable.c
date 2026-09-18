@@ -357,4 +357,9 @@ void PrintTSSerializableCode(FILE* src, ModuleList* mods, Module* m, int novolat
 		PrintTSSerializableTypeDefCode(src, mods, m, td, novolatilefuncs);
 		bIsFirst = false;
 	}
+
+	if (ModuleDefinesAsnOptionalParameters(m))
+	{
+		fprintf(src, "\nexport type { IUCServerOptionalParam, IUCServerOptionalParameters } from \"./TSOptionalParamConverter%s\";\n", getCommonJSFileExtension());
+	}
 }
