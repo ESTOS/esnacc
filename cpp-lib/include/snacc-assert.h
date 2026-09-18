@@ -13,8 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "platform-functions.h"
-
 #if defined(_WIN32)
 #ifdef __cplusplus
 extern "C"
@@ -84,11 +82,18 @@ SNACC_ASSERT_INLINE int SnaccIsGTestBinary(void)
 // When set, force breakpoints during tests even without a debugger (parity with TS SNACC_ROSE_DEBUG_IN_TESTS).
 SNACC_ASSERT_INLINE int SnaccRoseDebugInTestsEnabled(void)
 {
+#if defined(_WIN32)
 	char szValue[64];
 	size_t cchValue = 0;
-	if (mygetenv(&cchValue, szValue, sizeof(szValue), "SNACC_ROSE_DEBUG_IN_TESTS") != 0 || cchValue == 0)
+	if (getenv_s(&cchValue, szValue, sizeof(szValue), "SNACC_ROSE_DEBUG_IN_TESTS") != 0 || cchValue == 0)
 		return 0;
 	return szValue[0] != '\0' && strcmp(szValue, "0") != 0;
+#else
+	const char* pszValue = getenv("SNACC_ROSE_DEBUG_IN_TESTS");
+	if (pszValue == NULL || pszValue[0] == '\0' || strcmp(pszValue, "0") == 0)
+		return 0;
+	return 1;
+#endif
 }
 
 // Break only on a debug run (debugger attached) or when SNACC_ROSE_DEBUG_IN_TESTS overrides loose GTest runs.
