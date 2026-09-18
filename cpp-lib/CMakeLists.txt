@@ -17,8 +17,7 @@ elseif(MSVC)
 endif()
 add_library(snacc_cpp_lib ALIAS cpp-lib)
 
-target_include_directories(cpp-lib PUBLIC "include" "${CMAKE_SOURCE_DIR}/c-lib/include")
-target_link_libraries(cpp-lib PUBLIC c-lib)
+target_include_directories(cpp-lib PUBLIC "include")
 target_compile_definitions(cpp-lib PRIVATE SNACCDLL_NONE)
 target_compile_definitions(cpp-lib PRIVATE SNACCLIB_BUILD)
 
