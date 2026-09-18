@@ -18,18 +18,15 @@ import {
 import { roseDebugBreak } from "./TSBaseUtils.js";
 
 /**
- * Sadly someone added custom written encoders decoders for the custom parameters in the UCServer
- * So we cannot use the asn1 stub definitions for them, we need to encode decode them in the same notation
- * This is how an optional parameter looks like the UCServer is aware of
+ * UCServer wire value for one optional parameter entry (integer, UTF-8 string, or base64 binary wrapper).
  */
-type IUCServerOptionalParam = number | string | { binarydata: string; };
+export type IUCServerOptionalParam = number | string | { binarydata: string };
 
 /**
- * Sadly someone added custom written encoders decoders for the custom parameters in the UCServer
- * So we cannot use the asn1 stub definitions for them, we need to encode decode them in the same notation
- * This is how the array of optional parameters in asn1 is encoded into, or decoded from a json object
+ * UCServer map notation for AsnOptionalParameters — Redux-safe plain object keyed by parameter name.
+ * Differs from IAsnOptionalParameters (ASN.1 array of IAsnOptionalParam) used by standard JSON encoding.
  */
-type IUCServerOptionalParameters = Record<string, IUCServerOptionalParam>;
+export type IUCServerOptionalParameters = Record<string, IUCServerOptionalParam> & INamedType;
 
 /**
  * Helper class that contains the code to do the custom conversion the UCServer is doing for the AsnOptionalParameters
@@ -49,7 +46,7 @@ export class EAsnOptionalParametersConverter {
 		errors?: ConverterErrors,
 		context?: EncodeContext,
 		parametername?: string,
-	): ENetUC_Common.AsnOptionalParameters & INamedType | undefined {
+	): IUCServerOptionalParameters | undefined {
 		errors ||= new ConverterErrors();
 		errors.storeState();
 		const newContext = TSConverter.addEncodeContext(context, parametername, "AsnOptionalParameters");
@@ -59,9 +56,9 @@ export class EAsnOptionalParametersConverter {
 			return undefined;
 		}
 
-		const result = {} as Record<string, unknown> & INamedType;
+		const result = {} as IUCServerOptionalParameters;
 		if (newContext?.bAddTypes)
-			result["_type"] = "IUCServerOptionalParameters";
+			result._type = "IUCServerOptionalParameters";
 
 		for (const [id, element] of obj.entries()) {
 			if (element) {
@@ -85,7 +82,7 @@ export class EAsnOptionalParametersConverter {
 		}
 
 		if (errors.validateResult(newContext, "AsnOptionalParameters"))
-			return result as unknown as ENetUC_Common.AsnOptionalParameters;
+			return result;
 
 		return undefined;
 	}

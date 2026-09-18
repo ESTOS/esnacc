@@ -533,6 +533,11 @@ char* MakeTSEncDecFileName PARAMS((refName), const char* refName)
 	return MakeFileName(refName, "_Converter.ts");
 }
 
+char* MakeTSSerializableFileName PARAMS((refName), const char* refName)
+{
+	return MakeFileName(refName, "_Serializable.ts");
+}
+
 char* MakeJsonDocFileName PARAMS((refName), const char* refName)
 {
 	return MakeFileName(refName, ".json");

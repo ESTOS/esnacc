@@ -1,5 +1,6 @@
 #include "gen-ts-converter.h"
 #include "gen-ts-combined.h"
+#include "gen-ts-serializable.h"
 #include "../str-util.h"
 #include "../structure-util.h"
 #include "../tag-util.h"
@@ -44,8 +45,10 @@ void PrintTSConverterImports(FILE* src, ModuleList* mods, Module* mod)
 
 	// Our own data structure file is not in the imports
 	fprintf(src, "import * as %s from \"./%s%s\";\n", GetNameSpace(mod), mod->baseFileName, getCommonJSFileExtension());
-	if (strcmp(mod->modId->name, "UC-Server-Access-Protocol-Common") == 0)
-		fprintf(src, "import { EAsnOptionalParametersConverter } from \"./TSOptionalParamConverter%s\";\n", getCommonJSFileExtension());
+	if (ContainsSerializables(mod))
+		fprintf(src, "import type * as %s_Serializable from \"./%s_Serializable%s\";\n", GetNameSpace(mod), mod->baseFileName, getCommonJSFileExtension());
+	if (ModuleDefinesAsnOptionalParameters(mod))
+		fprintf(src, "import { EAsnOptionalParametersConverter, type IUCServerOptionalParameters } from \"./TSOptionalParamConverter%s\";\n", getCommonJSFileExtension());
 
 	PrintTSImports(src, mods, mod, true, true, false);
 }
@@ -1427,13 +1430,10 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 		fprintf(src, "export class %s_Converter {", szConverted);
 		if (printEncoders)
 		{
-			fprintf(src, "\n\tpublic static toJSON(s: %s.%s, errors?: ConverterErrors, context?: IEncodeContext, name?: string): %s.%s", szNameSpace, szConverted, szNameSpace, szConverted);
-			if (type != BASICTYPE_SEQUENCEOF && type != BASICTYPE_SETOF)
-			{
-				// Sequence of only contains the elements, no additional stuff
-				fprintf(src, " & INamedType");
-			}
-			fprintf(src, " | undefined {\n");
+			if (strcmp(szConverted, "AsnOptionalParameters") == 0)
+				fprintf(src, "\n\tpublic static toJSON(s: %s.%s, errors?: ConverterErrors, context?: IEncodeContext, name?: string): %s_Serializable.I%s | IUCServerOptionalParameters | undefined {\n", szNameSpace, szConverted, szNameSpace, szConverted);
+			else
+				fprintf(src, "\n\tpublic static toJSON(s: %s.%s, errors?: ConverterErrors, context?: IEncodeContext, name?: string): %s_Serializable.I%s | undefined {\n", szNameSpace, szConverted, szNameSpace, szConverted);
 
 			// An array cannot create any erros while converting
 			fprintf(src, "\t\terrors ||= new ConverterErrors();\n");
@@ -1441,9 +1441,9 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			fprintf(src, "\t\tconst newContext = TSConverter.addEncodeContext(context, name, \"%s\");\n\n", szConverted);
 
 			if (type == BASICTYPE_SEQUENCEOF || type == BASICTYPE_SETOF)
-				fprintf(src, "\t\tconst t = [] as %s.%s;\n\n", szNameSpace, szConverted);
+				fprintf(src, "\t\tconst t = [] as %s_Serializable.I%s;\n\n", szNameSpace, szConverted);
 			else if (type != BASICTYPE_IMPORTTYPEREF && type != BASICTYPE_LOCALTYPEREF)
-				fprintf(src, "\t\tconst t = {} as %s.%s & INamedType;\n\n", szNameSpace, szConverted);
+				fprintf(src, "\t\tconst t = {} as %s_Serializable.I%s;\n\n", szNameSpace, szConverted);
 
 			if (strcmp(szConverted, "AsnOptionalParam") == 0)
 			{
@@ -1476,7 +1476,10 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			fprintf(src, "\t\tconst newContext = TSConverter.addDecodeContext(context, name, \"%s\");\n\n", szConverted);
 			fprintf(src, "\t\tlet t: %s.%s | undefined;\n", szNameSpace, szConverted);
 
-			fprintf(src, "\t\tconst s = TSConverter.prepareJSONData<%s.%s>(data, errors, newContext, optional);\n", szNameSpace, szConverted);
+			if (strcmp(szConverted, "AsnOptionalParameters") == 0)
+				fprintf(src, "\t\tconst s = TSConverter.prepareJSONData<%s_Serializable.I%s | IUCServerOptionalParameters>(data, errors, newContext, optional);\n", szNameSpace, szConverted);
+			else
+				fprintf(src, "\t\tconst s = TSConverter.prepareJSONData<%s_Serializable.I%s>(data, errors, newContext, optional);\n", szNameSpace, szConverted);
 			fprintf(src, "\t\tif (s) {");
 			enum BasicTypeChoiceId choice = td->type->basicType->choiceId;
 			if (choice != BASICTYPE_LOCALTYPEREF && choice != BASICTYPE_IMPORTTYPEREF)
@@ -1502,7 +1505,7 @@ void PrintTSEncoderDecoderCode(FILE* src, ModuleList* mods, Module* m, TypeDef* 
 			else if (strcmp(szConverted, "AsnOptionalParameters") == 0)
 			{
 				fprintf(src, "\n");
-				fprintf(src, "\t\t\tif (s.length === undefined) {\n");
+				fprintf(src, "\t\t\tif (!Array.isArray(s)) {\n");
 				fprintf(src, "\t\t\t\t// Proprietary UCServer AsnOptionalParameters decoding\n");
 				fprintf(src, "\t\t\t\tEAsnOptionalParametersConverter.fromJSON(s, t, errors, context, name, optional);\n");
 				fprintf(src, "\t\t\t} else {");
@@ -1617,6 +1620,18 @@ bool ContainsConverters(Module* m)
 		}
 	}
 	return bContainsConverters;
+}
+
+// Returns true when the module defines the UCServer optional-parameters bag type.
+bool ModuleDefinesAsnOptionalParameters(Module* m)
+{
+	TypeDef* td;
+	FOR_EACH_LIST_ELMT(td, m->typeDefs)
+	{
+		if (strcmp(td->definedName, "AsnOptionalParameters") == 0)
+			return true;
+	}
+	return false;
 }
 
 void PrintTSConverterCode(FILE* src, ModuleList* mods, Module* m, long longJmpVal, int printTypes, int printValues, int printEncoders, int printDecoders, int printTSONEncDec, int novolatilefuncs)

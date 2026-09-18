@@ -1,0 +1,30 @@
+OptionalParams-Test
+	{ 1 3 6 1 4 1 10924 9999 97 }
+
+DEFINITIONS
+IMPLICIT TAGS ::=
+BEGIN
+
+AsnOptionalParam ::= SEQUENCE
+{
+	key UTF8String,
+	value CHOICE
+	{
+		stringdata UTF8String,
+		binarydata OCTET STRING,
+		integerdata INTEGER
+	},
+	...
+}
+
+AsnOptionalParameters ::= SEQUENCE OF AsnOptionalParam
+
+-- @ignorevalidation no-asn-optional-parameters
+AsnOptionalParamsHolder ::= SEQUENCE
+{
+	name UTF8String,
+	optionalParams [0] AsnOptionalParameters OPTIONAL,
+	...
+}
+
+END

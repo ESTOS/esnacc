@@ -28,6 +28,7 @@
 #include "gen-ts-combined.h"
 #include "gen-ts-converter.h"
 #include "gen-ts-rose.h"
+#include "gen-ts-serializable.h"
 #include "../../core/asn_comments.h"
 #include "../../core/interface_baseline.h"
 #include "../../core/module_version_emit.h"
@@ -986,6 +987,7 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 	AsnListNode* saveMods;
 	FILE* srcFilePtr = NULL;
 	FILE* encdecFilePtr = NULL;
+	FILE* serializableFilePtr = NULL;
 	// FILE		*hdrForwardDecl;
 	DefinedObj* fNames;
 	int fNameConflict = FALSE;
@@ -998,9 +1000,9 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 	fNames = NewObjList();
 	FOR_EACH_LIST_ELMT(currMod, allMods)
 	{
-		if (ObjIsDefined(fNames, currMod->tsFileName, StrObjCmp) || ObjIsDefined(fNames, currMod->tsConverterFileName, StrObjCmp))
+		if (ObjIsDefined(fNames, currMod->tsFileName, StrObjCmp) || ObjIsDefined(fNames, currMod->tsConverterFileName, StrObjCmp) || ObjIsDefined(fNames, currMod->tsSerializableFileName, StrObjCmp))
 		{
-			fprintf(errFileG, "Ack! ERROR---file name conflict for generated typescript files with names `%s' and `%s'.\n\n", currMod->tsFileName, currMod->tsConverterFileName);
+			fprintf(errFileG, "Ack! ERROR---file name conflict for generated typescript files with names `%s', `%s', and `%s'.\n\n", currMod->tsFileName, currMod->tsConverterFileName, currMod->tsSerializableFileName);
 			fprintf(errFileG, "This usually means the max file name length is truncating the file names.\n");
 			fprintf(errFileG, "Try re-naming the modules with shorter names or increasing the argument to -mf option (if you are using it).\n");
 			fprintf(errFileG, "This error can also be caused by 2 modules with the same names but different OBJECT IDENTIFIERs.");
@@ -1011,13 +1013,14 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 		{
 			DefineObj(&fNames, currMod->tsFileName);
 			DefineObj(&fNames, currMod->tsConverterFileName);
+			DefineObj(&fNames, currMod->tsSerializableFileName);
 		}
 
 		if (fNameConflict)
 			return;
-
-		FreeDefinedObjs(&fNames);
 	}
+
+	FreeDefinedObjs(&fNames);
 
 	FILE* typesFile = NULL;
 	char* szTypes = MakeFileName("types.ts", "");
@@ -1059,15 +1062,24 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 			fprintf(typesFile, "export * as %s from \"./%s%s\";\n", varName, szModName, getCommonJSFileExtension());
 			if (genJSONEncDec)
 			{
-				char szFileName[_MAX_PATH] = {0};
-				strcat_s(szFileName, _MAX_PATH - 1, szModName);
-				strcat_s(szFileName, _MAX_PATH - 1, "_Converter.ts");
-				char* szConverterFileName = MakeFileName(szFileName, "");
-				FILE* exists = NULL;
-				if (fopen_s(&exists, szConverterFileName, "r") == 0)
+				Module* exportMod = NULL;
+				FOR_EACH_LIST_ELMT(currMod, allMods)
+				{
+					char* baseName = MakeFileNameWithoutOutputPath(currMod->baseFilePath, "");
+					if (baseName && strcmp(baseName, szModName) == 0)
+					{
+						exportMod = currMod;
+						free(baseName);
+						break;
+					}
+					if (baseName)
+						free(baseName);
+				}
+
+				if (exportMod && ContainsConverters(exportMod))
 				{
 					fprintf(typesFile, "export * as %s_Converter from \"./%s_Converter%s\";\n", varName, szModName, getCommonJSFileExtension());
-					fclose(exists);
+					fprintf(typesFile, "export * as %s_Serializable from \"./%s_Serializable%s\";\n", varName, szModName, getCommonJSFileExtension());
 				}
 			}
 
@@ -1288,6 +1300,18 @@ void PrintTSCode(ModuleList* allMods, long longJmpVal, int genTypes, int genValu
 					PrintTSConverterCode(encdecFilePtr, allMods, currMod, longJmpVal, genTypes, genValues, genJSONEncDec, genJSONEncDec, genJSONEncDec, novolatilefuncs);
 					allMods->curr = saveMods;
 					fclose(encdecFilePtr);
+				}
+
+				if (fopen_s(&serializableFilePtr, currMod->tsSerializableFileName, "wt") != 0 || serializableFilePtr == NULL)
+				{
+					perror("fopen");
+				}
+				else
+				{
+					saveMods = allMods->curr;
+					PrintTSSerializableCode(serializableFilePtr, allMods, currMod, novolatilefuncs);
+					allMods->curr = saveMods;
+					fclose(serializableFilePtr);
 				}
 			}
 		}
