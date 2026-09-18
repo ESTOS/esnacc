@@ -5,7 +5,9 @@ alwaysApply: true
 
 # Platform-Portable Helpers (esnacc)
 
-CI builds on **Ubuntu** as well as Windows. Do **not** call MSVC-only CRT APIs (`strcpy_s`, `strcat_s`, `fopen_s`, `_MAX_PATH`, …) directly in new or edited compiler/c-lib code without going through the existing portability layer.
+CI builds on **Ubuntu** as well as Windows. Do **not** call MSVC-only CRT APIs (`strcpy_s`, `strcat_s`, `fopen_s`, `_MAX_PATH`, …) directly in new or edited **compiler/c-lib** code without going through the existing portability layer.
+
+**Scope:** `c-lib/include/asn-config.h` and `platform-functions.h` are for the **compiler and C target** only. Do **not** include them from `cpp-lib/` — products use `cpp-lib/include/asn-config.h` and the CRT. See [c-lib-cpp-lib-isolation.mdc](c-lib-cpp-lib-isolation.mdc).
 
 ## Required includes
 

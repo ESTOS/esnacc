@@ -39,8 +39,8 @@ rg -l "^read_when:" --glob "*.md"
 | -------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------- |
 | `compiler/`                | ASN.1 parser, core compiler, CLI                                         | Compiler behavior, CLI flags, parsing, shared codegen   |
 | `compiler/back-ends/`      | Per-language code generators (`ts-gen`, `c++-gen`, `c-gen`, `cs-gen`, …) | Generated output for a specific target language         |
-| `cpp-lib/`                 | C++ runtime library (`esnacc_cpp_lib`)                                   | BER/JSON codecs, ROSE runtime, C++ consumer APIs        |
-| `c-lib/`                   | C runtime support                                                        | C target runtime and helpers                            |
+| `cpp-lib/`                 | C++ runtime library (`esnacc_cpp_lib`) — **product deliverable**         | BER/JSON codecs, ROSE runtime, C++ consumer APIs (ProCall, global) |
+| `c-lib/`                   | C runtime — **compiler and C-target only** (not linked by products)      | `esnacc` compiler, C ASN.1 backend, compiler unit tests |
 | `ROSE/`                    | ROSE-related shared material                                             | ROSE protocol/client-server concerns                    |
 | `samples/`                 | End-to-end usage examples                                                | Verifying generation, integration patterns, sample apps |
 | `samples/ts-microservice/` | Main TypeScript sample (server, client, browser, OpenAPI)                | TypeScript ROSE/REST/WebSocket workflows                |
@@ -103,6 +103,7 @@ Requirements and IDE-specific steps are in [docs/build.md](docs/build.md). CMake
 - When documentation and code disagree, verify against `samples/` and tests before updating docs.
 - **Document new types and members** at the definition site (purpose, usage, ownership). See [.cursor/rules/living-documentation.mdc](.cursor/rules/living-documentation.mdc).
 - **Cross-language parity:** ROSE runtime behavior, naming, ASN.1 structures, and tests stay aligned across C++, TypeScript, and future Kotlin/Swift runtimes. See [.cursor/rules/rose-cross-language-parity.mdc](.cursor/rules/rose-cross-language-parity.mdc).
+- **c-lib / cpp-lib isolation:** products link only `cpp-lib`; never couple them in CMake or headers. See [.cursor/rules/c-lib-cpp-lib-isolation.mdc](.cursor/rules/c-lib-cpp-lib-isolation.mdc).
 
 ### Tests define the public API (hard constraint)
 
