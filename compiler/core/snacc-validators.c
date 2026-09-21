@@ -32,6 +32,9 @@ bool ValidateProperROSEArguments(ModuleList* allMods);
 // Validates that optionals are either only encoded context specific or at least not shared (implicit and explicit)
 bool ValidateOptionals(ModuleList* allMods);
 
+// Validates that context-tagged [n] SEQUENCE members are marked OPTIONAL.
+bool ValidateTaggedRequiredMembers(ModuleList* allMods);
+
 enum BasicTypeChoiceId getType(const char* szType)
 {
 	if (strcmp(szType, "BASICTYPE_BOOLEAN") == 0)
@@ -265,6 +268,11 @@ void ValidateASN1Data(ModuleList* allMods)
 	if (giValidationLevel & SNACC_VAL_NO_ASN_OPTIONAL_PARAMETERS)
 	{
 		if (!ValidateNoOptionalParamsBag(allMods))
+			bSucceeded = false;
+	}
+	if (giValidationLevel & SNACC_VAL_NO_TAGGED_REQUIRED_MEMBERS)
+	{
+		if (!ValidateTaggedRequiredMembers(allMods))
 			bSucceeded = false;
 	}
 	if (!bSucceeded)
@@ -1082,6 +1090,62 @@ bool ValidateOptionals(ModuleList* allMods)
 
 				iErrorCounter++;
 				nWeHaveErrors++;
+			}
+		}
+	}
+
+	if (iErrorCounter)
+		fprintf(stderr, "  -> File contained %i error(s)\n\n", iErrorCounter);
+
+	return nWeHaveErrors ? false : true;
+}
+
+bool ValidateTaggedRequiredMembers(ModuleList* allMods)
+{
+	int nWeHaveErrors = 0;
+	int iErrorCounter = 0;
+	const char* szLastErrorFile = NULL;
+	Module* mod;
+	FOR_EACH_LIST_ELMT(mod, allMods)
+	{
+		if (mod->ImportedFlag == FALSE)
+		{
+			TypeDef* td;
+			FOR_EACH_LIST_ELMT(td, mod->typeDefs)
+			{
+				if (IsValidationExemptSequence(mod, td->definedName, SNACC_VAL_NO_TAGGED_REQUIRED_MEMBERS))
+					continue;
+
+				struct BasicType* type = td->type->basicType;
+				if (type->choiceId != BASICTYPE_SEQUENCE)
+					continue;
+
+				NamedType* subType;
+				FOR_EACH_LIST_ELMT(subType, type->a.sequence)
+				{
+					if (subType->type->basicType->choiceId == BASICTYPE_EXTENSION)
+						continue;
+					if (subType->type->optional)
+						continue;
+					if (GetContextID(subType->type) < 0)
+						continue;
+
+					if (!nWeHaveErrors)
+						fprintf(stderr, "*** Validating context-tagged SEQUENCE members... ***\n");
+
+					if (szLastErrorFile != mod->asn1SrcFileName)
+					{
+						if (szLastErrorFile)
+							fprintf(stderr, "  -> File contained %i error(s)\n\n", iErrorCounter);
+						fprintf(stderr, "Errors in %s:\n", mod->asn1SrcFileName);
+						szLastErrorFile = mod->asn1SrcFileName;
+						iErrorCounter = 0;
+					}
+
+					fprintf(stderr, "- %s: context-tagged member '%s' must be OPTIONAL\n", td->definedName, subType->fieldName);
+					iErrorCounter++;
+					nWeHaveErrors++;
+				}
 			}
 		}
 	}

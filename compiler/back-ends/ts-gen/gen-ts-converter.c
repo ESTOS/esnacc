@@ -814,8 +814,6 @@ void Print_BER_EncoderAssignProperty(FILE* src, ModuleList* mods, Module* m, enu
 	const bool bOptional = e->type->optional ? true : false;
 	// Optional parameters may be encoded implicit (as type itself) or explizit where the object is itself encapsulated in a dedicated
 	const bool bImplicit = e->type->implicit ? true : false;
-	if (bImplicit && !bOptional)
-		fprintf(stderr, "Invalid combination? Non optional is implicitly defined '%s'\n", szFieldName);
 	char szOptional[128] = {0};
 	int iOptionalID = -1;
 	if (bOptional)
