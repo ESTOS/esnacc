@@ -11,6 +11,10 @@ AsnStatus ::= ENUMERATED
 	inactive(1)
 }
 
+AsnUserId ::= UTF8String
+
+AsnUserIds ::= SEQUENCE OF AsnUserId
+
 AsnPerson ::= SEQUENCE
 {
 	name UTF8String,

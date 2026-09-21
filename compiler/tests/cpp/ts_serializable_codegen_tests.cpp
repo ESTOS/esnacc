@@ -60,6 +60,9 @@ namespace compiler
 		EXPECT_TRUE(FileContains(SerializableOutputPath(workDir), "name: string")) << serializable;
 		EXPECT_TRUE(FileContains(SerializableOutputPath(workDir), "avatar?: string")) << serializable;
 		EXPECT_TRUE(FileContains(SerializableOutputPath(workDir), "status: number")) << serializable;
+		EXPECT_TRUE(FileContains(SerializableOutputPath(workDir), "export type IAsnStatus = number")) << serializable;
+		EXPECT_TRUE(FileContains(SerializableOutputPath(workDir), "export type IAsnUserId = string")) << serializable;
+		EXPECT_TRUE(FileContains(SerializableOutputPath(workDir), "export type IAsnUserIds = IAsnUserId[]")) << serializable;
 		EXPECT_TRUE(FileContains(SerializableOutputPath(workDir), "export type IAsnPeopleList = IAsnPerson[]")) << serializable;
 		EXPECT_TRUE(FileContains(SerializableOutputPath(workDir), "export interface IAsnTaggedChoice")) << serializable;
 		EXPECT_TRUE(FileContains(SerializableOutputPath(workDir), "text?: string")) << serializable;

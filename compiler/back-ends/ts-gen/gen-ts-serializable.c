@@ -345,6 +345,41 @@ void PrintTSSerializableSetOfDefCode(FILE* src, ModuleList* mods, Module* m, Typ
 	PrintTSSerializableListType(src, td, setOf, m, mods);
 }
 
+// Emits export type I<Name> = <primitive> for ASN.1 library-type typedefs (UTF8String, INTEGER, …).
+static void PrintTSSerializableSimpleDefCode(FILE* src, TypeDef* td)
+{
+	char* szIface = GetTSSerializableTypeName(td->definedName);
+	enum BasicTypeChoiceId choiceId = td->type->basicType->choiceId;
+
+	if (choiceId == BASICTYPE_OCTETCONTAINING && td->type->basicType->a.stringContaining->basicType->choiceId == BASICTYPE_UTF8_STR)
+		choiceId = BASICTYPE_UTF8_STR;
+
+	fprintf(src, "export type %s = ", szIface);
+	switch (choiceId)
+	{
+		case BASICTYPE_BOOLEAN:
+			fprintf(src, "boolean");
+			break;
+		case BASICTYPE_INTEGER:
+		case BASICTYPE_REAL:
+		case BASICTYPE_ENUMERATED:
+			fprintf(src, "number");
+			break;
+		case BASICTYPE_UTF8_STR:
+			fprintf(src, "string");
+			break;
+		case BASICTYPE_OCTETSTRING:
+		case BASICTYPE_OCTETCONTAINING:
+			fprintf(src, "string");
+			break;
+		default:
+			free(szIface);
+			snacc_exit("unsupported simple type %d in PrintTSSerializableSimpleDefCode", choiceId);
+	}
+	fprintf(src, ";\n");
+	free(szIface);
+}
+
 void PrintTSSerializableTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDef* td, int novolatilefuncs)
 {
 	fprintf(src, "// [%s]\n", __FUNCTION__);
@@ -357,6 +392,7 @@ void PrintTSSerializableTypeDefCode(FILE* src, ModuleList* mods, Module* m, Type
 		case BASICTYPE_INTEGER:
 		case BASICTYPE_UTF8_STR:
 		case BASICTYPE_ENUMERATED:
+			PrintTSSerializableSimpleDefCode(src, td);
 			break;
 		case BASICTYPE_SEQUENCEOF:
 		case BASICTYPE_SETOF:
@@ -416,10 +452,6 @@ void PrintTSSerializableCode(FILE* src, ModuleList* mods, Module* m, int novolat
 			if (!bIsFirst)
 				continue;
 
-		enum BasicTypeChoiceId type = td->type->basicType->choiceId;
-		if (IsSimpleType(type) || ResolveTypeReferencesToRoot(td->type, NULL)->basicType->choiceId == BASICTYPE_ENUMERATED)
-			continue;
-
 		if (!bIsFirst)
 			fprintf(src, "\n");
 		PrintTSSerializableTypeDefCode(src, mods, m, td, novolatilefuncs);
@@ -427,7 +459,5 @@ void PrintTSSerializableCode(FILE* src, ModuleList* mods, Module* m, int novolat
 	}
 
 	if (ModuleDefinesAsnOptionalParameters(m))
-	{
 		fprintf(src, "\nexport type { IUCServerOptionalParam, IUCServerOptionalParameters } from \"./TSOptionalParamConverter%s\";\n", getCommonJSFileExtension());
-	}
 }
