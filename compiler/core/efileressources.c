@@ -20,6 +20,7 @@ INCBIN(BIN_ASN1_SERVER, "compiler/back-ends/ts-gen/gluecode/TSASN1Server.ts");
 INCBIN(BIN_ROSE_BASE, "compiler/back-ends/ts-gen/gluecode/TSROSEBase.ts");
 INCBIN(BIN_SNACCROSE, "compiler/back-ends/ts-gen/gluecode/SNACCROSE.ts");
 INCBIN(BIN_SNACCROSE_CONVERTER, "compiler/back-ends/ts-gen/gluecode/SNACCROSE_Converter.ts");
+INCBIN(BIN_SNACCROSE_SERIALIZABLE, "compiler/back-ends/ts-gen/gluecode/SNACCROSE_Serializable.ts");
 INCBIN(BIN_INVOKE_CONTEXT, "compiler/back-ends/ts-gen/gluecode/TSInvokeContext.ts");
 INCBIN(BIN_BASE_UTILS, "compiler/back-ends/ts-gen/gluecode/TSBaseUtils.ts");
 INCBIN(BIN_DEPRECATED_CALLBACK, "compiler/back-ends/ts-gen/gluecode/TSDeprecatedCallback.ts");
@@ -92,6 +93,9 @@ void SaveResourceToFile(enum EFILERESSOURCE resourceID, const char* szFileName)
 			break;
 		case ETS_SNACCROSE_CONVERTER:
 			SaveIncBinToFile(gBIN_SNACCROSE_CONVERTERData, gBIN_SNACCROSE_CONVERTERSize, szFileName);
+			break;
+		case ETS_SNACCROSE_SERIALIZABLE:
+			SaveIncBinToFile(gBIN_SNACCROSE_SERIALIZABLEData, gBIN_SNACCROSE_SERIALIZABLESize, szFileName);
 			break;
 		case ETS_OPTIONALPARAM_CONVERTER:
 			SaveIncBinToFile(gBIN_OPTIONALPARAM_CONVERTERData, gBIN_OPTIONALPARAM_CONVERTERSize, szFileName);

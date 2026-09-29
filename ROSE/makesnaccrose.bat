@@ -17,6 +17,7 @@ echo %COMPILER% -ValidationLevel 0 -JTE -j SNACCROSE.asn1
 if NOT %ERRORLEVEL% == 0 pause
 move SNACCROSE.ts ..\compiler\back-ends\ts-gen\gluecode\SNACCROSE.ts >NUL
 move SNACCROSE_Converter.ts ..\compiler\back-ends\ts-gen\gluecode\SNACCROSE_Converter.ts >NUL
+move SNACCROSE_Serializable.ts ..\compiler\back-ends\ts-gen\gluecode\SNACCROSE_Serializable.ts >NUL
 del *.ts
 
 echo finished...

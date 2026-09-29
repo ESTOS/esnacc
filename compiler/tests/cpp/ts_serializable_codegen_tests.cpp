@@ -32,11 +32,7 @@ namespace
 		std::filesystem::create_directories(workDir.path() / "out");
 
 		std::vector<std::string> args = {
-			"-JTE",
-			"-j",
-			"-o",
-			(workDir.path() / "out").string(),
-			InputModulePath(workDir).string(),
+			"-JTE", "-j", "-o", (workDir.path() / "out").string(), InputModulePath(workDir).string(),
 		};
 		args.insert(args.end(), extraArgs.begin(), extraArgs.end());
 		return RunProcess(ResolveEsnaccExecutable(), args, workDir.path());
@@ -89,6 +85,29 @@ namespace compiler
 		EXPECT_TRUE(FileContains(ConverterOutputPath(workDir), "Serializable_Test.AsnPerson | undefined")) << converter;
 	}
 
+	TEST(Compiler_TsSerializableCodegenTest, RoseGlueIncludesSnaccRoseSerializable)
+	{
+		TestWorkDir workDir;
+		workDir.CopyFixture(FixtureDirectory() / "Serializable_Test.asn1");
+
+		std::filesystem::create_directories(workDir.path() / "out");
+		const ProcessResult result = RunProcess(ResolveEsnaccExecutable(),
+												{
+													"-JTE",
+													"-j",
+													"-RTS_CLIENT_BROWSER",
+													"-o",
+													(workDir.path() / "out").string(),
+													InputModulePath(workDir).string(),
+												},
+												workDir.path());
+		ASSERT_EQ(result.exitCode, 0) << result.output;
+
+		const std::filesystem::path serializablePath = workDir.path() / "out" / "SNACCROSE_Serializable.ts";
+		EXPECT_TRUE(std::filesystem::exists(serializablePath)) << result.output;
+		EXPECT_TRUE(FileContains(serializablePath, "export interface IROSEMessage")) << ReadFileToString(serializablePath);
+	}
+
 	TEST(Compiler_TsSerializableCodegenTest, TypesFileReExportsSerializableModule)
 	{
 		TestWorkDir workDir;
@@ -106,16 +125,15 @@ namespace compiler
 		workDir.CopyFixture(FixtureDirectory() / "OptionalParams_Test.asn1");
 
 		std::filesystem::create_directories(workDir.path() / "out");
-		const ProcessResult result = RunProcess(
-			ResolveEsnaccExecutable(),
-			{
-				"-JTE",
-				"-j",
-				"-o",
-				(workDir.path() / "out").string(),
-				(workDir.path() / "OptionalParams_Test.asn1").string(),
-			},
-			workDir.path());
+		const ProcessResult result = RunProcess(ResolveEsnaccExecutable(),
+												{
+													"-JTE",
+													"-j",
+													"-o",
+													(workDir.path() / "out").string(),
+													(workDir.path() / "OptionalParams_Test.asn1").string(),
+												},
+												workDir.path());
 		ASSERT_EQ(result.exitCode, 0) << result.output;
 
 		const std::filesystem::path serializablePath = workDir.path() / "out" / "OptionalParams_Test_Serializable.ts";
