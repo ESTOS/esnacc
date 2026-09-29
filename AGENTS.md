@@ -95,6 +95,7 @@ Requirements and IDE-specific steps are in [docs/build.md](docs/build.md). CMake
 
 ## Working conventions
 
+- **Commit subjects:** start with the Jira key (`BUILDSYS-640: …`). See [.cursor/rules/commit-messages.mdc](.cursor/rules/commit-messages.mdc).
 - **C++ formatting:** after every C++ edit, run `clang-format` on all touched `.h`/`.cpp`/`.c` files before finishing (repo root `.clang-format`, clang-format 18+). See [.cursor/rules/cpp-clang-format.mdc](.cursor/rules/cpp-clang-format.mdc); on Windows use `scripts/resolve-clang-format.ps1`. Repo-wide baseline: `scripts/clang-format-all.ps1` / `scripts/clang-format-all.sh` (respects `.clang-format-ignore`).
 - Preserve existing line endings and formatting in edited files.
 - Prefer the smallest correct change; match surrounding code style.
