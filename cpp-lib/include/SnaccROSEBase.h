@@ -282,7 +282,7 @@ public:
 	 * uiInvokeID - the inbound invoke that we send the error for
 	 * problem - the reject cause
 	 * strResponse - the encoded response data to send via the transport layer
-	 * szError - an optional error description (basically the problem as text, used for json encoded results)
+	 * szError - optional detail text carried on the reject for every encoding. Peers use it to split invoke problems that share one wire code.
 	 * szSessionID - the SessionID as taken from the invoke
 	 * pAuthHeader - an optional Auth header
 	 */

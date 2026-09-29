@@ -85,9 +85,9 @@ GeneralProblem ::= INTEGER { -- ROSE-provider detected
 
 InvokeProblem ::= INTEGER { -- ROSE-user detected
 	duplicateInvocation(0),
-	unrecognisedOperation(1),
+	unrecognisedOperation(1), -- Detail "unrecognisedOperation": operation is not in the generated stub or the lookup map (ROSE_REJECT_UNKNOWNOPERATION). Detail "functionMissing": operation is known, but the virtual OnInvoke handler is not overridden (ROSE_REJECT_FUNCTIONMISSING)
 	mistypedArgument(2),
-	resourceLimitation(3),
+	resourceLimitation(3), -- Reserved for a full dispatch queue. Also sent when the encoded response exceeds the length prefix (detail "responseIsTooBig", ROSE_TE_ENCODE_FAILED)
 	initiatorReleasing(4),
 	unrecognisedLinkedID(5),
 	linkedResponseUnexpected(6),

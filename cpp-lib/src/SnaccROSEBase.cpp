@@ -24,6 +24,15 @@ namespace
 		return static_cast<int>(*timeout);
 	}
 
+	// True when the reject detail text equals szExpected.
+	// EncodeInvokeRejectResponse and GetRejectResultCode use it to split one wire invoke problem into distinct ROSE_REJECT_* codes.
+	bool RejectDetailEquals(const SNACC::ROSEReject* pReject, const char* szExpected)
+	{
+		if (!pReject || !pReject->details || !szExpected)
+			return false;
+		return pReject->details->getASCII() == szExpected;
+	}
+
 	// Encodes ROSEInvoke.timeout only for positive invoke timeouts on non-event invokes.
 	bool ShouldEncodeWireInvokeTimeout(const SnaccInvokeContext& ctx, const SNACC::ROSEInvoke& invoke)
 	{
@@ -1028,10 +1037,12 @@ long SnaccROSEBase::GetRejectResultCode(const SNACC::ROSEReject* pReject)
 	if (pReject->reject->choiceId == RejectProblem::invokeProblemCid && pReject->reject->invokeProblem)
 	{
 		if (*pReject->reject->invokeProblem == InvokeProblem::unrecognisedOperation)
-			lRoseResult = ROSE_REJECT_UNKNOWNOPERATION;
+			lRoseResult = RejectDetailEquals(pReject, "functionMissing") ? ROSE_REJECT_FUNCTIONMISSING : ROSE_REJECT_UNKNOWNOPERATION;
 		else if (*pReject->reject->invokeProblem == InvokeProblem::mistypedArgument)
 			lRoseResult = ROSE_REJECT_MISTYPEDARGUMENT;
-		else if (*pReject->reject->invokeProblem == InvokeProblem::resourceLimitation)
+		else if (*pReject->reject->invokeProblem == InvokeProblem::resourceLimitation && RejectDetailEquals(pReject, "responseIsTooBig"))
+			lRoseResult = ROSE_TE_ENCODE_FAILED;
+		else if (*pReject->reject->invokeProblem == InvokeProblem::resourceLimitation && RejectDetailEquals(pReject, "functionMissing"))
 			lRoseResult = ROSE_REJECT_FUNCTIONMISSING;
 		else if (*pReject->reject->invokeProblem == InvokeProblem::authenticationIncomplete)
 			lRoseResult = ROSE_REJECT_AUTHENTICATIONINCOMPLETE;
@@ -1467,7 +1478,7 @@ long SnaccROSEBase::EncodeRejectInvoke(unsigned int uiInvokeID, SNACC::InvokePro
 	if (pAuthHeader)
 		reject.authentication = (SNACC::ROSEAuthResult*)pAuthHeader->Clone();
 
-	if ((m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING) && szError)
+	if (szError)
 		reject.details = UTF8String::CreateNewFromUTF8(szError);
 
 	return EncodeReject(&reject, strResponse);
@@ -1483,7 +1494,7 @@ long SnaccROSEBase::EncodeInvokeRejectResponse(const SNACC::ROSEInvoke* pInvoke,
 	else if (lProtocolResult == ROSE_REJECT_MISTYPEDARGUMENT)
 		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::mistypedArgument, strResponse, "mistypedArgument", szSessionID);
 	else if (lProtocolResult == ROSE_REJECT_FUNCTIONMISSING)
-		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::resourceLimitation, strResponse, "functionMissing", szSessionID);
+		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::unrecognisedOperation, strResponse, "functionMissing", szSessionID);
 	else if (lProtocolResult == ROSE_REJECT_INVALIDSESSIONID)
 		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::invalidSessionID, strResponse, "invalidSessionID", szSessionID);
 	else if (lProtocolResult == ROSE_REJECT_AUTHENTICATIONFAILED)
