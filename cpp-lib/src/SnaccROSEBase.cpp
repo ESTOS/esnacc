@@ -609,6 +609,7 @@ SnaccTelemetryData::Reason GetUnhandledReasonFromResult(const long lRoseResult)
 		case ROSE_REJECT_FUNCTIONMISSING:
 		case ROSE_REJECT_UNKNOWN:
 		case ROSE_REJECT_ARGUMENT_MISSING:
+		case ROSE_REJECT_QUEUE_FULL:
 			return SnaccTelemetryData::Reason::REJECT_PROTOCOL;
 		case ROSE_REJECT_INVALIDSESSIONID:
 		case ROSE_REJECT_STARTSSLREQUIRED:
@@ -1040,6 +1041,8 @@ long SnaccROSEBase::GetRejectResultCode(const SNACC::ROSEReject* pReject)
 			lRoseResult = RejectDetailEquals(pReject, "functionMissing") ? ROSE_REJECT_FUNCTIONMISSING : ROSE_REJECT_UNKNOWNOPERATION;
 		else if (*pReject->reject->invokeProblem == InvokeProblem::mistypedArgument)
 			lRoseResult = ROSE_REJECT_MISTYPEDARGUMENT;
+		else if (*pReject->reject->invokeProblem == InvokeProblem::resourceLimitation && RejectDetailEquals(pReject, "queueFull"))
+			lRoseResult = ROSE_REJECT_QUEUE_FULL;
 		else if (*pReject->reject->invokeProblem == InvokeProblem::resourceLimitation && RejectDetailEquals(pReject, "responseIsTooBig"))
 			lRoseResult = ROSE_TE_ENCODE_FAILED;
 		else if (*pReject->reject->invokeProblem == InvokeProblem::resourceLimitation && RejectDetailEquals(pReject, "functionMissing"))
@@ -1509,6 +1512,8 @@ long SnaccROSEBase::EncodeInvokeRejectResponse(const SNACC::ROSEInvoke* pInvoke,
 		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::authenticationFailed, strResponse, "serverBusy", szSessionID, ctx.m_pRejectAuth);
 	else if (lProtocolResult == ROSE_REJECT_ARGUMENT_MISSING)
 		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::mistypedArgument, strResponse, "argumentMissing", szSessionID);
+	else if (lProtocolResult == ROSE_REJECT_QUEUE_FULL)
+		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::resourceLimitation, strResponse, "queueFull", szSessionID);
 	else if (lProtocolResult == ROSE_TE_ENCODE_FAILED)
 		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::resourceLimitation, strResponse, "responseIsTooBig", szSessionID);
 	else

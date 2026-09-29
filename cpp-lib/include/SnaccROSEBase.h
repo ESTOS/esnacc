@@ -173,11 +173,13 @@ public:
 		Does not complete or resurrect pending operations from the prior session. */
 	void ResumeRoseProcessing();
 
-	/*! Input of the binary data
-		This processes results and Invokes that are in the list of MultiThreadedInvokeIDs.
-		It is used for the Single thread mode.
-		First call this function to complete pending invokes and if not processed
-		call OnBinaryDataBlock.
+	/*! Input of the binary data on the single-thread entry point.
+		Results, errors, and rejects are always handled here.
+		An inbound invoke is handled on the calling thread only when its operationID is in
+		m_multithreadInvokeIDs. Otherwise this returns false and the caller re-enters through
+		OnBinaryDataBlock (the ProCall client marshals that case to the UI thread).
+		Named dispatch pools do not replace this filter: a pool chooses the worker thread,
+		this set chooses whether this entry point accepts the invoke at all.
 		The data should be pure ASN.1 data without header.
 		There must be one call for each ROSEMessage.*/
 	bool OnBinaryDataBlockResult(const char* lpBytes, unsigned long lSize, bool bLogTransportData = true);
@@ -523,8 +525,10 @@ private:
 	bool m_watchdogThreadRunning{false};
 	size_t m_asyncDeadlineCount{0};
 
-	// Operations that are handled multithreaded, event the application itself is single threaded
-	// This member has to be set while initializing the class as it is not thread save
+	// Allow-list for OnBinaryDataBlockResult. Listed operationIDs are dispatched on the calling
+	// thread; other invokes stay unprocessed so the caller can re-enter via OnBinaryDataBlock.
+	// OnBinaryDataBlock ignores this set. Not a thread pool, and not replaced by named dispatch
+	// pools. Set only during construction; the set is not guarded for later mutation.
 	const std::set<int> m_multithreadInvokeIDs;
 
 	// Outbound Data Interface (optional)

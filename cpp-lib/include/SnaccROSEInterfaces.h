@@ -124,6 +124,9 @@ const long ROSE_REJECT_AUTHENTICATION_USER_LOCKED_OUT = 0x00000C00;
 const long ROSE_REJECT_ARGUMENT_MISSING = 0x00000D00;
 //! Local stub rejected before send: peer negotiate snapshot does not offer this invoke OPID
 const long ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00;
+//! Dispatch queue is full. The handler did not run.
+//! Wire invoke problem is resourceLimitation. Detail "queueFull".
+const long ROSE_REJECT_QUEUE_FULL = 0x00000F00;
 
 //! ROSE Server side ROSEError answers:
 //! ROSEError Message received
