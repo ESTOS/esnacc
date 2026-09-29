@@ -1,0 +1,22 @@
+TaggedRequired-Test
+	{ 1 3 6 1 4 1 10924 9999 97 }
+
+DEFINITIONS
+IMPLICIT TAGS ::=
+BEGIN
+
+BadSettings ::= SEQUENCE
+{
+	u8sVersion		UTF8String,
+	stTimestamp		[0] UTF8String,
+	...
+}
+
+GoodSettings ::= SEQUENCE
+{
+	u8sVersion		UTF8String,
+	stTimestamp		[0] UTF8String OPTIONAL,
+	...
+}
+
+END

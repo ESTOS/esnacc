@@ -771,7 +771,10 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * @param event - the websocket close event
 	 */
 	private onSocketClose(event: ISocketCloseEvent): void {
-		this.log(ELogSeverity.error, "WebSocket was closed. Going to reconnect", "onSocketClose", this, {
+		const closeMessage = this.autoReconnect
+			? "WebSocket was closed. Going to reconnect"
+			: "WebSocket was closed";
+		this.log(ELogSeverity.error, closeMessage, "onSocketClose", this, {
 			code: event.code,
 			reason: event.reason,
 		});

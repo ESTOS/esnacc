@@ -19,7 +19,8 @@
 	X(ROSE_INVOKE_EVENT_SHAPE, 32, "rose-invoke-event-shape", "ROSE invoke operations need argument, result, and error; events only an argument")                                                                                                                                                                                                                                                                                                                                                                  \
 	X(NO_MIXED_OPTIONAL_ENCODING, 64, "no-mixed-optional-encoding", "SEQUENCE must not mix context-tagged [n] OPTIONAL and untagged OPTIONAL members")                                                                                                                                                                                                                                                                                                                                                             \
 	X(NO_UNTAGGED_OPTIONAL_MEMBERS, 128, "no-untagged-optional-members", "OPTIONAL SEQUENCE members must use context tags [n], not untagged OPTIONAL")                                                                                                                                                                                                                                                                                                                                                             \
-	X(NO_ASN_OPTIONAL_PARAMETERS, 256, "no-asn-optional-parameters", "SEQUENCE must not declare optionalParams / AsnOptionalParameters members")
+	X(NO_ASN_OPTIONAL_PARAMETERS, 256, "no-asn-optional-parameters", "SEQUENCE must not declare optionalParams / AsnOptionalParameters members")                                                                                                                                                                                                                                                                                                                                                             \
+	X(NO_TAGGED_REQUIRED_MEMBERS, 512, "no-tagged-required-members", "SEQUENCE members with a context tag [n] must be OPTIONAL")
 
 #ifdef __cplusplus
 extern "C"
@@ -34,7 +35,7 @@ extern "C"
 	} EValidationCheck;
 
 	/* All per-type / per-operation checks (excludes unique-operation-id). */
-#define SNACC_VAL_ALL_TYPE_CHECKS 0x000001FE
+#define SNACC_VAL_ALL_TYPE_CHECKS 0x000003FE
 
 	typedef struct SnaccValidationRuleDesc
 	{

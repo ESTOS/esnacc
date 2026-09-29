@@ -78,6 +78,7 @@ char* MakeSwiftFileName PROTO((const char* moduleName));
 char* MakeJSFileName PROTO((const char* moduleName));
 char* MakeTSFileName PROTO((const char* moduleName));
 char* MakeTSEncDecFileName PROTO((const char* moduleName));
+char* MakeTSSerializableFileName PROTO((const char* moduleName));
 char* MakeTSROSEClientFileName PROTO((const char* moduleName));
 char* MakeTSROSEServerFileName PROTO((const char* moduleName));
 char* MakeJsonDocFileName PROTO((const char* moduleName));

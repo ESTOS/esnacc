@@ -4,3 +4,4 @@
 
 void ValidateASN1Data(ModuleList* allMods);
 bool ValidateNoOptionalParamsBag(ModuleList* allMods);
+bool ValidateTaggedRequiredMembers(ModuleList* allMods);

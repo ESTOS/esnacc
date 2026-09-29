@@ -52,6 +52,8 @@ namespace
 		{"optional-params-bag", SNACC_VAL_NO_ASN_OPTIONAL_PARAMETERS},
 		{"optional-params", SNACC_VAL_NO_ASN_OPTIONAL_PARAMETERS},
 		{"optionalparams", SNACC_VAL_NO_ASN_OPTIONAL_PARAMETERS},
+		{"tagged-required", SNACC_VAL_NO_TAGGED_REQUIRED_MEMBERS},
+		{"tagged-required-member", SNACC_VAL_NO_TAGGED_REQUIRED_MEMBERS},
 	};
 
 	std::string trimToken(const std::string& token)

@@ -102,6 +102,12 @@ void SaveTSROSEFilesToOutputDirectory(const int genRoseStubs, const char* szPath
 			strcat_s(szFileName, _MAX_PATH - 1, "SNACCROSE_Converter.ts");
 			SaveResourceToFile(ETS_SNACCROSE_CONVERTER, szFileName);
 		}
+		{
+			char szFileName[_MAX_PATH] = {0};
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "SNACCROSE_Serializable.ts");
+			SaveResourceToFile(ETS_SNACCROSE_SERIALIZABLE, szFileName);
+		}
 	}
 	{
 		char szFileName[_MAX_PATH] = {0};
