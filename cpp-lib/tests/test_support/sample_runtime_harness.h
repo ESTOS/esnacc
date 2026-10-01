@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <condition_variable>
 #include <cstring>
 #include <deque>
 #include <future>
@@ -171,6 +172,63 @@ namespace snacclib
 		}
 	};
 
+	// Blocks asnGetSettings inside the handler so a test can queue more work behind it.
+	// The destructor releases a waiting handler so a failed test does not hang the process.
+	struct HandlerBlockGate
+	{
+		mutable std::mutex mutex{};
+		std::condition_variable cv{};
+		bool release{};
+		int entered{};
+		std::vector<std::thread::id> threads{};
+
+		~HandlerBlockGate()
+		{
+			Release();
+		}
+
+		// Records the handler thread and blocks until Release. Called from asnGetSettings.
+		void Enter()
+		{
+			std::unique_lock<std::mutex> lock(mutex);
+			threads.push_back(std::this_thread::get_id());
+			++entered;
+			cv.notify_all();
+			cv.wait(lock, [&] { return release; });
+		}
+
+		// Blocks the test thread until count handlers have entered the gate.
+		void WaitEntered(int count)
+		{
+			std::unique_lock<std::mutex> lock(mutex);
+			cv.wait(lock, [&] { return entered >= count; });
+		}
+
+		// Unblocks every handler waiting in Enter.
+		void Release()
+		{
+			std::lock_guard<std::mutex> lock(mutex);
+			release = true;
+			cv.notify_all();
+		}
+
+		// Handler entries observed so far. Safe to call from the test thread.
+		int Entered() const
+		{
+			std::lock_guard<std::mutex> lock(mutex);
+			return entered;
+		}
+
+		// Thread that entered at index, or a default id when the index is out of range.
+		std::thread::id ThreadAt(size_t index) const
+		{
+			std::lock_guard<std::mutex> lock(mutex);
+			if (index >= threads.size())
+				return {};
+			return threads[index];
+		}
+	};
+
 	// Bundles module behavior switches so tests can turn individual handlers into
 	// rejects or application errors without rewriting the module implementation.
 	struct HandlerModes
@@ -181,6 +239,8 @@ namespace snacclib
 		bool setSettingsReturnsError = false;		// when true the settings set handler returns ROSEError
 		bool implementCreateFancyEvents = true;		// when false the event creator returns a reject
 		bool createFancyEventsReturnsError = false; // when true the event creator returns ROSEError
+		int throwRuntimeErrorOnGetSettings{};		// remaining get-settings calls that throw std::runtime_error after the gate
+		std::shared_ptr<HandlerBlockGate> blockGetSettings{};
 	};
 
 	class RuntimeEndpoint;
@@ -862,6 +922,13 @@ namespace snacclib
 		InvokeResult OnInvoke_asnGetSettings(AsnGetSettingsArgument* /* argument */, AsnGetSettingsResult* result, AsnRequestError* error, SnaccInvokeContext& ctx) override
 		{
 			m_endpoint.RecordInboundHandlerContext(ctx);
+			if (m_handlerModes.blockGetSettings)
+				m_handlerModes.blockGetSettings->Enter();
+			if (m_handlerModes.throwRuntimeErrorOnGetSettings > 0)
+			{
+				--m_handlerModes.throwRuntimeErrorOnGetSettings;
+				throw std::runtime_error("get settings handler fault");
+			}
 
 			if (!m_handlerModes.implementGetSettings)
 				return InvokeResult::returnReject;

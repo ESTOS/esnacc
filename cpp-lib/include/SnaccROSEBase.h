@@ -18,6 +18,7 @@
 #include "SnaccROSEInterfaces.h"
 #include "SnaccRoseOperationLookup.h"
 #include "SnaccTelemetry.h"
+#include "SnaccWorkerPools.h"
 #include "syncevent.h"
 
 #if defined(_MSC_VER)
@@ -168,6 +169,18 @@ public:
 		pending operations with ROSE_TE_SHUTDOWN. Pair with ResumeRoseProcessing() when
 		the same stub instance reconnects. */
 	void PauseRoseProcessing();
+
+	/*! Borrows a shared worker-pool registry. Null leaves every invoke on the calling thread.
+		The registry must outlive this stub, or the caller must pass nullptr first.
+		Replacing a previous registry drains this stub's queued items and waits until its
+		handlers return. Do not call this from a pool worker that is running this stub. */
+	void SetWorkerPools(SnaccWorkerPools* pPools);
+
+	/*! True when this inbound operation is handed to a worker pool. strWorkerPool receives the pool name.
+		False leaves the invoke on the calling thread and clears strWorkerPool.
+		The default reads the registry borrowed through SetWorkerPools.
+		A module overrides this to force a pool or to keep a listed operation inline. */
+	virtual bool ResolveWorkerPool(unsigned int uiOperationID, std::string& strWorkerPool) const;
 
 	/*! Re-opens ROSE processing after PauseRoseProcessing() (e.g. transport reconnect).
 		Does not complete or resurrect pending operations from the prior session. */
@@ -425,8 +438,24 @@ protected:
 	void OnInvokeProcessed(std::shared_ptr<const SnaccTelemetryData> data) override;
 
 private:
+	/*! How a pooled inbound message is finished. EnqueueOrRun is the socket-thread entry. */
+	enum class PooledInboundMode
+	{
+		EnqueueOrRun,
+		Run,
+		ShutdownReject,
+		DropExpired,
+		QueueFull
+	};
+
 	/*! Inbound invoke/event dispatch; takes ownership of the decoded message. */
-	virtual void OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long lMessageSize);
+	virtual void OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long lMessageSize, PooledInboundMode mode = PooledInboundMode::EnqueueOrRun);
+	/*! Entry used by pool workers and by queue cancellation. */
+	void RunPooledInbound(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long lMessageSize, PooledInboundMode mode);
+	/*! Adopts pMessage and maps a pool action onto RunPooledInbound. Called from the enqueue callback. */
+	void CompletePooledFromPool(SNACC::ROSEMessage* pMessage, unsigned long lMessageSize, SnaccPooledInboundAction action);
+	/*! Session gate read by a pool worker before it runs a handler. */
+	bool IsDispatchProcessingAllowed() const;
 	/*! Telemetry hook for matched inbound result; borrows arm of owned message. */
 	virtual void OnResultMessage(const SNACC::ROSEResult& result, unsigned long lMessageSize);
 	/*! Telemetry hook for matched inbound error; borrows arm of owned message. */
@@ -527,7 +556,7 @@ private:
 
 	// Allow-list for OnBinaryDataBlockResult. Listed operationIDs are dispatched on the calling
 	// thread; other invokes stay unprocessed so the caller can re-enter via OnBinaryDataBlock.
-	// OnBinaryDataBlock ignores this set. Not a thread pool, and not replaced by named dispatch
+	// OnBinaryDataBlock ignores this set. Not a thread pool, and not replaced by named worker
 	// pools. Set only during construction; the set is not guarded for later mutation.
 	const std::set<int> m_multithreadInvokeIDs;
 
@@ -560,6 +589,10 @@ private:
 
 	// Borrowed listener lookup table; must outlive this stub and be sealed before accepts (UCAAS-1485).
 	const SnaccRoseOperationLookup& m_operationLookup;
+
+	// Borrowed shared worker pools. Null until SetWorkerPools. The owner keeps the registry
+	// alive until every borrowing stub has cleared the pointer or been destroyed.
+	SnaccWorkerPools* m_pWorkerPools{};
 };
 
 #endif //_SnaccROSEBase_h_
