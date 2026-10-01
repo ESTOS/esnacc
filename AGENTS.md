@@ -102,7 +102,10 @@ Requirements and IDE-specific steps are in [docs/build.md](docs/build.md). CMake
 - **Platform portability:** use shared helpers (`asn-config.h`, `platform-functions.h`, `time_helpers.h`, `cpp_c_helper.h`) — never MSVC-only CRT calls in portable compiler code. See [.cursor/rules/platform-portable-helpers.mdc](.cursor/rules/platform-portable-helpers.mdc).
 - Generated output shape is defined by ASN.1 inputs plus the relevant `compiler/back-ends/*-gen` implementation — read both before changing behavior.
 - When documentation and code disagree, verify against `samples/` and tests before updating docs.
-- **Document new types and members** at the definition site (purpose, usage, ownership). See [.cursor/rules/living-documentation.mdc](.cursor/rules/living-documentation.mdc).
+- **Document new types, members, and functional blocks** at the definition site. A block comment says what it does, and why or when that is not obvious. See [.cursor/rules/living-documentation.mdc](.cursor/rules/living-documentation.mdc).
+- **No new `friend class`:** do not add `friend class` or `friend struct`. Existing friends in `asn-buf.h` and vendored jsoncpp stay. See [.cursor/rules/no-friend-class.mdc](.cursor/rules/no-friend-class.mdc).
+- **Member initialization and pointer names:** initialize every member at its definition with `{}`. Pointers use a `p` prefix. See [.cursor/rules/member-initialization.mdc](.cursor/rules/member-initialization.mdc).
+- **C++20:** new code uses the C++20 standard library. Threads are `std::jthread` / `std::thread`, not pthread. See [.cursor/rules/prefer-cpp20.mdc](.cursor/rules/prefer-cpp20.mdc).
 - **Cross-language parity:** ROSE runtime behavior, naming, ASN.1 structures, and tests stay aligned across C++, TypeScript, and future Kotlin/Swift runtimes. See [.cursor/rules/rose-cross-language-parity.mdc](.cursor/rules/rose-cross-language-parity.mdc).
 - **c-lib / cpp-lib isolation:** products link only `cpp-lib`; never couple them in CMake or headers. See [.cursor/rules/c-lib-cpp-lib-isolation.mdc](.cursor/rules/c-lib-cpp-lib-isolation.mdc).
 

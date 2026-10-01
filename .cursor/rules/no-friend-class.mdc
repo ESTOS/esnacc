@@ -1,0 +1,19 @@
+---
+description: Do not add friend class or friend struct
+alwaysApply: true
+---
+
+# No new friend class
+
+Do not add `friend class` or `friend struct` in new or edited code.
+
+Existing friends stay where they are. Do not remove or rewrite them as part of an unrelated change:
+
+- `cpp-lib/include/asn-buf.h` (`friend class AsnBuf`)
+- vendored `cpp-lib/jsoncpp/`
+
+## What to do instead
+
+When one type needs to call another type's private operation, keep the operation private and pass a callback the owning type installs. The owner creates that callback in a member function, so the callback can reach private members. The collaborator stores and invokes the callback. It does not become a friend.
+
+A public method is appropriate only when callers outside that collaboration are meant to use it.

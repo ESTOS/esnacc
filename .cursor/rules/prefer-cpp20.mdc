@@ -1,0 +1,13 @@
+---
+description: Prefer C++20 in new and edited code
+alwaysApply: true
+---
+
+# Prefer C++20
+
+The repo builds with C++20 (`CMAKE_CXX_STANDARD 20`). New and edited code uses the C++20 standard library.
+
+- Threads, mutexes, and condition variables are `std::jthread`, `std::thread`, `std::mutex`, and `std::condition_variable`.
+- Do not include `pthread.h` or call `pthread_*` in new code.
+- A platform API is acceptable only when C++20 has no equivalent. Naming a Windows thread for a crash dump uses `SetThreadDescription` for that reason. Other platforms leave the OS thread name unset.
+- Do not rewrite existing platform thread code in an unrelated change.
