@@ -150,7 +150,7 @@ export function buildCppTestTargets(buildDir) {
 }
 
 /**
- * Runs CTest for discovered C++ tests (excludes the monolithic TS glue ctest).
+ * Runs CTest for discovered C++ tests (excludes TypeScript ctests labeled ts).
  * @param {string} buildDir
  * @returns {number} Exit code from ctest.
  */

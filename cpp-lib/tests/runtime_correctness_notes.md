@@ -481,7 +481,7 @@ encode/decode in `SNACCROSE_Converter.ts` (not test harness).
 1. `typescript/support/sample_runtime_harness.ts` — loopback transport + sample modules.
 2. Sample stubs copied in `scripts/run_gluecode_tests.*` (`ENetUC_Settings_Manager`, `ENetUC_Event_Manager`).
 3. `TSCallFlow.loopback.test.ts`, `TSLogicalFailure.loopback.test.ts`, `TSTransportFailure.loopback.test.ts`.
-4. CI CMake `ctest` batch (`SNACC_CTEST_REGISTER_TS=ON`): `typescript_run_all_compiler_ts_rose_runtime_loopback_spec_tests` runs the same `typescript/*.test.ts` files via `scripts/run-ts-glue-test-suite.mjs`. Local IDE uses node:test Test Explorer (`nodejs-testing`); BER/JSON matrix cases use top-level `test("… (BER)")` / `test("… (JSON)")` literals so static discovery matches CI (`node --test` registers loop bodies at runtime only).
+4. CI CMake `ctest` (`SNACC_CTEST_REGISTER_TS=ON`): each top-level `test("…")` literal in `typescript/*.test.ts` is its own CTest entry (`typescript/<file>/<name>`), discovered by `scripts/list-ts-glue-tests.mjs` and run by `scripts/run-ts-glue-one-test.mjs`. Local IDE uses node:test Test Explorer (`nodejs-testing`); `pnpm test` still runs the suite in one process. BER/JSON matrix cases use top-level `test("… (BER)")` / `test("… (JSON)")` literals so static discovery matches CI (`node --test` registers loop bodies at runtime only).
 
 ### Block C — Telemetry in TypeScript (largest product gap)
 
