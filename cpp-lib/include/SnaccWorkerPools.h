@@ -27,6 +27,7 @@ enum class SnaccWorkerFaultPolicy
 	Every stub that borrows the registry sees the same assignment. */
 struct SnaccWorkerPoolConfig
 {
+	/*! Label for this pool. Windows names each of its workers `wp::<name>` and does not append a thread id. */
 	std::string name{};
 	/*! Upper bound on live worker threads. Values below 1 are treated as 1. */
 	unsigned int maxThreads{1};

@@ -10,7 +10,8 @@
 #include <deque>
 #include <mutex>
 #include <optional>
-#include <sstream>
+#include <string>
+#include <string_view>
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
@@ -84,16 +85,17 @@ namespace
 	// One thread stays for the life of the pool so a crash dump still shows the pool name.
 	constexpr unsigned int kMinLiveWorkers = 1;
 
-	// Publishes `<pool>-<thread id>` for a crash dump when the worker starts.
+	// Leading token on every worker so a debugger filter finds the pools. The configured pool name follows it.
+	constexpr std::string_view kWorkerThreadNamePrefix = "wp::";
+
+	// Publishes `wp::<pool>` when the worker starts. A pool named `sql::ModuleName` is `wp::sql::ModuleName`.
+	// The debugger already shows the thread id, so the name does not repeat it.
 	// C++20 has no thread-naming function. Windows uses SetThreadDescription. Other platforms leave the OS name unset.
 	void NameWorkerThread(const std::string& poolName)
 	{
+		const std::string name = std::string(kWorkerThreadNamePrefix) + poolName;
 #ifdef _WIN32
-		// The suffix is the C++ thread id, assigned when the worker runs, not a slot reused from 0.
 		// SetThreadDescription is looked up because older Windows does not export it. A missing export leaves the thread unnamed.
-		std::ostringstream oss;
-		oss << poolName << "-" << std::this_thread::get_id();
-		const std::string name = oss.str();
 		std::wstring wide(name.begin(), name.end());
 		using SetThreadDescriptionFn = HRESULT(WINAPI*)(HANDLE, PCWSTR);
 		auto setThreadDescription = reinterpret_cast<SetThreadDescriptionFn>(GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetThreadDescription"));
@@ -101,7 +103,7 @@ namespace
 			setThreadDescription(GetCurrentThread(), wide.c_str());
 #else
 		// std::jthread has no name. Do not call pthread_setname_np.
-		(void)poolName;
+		(void)name;
 #endif
 	}
 
