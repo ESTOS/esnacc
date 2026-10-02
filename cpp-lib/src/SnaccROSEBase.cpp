@@ -1,4 +1,5 @@
 #include "../include/SnaccROSEBase.h"
+#include "../include/SnaccWorkerPools.h"
 #include "../include/SNACCROSE.h"
 #include "snacc-assert.h"
 #include <vector>
@@ -22,6 +23,15 @@ namespace
 		if (!timeout.has_value())
 			return static_cast<int>(lMaxInvokeWait);
 		return static_cast<int>(*timeout);
+	}
+
+	// True when the reject detail text equals szExpected.
+	// EncodeInvokeRejectResponse and GetRejectResultCode use it to split one wire invoke problem into distinct ROSE_REJECT_* codes.
+	bool RejectDetailEquals(const SNACC::ROSEReject* pReject, const char* szExpected)
+	{
+		if (!pReject || !pReject->details || !szExpected)
+			return false;
+		return pReject->details->getASCII() == szExpected;
 	}
 
 	// Encodes ROSEInvoke.timeout only for positive invoke timeouts on non-event invokes.
@@ -600,6 +610,7 @@ SnaccTelemetryData::Reason GetUnhandledReasonFromResult(const long lRoseResult)
 		case ROSE_REJECT_FUNCTIONMISSING:
 		case ROSE_REJECT_UNKNOWN:
 		case ROSE_REJECT_ARGUMENT_MISSING:
+		case ROSE_REJECT_QUEUE_FULL:
 			return SnaccTelemetryData::Reason::REJECT_PROTOCOL;
 		case ROSE_REJECT_INVALIDSESSIONID:
 		case ROSE_REJECT_STARTSSLREQUIRED:
@@ -903,6 +914,10 @@ void SnaccROSEBase::PauseRoseProcessing()
 		m_bProcessingAllowed = false;
 	}
 
+	// The session gate is already closed. Drop this stub's queued pool work and wait for a handler that already started.
+	// That handler sees the closed gate and does not send its reply. Other stubs on the same pools are left queued.
+	if (m_pWorkerPools)
+		m_pWorkerPools->RejectQueuedAndWait(*this);
 	CompleteAllPendingOperations();
 }
 
@@ -1028,10 +1043,14 @@ long SnaccROSEBase::GetRejectResultCode(const SNACC::ROSEReject* pReject)
 	if (pReject->reject->choiceId == RejectProblem::invokeProblemCid && pReject->reject->invokeProblem)
 	{
 		if (*pReject->reject->invokeProblem == InvokeProblem::unrecognisedOperation)
-			lRoseResult = ROSE_REJECT_UNKNOWNOPERATION;
+			lRoseResult = RejectDetailEquals(pReject, "functionMissing") ? ROSE_REJECT_FUNCTIONMISSING : ROSE_REJECT_UNKNOWNOPERATION;
 		else if (*pReject->reject->invokeProblem == InvokeProblem::mistypedArgument)
 			lRoseResult = ROSE_REJECT_MISTYPEDARGUMENT;
-		else if (*pReject->reject->invokeProblem == InvokeProblem::resourceLimitation)
+		else if (*pReject->reject->invokeProblem == InvokeProblem::resourceLimitation && RejectDetailEquals(pReject, "queueFull"))
+			lRoseResult = ROSE_REJECT_QUEUE_FULL;
+		else if (*pReject->reject->invokeProblem == InvokeProblem::resourceLimitation && RejectDetailEquals(pReject, "responseIsTooBig"))
+			lRoseResult = ROSE_TE_ENCODE_FAILED;
+		else if (*pReject->reject->invokeProblem == InvokeProblem::resourceLimitation && RejectDetailEquals(pReject, "functionMissing"))
 			lRoseResult = ROSE_REJECT_FUNCTIONMISSING;
 		else if (*pReject->reject->invokeProblem == InvokeProblem::authenticationIncomplete)
 			lRoseResult = ROSE_REJECT_AUTHENTICATIONINCOMPLETE;
@@ -1467,7 +1486,7 @@ long SnaccROSEBase::EncodeRejectInvoke(unsigned int uiInvokeID, SNACC::InvokePro
 	if (pAuthHeader)
 		reject.authentication = (SNACC::ROSEAuthResult*)pAuthHeader->Clone();
 
-	if ((m_eTransportEncoding == SNACC::TransportEncoding::JSON || m_eTransportEncoding == SNACC::TransportEncoding::JSON_NO_HEADING) && szError)
+	if (szError)
 		reject.details = UTF8String::CreateNewFromUTF8(szError);
 
 	return EncodeReject(&reject, strResponse);
@@ -1483,7 +1502,7 @@ long SnaccROSEBase::EncodeInvokeRejectResponse(const SNACC::ROSEInvoke* pInvoke,
 	else if (lProtocolResult == ROSE_REJECT_MISTYPEDARGUMENT)
 		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::mistypedArgument, strResponse, "mistypedArgument", szSessionID);
 	else if (lProtocolResult == ROSE_REJECT_FUNCTIONMISSING)
-		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::resourceLimitation, strResponse, "functionMissing", szSessionID);
+		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::unrecognisedOperation, strResponse, "functionMissing", szSessionID);
 	else if (lProtocolResult == ROSE_REJECT_INVALIDSESSIONID)
 		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::invalidSessionID, strResponse, "invalidSessionID", szSessionID);
 	else if (lProtocolResult == ROSE_REJECT_AUTHENTICATIONFAILED)
@@ -1498,6 +1517,8 @@ long SnaccROSEBase::EncodeInvokeRejectResponse(const SNACC::ROSEInvoke* pInvoke,
 		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::authenticationFailed, strResponse, "serverBusy", szSessionID, ctx.m_pRejectAuth);
 	else if (lProtocolResult == ROSE_REJECT_ARGUMENT_MISSING)
 		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::mistypedArgument, strResponse, "argumentMissing", szSessionID);
+	else if (lProtocolResult == ROSE_REJECT_QUEUE_FULL)
+		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::resourceLimitation, strResponse, "queueFull", szSessionID);
 	else if (lProtocolResult == ROSE_TE_ENCODE_FAILED)
 		lEncodeResult = EncodeRejectInvoke(pInvoke->invokeID, InvokeProblem::resourceLimitation, strResponse, "responseIsTooBig", szSessionID);
 	else
@@ -1511,12 +1532,91 @@ long SnaccROSEBase::EncodeInvokeRejectResponse(const SNACC::ROSEInvoke* pInvoke,
 	return lEncodeResult == ROSE_NOERROR ? lProtocolResult : lEncodeResult;
 }
 
-void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long ulMessageSize)
+// Borrows the shared registry. A previous registry is drained for this stub before the pointer changes.
+void SnaccROSEBase::SetWorkerPools(SnaccWorkerPools* pPools)
 {
-	std::string strResponse;
-	long lResult = ROSE_REJECT_UNKNOWNOPERATION;
+	// Same address, including a second constructor call with the process registry. Nothing is queued under a different owner.
+	if (m_pWorkerPools == pPools)
+		return;
+	// Drain before the pointer moves. Items left on the old registry would still call back into this stub after it had let go.
+	if (m_pWorkerPools)
+		m_pWorkerPools->RejectQueuedAndWait(*this);
+	// Written before any other thread uses this stub. Later reads are not synchronized with a write.
+	m_pWorkerPools = pPools;
+}
+
+// Default pool routing from the borrowed registry. False keeps the invoke on the calling thread.
+bool SnaccROSEBase::ResolveWorkerPool(unsigned int uiOperationID, std::string& strWorkerPool) const
+{
+	// This stub never borrowed a registry. Clear a stale name so the caller cannot enqueue on a pool it does not have.
+	if (!m_pWorkerPools)
+	{
+		strWorkerPool.clear();
+		return false;
+	}
+
+	// True only when Configure assigned this operation id. An unlisted id stays on the calling thread.
+	strWorkerPool = m_pWorkerPools->PoolForOperation(uiOperationID);
+	return !strWorkerPool.empty();
+}
+
+// Pool-worker entry into OnInvokeMessage. The caller already decided the mode.
+void SnaccROSEBase::RunPooledInbound(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long lMessageSize, PooledInboundMode mode)
+{
+	// Re-enters OnInvokeMessage with a mode other than EnqueueOrRun, so the socket-thread hand-off does not run again.
+	OnInvokeMessage(std::move(pMessage), lMessageSize, mode);
+}
+
+// Adopts the message the pool released, then finishes it on this stub. Called from the enqueue callback.
+void SnaccROSEBase::CompletePooledFromPool(SNACC::ROSEMessage* pMessage, unsigned long lMessageSize, SnaccPooledInboundAction action)
+{
+	// The pool released its unique_ptr to cross the callback. Adopt before anything else so a throw cannot leak the message.
+	std::unique_ptr<SNACC::ROSEMessage> owned(pMessage);
+	// The pool decided the outcome. QueueFull is decided on the socket thread and never arrives through this callback.
+	PooledInboundMode mode = PooledInboundMode::Run;
+	if (action == SnaccPooledInboundAction::ShutdownReject)
+		mode = PooledInboundMode::ShutdownReject;
+	else if (action == SnaccPooledInboundAction::DropExpired)
+		mode = PooledInboundMode::DropExpired;
+	RunPooledInbound(std::move(owned), lMessageSize, mode);
+}
+
+// Session gate as seen by a pool worker. Closed after PauseRoseProcessing.
+bool SnaccROSEBase::IsDispatchProcessingAllowed() const
+{
+	return IsProcessingAllowed();
+}
+
+void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long ulMessageSize, PooledInboundMode mode)
+{
 	auto& invoke = *pMessage->invoke;
 	PrepareInboundInvokeOperationId(invoke, *this);
+	// First entry is the socket thread. A worker re-enters with Run, ShutdownReject, or DropExpired and must not enqueue again.
+	if (mode == PooledInboundMode::EnqueueOrRun)
+	{
+		// True hands this operation to a pool. False runs the handler below on this thread.
+		// A pool that refuses the item (full or stopping) also falls through, with the mode changed to a reject.
+		std::string strWorkerPool;
+		if (ResolveWorkerPool(static_cast<unsigned int>(invoke.operationID), strWorkerPool) && m_pWorkerPools)
+		{
+			// Built here, on the stub, so the lambdas can call private methods. The pool stores them and does not become a friend.
+			SnaccPooledInboundCallbacks callbacks;
+			callbacks.processingAllowed = [this] { return IsDispatchProcessingAllowed(); };
+			callbacks.complete = [this](SNACC::ROSEMessage* pRaw, unsigned long size, SnaccPooledInboundAction action) { CompletePooledFromPool(pRaw, size, action); };
+			const SnaccWorkerEnqueueResult enqueueResult = m_pWorkerPools->Enqueue(strWorkerPool, *this, pMessage, ulMessageSize, std::move(callbacks));
+			// Queued: the worker owns the message. This call returns and the handler runs later on that thread.
+			if (enqueueResult == SnaccWorkerEnqueueResult::Queued)
+				return;
+			// Not queued. The message is still ours. Change the mode and finish it below on this thread.
+			if (enqueueResult == SnaccWorkerEnqueueResult::RejectedFull)
+				mode = PooledInboundMode::QueueFull;
+			else if (enqueueResult == SnaccWorkerEnqueueResult::PoolStopped)
+				mode = PooledInboundMode::ShutdownReject;
+		}
+	}
+
+	std::string strResponse;
+	long lResult = ROSE_REJECT_UNKNOWNOPERATION;
 	SnaccInvokeContextInit init(SnaccInvokeDirection::INBOUND, &invoke, nullptr, this);
 	auto pCtx = CreateInvokeContext(init);
 	const char* szOperationName = pCtx->OperationNameCStr();
@@ -1524,8 +1624,18 @@ void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage
 	auto telemetryResult = SnaccTelemetryData::Outcome::UNHANDLED;
 	auto telemetryReason = SnaccTelemetryData::Reason::UNKNOWN_FAILURE;
 	bool bInvokeException = false;
+	bool bDropReply = false;
 
-	if (!IsProcessingAllowed())
+	// Reached on the socket thread when the pool did not take the item, and on a worker for Run, reject, and expiry.
+	// QueueFull and shutdown reject without the handler. An expired deadline records a timeout and sends no reply.
+	if (mode == PooledInboundMode::QueueFull)
+		lResult = ROSE_REJECT_QUEUE_FULL;
+	else if (mode == PooledInboundMode::DropExpired)
+	{
+		lResult = ROSE_TE_TIMEOUT;
+		bDropReply = true;
+	}
+	else if (mode == PooledInboundMode::ShutdownReject || !IsProcessingAllowed())
 		lResult = ROSE_TE_SHUTDOWN;
 	else
 	{
@@ -1546,6 +1656,12 @@ void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage
 			std::string jsonString = getPrettyPrinted(error);
 			PrintJSONToLog(false, true, nullptr, jsonString.c_str(), jsonString.length());
 		}
+		if (!IsProcessingAllowed() || SnaccWorkerPools::CurrentPoolIsStopping())
+		{
+			strResponse.clear();
+			lResult = ROSE_TE_SHUTDOWN;
+			bDropReply = true;
+		}
 	}
 
 	const bool bIsInvoke = (AsnIntType)invoke.invokeID != 99999;
@@ -1553,12 +1669,15 @@ void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage
 
 	// if the Result is ROSE_NOERROR the request has been processed with a result or an error (the invoke context points out if it was replied with an error)
 	// if the result is ROSE_REJECT_ASYNCOPERATION, the result will be sent async
-	if (bIsRejectResponse)
+	if (bIsRejectResponse && !bDropReply)
 	{
 		lResult = EncodeInvokeRejectResponse(&invoke, lResult, *pCtx, strResponse);
 		if (lResult != ROSE_NOERROR)
 			telemetryReason = GetUnhandledReasonFromResult(lResult);
 	}
+
+	if (bDropReply)
+		strResponse.clear();
 
 	if (!strResponse.empty())
 	{
@@ -2019,60 +2138,67 @@ void SnaccROSEBase::NotifyWatchdog()
 
 void SnaccROSEBase::EnsureWatchdogRunning()
 {
-	std::lock_guard<std::mutex> guard(m_watchdogMutex);
-	if (m_watchdogThreadRunning)
-		return;
-
-	m_watchdogStopRequested = false;
-	m_watchdogThreadRunning = true;
-	m_watchdogThread = std::thread([this]() {
-		for (;;)
-		{
-			std::chrono::steady_clock::time_point nextDeadline = std::chrono::steady_clock::time_point::max();
+	// The previous watchdog thread has exited but is still joinable. Assigning over it would terminate.
+	std::thread finished;
+	{
+		std::lock_guard<std::mutex> guard(m_watchdogMutex);
+		if (m_watchdogThreadRunning)
+			return;
+		if (m_watchdogThread.joinable())
+			finished.swap(m_watchdogThread);
+		m_watchdogStopRequested = false;
+		m_watchdogThreadRunning = true;
+		m_watchdogThread = std::thread([this]() {
+			for (;;)
 			{
-				std::lock_guard<std::mutex> pendingGuard(m_InternalProtectMutex);
-				for (const auto& entry : m_PendingOperations)
+				std::chrono::steady_clock::time_point nextDeadline = std::chrono::steady_clock::time_point::max();
 				{
-					const SnaccROSEPendingOperation& pending = *entry.second;
-					if (pending.m_bAsyncInvoke && pending.m_asyncDeadline.has_value() && pending.m_asyncDeadline.value() < nextDeadline)
-						nextDeadline = pending.m_asyncDeadline.value();
-				}
-			}
-
-			std::unique_lock<std::mutex> watchdogLock(m_watchdogMutex);
-			if (nextDeadline == std::chrono::steady_clock::time_point::max())
-			{
-				m_watchdogCv.wait(watchdogLock, [this]() {
-					if (m_watchdogStopRequested)
-						return true;
 					std::lock_guard<std::mutex> pendingGuard(m_InternalProtectMutex);
-					return m_asyncDeadlineCount > 0;
-				});
-				if (m_watchdogStopRequested)
+					for (const auto& entry : m_PendingOperations)
+					{
+						const SnaccROSEPendingOperation& pending = *entry.second;
+						if (pending.m_bAsyncInvoke && pending.m_asyncDeadline.has_value() && pending.m_asyncDeadline.value() < nextDeadline)
+							nextDeadline = pending.m_asyncDeadline.value();
+					}
+				}
+
+				std::unique_lock<std::mutex> watchdogLock(m_watchdogMutex);
+				if (nextDeadline == std::chrono::steady_clock::time_point::max())
+				{
+					m_watchdogCv.wait(watchdogLock, [this]() {
+						if (m_watchdogStopRequested)
+							return true;
+						std::lock_guard<std::mutex> pendingGuard(m_InternalProtectMutex);
+						return m_asyncDeadlineCount > 0;
+					});
+					if (m_watchdogStopRequested)
+					{
+						std::lock_guard<std::mutex> pendingGuard(m_InternalProtectMutex);
+						if (m_asyncDeadlineCount == 0)
+							break;
+					}
+					continue;
+				}
+
+				if (m_watchdogCv.wait_until(watchdogLock, nextDeadline, [this]() { return m_watchdogStopRequested; }))
 				{
 					std::lock_guard<std::mutex> pendingGuard(m_InternalProtectMutex);
 					if (m_asyncDeadlineCount == 0)
 						break;
 				}
-				continue;
+				else
+				{
+					watchdogLock.unlock();
+					ProcessAsyncTimeouts();
+				}
 			}
 
-			if (m_watchdogCv.wait_until(watchdogLock, nextDeadline, [this]() { return m_watchdogStopRequested; }))
-			{
-				std::lock_guard<std::mutex> pendingGuard(m_InternalProtectMutex);
-				if (m_asyncDeadlineCount == 0)
-					break;
-			}
-			else
-			{
-				watchdogLock.unlock();
-				ProcessAsyncTimeouts();
-			}
-		}
-
-		std::lock_guard<std::mutex> guard(m_watchdogMutex);
-		m_watchdogThreadRunning = false;
-	});
+			std::lock_guard<std::mutex> guard(m_watchdogMutex);
+			m_watchdogThreadRunning = false;
+		});
+	}
+	if (finished.joinable())
+		finished.join();
 }
 
 void SnaccROSEBase::StopWatchdogThread()

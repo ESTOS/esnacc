@@ -481,7 +481,7 @@ encode/decode in `SNACCROSE_Converter.ts` (not test harness).
 1. `typescript/support/sample_runtime_harness.ts` — loopback transport + sample modules.
 2. Sample stubs copied in `scripts/run_gluecode_tests.*` (`ENetUC_Settings_Manager`, `ENetUC_Event_Manager`).
 3. `TSCallFlow.loopback.test.ts`, `TSLogicalFailure.loopback.test.ts`, `TSTransportFailure.loopback.test.ts`.
-4. CI CMake `ctest` batch (`SNACC_CTEST_REGISTER_TS=ON`): `typescript_run_all_compiler_ts_rose_runtime_loopback_spec_tests` runs the same `typescript/*.test.ts` files via `scripts/run-ts-glue-test-suite.mjs`. Local IDE uses node:test Test Explorer (`nodejs-testing`); BER/JSON matrix cases use top-level `test("… (BER)")` / `test("… (JSON)")` literals so static discovery matches CI (`node --test` registers loop bodies at runtime only).
+4. CI CMake `ctest` (`SNACC_CTEST_REGISTER_TS=ON`): each top-level `test("…")` literal in `typescript/*.test.ts` is its own CTest entry (`typescript/<file>/<name>`), discovered by `scripts/list-ts-glue-tests.mjs` and run by `scripts/run-ts-glue-one-test.mjs`. Local IDE uses node:test Test Explorer (`nodejs-testing`); `pnpm test` still runs the suite in one process. BER/JSON matrix cases use top-level `test("… (BER)")` / `test("… (JSON)")` literals so static discovery matches CI (`node --test` registers loop bodies at runtime only).
 
 ### Block C — Telemetry in TypeScript (largest product gap)
 
@@ -510,6 +510,18 @@ Then port `telemetry_tests.cpp` → `TSTelemetry.test.ts` (outcome/reason assert
 ### Block F — Kotlin / Swift
 
 When Tier A ROSE glue lands, reuse scenario names from this matrix; implement harness per language.
+
+## 12. Named worker pools (UCAAS-1479)
+
+### Contract
+
+1. **Opt-in, shared registry.** The process owns one `SnaccWorkerPools`, the same lifetime as a listener's `SnaccRoseOperationLookup`. `Configure` declares named pools (name, `maxThreads`, `maxElements`, operation ids) once and starts one thread per pool immediately. Every stub that `SetWorkerPools` to that object shares the threads and the operationID assignment. A stub that has not borrowed the registry stays on the calling thread. An operationID listed twice is refused: Configure returns false, asserts in debug, and keeps the previous set. An invoke whose operationID is not assigned runs on the calling thread.
+2. **Routing.** `SnaccROSEBase::ResolveWorkerPool` returns true and writes the pool name when the invoke is handed to a pool. False leaves it on the calling thread. The default reads the borrowed registry. A module may override it.
+3. **Depth.** `maxElements` counts waiting items plus items inside a handler. `0` means no limit. When the depth is exhausted the calling thread rejects an invoke with `ROSE_REJECT_QUEUE_FULL` (`resourceLimitation`, detail `queueFull`) and does not run the handler. An event (`invokeID` 99999) is dropped with no reject.
+4. **Worker.** Argument decode, `OnInvoke`, the reply, and inbound telemetry finalize run on the worker. The worker calls `SendBinaryDataBlockEx` on the stub that received the invoke. `Configure` starts one thread per pool, named `wp::<pool>` with no thread id, and that floor thread stays until `Shutdown`. Further threads start on demand up to `maxThreads`. A thread above the floor that finds the queue empty waits `idleTimeoutMs` (default 30000, `0` means it stays) and then exits. The next enqueue starts a replacement up to `maxThreads`. One FIFO per pool, shared by every stub that borrowed the registry. A `SnaccException` from the handler becomes a mistyped-argument reject and the thread stays. Any other exception follows `SnaccWorkerFaultPolicy`: `KeepWorker` swallows it and takes the next item; `RetireWorker` ends that thread and starts a replacement when work remains. Neither path sends a reply for the failed item.
+5. **Stop.** `PauseRoseProcessing` and destroying the stub reject invokes still queued for that stub with the existing shutdown reject and do not run their handlers. A handler of that stub already running finishes and its reply is discarded. Other stubs on the same registry keep their queued items and their workers. `SnaccWorkerPools::Shutdown` rejects every stub and joins the workers.
+6. **Deadline.** A positive `ROSEInvoke.timeout` is `T_enqueue + timeout`. If that instant has passed when the worker dequeues the item, the handler does not run and the server sends no reply. The client's own wait then completes locally with `ROSE_TE_TIMEOUT`.
+7. **`m_multithreadInvokeIDs`** is unchanged. It is not a pool.
 
 ## Recommended Follow-Up Order
 
