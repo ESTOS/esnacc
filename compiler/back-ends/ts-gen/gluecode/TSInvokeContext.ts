@@ -25,7 +25,8 @@ export enum EASN1TransportEncoding {
  * Base params for the invoke context
  */
 export interface IInvokeContextBaseParams {
-	// Applied via setInvokeTimeout() when constructing the context (omit = use connection default).
+	// Applied via setInvokeTimeout() when constructing the context.
+	// Omit it and encodeInvoke writes the stub default onto the context and onto ROSEInvoke.timeout.
 	invokeTimeoutMs?: number;
 	// Encoding of the message
 	encoding?: EASN1TransportEncoding;

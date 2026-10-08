@@ -194,12 +194,14 @@ public:
 	// SNACC::ROSEInvoke* pInvoke{};
 
 	/*! Sets the invoke timeout in milliseconds. 0 is fire-and-forget (dispatch only, no wait and no
-		async completion). Values > 0 are encoded on ROSEInvoke.timeout when sending (not for events).
-		Inbound: populated from the wire when ROSEInvoke.timeout is present. */
+		async completion) and is still encoded on ROSEInvoke.timeout. Values > 0 are a deadline.
+		Events (invoke id 99999) omit the field. An unset context takes a positive connection default before send.
+		A non-positive connection default leaves the optional field off the wire.
+		Inbound: populated from the wire when ROSEInvoke.timeout is present, including 0. */
 	void SetInvokeTimeout(unsigned int uiTimeoutMs);
 
-	/*! Clears a configured timeout so the connection default (m_lMaxInvokeWait) applies on outbound
-		sends. Inbound contexts remain unset when the wire field is absent. */
+	/*! Clears a configured timeout so a positive connection default (m_lMaxInvokeWait) applies on the
+		next outbound send. Inbound contexts remain unset when the wire field is absent. */
 	void ClearInvokeTimeout();
 
 	/*! Returns the invoke timeout when set; empty when unset or absent on the wire. */

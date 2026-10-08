@@ -34,13 +34,26 @@ namespace
 		return pReject->details->getASCII() == szExpected;
 	}
 
-	// Encodes ROSEInvoke.timeout only for positive invoke timeouts on non-event invokes.
+	// Encodes ROSEInvoke.timeout for every non-event invoke that has a timeout, including 0.
 	bool ShouldEncodeWireInvokeTimeout(const SnaccInvokeContext& ctx, const SNACC::ROSEInvoke& invoke)
 	{
-		const auto timeout = ctx.InvokeTimeout();
-		if (!timeout.has_value() || *timeout == 0)
+		if (static_cast<AsnIntType>(invoke.invokeID) == 99999)
 			return false;
-		return static_cast<AsnIntType>(invoke.invokeID) != 99999;
+		return ctx.InvokeTimeout().has_value();
+	}
+
+	// Stores a positive connection default on an unset non-event context.
+	// A non-positive default is a conscious override: the optional field stays off the wire.
+	// Explicit 0 is left unchanged and is encoded.
+	void PrepareOutboundInvokeTimeout(SnaccInvokeContext& ctx, const SNACC::ROSEInvoke& invoke, long lMaxInvokeWait)
+	{
+		if (static_cast<AsnIntType>(invoke.invokeID) == 99999)
+			return;
+		if (ctx.InvokeTimeout().has_value())
+			return;
+		if (lMaxInvokeWait <= 0)
+			return;
+		ctx.SetInvokeTimeout(static_cast<unsigned int>(lMaxInvokeWait));
 	}
 } // namespace
 
@@ -279,7 +292,7 @@ namespace
 		SNACC::ROSEInvoke* m_pInvoke = nullptr;
 	};
 
-	// Adds ROSEInvoke.timeout for encoding when the invoke context requests a positive deadline.
+	// Adds ROSEInvoke.timeout for encoding. Non-event invokes always carry the field, including 0.
 	class ScopedInvokeWireTimeout final
 	{
 	public:
@@ -1774,6 +1787,8 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 	long lRoseResult = ROSE_NOERROR;
 	if (pstRequestData)
 		*pstRequestData = 0;
+
+	PrepareOutboundInvokeTimeout(ctx, *pInvoke, m_lMaxInvokeWait);
 
 	ROSEMessage invokeMsg;
 	const ScopedEncodeInvokeBorrow invokeBorrow(invokeMsg, *pInvoke);

@@ -806,6 +806,19 @@ namespace snacclib
 		EXPECT_EQ(750u, *pCtx->InvokeTimeout());
 	}
 
+	TEST(snacclib_InvokeWireTimeoutTest, InboundInitCopiesZeroWireTimeout)
+	{
+		ROSEInvoke invoke;
+		invoke.invokeID = 1;
+		invoke.operationID = 43210;
+		invoke.timeout = new AsnInt(0);
+
+		const auto pCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::INBOUND, &invoke));
+		ASSERT_NE(nullptr, pCtx);
+		ASSERT_TRUE(pCtx->InvokeTimeout().has_value());
+		EXPECT_EQ(0u, *pCtx->InvokeTimeout());
+	}
+
 	TEST(snacclib_InvokeWireTimeoutTest, InboundInitWithoutWireTimeoutLeavesUnset)
 	{
 		ROSEInvoke invoke;
@@ -841,7 +854,7 @@ namespace snacclib
 		EXPECT_EQ(500u, *m_server.InboundObservation().HandlerSnapshot().InvokeTimeout());
 	}
 
-	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundDefaultInvokeTimeoutOmitsWireValueOnInbound)
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundDefaultInvokeTimeoutUsesConnectionDefaultOnInbound)
 	{
 		InitializeEndpoints(TransportEncoding::JSON);
 
@@ -850,10 +863,13 @@ namespace snacclib
 		AsnRequestError error;
 		ASSERT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
 		EXPECT_TRUE(m_server.InboundObservation().HandlerSnapshot().WasCaptured());
-		EXPECT_FALSE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
+		const auto expected = static_cast<unsigned int>(m_client.GetMaxInvokeWaitTime());
+		ASSERT_GT(expected, 0u);
+		ASSERT_TRUE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
+		EXPECT_EQ(expected, *m_server.InboundObservation().HandlerSnapshot().InvokeTimeout());
 	}
 
-	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundFireAndForgetOmitsWireValueOnInbound)
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundFireAndForgetEncodesZeroTimeoutOnInbound)
 	{
 		InitializeEndpoints(TransportEncoding::JSON);
 
@@ -863,7 +879,8 @@ namespace snacclib
 		auto pCtx = m_client.CreateOutboundInvokeContext(0u);
 		ASSERT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pCtx));
 		EXPECT_TRUE(m_server.InboundObservation().HandlerSnapshot().WasCaptured());
-		EXPECT_FALSE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
+		ASSERT_TRUE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
+		EXPECT_EQ(0u, *m_server.InboundObservation().HandlerSnapshot().InvokeTimeout());
 	}
 
 	TEST(snacclib_InvokeContextInitTest, InboundResolvesOperationIdFromNameThenCanonicalContextName)

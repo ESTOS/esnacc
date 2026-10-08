@@ -238,6 +238,35 @@ namespace snacclib
 		EXPECT_EQ(1, m_gate->Entered());
 	}
 
+	TEST_F(snacclib_WorkerPoolRuntimeTest, ZeroTimeoutQueuedInvokeStillRunsHandler)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		ConfigureGetSettingsPool(1, 4);
+
+		AsyncInvokeLatch running;
+		AsnGetSettingsResult runningResult;
+		AsnRequestError runningError;
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(running, runningResult, runningError, 2000));
+		m_gate->WaitEntered(1);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		ASSERT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error, 0));
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		EXPECT_EQ(1, m_gate->Entered());
+
+		m_gate->Release();
+		ASSERT_TRUE(running.WaitFor(std::chrono::milliseconds(1000)));
+		EXPECT_EQ(ROSE_NOERROR, running.RoseResult());
+
+		const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+		while (m_gate->Entered() < 2 && std::chrono::steady_clock::now() < deadline)
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		EXPECT_EQ(2, m_gate->Entered());
+	}
+
 	TEST_F(snacclib_WorkerPoolRuntimeTest, StubWithoutBorrowedPoolsStaysOnCallingThread)
 	{
 		InitializeEndpoints(TransportEncoding::JSON);

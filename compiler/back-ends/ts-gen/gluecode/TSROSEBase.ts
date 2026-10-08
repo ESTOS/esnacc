@@ -299,7 +299,7 @@ export type EHttpHeaders = IncomingHttpHeaders;
  * Base interface for the invoke context
  */
 export interface IInvokeContextBase extends IInvokeContextBaseParams {
-	// Milliseconds invoke timeout (undefined when unset or absent on the wire).
+	// Milliseconds invoke timeout. Undefined until set, or until a non-event encode applies the stub default.
 	setInvokeTimeout: (iTimeoutMs: number) => void;
 	clearInvokeTimeout: () => void;
 	invokeTimeout: () => number | undefined;
@@ -324,6 +324,7 @@ class BaseInvokeContext implements IInvokeContextBase {
 	public clientConnectionID: string | undefined;
 	public headers: EHttpHeaders | undefined;
 	public customData: unknown | undefined;
+	// Same member name as the C++ context. The accessor stays invokeTimeout().
 	private m_invokeTimeout?: number;
 
 	/**
@@ -344,14 +345,16 @@ class BaseInvokeContext implements IInvokeContextBase {
 	}
 
 	/**
-	 * Sets the invoke timeout in milliseconds. Outbound values > 0 are encoded on
-	 * ROSEInvoke.timeout (not for events). Inbound contexts are populated from the wire.
+	 * Sets the invoke timeout in milliseconds.
+	 * A non-event encode writes every set value, including 0, onto ROSEInvoke.timeout.
+	 * encodeInvoke also calls this when the caller left the timeout unset, storing the stub default.
+	 * Inbound contexts are populated from the wire, including 0.
 	 */
 	public setInvokeTimeout(iTimeoutMs: number): void {
 		this.m_invokeTimeout = iTimeoutMs;
 	}
 
-	/** Clears a configured timeout so the connection default applies on outbound sends. */
+	/** Clears a configured timeout. The next non-event encode applies a positive stub default. */
 	public clearInvokeTimeout(): void {
 		this.m_invokeTimeout = undefined;
 	}
@@ -433,7 +436,7 @@ export class ReceiveInvokeContext extends BaseInvokeContext implements IReceiveI
 			invokeID: invoke.invokeID,
 			operationID: invoke.operationID,
 			operationName: invoke.operationName,
-			...(invoke.timeout !== undefined && invoke.timeout > 0 ? { invokeTimeoutMs: invoke.timeout } : {}),
+			...(invoke.timeout !== undefined ? { invokeTimeoutMs: invoke.timeout } : {}),
 		});
 	}
 }
@@ -656,6 +659,8 @@ export interface IASN1Transport extends IRoseSessionSubscription {
 	getEncodeContext(): EncodeContext;
 	getDecodeContext(): DecodeContext;
 	getNextInvokeID(): number;
+	/** Stub default invoke timeout in milliseconds. encodeInvoke uses it when the caller left the context unset. */
+	getDefaultInvokeTimeout(): number;
 	getSessionID(): string | undefined;
 	getEncoding(clientConnectionID?: string): EASN1TransportEncoding;
 	setEncoding(encoding: EASN1TransportEncoding, clientConnectionID?: string): void;
@@ -1071,6 +1076,36 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	}
 
 	/**
+	 * Resolves the timeout written on an outbound ROSEInvoke.
+	 * encodeInvoke calls this before the envelope is built.
+	 * When the caller left the context unset and the stub default is positive, that default is stored
+	 * on the context and returned so the server receives the same deadline the local watchdog uses.
+	 * A non-positive stub default is a conscious override: the optional field stays off the wire and
+	 * the encode continues. Events return undefined. An explicit 0 stays 0 and is encoded.
+	 *
+	 * @param invokeContext - outbound context for this call; updated when the stub default is applied
+	 * @param event - true for an event invoke (invoke id 99999)
+	 * @returns the timeout to write, or undefined when the optional field stays off the wire
+	 */
+	private resolveOutboundInvokeTimeout(
+		invokeContext: SendInvokeContext,
+		event: boolean,
+	): number | undefined {
+		if (event)
+			return undefined;
+
+		let timeoutMs = invokeContext.invokeTimeout();
+		if (timeoutMs === undefined) {
+			const stubTimeout = this.transport.getDefaultInvokeTimeout();
+			if (!(stubTimeout > 0))
+				return undefined;
+			invokeContext.setInvokeTimeout(stubTimeout);
+			timeoutMs = stubTimeout;
+		}
+		return timeoutMs;
+	}
+
+	/**
 	 * Encodes the argument for an invoke, the result is the object that contains the payload to send it to the other side
 	 * First encodes the argument with the appropriate ArgumentConverter
 	 * Afterwards the encoded argument is embedded in a ROSEInvoke object and encoded
@@ -1098,16 +1133,16 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		const invokeID = event ? 99999 : this.transport.getNextInvokeID();
 		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
 		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
+		const wireTimeoutMs = this.resolveOutboundInvokeTimeout(invokeContext, event);
 
 		// The root ROSE message which is now filled with its own parameters
 		const message = new ROSEMessage();
-		const wireTimeoutMs = invokeContext.invokeTimeout();
 		message.invoke = new ROSEInvoke({
 			invokeID,
 			...(sessionID && { sessionID }),
 			operationID,
 			...(context.bAddOperationName && { operationName }),
-			...(!event && wireTimeoutMs !== undefined && wireTimeoutMs > 0 ? { timeout: wireTimeoutMs } : {}),
+			...(!event && typeof wireTimeoutMs === "number" ? { timeout: wireTimeoutMs } : {}),
 		});
 
 		// Copy the invoke for logging purposes (Contains plain json data)

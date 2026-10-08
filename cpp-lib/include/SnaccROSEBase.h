@@ -162,8 +162,15 @@ public:
 	static void SetTelemetryCallback(SnaccTelemetryCallback* pCallBack);
 
 	/*! Set timeout for function invokes.
-		Wait time in milliseconds */
+		Wait time in milliseconds. Send copies a positive value onto ROSEInvoke.timeout when the caller left the context unset.
+		A non-positive value leaves the optional field off the wire. The encode still succeeds. */
 	void SetMaxInvokeWaitTime(long lMaxInvokeWait);
+
+	/*! Connection default invoke timeout in milliseconds. */
+	long GetMaxInvokeWaitTime() const
+	{
+		return m_lMaxInvokeWait;
+	}
 
 	/*! Ends the current transport ROSE session: blocks new invokes/events and completes
 		pending operations with ROSE_TE_SHUTDOWN. Pair with ResumeRoseProcessing() when

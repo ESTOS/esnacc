@@ -121,7 +121,8 @@ namespace
 	// Enqueue-time deadline from a positive ROSEInvoke.timeout. Unset when the field is absent or not positive.
 	std::optional<std::chrono::steady_clock::time_point> DeadlineFor(const SNACC::ROSEInvoke& invoke)
 	{
-		// Absent or non-positive timeout means the client did not set a deadline. The worker then always runs the handler.
+		// 0 is fire-and-forget, not "already expired". now+0 would drop the item before the handler runs.
+		// Absent or non-positive timeout means there is no deadline. The worker always runs the handler.
 		if (!invoke.timeout || static_cast<int>(*invoke.timeout) <= 0)
 			return std::nullopt;
 		// Captured at enqueue, not when the worker starts, so time spent queued counts against the client timeout.
