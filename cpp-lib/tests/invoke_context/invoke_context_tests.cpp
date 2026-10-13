@@ -510,6 +510,61 @@ namespace snacclib
 			ASSERT_TRUE(snapshot.InvokeTimeout().has_value());
 			EXPECT_EQ(uiExpectedTimeout, *snapshot.InvokeTimeout());
 		}
+
+		// Sends get-settings with the connection default forced to 0 and checks the server saw no timeout.
+		// A non-positive default leaves ROSEInvoke.timeout off the wire. The encode still succeeds.
+		void AssertSuppressedConnectionDefaultOmitsInvokeTimeout(const TransportEncoding encoding)
+		{
+			InitializeEndpoints(encoding);
+			m_client.SetMaxInvokeWaitTime(0);
+
+			AsnGetSettingsArgument argument;
+			AsnGetSettingsResult result;
+			AsnRequestError error;
+			ASSERT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+
+			const auto& snapshot = m_server.InboundObservation().HandlerSnapshot();
+			ASSERT_TRUE(snapshot.WasCaptured());
+			EXPECT_FALSE(snapshot.InvokeTimeout().has_value());
+		}
+
+		// Sends an event whose context has a timeout and checks the queued ROSEInvoke omitted the field.
+		// Events use invoke id 99999. The caller timeout stays on the context and does not go on the wire.
+		void AssertEventOmitsInvokeTimeoutOnWire(const TransportEncoding encoding)
+		{
+			InitializeEndpoints(encoding);
+			m_client.Transport().EnqueueAction(TransportAction::Queue());
+
+			ENetUC_Settings_ManagerROSE component(&m_client);
+			AsnSettingsChangedArgument eventArgument;
+			SetSettingsValues(eventArgument.settings, true, "event-with-timeout");
+			auto pCtx = m_client.CreateOutboundInvokeContext(500u);
+			ASSERT_TRUE(pCtx);
+			ASSERT_EQ(ROSE_NOERROR, component.Event_asnSettingsChanged(&eventArgument, pCtx));
+
+			const auto queued = m_client.Transport().TakeQueuedMessages();
+			ASSERT_EQ(1u, queued.size());
+
+			ROSEMessage message;
+			if (encoding == TransportEncoding::BER)
+			{
+				AsnBuf buffer(queued.front().data(), queued.front().size());
+				AsnLen bytesDecoded = 0;
+				message.BDec(buffer, bytesDecoded);
+			}
+			else
+			{
+				ASSERT_GE(queued.front().size(), 8u);
+				SJson::Value value;
+				SJson::Reader reader;
+				ASSERT_TRUE(reader.parse(queued.front().data() + 8, queued.front().data() + queued.front().size(), value));
+				ASSERT_TRUE(message.JDec(value));
+			}
+
+			ASSERT_NE(nullptr, message.invoke);
+			EXPECT_EQ(static_cast<AsnIntType>(99999), static_cast<AsnIntType>(message.invoke->invokeID));
+			EXPECT_EQ(nullptr, message.invoke->timeout);
+		}
 	};
 
 	TEST_F(snacclib_InvokeContextRuntimeTest, InboundHandlerReceivesCustomInvokeContextBer)
@@ -929,6 +984,34 @@ namespace snacclib
 		EXPECT_TRUE(m_server.InboundObservation().HandlerSnapshot().WasCaptured());
 		ASSERT_TRUE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
 		EXPECT_EQ(0u, *m_server.InboundObservation().HandlerSnapshot().InvokeTimeout());
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundFireAndForgetEncodesZeroTimeoutOnInboundBer)
+	{
+		InitializeEndpoints(TransportEncoding::BER);
+		auto pCtx = m_client.CreateOutboundInvokeContext(0u);
+		ASSERT_TRUE(pCtx);
+		AssertInboundSawInvokeTimeout(pCtx, 0u);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundSuppressedConnectionDefaultOmitsInvokeTimeoutJson)
+	{
+		AssertSuppressedConnectionDefaultOmitsInvokeTimeout(TransportEncoding::JSON);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundSuppressedConnectionDefaultOmitsInvokeTimeoutBer)
+	{
+		AssertSuppressedConnectionDefaultOmitsInvokeTimeout(TransportEncoding::BER);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundEventOmitsInvokeTimeoutOnWireJson)
+	{
+		AssertEventOmitsInvokeTimeoutOnWire(TransportEncoding::JSON);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundEventOmitsInvokeTimeoutOnWireBer)
+	{
+		AssertEventOmitsInvokeTimeoutOnWire(TransportEncoding::BER);
 	}
 
 	TEST(snacclib_InvokeContextInitTest, InboundResolvesOperationIdFromNameThenCanonicalContextName)
