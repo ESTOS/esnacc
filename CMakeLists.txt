@@ -81,8 +81,8 @@ add_subdirectory(compiler)
 
 if(BUILD_TESTING)
 	# Per-case CTest entries for TypeScript glue specs, plus the microservice integration test.
-	# OFF by default: IDE runs typescript/*.test.ts via the node:test Test Explorer.
-	# ON in CI: ctest lists each glue test() on its own after stub prepare.
+	# The VS Code CMake test view turns this on so those cases sit next to the C++ suites.
+	# CI sets the same option. Each glue test() is its own ctest after stub prepare.
 	option(SNACC_CTEST_REGISTER_TS "Register TypeScript glue cases and integration CTest entries (CI)" OFF)
 
 	add_subdirectory(compiler/tests/cpp)

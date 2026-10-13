@@ -3,9 +3,9 @@
 # Spec files: typescript/*.test.ts — run locally via VS Code node:test Test Explorer
 # (nodejs-testing.* in .vscode/settings.json) or `pnpm test` in typescript/.
 #
-# When SNACC_CTEST_REGISTER_TS=ON (CI), each top-level test() literal becomes its own
-# ctest (scripts/list-ts-glue-tests.mjs + scripts/run-ts-glue-one-test.mjs). Local
-# `pnpm test` still runs the whole suite in one process.
+# When SNACC_CTEST_REGISTER_TS=ON (CI and the VS Code CMake test view), each top-level
+# test() literal becomes its own ctest (scripts/list-ts-glue-tests.mjs +
+# scripts/run-ts-glue-one-test.mjs). `pnpm test` still runs the whole suite in one process.
 
 if(NOT BUILD_TESTING)
 	return()

@@ -32,11 +32,11 @@
 	"cmake.configureSettings": {
 		"BUILD_TESTING": "ON",
 		"MSVC_STATIC_RUNTIME": "ON",
-		"SNACC_CTEST_REGISTER_TS": "OFF"
+		"SNACC_CTEST_REGISTER_TS": "ON"
 	},
 	"cmake.buildBeforeRun": true,
 	"cmake.ctest.testConfiguration": "Release",
-	"cmake.ctest.testSuiteDelimiter": "[_.]",
+	"cmake.ctest.testSuiteDelimiter": "[_./]",
 	"cmake.ctest.testSuiteDelimiterMaxOccurrence": 2,
 	"[html]": {
 		"editor.defaultFormatter": "vscode.html-language-features"
