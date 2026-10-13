@@ -91,13 +91,13 @@ const long ROSE_TE_ENCODE_FAILED = 0x00000004;
 const long ROSE_RE_INVALID_ANSWER = 0x00000010;
 const long ROSE_RE_DECODE_FAILED = 0x00000020;
 
-//! ROSE Server side ROSEReject answers:
-//! Function not implemented
+//! ROSE Server side ROSEReject answers.
+//! Wire invoke problem is unrecognisedOperation. Detail "unrecognisedOperation" means the operation is not in the stub or the lookup map.
 #define ISROSE_REJECT(num) (num & 0x00000F00)
 const long ROSE_REJECT_UNKNOWNOPERATION = 0x00000100;
 //! Function Argument invalid (decode failed)
 const long ROSE_REJECT_MISTYPEDARGUMENT = 0x00000200;
-//! Function is not implemented (virtual override missing)
+//! Wire invoke problem is unrecognisedOperation. Detail "functionMissing" means the operation is known, but the virtual OnInvoke handler is not overridden.
 const long ROSE_REJECT_FUNCTIONMISSING = 0x00000300;
 //! Unknown Reject
 const long ROSE_REJECT_UNKNOWN = 0x00000400;
@@ -124,6 +124,9 @@ const long ROSE_REJECT_AUTHENTICATION_USER_LOCKED_OUT = 0x00000C00;
 const long ROSE_REJECT_ARGUMENT_MISSING = 0x00000D00;
 //! Local stub rejected before send: peer negotiate snapshot does not offer this invoke OPID
 const long ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00;
+//! Dispatch queue is full. The handler did not run.
+//! Wire invoke problem is resourceLimitation. Detail "queueFull".
+const long ROSE_REJECT_QUEUE_FULL = 0x00000F00;
 
 //! ROSE Server side ROSEError answers:
 //! ROSEError Message received
@@ -191,12 +194,14 @@ public:
 	// SNACC::ROSEInvoke* pInvoke{};
 
 	/*! Sets the invoke timeout in milliseconds. 0 is fire-and-forget (dispatch only, no wait and no
-		async completion). Values > 0 are encoded on ROSEInvoke.timeout when sending (not for events).
-		Inbound: populated from the wire when ROSEInvoke.timeout is present. */
+		async completion) and is still encoded on ROSEInvoke.timeout. Values > 0 are a deadline.
+		Events (invoke id 99999) omit the field. An unset context takes a positive connection default before send.
+		A non-positive connection default leaves the optional field off the wire.
+		Inbound: populated from the wire when ROSEInvoke.timeout is present, including 0. */
 	void SetInvokeTimeout(unsigned int uiTimeoutMs);
 
-	/*! Clears a configured timeout so the connection default (m_lMaxInvokeWait) applies on outbound
-		sends. Inbound contexts remain unset when the wire field is absent. */
+	/*! Clears a configured timeout so a positive connection default (m_lMaxInvokeWait) applies on the
+		next outbound send. Inbound contexts remain unset when the wire field is absent. */
 	void ClearInvokeTimeout();
 
 	/*! Returns the invoke timeout when set; empty when unset or absent on the wire. */

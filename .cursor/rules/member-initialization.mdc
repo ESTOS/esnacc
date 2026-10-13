@@ -1,0 +1,20 @@
+---
+description: Initialize every member, and prefix pointers with p
+alwaysApply: true
+---
+
+# Member initialization and pointer names
+
+Initialize every data member at its definition.
+
+- Every member uses a `{}` initializer, including pointers.
+- Pointer members use a `p` prefix.
+
+```cpp
+bool m_bOpen{};
+SnaccWorkerPools* m_pWorkerPools{};
+```
+
+The `p` prefix is for every pointer, not only members. A member is `m_pWorkerPools`. A parameter or local is `pWorkerPools`.
+
+Apply this to new and edited members. Do not rename unrelated existing members in the same change.

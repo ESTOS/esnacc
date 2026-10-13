@@ -1,0 +1,31 @@
+---
+description: Commit subjects start with the Jira ticket key
+alwaysApply: true
+---
+
+# Commit messages
+
+Every commit subject starts with the Jira ticket key for the work, so the key is the first thing visible in `git log`.
+
+## Format
+
+```
+TICKET-KEY: Short imperative summary
+```
+
+- The key is the project prefix plus the number, as in `BUILDSYS-640`.
+- One space after the colon. The rest of the subject stays a short imperative sentence.
+- The body may explain why. It does not replace the key on the subject line.
+- Use the same key on every commit for that ticket, including follow-up fixes on the same branch.
+
+## Examples
+
+```
+BUILDSYS-640: Emit I* aliases for simple ASN.1 typedefs.
+
+BUILDSYS-645: Add optional per-invoke timeout on the ROSE wire.
+```
+
+## When the key is unknown
+
+Ask for the ticket key before committing. Do not invent a key, and do not commit with the key only in the body or at the end of the subject.

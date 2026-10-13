@@ -417,16 +417,19 @@ Each helper detaches borrowed pointers in its destructor.
    queued behind resource limits) and the deadline has passed after receipt, product code may
    discard the work without executing the handler and without sending a late
    result/error/reject for that expired invoke.
-2. **Outbound encoding:** when `InvokeTimeout()` / `invokeTimeout()` is set and **> 0** on a
-   non-event invoke (`invokeID != 99999`), the runtime sets `ROSEInvoke.timeout` before encode.
-   Omit the field when unset (connection default), when set to `0` (fire-and-forget), or for events.
+2. **Outbound encoding:** a non-event invoke (`invokeID != 99999`) carries `ROSEInvoke.timeout` when
+   the caller set one or the stub default is positive. Both languages use 20000 ms
+   (`defaultTimeout` / `m_lMaxInvokeWait`). An unset context copies that default onto the context
+   and onto the wire. A non-positive default is a conscious override: the optional field stays off
+   the wire and the encode still succeeds. `0` on the call is fire-and-forget and is encoded as `0`.
+   Events omit the field.
 3. **Inbound context:** when the wire field is present, copy into `SnaccInvokeContext` /
    `ReceiveInvokeContext` via `InvokeTimeout()` / `invokeTimeout()`; absent field stays unset.
 4. **C++ / TypeScript parity:** `SetInvokeTimeout(unsigned)` / `setInvokeTimeout(number)`,
    `ClearInvokeTimeout()` / `clearInvokeTimeout()`, `std::optional<unsigned int> InvokeTimeout()`
    / `invokeTimeout(): number | undefined`, optional constructor param `invokeTimeoutMs` on
    outbound contexts (`CreateOutboundInvokeContext()` / `SendInvokeContext` partial args).
-   Three states: unset → connection default; `0` → fire-and-forget; `> 0` → explicit ms (+ wire).
+   Three states: unset → connection default, written on the wire; `0` → fire-and-forget, written as `0` (the worker pool does not treat it as already expired); `> 0` → explicit deadline on the wire.
 5. **Backward compatibility:** peers that omit `timeout` behave as today.
 
 ## 10. Cross-language runtime test matrix
@@ -443,7 +446,7 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 | `server_invoke_block_policy_tests`                | `TSASN1Base.invokeBlockPolicy.test.ts`            | **Partial** (subscription path only)                                                                                                                             |
 | `rose_session_subscription_tests`                 | `TSASN1Base.roseSessionSubscription.test.ts`      | **Partial** (`SnaccROSEComponent` C++-only)                                                                                                                      |
 | Pause / shutdown gate                             | `TSASN1Base.pauseRoseProcessing.test.ts`          | **Partial** (3 scenarios; lifecycle/async overlap C++-only)                                                                                                      |
-| `InvokeWireTimeoutTest` / outbound encode         | `TSROSEBase.invokeTimeout.test.ts`                | **Aligned** (unit + encode path)                                                                                                                                 |
+| `InvokeWireTimeoutTest` / outbound encode         | `TSROSEBase.invokeTimeout.test.ts`                | **Aligned** — unset writes the stub default; `0` is on the wire and is not an expired queue deadline                                                            |
 | `InvokeContextInitTest`                           | `TSInvokeContext.init.test.ts`                    | **Partial** (wire `operationName` vs lookup differs from C++)                                                                                                    |
 | `InvokeContextRuntimeTest` (loopback)             | `TSCallFlow.loopback.test.ts` (subset)            | **Partial** — full orphan/malformed matrix C++-only                                                                                                              |
 | `OutboundWireInvokeTimeoutReachesInboundHandler*` | —                                                 | **Blocked** — TS `receiveHandleROSEMessage` does not copy wire `timeout` into context yet                                                                        |
@@ -481,7 +484,7 @@ encode/decode in `SNACCROSE_Converter.ts` (not test harness).
 1. `typescript/support/sample_runtime_harness.ts` — loopback transport + sample modules.
 2. Sample stubs copied in `scripts/run_gluecode_tests.*` (`ENetUC_Settings_Manager`, `ENetUC_Event_Manager`).
 3. `TSCallFlow.loopback.test.ts`, `TSLogicalFailure.loopback.test.ts`, `TSTransportFailure.loopback.test.ts`.
-4. CI CMake `ctest` batch (`SNACC_CTEST_REGISTER_TS=ON`): `typescript_run_all_compiler_ts_rose_runtime_loopback_spec_tests` runs the same `typescript/*.test.ts` files via `scripts/run-ts-glue-test-suite.mjs`. Local IDE uses node:test Test Explorer (`nodejs-testing`); BER/JSON matrix cases use top-level `test("… (BER)")` / `test("… (JSON)")` literals so static discovery matches CI (`node --test` registers loop bodies at runtime only).
+4. CMake `ctest` (`SNACC_CTEST_REGISTER_TS=ON` in CI and in the VS Code CMake settings): each top-level `test("…")` literal in `typescript/*.test.ts` is its own CTest entry (`typescript/<file>/<name>`), discovered by `scripts/list-ts-glue-tests.mjs` and run by `scripts/run-ts-glue-one-test.mjs`. The CMake test view lists those entries beside the C++ suites. `pnpm test` still runs the suite in one process. BER/JSON matrix cases use top-level `test("… (BER)")` / `test("… (JSON)")` literals so static discovery matches CI (`node --test` registers loop bodies at runtime only).
 
 ### Block C — Telemetry in TypeScript (largest product gap)
 
@@ -510,6 +513,18 @@ Then port `telemetry_tests.cpp` → `TSTelemetry.test.ts` (outcome/reason assert
 ### Block F — Kotlin / Swift
 
 When Tier A ROSE glue lands, reuse scenario names from this matrix; implement harness per language.
+
+## 12. Named worker pools (UCAAS-1479)
+
+### Contract
+
+1. **Opt-in, shared registry.** The process owns one `SnaccWorkerPools`, the same lifetime as a listener's `SnaccRoseOperationLookup`. `Configure` declares named pools (name, `maxThreads`, `maxElements`, operation ids) once and starts one thread per pool immediately. Every stub that `SetWorkerPools` to that object shares the threads and the operationID assignment. A stub that has not borrowed the registry stays on the calling thread. An operationID listed twice is refused: Configure returns false, asserts in debug, and keeps the previous set. An invoke whose operationID is not assigned runs on the calling thread.
+2. **Routing.** `SnaccROSEBase::ResolveWorkerPool` returns true and writes the pool name when the invoke is handed to a pool. False leaves it on the calling thread. The default reads the borrowed registry. A module may override it.
+3. **Depth.** `maxElements` counts waiting items plus items inside a handler. `0` means no limit. When the depth is exhausted the calling thread rejects an invoke with `ROSE_REJECT_QUEUE_FULL` (`resourceLimitation`, detail `queueFull`) and does not run the handler. An event (`invokeID` 99999) is dropped with no reject.
+4. **Worker.** Argument decode, `OnInvoke`, the reply, and inbound telemetry finalize run on the worker. The worker calls `SendBinaryDataBlockEx` on the stub that received the invoke. `Configure` starts one thread per pool, named `wp::<pool>` with no thread id, and that floor thread stays until `Shutdown`. Further threads start on demand up to `maxThreads`. A thread above the floor that finds the queue empty waits `idleTimeoutMs` (default 30000, `0` means it stays) and then exits. The next enqueue starts a replacement up to `maxThreads`. One FIFO per pool, shared by every stub that borrowed the registry. A `SnaccException` from the handler becomes a mistyped-argument reject and the thread stays. Any other exception follows `SnaccWorkerFaultPolicy`: `KeepWorker` swallows it and takes the next item; `RetireWorker` ends that thread and starts a replacement when work remains. Neither path sends a reply for the failed item.
+5. **Stop.** `PauseRoseProcessing` and destroying the stub reject invokes still queued for that stub with the existing shutdown reject and do not run their handlers. A handler of that stub already running finishes and its reply is discarded. Other stubs on the same registry keep their queued items and their workers. `SnaccWorkerPools::Shutdown` rejects every stub and joins the workers.
+6. **Deadline.** A positive `ROSEInvoke.timeout` is `T_enqueue + timeout`. If that instant has passed when the worker dequeues the item, the handler does not run and the server sends no reply. The client's own wait then completes locally with `ROSE_TE_TIMEOUT`.
+7. **`m_multithreadInvokeIDs`** is unchanged. It is not a pool.
 
 ## Recommended Follow-Up Order
 

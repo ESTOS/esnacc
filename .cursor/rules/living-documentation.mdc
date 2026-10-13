@@ -25,6 +25,18 @@ For **every new function or method** (free functions, static helpers, member fun
 - State purpose, caller context, and non-obvious pre/postconditions (e.g. mutates invoke, borrow vs own).
 - Do not skip file-local helpers in `.cpp` — they are part of the runtime contract tests document.
 
+## Functional blocks
+
+Inside every new or materially changed function, comment each functional block. A block is a stretch that does one job (validate, lock and swap, wait, reject, start a thread), not each statement.
+
+The comment sits immediately above the block and covers:
+
+1. **What** — what this block does.
+2. **Why** — when the reason is not obvious from the statements.
+3. **When** — when it runs, or which caller or thread is in it, when that is not obvious.
+
+A few lines. Skip a block only when it is a trivial assignment, a loop index, or an obvious parameter.
+
 ## Style in this repo
 
 - **Public headers** (`cpp-lib/include/`, generated interfaces): use existing `/*! ... */` block style where siblings do.

@@ -42,6 +42,7 @@ target_link_libraries(snacc-sample-generated PUBLIC snacc_cpp_lib)
 
 set(SNACC_RUNTIME_CPP_TEST_SOURCES
 	async_invoke/async_invoke_tests.cpp
+	worker_pool/worker_pool_tests.cpp
 	call_flow/call_flow_tests.cpp
 	invoke_block_policy/client_invoke_block_policy_tests.cpp
 	invoke_block_policy/server_invoke_block_policy_tests.cpp

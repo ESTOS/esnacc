@@ -80,10 +80,10 @@ add_subdirectory(cpp-lib)
 add_subdirectory(compiler)
 
 if(BUILD_TESTING)
-	# Batch CTest wrappers for TypeScript (glue suite + microservice integration).
-	# OFF by default: IDE runs typescript/*.test.ts via the node:test Test Explorer.
-	# ON in CI: ctest executes the same spec files in one shot after stub prepare.
-	option(SNACC_CTEST_REGISTER_TS "Register TypeScript batch/integration CTest entries (CI)" OFF)
+	# Per-case CTest entries for TypeScript glue specs, plus the microservice integration test.
+	# The VS Code CMake test view turns this on so those cases sit next to the C++ suites.
+	# CI sets the same option. Each glue test() is its own ctest after stub prepare.
+	option(SNACC_CTEST_REGISTER_TS "Register TypeScript glue cases and integration CTest entries (CI)" OFF)
 
 	add_subdirectory(compiler/tests/cpp)
 	add_subdirectory(cpp-lib/tests)

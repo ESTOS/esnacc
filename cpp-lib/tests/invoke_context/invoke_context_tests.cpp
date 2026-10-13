@@ -494,6 +494,77 @@ namespace snacclib
 			EXPECT_FALSE(pContext->WasPreparedForTelemetry());
 			EXPECT_EQ("pending-reject", pContext->TelemetryNote());
 		}
+
+		// Sends get-settings and checks the timeout the server read from the decoded ROSEInvoke.
+		// Caller has already initialized the endpoints. A null context is the generated invoke with no caller timeout.
+		void AssertInboundSawInvokeTimeout(const std::shared_ptr<SnaccInvokeContext>& pCtx, const unsigned int uiExpectedTimeout)
+		{
+			AsnGetSettingsArgument argument;
+			AsnGetSettingsResult result;
+			AsnRequestError error;
+			const long roseResult = pCtx ? m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pCtx) : m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error);
+			ASSERT_EQ(ROSE_NOERROR, roseResult);
+
+			const auto& snapshot = m_server.InboundObservation().HandlerSnapshot();
+			ASSERT_TRUE(snapshot.WasCaptured());
+			ASSERT_TRUE(snapshot.InvokeTimeout().has_value());
+			EXPECT_EQ(uiExpectedTimeout, *snapshot.InvokeTimeout());
+		}
+
+		// Sends get-settings with the connection default forced to 0 and checks the server saw no timeout.
+		// A non-positive default leaves ROSEInvoke.timeout off the wire. The encode still succeeds.
+		void AssertSuppressedConnectionDefaultOmitsInvokeTimeout(const TransportEncoding encoding)
+		{
+			InitializeEndpoints(encoding);
+			m_client.SetMaxInvokeWaitTime(0);
+
+			AsnGetSettingsArgument argument;
+			AsnGetSettingsResult result;
+			AsnRequestError error;
+			ASSERT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+
+			const auto& snapshot = m_server.InboundObservation().HandlerSnapshot();
+			ASSERT_TRUE(snapshot.WasCaptured());
+			EXPECT_FALSE(snapshot.InvokeTimeout().has_value());
+		}
+
+		// Sends an event whose context has a timeout and checks the queued ROSEInvoke omitted the field.
+		// Events use invoke id 99999. The caller timeout stays on the context and does not go on the wire.
+		void AssertEventOmitsInvokeTimeoutOnWire(const TransportEncoding encoding)
+		{
+			InitializeEndpoints(encoding);
+			m_client.Transport().EnqueueAction(TransportAction::Queue());
+
+			ENetUC_Settings_ManagerROSE component(&m_client);
+			AsnSettingsChangedArgument eventArgument;
+			SetSettingsValues(eventArgument.settings, true, "event-with-timeout");
+			auto pCtx = m_client.CreateOutboundInvokeContext(500u);
+			ASSERT_TRUE(pCtx);
+			ASSERT_EQ(ROSE_NOERROR, component.Event_asnSettingsChanged(&eventArgument, pCtx));
+
+			const auto queued = m_client.Transport().TakeQueuedMessages();
+			ASSERT_EQ(1u, queued.size());
+
+			ROSEMessage message;
+			if (encoding == TransportEncoding::BER)
+			{
+				AsnBuf buffer(queued.front().data(), queued.front().size());
+				AsnLen bytesDecoded = 0;
+				message.BDec(buffer, bytesDecoded);
+			}
+			else
+			{
+				ASSERT_GE(queued.front().size(), 8u);
+				SJson::Value value;
+				SJson::Reader reader;
+				ASSERT_TRUE(reader.parse(queued.front().data() + 8, queued.front().data() + queued.front().size(), value));
+				ASSERT_TRUE(message.JDec(value));
+			}
+
+			ASSERT_NE(nullptr, message.invoke);
+			EXPECT_EQ(static_cast<AsnIntType>(99999), static_cast<AsnIntType>(message.invoke->invokeID));
+			EXPECT_EQ(nullptr, message.invoke->timeout);
+		}
 	};
 
 	TEST_F(snacclib_InvokeContextRuntimeTest, InboundHandlerReceivesCustomInvokeContextBer)
@@ -806,6 +877,19 @@ namespace snacclib
 		EXPECT_EQ(750u, *pCtx->InvokeTimeout());
 	}
 
+	TEST(snacclib_InvokeWireTimeoutTest, InboundInitCopiesZeroWireTimeout)
+	{
+		ROSEInvoke invoke;
+		invoke.invokeID = 1;
+		invoke.operationID = 43210;
+		invoke.timeout = new AsnInt(0);
+
+		const auto pCtx = SnaccInvokeContext::Create(SnaccInvokeContextInit(SnaccInvokeDirection::INBOUND, &invoke));
+		ASSERT_NE(nullptr, pCtx);
+		ASSERT_TRUE(pCtx->InvokeTimeout().has_value());
+		EXPECT_EQ(0u, *pCtx->InvokeTimeout());
+	}
+
 	TEST(snacclib_InvokeWireTimeoutTest, InboundInitWithoutWireTimeoutLeavesUnset)
 	{
 		ROSEInvoke invoke;
@@ -841,7 +925,7 @@ namespace snacclib
 		EXPECT_EQ(500u, *m_server.InboundObservation().HandlerSnapshot().InvokeTimeout());
 	}
 
-	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundDefaultInvokeTimeoutOmitsWireValueOnInbound)
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundDefaultInvokeTimeoutUsesConnectionDefaultOnInbound)
 	{
 		InitializeEndpoints(TransportEncoding::JSON);
 
@@ -850,10 +934,45 @@ namespace snacclib
 		AsnRequestError error;
 		ASSERT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
 		EXPECT_TRUE(m_server.InboundObservation().HandlerSnapshot().WasCaptured());
-		EXPECT_FALSE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
+		const auto expected = static_cast<unsigned int>(m_client.GetMaxInvokeWaitTime());
+		ASSERT_GT(expected, 0u);
+		ASSERT_TRUE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
+		EXPECT_EQ(expected, *m_server.InboundObservation().HandlerSnapshot().InvokeTimeout());
 	}
 
-	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundFireAndForgetOmitsWireValueOnInbound)
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundDefaultInvokeTimeoutUsesConnectionDefaultOnInboundBer)
+	{
+		InitializeEndpoints(TransportEncoding::BER);
+		const auto expected = static_cast<unsigned int>(m_client.GetMaxInvokeWaitTime());
+		ASSERT_GT(expected, 0u);
+		AssertInboundSawInvokeTimeout({}, expected);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundClearedInvokeTimeoutUsesConnectionDefaultOnInboundJson)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		auto pCtx = m_client.CreateOutboundInvokeContext(250u);
+		ASSERT_TRUE(pCtx);
+		pCtx->ClearInvokeTimeout();
+		ASSERT_FALSE(pCtx->InvokeTimeout().has_value());
+		const auto expected = static_cast<unsigned int>(m_client.GetMaxInvokeWaitTime());
+		ASSERT_GT(expected, 0u);
+		AssertInboundSawInvokeTimeout(pCtx, expected);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundClearedInvokeTimeoutUsesConnectionDefaultOnInboundBer)
+	{
+		InitializeEndpoints(TransportEncoding::BER);
+		auto pCtx = m_client.CreateOutboundInvokeContext(250u);
+		ASSERT_TRUE(pCtx);
+		pCtx->ClearInvokeTimeout();
+		ASSERT_FALSE(pCtx->InvokeTimeout().has_value());
+		const auto expected = static_cast<unsigned int>(m_client.GetMaxInvokeWaitTime());
+		ASSERT_GT(expected, 0u);
+		AssertInboundSawInvokeTimeout(pCtx, expected);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundFireAndForgetEncodesZeroTimeoutOnInbound)
 	{
 		InitializeEndpoints(TransportEncoding::JSON);
 
@@ -863,7 +982,36 @@ namespace snacclib
 		auto pCtx = m_client.CreateOutboundInvokeContext(0u);
 		ASSERT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pCtx));
 		EXPECT_TRUE(m_server.InboundObservation().HandlerSnapshot().WasCaptured());
-		EXPECT_FALSE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
+		ASSERT_TRUE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
+		EXPECT_EQ(0u, *m_server.InboundObservation().HandlerSnapshot().InvokeTimeout());
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundFireAndForgetEncodesZeroTimeoutOnInboundBer)
+	{
+		InitializeEndpoints(TransportEncoding::BER);
+		auto pCtx = m_client.CreateOutboundInvokeContext(0u);
+		ASSERT_TRUE(pCtx);
+		AssertInboundSawInvokeTimeout(pCtx, 0u);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundSuppressedConnectionDefaultOmitsInvokeTimeoutJson)
+	{
+		AssertSuppressedConnectionDefaultOmitsInvokeTimeout(TransportEncoding::JSON);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundSuppressedConnectionDefaultOmitsInvokeTimeoutBer)
+	{
+		AssertSuppressedConnectionDefaultOmitsInvokeTimeout(TransportEncoding::BER);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundEventOmitsInvokeTimeoutOnWireJson)
+	{
+		AssertEventOmitsInvokeTimeoutOnWire(TransportEncoding::JSON);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundEventOmitsInvokeTimeoutOnWireBer)
+	{
+		AssertEventOmitsInvokeTimeoutOnWire(TransportEncoding::BER);
 	}
 
 	TEST(snacclib_InvokeContextInitTest, InboundResolvesOperationIdFromNameThenCanonicalContextName)

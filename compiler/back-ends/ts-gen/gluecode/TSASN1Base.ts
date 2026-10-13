@@ -335,8 +335,12 @@ export abstract class TSASN1Base implements IASN1Transport {
 	protected logger?: IROSELogger;
 	// Logs the raw transport (inbound before decoding, outbound after encoding)
 	protected logRawTransport = false;
-	// The default timeout for a websocket based invoke to the other side (a caller may change that value or provide a different one in the per call invokecontext)
-	protected defaultTimeout = 5000;
+	// The default timeout for a websocket based invoke to the other side.
+	// Same 20000 ms as C++ m_lMaxInvokeWait and the ProCall client registry fallback.
+	// encodeInvoke copies a positive value onto ROSEInvoke.timeout when the caller omits invokeTimeoutMs.
+	// A non-positive override leaves the optional field off the wire and the encode still succeeds.
+	// A caller may change that value or provide a different one in the per call invokecontext.
+	protected defaultTimeout = 20000;
 	// Addtitional meta data that is added to general log requests
 	protected additionalLogMeta: Record<string, unknown> | undefined;
 	// Addtitional meta data that is added to raw log requests (e.g. if you want to send data to loki)
@@ -356,6 +360,17 @@ export abstract class TSASN1Base implements IASN1Transport {
 	) {
 		this.instanceType = instanceType;
 		this.encoding = encoding;
+	}
+
+	/**
+	 * Default invoke timeout in milliseconds used when a caller omits invokeTimeoutMs.
+	 * encodeInvoke copies a positive value onto the outbound context and onto ROSEInvoke.timeout.
+	 * A non-positive value leaves the optional field off the wire. The encode still succeeds.
+	 *
+	 * @returns the stub default, in milliseconds
+	 */
+	public getDefaultInvokeTimeout(): number {
+		return this.defaultTimeout;
 	}
 
 	/**
