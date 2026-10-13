@@ -1076,33 +1076,40 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	}
 
 	/**
-	 * Resolves the timeout written on an outbound ROSEInvoke.
-	 * encodeInvoke calls this before the envelope is built.
-	 * When the caller left the context unset and the stub default is positive, that default is stored
-	 * on the context and returned so the server receives the same deadline the local watchdog uses.
-	 * A non-positive stub default is a conscious override: the optional field stays off the wire and
-	 * the encode continues. Events return undefined. An explicit 0 stays 0 and is encoded.
+	 * Timeout written on a non-event ROSEInvoke, taken from the first place that has one.
+	 * encodeInvoke calls this before the envelope is built and stores the choice on invokeContext
+	 * so the local watchdog and the wire use the same value.
+	 * Order: the context just built (invokeTimeoutMs survived the copy), then the caller's live
+	 * context (its timeout sits in a private field that object spread drops), then a positive stub default.
+	 * An explicit 0 is kept. Events and a non-positive stub default stay unset, and the encode still succeeds.
 	 *
-	 * @param invokeContext - outbound context for this call; updated when the stub default is applied
+	 * @param callerContext - the object passed to handleInvoke or handleEvent, when the caller passed one
+	 * @param invokeContext - the outbound context for this call; updated when the resolved timeout was not already stored there
 	 * @param event - true for an event invoke (invoke id 99999)
 	 * @returns the timeout to write, or undefined when the optional field stays off the wire
 	 */
-	private resolveOutboundInvokeTimeout(
+	private resolveInvokeTimeout(
+		callerContext: Partial<ISendInvokeContext> | undefined,
 		invokeContext: SendInvokeContext,
 		event: boolean,
 	): number | undefined {
 		if (event)
 			return undefined;
 
-		let timeoutMs = invokeContext.invokeTimeout();
-		if (timeoutMs === undefined) {
-			const stubTimeout = this.transport.getDefaultInvokeTimeout();
-			if (!(stubTimeout > 0))
-				return undefined;
-			invokeContext.setInvokeTimeout(stubTimeout);
-			timeoutMs = stubTimeout;
+		const caller = callerContext as Partial<IInvokeContextBase> | undefined;
+		const callerTimeout = typeof caller?.invokeTimeout === "function" ? caller.invokeTimeout() : undefined;
+		const timeoutMs = invokeContext.invokeTimeout() ?? callerTimeout;
+		if (timeoutMs !== undefined) {
+			if (invokeContext.invokeTimeout() === undefined)
+				invokeContext.setInvokeTimeout(timeoutMs);
+			return timeoutMs;
 		}
-		return timeoutMs;
+
+		const stubTimeout = this.transport.getDefaultInvokeTimeout();
+		if (!(stubTimeout > 0))
+			return undefined;
+		invokeContext.setInvokeTimeout(stubTimeout);
+		return stubTimeout;
 	}
 
 	/**
@@ -1133,7 +1140,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		const invokeID = event ? 99999 : this.transport.getNextInvokeID();
 		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
 		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
-		const wireTimeoutMs = this.resolveOutboundInvokeTimeout(invokeContext, event);
+		const wireTimeoutMs = this.resolveInvokeTimeout(contextParams, invokeContext, event);
 
 		// The root ROSE message which is now filled with its own parameters
 		const message = new ROSEMessage();

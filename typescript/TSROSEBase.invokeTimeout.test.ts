@@ -199,6 +199,177 @@ test("OutboundDefaultInvokeTimeoutUsesStubDefault", async () => {
 	assert.equal(decoded.invoke.timeout, stubTimeout);
 });
 
+test("OutboundWithoutInvokeContextUsesStubDefault", async () => {
+	const transport = new CapturingClientTransport();
+	transport.registerOperation(
+		noopInvokeHandler,
+		noopInvokeHandler as never,
+		4100,
+		"asnTestInvoke",
+		"TestModule",
+		100,
+		0,
+		0,
+		false,
+	);
+	const rose = new TestRose(transport);
+	const argument = new ENetUC_Common.AsnOptionalParamChoice({ integerdata: 1 });
+
+	await rose.handleInvoke(
+		argument,
+		ENetUC_Common.AsnOptionalParamChoice,
+		4100,
+		"asnTestInvoke",
+		ENetUC_Common_Converter.AsnOptionalParamChoice_Converter,
+		ENetUC_Common_Converter.AsnOptionalParamChoice_Converter,
+	);
+
+	assert.ok(transport.lastInvokeData);
+	const stubTimeout = transport.getDefaultInvokeTimeout();
+	assertRoseInvokeTimeoutPresent(transport.lastInvokeData.invoke.timeout);
+	assert.equal(transport.lastInvokeData.invoke.timeout, stubTimeout);
+	assert.equal(transport.lastInvokeData.invokeContext.invokeTimeout(), stubTimeout);
+
+	const errors = new ConverterErrors();
+	const decoded = ROSEMessage_Converter.fromJSON(
+		transport.lastInvokeData.payLoad as object,
+		errors,
+	) as ROSEMessage;
+	assert.equal(errors.length, 0);
+	assert.ok(decoded.invoke);
+	assertRoseInvokeTimeoutPresent(decoded.invoke.timeout);
+	assert.equal(decoded.invoke.timeout, stubTimeout);
+});
+
+test("OutboundUndefinedInvokeTimeoutUsesStubDefault", async () => {
+	const transport = new CapturingClientTransport();
+	transport.registerOperation(
+		noopInvokeHandler,
+		noopInvokeHandler as never,
+		4100,
+		"asnTestInvoke",
+		"TestModule",
+		100,
+		0,
+		0,
+		false,
+	);
+	const rose = new TestRose(transport);
+	const argument = new ENetUC_Common.AsnOptionalParamChoice({ integerdata: 1 });
+
+	await rose.handleInvoke(
+		argument,
+		ENetUC_Common.AsnOptionalParamChoice,
+		4100,
+		"asnTestInvoke",
+		ENetUC_Common_Converter.AsnOptionalParamChoice_Converter,
+		ENetUC_Common_Converter.AsnOptionalParamChoice_Converter,
+		{ invokeTimeoutMs: undefined, encoding: EASN1TransportEncoding.JSON },
+	);
+
+	assert.ok(transport.lastInvokeData);
+	const stubTimeout = transport.getDefaultInvokeTimeout();
+	assertRoseInvokeTimeoutPresent(transport.lastInvokeData.invoke.timeout);
+	assert.equal(transport.lastInvokeData.invoke.timeout, stubTimeout);
+	assert.equal(transport.lastInvokeData.invokeContext.invokeTimeout(), stubTimeout);
+
+	const errors = new ConverterErrors();
+	const decoded = ROSEMessage_Converter.fromJSON(
+		transport.lastInvokeData.payLoad as object,
+		errors,
+	) as ROSEMessage;
+	assert.equal(errors.length, 0);
+	assert.ok(decoded.invoke);
+	assertRoseInvokeTimeoutPresent(decoded.invoke.timeout);
+	assert.equal(decoded.invoke.timeout, stubTimeout);
+});
+
+test("OutboundClearedInvokeContextUsesStubDefault", async () => {
+	const transport = new CapturingClientTransport();
+	transport.registerOperation(
+		noopInvokeHandler,
+		noopInvokeHandler as never,
+		4100,
+		"asnTestInvoke",
+		"TestModule",
+		100,
+		0,
+		0,
+		false,
+	);
+	const rose = new TestRose(transport);
+	const argument = new ENetUC_Common.AsnOptionalParamChoice({ integerdata: 1 });
+	const callerContext = new SendInvokeContext({ invokeTimeoutMs: 500, encoding: EASN1TransportEncoding.JSON });
+	callerContext.clearInvokeTimeout();
+
+	await rose.handleInvoke(
+		argument,
+		ENetUC_Common.AsnOptionalParamChoice,
+		4100,
+		"asnTestInvoke",
+		ENetUC_Common_Converter.AsnOptionalParamChoice_Converter,
+		ENetUC_Common_Converter.AsnOptionalParamChoice_Converter,
+		callerContext,
+	);
+
+	assert.ok(transport.lastInvokeData);
+	const stubTimeout = transport.getDefaultInvokeTimeout();
+	assertRoseInvokeTimeoutPresent(transport.lastInvokeData.invoke.timeout);
+	assert.equal(transport.lastInvokeData.invoke.timeout, stubTimeout);
+	assert.equal(transport.lastInvokeData.invokeContext.invokeTimeout(), stubTimeout);
+
+	const errors = new ConverterErrors();
+	const decoded = ROSEMessage_Converter.fromJSON(
+		transport.lastInvokeData.payLoad as object,
+		errors,
+	) as ROSEMessage;
+	assert.equal(errors.length, 0);
+	assert.ok(decoded.invoke);
+	assertRoseInvokeTimeoutPresent(decoded.invoke.timeout);
+	assert.equal(decoded.invoke.timeout, stubTimeout);
+});
+
+test("OutboundInvokeContextTimeoutEncodesOnInvoke", async () => {
+	const transport = new CapturingClientTransport();
+	transport.registerOperation(
+		noopInvokeHandler,
+		noopInvokeHandler as never,
+		4100,
+		"asnTestInvoke",
+		"TestModule",
+		100,
+		0,
+		0,
+		false,
+	);
+	const rose = new TestRose(transport);
+	const argument = new ENetUC_Common.AsnOptionalParamChoice({ integerdata: 1 });
+	const callerContext = new SendInvokeContext({ invokeTimeoutMs: 750, encoding: EASN1TransportEncoding.JSON });
+
+	await rose.handleInvoke(
+		argument,
+		ENetUC_Common.AsnOptionalParamChoice,
+		4100,
+		"asnTestInvoke",
+		ENetUC_Common_Converter.AsnOptionalParamChoice_Converter,
+		ENetUC_Common_Converter.AsnOptionalParamChoice_Converter,
+		callerContext,
+	);
+
+	assert.ok(transport.lastInvokeData);
+	assertRoseInvokeTimeoutPresent(transport.lastInvokeData.invoke.timeout, 750);
+	assert.equal(transport.lastInvokeData.invokeContext.invokeTimeout(), 750);
+
+	const errors = new ConverterErrors();
+	const decoded = ROSEMessage_Converter.fromJSON(
+		transport.lastInvokeData.payLoad as object,
+		errors,
+	) as ROSEMessage;
+	assert.equal(errors.length, 0);
+	assert.ok(decoded.invoke);
+	assertRoseInvokeTimeoutPresent(decoded.invoke.timeout, 750);
+});
+
 test("OutboundSuppressedStubDefaultOmitsOptionalTimeout", async () => {
 	const transport = new EmptyDefaultTransport();
 	transport.registerOperation(

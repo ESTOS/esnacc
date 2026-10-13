@@ -494,6 +494,22 @@ namespace snacclib
 			EXPECT_FALSE(pContext->WasPreparedForTelemetry());
 			EXPECT_EQ("pending-reject", pContext->TelemetryNote());
 		}
+
+		// Sends get-settings and checks the timeout the server read from the decoded ROSEInvoke.
+		// Caller has already initialized the endpoints. A null context is the generated invoke with no caller timeout.
+		void AssertInboundSawInvokeTimeout(const std::shared_ptr<SnaccInvokeContext>& pCtx, const unsigned int uiExpectedTimeout)
+		{
+			AsnGetSettingsArgument argument;
+			AsnGetSettingsResult result;
+			AsnRequestError error;
+			const long roseResult = pCtx ? m_clientSettingsModule.InvokeGetSettingsWithContext(&argument, &result, &error, pCtx) : m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error);
+			ASSERT_EQ(ROSE_NOERROR, roseResult);
+
+			const auto& snapshot = m_server.InboundObservation().HandlerSnapshot();
+			ASSERT_TRUE(snapshot.WasCaptured());
+			ASSERT_TRUE(snapshot.InvokeTimeout().has_value());
+			EXPECT_EQ(uiExpectedTimeout, *snapshot.InvokeTimeout());
+		}
 	};
 
 	TEST_F(snacclib_InvokeContextRuntimeTest, InboundHandlerReceivesCustomInvokeContextBer)
@@ -867,6 +883,38 @@ namespace snacclib
 		ASSERT_GT(expected, 0u);
 		ASSERT_TRUE(m_server.InboundObservation().HandlerSnapshot().InvokeTimeout().has_value());
 		EXPECT_EQ(expected, *m_server.InboundObservation().HandlerSnapshot().InvokeTimeout());
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundDefaultInvokeTimeoutUsesConnectionDefaultOnInboundBer)
+	{
+		InitializeEndpoints(TransportEncoding::BER);
+		const auto expected = static_cast<unsigned int>(m_client.GetMaxInvokeWaitTime());
+		ASSERT_GT(expected, 0u);
+		AssertInboundSawInvokeTimeout({}, expected);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundClearedInvokeTimeoutUsesConnectionDefaultOnInboundJson)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		auto pCtx = m_client.CreateOutboundInvokeContext(250u);
+		ASSERT_TRUE(pCtx);
+		pCtx->ClearInvokeTimeout();
+		ASSERT_FALSE(pCtx->InvokeTimeout().has_value());
+		const auto expected = static_cast<unsigned int>(m_client.GetMaxInvokeWaitTime());
+		ASSERT_GT(expected, 0u);
+		AssertInboundSawInvokeTimeout(pCtx, expected);
+	}
+
+	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundClearedInvokeTimeoutUsesConnectionDefaultOnInboundBer)
+	{
+		InitializeEndpoints(TransportEncoding::BER);
+		auto pCtx = m_client.CreateOutboundInvokeContext(250u);
+		ASSERT_TRUE(pCtx);
+		pCtx->ClearInvokeTimeout();
+		ASSERT_FALSE(pCtx->InvokeTimeout().has_value());
+		const auto expected = static_cast<unsigned int>(m_client.GetMaxInvokeWaitTime());
+		ASSERT_GT(expected, 0u);
+		AssertInboundSawInvokeTimeout(pCtx, expected);
 	}
 
 	TEST_F(snacclib_InvokeContextRuntimeTest, OutboundFireAndForgetEncodesZeroTimeoutOnInbound)
