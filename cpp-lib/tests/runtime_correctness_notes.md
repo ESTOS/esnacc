@@ -417,20 +417,28 @@ Each helper detaches borrowed pointers in its destructor.
    queued behind resource limits) and the deadline has passed after receipt, product code may
    discard the work without executing the handler and without sending a late
    result/error/reject for that expired invoke.
-2. **Outbound encoding:** a non-event invoke (`invokeID != 99999`) carries `ROSEInvoke.timeout` when
-   the caller set one or the stub default is positive. Both languages use 20000 ms
+2. **Outbound encoding:** a non-event invoke (`invokeID != 99999`) resolves a timeout when the
+   caller set one or the stub default is positive. Both languages use 20000 ms
    (`defaultTimeout` / `m_lMaxInvokeWait`). An unset context copies that default onto the context
-   and onto the wire. A non-positive default is a conscious override: the optional field stays off
-   the wire and the encode still succeeds. `0` on the call is fire-and-forget and is encoded as `0`.
-   Events omit the field.
+   for the local wait. JSON also writes it on `ROSEInvoke.timeout`. BER writes it only when
+   `SetSendTimeoutInInvokes(true)` / `setSendTimeoutInInvokes(true)` was called; the default is
+   false. Set the flag only when the other side already understands `ROSEInvoke.timeout`.
+   A peer that does not know the field fails BER decoding of any invoke that carries it.
+   A non-positive default leaves the context
+   unset, so the optional field stays off the wire and the encode still succeeds. `0` on the call
+   is fire-and-forget: it is written as `0` on JSON, and on BER only when the flag is on. The
+   local wait still treats `0` as do-not-wait. Events omit the field.
+   **Cross-language parity:** `SetSendTimeoutInInvokes(bool)` / `GetSendTimeoutInInvokes()` ↔
+   `setSendTimeoutInInvokes(boolean)` / `getSendTimeoutInInvokes()`. Kotlin/Swift follow the same
+   flag when those ROSE runtimes exist.
 3. **Inbound context:** when the wire field is present, copy into `SnaccInvokeContext` /
    `ReceiveInvokeContext` via `InvokeTimeout()` / `invokeTimeout()`; absent field stays unset.
 4. **C++ / TypeScript parity:** `SetInvokeTimeout(unsigned)` / `setInvokeTimeout(number)`,
    `ClearInvokeTimeout()` / `clearInvokeTimeout()`, `std::optional<unsigned int> InvokeTimeout()`
    / `invokeTimeout(): number | undefined`, optional constructor param `invokeTimeoutMs` on
    outbound contexts (`CreateOutboundInvokeContext()` / `SendInvokeContext` partial args).
-   Three states: unset → connection default, written on the wire; `0` → fire-and-forget, written as `0` (the worker pool does not treat it as already expired); `> 0` → explicit deadline on the wire.
-5. **Backward compatibility:** peers that omit `timeout` behave as today.
+   Three states on the context: unset → connection default; `0` → fire-and-forget (the worker pool does not treat a wire `0` as already expired); `> 0` → explicit deadline. JSON writes all three resolved values. BER writes them only when `SetSendTimeoutInInvokes(true)`.
+5. **Backward compatibility:** peers that omit `timeout` behave as today. BER omits the field unless the sender enabled `SetSendTimeoutInInvokes`. Enable that flag only when the other side is aware of `ROSEInvoke.timeout`; otherwise BER decoding fails. JSON may include the field; an old JSON decoder ignores the extra name.
 
 ## 10. Cross-language runtime test matrix
 
@@ -446,7 +454,7 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 | `server_invoke_block_policy_tests`                | `TSASN1Base.invokeBlockPolicy.test.ts`            | **Partial** (subscription path only)                                                                                                                             |
 | `rose_session_subscription_tests`                 | `TSASN1Base.roseSessionSubscription.test.ts`      | **Partial** (`SnaccROSEComponent` C++-only)                                                                                                                      |
 | Pause / shutdown gate                             | `TSASN1Base.pauseRoseProcessing.test.ts`          | **Partial** (3 scenarios; lifecycle/async overlap C++-only)                                                                                                      |
-| `InvokeWireTimeoutTest` / outbound encode         | `TSROSEBase.invokeTimeout.test.ts`                | **Aligned** — unset writes the stub default; `0` is on the wire and is not an expired queue deadline                                                            |
+| `InvokeWireTimeoutTest` / outbound encode         | `TSROSEBase.invokeTimeout.test.ts`                | **Aligned** — JSON always writes the resolved timeout; BER writes it only after `SetSendTimeoutInInvokes(true)`; the local wait is unchanged; wire `0` is not an expired queue deadline |
 | `InvokeContextInitTest`                           | `TSInvokeContext.init.test.ts`                    | **Partial** (wire `operationName` vs lookup differs from C++)                                                                                                    |
 | `InvokeContextRuntimeTest` (loopback)             | `TSCallFlow.loopback.test.ts` (subset)            | **Partial** — full orphan/malformed matrix C++-only                                                                                                              |
 | `OutboundWireInvokeTimeoutReachesInboundHandler*` | —                                                 | **Blocked** — TS `receiveHandleROSEMessage` does not copy wire `timeout` into context yet                                                                        |

@@ -337,10 +337,16 @@ export abstract class TSASN1Base implements IASN1Transport {
 	protected logRawTransport = false;
 	// The default timeout for a websocket based invoke to the other side.
 	// Same 20000 ms as C++ m_lMaxInvokeWait and the ProCall client registry fallback.
-	// encodeInvoke copies a positive value onto ROSEInvoke.timeout when the caller omits invokeTimeoutMs.
-	// A non-positive override leaves the optional field off the wire and the encode still succeeds.
+	// encodeInvoke copies a positive value onto the outbound context when the caller omits invokeTimeoutMs.
+	// JSON also writes that value on ROSEInvoke.timeout. BER writes it only when sendTimeoutInInvokes is true.
+	// A non-positive override leaves the context unset, so the optional field stays off the wire. The encode still succeeds.
 	// A caller may change that value or provide a different one in the per call invokecontext.
 	protected defaultTimeout = 20000;
+	// When true, a non-event BER invoke writes ROSEInvoke.timeout.
+	// Set this only when the other side already understands the field. Otherwise that peer's BER decode fails.
+	// JSON ignores this and always writes the field. Default false.
+	// The local wait (defaultTimeout / invokeTimeout) is unchanged either way.
+	private sendTimeoutInInvokes = false;
 	// Addtitional meta data that is added to general log requests
 	protected additionalLogMeta: Record<string, unknown> | undefined;
 	// Addtitional meta data that is added to raw log requests (e.g. if you want to send data to loki)
@@ -364,13 +370,36 @@ export abstract class TSASN1Base implements IASN1Transport {
 
 	/**
 	 * Default invoke timeout in milliseconds used when a caller omits invokeTimeoutMs.
-	 * encodeInvoke copies a positive value onto the outbound context and onto ROSEInvoke.timeout.
-	 * A non-positive value leaves the optional field off the wire. The encode still succeeds.
+	 * encodeInvoke copies a positive value onto the outbound context for the local wait.
+	 * JSON also writes it on ROSEInvoke.timeout. BER writes it only when getSendTimeoutInInvokes() is true.
+	 * A non-positive value leaves the context unset, so the optional field stays off the wire. The encode still succeeds.
 	 *
 	 * @returns the stub default, in milliseconds
 	 */
 	public getDefaultInvokeTimeout(): number {
 		return this.defaultTimeout;
+	}
+
+	/**
+	 * Controls whether a non-event BER invoke writes ROSEInvoke.timeout.
+	 * JSON always writes the field. BER writes it only when bEnable is true.
+	 * Set true only when the other side already understands ROSEInvoke.timeout.
+	 * A peer that does not know the field fails BER decoding of any invoke that carries it.
+	 * The local wait is unchanged. The default is false.
+	 *
+	 * @param bEnable - true when this peer accepts ROSEInvoke.timeout on BER
+	 */
+	public setSendTimeoutInInvokes(bEnable: boolean): void {
+		this.sendTimeoutInInvokes = bEnable;
+	}
+
+	/**
+	 * True when BER invokes may carry ROSEInvoke.timeout.
+	 *
+	 * @returns the BER wire-timeout switch; JSON does not consult it
+	 */
+	public getSendTimeoutInInvokes(): boolean {
+		return this.sendTimeoutInInvokes;
 	}
 
 	/**

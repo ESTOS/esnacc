@@ -661,6 +661,8 @@ export interface IASN1Transport extends IRoseSessionSubscription {
 	getNextInvokeID(): number;
 	/** Stub default invoke timeout in milliseconds. encodeInvoke uses it when the caller left the context unset. */
 	getDefaultInvokeTimeout(): number;
+	/** True when a non-event BER invoke may write ROSEInvoke.timeout. Enable the setter only when the peer already understands the field; otherwise BER decoding fails. JSON ignores this. */
+	getSendTimeoutInInvokes(): boolean;
 	getSessionID(): string | undefined;
 	getEncoding(clientConnectionID?: string): EASN1TransportEncoding;
 	setEncoding(encoding: EASN1TransportEncoding, clientConnectionID?: string): void;
@@ -1078,15 +1080,16 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	/**
 	 * Timeout written on a non-event ROSEInvoke, taken from the first place that has one.
 	 * encodeInvoke calls this before the envelope is built and stores the choice on invokeContext
-	 * so the local watchdog and the wire use the same value.
+	 * so the local watchdog has a timeout even when the wire field is left off.
 	 * Order: the context just built (invokeTimeoutMs survived the copy), then the caller's live
 	 * context (its timeout sits in a private field that object spread drops), then a positive stub default.
 	 * An explicit 0 is kept. Events and a non-positive stub default stay unset, and the encode still succeeds.
+	 * encodeInvoke writes the returned value on ROSEInvoke only for JSON, or for BER when getSendTimeoutInInvokes() is true.
 	 *
 	 * @param callerContext - the object passed to handleInvoke or handleEvent, when the caller passed one
 	 * @param invokeContext - the outbound context for this call; updated when the resolved timeout was not already stored there
 	 * @param event - true for an event invoke (invoke id 99999)
-	 * @returns the timeout to write, or undefined when the optional field stays off the wire
+	 * @returns the local timeout, or undefined when the context stays unset
 	 */
 	private resolveInvokeTimeout(
 		callerContext: Partial<ISendInvokeContext> | undefined,
@@ -1110,6 +1113,22 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			return undefined;
 		invokeContext.setInvokeTimeout(stubTimeout);
 		return stubTimeout;
+	}
+
+	/**
+	 * True when the resolved timeout is written on ROSEInvoke.
+	 * JSON always writes it. BER writes it only when this peer was marked ready.
+	 * Events never arrive here with a timeout: resolveInvokeTimeout returns undefined for them.
+	 *
+	 * @param encoding - the encoding selected for this outbound invoke
+	 * @returns true when the optional field is written
+	 */
+	private shouldWriteInvokeTimeout(encoding: EASN1TransportEncoding): boolean {
+		if (encoding === EASN1TransportEncoding.JSON)
+			return true;
+		if (encoding === EASN1TransportEncoding.BER)
+			return this.transport.getSendTimeoutInInvokes();
+		return false;
 	}
 
 	/**
@@ -1141,6 +1160,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
 		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
 		const wireTimeoutMs = this.resolveInvokeTimeout(contextParams, invokeContext, event);
+		const writeTimeout = typeof wireTimeoutMs === "number" && this.shouldWriteInvokeTimeout(encoding);
 
 		// The root ROSE message which is now filled with its own parameters
 		const message = new ROSEMessage();
@@ -1149,7 +1169,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			...(sessionID && { sessionID }),
 			operationID,
 			...(context.bAddOperationName && { operationName }),
-			...(!event && typeof wireTimeoutMs === "number" ? { timeout: wireTimeoutMs } : {}),
+			...(writeTimeout ? { timeout: wireTimeoutMs } : {}),
 		});
 
 		// Copy the invoke for logging purposes (Contains plain json data)
