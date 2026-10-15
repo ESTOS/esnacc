@@ -11,7 +11,7 @@ A TypeScript case is visible as its own entry in the VS Code node:test tree and 
 
 - Glue specs: `typescript/*.test.ts`, emitted to `typescript/dist`, run by `scripts/run-ts-glue-test-suite.mjs`.
 - Sample client/server specs: `samples/ts-microservice/node-client/src/microservice.integration.test.ts`, emitted to `dist/microservice.integration.test.js`, run by `scripts/run-ts-microservice-tests.mjs`. The emitted name ends in `.test.js`, which is the only name the VS Code node:test explorer lists.
-- The editor includes those emitted files (`.vscode/settings.json`). CI runs the same scripts and publishes both junit files with `dorny/test-reporter`.
+- The editor includes those emitted files (`.vscode/settings.json`). CI runs the same scripts and publishes their junit files, together with `ctest --output-junit`, as one GitHub check named Tests. Each CTest case is a row in that same check.
 - Do not register these files as CTest entries. A CTest row is one entry for the whole file.
 
 ## When you add or change a test

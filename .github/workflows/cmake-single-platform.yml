@@ -58,28 +58,31 @@ jobs:
         run: cmake --build ${{github.workspace}}/build --target snacc-ts-all
 
       - name: Run TypeScript glue tests
+        if: ${{ !cancelled() }}
         run: node scripts/run-ts-glue-test-suite.mjs
 
       - name: Run TypeScript microservice tests
+        if: ${{ !cancelled() }}
         run: node scripts/run-ts-microservice-tests.mjs
         env:
           SNACC_TS_VERBOSE: "1"
 
-      # Lists every node:test case on the job summary and as its own check entry.
-      # The VS Code explorer runs the same emitted files and does not wait on this report.
-      - name: Publish TypeScript test results
+      - name: Run tests (ctest)
+        if: ${{ !cancelled() }}
+        working-directory: ${{github.workspace}}/build
+        # Each CTest case is written to ctest-junit.xml. The publish step lists it
+        # beside the TypeScript cases. See https://cmake.org/cmake/help/latest/manual/ctest.1.html
+        run: ctest --output-on-failure -C ${{env.BUILD_TYPE}} --output-junit ctest-junit.xml
+
+      # One check for every case: TypeScript node:test files and the CTest junit file.
+      # A failed suite still lets the others run, so the check shows all of them.
+      - name: Publish test results
         uses: dorny/test-reporter@v3
         if: ${{ !cancelled() }}
         with:
-          name: TypeScript tests
-          path: typescript/dist/glue-junit.xml,samples/ts-microservice/node-client/dist/microservice-junit.xml
+          name: Tests
+          path: typescript/dist/glue-junit.xml,samples/ts-microservice/node-client/dist/microservice-junit.xml,build/ctest-junit.xml
           reporter: java-junit
           list-suites: all
           list-tests: all
           fail-on-error: true
-
-      - name: Run tests (ctest)
-        working-directory: ${{github.workspace}}/build
-        # Execute tests defined by the CMake configuration.
-        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest --output-on-failure -C ${{env.BUILD_TYPE}}

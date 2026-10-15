@@ -125,7 +125,7 @@ See [.cursor/rules/test-specification-first.mdc](.cursor/rules/test-specificatio
 See [.cursor/rules/node-test-single-entry.mdc](.cursor/rules/node-test-single-entry.mdc).
 
 - Each TypeScript `test("literal name")` is its own VS Code node:test entry and its own GitHub check row.
-- Glue specs and the sample client/server specs share that rule. CI publishes both junit files. They are not CTest entries.
+- Glue specs and the sample client/server specs share that rule. CI publishes their junit files and the CTest junit file as one check named Tests. The TypeScript files are not CTest entries.
 - A test name built in a loop does not stay aligned. Use a string literal per case.
 
 ## Version and tags (`version.h`)
