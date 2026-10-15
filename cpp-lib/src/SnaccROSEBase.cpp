@@ -10,6 +10,37 @@
 
 using namespace SNACC;
 
+namespace
+{
+	/*! Clears a borrowed ROSE pointer when the enclosing send function returns.
+	 *  SendReject, SendResult and SendError store caller-owned objects in a
+	 *  temporary ROSEMessage or AsnAny. Those destructors delete the arm.
+	 *  The pointer used to be cleared only after a successful encode, so a
+	 *  SnaccException from BEnc or JEnc deleted stack objects and corrupted
+	 *  the heap. The destructor clears the slot on every exit, including
+	 *  unwind. The success path is one pointer write. */
+	template <typename T> class ClearBorrowedOnExit
+	{
+	public:
+		explicit ClearBorrowedOnExit(T*& slot) noexcept
+			: m_slot(slot)
+		{
+		}
+
+		~ClearBorrowedOnExit() noexcept
+		{
+			m_slot = nullptr;
+		}
+
+		ClearBorrowedOnExit(const ClearBorrowedOnExit&) = delete;
+		ClearBorrowedOnExit& operator=(const ClearBorrowedOnExit&) = delete;
+
+	private:
+		/*! Caller-owned pointer stored inside a temporary ROSE object. */
+		T*& m_slot;
+	};
+} // namespace
+
 SnaccInvokeContext::SnaccInvokeContext()
 {
 	pInvokeAuth = nullptr;
@@ -690,6 +721,8 @@ long SnaccROSEBase::SendReject(SNACC::ROSEReject* preject)
 	ROSEMessage rejectMsg;
 	rejectMsg.choiceId = ROSEMessage::rejectCid;
 	rejectMsg.reject = preject;
+	// Cleared on every exit so ~ROSEMessage does not delete the borrowed reject.
+	ClearBorrowedOnExit<ROSEReject> detachReject(rejectMsg.reject);
 
 	// encode now.
 	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
@@ -734,9 +767,6 @@ long SnaccROSEBase::SendReject(SNACC::ROSEReject* preject)
 	{
 		throw std::runtime_error("invalid m_eTransportEncoding");
 	}
-
-	// prevent delete of preject...
-	rejectMsg.reject = 0;
 
 	return lRoseResult;
 }
@@ -1141,6 +1171,8 @@ long SnaccROSEBase::SendResult(SNACC::ROSEResult* presult)
 	ROSEMessage ResultMsg;
 	ResultMsg.choiceId = ROSEMessage::resultCid;
 	ResultMsg.result = presult;
+	// Cleared on every exit so ~ROSEMessage does not delete the borrowed result.
+	ClearBorrowedOnExit<ROSEResult> detachResult(ResultMsg.result);
 
 	// encode now.
 	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
@@ -1186,9 +1218,6 @@ long SnaccROSEBase::SendResult(SNACC::ROSEResult* presult)
 		throw std::runtime_error("invalid m_eTransportEncoding");
 	}
 
-	// prevent delete of presult...
-	ResultMsg.result = 0;
-
 	return lRoseResult;
 }
 
@@ -1201,13 +1230,12 @@ long SnaccROSEBase::SendResult(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType*
 	result.result = new ROSEResultSeq;
 	result.result->resultValue = 0;
 	result.result->result.value = pResult;
+	// Cleared on every exit so ~ROSEResult does not delete the borrowed payload.
+	ClearBorrowedOnExit<AsnType> detachPayload(result.result->result.value);
 	if (szSessionID)
 		result.sessionID = new UTF8String(szSessionID);
 
 	lRoseResult = SendResult(&result);
-
-	// prevent delete of value...
-	result.result->result.value = 0;
 
 	return lRoseResult;
 }
@@ -1219,6 +1247,8 @@ long SnaccROSEBase::SendError(SNACC::ROSEError* perror)
 	ROSEMessage errorMsg;
 	errorMsg.choiceId = ROSEMessage::errorCid;
 	errorMsg.error = perror;
+	// Cleared on every exit so ~ROSEMessage does not delete the borrowed error.
+	ClearBorrowedOnExit<ROSEError> detachError(errorMsg.error);
 
 	// encode now.
 	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
@@ -1264,9 +1294,6 @@ long SnaccROSEBase::SendError(SNACC::ROSEError* perror)
 		throw std::runtime_error("invalid m_eTransportEncoding");
 	}
 
-	// prevent delete of perror...
-	errorMsg.error = 0;
-
 	return lRoseResult;
 }
 
@@ -1279,13 +1306,12 @@ long SnaccROSEBase::SendError(const SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 	error.error_value = 0;
 	error.error = new AsnAny;
 	error.error->value = pError;
+	// Cleared on every exit so ~ROSEError does not delete the borrowed payload.
+	ClearBorrowedOnExit<AsnType> detachPayload(error.error->value);
 	if (szSessionID)
 		error.sessionID = new UTF8String(szSessionID);
 
 	lRoseResult = SendError(&error);
-
-	// prevent delete of value...
-	error.error->value = 0;
 
 	return lRoseResult;
 }
