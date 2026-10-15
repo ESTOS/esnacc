@@ -48,7 +48,7 @@ jobs:
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_TESTING=ON -DSNACC_CTEST_REGISTER_TS=ON
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_TESTING=ON
 
       - name: Build
         # Build your program with the given configuration
@@ -60,14 +60,19 @@ jobs:
       - name: Run TypeScript glue tests
         run: node scripts/run-ts-glue-test-suite.mjs
 
-      # Lists every glue case on the job summary and as its own check entry.
+      - name: Run TypeScript microservice tests
+        run: node scripts/run-ts-microservice-tests.mjs
+        env:
+          SNACC_TS_VERBOSE: "1"
+
+      # Lists every node:test case on the job summary and as its own check entry.
       # The VS Code explorer runs the same emitted files and does not wait on this report.
-      - name: Publish TypeScript glue test results
+      - name: Publish TypeScript test results
         uses: dorny/test-reporter@v3
         if: ${{ !cancelled() }}
         with:
-          name: TypeScript glue tests
-          path: typescript/dist/glue-junit.xml
+          name: TypeScript tests
+          path: typescript/dist/glue-junit.xml,samples/ts-microservice/node-client/dist/microservice-junit.xml
           reporter: java-junit
           list-suites: all
           list-tests: all
@@ -75,10 +80,6 @@ jobs:
 
       - name: Run tests (ctest)
         working-directory: ${{github.workspace}}/build
-        env:
-          SNACC_TS_VERBOSE: "1"
         # Execute tests defined by the CMake configuration.
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: |
-          ctest --output-on-failure -C ${{env.BUILD_TYPE}} -E typescript_run_ts_microservice
-          ctest --output-on-failure -C ${{env.BUILD_TYPE}} -R typescript_run_ts_microservice -V
+        run: ctest --output-on-failure -C ${{env.BUILD_TYPE}}

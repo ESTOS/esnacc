@@ -35,7 +35,7 @@ Prepare the TypeScript sample packages from the `samples` folder (after building
 
 This generates stubs (TS + OpenAPI) and runs `pnpm install` for the `ts-microservice` workspace (`browser-client`, `node-server`, `node-client`). Requires **pnpm 11+** and **Node 26+**. Lockfile: `ts-microservice/pnpm-lock.yaml`.
 
-CMake/CI uses the same `prepare.js` (with `--frozen-lockfile`) via the `snacc-ts-prepare` target before building and running `typescript_run_ts_microservice_sample_node_client_against_node_server`.
+CMake/CI uses the same `prepare.js` (with `--frozen-lockfile`) via the `snacc-ts-prepare` target, builds `snacc-ts-all`, then runs `scripts/run-ts-microservice-tests.mjs`. Each `test()` is its own GitHub row.
 
 Optional flags: `--skip-stubs`, `--skip-install`, `--frozen-lockfile`, `--clean` (delete each package's `node_modules` before `pnpm install`; or set `SNACC_PREPARE_CLEAN=1`). On Windows, `prepare.bat` waits 10 seconds on success unless `SNACC_NO_PAUSE=1` is set.
 
@@ -84,7 +84,7 @@ cd node-server && pnpm run build
 cd ../node-client && pnpm run build && pnpm test
 ```
 
-In GitHub Actions, the same flow is driven by CMake targets `snacc-ts-prepare`, `snacc-ts-all`, and the `typescript_run_ts_microservice_sample_node_client_against_node_server` ctest entry.
+In GitHub Actions, the same flow is driven by CMake targets `snacc-ts-prepare` and `snacc-ts-all`, then `node scripts/run-ts-microservice-tests.mjs`. The VS Code node:test tree reads the same `dist/microservice.integration.test.js`.
 
 ## Running the browser demo
 

@@ -31,8 +31,7 @@
 	"cmake.buildDirectory": "${workspaceFolder}/build/x64_vc145",
 	"cmake.configureSettings": {
 		"BUILD_TESTING": "ON",
-		"MSVC_STATIC_RUNTIME": "ON",
-		"SNACC_CTEST_REGISTER_TS": "ON"
+		"MSVC_STATIC_RUNTIME": "ON"
 	},
 	"cmake.buildBeforeRun": true,
 	"cmake.ctest.testConfiguration": "Release",
@@ -43,7 +42,10 @@
 	},
 	"typescript.tsdk": "typescript/node_modules/typescript/lib",
 	"typescript.enablePromptUseWorkspaceTsdk": true,
-	"nodejs-testing.include": ["typescript/dist"],
+	"nodejs-testing.include": [
+		"typescript/dist",
+		"samples/ts-microservice/node-client/dist"
+	],
 	"nodejs-testing.exclude": ["**/node_modules/**"],
 	"nodejs-testing.pretest": ["node", "${workspaceFolder}/scripts/ensure-ts-glue-for-tests.mjs"],
 	"nodejs-testing.env": {

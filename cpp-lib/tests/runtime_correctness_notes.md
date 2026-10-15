@@ -507,7 +507,7 @@ encode/decode in `SNACCROSE_Converter.ts` (not test harness).
 1. `typescript/support/sample_runtime_harness.ts` — loopback transport + sample modules.
 2. Sample stubs copied in `scripts/run_gluecode_tests.*` (`ENetUC_Settings_Manager`, `ENetUC_Event_Manager`).
 3. `TSCallFlow.loopback.test.ts`, `TSLogicalFailure.loopback.test.ts`, `TSTransportFailure.loopback.test.ts`.
-4. TypeScript glue specs run as one `node --test` on `typescript/dist` (`scripts/run-ts-glue-test-suite.mjs`). The VS Code node:test explorer, `pnpm test`, and CI use that command. It copies newer glue sources and emits when TypeScript sources change. It does not build the compiler or run `samples/prepare.js`. BER/JSON matrix cases use `test("… (BER)")` / `test("… (JSON)")` string literals so each case is its own explorer entry and its own GitHub row.
+4. TypeScript glue specs run as one `node --test` on `typescript/dist` (`scripts/run-ts-glue-test-suite.mjs`). The VS Code node:test explorer, `pnpm test`, and CI use that command. It copies newer glue sources and emits when TypeScript sources change. It does not build the compiler or run `samples/prepare.js`. BER/JSON matrix cases use `test("… (BER)")` / `test("… (JSON)")` string literals so each case is its own explorer entry and its own GitHub row. The sample client/server file `samples/ts-microservice/node-client/src/microservice.integration.test.ts` uses the same literal `test()` calls. CI runs `scripts/run-ts-microservice-tests.mjs` and publishes that junit file beside the glue report.
 
 ### Block C — Telemetry in TypeScript (largest product gap)
 
