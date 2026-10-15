@@ -13,7 +13,7 @@
 		"build": "tsc -p .",
 		"clean": "npx rimraf dist",
 		"lint": "dprint fmt && oxlint",
-		"test": "node --test dist/run-tests.js",
+		"test": "node ../../../scripts/run-ts-microservice-tests.mjs",
 		"preinstall": "node check-pm.js"
 	},
 	"license": "UNLICENSED",

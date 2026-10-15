@@ -13,7 +13,7 @@
 		"setup": "node ../scripts/setup-snacc-tests.mjs",
 		"prepare-stub": "node ../scripts/prepare-ts-glue-stub.mjs --clean",
 		"test": "node ../scripts/run-ts-glue-test-suite.mjs",
-		"test:watch": "node ../scripts/prepare-ts-glue-stub.mjs && node --import ../scripts/ts-glue-test-register.mjs --import tsx --test --watch *.test.ts"
+		"test:watch": "node ../scripts/run-ts-glue-test-suite.mjs --watch"
 	},
 	"dependencies": {
 		"@estos/asn1ts": "^3.2.5"

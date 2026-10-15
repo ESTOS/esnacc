@@ -120,6 +120,14 @@ See [.cursor/rules/test-specification-first.mdc](.cursor/rules/test-specificatio
 - When writing tests, focus on specifying the API — not on getting a green suite.
 - **Only exception:** the user explicitly asks to change tests, change product code, or revise the spec.
 
+### TypeScript tests are one entry in both places
+
+See [.cursor/rules/node-test-single-entry.mdc](.cursor/rules/node-test-single-entry.mdc).
+
+- Each TypeScript `test("literal name")` is its own VS Code node:test entry and its own GitHub check row.
+- Glue specs and the sample client/server specs share that rule. CI publishes their junit files and the CTest junit file as one check named Tests. The TypeScript files are not CTest entries.
+- A test name built in a loop does not stay aligned. Use a string literal per case.
+
 ## Version and tags (`version.h`)
 
 See [.cursor/rules/snacclib7-release-workflow.mdc](.cursor/rules/snacclib7-release-workflow.mdc).

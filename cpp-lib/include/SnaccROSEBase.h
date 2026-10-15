@@ -162,14 +162,30 @@ public:
 	static void SetTelemetryCallback(SnaccTelemetryCallback* pCallBack);
 
 	/*! Set timeout for function invokes.
-		Wait time in milliseconds. Send copies a positive value onto ROSEInvoke.timeout when the caller left the context unset.
-		A non-positive value leaves the optional field off the wire. The encode still succeeds. */
+		Wait time in milliseconds used on this side when the caller left the context unset.
+		A positive value is also the number written to ROSEInvoke.timeout when the encoding allows it.
+		JSON always writes that field. BER writes it only after SetSendTimeoutInInvokes(true).
+		A non-positive value leaves the context unset, so the optional field stays off the wire. The encode still succeeds. */
 	void SetMaxInvokeWaitTime(long lMaxInvokeWait);
 
 	/*! Connection default invoke timeout in milliseconds. */
 	long GetMaxInvokeWaitTime() const
 	{
 		return m_lMaxInvokeWait;
+	}
+
+	/*! Controls whether a non-event BER invoke writes ROSEInvoke.timeout.
+		JSON always writes the field when the context has a timeout, including 0.
+		BER writes it only when bEnable is true. The default is false.
+		Set this true only when the other side already understands ROSEInvoke.timeout.
+		A peer that does not know the field fails BER decoding of any invoke that carries it.
+		The local wait from SetMaxInvokeWaitTime or SetInvokeTimeout is unchanged either way. */
+	void SetSendTimeoutInInvokes(bool bEnable);
+
+	/*! True when BER invokes may carry ROSEInvoke.timeout. */
+	bool GetSendTimeoutInInvokes() const
+	{
+		return m_bSendTimeoutInInvokes;
 	}
 
 	/*! Ends the current transport ROSE session: blocks new invokes/events and completes
@@ -518,6 +534,8 @@ private:
 	const std::wstring m_strClassName;
 	/*! Maximum wait time (milliseconds) for a function to return default: 20000 ms*/
 	long m_lMaxInvokeWait{20000};
+	/*! When true, a non-event BER invoke writes ROSEInvoke.timeout. Set this only when the other side already understands the field; otherwise that peer's BER decode fails. JSON ignores this and always writes the field. Default false. */
+	bool m_bSendTimeoutInInvokes{false};
 	/*! False while PauseRoseProcessing() shutdown gate is active for this transport session. */
 	bool m_bProcessingAllowed{true};
 	/*! The counter for the InvokeIds */

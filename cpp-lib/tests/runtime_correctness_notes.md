@@ -215,6 +215,21 @@ optional reject, and telemetry:
 - `PublicApiSmokeTest.OnBinaryDataBlockResultDecodeErrorsInvokeHookBer`
 - `PublicApiSmokeTest.OnBinaryDataBlockResultDecodeErrorsInvokeHookJson`
 
+### Transport payload notations (BUILDSYS-661)
+
+`EAsnLogLevel` selects the notation. Each successfully handled ROSE PDU (invoke, result, error, reject, event) is logged in every enabled notation, inbound and outbound. The JSON entry and the BER hex entry are separate log lines.
+
+| Enabled bits | BER wire | JSON wire |
+| --- | --- | --- |
+| JSON | pretty decoded JSON of the ROSE message (`getPrettyPrinted`, so the payload contains a newline) | pretty JSON of the payload |
+| BER | hex of the BER bytes. With the JSON bit also set the line is wrapped as `"BER" : "AA BB"`. With only the BER bit the payload is the hex text (a reject starts with `A4`) | no hex; the BER bit applies to BER payloads |
+| JSON_AND_BER | both of the above | pretty JSON only |
+| JSON_ALWAYS_PRETTY_PRINTED | pretty JSON | pretty JSON, including when the inbound payload is a single line |
+
+`logging_tests.cpp` is the spec. Inbound BER logs hex at receive with `pMsg == nullptr` for every choice. Decoded JSON is written later: invoke in `DecodeInvoke`, result and error in `HandleInvokeResult` after the ANY graft, and reject in `HandleInvokeResult` with no graft because a reject has no opaque ANY. `BerRejectLoggedAsPrettyJsonAndHex` requires that inbound JSON line.
+
+TypeScript `logRawTransport` is still a boolean (decoded object or BER hex, not both). Aligning that with this table is BUILDSYS-661.
+
 ## 5. Inbound Decode Layers, Reject Policy, and BER vs JSON
 
 ### Why BER and JSON are not symmetric at the wire layer
@@ -417,20 +432,28 @@ Each helper detaches borrowed pointers in its destructor.
    queued behind resource limits) and the deadline has passed after receipt, product code may
    discard the work without executing the handler and without sending a late
    result/error/reject for that expired invoke.
-2. **Outbound encoding:** a non-event invoke (`invokeID != 99999`) carries `ROSEInvoke.timeout` when
-   the caller set one or the stub default is positive. Both languages use 20000 ms
+2. **Outbound encoding:** a non-event invoke (`invokeID != 99999`) resolves a timeout when the
+   caller set one or the stub default is positive. Both languages use 20000 ms
    (`defaultTimeout` / `m_lMaxInvokeWait`). An unset context copies that default onto the context
-   and onto the wire. A non-positive default is a conscious override: the optional field stays off
-   the wire and the encode still succeeds. `0` on the call is fire-and-forget and is encoded as `0`.
-   Events omit the field.
+   for the local wait. JSON also writes it on `ROSEInvoke.timeout`. BER writes it only when
+   `SetSendTimeoutInInvokes(true)` / `setSendTimeoutInInvokes(true)` was called; the default is
+   false. Set the flag only when the other side already understands `ROSEInvoke.timeout`.
+   A peer that does not know the field fails BER decoding of any invoke that carries it.
+   A non-positive default leaves the context
+   unset, so the optional field stays off the wire and the encode still succeeds. `0` on the call
+   is fire-and-forget: it is written as `0` on JSON, and on BER only when the flag is on. The
+   local wait still treats `0` as do-not-wait. Events omit the field.
+   **Cross-language parity:** `SetSendTimeoutInInvokes(bool)` / `GetSendTimeoutInInvokes()` ↔
+   `setSendTimeoutInInvokes(boolean)` / `getSendTimeoutInInvokes()`. Kotlin/Swift follow the same
+   flag when those ROSE runtimes exist.
 3. **Inbound context:** when the wire field is present, copy into `SnaccInvokeContext` /
    `ReceiveInvokeContext` via `InvokeTimeout()` / `invokeTimeout()`; absent field stays unset.
 4. **C++ / TypeScript parity:** `SetInvokeTimeout(unsigned)` / `setInvokeTimeout(number)`,
    `ClearInvokeTimeout()` / `clearInvokeTimeout()`, `std::optional<unsigned int> InvokeTimeout()`
    / `invokeTimeout(): number | undefined`, optional constructor param `invokeTimeoutMs` on
    outbound contexts (`CreateOutboundInvokeContext()` / `SendInvokeContext` partial args).
-   Three states: unset → connection default, written on the wire; `0` → fire-and-forget, written as `0` (the worker pool does not treat it as already expired); `> 0` → explicit deadline on the wire.
-5. **Backward compatibility:** peers that omit `timeout` behave as today.
+   Three states on the context: unset → connection default; `0` → fire-and-forget (the worker pool does not treat a wire `0` as already expired); `> 0` → explicit deadline. JSON writes all three resolved values. BER writes them only when `SetSendTimeoutInInvokes(true)`.
+5. **Backward compatibility:** peers that omit `timeout` behave as today. BER omits the field unless the sender enabled `SetSendTimeoutInInvokes`. Enable that flag only when the other side is aware of `ROSEInvoke.timeout`; otherwise BER decoding fails. JSON may include the field; an old JSON decoder ignores the extra name.
 
 ## 10. Cross-language runtime test matrix
 
@@ -446,7 +469,7 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 | `server_invoke_block_policy_tests`                | `TSASN1Base.invokeBlockPolicy.test.ts`            | **Partial** (subscription path only)                                                                                                                             |
 | `rose_session_subscription_tests`                 | `TSASN1Base.roseSessionSubscription.test.ts`      | **Partial** (`SnaccROSEComponent` C++-only)                                                                                                                      |
 | Pause / shutdown gate                             | `TSASN1Base.pauseRoseProcessing.test.ts`          | **Partial** (3 scenarios; lifecycle/async overlap C++-only)                                                                                                      |
-| `InvokeWireTimeoutTest` / outbound encode         | `TSROSEBase.invokeTimeout.test.ts`                | **Aligned** — unset writes the stub default; `0` is on the wire and is not an expired queue deadline                                                            |
+| `InvokeWireTimeoutTest` / outbound encode         | `TSROSEBase.invokeTimeout.test.ts`                | **Aligned** — JSON always writes the resolved timeout; BER writes it only after `SetSendTimeoutInInvokes(true)`; the local wait is unchanged; wire `0` is not an expired queue deadline |
 | `InvokeContextInitTest`                           | `TSInvokeContext.init.test.ts`                    | **Partial** (wire `operationName` vs lookup differs from C++)                                                                                                    |
 | `InvokeContextRuntimeTest` (loopback)             | `TSCallFlow.loopback.test.ts` (subset)            | **Partial** — full orphan/malformed matrix C++-only                                                                                                              |
 | `OutboundWireInvokeTimeoutReachesInboundHandler*` | —                                                 | **Blocked** — TS `receiveHandleROSEMessage` does not copy wire `timeout` into context yet                                                                        |
@@ -454,7 +477,7 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 | `logical_failure_tests`                           | `TSLogicalFailure.loopback.test.ts`               | **Partial** — TS returns wire `InvokeProblemenum` (not C++ `ROSE_REJECT_*`); BER loopback loses `invokeProblem=1` on reject round-trip (spec failure, see below) |
 | `transport_failure_tests`                         | `TSTransportFailure.loopback.test.ts`             | **Partial** (timeout code `requestTimedOut` vs `ROSE_TE_TIMEOUT`)                                                                                                |
 | `async_invoke_tests`                              | —                                                 | **Blocked** — Promise model; no `SetAsyncCompletion` surface                                                                                                     |
-| `logging_tests`                                   | —                                                 | **Blocked** — no `ConfigureFileLogging` / transport log-flag API in TS                                                                                           |
+| `logging_tests`                                   | —                                                 | **Blocked** — C++ bitmask is specified; TS `logRawTransport` is still a boolean (hex or object, not both). Alignment is BUILDSYS-661. |
 | `telemetry_tests`                                 | —                                                 | **Blocked** — no telemetry subsystem in TS glue                                                                                                                  |
 | `lifecycle_tests`                                 | —                                                 | **Blocked** — partial overlap with pause tests                                                                                                                   |
 | `public_api_tests` (decode hooks, file log)       | —                                                 | **Blocked** — C++-specific APIs                                                                                                                                  |
@@ -484,7 +507,7 @@ encode/decode in `SNACCROSE_Converter.ts` (not test harness).
 1. `typescript/support/sample_runtime_harness.ts` — loopback transport + sample modules.
 2. Sample stubs copied in `scripts/run_gluecode_tests.*` (`ENetUC_Settings_Manager`, `ENetUC_Event_Manager`).
 3. `TSCallFlow.loopback.test.ts`, `TSLogicalFailure.loopback.test.ts`, `TSTransportFailure.loopback.test.ts`.
-4. CMake `ctest` (`SNACC_CTEST_REGISTER_TS=ON` in CI and in the VS Code CMake settings): each top-level `test("…")` literal in `typescript/*.test.ts` is its own CTest entry (`typescript/<file>/<name>`), discovered by `scripts/list-ts-glue-tests.mjs` and run by `scripts/run-ts-glue-one-test.mjs`. The CMake test view lists those entries beside the C++ suites. `pnpm test` still runs the suite in one process. BER/JSON matrix cases use top-level `test("… (BER)")` / `test("… (JSON)")` literals so static discovery matches CI (`node --test` registers loop bodies at runtime only).
+4. TypeScript glue specs run as one `node --test` on `typescript/dist` (`scripts/run-ts-glue-test-suite.mjs`). The VS Code node:test explorer, `pnpm test`, and CI use that command. It copies newer glue sources and emits when TypeScript sources change. It does not build the compiler or run `samples/prepare.js`. BER/JSON matrix cases use `test("… (BER)")` / `test("… (JSON)")` string literals so each case is its own explorer entry and its own GitHub row. The sample client/server file `samples/ts-microservice/node-client/src/microservice.integration.test.ts` uses the same literal `test()` calls. CI runs `scripts/run-ts-microservice-tests.mjs` and publishes that junit file beside the glue report.
 
 ### Block C — Telemetry in TypeScript (largest product gap)
 

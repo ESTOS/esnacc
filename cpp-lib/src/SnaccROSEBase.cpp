@@ -34,17 +34,25 @@ namespace
 		return pReject->details->getASCII() == szExpected;
 	}
 
-	// Encodes ROSEInvoke.timeout for every non-event invoke that has a timeout, including 0.
-	bool ShouldEncodeWireInvokeTimeout(const SnaccInvokeContext& ctx, const SNACC::ROSEInvoke& invoke)
+	// True when Send should write ROSEInvoke.timeout for this invoke.
+	// The context must already hold a value, including 0. Events (invoke id 99999) never carry the field.
+	// JSON always writes it. BER writes it only when the stub was told this peer accepts the field.
+	bool ShouldEncodeWireInvokeTimeout(const SnaccInvokeContext& ctx, const SNACC::ROSEInvoke& invoke, TransportEncoding encoding, bool bSendTimeoutInInvokes)
 	{
 		if (static_cast<AsnIntType>(invoke.invokeID) == 99999)
 			return false;
-		return ctx.InvokeTimeout().has_value();
+		if (!ctx.InvokeTimeout().has_value())
+			return false;
+		if (encoding == TransportEncoding::JSON || encoding == TransportEncoding::JSON_NO_HEADING)
+			return true;
+		if (encoding == TransportEncoding::BER)
+			return bSendTimeoutInInvokes;
+		return false;
 	}
 
-	// Stores a positive connection default on an unset non-event context.
-	// A non-positive default is a conscious override: the optional field stays off the wire.
-	// Explicit 0 is left unchanged and is encoded.
+	// Stores a positive connection default on an unset non-event context so the local wait uses it.
+	// A non-positive default leaves the context unset. Explicit 0 is left unchanged.
+	// ShouldEncodeWireInvokeTimeout decides whether that value is written on the wire.
 	void PrepareOutboundInvokeTimeout(SnaccInvokeContext& ctx, const SNACC::ROSEInvoke& invoke, long lMaxInvokeWait)
 	{
 		if (static_cast<AsnIntType>(invoke.invokeID) == 99999)
@@ -292,13 +300,14 @@ namespace
 		SNACC::ROSEInvoke* m_pInvoke = nullptr;
 	};
 
-	// Adds ROSEInvoke.timeout for encoding. Non-event invokes always carry the field, including 0.
+	// Adds ROSEInvoke.timeout for the duration of Send, then clears it so the caller's invoke is unchanged.
+	// Non-event invokes carry the field, including 0, only when ShouldEncodeWireInvokeTimeout agrees.
 	class ScopedInvokeWireTimeout final
 	{
 	public:
-		ScopedInvokeWireTimeout(SNACC::ROSEInvoke& invoke, const SnaccInvokeContext& ctx)
+		ScopedInvokeWireTimeout(SNACC::ROSEInvoke& invoke, const SnaccInvokeContext& ctx, TransportEncoding encoding, bool bSendTimeoutInInvokes)
 		{
-			if (!ShouldEncodeWireInvokeTimeout(ctx, invoke) || invoke.timeout)
+			if (!ShouldEncodeWireInvokeTimeout(ctx, invoke, encoding, bSendTimeoutInInvokes) || invoke.timeout)
 				return;
 
 			m_pInvoke = &invoke;
@@ -944,6 +953,15 @@ void SnaccROSEBase::SetMaxInvokeWaitTime(long lMaxInvokeWait)
 {
 	std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
 	m_lMaxInvokeWait = lMaxInvokeWait;
+}
+
+// Turns BER encoding of ROSEInvoke.timeout on or off for this stub.
+// Enable it only when the other side already understands the field. Otherwise that peer's BER decode fails.
+// JSON ignores the flag. The local wait is unchanged. Default is off.
+void SnaccROSEBase::SetSendTimeoutInInvokes(bool bEnable)
+{
+	std::lock_guard<std::mutex> guard(m_InternalProtectMutex);
+	m_bSendTimeoutInInvokes = bEnable;
 }
 
 void SnaccROSEBase::CompleteAllPendingOperations()
@@ -1792,7 +1810,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 
 	ROSEMessage invokeMsg;
 	const ScopedEncodeInvokeBorrow invokeBorrow(invokeMsg, *pInvoke);
-	const ScopedInvokeWireTimeout wireTimeout(*pInvoke, ctx);
+	const ScopedInvokeWireTimeout wireTimeout(*pInvoke, ctx, m_eTransportEncoding, m_bSendTimeoutInInvokes);
 
 	if (m_eTransportEncoding == SNACC::TransportEncoding::BER)
 	{
@@ -2583,6 +2601,12 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessag
 				lRoseResult = ROSE_RE_DECODE_FAILED;
 			}
 		}
+	}
+	else if (responseMsg.choiceId == ROSEMessage::rejectCid && responseMsg.reject && m_eTransportEncoding == SNACC::TransportEncoding::BER)
+	{
+		// Reject has no opaque ANY, so there is nothing to graft. Log the decoded envelope here,
+		// the same stage as the result and error JSON lines. The receive path already logged the BER hex.
+		LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, nullptr, 0, &responseMsg, nullptr);
 	}
 
 	return lRoseResult;

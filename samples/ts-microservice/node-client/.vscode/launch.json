@@ -12,7 +12,7 @@
 			"runtimeArgs": [
 				"--test"
 			],
-			"program": "${workspaceFolder}/dist/run-tests.js",
+			"program": "${workspaceFolder}/dist/microservice.integration.test.js",
 			"cwd": "${workspaceFolder}",
 			"console": "integratedTerminal",
 			"smartStep": true,

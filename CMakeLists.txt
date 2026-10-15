@@ -80,11 +80,7 @@ add_subdirectory(cpp-lib)
 add_subdirectory(compiler)
 
 if(BUILD_TESTING)
-	# Per-case CTest entries for TypeScript glue specs, plus the microservice integration test.
-	# The VS Code CMake test view turns this on so those cases sit next to the C++ suites.
-	# CI sets the same option. Each glue test() is its own ctest after stub prepare.
-	option(SNACC_CTEST_REGISTER_TS "Register TypeScript glue cases and integration CTest entries (CI)" OFF)
-
+	# TypeScript tests are node --test, not CTest. CI and VS Code both list each test().
 	add_subdirectory(compiler/tests/cpp)
 	add_subdirectory(cpp-lib/tests)
 	add_subdirectory(typescript)

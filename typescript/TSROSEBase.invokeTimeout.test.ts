@@ -1,6 +1,7 @@
 // Run: npx tsx typescript/TSROSEBase.invokeTimeout.test.ts
 // Parity: cpp-lib/tests/invoke_context_tests.cpp (InvokeWireTimeoutTest, CreateOutboundInvokeContextOptionalTimeout, outbound wire encode)
-// Unset caller timeout: both languages write the stub default onto ROSEInvoke.timeout. 0 is encoded as 0.
+// JSON always writes the resolved timeout onto ROSEInvoke.timeout. BER writes it only after setSendTimeoutInInvokes(true).
+// The outbound context still stores the local wait either way. 0 is fire-and-forget and is not an expired queue deadline.
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as ENetUC_Common from "./stub/ENetUC_Common.js";
@@ -40,25 +41,31 @@ class EmptyDefaultTransport extends CapturingClientTransport {
 /**
  * Encodes one outbound invoke or event and checks ROSEInvoke.timeout on the invoke and the decoded payload.
  * The timeout tests call this for JSON and BER. A false includeContext is a call with no invoke context.
- * "stub" expects the transport default. "omit" expects the optional field to stay off the wire.
+ * "stub" expects the transport default on the wire and on the context.
+ * "omit" expects the optional field and the context timeout to stay unset.
+ * "local-only" expects the wire field to stay off and the context to keep the local wait.
  *
  * @param options.encoding - JSON or BER for this call
  * @param options.transport - capturing transport; a new JSON client is created when omitted
  * @param options.context - caller context, passed through unchanged when includeContext is true
  * @param options.includeContext - false omits the context argument
- * @param options.expected - milliseconds, the stub default, or an omitted field
+ * @param options.expected - milliseconds, the stub default, an omitted field, or a local-only timeout
  * @param options.event - true sends an event (invoke id 99999), which never carries a timeout
+ * @param options.sendTimeoutInInvokes - when true, BER may write ROSEInvoke.timeout
  */
 async function assertEncodedTimeout(options: {
 	encoding: EASN1TransportEncoding;
 	transport?: CapturingClientTransport;
 	context?: object;
 	includeContext: boolean;
-	expected: number | "stub" | "omit";
+	expected: number | "stub" | "omit" | "local-only";
 	event?: boolean;
+	sendTimeoutInInvokes?: boolean;
 }): Promise<void> {
 	const transport = options.transport ?? new CapturingClientTransport();
 	transport.setEncoding(options.encoding);
+	if (options.sendTimeoutInInvokes)
+		transport.setSendTimeoutInInvokes(true);
 	const operationID = options.event ? 4150 : 4100;
 	const operationName = options.event ? "asnTestEvent" : "asnTestInvoke";
 	transport.registerOperation(
@@ -86,11 +93,17 @@ async function assertEncodedTimeout(options: {
 	}
 
 	assert.ok(transport.lastInvokeData);
-	const expectedMs = options.expected === "stub" ? transport.getDefaultInvokeTimeout() : options.expected;
-	if (expectedMs === "omit")
+	const callerTimeout = localTimeoutFromCaller(options.includeContext ? options.context : undefined);
+	const stubTimeout = transport.getDefaultInvokeTimeout();
+	const expectedMs = options.expected === "stub"
+		? stubTimeout
+		: options.expected === "local-only"
+			? (callerTimeout !== undefined ? callerTimeout : (stubTimeout > 0 ? stubTimeout : undefined))
+			: options.expected;
+	if (expectedMs === "omit" || options.expected === "local-only")
 		assert.equal(transport.lastInvokeData.invoke.timeout, undefined);
 	else
-		assertRoseInvokeTimeoutPresent(transport.lastInvokeData.invoke.timeout, expectedMs);
+		assertRoseInvokeTimeoutPresent(transport.lastInvokeData.invoke.timeout, expectedWireMs(expectedMs));
 	if (!options.event) {
 		if (expectedMs === "omit")
 			assert.equal(transport.lastInvokeData.invokeContext.invokeTimeout(), undefined);
@@ -107,10 +120,41 @@ async function assertEncodedTimeout(options: {
 		: ROSEMessage_Converter.fromJSON(payLoad as object, errors)) as ROSEMessage;
 	assert.equal(errors.length, 0, errors.getDiagnostic());
 	assert.ok(decoded.invoke);
-	if (expectedMs === "omit")
+	if (expectedMs === "omit" || options.expected === "local-only")
 		assert.equal(decoded.invoke.timeout, undefined);
 	else
-		assertRoseInvokeTimeoutPresent(decoded.invoke.timeout, expectedMs);
+		assertRoseInvokeTimeoutPresent(decoded.invoke.timeout, expectedWireMs(expectedMs));
+}
+
+/**
+ * Narrows a resolved expectation to the milliseconds that must appear on the wire.
+ * Callers use this only after they have rejected the omit and local-only cases.
+ *
+ * @param expectedMs - milliseconds, or the omit sentinel that must not reach this helper
+ * @returns the millisecond value
+ */
+function expectedWireMs(expectedMs: number | "omit" | undefined): number {
+	if (typeof expectedMs !== "number")
+		throw new Error("expected a numeric ROSEInvoke.timeout");
+	return expectedMs;
+}
+
+/**
+ * Reads a caller timeout from a plain params object or a live invoke context.
+ * A cleared context returns undefined so the stub default can fill the local wait.
+ *
+ * @param context - the object passed as the invoke context, when one was passed
+ * @returns the caller timeout, including 0, or undefined when the caller left it unset
+ */
+function localTimeoutFromCaller(context: object | undefined): number | undefined {
+	if (!context)
+		return undefined;
+	const live = context as { invokeTimeout?: () => number | undefined; invokeTimeoutMs?: number };
+	if (typeof live.invokeTimeout === "function")
+		return live.invokeTimeout();
+	if (typeof live.invokeTimeoutMs === "number")
+		return live.invokeTimeoutMs;
+	return undefined;
 }
 
 test("CreateOutboundInvokeContextOptionalTimeout: unset, zero, and explicit ms", () => {
@@ -558,7 +602,7 @@ test("OutboundEventOmitsWireTimeoutEvenWhenSet", async () => {
 });
 
 test("OutboundWithoutInvokeContextUsesStubDefaultBer", async () => {
-	await assertEncodedTimeout({ encoding: EASN1TransportEncoding.BER, includeContext: false, expected: "stub" });
+	await assertEncodedTimeout({ encoding: EASN1TransportEncoding.BER, includeContext: false, expected: "local-only" });
 });
 
 test("OutboundDefaultInvokeTimeoutUsesStubDefaultBer", async () => {
@@ -566,7 +610,7 @@ test("OutboundDefaultInvokeTimeoutUsesStubDefaultBer", async () => {
 		encoding: EASN1TransportEncoding.BER,
 		includeContext: true,
 		context: { encoding: EASN1TransportEncoding.BER },
-		expected: "stub",
+		expected: "local-only",
 	});
 });
 
@@ -575,7 +619,7 @@ test("OutboundUndefinedInvokeTimeoutUsesStubDefaultBer", async () => {
 		encoding: EASN1TransportEncoding.BER,
 		includeContext: true,
 		context: { invokeTimeoutMs: undefined, encoding: EASN1TransportEncoding.BER },
-		expected: "stub",
+		expected: "local-only",
 	});
 });
 
@@ -586,7 +630,7 @@ test("OutboundClearedInvokeContextUsesStubDefaultBer", async () => {
 		encoding: EASN1TransportEncoding.BER,
 		includeContext: true,
 		context: callerContext,
-		expected: "stub",
+		expected: "local-only",
 	});
 });
 
@@ -595,7 +639,7 @@ test("OutboundWireInvokeTimeoutEncodesOnInvokeBer", async () => {
 		encoding: EASN1TransportEncoding.BER,
 		includeContext: true,
 		context: { invokeTimeoutMs: 500, encoding: EASN1TransportEncoding.BER },
-		expected: 500,
+		expected: "local-only",
 	});
 });
 
@@ -605,7 +649,7 @@ test("OutboundInvokeContextTimeoutEncodesOnInvokeBer", async () => {
 		encoding: EASN1TransportEncoding.BER,
 		includeContext: true,
 		context: callerContext,
-		expected: 750,
+		expected: "local-only",
 	});
 });
 
@@ -614,7 +658,36 @@ test("OutboundFireAndForgetEncodesZeroTimeoutBer", async () => {
 		encoding: EASN1TransportEncoding.BER,
 		includeContext: true,
 		context: { invokeTimeoutMs: 0, encoding: EASN1TransportEncoding.BER },
+		expected: "local-only",
+	});
+});
+
+test("OutboundWithoutInvokeContextWritesTimeoutWhenEnabledBer", async () => {
+	await assertEncodedTimeout({
+		encoding: EASN1TransportEncoding.BER,
+		includeContext: false,
+		expected: "stub",
+		sendTimeoutInInvokes: true,
+	});
+});
+
+test("OutboundWireInvokeTimeoutEncodesWhenEnabledBer", async () => {
+	await assertEncodedTimeout({
+		encoding: EASN1TransportEncoding.BER,
+		includeContext: true,
+		context: { invokeTimeoutMs: 500, encoding: EASN1TransportEncoding.BER },
+		expected: 500,
+		sendTimeoutInInvokes: true,
+	});
+});
+
+test("OutboundFireAndForgetEncodesZeroTimeoutWhenEnabledBer", async () => {
+	await assertEncodedTimeout({
+		encoding: EASN1TransportEncoding.BER,
+		includeContext: true,
+		context: { invokeTimeoutMs: 0, encoding: EASN1TransportEncoding.BER },
 		expected: 0,
+		sendTimeoutInInvokes: true,
 	});
 });
 
@@ -634,7 +707,7 @@ test("OutboundInvokeContextZeroTimeoutEncodesOnInvokeBer", async () => {
 		encoding: EASN1TransportEncoding.BER,
 		includeContext: true,
 		context: callerContext,
-		expected: 0,
+		expected: "local-only",
 	});
 });
 

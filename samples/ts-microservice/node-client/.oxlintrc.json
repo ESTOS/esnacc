@@ -183,7 +183,7 @@
 	},
 	"overrides": [
 		{
-			"files": ["src/run-tests.ts"],
+			"files": ["src/microservice.integration.test.ts"],
 			"rules": {
 				"@typescript-eslint/no-floating-promises": "off"
 			}

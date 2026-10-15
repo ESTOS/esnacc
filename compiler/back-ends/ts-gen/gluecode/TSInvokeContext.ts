@@ -26,7 +26,8 @@ export enum EASN1TransportEncoding {
  */
 export interface IInvokeContextBaseParams {
 	// Applied via setInvokeTimeout() when constructing the context.
-	// Omit it and encodeInvoke writes the stub default onto the context and onto ROSEInvoke.timeout.
+	// Omit it and encodeInvoke writes the stub default onto the context for the local wait.
+	// JSON also writes that value on ROSEInvoke.timeout. BER writes it only when setSendTimeoutInInvokes(true) was called.
 	invokeTimeoutMs?: number;
 	// Encoding of the message
 	encoding?: EASN1TransportEncoding;

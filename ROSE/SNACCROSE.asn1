@@ -12,19 +12,22 @@ ROSEMessage ::= CHOICE {
 
 ROSEAuth ::= SEQUENCE {
 	method UTF8String,            -- Authentication Type (e.g. "Basic" or "JWT")
-	authdata OCTET STRING         -- Authentication Data z.b. BASE64(user:passwd) or jwt string or NTLM binary 
+	authdata OCTET STRING,         -- Authentication Data z.b. BASE64(user:passwd) or jwt string or NTLM binary 
+	...
 }
 
 ROSEAuthList ::= SEQUENCE OF ROSEAuth 
 
 ROSEAuthRequest ::= SEQUENCE {
 	auth ROSEAuth,
-	context  UTF8String OPTIONAL  -- Auth context for multi-level negotiation must be supplied again by the client on the second call
+	context  UTF8String OPTIONAL,  -- Auth context for multi-level negotiation must be supplied again by the client on the second call
+	...
 }
 
 ROSEAuthResult ::= SEQUENCE {
 	authList ROSEAuthList,
-	context  UTF8String OPTIONAL  -- Auth context for multi-level negotiation must be supplied again by the client on the second call
+	context  UTF8String OPTIONAL,  -- Auth context for multi-level negotiation must be supplied again by the client on the second call
+	...
 }
 
 ROSEInvoke		::=	SEQUENCE {
@@ -48,8 +51,10 @@ ROSEResult ::= SEQUENCE {
 	invokeID INTEGER,
 	result SEQUENCE {
 		resultValue INTEGER,
-		result ANY
-	} OPTIONAL 
+		result ANY,
+		...
+	} OPTIONAL,
+	...
 }
 
 ROSEError ::= SEQUENCE {
@@ -67,7 +72,8 @@ ROSEReject ::= SEQUENCE {
 	},
 	reject RejectProblem OPTIONAL,
 	details UTF8String OPTIONAL, -- ste Added 24.10.2014 not Rose Standard, used for Json Decode Error
-	authentication [4] ROSEAuthResult OPTIONAL -- ste Added 21.10.2015 not Rose Standard, used for Invoke Authentication
+	authentication [4] ROSEAuthResult OPTIONAL, -- ste Added 21.10.2015 not Rose Standard, used for Invoke Authentication
+	...
 }
 
 RejectProblem ::= CHOICE {

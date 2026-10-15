@@ -8,7 +8,7 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 
 let exitCode = 0;
 
-console.log("=== C++ tests (CTest, excluding TS glue ctest) ===\n");
+console.log("=== C++ tests (CTest) ===\n");
 const buildDir = findCmakeBuildDir();
 const cppStatus = runCppCtest(buildDir);
 if (cppStatus !== 0) {

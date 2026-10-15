@@ -8,7 +8,6 @@ set(SNACC_TS_NODE_CLIENT "${SNACC_TS_ROOT}/node-client")
 set(SNACC_TS_PREPARE_STAMP "${CMAKE_CURRENT_BINARY_DIR}/ts-prepare.stamp")
 set(SNACC_TS_SERVER_BUILD_STAMP "${CMAKE_CURRENT_BINARY_DIR}/ts-server-build.stamp")
 set(SNACC_TS_CLIENT_BUILD_STAMP "${CMAKE_CURRENT_BINARY_DIR}/ts-client-build.stamp")
-set(SNACC_TS_LOG_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ts-test-logs")
 
 find_program(SNACC_TS_PNPM_EXECUTABLE pnpm)
 find_program(SNACC_TS_NODE_EXECUTABLE node)
@@ -66,20 +65,3 @@ add_custom_command(
 add_custom_target(snacc-ts-client-build DEPENDS "${SNACC_TS_CLIENT_BUILD_STAMP}")
 
 add_custom_target(snacc-ts-all DEPENDS snacc-ts-server-build snacc-ts-client-build)
-
-if(SNACC_CTEST_REGISTER_TS)
-	# CI integration smoke: node-client/dist/run-tests.js against a live node-server.
-	# Build snacc-ts-all before ctest. Local IDE: build samples and run node-client tests directly.
-	add_test(
-		NAME typescript_run_ts_microservice_sample_node_client_against_node_server
-		COMMAND "${SNACC_TS_NODE_EXECUTABLE}" --test "${SNACC_TS_NODE_CLIENT}/dist/run-tests.js"
-		WORKING_DIRECTORY "${SNACC_TS_NODE_CLIENT}"
-	)
-
-	set_tests_properties(
-		typescript_run_ts_microservice_sample_node_client_against_node_server
-		PROPERTIES
-			LABELS "ts;integration"
-			ENVIRONMENT "SNACC_TS_SERVER_ROOT=${SNACC_TS_NODE_SERVER};SNACC_TS_TEST_PORT=13020;SNACC_TS_LOG_DIRECTORY=${SNACC_TS_LOG_DIRECTORY}"
-	)
-endif()
