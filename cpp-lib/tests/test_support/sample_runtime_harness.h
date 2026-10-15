@@ -240,6 +240,7 @@ namespace snacclib
 		bool implementCreateFancyEvents = true;		// when false the event creator returns a reject
 		bool createFancyEventsReturnsError = false; // when true the event creator returns ROSEError
 		int throwRuntimeErrorOnGetSettings{};		// remaining get-settings calls that throw std::runtime_error after the gate
+		bool throwSnaccExceptionOnGetSettings = false; // when true the next get-settings call throws SnaccException
 		std::shared_ptr<HandlerBlockGate> blockGetSettings{};
 	};
 
@@ -562,6 +563,47 @@ namespace snacclib
 		size_t m_nTransportSendCount = 0;
 	};
 
+	/*! AsnType that fails encode and decode with SnaccException.
+	 *  Tests pass it into DecodeInvoke and EncodeResult so the real ROSE
+	 *  paths throw, instead of substituting a fake return code. */
+	class ThrowingAsnType final : public AsnType
+	{
+	public:
+		AsnType* Clone() const override
+		{
+			return new ThrowingAsnType();
+		}
+
+		const char* typeName() const override
+		{
+			return "ThrowingAsnType";
+		}
+
+		/*! Always throws DECODE_ERROR. The ROSE decode catch logs this text. */
+		void BDec(const AsnBuf&, AsnLen&) override
+		{
+			throw EXCEPT("invoke decode fault", DECODE_ERROR);
+		}
+
+		/*! Always throws ENCODE_ERROR. Matches an empty CHOICE result encode. */
+		AsnLen BEnc(AsnBuf&) const override
+		{
+			throw EXCEPT("Choice is empty", ENCODE_ERROR);
+		}
+
+		/*! JSON encode counterpart of BEnc. Same error text for both transports. */
+		SJson::Value JEnc() const override
+		{
+			throw EXCEPT("Choice is empty", ENCODE_ERROR);
+		}
+
+		/*! JSON decode counterpart of BDec. */
+		bool JDec(const SJson::Value&) override
+		{
+			throw EXCEPT("invoke decode fault", DECODE_ERROR);
+		}
+	};
+
 	// Session-scoped runtime host used on both client and server sides. It models a
 	// single ROSE connection, owns the transport binding, injects session ids, and
 	// dispatches inbound invokes to the registered modules.
@@ -712,10 +754,51 @@ namespace snacclib
 			return SnaccROSEBase::SendEvent(pInvoke, szOperationName, std::move(pCtx));
 		}
 
+		/*! Next DecodeInvoke decodes a ThrowingAsnType so BDec/JDec throws.
+		 *  DecodeInvoke logs that and returns ROSE_RE_DECODE_FAILED. One shot. */
+		void FailNextInvokeDecode()
+		{
+			m_bFailNextInvokeDecode = true;
+		}
+
+		/*! Next EncodeResult encodes a ThrowingAsnType so BEnc/JEnc throws
+		 *  "Choice is empty" out of the real result encoder. One shot. */
+		void FailNextResultEncode()
+		{
+			m_bFailNextResultEncode = true;
+		}
+
+		/*! Drops armed encode and decode faults. Called from the fixture setup. */
+		virtual void ResetFaultInjection()
+		{
+			m_bFailNextInvokeDecode = false;
+			m_bFailNextResultEncode = false;
+		}
+
+		/*! When armed, decodes a throwing argument through SnaccROSEBase::DecodeInvoke.
+		 *  The generated argument is left untouched and the product handler does not run. */
+		long DecodeInvoke(const SNACC::ROSEMessage& invokeMessage, SNACC::AsnType* pArgument) override
+		{
+			if (m_bFailNextInvokeDecode)
+			{
+				m_bFailNextInvokeDecode = false;
+				ThrowingAsnType throwingArgument;
+				return SnaccROSEBase::DecodeInvoke(invokeMessage, &throwingArgument);
+			}
+			return SnaccROSEBase::DecodeInvoke(invokeMessage, pArgument);
+		}
+
 		// Ensures outbound result payloads inherit the session id of this connection.
 		long EncodeResult(unsigned int uiInvokeID, const SNACC::AsnType* pResult, std::string& strResponse, const wchar_t* szSessionID = nullptr) override
 		{
-			return SnaccROSEBase::EncodeResult(uiInvokeID, pResult, strResponse, szSessionID ? szSessionID : m_wstrSessionId.c_str());
+			const wchar_t* szEffectiveSessionId = szSessionID ? szSessionID : m_wstrSessionId.c_str();
+			if (m_bFailNextResultEncode)
+			{
+				m_bFailNextResultEncode = false;
+				ThrowingAsnType throwingResult;
+				return SnaccROSEBase::EncodeResult(uiInvokeID, &throwingResult, strResponse, szEffectiveSessionId);
+			}
+			return SnaccROSEBase::EncodeResult(uiInvokeID, pResult, strResponse, szEffectiveSessionId);
 		}
 
 		// Ensures outbound error payloads inherit the session id of this connection.
@@ -746,6 +829,8 @@ namespace snacclib
 			pInvoke->sessionID->setASCII(m_strSessionId);
 		}
 
+		bool m_bFailNextInvokeDecode = false;						 // one-shot: DecodeInvoke uses ThrowingAsnType
+		bool m_bFailNextResultEncode = false;						 // one-shot: EncodeResult uses ThrowingAsnType
 		std::unique_ptr<LoopbackTransport> m_transport;				 // transport hook used by the base runtime for outbound sends
 		std::map<unsigned int, IRuntimeModule*> m_modules;			 // registered modules keyed by generated interface id
 		std::string m_strSessionId;									 // narrow session id used in test assertions and invoke payloads
@@ -797,6 +882,20 @@ namespace snacclib
 			return m_logEntries.size();
 		}
 
+		/*! Next outbound PrintJSONToLog throws. EncodeReject logs the reject
+		 *  before returning, so this injects a second SnaccException while an
+		 *  invoke exception is already being turned into a reject. One shot. */
+		void FailNextOutboundLog()
+		{
+			m_bThrowOnNextOutboundLog = true;
+		}
+
+		void ResetFaultInjection() override
+		{
+			RuntimeEndpoint::ResetFaultInjection();
+			m_bThrowOnNextOutboundLog = false;
+		}
+
 		// Uses the test-controlled log level instead of hard-wiring logging off.
 		EAsnLogLevel GetLogLevel(const bool bOutbound) override
 		{
@@ -806,6 +905,12 @@ namespace snacclib
 		// Captures the final log entry and optionally forwards it to the base file logger.
 		bool PrintJSONToLog(const bool bOutbound, const bool bError, const char* szOperationName, const char* szData, const size_t size = 0) override
 		{
+			if (m_bThrowOnNextOutboundLog && bOutbound)
+			{
+				m_bThrowOnNextOutboundLog = false;
+				throw EXCEPT("reject handling fault", ENCODE_ERROR);
+			}
+
 			if (szData)
 			{
 				CapturedLogEntry entry;
@@ -826,6 +931,7 @@ namespace snacclib
 		EAsnLogLevel m_inboundLogLevel = EAsnLogLevel::DISABLED;  // active inbound log level for the endpoint
 		EAsnLogLevel m_outboundLogLevel = EAsnLogLevel::DISABLED; // active outbound log level for the endpoint
 		bool m_bForwardLogsToBase = false;						  // whether logs are also forwarded into file logging
+		bool m_bThrowOnNextOutboundLog = false;					  // one-shot throw from the next outbound log callback
 		std::vector<CapturedLogEntry> m_logEntries;				  // captured final log entries for assertions
 	};
 
@@ -928,6 +1034,11 @@ namespace snacclib
 			{
 				--m_handlerModes.throwRuntimeErrorOnGetSettings;
 				throw std::runtime_error("get settings handler fault");
+			}
+			if (m_handlerModes.throwSnaccExceptionOnGetSettings)
+			{
+				m_handlerModes.throwSnaccExceptionOnGetSettings = false;
+				throw EXCEPT("get settings handler fault", ENCODE_ERROR);
 			}
 
 			if (!m_handlerModes.implementGetSettings)
@@ -1352,6 +1463,8 @@ namespace snacclib
 			m_client.SetForwardLogsToBase(false);
 			m_server.ClearCapturedLogs();
 			m_client.ClearCapturedLogs();
+			m_server.ResetFaultInjection();
+			m_client.ResetFaultInjection();
 			m_telemetryRecorder.Clear();
 		}
 

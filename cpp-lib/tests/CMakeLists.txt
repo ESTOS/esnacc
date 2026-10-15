@@ -50,6 +50,7 @@ set(SNACC_RUNTIME_CPP_TEST_SOURCES
 	lifecycle/lifecycle_tests.cpp
 	logging/logging_tests.cpp
 	logical_failure/logical_failure_tests.cpp
+	invoke_exception/invoke_exception_tests.cpp
 	module_registry/module_registry_tests.cpp
 	public_api/public_api_tests.cpp
 	rose_session_subscription/rose_session_subscription_tests.cpp
