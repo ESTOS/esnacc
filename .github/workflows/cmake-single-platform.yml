@@ -11,8 +11,6 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-  # Run JavaScript actions (e.g. pnpm/action-setup) on Node 26 instead of deprecated Node 20/24 runtimes.
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE26: true
   # GitHub tarball deps (uclogger/ucconfig) invoke npm install with legacy engine ranges.
   NPM_CONFIG_ENGINE_STRICT: "false"
 
@@ -32,7 +30,7 @@ jobs:
 
       # package.json declares packageManager: pnpm@11.9.0; setup-node needs pnpm on PATH first.
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 11.9.0
 
