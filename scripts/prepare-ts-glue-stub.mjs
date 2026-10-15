@@ -1,5 +1,5 @@
 // Copies gluecode + sample stubs into typescript/stub for glue tests.
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -33,8 +33,31 @@ export function getTsGlueTestPaths() {
 }
 
 /**
- * Syncs gluecode and sample stubs into tests/stub.
- * @param options.clean - remove stub output before copy (default false; overwrites files either way)
+ * Copies src onto dest when dest is missing or older than src.
+ * A test click calls this often. Unchanged files keep their mtime so the JS emit stays valid.
+ * @param {string} src
+ * @param {string} dest
+ * @returns {boolean} true when the file was copied
+ */
+function copyIfNewer(src, dest) {
+	if (!existsSync(src)) {
+		throw new Error(`Missing glue input ${src}. Run samples/prepare.js when ASN.1 or the compiler changed.`);
+	}
+	if (existsSync(dest)) {
+		const srcStat = statSync(src);
+		const destStat = statSync(dest);
+		if (destStat.mtimeMs >= srcStat.mtimeMs && destStat.size === srcStat.size) {
+			return false;
+		}
+	}
+	cpSync(src, dest, { force: true });
+	return true;
+}
+
+/**
+ * Syncs gluecode and sample stubs into typescript/stub.
+ * Does not run the ASN.1 compiler or pnpm. Those stay on the snacc-ts-glue-prepare target.
+ * @param options.clean - remove stub output before copy (default false)
  */
 export function prepareTsGlueStub(options = {}) {
 	const clean = options.clean === true;
@@ -51,11 +74,11 @@ export function prepareTsGlueStub(options = {}) {
 	mkdirSync(paths.stub, { recursive: true });
 
 	for (const name of readdirSync(paths.glueDir)) {
-		cpSync(join(paths.glueDir, name), join(paths.stub, name), { force: true });
+		copyIfNewer(join(paths.glueDir, name), join(paths.stub, name));
 	}
 
 	for (const name of STUB_FILES) {
-		cpSync(join(paths.stubDir, name), join(paths.stub, name), { force: true });
+		copyIfNewer(join(paths.stubDir, name), join(paths.stub, name));
 	}
 
 	return paths;

@@ -1,45 +1,18 @@
-// Runs one TS glue test file (cross-platform; fixes Windows --import path issues).
+// Runs one glue spec through the shared suite runner.
+// Callers pass the TypeScript file name. The suite emits and runs the JavaScript.
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
-const testDir = join(repoRoot, "typescript");
-const registerUrl = pathToFileURL(join(repoRoot, "scripts/ts-glue-test-register.mjs")).href;
-const testArg = process.argv[2];
-
-if (!testArg) {
+const testFile = process.argv[2];
+if (!testFile) {
 	console.error("usage: node run-ts-glue-test-file.mjs <test-file.ts>");
 	process.exit(1);
 }
 
-const testFile = resolve(testDir, testArg);
-const hasLocalTsx = existsSync(join(testDir, "node_modules/tsx/package.json"));
-
-const env = { ...process.env };
-const nodeModules = join(repoRoot, "samples/ts-microservice/node-client/node_modules");
-if (existsSync(join(nodeModules, "@estos/asn1ts"))) {
-	env.NODE_PATH = nodeModules;
-}
-
-const result = hasLocalTsx
-	? spawnSync(process.execPath, ["--import", registerUrl, "--import", "tsx", testFile], {
-		cwd: testDir,
-		env,
-		stdio: "inherit",
-	})
-	: spawnSync("npx", ["--yes", "tsx", "--import", registerUrl, testFile], {
-		cwd: testDir,
-		env,
-		stdio: "inherit",
-		shell: true,
-	});
-
+const suite = join(dirname(fileURLToPath(import.meta.url)), "run-ts-glue-test-suite.mjs");
+const result = spawnSync(process.execPath, [suite, testFile], { stdio: "inherit" });
 if (result.error) {
 	console.error(result.error);
-}
-if (result.status === null) {
-	console.error("glue test runner failed to start");
 }
 process.exit(result.status ?? 1);

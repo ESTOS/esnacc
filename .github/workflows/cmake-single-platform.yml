@@ -18,6 +18,10 @@ env:
 
 jobs:
   build-and-test:
+    permissions:
+      contents: read
+      actions: read
+      checks: write
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
@@ -52,6 +56,22 @@ jobs:
 
       - name: Build TypeScript integration tests
         run: cmake --build ${{github.workspace}}/build --target snacc-ts-all
+
+      - name: Run TypeScript glue tests
+        run: node scripts/run-ts-glue-test-suite.mjs
+
+      # Lists every glue case on the job summary and as its own check entry.
+      # The VS Code explorer runs the same emitted files and does not wait on this report.
+      - name: Publish TypeScript glue test results
+        uses: dorny/test-reporter@v3
+        if: ${{ !cancelled() }}
+        with:
+          name: TypeScript glue tests
+          path: typescript/dist/glue-junit.xml
+          reporter: java-junit
+          list-suites: all
+          list-tests: all
+          fail-on-error: true
 
       - name: Run tests (ctest)
         working-directory: ${{github.workspace}}/build

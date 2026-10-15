@@ -507,7 +507,7 @@ encode/decode in `SNACCROSE_Converter.ts` (not test harness).
 1. `typescript/support/sample_runtime_harness.ts` — loopback transport + sample modules.
 2. Sample stubs copied in `scripts/run_gluecode_tests.*` (`ENetUC_Settings_Manager`, `ENetUC_Event_Manager`).
 3. `TSCallFlow.loopback.test.ts`, `TSLogicalFailure.loopback.test.ts`, `TSTransportFailure.loopback.test.ts`.
-4. CMake `ctest` (`SNACC_CTEST_REGISTER_TS=ON` in CI and in the VS Code CMake settings): each top-level `test("…")` literal in `typescript/*.test.ts` is its own CTest entry (`typescript/<file>/<name>`), discovered by `scripts/list-ts-glue-tests.mjs` and run by `scripts/run-ts-glue-one-test.mjs`. The CMake test view lists those entries beside the C++ suites. `pnpm test` still runs the suite in one process. BER/JSON matrix cases use top-level `test("… (BER)")` / `test("… (JSON)")` literals so static discovery matches CI (`node --test` registers loop bodies at runtime only).
+4. TypeScript glue specs run as one `node --test` on `typescript/dist` (`scripts/run-ts-glue-test-suite.mjs`). The VS Code node:test explorer, `pnpm test`, and CI use that command. It copies newer glue sources and emits when TypeScript sources change. It does not build the compiler or run `samples/prepare.js`. BER/JSON matrix cases use `test("… (BER)")` / `test("… (JSON)")` string literals so each case is its own explorer entry and its own GitHub row.
 
 ### Block C — Telemetry in TypeScript (largest product gap)
 
