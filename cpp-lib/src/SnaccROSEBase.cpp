@@ -2602,6 +2602,12 @@ long SnaccROSEBase::HandleInvokeResult(long lRoseResult, const SNACC::ROSEMessag
 			}
 		}
 	}
+	else if (responseMsg.choiceId == ROSEMessage::rejectCid && responseMsg.reject && m_eTransportEncoding == SNACC::TransportEncoding::BER)
+	{
+		// Reject has no opaque ANY, so there is nothing to graft. Log the decoded envelope here,
+		// the same stage as the result and error JSON lines. The receive path already logged the BER hex.
+		LogTransportData(false, SNACC::TransportEncoding::BER, nullptr, nullptr, 0, &responseMsg, nullptr);
+	}
 
 	return lRoseResult;
 }

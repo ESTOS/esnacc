@@ -215,6 +215,21 @@ optional reject, and telemetry:
 - `PublicApiSmokeTest.OnBinaryDataBlockResultDecodeErrorsInvokeHookBer`
 - `PublicApiSmokeTest.OnBinaryDataBlockResultDecodeErrorsInvokeHookJson`
 
+### Transport payload notations (BUILDSYS-661)
+
+`EAsnLogLevel` selects the notation. Each successfully handled ROSE PDU (invoke, result, error, reject, event) is logged in every enabled notation, inbound and outbound. The JSON entry and the BER hex entry are separate log lines.
+
+| Enabled bits | BER wire | JSON wire |
+| --- | --- | --- |
+| JSON | pretty decoded JSON of the ROSE message (`getPrettyPrinted`, so the payload contains a newline) | pretty JSON of the payload |
+| BER | hex of the BER bytes. With the JSON bit also set the line is wrapped as `"BER" : "AA BB"`. With only the BER bit the payload is the hex text (a reject starts with `A4`) | no hex; the BER bit applies to BER payloads |
+| JSON_AND_BER | both of the above | pretty JSON only |
+| JSON_ALWAYS_PRETTY_PRINTED | pretty JSON | pretty JSON, including when the inbound payload is a single line |
+
+`logging_tests.cpp` is the spec. Inbound BER logs hex at receive with `pMsg == nullptr` for every choice. Decoded JSON is written later: invoke in `DecodeInvoke`, result and error in `HandleInvokeResult` after the ANY graft, and reject in `HandleInvokeResult` with no graft because a reject has no opaque ANY. `BerRejectLoggedAsPrettyJsonAndHex` requires that inbound JSON line.
+
+TypeScript `logRawTransport` is still a boolean (decoded object or BER hex, not both). Aligning that with this table is BUILDSYS-661.
+
 ## 5. Inbound Decode Layers, Reject Policy, and BER vs JSON
 
 ### Why BER and JSON are not symmetric at the wire layer
@@ -462,7 +477,7 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 | `logical_failure_tests`                           | `TSLogicalFailure.loopback.test.ts`               | **Partial** — TS returns wire `InvokeProblemenum` (not C++ `ROSE_REJECT_*`); BER loopback loses `invokeProblem=1` on reject round-trip (spec failure, see below) |
 | `transport_failure_tests`                         | `TSTransportFailure.loopback.test.ts`             | **Partial** (timeout code `requestTimedOut` vs `ROSE_TE_TIMEOUT`)                                                                                                |
 | `async_invoke_tests`                              | —                                                 | **Blocked** — Promise model; no `SetAsyncCompletion` surface                                                                                                     |
-| `logging_tests`                                   | —                                                 | **Blocked** — no `ConfigureFileLogging` / transport log-flag API in TS                                                                                           |
+| `logging_tests`                                   | —                                                 | **Blocked** — C++ bitmask is specified; TS `logRawTransport` is still a boolean (hex or object, not both). Alignment is BUILDSYS-661. |
 | `telemetry_tests`                                 | —                                                 | **Blocked** — no telemetry subsystem in TS glue                                                                                                                  |
 | `lifecycle_tests`                                 | —                                                 | **Blocked** — partial overlap with pause tests                                                                                                                   |
 | `public_api_tests` (decode hooks, file log)       | —                                                 | **Blocked** — C++-specific APIs                                                                                                                                  |
