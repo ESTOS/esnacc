@@ -3,6 +3,6 @@
 
 #define VERSION "7.0.21"
 #define VERSION_RC 7, 0, 21
-#define RELDATE "14.10.2026"
+#define RELDATE "15.10.2026"
 
 #endif // VERSION_H
