@@ -14,7 +14,7 @@ This file lists the **negotiate / gating** surfaces that must change together to
 
 | C++ (`cpp-lib/`) | TypeScript (`compiler/back-ends/ts-gen/gluecode/`) |
 |------------------|------------------------------------------------------|
-| `ISnaccRoseSessionSubscription`, `SnaccROSESender`, `SnaccROSEComponent` | `IRoseSessionSubscription`, `IASN1Transport`, `ROSEBase`, `RoseSessionSubscriptionStore` |
+| `ISnaccRoseSessionSubscription`, `RoseSessionSubscriptionStore`, `SnaccROSESender`, `SnaccROSEComponent` | `IRoseSessionSubscription`, `RoseSessionSubscriptionStore`, `IASN1Transport`, `ROSEBase` |
 | `SetOperationBlockPolicy` / `IsOperationBlocked` | `setOperationBlockPolicy` / `isOperationBlocked` |
 | `CompleteIfProcessingShutdown` / `CompleteIfOperationBlocked` on `SendEvent` / `SendInvoke` | `completeIfProcessingShutdown` / `completeIfOperationBlocked` on `handleEvent` / `handleInvoke` and `sendInvoke` |
 | `PauseRoseProcessing` / `ResumeRoseProcessing` / `LookUpInterfaceID` on `SnaccROSEBase` | `pauseRoseProcessing` / `resumeRoseProcessing` / `lookUpInterfaceID` on `TSASN1Base` |

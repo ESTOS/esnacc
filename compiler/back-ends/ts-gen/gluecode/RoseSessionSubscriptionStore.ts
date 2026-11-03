@@ -1,8 +1,10 @@
 import type { IRoseSessionSubscription } from "./IRoseSessionSubscription.js";
 
 /*
- * In-memory per-session subscription store (reference implementation for TS servers).
- * Parity with UCServer ENetCtiSessionSubscriptionStore; reuse the same shape for Kotlin/Swift ports.
+ * In-memory per-session subscription store.
+ * Paired with C++ RoseSessionSubscriptionStore. A replace or clear updates only that
+ * module's OPIDs in the flat lookup. Events and invokes stay separate sets.
+ * Not thread-safe. Callers that share one store across threads must serialize access.
  */
 export class RoseSessionSubscriptionStore implements IRoseSessionSubscription {
 	private subscribedEventsByModule = new Map<number, Set<number>>();
