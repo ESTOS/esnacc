@@ -2,7 +2,7 @@
 import type { ROSEError, ROSEReject, ROSEResult } from "../stub/SNACCROSE.js";
 import { ASN1ClassInstanceType, TSASN1Base } from "../stub/TSASN1Base.js";
 import { EASN1TransportEncoding } from "../stub/TSInvokeContext.js";
-import type { IASN1InvokeData } from "../stub/TSROSEBase.js";
+import { type IASN1InvokeData, ROSE_NOERROR, type ERoseResult } from "../stub/TSROSEBase.js";
 import { ReceiveInvokeContext, ROSEBase } from "../stub/TSROSEBase.js";
 
 /** Records the last outbound invoke passed to sendInvoke. */
@@ -18,10 +18,14 @@ export class CapturingClientTransport extends TSASN1Base {
 		return undefined;
 	}
 
-	public sendEvent(data: IASN1InvokeData): undefined | boolean {
+	/**
+	 * Records the encoded event the way the async capture path did, and reports a local success.
+	 * The timeout tests assert on lastInvokeData, not on the socket. The return matches C++ ROSE_NOERROR.
+	 */
+	public sendEvent(data: IASN1InvokeData): ERoseResult {
 		this.lastInvokeData = data;
 		void this.sendInvoke(data);
-		return undefined;
+		return ROSE_NOERROR;
 	}
 
 	public sendEventSync(_data: IASN1InvokeData): boolean {

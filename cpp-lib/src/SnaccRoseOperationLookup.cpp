@@ -195,7 +195,7 @@ long SnaccRoseOperationLookupRegistrationHost::DecodeInvoke(const SNACC::ROSEMes
 	return ROSE_TE_SHUTDOWN;
 }
 
-long SnaccRoseOperationLookupRegistrationHost::SendEvent(SNACC::ROSEInvoke* /* pInvoke */, const char* /* szOperationName */, std::shared_ptr<SnaccInvokeContext> /* pCtx */)
+ERoseResult SnaccRoseOperationLookupRegistrationHost::SendEvent(SNACC::ROSEInvoke* /* pInvoke */, const char* /* szOperationName */, std::shared_ptr<SnaccInvokeContext> /* pCtx */)
 {
 	return ROSE_TE_SHUTDOWN;
 }

@@ -233,13 +233,13 @@ namespace snacclib
 	// rejects or application errors without rewriting the module implementation.
 	struct HandlerModes
 	{
-		bool implementGetSettings = true;			// when false the settings get handler returns a reject
-		bool getSettingsReturnsError = false;		// when true the settings get handler returns ROSEError
-		bool implementSetSettings = true;			// when false the settings set handler returns a reject
-		bool setSettingsReturnsError = false;		// when true the settings set handler returns ROSEError
-		bool implementCreateFancyEvents = true;		// when false the event creator returns a reject
-		bool createFancyEventsReturnsError = false; // when true the event creator returns ROSEError
-		int throwRuntimeErrorOnGetSettings{};		// remaining get-settings calls that throw std::runtime_error after the gate
+		bool implementGetSettings = true;			   // when false the settings get handler returns a reject
+		bool getSettingsReturnsError = false;		   // when true the settings get handler returns ROSEError
+		bool implementSetSettings = true;			   // when false the settings set handler returns a reject
+		bool setSettingsReturnsError = false;		   // when true the settings set handler returns ROSEError
+		bool implementCreateFancyEvents = true;		   // when false the event creator returns a reject
+		bool createFancyEventsReturnsError = false;	   // when true the event creator returns ROSEError
+		int throwRuntimeErrorOnGetSettings{};		   // remaining get-settings calls that throw std::runtime_error after the gate
 		bool throwSnaccExceptionOnGetSettings = false; // when true the next get-settings call throws SnaccException
 		std::shared_ptr<HandlerBlockGate> blockGetSettings{};
 	};
@@ -748,7 +748,7 @@ namespace snacclib
 		}
 
 		// Attaches the endpoint session id before the base runtime encodes an event.
-		long SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
+		ERoseResult SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
 		{
 			AttachSessionId(pInvoke);
 			return SnaccROSEBase::SendEvent(pInvoke, szOperationName, std::move(pCtx));

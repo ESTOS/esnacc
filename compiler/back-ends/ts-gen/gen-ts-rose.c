@@ -142,7 +142,7 @@ void PrintTSROSEImports(FILE* src, ModuleList* mods, Module* mod)
 	fprintf(src, "// Global imports\n");
 	fprintf(src, "import { I%s, I%s_Handler } from \"./%s_Interface%s\";\n", mod->ROSEClassName, mod->ROSEClassName, mod->ROSEClassName, getCommonJSFileExtension());
 	fprintf(src, "import { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from \"./SNACCROSE%s\";\n", getCommonJSFileExtension());
-	fprintf(src, "import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, IASN1Transport, IASN1LogData, IReceiveInvokeContext, IInvokeHandler, ELogSeverity, ROSEBase } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
+	fprintf(src, "import { AsnInvokeProblem, AsnInvokeProblemEnum, createInvokeReject, ERoseResult, IASN1Transport, IASN1LogData, IReceiveInvokeContext, IInvokeHandler, ELogSeverity, ROSEBase } from \"./TSROSEBase%s\";\n", getCommonJSFileExtension());
 	fprintf(src, "import { ISendInvokeContextParams } from \"./TSInvokeContext%s\";\n", getCommonJSFileExtension());
 
 	fprintf(src, "// Local imports\n");
@@ -775,7 +775,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 					if (pszResult && !bEvents)
 						fprintf(src, "\t * @returns a Promise resolving into %s, an AsnRequestError or AsnInvokeProblem object\n", pszResult);
 					else if (bEvents)
-						fprintf(src, "\t * @returns undefined or, if bSendEventSynchronous has been set true when the event was sent\n");
+						fprintf(src, "\t * @returns ERoseResult, the local send code, same as C++ SendEvent\n");
 					fprintf(src, "\t */\n");
 				}
 			}
@@ -821,7 +821,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 			}
 			else if (!pszResult && bEvents)
 			{
-				fprintf(src, "\tpublic event_%s(argument: %s.%s, ctx?: ISendInvokeContextParams): undefined | boolean {\n", pszFunction, szArgumentNS, pszArgument);
+				fprintf(src, "\tpublic event_%s(argument: %s.%s, ctx?: ISendInvokeContextParams): ERoseResult {\n", pszFunction, szArgumentNS, pszArgument);
 				if (bDeprecated)
 				{
 					asnoperationcomment comment;

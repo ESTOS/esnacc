@@ -49,7 +49,7 @@ A late result or error for an invoke that pause already completed is ignored. It
 
 - Pause closes the gate first, then completes pending invokes with `ROSE_TE_SHUTDOWN`.
 - A new outbound invoke while the gate is closed fails with `ROSE_TE_SHUTDOWN` and is not sent.
-- A new outbound event is not sent.
+- A new outbound event is not sent and returns `ROSE_TE_SHUTDOWN`.
 - An inbound invoke or event is not delivered to the application handler. The caller gets a shutdown reject.
 - Resume sets the gate open again. The next invoke and the next event use the new session.
 - Resume does not replay or revive the completed invokes.
@@ -77,9 +77,10 @@ Sources:
 | --- | --- | --- | --- |
 | Worker pools | When the stub has borrowed pools, pause rejects that stub's queued work and waits for a handler that already started. The handler sees the closed gate and does not send its reply. | No pool runtime. | TypeScript has no worker pools. The UCServer uses the C++ pools. |
 | Async completion | `FinishAsyncInvoke` completes a callback invoke. | The pending `Promise` resolves with `ROSE_TE_SHUTDOWN`. | One completion channel in JavaScript. The outcome is the same shutdown code. |
-| Event result while closed | `SendEvent` returns `ROSE_TE_SHUTDOWN`. | `sendEvent` returns `false` when `bSendEventSynchronous` is set, and `undefined` otherwise. | The TypeScript event API does not return a ROSE code. The event is still not sent. |
 | Stub lifetime | The destructor calls `PauseRoseProcessing`. | The caller calls `pauseRoseProcessing`. | JavaScript has no deterministic destructor. |
+| Encode failure on an event | `Send` throws or returns the prefix result. The event is not sent. | `handleEvent` returns the `AsnInvokeProblem` value, or `ROSE_TE_TRANSPORTFAILED` when that value is missing. | The generated `event_*` method stays synchronous and numeric. The caller still sees a non-zero local code. |
 | Method casing | `PascalCase` | `camelCase` | Language naming map. |
+| Result type | Unscoped `ERoseResult` converts to `long`. | Numeric enum `ERoseResult`, assignable to `number`. | Same values. Existing `long` call sites keep compiling. |
 
 ## Tests
 
@@ -89,6 +90,7 @@ Sources:
 | Pending invoke completes with shutdown | `PauseRoseProcessingCompletesPendingInvokeWithShutdownBer` / `Json` | `pauseRoseProcessing completes pending invokes with shutdown` |
 | Inbound stays undispatched until resume | `PauseRoseProcessingBlocksInboundDispatchUntilResumed` | `pauseRoseProcessing blocks inbound dispatch until resumeRoseProcessing` |
 | Resume lets the next invoke and event through | `ResumeRoseProcessingAllowsNextOutboundInvoke` | `resumeRoseProcessing allows the next outbound invoke` |
+| Event send returns the local ROSE code | `SendEvent` returns `ROSE_TE_SHUTDOWN` in `PauseRoseProcessingBlocksNewOutboundInvokesAndEvents`; a failed socket write returns `ROSE_TE_TRANSPORTFAILED` from `Send` | `sendEvent returns the same local codes as C++ SendEvent` |
 | Late result does not replace shutdown | `LateResultAfterPauseDoesNotResurrectPendingInvoke` | `late result after pauseRoseProcessing does not replace the shutdown reject` |
 | Async callback completes with shutdown | `PauseRoseProcessingCompletesAsyncInvokeWithShutdownJson` | The pending-promise test above |
 | Queued pool work is dropped | `PauseRejectsQueuedWorkAndDropsInflightReply` | No TypeScript counterpart |

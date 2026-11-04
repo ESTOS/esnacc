@@ -1381,9 +1381,9 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			}
 			else
 			{
-				fprintf(hdr, "\tlong Event_%s(%s* argument, std::shared_ptr<SnaccInvokeContext> pCtx = {});\n", vd->definedName, pszArgument);
+				fprintf(hdr, "\tERoseResult Event_%s(%s* argument, std::shared_ptr<SnaccInvokeContext> pCtx = {});\n", vd->definedName, pszArgument);
 				fprintf(src, "// default parameters: pCtx = {}\n");
-				fprintf(src, "long %s::Event_%s(%s* argument, std::shared_ptr<SnaccInvokeContext> pCtx)\n", m->ROSEClassName, vd->definedName, pszArgument);
+				fprintf(src, "ERoseResult %s::Event_%s(%s* argument, std::shared_ptr<SnaccInvokeContext> pCtx)\n", m->ROSEClassName, vd->definedName, pszArgument);
 			}
 
 			fprintf(src, "{\n");

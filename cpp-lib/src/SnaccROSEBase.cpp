@@ -1879,7 +1879,7 @@ bool SnaccROSEBase::CompleteIfProcessingShutdown(SNACC::ROSEInvoke* pInvoke, con
 	return true;
 }
 
-long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
+ERoseResult SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	const auto chronoCreated = std::chrono::steady_clock::now();
 	const char* szResolvedOperationName = ResolveOperationNameFromStub(szOperationName, pInvoke->operationID, this);
@@ -1891,16 +1891,16 @@ long SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperatio
 
 	long lRoseResult = ROSE_NOERROR;
 	if (CompleteIfProcessingShutdown(pInvoke, szResolvedOperationName, chronoCreated, pCtx, lRoseResult))
-		return lRoseResult;
+		return static_cast<ERoseResult>(lRoseResult);
 
 	if (CompleteIfOperationBlocked(pInvoke, szResolvedOperationName, true, pCtx, lRoseResult))
-		return lRoseResult;
+		return static_cast<ERoseResult>(lRoseResult);
 
 	lRoseResult = Send(pInvoke, szResolvedOperationName, ctx, &stRequestData);
 	auto telemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, stRequestData, chronoCreated);
 	telemetry->finalize(lRoseResult == ROSE_NOERROR ? SnaccTelemetryData::Outcome::EVENT : SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, lRoseResult == ROSE_NOERROR ? SnaccTelemetryData::Reason::LOCAL_EVENT : GetUnhandledReasonFromResult(lRoseResult), lRoseResult, std::nullopt, pCtx);
 	OnInvokeProcessed(telemetry);
-	return lRoseResult;
+	return static_cast<ERoseResult>(lRoseResult);
 }
 
 bool SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szOperationName, const char* szData, const size_t size, const SNACC::ROSEMessage* pMsg, const SJson::Value* pParsedValue)

@@ -5,7 +5,7 @@ import { RoseSessionSubscriptionStore } from "./stub/RoseSessionSubscriptionStor
 import type { ROSEError, ROSEInvoke, ROSEReject, ROSEResult } from "./stub/SNACCROSE.js";
 import { ASN1ClassInstanceType, TSASN1Base } from "./stub/TSASN1Base.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
-import { ROSEBase } from "./stub/TSROSEBase.js";
+import { ROSEBase, ROSE_NOERROR, type ERoseResult } from "./stub/TSROSEBase.js";
 import type { IASN1InvokeData, IASN1LogData, IReceiveInvokeContext } from "./stub/TSROSEBase.js";
 
 class SubscriptionTransport extends TSASN1Base {
@@ -56,9 +56,9 @@ class SubscriptionTransport extends TSASN1Base {
 		return Promise.resolve(undefined);
 	}
 
-	public sendEvent(_data: IASN1InvokeData): undefined {
+	public sendEvent(_data: IASN1InvokeData): ERoseResult {
 		this.sentEvents++;
-		return undefined;
+		return ROSE_NOERROR;
 	}
 
 	public sendEventSync(_data: IASN1InvokeData): boolean {

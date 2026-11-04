@@ -34,6 +34,7 @@ import {
 	snaccAssert,
 	snaccAssertFail,
 	ROSE_TE_SHUTDOWN,
+	ERoseResult,
 	ASN1ByteArray,
 	ROSEBase,
 } from "./TSROSEBase.js";
@@ -664,16 +665,17 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * Allows every event. A transport without a session store is not filtered here.
-	 * Override with RoseSessionSubscriptionStore: an empty store then returns false.
+	 * True for every event until a store overrides this.
+	 * A transport without a session store is not filtered here. An empty store returns false.
 	 */
 	public isSubscribedEvent(_eventOpId: number): boolean {
 		return true;
 	}
 
 	/**
-	 * Allows every invoke. A transport without a session store is not filtered here.
-	 * Override with RoseSessionSubscriptionStore: an empty store then returns false.
+	 * True for every invoke until a store overrides this.
+	 * A transport without a session store is not filtered here. An empty store returns false.
+	 * Clients keep this default and are filtered only by remote capabilities.
 	 */
 	public isSupportedInvoke(_invokeOpId: number): boolean {
 		return true;
@@ -695,7 +697,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 
 	/**
 	 * True when BlockUnsupportedOperations is active and the outbound op is not in the session set.
-	 * An empty store blocks. A transport whose queries allow every OPID is not blocked here.
+	 * An empty set blocks.
 	 */
 	public isOperationBlocked(operationID: number, isEvent: boolean): boolean {
 		if (this.operationBlockPolicy !== OperationBlockPolicy.BlockUnsupportedOperations)
@@ -957,21 +959,21 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * Helper method that allows to send an event without setting a timeout or by mistake taking care of result messages of the sendInvoke message
+	 * Sends an already encoded event and returns the local send code.
 	 *
-	 * @param data - the data for the invoke
-	 * @returns undefined or, if bSendEventSynchronous has been set true when the event was sent
+	 * Called from `ROSEBase.handleEvent` after encode. There is no peer answer. Every event uses
+	 * `sendEventSync`. The return matches C++ `SendEvent`: `ROSE_TE_SHUTDOWN` while the session
+	 * gate is closed, `ROSE_NOERROR` when the bytes were handed to the socket, and
+	 * `ROSE_TE_TRANSPORTFAILED` when the socket or peer connection was not ready.
+	 *
+	 * @param data - the encoded event payload and invoke context
+	 * @returns the local send code (`ERoseResult`)
 	 */
-	public sendEvent(data: IASN1InvokeData): undefined | boolean {
+	public sendEvent(data: IASN1InvokeData): ERoseResult {
 		if (!this.isProcessingAllowed())
-			return data.invokeContext?.bSendEventSynchronous ? false : undefined;
+			return ERoseResult.ROSE_TE_SHUTDOWN;
 
-		if (data.invokeContext?.bSendEventSynchronous)
-			return this.sendEventSync(data);
-		else {
-			void this.sendInvoke(data);
-			return undefined;
-		}
+		return this.sendEventSync(data) ? ERoseResult.ROSE_NOERROR : ERoseResult.ROSE_TE_TRANSPORTFAILED;
 	}
 
 	// Sends an invoke (event, invoke, reject, result etc.) to the other side

@@ -4,7 +4,7 @@ import test from "node:test";
 import { type ROSEError, ROSEReject, type ROSEResult } from "./stub/SNACCROSE.js";
 import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./stub/TSASN1Base.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
-import { type IASN1InvokeData, ReceiveInvokeContext, ROSE_TE_SHUTDOWN, SendInvokeContext } from "./stub/TSROSEBase.js";
+import { type IASN1InvokeData, ReceiveInvokeContext, ROSE_NOERROR, ROSE_TE_SHUTDOWN, ROSE_TE_TRANSPORTFAILED, SendInvokeContext } from "./stub/TSROSEBase.js";
 
 class TestTransport extends TSASN1Base {
 	public constructor() {
@@ -19,8 +19,11 @@ class TestTransport extends TSASN1Base {
 		return undefined;
 	}
 
+	/** When false, sendEventSync reports that the socket or peer connection was not ready. */
+	public syncSendSucceeds = true;
+
 	public sendEventSync(_data: IASN1InvokeData): boolean {
-		return true;
+		return this.syncSendSucceeds;
 	}
 
 	public getSessionID(): string | undefined {
@@ -67,13 +70,12 @@ test("pauseRoseProcessing blocks outbound invoke and event sends", async () => {
 	assert.equal(invokeReject.reject?.invokeProblem, ROSE_TE_SHUTDOWN);
 
 	const eventContext = createInvokeContext(transport, 200, "asnEvent", true);
-	eventContext.bSendEventSynchronous = true;
 	const eventResult = transport.sendEvent({
 		invoke: { invokeID: 99999, operationID: 200, operationName: "asnEvent" },
 		payLoad: {},
 		invokeContext: eventContext,
 	});
-	assert.equal(eventResult, false);
+	assert.equal(eventResult, ROSE_TE_SHUTDOWN);
 
 	transport.resumeRoseProcessing();
 	assert.equal(transport.isProcessingAllowed(), true);
@@ -100,15 +102,31 @@ test("resumeRoseProcessing allows the next outbound invoke", async () => {
 	assert.equal(sent, undefined);
 
 	const eventContext = createInvokeContext(transport, 200, "asnEvent", true);
-	eventContext.bSendEventSynchronous = true;
 	assert.equal(
 		transport.sendEvent({
 			invoke: { invokeID: 99999, operationID: 200, operationName: "asnEvent" },
 			payLoad: {},
 			invokeContext: eventContext,
 		}),
-		true,
+		ROSE_NOERROR,
 	);
+});
+
+test("sendEvent returns the same local codes as C++ SendEvent", () => {
+	const transport = new TestTransport();
+	const eventData = (): IASN1InvokeData => ({
+		invoke: { invokeID: 99999, operationID: 200, operationName: "asnEvent" },
+		payLoad: {},
+		invokeContext: createInvokeContext(transport, 200, "asnEvent", true),
+	});
+
+	assert.equal(transport.sendEvent(eventData()), ROSE_NOERROR);
+
+	transport.syncSendSucceeds = false;
+	assert.equal(transport.sendEvent(eventData()), ROSE_TE_TRANSPORTFAILED);
+
+	transport.pauseRoseProcessing();
+	assert.equal(transport.sendEvent(eventData()), ROSE_TE_SHUTDOWN);
 });
 
 test("pauseRoseProcessing completes pending invokes with shutdown", async () => {

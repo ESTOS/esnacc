@@ -58,7 +58,7 @@ namespace snacclib
 				return ROSE_NOERROR;
 			}
 
-			long SendEvent(SNACC::ROSEInvoke* /*pInvoke*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
+			ERoseResult SendEvent(SNACC::ROSEInvoke* /*pInvoke*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
 			{
 				return ROSE_NOERROR;
 			}
