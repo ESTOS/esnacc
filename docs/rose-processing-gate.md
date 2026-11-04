@@ -14,6 +14,7 @@ related_docs:
   - ../AGENTS.md
   - ../cpp-lib/tests/runtime_correctness_notes.md
   - ../.cursor/rules/rose-cross-language-parity.mdc
+  - rose-worker-pools.md
 ---
 
 # ROSE processing gate
@@ -75,7 +76,7 @@ Sources:
 
 | Topic | C++ | TypeScript | Why this is allowed |
 | --- | --- | --- | --- |
-| Worker pools | When the stub has borrowed pools, pause rejects that stub's queued work and waits for a handler that already started. The handler sees the closed gate and does not send its reply. | No pool runtime. | TypeScript has no worker pools. The UCServer uses the C++ pools. |
+| Worker pools | When the stub has borrowed pools, pause rejects that stub's queued work and waits for a handler that already started. The handler sees the closed gate and does not send its reply. | No pool runtime. | TypeScript has no worker pools. The UCServer uses the C++ pools. The pool contract is [rose-worker-pools.md](rose-worker-pools.md). |
 | Async completion | `FinishAsyncInvoke` completes a callback invoke. | The pending `Promise` resolves with `ROSE_TE_SHUTDOWN`. | One completion channel in JavaScript. The outcome is the same shutdown code. |
 | Stub lifetime | The destructor calls `PauseRoseProcessing`. | The caller calls `pauseRoseProcessing`. | JavaScript has no deterministic destructor. |
 | Encode failure on an event | `Send` throws or returns the prefix result. The event is not sent. | `handleEvent` returns the `AsnInvokeProblem` value, or `ROSE_TE_TRANSPORTFAILED` when that value is missing. | The generated `event_*` method stays synchronous and numeric. The caller still sees a non-zero local code. |

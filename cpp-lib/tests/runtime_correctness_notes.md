@@ -17,6 +17,8 @@ related_docs:
   - ../../.cursor/rules/rose-cross-language-parity.mdc
   - ../../docs/rose-session-subscription.md
   - ../../docs/rose-processing-gate.md
+  - ../../docs/rose-invoke-timeout.md
+  - ../../docs/rose-worker-pools.md
 ---
 
 # Runtime Correctness Notes
@@ -428,6 +430,8 @@ Each helper detaches borrowed pointers in its destructor.
 
 ## 9. ROSEInvoke Wire Timeout (BUILDSYS-645)
 
+Human contract, including C++/TypeScript deviations: [docs/rose-invoke-timeout.md](../../docs/rose-invoke-timeout.md).
+
 ### Status: implemented (7.0.18)
 
 ### Contract
@@ -544,6 +548,8 @@ Then port `telemetry_tests.cpp` → `TSTelemetry.test.ts` (outcome/reason assert
 When Tier A ROSE glue lands, reuse scenario names from this matrix; implement harness per language.
 
 ## 12. Named worker pools (UCAAS-1479)
+
+Human contract, including the TypeScript absence: [docs/rose-worker-pools.md](../../docs/rose-worker-pools.md).
 
 ### Contract
 

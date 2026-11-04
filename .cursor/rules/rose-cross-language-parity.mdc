@@ -55,11 +55,16 @@ These must stay aligned wherever Tier A exists:
 - Outbound/inbound invoke and event dispatch, reject/error/result handling
 - `PauseRoseProcessing` / `ResumeRoseProcessing`, operation block policy, session subscription / negotiate
 - Telemetry outcomes and reason codes (same meaning, same triggers)
-- Wire encode rules (e.g. encode `timeout` only when `> 0`, not for events)
+- Wire encode rules (JSON writes a resolved `timeout`, including `0`, on a non-event invoke; BER writes it only after `SetSendTimeoutInInvokes`; events omit the field)
 
 Document new cross-cutting behavior in `runtime_correctness_notes.md` with a **“Cross-language parity”** bullet naming C++, TS, and planned Kotlin/Swift surfaces.
 
-Human-readable feature docs live under `docs/` with routing front matter. The session subscription store, including every justified C++/TypeScript deviation, is `docs/rose-session-subscription.md`. A difference that is not in that file's deviations table is a bug. Update the file in the same change as the code.
+Human-readable feature docs live under `docs/` with routing front matter. A difference that is not in that feature's deviations table is a bug. Update the matching page in the same change as the code.
+
+- `docs/rose-session-subscription.md`
+- `docs/rose-processing-gate.md`
+- `docs/rose-invoke-timeout.md`
+- `docs/rose-worker-pools.md`
 
 ## Tests
 
