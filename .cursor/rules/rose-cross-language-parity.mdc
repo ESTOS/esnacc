@@ -59,6 +59,8 @@ These must stay aligned wherever Tier A exists:
 
 Document new cross-cutting behavior in `runtime_correctness_notes.md` with a **“Cross-language parity”** bullet naming C++, TS, and planned Kotlin/Swift surfaces.
 
+Human-readable feature docs live under `docs/` with routing front matter. The session subscription store, including every justified C++/TypeScript deviation, is `docs/rose-session-subscription.md`. A difference that is not in that file's deviations table is a bug. Update the file in the same change as the code.
+
 ## Tests
 
 | Layer | Location | Role |
@@ -82,7 +84,9 @@ Negotiate/gating pairing table: `.cursor/rules/interface-negotiate-cpp-ts-parity
 2. Change ASN.1 if wire shape changes; regenerate stubs.
 3. Implement **C++ and TypeScript** in the same task (or same MR series).
 4. Add paired tests; note Kotlin/Swift follow-up in the MR if runtimes do not exist yet.
-5. For Kotlin/Swift stub-only changes, verify generated field names and codecs match Tier B.
+5. Update the human doc (`docs/rose-session-subscription.md` for this store, or the feature page under `docs/` for a new area). Add a deviations-table row when the languages differ, with the reason. If they do not differ, do not leave a stale row.
+6. Before commit, push, or a merge request: re-read that doc against the diff. Public methods, members, and behavior must match, or the deviation must be in the table.
+7. For Kotlin/Swift stub-only changes, verify generated field names and codecs match Tier B.
 
 ## Out of scope
 

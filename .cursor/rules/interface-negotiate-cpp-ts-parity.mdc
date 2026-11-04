@@ -23,6 +23,8 @@ This file lists the **negotiate / gating** surfaces that must change together to
 
 Do **not** land C++-only or TS-only halves of the same behavior. Tests on both sides move together when semantics change.
 
+Human contract and the deviations table: `docs/rose-session-subscription.md`. Update it in the same change.
+
 ## Naming
 
 - **Ask the user** before introducing or renaming public API (types, enums, methods, flags).
