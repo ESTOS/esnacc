@@ -15,6 +15,7 @@ related_docs:
   - ../../AGENTS.md
   - ../../ReadMe.md
   - ../../.cursor/rules/rose-cross-language-parity.mdc
+  - ../../docs/rose-session-subscription.md
   - ../../docs/rose-processing-gate.md
 ---
 

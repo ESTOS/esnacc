@@ -261,7 +261,8 @@ enum class SnaccOperationBlockPolicy
 
 /*! SnaccROSESender is the transport-facing interface for generated ROSE stubs: send outbound
 	invokes and events, decode inbound invokes, and encode invoke responses.
-	Also implements ISnaccRoseSessionSubscription; base methods assert until overridden. */
+	Also implements ISnaccRoseSessionSubscription. Write methods assert until overridden.
+	The two queries allow every OPID until a store is installed. An empty store blocks. */
 class SnaccROSESender : public virtual ISnaccRoseSessionSubscription
 {
 public:
@@ -361,13 +362,8 @@ public:
 
 	SnaccOperationBlockPolicy GetOperationBlockPolicy() const;
 
-	/*! True after MarkSessionSubscriptionStateSet() (typically when a subscribe handler updates session OPIDs). */
-	bool HasSessionSubscriptionState() const;
-
-	/*! Marks session subscription state as initialized; call from SetSubscribedEvents and related overrides. */
-	void MarkSessionSubscriptionStateSet();
-
-	/*! True when BlockUnsupportedOperations is active, capability state is set, and the outbound op is not allowed. */
+	/*! True when BlockUnsupportedOperations is active and the outbound op is not in the session set.
+		An empty store blocks. A sender whose queries allow every OPID is not blocked here. */
 	bool IsOperationBlocked(unsigned int uiOpId, bool bIsEvent) const;
 
 	/*
@@ -416,7 +412,6 @@ protected:
 	}
 
 	SnaccOperationBlockPolicy m_operationBlockPolicy{SnaccOperationBlockPolicy::NeverBlock};
-	bool m_bSessionSubscriptionStateSet{false};
 };
 
 class SnaccScopedInvokeMessage

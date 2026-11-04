@@ -68,6 +68,7 @@ Other backends (C, C#, Java, Kotlin, Swift, Delphi, JavaScript, IDL, JSDoc, Open
 | [samples/ts-microservice/readme.md](samples/ts-microservice/readme.md)                         | TypeScript microservice layout and verification flow |
 | [samples/ts-microservice/node-server/README.md](samples/ts-microservice/node-server/README.md) | Node server handlers, config, generated stub usage   |
 | [cpp-lib/tests/runtime_correctness_notes.md](cpp-lib/tests/runtime_correctness_notes.md)       | Intended C++ runtime semantics and correctness tests |
+| [docs/rose-session-subscription.md](docs/rose-session-subscription.md)                         | Session subscription store: behavior, API, C++/TS deviations |
 | [docs/rose-processing-gate.md](docs/rose-processing-gate.md)                                   | ROSE pause/resume gate: behavior, API, C++/TS deviations |
 
 ## Typical task routing

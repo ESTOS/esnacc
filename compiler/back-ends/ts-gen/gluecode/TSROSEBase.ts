@@ -636,8 +636,6 @@ export interface IASN1Transport extends IRoseSessionSubscription {
 	isProcessingAllowed(): boolean;
 	setOperationBlockPolicy(policy: OperationBlockPolicy): void;
 	getOperationBlockPolicy(): OperationBlockPolicy;
-	hasSessionSubscriptionState(): boolean;
-	markSessionSubscriptionStateSet(): void;
 	isOperationBlocked(operationID: number, isEvent: boolean): boolean;
 	completeIfProcessingShutdown(invoke: ROSEInvoke): ROSEReject | undefined;
 	completeIfOperationBlocked(

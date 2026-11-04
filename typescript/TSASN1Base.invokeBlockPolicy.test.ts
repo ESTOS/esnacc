@@ -40,12 +40,10 @@ class SubscriptionTransport extends TSASN1Base {
 	}
 
 	public setSubscribedEvents(moduleIid: number, eventOpIds: readonly number[]): void {
-		this.markSessionSubscriptionStateSet();
 		this.store.setSubscribedEvents(moduleIid, eventOpIds);
 	}
 
 	public setSupportedInvokes(moduleIid: number, invokeOpIds: readonly number[]): void {
-		this.markSessionSubscriptionStateSet();
 		this.store.setSupportedInvokes(moduleIid, invokeOpIds);
 	}
 
@@ -92,6 +90,8 @@ test("negotiate path: blockUnsupportedOperations without snapshot does not block
 	const transport = new ClientTestTransport();
 	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 100, 0, 0, false);
 	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
+	assert.equal(transport.isOperationBlocked(100, false), false);
+	assert.equal(transport.isOperationBlocked(2109, true), false);
 
 	await transport.sendInvoke({
 		invoke: createInvoke(100, "asnInvoke"),
@@ -116,14 +116,14 @@ test("negotiate path: unsupported op id returns remoteNotCapable reject at stub 
 	assert.equal(CustomInvokeProblemEnum.remoteNotCapable, ROSE_REJECT_REMOTENOTCAPABLE);
 });
 
-test("subscription path: BlockUnsupportedOperations without state does not block", () => {
+test("subscription path: blocks event and invoke absent from the store", () => {
 	const transport = new SubscriptionTransport();
 	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
-	assert.equal(transport.isOperationBlocked(2109, true), false);
-	assert.equal(transport.isOperationBlocked(2109, false), false);
+	assert.equal(transport.isOperationBlocked(2109, true), true);
+	assert.equal(transport.isOperationBlocked(2109, false), true);
 });
 
-test("subscription path: blocks unsubscribed event after state is marked", () => {
+test("subscription path: blocks unsubscribed event", () => {
 	const transport = new SubscriptionTransport();
 	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
 	transport.setSubscribedEvents(100, [2170]);
@@ -131,7 +131,15 @@ test("subscription path: blocks unsubscribed event after state is marked", () =>
 	assert.equal(transport.isOperationBlocked(2170, true), false);
 });
 
-test("completeIfOperationBlocked blocks unsubscribed event after state is marked", () => {
+test("subscription path: blocks unsupported invoke", () => {
+	const transport = new SubscriptionTransport();
+	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
+	transport.setSupportedInvokes(100, [3001]);
+	assert.equal(transport.isOperationBlocked(3002, false), true);
+	assert.equal(transport.isOperationBlocked(3001, false), false);
+});
+
+test("completeIfOperationBlocked blocks unsubscribed event", () => {
 	const transport = new SubscriptionTransport();
 	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
 	transport.setSubscribedEvents(100, [2170]);

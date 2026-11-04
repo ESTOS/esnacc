@@ -4,7 +4,7 @@ import type { IRoseSessionSubscription } from "./IRoseSessionSubscription.js";
  * In-memory per-session subscription store.
  * Paired with C++ RoseSessionSubscriptionStore. A replace or clear updates only that
  * module's OPIDs in the flat lookup. Events and invokes stay separate sets.
- * Not thread-safe. Callers that share one store across threads must serialize access.
+ * No lock: the JS event loop serializes access. The C++ store uses a shared mutex.
  */
 export class RoseSessionSubscriptionStore implements IRoseSessionSubscription {
 	private subscribedEventsByModule = new Map<number, Set<number>>();

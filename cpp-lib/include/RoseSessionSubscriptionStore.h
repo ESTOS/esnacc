@@ -3,6 +3,7 @@
 
 #include "ISnaccRoseSessionSubscription.h"
 
+#include <shared_mutex>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -10,7 +11,9 @@
  * In-memory per-session subscription store.
  * Paired with TypeScript RoseSessionSubscriptionStore. A replace or clear updates
  * only that module's OPIDs in the flat lookup. Events and invokes stay separate sets.
- * Not thread-safe. Callers that share one store across threads must serialize access.
+ * Many readers, one writer (std::shared_mutex). The TypeScript store has the same
+ * set rules and no lock; its event loop is the serializer.
+ * ClearModuleOpIds and ReplaceModuleOpIds must be called with the unique lock held.
  */
 class RoseSessionSubscriptionStore : public ISnaccRoseSessionSubscription
 {
@@ -32,6 +35,7 @@ private:
 	/* Replaces moduleIid. An empty opIds list leaves the module absent. Other modules stay in both maps. */
 	void ReplaceModuleOpIds(std::unordered_map<int, std::unordered_set<unsigned int>>& moduleOpIdsByModule, std::unordered_set<unsigned int>& flatOpIds, int moduleIid, const std::list<int>& opIds);
 
+	mutable std::shared_mutex m_lock;
 	std::unordered_map<int, std::unordered_set<unsigned int>> m_subscribedEventsByModule;
 	std::unordered_set<unsigned int> m_subscribedEventOpIds;
 	std::unordered_map<int, std::unordered_set<unsigned int>> m_supportedInvokesByModule;

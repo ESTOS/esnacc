@@ -328,7 +328,6 @@ export abstract class TSASN1Base implements IASN1Transport {
 	private remoteModuleCapabilitiesByName = new Map<string, ILoadedModuleInfo>();
 	private remoteModuleCapabilitiesSet = false;
 	private operationBlockPolicy = OperationBlockPolicy.NeverBlock;
-	private sessionSubscriptionStateSet = false;
 	private roseProcessingAllowed = true;
 	private interfaceIdsByOpId = new Map<number, number>();
 	// The Logger Callback which must be set with the SetLogger Method
@@ -664,16 +663,20 @@ export abstract class TSASN1Base implements IASN1Transport {
 		snaccAssertFail("addSupportedInvoke not implemented on this transport");
 	}
 
-	/** True when eventOpId is in the effective subscribed-event set. Server transports must override. */
+	/**
+	 * Allows every event. A transport without a session store is not filtered here.
+	 * Override with RoseSessionSubscriptionStore: an empty store then returns false.
+	 */
 	public isSubscribedEvent(_eventOpId: number): boolean {
-		snaccAssertFail("isSubscribedEvent not implemented on this transport");
-		return false;
+		return true;
 	}
 
-	/** True when invokeOpId is in the supported server-to-client invoke set. Server transports must override. */
+	/**
+	 * Allows every invoke. A transport without a session store is not filtered here.
+	 * Override with RoseSessionSubscriptionStore: an empty store then returns false.
+	 */
 	public isSupportedInvoke(_invokeOpId: number): boolean {
-		snaccAssertFail("isSupportedInvoke not implemented on this transport");
-		return false;
+		return true;
 	}
 
 	/**
@@ -691,29 +694,14 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * True after markSessionSubscriptionStateSet() (typically when subscribe handlers update session OPIDs).
-	 */
-	public hasSessionSubscriptionState(): boolean {
-		return this.sessionSubscriptionStateSet;
-	}
-
-	/**
-	 * Marks session subscription state as initialized; call from setSubscribedEvents and related overrides.
-	 */
-	public markSessionSubscriptionStateSet(): void {
-		this.sessionSubscriptionStateSet = true;
-	}
-
-	/**
-	 * True when BlockUnsupportedOperations is active, capability state is set, and the outbound op is not allowed.
+	 * True when BlockUnsupportedOperations is active and the outbound op is not in the session set.
+	 * An empty store blocks. A transport whose queries allow every OPID is not blocked here.
 	 */
 	public isOperationBlocked(operationID: number, isEvent: boolean): boolean {
 		if (this.operationBlockPolicy !== OperationBlockPolicy.BlockUnsupportedOperations)
 			return false;
 
 		if (isEvent) {
-			if (!this.sessionSubscriptionStateSet)
-				return false;
 			if (this.isSubscribedEvent(operationID))
 				return false;
 			snaccAssertFail(
@@ -722,7 +710,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			return true;
 		}
 
-		if (this.sessionSubscriptionStateSet && !this.isSupportedInvoke(operationID)) {
+		if (!this.isSupportedInvoke(operationID)) {
 			snaccAssertFail(
 				`Outbound invoke blocked: operation id ${operationID} is not supported for this session`,
 			);

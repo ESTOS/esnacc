@@ -738,16 +738,6 @@ SnaccOperationBlockPolicy SnaccROSESender::GetOperationBlockPolicy() const
 	return m_operationBlockPolicy;
 }
 
-bool SnaccROSESender::HasSessionSubscriptionState() const
-{
-	return m_bSessionSubscriptionStateSet;
-}
-
-void SnaccROSESender::MarkSessionSubscriptionStateSet()
-{
-	m_bSessionSubscriptionStateSet = true;
-}
-
 bool SnaccROSESender::IsOperationBlocked(const unsigned int uiOpId, const bool bIsEvent) const
 {
 	if (m_operationBlockPolicy != SnaccOperationBlockPolicy::BlockUnsupportedOperations)
@@ -755,15 +745,13 @@ bool SnaccROSESender::IsOperationBlocked(const unsigned int uiOpId, const bool b
 
 	if (bIsEvent)
 	{
-		if (!m_bSessionSubscriptionStateSet)
-			return false;
 		if (IsSubscribedEvent(uiOpId))
 			return false;
 		ASSERT_FAILED("Outbound event blocked: operation id %u is not subscribed for this session", uiOpId);
 		return true;
 	}
 
-	if (m_bSessionSubscriptionStateSet && !IsSupportedInvoke(uiOpId))
+	if (!IsSupportedInvoke(uiOpId))
 	{
 		ASSERT_FAILED("Outbound invoke blocked: operation id %u is not supported for this session", uiOpId);
 		return true;

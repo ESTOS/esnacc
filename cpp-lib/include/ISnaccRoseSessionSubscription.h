@@ -6,11 +6,12 @@
 /*
  * Per-session ROSE subscription contract for SnaccROSESender and SnaccROSEComponent.
  *
- * Server-side senders must override all methods. SnaccROSESender base implementations assert
- * in debug builds when called without an override.
+ * A server that owns a RoseSessionSubscriptionStore must override all methods.
+ * SnaccROSESender write methods assert until overridden. The two queries allow every
+ * OPID until that store is installed.
  *
- * When SnaccOperationBlockPolicy is BlockUnsupportedOperations and session state is marked,
- * gluecode blocks outbound traffic via IsOperationBlocked.
+ * When SnaccOperationBlockPolicy is BlockUnsupportedOperations, gluecode blocks outbound
+ * traffic that is not in this session set via IsOperationBlocked. An empty set blocks.
  */
 class ISnaccRoseSessionSubscription
 {
