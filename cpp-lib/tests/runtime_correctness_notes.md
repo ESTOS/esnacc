@@ -15,6 +15,7 @@ related_docs:
   - ../../AGENTS.md
   - ../../ReadMe.md
   - ../../.cursor/rules/rose-cross-language-parity.mdc
+  - ../../docs/rose-processing-gate.md
 ---
 
 # Runtime Correctness Notes
@@ -47,6 +48,8 @@ Primary reference points:
 ## 1. Transport-session ROSE processing gate (`PauseRoseProcessing` / `ResumeRoseProcessing`)
 
 ### Status: implemented
+
+Human contract, including C++/TypeScript deviations: [docs/rose-processing-gate.md](../../docs/rose-processing-gate.md).
 
 ### Public contract
 
@@ -108,6 +111,8 @@ while shutdown is active.
 - `PublicApiRuntimeTest.PauseRoseProcessingBlocksInboundDispatchUntilResumed`
 - `LifecycleRuntimeTest.PauseRoseProcessingCompletesPendingInvokeWithShutdownBer`
 - `LifecycleRuntimeTest.PauseRoseProcessingCompletesPendingInvokeWithShutdownJson`
+- `LifecycleRuntimeTest.ResumeRoseProcessingAllowsNextOutboundInvoke`
+- `LifecycleRuntimeTest.LateResultAfterPauseDoesNotResurrectPendingInvoke`
 - `LifecycleRuntimeTest.PendingInvokeCanRecoverAfterShutdownOnNextFixtureSetupBer`
 - `LifecycleRuntimeTest.PendingInvokeCanRecoverAfterShutdownOnNextFixtureSetupJson`
 
@@ -468,7 +473,7 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 | `client_invoke_block_policy_tests`                | `TSASN1Base.invokeBlockPolicy.test.ts`            | **Aligned** (stub gate; loopback runtime C++-only)                                                                                                               |
 | `server_invoke_block_policy_tests`                | `TSASN1Base.invokeBlockPolicy.test.ts`            | **Partial** (subscription path only)                                                                                                                             |
 | `rose_session_subscription_tests`                 | `TSASN1Base.roseSessionSubscription.test.ts`      | **Aligned** (store replace/clear matrix on both; component forward is `SnaccROSEComponentForwardsToSender` / `ROSEBase forwards subscription queries to transport`) |
-| Pause / shutdown gate                             | `TSASN1Base.pauseRoseProcessing.test.ts`          | **Partial** (3 scenarios; lifecycle/async overlap C++-only)                                                                                                      |
+| Pause / shutdown gate                             | `TSASN1Base.pauseRoseProcessing.test.ts`          | **Aligned** for the session gate (block, complete pending, resume, inbound until resume, late result). Worker-pool reject inside `PauseRoseProcessing` stays C++-only. Async callback completion stays C++-only. |
 | `InvokeWireTimeoutTest` / outbound encode         | `TSROSEBase.invokeTimeout.test.ts`                | **Aligned** — JSON always writes the resolved timeout; BER writes it only after `SetSendTimeoutInInvokes(true)`; the local wait is unchanged; wire `0` is not an expired queue deadline |
 | `InvokeContextInitTest`                           | `TSInvokeContext.init.test.ts`                    | **Partial** (wire `operationName` vs lookup differs from C++)                                                                                                    |
 | `InvokeContextRuntimeTest` (loopback)             | `TSCallFlow.loopback.test.ts` (subset)            | **Partial** — full orphan/malformed matrix C++-only                                                                                                              |

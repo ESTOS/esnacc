@@ -66,15 +66,49 @@ test("pauseRoseProcessing blocks outbound invoke and event sends", async () => {
 	assert.ok(invokeReject instanceof ROSEReject);
 	assert.equal(invokeReject.reject?.invokeProblem, ROSE_TE_SHUTDOWN);
 
+	const eventContext = createInvokeContext(transport, 200, "asnEvent", true);
+	eventContext.bSendEventSynchronous = true;
 	const eventResult = transport.sendEvent({
 		invoke: { invokeID: 99999, operationID: 200, operationName: "asnEvent" },
 		payLoad: {},
-		invokeContext: createInvokeContext(transport, 200, "asnEvent", true),
+		invokeContext: eventContext,
 	});
-	assert.equal(eventResult, undefined);
+	assert.equal(eventResult, false);
 
 	transport.resumeRoseProcessing();
 	assert.equal(transport.isProcessingAllowed(), true);
+});
+
+test("resumeRoseProcessing allows the next outbound invoke", async () => {
+	const transport = new TestTransport();
+	transport.pauseRoseProcessing();
+
+	const blocked = await transport.sendInvoke({
+		invoke: { invokeID: 1, operationID: 100, operationName: "asnInvoke" },
+		payLoad: {},
+		invokeContext: createInvokeContext(transport, 100, "asnInvoke", false),
+	});
+	assert.ok(blocked instanceof ROSEReject);
+	assert.equal(blocked.reject?.invokeProblem, ROSE_TE_SHUTDOWN);
+
+	transport.resumeRoseProcessing();
+	const sent = await transport.sendInvoke({
+		invoke: { invokeID: 2, operationID: 100, operationName: "asnInvoke" },
+		payLoad: {},
+		invokeContext: createInvokeContext(transport, 100, "asnInvoke", false),
+	});
+	assert.equal(sent, undefined);
+
+	const eventContext = createInvokeContext(transport, 200, "asnEvent", true);
+	eventContext.bSendEventSynchronous = true;
+	assert.equal(
+		transport.sendEvent({
+			invoke: { invokeID: 99999, operationID: 200, operationName: "asnEvent" },
+			payLoad: {},
+			invokeContext: eventContext,
+		}),
+		true,
+	);
 });
 
 test("pauseRoseProcessing completes pending invokes with shutdown", async () => {
@@ -103,4 +137,75 @@ test("receiveHandleROSEMessage rejects inbound invoke while paused", async () =>
 
 	assert.ok(response);
 	assert.match(String(response?.payLoad), /"invokeProblem":2/);
+});
+
+test("pauseRoseProcessing blocks inbound dispatch until resumeRoseProcessing", async () => {
+	const transport = new TestTransport();
+	let handlerCalls = 0;
+	const handler = {
+		getNameForOperationID: () => undefined,
+		getIDForOperationName: () => undefined,
+		onInvoke: async () => {
+			handlerCalls += 1;
+			return undefined;
+		},
+	};
+	transport.registerOperation(handler, handler as never, 100, "asnInvoke", "TestModule", 100, 0, 0, false);
+	transport.pauseRoseProcessing();
+
+	const blocked = await transport.receiveHandleROSEMessage(
+		{ invoke: { invokeID: 3, operationID: 100, operationName: "asnInvoke" } },
+		{},
+		new ReceiveInvokeContext({ encoding: EASN1TransportEncoding.JSON }),
+	);
+	assert.match(String(blocked?.payLoad), /"invokeProblem":2/);
+	assert.equal(handlerCalls, 0);
+
+	transport.resumeRoseProcessing();
+	await transport.receiveHandleROSEMessage(
+		{ invoke: { invokeID: 4, operationID: 100, operationName: "asnInvoke" } },
+		{},
+		new ReceiveInvokeContext({ encoding: EASN1TransportEncoding.JSON }),
+	);
+	assert.equal(handlerCalls, 1);
+});
+
+test("late result after pauseRoseProcessing does not replace the shutdown reject", async () => {
+	const transport = new PendingTestTransport();
+	const pending = transport.sendInvoke({
+		invoke: { invokeID: 7, operationID: 100, operationName: "asnInvoke" },
+		payLoad: {},
+		invokeContext: createInvokeContext(transport, 100, "asnInvoke", false),
+	});
+
+	transport.pauseRoseProcessing();
+	const shutdown = await pending;
+	assert.ok(shutdown instanceof ROSEReject);
+	assert.equal(shutdown.reject?.invokeProblem, ROSE_TE_SHUTDOWN);
+
+	const late = await transport.receiveHandleROSEMessage(
+		{ result: { invokeID: 7, result: {} } },
+		{},
+		new ReceiveInvokeContext({ encoding: EASN1TransportEncoding.JSON }),
+	);
+	assert.equal(late, undefined);
+
+	transport.resumeRoseProcessing();
+	let settled = false;
+	const next = transport
+		.sendInvoke({
+			invoke: { invokeID: 8, operationID: 100, operationName: "asnInvoke" },
+			payLoad: {},
+			invokeContext: createInvokeContext(transport, 100, "asnInvoke", false),
+		})
+		.then((value) => {
+			settled = true;
+			return value;
+		});
+	await new Promise((resolve) => setTimeout(resolve, 20));
+	assert.equal(settled, false);
+	transport.pauseRoseProcessing();
+	const closed = await next;
+	assert.ok(closed instanceof ROSEReject);
+	assert.equal(closed.reject?.invokeProblem, ROSE_TE_SHUTDOWN);
 });
