@@ -175,18 +175,129 @@ bool PrintTSROSEOperationDefine(FILE* src, Module* m, ValueDef* v)
 	return true;
 }
 
+/*
+ * True when vd is emitted into OperationIDs. Same filter as PrintTSROSEOperationDefine.
+ * PrintTSROSEOperationDefines uses this so a section comment is skipped when the group is empty.
+ */
+static bool IsPrintedTsRoseOperationId(Module* m, ValueDef* v)
+{
+	if (v->value->basicValue->choiceId != BASICVALUE_INTEGER)
+		return false;
+	if (v->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
+		return false;
+	if (v->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
+		return false;
+	if (IsDeprecatedNoOutputOperation(m, v->definedName))
+		return false;
+	return true;
+}
+
+/*
+ * True when vd is a printed ROSE event (no RESULT). Same split as the C++ IsEvent.
+ * The argument is requested because GetROSEDetails returns false when every requested slot is absent.
+ */
+static bool IsEvent(Module* m, ValueDef* vd)
+{
+	if (!IsPrintedTsRoseOperationId(m, vd))
+		return false;
+
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	if (!GetROSEDetails(m, vd, &pszArgument, &pszResult, NULL, NULL, NULL, NULL, true))
+		return false;
+	return pszResult == NULL;
+}
+
+/*
+ * True when vd is a printed ROSE invoke (details resolve and a RESULT is present).
+ * Same split as IsEvent: an id whose details do not resolve is neither.
+ */
+static bool IsOperation(Module* m, ValueDef* vd)
+{
+	if (!IsPrintedTsRoseOperationId(m, vd))
+		return false;
+
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	if (!GetROSEDetails(m, vd, &pszArgument, &pszResult, NULL, NULL, NULL, NULL, true))
+		return false;
+	return pszResult != NULL;
+}
+
+/*
+ * True when defs contains a printed invoke. PrintTSROSEOperationDefines uses this
+ * to skip the function section comment when the module has only events.
+ */
+static bool HasOperation(Module* m, ValueDefList* defs)
+{
+	ValueDef* vd;
+	FOR_EACH_LIST_ELMT(vd, defs)
+	{
+		if (IsOperation(m, vd))
+			return true;
+	}
+	return false;
+}
+
+/*
+ * True when defs contains a printed event. PrintTSROSEOperationDefines uses this
+ * to skip the event section comment when the module has only invokes.
+ */
+static bool HasEvent(Module* m, ValueDefList* defs)
+{
+	ValueDef* vd;
+	FOR_EACH_LIST_ELMT(vd, defs)
+	{
+		if (IsEvent(m, vd))
+			return true;
+	}
+	return false;
+}
+
+/*
+ * Writes one OperationIDs group. A comma closes the previous member before the next
+ * group comment. The last member of the enum has no trailing comma.
+ */
+static void PrintTSRoseOperationIdGroup(FILE* src, Module* mod, ValueDefList* defs, bool bEvents, bool* pbElementAdded)
+{
+	if (bEvents)
+	{
+		if (!HasEvent(mod, defs))
+			return;
+	}
+	else if (!HasOperation(mod, defs))
+		return;
+
+	if (*pbElementAdded)
+		fprintf(src, ",\n");
+	fprintf(src, "\t// ---- %s ----\n", bEvents ? "Events" : "Functions (invokes)");
+
+	ValueDef* vd;
+	bool bInGroup = false;
+	FOR_EACH_LIST_ELMT(vd, defs)
+	{
+		if (bEvents)
+		{
+			if (!IsEvent(mod, vd))
+				continue;
+		}
+		else if (!IsOperation(mod, vd))
+			continue;
+		if (bInGroup)
+			fprintf(src, ",\n");
+		bInGroup = PrintTSROSEOperationDefine(src, mod, vd);
+	}
+	*pbElementAdded = bInGroup;
+}
+
 void PrintTSROSEOperationDefines(FILE* src, Module* mod, ValueDefList* defs)
 {
 	fprintf(src, "\n// [%s]\n", __FUNCTION__);
 	fprintf(src, "export enum OperationIDs {\n");
 	bool bElementAdded = false;
-	ValueDef* vd;
-	FOR_EACH_LIST_ELMT(vd, defs)
-	{
-		if (bElementAdded)
-			fprintf(src, ",\n");
-		bElementAdded = PrintTSROSEOperationDefine(src, mod, vd);
-	}
+	// Functions first, then events. Order inside each group stays the ASN.1 valueDefs order.
+	PrintTSRoseOperationIdGroup(src, mod, defs, false, &bElementAdded);
+	PrintTSRoseOperationIdGroup(src, mod, defs, true, &bElementAdded);
 	fprintf(src, "\n}\n");
 }
 
@@ -482,6 +593,50 @@ void PrintTSROSEConstructor(FILE* src, Module* m)
 	fprintf(src, "\t}\n");
 }
 
+/*
+ * Writes one setHandler registration group. Called twice from PrintTSROSESetHandler,
+ * functions first. Skips operations that are not registered today (no ROSE details).
+ */
+static void PrintTSRoseRegisterGroup(FILE* src, Module* m, bool bEvents)
+{
+	ValueDef* vd;
+	bool bHeader = false;
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		if (!IsROSEValueDef(m, vd))
+			continue;
+
+		const char* pszArgument = NULL;
+		const char* pszResult = NULL;
+		const char* pszError = NULL;
+		if (!GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
+			continue;
+
+		if (bEvents && !IsEvent(m, vd))
+			continue;
+		else if (!bEvents && !IsOperation(m, vd))
+			continue;
+		const bool bIsEvent = pszResult == NULL;
+
+		if (!bHeader)
+		{
+			fprintf(src, "\t\t// ---- %s ----\n", bEvents ? "Events" : "Functions (invokes)");
+			bHeader = true;
+		}
+
+		long long llAddedUnix = 0;
+		long long llDeprecatedUnix = 0;
+		asnoperationcomment comment;
+		if (GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment))
+		{
+			llAddedUnix = comment.i64Added;
+			llDeprecatedUnix = comment.i64Deprecated;
+		}
+
+		fprintf(src, "\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\", %s.MODULE_NAME, %s.MODULE_IID, %lld, %lld, %s);\n", vd->definedName, vd->definedName, GetNameSpace(m), GetNameSpace(m), llAddedUnix, llDeprecatedUnix, bIsEvent ? "true" : "false");
+	}
+}
+
 void PrintTSROSESetHandler(FILE* src, Module* m)
 {
 	fprintf(src, "\n\t// [%s]\n", __FUNCTION__);
@@ -498,30 +653,9 @@ void PrintTSROSESetHandler(FILE* src, Module* m)
 	fprintf(src, "\tpublic setHandler(handler: Partial<I%s_Handler>): void {\n", m->ROSEClassName);
 	if (gMajorInterfaceVersion >= 0)
 		fprintf(src, "\t\tthis.transport.registerModuleVersion(%s.MODULE_NAME, %s.MODULE_VERSION);\n", GetNameSpace(m), GetNameSpace(m));
-	ValueDef* vd;
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
-	{
-		if (!IsROSEValueDef(m, vd))
-			continue;
-
-		const char* pszArgument = NULL;
-		const char* pszResult = NULL;
-		const char* pszError = NULL;
-		if (!GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, NULL, NULL, NULL, true))
-			continue;
-
-		const bool bIsEvent = pszResult == NULL;
-		long long llAddedUnix = 0;
-		long long llDeprecatedUnix = 0;
-		asnoperationcomment comment;
-		if (GetOperationComment_UTF8(m->moduleName, vd->definedName, &comment))
-		{
-			llAddedUnix = comment.i64Added;
-			llDeprecatedUnix = comment.i64Deprecated;
-		}
-
-		fprintf(src, "\t\tthis.transport.registerOperation(this, handler, OperationIDs.OPID_%s, \"%s\", %s.MODULE_NAME, %s.MODULE_IID, %lld, %lld, %s);\n", vd->definedName, vd->definedName, GetNameSpace(m), GetNameSpace(m), llAddedUnix, llDeprecatedUnix, bIsEvent ? "true" : "false");
-	}
+	// Functions first, then events. registerModuleVersion stays ahead of both groups.
+	PrintTSRoseRegisterGroup(src, m, false);
+	PrintTSRoseRegisterGroup(src, m, true);
 
 	fprintf(src, "\t}\n");
 }
