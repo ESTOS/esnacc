@@ -170,7 +170,16 @@ export class LoopbackTransport extends TSASN1Base {
 		});
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
+	/**
+	 * Delivers an encoded event to the peer.
+	 *
+	 * handleEvent always calls sendEvent, and sendEvent only calls sendEventSync.
+	 * The previous async sendEvent path used sendInvoke for the same delivery.
+	 * The promise is not awaited: event handlers run while the invoking call is still on the stack,
+	 * which is what the loopback call-flow tests observe.
+	 */
+	public sendEventSync(data: IASN1InvokeData): boolean {
+		void this.sendInvoke(data);
 		return true;
 	}
 

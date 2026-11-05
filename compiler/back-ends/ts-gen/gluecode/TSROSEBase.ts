@@ -293,13 +293,13 @@ export interface IConnectionSocket {
  * Centralized method that creates a ROSEReject for an invoke problem
  *
  * @param invoke - The invoke this reject is created for or the number
- * @param value - The invoke problem enum value
+ * @param value - Invoke problem, custom problem, or a local ERoseResult such as ROSE_TE_SHUTDOWN
  * @param description - An additional description to hand over to the other side
  * @returns - the created ROSEReject object
  */
 export function createInvokeReject(
 	invoke: ROSEInvoke | number,
-	value: InvokeProblemenum | CustomInvokeProblemEnum,
+	value: InvokeProblemenum | CustomInvokeProblemEnum | ERoseResult,
 	description?: string,
 ): ROSEReject {
 	let sessionID: string | undefined;
