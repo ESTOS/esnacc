@@ -1988,7 +1988,7 @@ bool SnaccROSEBase::LogTransportData(const bool bOutbound, const SNACC::Transpor
 	return bTransportDataWasLogged;
 }
 
-long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
+ERoseResult SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	const auto chronoCreated = std::chrono::steady_clock::now();
 	const char* szResolvedOperationName = ResolveOperationNameFromStub(szOperationName, pInvoke->operationID, this);
@@ -2005,10 +2005,10 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResu
 
 	long lRoseResult = ROSE_NOERROR;
 	if (CompleteIfProcessingShutdown(pInvoke, szResolvedOperationName, chronoCreated, pCtx, lRoseResult))
-		return lRoseResult;
+		return static_cast<ERoseResult>(lRoseResult);
 
 	if (CompleteIfOperationBlocked(pInvoke, szResolvedOperationName, false, pCtx, lRoseResult))
-		return lRoseResult;
+		return static_cast<ERoseResult>(lRoseResult);
 
 	auto& pendingOP = AddPendingOperation(pInvoke->invokeID, pInvoke->operationID, szResolvedOperationName);
 
@@ -2053,7 +2053,7 @@ long SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResu
 
 	RemovePendingOperation(pendingOP.m_lInvokeID);
 
-	return lRoseResult;
+	return static_cast<ERoseResult>(lRoseResult);
 }
 
 void SnaccROSEBase::FinishAsyncInvoke(long invokeID, long lRoseResult, std::unique_ptr<SNACC::ROSEMessage> pMessage, size_t stResponseData)
@@ -2234,7 +2234,7 @@ void SnaccROSEBase::StopWatchdogThread()
 		m_watchdogThread.join();
 }
 
-long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
+ERoseResult SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName /*= nullptr*/, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	const auto chronoCreated = std::chrono::steady_clock::now();
 	const char* szResolvedOperationName = ResolveOperationNameFromStub(szOperationName, pInvoke->operationID, this);
@@ -2261,7 +2261,7 @@ long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 			shutdownCallback = pCtx->AsyncCallback();
 		if (shutdownCallback)
 			shutdownCallback(lRoseResult, *pCtx);
-		return lRoseResult;
+		return static_cast<ERoseResult>(lRoseResult);
 	}
 
 	if (CompleteIfOperationBlocked(pInvoke, szResolvedOperationName, false, pCtx, lRoseResult))
@@ -2271,7 +2271,7 @@ long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 			rejectCallback = pCtx->AsyncCallback();
 		if (rejectCallback)
 			rejectCallback(lRoseResult, *pCtx);
-		return lRoseResult;
+		return static_cast<ERoseResult>(lRoseResult);
 	}
 
 	auto& pendingOP = AddPendingOperation(pInvoke->invokeID, pInvoke->operationID, szResolvedOperationName);
@@ -2299,13 +2299,13 @@ long SnaccROSEBase::SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* 
 	{
 		// Finish even when the response was already consumed inside Send(); second call is a no-op.
 		FinishAsyncInvoke(pendingOP.m_lInvokeID, lRoseResult, {}, 0);
-		return lRoseResult;
+		return static_cast<ERoseResult>(lRoseResult);
 	}
 
 	if (lRoseResult != ROSE_NOERROR)
 	{
 		FinishAsyncInvoke(pendingOP.m_lInvokeID, lRoseResult, {}, 0);
-		return lRoseResult;
+		return static_cast<ERoseResult>(lRoseResult);
 	}
 
 	{

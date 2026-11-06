@@ -170,12 +170,12 @@ bool SnaccRoseOperationLookupRegistrationHost::LogTransportData(const bool /* bO
 	return false;
 }
 
-long SnaccRoseOperationLookupRegistrationHost::SendInvoke(SNACC::ROSEInvoke* /* pInvoke */, SNACC::AsnType* /* pResult */, SNACC::AsnType* /* pError */, const char* /* szOperationName */, std::shared_ptr<SnaccInvokeContext> /* pCtx */)
+ERoseResult SnaccRoseOperationLookupRegistrationHost::SendInvoke(SNACC::ROSEInvoke* /* pInvoke */, SNACC::AsnType* /* pResult */, SNACC::AsnType* /* pError */, const char* /* szOperationName */, std::shared_ptr<SnaccInvokeContext> /* pCtx */)
 {
 	return ROSE_TE_SHUTDOWN;
 }
 
-long SnaccRoseOperationLookupRegistrationHost::SendInvokeAsync(SNACC::ROSEInvoke* /* pInvoke */, SNACC::AsnType* /* pResult */, SNACC::AsnType* /* pError */, const char* /* szOperationName */, std::shared_ptr<SnaccInvokeContext> /* pCtx */)
+ERoseResult SnaccRoseOperationLookupRegistrationHost::SendInvokeAsync(SNACC::ROSEInvoke* /* pInvoke */, SNACC::AsnType* /* pResult */, SNACC::AsnType* /* pError */, const char* /* szOperationName */, std::shared_ptr<SnaccInvokeContext> /* pCtx */)
 {
 	return ROSE_TE_SHUTDOWN;
 }

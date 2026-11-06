@@ -33,12 +33,12 @@ namespace snacclib
 				return false;
 			}
 
-			long SendInvoke(SNACC::ROSEInvoke* /*pInvoke*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
+			ERoseResult SendInvoke(SNACC::ROSEInvoke* /*pInvoke*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
 			{
 				return ROSE_NOERROR;
 			}
 
-			long SendInvokeAsync(SNACC::ROSEInvoke* /*pInvoke*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
+			ERoseResult SendInvokeAsync(SNACC::ROSEInvoke* /*pInvoke*/, SNACC::AsnType* /*pResult*/, SNACC::AsnType* /*pError*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
 			{
 				return ROSE_NOERROR;
 			}

@@ -356,7 +356,10 @@ public:
 	virtual bool LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szOperationName, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue) override;
 
 	/**
-	 * An invoke that is send to the other side. Should only be called by the ROSE stub itself generated files
+	 * An invoke that is sent to the other side. Should only be called by the generated ROSE stub.
+	 *
+	 * The return is the local status and converts to long. The decoded answer is written to pResult or pError.
+	 * Send() still returns long; this method casts that value.
 	 *
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
 	 * pResult - decoded result payload in case a result response is received
@@ -365,13 +368,14 @@ public:
 	 * pCtx - contextual data for the invoke (timeout, async callback, telemetry). The caller may keep
 	 *        another shared reference to inspect changes after the call.
 	 */
-	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
+	virtual ERoseResult SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
 
 	/**
 	 * Async outbound invoke. For InvokeTimeout() > 0 (or unset connection default), requires SetAsyncCompletion() on pCtx.
+	 * Returns the local dispatch status. Completion of a waiting invoke is delivered through the context callback.
 	 * InvokeTimeout() == 0 matches SendInvoke fire-and-forget: no watchdog, no completion callback.
 	 */
-	virtual long SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
+	virtual ERoseResult SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
 
 	/**
 	 * Encodes the result or error from an OnInvoke request. Retrieves the result or error from the response
