@@ -4,7 +4,7 @@ import test from "node:test";
 import { type ROSEError, ROSEReject, type ROSEResult } from "./stub/SNACCROSE.js";
 import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./stub/TSASN1Base.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
-import { type IASN1InvokeData, ReceiveInvokeContext, ROSE_NOERROR, ROSE_TE_SHUTDOWN, ROSE_TE_TRANSPORTFAILED, SendInvokeContext } from "./stub/TSROSEBase.js";
+import { type ERoseResult, type IASN1InvokeData, ReceiveInvokeContext, ROSE_NOERROR, ROSE_TE_SHUTDOWN, ROSE_TE_TRANSPORTFAILED, SendInvokeContext } from "./stub/TSROSEBase.js";
 
 class TestTransport extends TSASN1Base {
 	public constructor() {
@@ -19,11 +19,17 @@ class TestTransport extends TSASN1Base {
 		return undefined;
 	}
 
-	/** When false, sendEventSync reports that the socket or peer connection was not ready. */
+	/** When false, sendEvent reports that the socket or peer connection was not ready. */
 	public syncSendSucceeds = true;
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
-		return this.syncSendSucceeds;
+	/**
+	 * Local send codes for the pause tests. The session gate is checked here because the base class
+	 * no longer wraps sendEvent.
+	 */
+	public sendEvent(_data: IASN1InvokeData): ERoseResult {
+		if (!this.isProcessingAllowed())
+			return ROSE_TE_SHUTDOWN;
+		return this.syncSendSucceeds ? ROSE_NOERROR : ROSE_TE_TRANSPORTFAILED;
 	}
 
 	public getSessionID(): string | undefined {

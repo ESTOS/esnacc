@@ -28,10 +28,6 @@ export class CapturingClientTransport extends TSASN1Base {
 		return ROSE_NOERROR;
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
-		return true;
-	}
-
 	public getSessionID(): string | undefined {
 		return undefined;
 	}
@@ -74,8 +70,9 @@ export class RecordingServerTransport extends TSASN1Base {
 		return undefined;
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
-		return true;
+	/** Accepts every encoded event. These tests do not assert the socket result. */
+	public sendEvent(_data: IASN1InvokeData): ERoseResult {
+		return ROSE_NOERROR;
 	}
 
 	public getSessionID(): string | undefined {

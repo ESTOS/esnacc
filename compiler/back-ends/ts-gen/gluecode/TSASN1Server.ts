@@ -16,6 +16,7 @@ import {
 	IASN1Transport,
 	ReceiveInvokeContext,
 	ASN1ByteArray,
+	ERoseResult,
 	ROSEBase,
 } from "./TSROSEBase.js";
 
@@ -64,24 +65,38 @@ export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * Sends an event synchronous to a client
+	 * Sends an encoded event to one client connection.
 	 *
-	 * @param data - the data for the invoke
-	 * @returns true when the event was sent
+	 * Checks the session gate once. A missing client connection id is `ROSE_REJECT_INVALIDSESSIONID`.
+	 * A missing connection handler, a missing client connection, a `send` that returns false, or a
+	 * `send` that throws is `ROSE_TE_TRANSPORTFAILED`.
+	 *
+	 * @param data - the encoded event payload and invoke context
+	 * @returns the local send code
 	 */
-	public sendEventSync(data: IASN1InvokeData): boolean {
+	public sendEvent(data: IASN1InvokeData): ERoseResult {
 		if (!this.isProcessingAllowed())
-			return false;
+			return ERoseResult.ROSE_TE_SHUTDOWN;
 
-		if (this.connectionhandler && data.invokeContext.clientConnectionID) {
-			const client = this.connectionhandler.getClientConnection(data.invokeContext.clientConnectionID);
-			if (client) {
-				const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
-				client.send(encodeResult.payLoad);
-				return true;
-			}
+		const clientConnectionID = data.invokeContext.clientConnectionID;
+		if (!clientConnectionID)
+			return ERoseResult.ROSE_REJECT_INVALIDSESSIONID;
+
+		if (!this.connectionhandler)
+			return ERoseResult.ROSE_TE_TRANSPORTFAILED;
+
+		const client = this.connectionhandler.getClientConnection(clientConnectionID);
+		if (!client)
+			return ERoseResult.ROSE_TE_TRANSPORTFAILED;
+
+		try {
+			const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
+			if (!client.send(encodeResult.payLoad))
+				return ERoseResult.ROSE_TE_TRANSPORTFAILED;
+			return ERoseResult.ROSE_NOERROR;
+		} catch {
+			return ERoseResult.ROSE_TE_TRANSPORTFAILED;
 		}
-		return false;
 	}
 
 	/**

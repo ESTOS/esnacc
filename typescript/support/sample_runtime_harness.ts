@@ -15,8 +15,11 @@ import {
 	asn1Encode,
 	createInvokeReject,
 	type IASN1InvokeData,
+	ERoseResult,
 	ReceiveInvokeContext,
 	ROSEBase,
+	ROSE_NOERROR,
+	ROSE_TE_SHUTDOWN,
 	SendInvokeContext,
 } from "../stub/TSROSEBase.js";
 import { ROSE_TE_TRANSPORTFAILED } from "./rose_result_codes.js";
@@ -173,14 +176,17 @@ export class LoopbackTransport extends TSASN1Base {
 	/**
 	 * Delivers an encoded event to the peer.
 	 *
-	 * handleEvent always calls sendEvent, and sendEvent only calls sendEventSync.
-	 * The previous async sendEvent path used sendInvoke for the same delivery.
-	 * The promise is not awaited: event handlers run while the invoking call is still on the stack,
-	 * which is what the loopback call-flow tests observe.
+	 * The promise from sendInvoke is not awaited: event handlers run while the invoking call is still
+	 * on the stack, which is what the loopback call-flow tests observe.
+	 *
+	 * @param data - the encoded event payload and invoke context
+	 * @returns ROSE_TE_SHUTDOWN while the session gate is closed, otherwise ROSE_NOERROR
 	 */
-	public sendEventSync(data: IASN1InvokeData): boolean {
+	public sendEvent(data: IASN1InvokeData): ERoseResult {
+		if (!this.isProcessingAllowed())
+			return ROSE_TE_SHUTDOWN;
 		void this.sendInvoke(data);
-		return true;
+		return ROSE_NOERROR;
 	}
 
 	public getSessionID(): string | undefined {

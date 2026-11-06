@@ -61,11 +61,6 @@ class SubscriptionTransport extends TSASN1Base {
 		return ROSE_NOERROR;
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
-		this.sentEvents++;
-		return true;
-	}
-
 	public getSessionID(): string | undefined {
 		return undefined;
 	}

@@ -15,6 +15,7 @@ import {
 	ROSE_HTTP_OK,
 	ROSE_HTTP_REJECT_FALLBACK,
 } from "./stub/TSROSEBase.js";
+import { ERoseResult, ROSE_NOERROR } from "./stub/TSROSEBase.js";
 import type { IASN1InvokeData, ROSEReject } from "./stub/TSROSEBase.js";
 import { SampleRuntimeHarness } from "./support/sample_runtime_harness.js";
 import * as ENetUC_Settings_Manager from "./stub/ENetUC_Settings_Manager.js";
@@ -28,8 +29,9 @@ class HandleResultProbe extends TSASN1Base {
 		return undefined;
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
-		return true;
+	/** Accepts every encoded event. HTTP status tests do not send. */
+	public sendEvent(_data: IASN1InvokeData): ERoseResult {
+		return ROSE_NOERROR;
 	}
 
 	public getSessionID(): string | undefined {

@@ -7,7 +7,7 @@ import { ROSEReject } from "./stub/SNACCROSE.js";
 import { ASN1ClassInstanceType, TSASN1Base } from "./stub/TSASN1Base.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
 import { buildRemoteModuleCapabilities } from "./stub/TSModuleCapabilities.js";
-import { CustomInvokeProblemEnum, OperationBlockPolicy, ROSEBase, ROSE_REJECT_REMOTENOTCAPABLE } from "./stub/TSROSEBase.js";
+import { CustomInvokeProblemEnum, ERoseResult, OperationBlockPolicy, ROSEBase, ROSE_NOERROR, ROSE_REJECT_REMOTENOTCAPABLE } from "./stub/TSROSEBase.js";
 import type { IASN1InvokeData } from "./stub/TSROSEBase.js";
 
 class ClientTestTransport extends TSASN1Base {
@@ -22,8 +22,9 @@ class ClientTestTransport extends TSASN1Base {
 		return undefined;
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
-		return true;
+	/** Accepts every encoded event. These tests drive sendInvoke, not the socket. */
+	public sendEvent(_data: IASN1InvokeData): ERoseResult {
+		return ROSE_NOERROR;
 	}
 
 	public getSessionID(): string | undefined {
@@ -62,9 +63,10 @@ class SubscriptionTransport extends TSASN1Base {
 		return Promise.resolve(undefined);
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
+	/** Counts events that passed the session filter. handleEvent calls this after the block check. */
+	public sendEvent(_data: IASN1InvokeData): ERoseResult {
 		this.sentEvents++;
-		return true;
+		return ROSE_NOERROR;
 	}
 
 	public getSessionID(): string | undefined {

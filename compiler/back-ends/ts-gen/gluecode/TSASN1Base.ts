@@ -961,26 +961,38 @@ export abstract class TSASN1Base implements IASN1Transport {
 	/**
 	 * Sends an already encoded event and returns the local send code.
 	 *
-	 * Called from `ROSEBase.handleEvent` after encode. There is no peer answer. Every event uses
-	 * `sendEventSync`. The return matches C++ `SendEvent`: `ROSE_TE_SHUTDOWN` while the session
-	 * gate is closed, `ROSE_NOERROR` when the bytes were handed to the socket, and
-	 * `ROSE_TE_TRANSPORTFAILED` when the socket or peer connection was not ready.
+	 * Called from `ROSEBase.handleEvent` after encode, and by callers that already hold an encoded event.
+	 * There is no peer answer and no pending invoke. The concrete transport owns the session gate and the
+	 * socket checks, and returns `ROSE_TE_SHUTDOWN`, `ROSE_NOERROR`, or a failure code such as
+	 * `ROSE_TE_TRANSPORTFAILED` or `ROSE_REJECT_INVALIDSESSIONID`.
 	 *
 	 * @param data - the encoded event payload and invoke context
 	 * @returns the local send code (`ERoseResult`)
 	 */
-	public sendEvent(data: IASN1InvokeData): ERoseResult {
-		if (!this.isProcessingAllowed())
-			return ERoseResult.ROSE_TE_SHUTDOWN;
+	public abstract sendEvent(data: IASN1InvokeData): ERoseResult;
 
-		return this.sendEventSync(data) ? ERoseResult.ROSE_NOERROR : ERoseResult.ROSE_TE_TRANSPORTFAILED;
-	}
-
-	// Sends an invoke (event, invoke, reject, result etc.) to the other side
+	/**
+	 * Sends an already encoded ROSE payload and waits for the peer answer when one is expected.
+	 *
+	 * Called from `ROSEBase.handleInvoke`, and by transports that still deliver an encoded event
+	 * through this path. The payload can be an invoke, result, error, or reject. A closed session
+	 * gate resolves a local shutdown reject. The promise resolves undefined when there is nothing
+	 * to wait for. A peer failure comes back as `ROSEReject` or `ROSEError`, not as `ERoseResult`.
+	 *
+	 * @param data - the encoded payload and invoke context
+	 * @returns the peer answer, a local reject, or undefined when the call does not wait
+	 */
 	public abstract sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
-	// Sends an even synchronously to the other side of a websocket connection
-	public abstract sendEventSync(data: IASN1InvokeData): boolean;
-	// Retrieves the client connection ID we got from the server
+
+	/**
+	 * Returns the ROSE session id of this transport.
+	 *
+	 * Called from `ROSEBase.encodeInvoke` to fill `ROSEInvoke.sessionID`. A client returns the id
+	 * assigned by the server. A server returns undefined: it serves many clients, and the target
+	 * id is already on the invoke context.
+	 *
+	 * @returns the session id, or undefined when this transport has none
+	 */
 	public abstract getSessionID(): string | undefined;
 
 	/**
