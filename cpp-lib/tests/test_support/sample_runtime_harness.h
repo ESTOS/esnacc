@@ -734,14 +734,14 @@ namespace snacclib
 		}
 
 		// Attaches the endpoint session id before the base runtime encodes an invoke.
-		long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
+		ERoseResult SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
 		{
 			AttachSessionId(pInvoke);
 			return SnaccROSEBase::SendInvoke(pInvoke, pResult, pError, szOperationName, std::move(pCtx));
 		}
 
 		// Attaches the endpoint session id before the base runtime dispatches an async invoke.
-		long SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
+		ERoseResult SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override
 		{
 			AttachSessionId(pInvoke);
 			return SnaccROSEBase::SendInvokeAsync(pInvoke, pResult, pError, szOperationName, std::move(pCtx));

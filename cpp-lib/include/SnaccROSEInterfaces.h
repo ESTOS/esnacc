@@ -69,7 +69,7 @@ namespace SJson
 /*! Unscoped on purpose, with underlying type long. An ERoseResult converts to long, so existing
 	parameters, comparisons, and long variables keep compiling. The other direction needs
 	static_cast<ERoseResult> and is only valid when the long is one of these enumerators.
-	Send() and SendInvoke() still return long. SendEvent() returns ERoseResult.
+	Send() still returns long. SendInvoke(), SendInvokeAsync(), and SendEvent() return ERoseResult.
 	During an invoke, ROSE_NOERROR means a ROSEResult was received.
 
 	Bit layout: transport uses 0x0000000F, ROSE layer 0x000000F0, reject 0x00000F00, error 0x0000F000. */
@@ -296,7 +296,11 @@ public:
 	 */
 	virtual bool LogTransportData(const bool bOutbound, const SNACC::TransportEncoding encoding, const char* szOperationName, const char* szData, const size_t size, const SNACC::ROSEMessage* pMSg, const SJson::Value* pParsedValue = nullptr) = 0;
 
-	/** An invoke that is send to the other side. Should only be called by the ROSE stub itself generated files
+	/** An invoke that is sent to the other side. Should only be called by the generated ROSE stub.
+	 *
+	 * The return is the local status: ROSE_NOERROR, a transport failure, a reject, or ROSE_ERROR_VALUE.
+	 * The decoded answer is written to pResult or pError. The value converts to long, so a caller may
+	 * store it in a long without a cast. Send() underneath still returns long and is cast here.
 	 *
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
 	 * pResult - decoded result payload in case a result response is received
@@ -305,14 +309,14 @@ public:
 	 * pCtx - contextual data for the invoke (timeout, async callback, telemetry). The caller may keep
 	 *        another shared reference to inspect changes after the call.
 	 */
-	virtual long SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) = 0;
+	virtual ERoseResult SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) = 0;
 
 	/** Async outbound invoke. For InvokeTimeout() > 0 (or unset connection default), requires SetAsyncCompletion() on pCtx.
 	 * Returns immediately after send (ROSE_NOERROR) or with a transport/encode failure; completion is
-	 * delivered through the context callback when waiting for a reply.
+	 * delivered through the context callback when waiting for a reply. The return converts to long.
 	 * InvokeTimeout() == 0 is fire-and-forget (parity with SendInvoke): dispatch only, DISPATCHED/WAIT_SKIPPED
 	 * telemetry, no completion callback — SetAsyncCompletion() must not be used (debug ASSERT). */
-	virtual long SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) = 0;
+	virtual ERoseResult SendInvokeAsync(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType* pResult, SNACC::AsnType* pError, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) = 0;
 
 	/**
 	 * Handles the response payload of the SendInvoke method. Retrieves the result or error from the response
