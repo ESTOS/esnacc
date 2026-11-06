@@ -4,6 +4,7 @@ import test from "node:test";
 import type { ROSEError, ROSEReject, ROSEResult } from "./stub/SNACCROSE.js";
 import { ASN1ClassInstanceType, TSASN1Base } from "./stub/TSASN1Base.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
+import { ERoseResult, ROSE_NOERROR } from "./stub/TSROSEBase.js";
 import type { IASN1InvokeData } from "./stub/TSROSEBase.js";
 
 class TestTransport extends TSASN1Base {
@@ -15,8 +16,9 @@ class TestTransport extends TSASN1Base {
 		return Promise.resolve(undefined);
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
-		return true;
+	/** Accepts every encoded event. Registry tests do not send. */
+	public sendEvent(_data: IASN1InvokeData): ERoseResult {
+		return ROSE_NOERROR;
 	}
 
 	public getSessionID(): string | undefined {

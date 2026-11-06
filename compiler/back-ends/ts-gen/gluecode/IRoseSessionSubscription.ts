@@ -2,12 +2,13 @@
  * Per-session ROSE subscription contract (parity with C++ ISnaccRoseSessionSubscription).
  *
  * Naming map for future backends:
- *   C++  clearAllSubscriptions / setSubscribedEvents / isSubscribedEvent
+ *   C++  ClearAllSubscriptions / SetSubscribedEvents / IsSubscribedEvent
  *   TS   clearAllSubscriptions / setSubscribedEvents / isSubscribedEvent
  *
- * Server-side transports must override all methods. TSASN1Base defaults call snaccAssertFail.
- * When OperationBlockPolicy is BlockUnsupportedOperations and session state is marked,
- * gluecode blocks outbound traffic via isOperationBlocked at handleEvent / handleInvoke.
+ * Server-side transports that own a store must override all methods.
+ * TSASN1Base write defaults call snaccAssertFail. The two queries allow every OPID until a store is installed.
+ * When OperationBlockPolicy is BlockUnsupportedOperations, gluecode blocks outbound
+ * traffic that is not in this session set via isOperationBlocked. An empty set blocks.
  */
 export interface IRoseSessionSubscription {
 	clearAllSubscriptions(): void;

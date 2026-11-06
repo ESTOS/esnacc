@@ -34,6 +34,7 @@ import {
 	snaccAssert,
 	snaccAssertFail,
 	ROSE_TE_SHUTDOWN,
+	ERoseResult,
 	ASN1ByteArray,
 	ROSEBase,
 } from "./TSROSEBase.js";
@@ -328,7 +329,6 @@ export abstract class TSASN1Base implements IASN1Transport {
 	private remoteModuleCapabilitiesByName = new Map<string, ILoadedModuleInfo>();
 	private remoteModuleCapabilitiesSet = false;
 	private operationBlockPolicy = OperationBlockPolicy.NeverBlock;
-	private sessionSubscriptionStateSet = false;
 	private roseProcessingAllowed = true;
 	private interfaceIdsByOpId = new Map<number, number>();
 	// The Logger Callback which must be set with the SetLogger Method
@@ -664,16 +664,21 @@ export abstract class TSASN1Base implements IASN1Transport {
 		snaccAssertFail("addSupportedInvoke not implemented on this transport");
 	}
 
-	/** True when eventOpId is in the effective subscribed-event set. Server transports must override. */
+	/**
+	 * True for every event until a store overrides this.
+	 * A transport without a session store is not filtered here. An empty store returns false.
+	 */
 	public isSubscribedEvent(_eventOpId: number): boolean {
-		snaccAssertFail("isSubscribedEvent not implemented on this transport");
-		return false;
+		return true;
 	}
 
-	/** True when invokeOpId is in the supported server-to-client invoke set. Server transports must override. */
+	/**
+	 * True for every invoke until a store overrides this.
+	 * A transport without a session store is not filtered here. An empty store returns false.
+	 * Clients keep this default and are filtered only by remote capabilities.
+	 */
 	public isSupportedInvoke(_invokeOpId: number): boolean {
-		snaccAssertFail("isSupportedInvoke not implemented on this transport");
-		return false;
+		return true;
 	}
 
 	/**
@@ -691,29 +696,14 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * True after markSessionSubscriptionStateSet() (typically when subscribe handlers update session OPIDs).
-	 */
-	public hasSessionSubscriptionState(): boolean {
-		return this.sessionSubscriptionStateSet;
-	}
-
-	/**
-	 * Marks session subscription state as initialized; call from setSubscribedEvents and related overrides.
-	 */
-	public markSessionSubscriptionStateSet(): void {
-		this.sessionSubscriptionStateSet = true;
-	}
-
-	/**
-	 * True when BlockUnsupportedOperations is active, capability state is set, and the outbound op is not allowed.
+	 * True when BlockUnsupportedOperations is active and the outbound op is not in the session set.
+	 * An empty set blocks.
 	 */
 	public isOperationBlocked(operationID: number, isEvent: boolean): boolean {
 		if (this.operationBlockPolicy !== OperationBlockPolicy.BlockUnsupportedOperations)
 			return false;
 
 		if (isEvent) {
-			if (!this.sessionSubscriptionStateSet)
-				return false;
 			if (this.isSubscribedEvent(operationID))
 				return false;
 			snaccAssertFail(
@@ -722,7 +712,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			return true;
 		}
 
-		if (this.sessionSubscriptionStateSet && !this.isSupportedInvoke(operationID)) {
+		if (!this.isSupportedInvoke(operationID)) {
 			snaccAssertFail(
 				`Outbound invoke blocked: operation id ${operationID} is not supported for this session`,
 			);
@@ -969,28 +959,40 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
-	 * Helper method that allows to send an event without setting a timeout or by mistake taking care of result messages of the sendInvoke message
+	 * Sends an already encoded event and returns the local send code.
 	 *
-	 * @param data - the data for the invoke
-	 * @returns undefined or, if bSendEventSynchronous has been set true when the event was sent
+	 * Called from `ROSEBase.handleEvent` after encode, and by callers that already hold an encoded event.
+	 * There is no peer answer and no pending invoke. The concrete transport owns the session gate and the
+	 * socket checks, and returns `ROSE_TE_SHUTDOWN`, `ROSE_NOERROR`, or a failure code such as
+	 * `ROSE_TE_TRANSPORTFAILED` or `ROSE_REJECT_INVALIDSESSIONID`.
+	 *
+	 * @param data - the encoded event payload and invoke context
+	 * @returns the local send code (`ERoseResult`)
 	 */
-	public sendEvent(data: IASN1InvokeData): undefined | boolean {
-		if (!this.isProcessingAllowed())
-			return data.invokeContext?.bSendEventSynchronous ? false : undefined;
+	public abstract sendEvent(data: IASN1InvokeData): ERoseResult;
 
-		if (data.invokeContext?.bSendEventSynchronous)
-			return this.sendEventSync(data);
-		else {
-			void this.sendInvoke(data);
-			return undefined;
-		}
-	}
-
-	// Sends an invoke (event, invoke, reject, result etc.) to the other side
+	/**
+	 * Sends an already encoded ROSE payload and waits for the peer answer when one is expected.
+	 *
+	 * Called from `ROSEBase.handleInvoke`, and by transports that still deliver an encoded event
+	 * through this path. The payload can be an invoke, result, error, or reject. A closed session
+	 * gate resolves a local shutdown reject. The promise resolves undefined when there is nothing
+	 * to wait for. A peer failure comes back as `ROSEReject` or `ROSEError`, not as `ERoseResult`.
+	 *
+	 * @param data - the encoded payload and invoke context
+	 * @returns the peer answer, a local reject, or undefined when the call does not wait
+	 */
 	public abstract sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
-	// Sends an even synchronously to the other side of a websocket connection
-	public abstract sendEventSync(data: IASN1InvokeData): boolean;
-	// Retrieves the client connection ID we got from the server
+
+	/**
+	 * Returns the ROSE session id of this transport.
+	 *
+	 * Called from `ROSEBase.encodeInvoke` to fill `ROSEInvoke.sessionID`. A client returns the id
+	 * assigned by the server. A server returns undefined: it serves many clients, and the target
+	 * id is already on the invoke context.
+	 *
+	 * @returns the session id, or undefined when this transport has none
+	 */
 	public abstract getSessionID(): string | undefined;
 
 	/**

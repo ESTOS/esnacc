@@ -29,3 +29,7 @@ BUILDSYS-645: Add optional per-invoke timeout on the ROSE wire.
 ## When the key is unknown
 
 Ask for the ticket key before committing. Do not invent a key, and do not commit with the key only in the body or at the end of the subject.
+
+## ROSE C++ / TypeScript docs
+
+When the commit, push, or merge request touches ROSE runtime behavior in C++ or TypeScript, read `docs/rose-session-subscription.md` if the session store or block policy is in the diff, and the matching feature page under `docs/` otherwise. Methods, members, and behavior stay aligned. A difference needs a row in that page's deviations table in the same change. See `.cursor/rules/rose-cross-language-parity.mdc`.

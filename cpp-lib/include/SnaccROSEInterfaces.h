@@ -65,73 +65,70 @@ namespace SJson
 	class Value;
 }
 
-//! Error definitions
-/*! During Invoke NOERROR means that a ROSEResult has been received. */
-const long ROSE_NOERROR = 0;
+//! Local ROSE result codes.
+/*! Unscoped on purpose, with underlying type long. An ERoseResult converts to long, so existing
+	parameters, comparisons, and long variables keep compiling. The other direction needs
+	static_cast<ERoseResult> and is only valid when the long is one of these enumerators.
+	Send() and SendInvoke() still return long. SendEvent() returns ERoseResult.
+	During an invoke, ROSE_NOERROR means a ROSEResult was received.
 
-// Bits in Error Code
-//! 0101 0101 0101 0101 0101 0101 0101 0101
-//!                                    Transport Layer
-//!                               ROSE Layer
-//!                          Reject
-//!                     Error
+	Bit layout: transport uses 0x0000000F, ROSE layer 0x000000F0, reject 0x00000F00, error 0x0000F000. */
+enum ERoseResult : long
+{
+	ROSE_NOERROR = 0,
 
-//! Errors for Transport Layer (message cannot be sent)
-//! TE Errors are reserved in bits 1 to 3 (Values 1 to
+	//! Transport layer. The message was not sent. Bits 1 to 3.
+	ROSE_TE_TRANSPORTFAILED = 0x00000001,
+	ROSE_TE_SHUTDOWN = 0x00000002,
+	ROSE_TE_TIMEOUT = 0x00000003,
+	//! Encode failed, for example a JSON payload that does not fit the length-prefix header.
+	ROSE_TE_ENCODE_FAILED = 0x00000004,
+
+	//! ROSE layer: the answer was invalid or decoding failed.
+	ROSE_RE_INVALID_ANSWER = 0x00000010,
+	ROSE_RE_DECODE_FAILED = 0x00000020,
+
+	//! Wire invoke problem is unrecognisedOperation. The operation is not in the stub or the lookup map.
+	ROSE_REJECT_UNKNOWNOPERATION = 0x00000100,
+	//! Function argument invalid (decode failed).
+	ROSE_REJECT_MISTYPEDARGUMENT = 0x00000200,
+	//! Wire invoke problem is unrecognisedOperation. The operation is known, but OnInvoke is not overridden.
+	ROSE_REJECT_FUNCTIONMISSING = 0x00000300,
+	//! Unknown reject.
+	ROSE_REJECT_UNKNOWN = 0x00000400,
+	//! Invalid SessionID.
+	ROSE_REJECT_INVALIDSESSIONID = 0x00000500,
+	//! StartSSL required. The function was called on a connection that requires StartSSL.
+	ROSE_REJECT_STARTSSLREQUIRED = 0x00000600,
+	//! Authentication incomplete. A second step is required.
+	ROSE_REJECT_AUTHENTICATIONINCOMPLETE = 0x00000700,
+	//! Authentication failed.
+	ROSE_REJECT_AUTHENTICATIONFAILED = 0x00000800,
+	//! Server busy. Authentication was rejected.
+	ROSE_REJECT_AUTHENTICATION_SERVER_BUSY = 0x00000A00,
+	//! User temporarily locked out after too many failed authentication attempts.
+	ROSE_REJECT_AUTHENTICATION_USER_TEMPORARY_LOCKED_OUT = 0x00000B00,
+	//! User locked out after too many failed authentication attempts.
+	ROSE_REJECT_AUTHENTICATION_USER_LOCKED_OUT = 0x00000C00,
+	//! The invoke requires an argument but none was specified.
+	ROSE_REJECT_ARGUMENT_MISSING = 0x00000D00,
+	//! Local stub rejected before send: the peer negotiate snapshot does not offer this invoke OPID.
+	ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00,
+	//! Dispatch queue is full. The handler did not run. Wire invoke problem is resourceLimitation, detail "queueFull".
+	ROSE_REJECT_QUEUE_FULL = 0x00000F00,
+
+	//! A ROSEError message was received.
+	ROSE_ERROR_VALUE = 0x00001000,
+};
+
+//! Transport-layer codes occupy bits 1 to 3.
 #define ISROSE_TE(num) (num & 0x0000000F)
-const long ROSE_TE_TRANSPORTFAILED = 0x00000001;
-const long ROSE_TE_SHUTDOWN = 0x00000002;
-const long ROSE_TE_TIMEOUT = 0x00000003;
-// Encode has failed (e.g. JSON encoding and the message was large than possible in the J0000123 header (in case the stub uses a length prefix))
-const long ROSE_TE_ENCODE_FAILED = 0x00000004;
-
-//! Errors for ROSE (invalid answer or decoding failed)
-//! Check for ROSE Error:
+//! ROSE-layer codes occupy the next nibble.
 #define ISROSE_RE(num) (num & 0x000000F0)
-const long ROSE_RE_INVALID_ANSWER = 0x00000010;
-const long ROSE_RE_DECODE_FAILED = 0x00000020;
-
-//! ROSE Server side ROSEReject answers.
-//! Wire invoke problem is unrecognisedOperation. Detail "unrecognisedOperation" means the operation is not in the stub or the lookup map.
+//! Reject codes occupy the next nibble.
 #define ISROSE_REJECT(num) (num & 0x00000F00)
-const long ROSE_REJECT_UNKNOWNOPERATION = 0x00000100;
-//! Function Argument invalid (decode failed)
-const long ROSE_REJECT_MISTYPEDARGUMENT = 0x00000200;
-//! Wire invoke problem is unrecognisedOperation. Detail "functionMissing" means the operation is known, but the virtual OnInvoke handler is not overridden.
-const long ROSE_REJECT_FUNCTIONMISSING = 0x00000300;
-//! Unknown Reject
-const long ROSE_REJECT_UNKNOWN = 0x00000400;
-//! Invalid SessionID
-const long ROSE_REJECT_INVALIDSESSIONID = 0x00000500;
-//! StartSSL required. Function called on a connection that requires StartSSL
-const long ROSE_REJECT_STARTSSLREQUIRED = 0x00000600;
-//! Authentication Required - Incomplete Authentication - second Step required
-const long ROSE_REJECT_AUTHENTICATIONINCOMPLETE = 0x00000700;
-//! Authentication Failed
-const long ROSE_REJECT_AUTHENTICATIONFAILED = 0x00000800;
-
-//! Async Operation - This is not really a reject, the result will be sent async by the implentor
-//! NOT used therefore commented out
-// const long ROSE_REJECT_ASYNCOPERATION = 0x00000900;
-
-//! Server busy authentication rejected
-const long ROSE_REJECT_AUTHENTICATION_SERVER_BUSY = 0x00000A00;
-//! User temporary locked out due to to many failed authentication attempts
-const long ROSE_REJECT_AUTHENTICATION_USER_TEMPORARY_LOCKED_OUT = 0x00000B00;
-//! User locked out due to to many failed authentication attempts
-const long ROSE_REJECT_AUTHENTICATION_USER_LOCKED_OUT = 0x00000C00;
-//! The invoke requires an argument but it was not specified
-const long ROSE_REJECT_ARGUMENT_MISSING = 0x00000D00;
-//! Local stub rejected before send: peer negotiate snapshot does not offer this invoke OPID
-const long ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00;
-//! Dispatch queue is full. The handler did not run.
-//! Wire invoke problem is resourceLimitation. Detail "queueFull".
-const long ROSE_REJECT_QUEUE_FULL = 0x00000F00;
-
-//! ROSE Server side ROSEError answers:
-//! ROSEError Message received
+//! ROSEError codes occupy the next nibble.
 #define ISROSE_ERROR(num) (num & 0x0000F000)
-const long ROSE_ERROR_VALUE = 0x00001000;
 
 class SnaccROSEBase;
 
@@ -261,7 +258,8 @@ enum class SnaccOperationBlockPolicy
 
 /*! SnaccROSESender is the transport-facing interface for generated ROSE stubs: send outbound
 	invokes and events, decode inbound invokes, and encode invoke responses.
-	Also implements ISnaccRoseSessionSubscription; base methods assert until overridden. */
+	Also implements ISnaccRoseSessionSubscription. Write methods assert until overridden.
+	IsSubscribedEvent and IsSupportedInvoke allow every OPID until a store overrides them. */
 class SnaccROSESender : public virtual ISnaccRoseSessionSubscription
 {
 public:
@@ -347,27 +345,24 @@ public:
 	 */
 	virtual long DecodeInvoke(const SNACC::ROSEMessage& invokeMessage, SNACC::AsnType* pArgument) = 0;
 
-	/** An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
+	/** An event (invoke without result) that is sent to the other side. Should only be called by the generated ROSE stub.
+	 *
+	 * There is no peer answer. The return is the local send code. It converts to long, so a caller
+	 * may store it in a long without a cast.
 	 *
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
 	 * szOperationName - the operationName (for logging purposes)
 	 * pCtx - contextual data for the invoke. The caller may keep another shared reference
 	 *        to inspect changes after the call.
 	 */
-	virtual long SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) = 0;
+	virtual ERoseResult SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) = 0;
 
 	/*! Configures blocking of outbound operations not covered by session subscription or negotiate state. Default NeverBlock. */
 	void SetOperationBlockPolicy(SnaccOperationBlockPolicy policy);
 
 	SnaccOperationBlockPolicy GetOperationBlockPolicy() const;
 
-	/*! True after MarkSessionSubscriptionStateSet() (typically when a subscribe handler updates session OPIDs). */
-	bool HasSessionSubscriptionState() const;
-
-	/*! Marks session subscription state as initialized; call from SetSubscribedEvents and related overrides. */
-	void MarkSessionSubscriptionStateSet();
-
-	/*! True when BlockUnsupportedOperations is active, capability state is set, and the outbound op is not allowed. */
+	/*! True when BlockUnsupportedOperations is active and the outbound op is not in the session set. An empty set blocks. */
 	bool IsOperationBlocked(unsigned int uiOpId, bool bIsEvent) const;
 
 	/*
@@ -416,7 +411,6 @@ protected:
 	}
 
 	SnaccOperationBlockPolicy m_operationBlockPolicy{SnaccOperationBlockPolicy::NeverBlock};
-	bool m_bSessionSubscriptionStateSet{false};
 };
 
 class SnaccScopedInvokeMessage

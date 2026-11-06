@@ -24,6 +24,7 @@ import {
 	ISocketErrorEvent,
 	ISocketMessageEvent,
 	ReceiveInvokeContext,
+	ERoseResult,
 	ROSEBase,
 	toASN1ByteArray,
 } from "./TSROSEBase.js";
@@ -247,18 +248,28 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	}
 
 	/**
-	 * Sends an event synchronous to the server
+	 * Sends an encoded event on the client socket.
 	 *
-	 * @param data - the data for the invoke
-	 * @returns true when the event was sent
+	 * Checks the session gate once. `ROSE_TE_TRANSPORTFAILED` covers a socket that is not open
+	 * and a `send` that throws. `socket.send` itself returns void, so a failed write shows up as an exception.
+	 *
+	 * @param data - the encoded event payload and invoke context
+	 * @returns the local send code
 	 */
-	public sendEventSync(data: IASN1InvokeData): boolean {
-		if (this.socket && this.socket.readyState === ESocketState.OPEN) {
+	public sendEvent(data: IASN1InvokeData): ERoseResult {
+		if (!this.isProcessingAllowed())
+			return ERoseResult.ROSE_TE_SHUTDOWN;
+
+		if (!this.socket || this.socket.readyState !== ESocketState.OPEN)
+			return ERoseResult.ROSE_TE_TRANSPORTFAILED;
+
+		try {
 			const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 			this.socket.send(encodeResult.payLoad);
-			return true;
+			return ERoseResult.ROSE_NOERROR;
+		} catch {
+			return ERoseResult.ROSE_TE_TRANSPORTFAILED;
 		}
-		return false;
 	}
 
 	/**

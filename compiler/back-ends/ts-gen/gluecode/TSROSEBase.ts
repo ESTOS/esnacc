@@ -72,11 +72,49 @@ export enum CustomInvokeProblemEnum {
 	remoteNotCapable = 0xE00,
 }
 
-/** Client-local SendInvoke result: peer negotiate snapshot does not offer this invoke OPID. */
-export const ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00;
+/**
+ * Local ROSE result codes. Same values as C++ `ERoseResult`.
+ *
+ * A numeric enum so `handleEvent` and `sendEvent` do not return a bare `number`.
+ * The value is still a number at runtime, so existing comparisons and `long` style checks keep working.
+ * C++ uses an unscoped enum with underlying type `long`, which converts to `long` without a cast.
+ */
+export enum ERoseResult {
+	ROSE_NOERROR = 0,
+	ROSE_TE_TRANSPORTFAILED = 0x00000001,
+	ROSE_TE_SHUTDOWN = 0x00000002,
+	ROSE_TE_TIMEOUT = 0x00000003,
+	ROSE_TE_ENCODE_FAILED = 0x00000004,
+	ROSE_RE_INVALID_ANSWER = 0x00000010,
+	ROSE_RE_DECODE_FAILED = 0x00000020,
+	ROSE_REJECT_UNKNOWNOPERATION = 0x00000100,
+	ROSE_REJECT_MISTYPEDARGUMENT = 0x00000200,
+	ROSE_REJECT_FUNCTIONMISSING = 0x00000300,
+	ROSE_REJECT_UNKNOWN = 0x00000400,
+	ROSE_REJECT_INVALIDSESSIONID = 0x00000500,
+	ROSE_REJECT_STARTSSLREQUIRED = 0x00000600,
+	ROSE_REJECT_AUTHENTICATIONINCOMPLETE = 0x00000700,
+	ROSE_REJECT_AUTHENTICATIONFAILED = 0x00000800,
+	ROSE_REJECT_AUTHENTICATION_SERVER_BUSY = 0x00000A00,
+	ROSE_REJECT_AUTHENTICATION_USER_TEMPORARY_LOCKED_OUT = 0x00000B00,
+	ROSE_REJECT_AUTHENTICATION_USER_LOCKED_OUT = 0x00000C00,
+	ROSE_REJECT_ARGUMENT_MISSING = 0x00000D00,
+	ROSE_REJECT_REMOTENOTCAPABLE = 0x00000E00,
+	ROSE_REJECT_QUEUE_FULL = 0x00000F00,
+	ROSE_ERROR_VALUE = 0x00001000,
+}
 
-/** Transport-layer shutdown (parity with C++ ROSE_TE_SHUTDOWN). */
-export const ROSE_TE_SHUTDOWN = 0x00000002;
+/** Same value as `ERoseResult.ROSE_REJECT_REMOTENOTCAPABLE`. Kept so existing imports stay valid. */
+export const ROSE_REJECT_REMOTENOTCAPABLE = ERoseResult.ROSE_REJECT_REMOTENOTCAPABLE;
+
+/** Same value as `ERoseResult.ROSE_NOERROR`. Kept so existing imports stay valid. */
+export const ROSE_NOERROR = ERoseResult.ROSE_NOERROR;
+
+/** Same value as `ERoseResult.ROSE_TE_TRANSPORTFAILED`. Kept so existing imports stay valid. */
+export const ROSE_TE_TRANSPORTFAILED = ERoseResult.ROSE_TE_TRANSPORTFAILED;
+
+/** Same value as `ERoseResult.ROSE_TE_SHUTDOWN`. Kept so existing imports stay valid. */
+export const ROSE_TE_SHUTDOWN = ERoseResult.ROSE_TE_SHUTDOWN;
 
 /** HTTP status for a successful ROSE invoke (`ROSEResult`). */
 export const ROSE_HTTP_OK = 200;
@@ -255,13 +293,13 @@ export interface IConnectionSocket {
  * Centralized method that creates a ROSEReject for an invoke problem
  *
  * @param invoke - The invoke this reject is created for or the number
- * @param value - The invoke problem enum value
+ * @param value - Invoke problem, custom problem, or a local ERoseResult such as ROSE_TE_SHUTDOWN
  * @param description - An additional description to hand over to the other side
  * @returns - the created ROSEReject object
  */
 export function createInvokeReject(
 	invoke: ROSEInvoke | number,
-	value: InvokeProblemenum | CustomInvokeProblemEnum,
+	value: InvokeProblemenum | CustomInvokeProblemEnum | ERoseResult,
 	description?: string,
 ): ROSEReject {
 	let sessionID: string | undefined;
@@ -453,7 +491,6 @@ export interface ISendInvokeContext extends ISendInvokeContextParams, IInvokeCon
  */
 export class SendInvokeContext extends BaseInvokeContext implements ISendInvokeContextParams {
 	public restTarget?: string;
-	public bSendEventSynchronous?: boolean;
 
 	/**
 	 * Constructor for the SendInvokeContext
@@ -463,7 +500,6 @@ export class SendInvokeContext extends BaseInvokeContext implements ISendInvokeC
 	public constructor(args: Partial<ISendInvokeContext>) {
 		super(args);
 		this.restTarget = args.restTarget;
-		this.bSendEventSynchronous = args.bSendEventSynchronous || false;
 	}
 }
 
@@ -610,7 +646,7 @@ export interface IInvokeHandler {
  */
 export interface IASN1Transport extends IRoseSessionSubscription {
 	sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
-	sendEvent(data: IASN1InvokeData): undefined | boolean;
+	sendEvent(data: IASN1InvokeData): ERoseResult;
 	registerOperation(
 		oninvokehandler: IInvokeHandler,
 		requesthandler: unknown,
@@ -636,8 +672,6 @@ export interface IASN1Transport extends IRoseSessionSubscription {
 	isProcessingAllowed(): boolean;
 	setOperationBlockPolicy(policy: OperationBlockPolicy): void;
 	getOperationBlockPolicy(): OperationBlockPolicy;
-	hasSessionSubscriptionState(): boolean;
-	markSessionSubscriptionStateSet(): void;
 	isOperationBlocked(operationID: number, isEvent: boolean): boolean;
 	completeIfProcessingShutdown(invoke: ROSEInvoke): ROSEReject | undefined;
 	completeIfOperationBlocked(
@@ -1209,14 +1243,22 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	}
 
 	/**
-	 * Handles an outbound event, encodes the argument, calls the other side and receives the response
+	 * Encodes an outbound event and hands it to the transport.
+	 *
+	 * Called by generated `event_*` methods. An event has no peer result; the return value is the
+	 * same local send code as C++ `SnaccROSEBase::SendEvent`: `ROSE_NOERROR` when the bytes were
+	 * handed to the socket, `ROSE_TE_SHUTDOWN` while the session gate is closed,
+	 * `ROSE_REJECT_REMOTENOTCAPABLE` when the session filter blocks the OPID,
+	 * `ROSE_TE_TRANSPORTFAILED` when the socket or peer connection is not ready, or
+	 * `ROSE_TE_ENCODE_FAILED` when encoding fails. Does not wait for a response and does not
+	 * register a pending invoke.
 	 *
 	 * @param argument - the invoke argument
 	 * @param operationID - the operation ID that has been called
 	 * @param operationName - the operation Name that has been called
 	 * @param argumentConverter - the converter for the argument object into the different encodings
 	 * @param invokeContext - the invokeContext which has already been prefilled with session related details
-	 * @returns undefined or, if bSendEventSynchronous has been set true when the event was sent
+	 * @returns the local send code
 	 */
 	public handleEvent(
 		argument: object,
@@ -1224,17 +1266,18 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		operationName: string,
 		argumentConverter: IConverter,
 		invokeContext?: ISendInvokeContextParams,
-	): undefined | boolean {
+	): ERoseResult {
 		if (!this.transport.isProcessingAllowed())
-			return invokeContext?.bSendEventSynchronous ? false : undefined;
+			return ERoseResult.ROSE_TE_SHUTDOWN;
 
-		if (this.transport.completeIfOperationBlocked(operationID, operationName, true))
-			return invokeContext?.bSendEventSynchronous ? false : undefined;
+		const blocked = this.transport.completeIfOperationBlocked(operationID, operationName, true);
+		if (blocked)
+			return ERoseResult.ROSE_REJECT_REMOTENOTCAPABLE;
 
 		// Encodes the argument and the ROSEInvoke envelop
 		const result = this.encodeInvoke(argument, operationID, operationName, argumentConverter, true, invokeContext);
 		if (result instanceof AsnInvokeProblem)
-			return undefined;
+			return ERoseResult.ROSE_TE_ENCODE_FAILED;
 
 		this.transport.logInvoke("handleEvent", this, argument, result.invokeContext, true);
 

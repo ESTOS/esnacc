@@ -1347,6 +1347,77 @@ static bool HasValidROSEInvokes(Module* mod, bool bEvents)
 	return false;
 }
 
+/*
+ * True when vd is a ROSE operation id PrintROSEOperationDefines would emit.
+ * PrintROSECode uses this as the shared filter for IsEvent and IsOperation.
+ * Operations suppressed by -nodeprecated are omitted so an empty group prints no section comment.
+ */
+static bool IsPrintedRoseOperation(Module* mod, ValueDef* vd)
+{
+	if (IsDeprecatedNoOutputOperation(mod, vd->definedName))
+		return false;
+
+	if (vd->value->basicValue->choiceId != BASICVALUE_INTEGER)
+		return false;
+	if (vd->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
+		return false;
+	if (vd->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
+		return false;
+
+	return true;
+}
+
+/*
+ * True when vd is a printed ROSE event (no RESULT). Same split as the event methods.
+ */
+static bool IsEvent(Module* mod, ValueDef* vd)
+{
+	if (!IsPrintedRoseOperation(mod, vd))
+		return false;
+	return IsValidROSEInvoke(mod, vd, true);
+}
+
+/*
+ * True when vd is a printed ROSE invoke (details resolve and a RESULT is present).
+ * Same split as IsEvent, which passes true to IsValidROSEInvoke.
+ */
+static bool IsOperation(Module* mod, ValueDef* vd)
+{
+	if (!IsPrintedRoseOperation(mod, vd))
+		return false;
+	return IsValidROSEInvoke(mod, vd, false);
+}
+
+/*
+ * True when the module contains a printed invoke. PrintROSECode uses this to skip
+ * the function section comment when the module has only events.
+ */
+static bool HasOperation(Module* mod)
+{
+	ValueDef* vd;
+	FOR_EACH_LIST_ELMT(vd, mod->valueDefs)
+	{
+		if (IsOperation(mod, vd))
+			return true;
+	}
+	return false;
+}
+
+/*
+ * True when the module contains a printed event. PrintROSECode uses this to skip
+ * the event section comment when the module has only invokes.
+ */
+static bool HasEvent(Module* mod)
+{
+	ValueDef* vd;
+	FOR_EACH_LIST_ELMT(vd, mod->valueDefs)
+	{
+		if (IsEvent(mod, vd))
+			return true;
+	}
+	return false;
+}
+
 static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueDef* vd, bool bCommentWasAdded)
 {
 	const char* pszArgument = NULL;
@@ -1381,9 +1452,9 @@ static bool PrintROSEInvoke(FILE* hdr, FILE* src, Module* m, int bEvents, ValueD
 			}
 			else
 			{
-				fprintf(hdr, "\tlong Event_%s(%s* argument, std::shared_ptr<SnaccInvokeContext> pCtx = {});\n", vd->definedName, pszArgument);
+				fprintf(hdr, "\tERoseResult Event_%s(%s* argument, std::shared_ptr<SnaccInvokeContext> pCtx = {});\n", vd->definedName, pszArgument);
 				fprintf(src, "// default parameters: pCtx = {}\n");
-				fprintf(src, "long %s::Event_%s(%s* argument, std::shared_ptr<SnaccInvokeContext> pCtx)\n", m->ROSEClassName, vd->definedName, pszArgument);
+				fprintf(src, "ERoseResult %s::Event_%s(%s* argument, std::shared_ptr<SnaccInvokeContext> pCtx)\n", m->ROSEClassName, vd->definedName, pszArgument);
 			}
 
 			fprintf(src, "{\n");
@@ -4556,14 +4627,31 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	PrintROSENamespaceOpenCode(hdr, m);
 	PrintROSENamespaceOpenCode(hdrInterface, m);
 
-	// print Operation defines
+	// Operation ids: functions (invokes) first, then events. Relative order inside each
+	// group stays the valueDefs order so an invoke id stays visually distinct from an event id.
+	const bool bHasFunctionIds = HasOperation(m);
+	const bool bHasEventIds = HasEvent(m);
 	fprintf(hdr, "// ------------------------------------------------------------------------------\n");
 	fprintf(hdr, "// Operation defines\n");
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	if (bHasFunctionIds)
 	{
-		if (IsDeprecatedNoOutputOperation(m, vd->definedName))
-			continue;
-		PrintROSEOperationDefines(hdr, r, vd, 0);
+		fprintf(hdr, "// ---- Functions (invokes) ----\n");
+		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+		{
+			if (!IsOperation(m, vd))
+				continue;
+			PrintROSEOperationDefines(hdr, r, vd, 0);
+		}
+	}
+	if (bHasEventIds)
+	{
+		fprintf(hdr, "// ---- Events ----\n");
+		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+		{
+			if (!IsEvent(m, vd))
+				continue;
+			PrintROSEOperationDefines(hdr, r, vd, 0);
+		}
 	}
 	fflush(hdr);
 	fprintf(hdr, "\n");
@@ -4633,11 +4721,26 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 	fprintf(src, "{\n");
 	if (gMajorInterfaceVersion >= 0)
 		fprintf(src, "\tRegisterModuleVersion(lookup, kModuleName, kModuleVersion);\n");
-	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	// Same function-then-event split as the OPID defines. RegisterModuleVersion stays first.
+	if (bHasFunctionIds)
 	{
-		if (IsDeprecatedNoOutputOperation(m, vd->definedName))
-			continue;
-		PrintROSEOperationRegistration(src, r, m, vd);
+		fprintf(src, "\t// ---- Functions (invokes) ----\n");
+		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+		{
+			if (!IsOperation(m, vd))
+				continue;
+			PrintROSEOperationRegistration(src, r, m, vd);
+		}
+	}
+	if (bHasEventIds)
+	{
+		fprintf(src, "\t// ---- Events ----\n");
+		FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+		{
+			if (!IsEvent(m, vd))
+				continue;
+			PrintROSEOperationRegistration(src, r, m, vd);
+		}
 	}
 	fprintf(src, "}\n\n");
 

@@ -68,11 +68,6 @@ export interface ISendInvokeContextParams extends IInvokeContextBaseParams {
 	// If no target is specified the handler will use the target that has been specified using setTarget
 	restTarget?: string;
 
-	// Allows to send an event synchronous if we are in an established websocket connection
-	// Will fail if the websocket is not established or not in an ready state
-	// Has no effect on invokes
-	bSendEventSynchronous?: boolean;
-
 	// We technically do not need the operationName in the ROSEInvoke message so adding it is optional
 	// by default the caller is not sending the operationName as it is not really needed
 	bAddOperationName?: boolean;

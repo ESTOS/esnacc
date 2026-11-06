@@ -58,7 +58,7 @@ namespace snacclib
 				return ROSE_NOERROR;
 			}
 
-			long SendEvent(SNACC::ROSEInvoke* /*pInvoke*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
+			ERoseResult SendEvent(SNACC::ROSEInvoke* /*pInvoke*/, const char* /*szOperationName*/, std::shared_ptr<SnaccInvokeContext> /*pCtx*/) override
 			{
 				return ROSE_NOERROR;
 			}
@@ -84,29 +84,27 @@ namespace snacclib
 			}
 		};
 
-		TEST(snacclib_ServerInvokeBlockPolicyTest, BlockWithoutStateDoesNotBlock)
+		TEST(snacclib_ServerInvokeBlockPolicyTest, BlocksEventAndInvokeAbsentFromTheStore)
 		{
 			RecordingSubscriptionSender sender;
 			sender.SetOperationBlockPolicy(SnaccOperationBlockPolicy::BlockUnsupportedOperations);
-			EXPECT_FALSE(sender.IsOperationBlocked(2109, true));
-			EXPECT_FALSE(sender.IsOperationBlocked(2109, false));
+			EXPECT_TRUE(sender.IsOperationBlocked(2109, true));
+			EXPECT_TRUE(sender.IsOperationBlocked(2109, false));
 		}
 
-		TEST(snacclib_ServerInvokeBlockPolicyTest, BlockWithStateBlocksUnsubscribedEvent)
+		TEST(snacclib_ServerInvokeBlockPolicyTest, BlocksUnsubscribedEvent)
 		{
 			RecordingSubscriptionSender sender;
 			sender.SetOperationBlockPolicy(SnaccOperationBlockPolicy::BlockUnsupportedOperations);
-			sender.MarkSessionSubscriptionStateSet();
 			sender.subscribedEventOpId = 2170;
 			EXPECT_TRUE(sender.IsOperationBlocked(2109, true));
 			EXPECT_FALSE(sender.IsOperationBlocked(2170, true));
 		}
 
-		TEST(snacclib_ServerInvokeBlockPolicyTest, BlockWithStateBlocksUnsupportedInvoke)
+		TEST(snacclib_ServerInvokeBlockPolicyTest, BlocksUnsupportedInvoke)
 		{
 			RecordingSubscriptionSender sender;
 			sender.SetOperationBlockPolicy(SnaccOperationBlockPolicy::BlockUnsupportedOperations);
-			sender.MarkSessionSubscriptionStateSet();
 			sender.supportedInvokeOpId = 3001;
 			EXPECT_TRUE(sender.IsOperationBlocked(3002, false));
 			EXPECT_FALSE(sender.IsOperationBlocked(3001, false));
@@ -116,7 +114,6 @@ namespace snacclib
 		{
 			RecordingSubscriptionSender sender;
 			sender.SetOperationBlockPolicy(SnaccOperationBlockPolicy::NeverBlock);
-			sender.MarkSessionSubscriptionStateSet();
 			EXPECT_FALSE(sender.IsOperationBlocked(2109, true));
 			EXPECT_FALSE(sender.IsOperationBlocked(2109, false));
 		}

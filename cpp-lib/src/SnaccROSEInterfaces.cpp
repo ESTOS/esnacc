@@ -46,18 +46,28 @@ void SnaccROSESender::SetSupportedInvokes(int moduleIid, const std::list<int>& i
 	ASSERT_FAILED("SetSupportedInvokes not implemented on this SnaccROSESender");
 }
 
+/*
+ * Allows every event. A sender without a session store is not filtered here.
+ * Override with RoseSessionSubscriptionStore: an empty store then returns false
+ * and IsOperationBlocked blocks the event. Clients keep this default and are
+ * filtered only by remote capabilities.
+ */
 bool SnaccROSESender::IsSubscribedEvent(unsigned int uiEventOpId) const
 {
 	(void)uiEventOpId;
-	ASSERT_FAILED("IsSubscribedEvent not implemented on this SnaccROSESender");
-	return false;
+	return true;
 }
 
+/*
+ * Allows every invoke. A sender without a session store is not filtered here.
+ * Override with RoseSessionSubscriptionStore: an empty store then returns false
+ * and IsOperationBlocked blocks the invoke. Clients keep this default and are
+ * filtered only by remote capabilities.
+ */
 bool SnaccROSESender::IsSupportedInvoke(unsigned int uiInvokeOpId) const
 {
 	(void)uiInvokeOpId;
-	ASSERT_FAILED("IsSupportedInvoke not implemented on this SnaccROSESender");
-	return false;
+	return true;
 }
 
 bool SnaccROSEComponent::IsSubscribedEvent(unsigned int uiEventOpId) const

@@ -7,7 +7,7 @@ import { ROSEReject } from "./stub/SNACCROSE.js";
 import { ASN1ClassInstanceType, TSASN1Base } from "./stub/TSASN1Base.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
 import { buildRemoteModuleCapabilities } from "./stub/TSModuleCapabilities.js";
-import { CustomInvokeProblemEnum, OperationBlockPolicy, ROSE_REJECT_REMOTENOTCAPABLE } from "./stub/TSROSEBase.js";
+import { CustomInvokeProblemEnum, ERoseResult, OperationBlockPolicy, ROSEBase, ROSE_NOERROR, ROSE_REJECT_REMOTENOTCAPABLE } from "./stub/TSROSEBase.js";
 import type { IASN1InvokeData } from "./stub/TSROSEBase.js";
 
 class ClientTestTransport extends TSASN1Base {
@@ -22,8 +22,9 @@ class ClientTestTransport extends TSASN1Base {
 		return undefined;
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
-		return true;
+	/** Accepts every encoded event. These tests drive sendInvoke, not the socket. */
+	public sendEvent(_data: IASN1InvokeData): ERoseResult {
+		return ROSE_NOERROR;
 	}
 
 	public getSessionID(): string | undefined {
@@ -40,12 +41,10 @@ class SubscriptionTransport extends TSASN1Base {
 	}
 
 	public setSubscribedEvents(moduleIid: number, eventOpIds: readonly number[]): void {
-		this.markSessionSubscriptionStateSet();
 		this.store.setSubscribedEvents(moduleIid, eventOpIds);
 	}
 
 	public setSupportedInvokes(moduleIid: number, invokeOpIds: readonly number[]): void {
-		this.markSessionSubscriptionStateSet();
 		this.store.setSupportedInvokes(moduleIid, invokeOpIds);
 	}
 
@@ -64,9 +63,10 @@ class SubscriptionTransport extends TSASN1Base {
 		return Promise.resolve(undefined);
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
+	/** Counts events that passed the session filter. handleEvent calls this after the block check. */
+	public sendEvent(_data: IASN1InvokeData): ERoseResult {
 		this.sentEvents++;
-		return true;
+		return ROSE_NOERROR;
 	}
 
 	public getSessionID(): string | undefined {
@@ -92,6 +92,8 @@ test("negotiate path: blockUnsupportedOperations without snapshot does not block
 	const transport = new ClientTestTransport();
 	transport.registerOperation(noopHandler, noopHandler as never, 100, "asnInvoke", "TestModule", 100, 0, 0, false);
 	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
+	assert.equal(transport.isOperationBlocked(100, false), false);
+	assert.equal(transport.isOperationBlocked(2109, true), false);
 
 	await transport.sendInvoke({
 		invoke: createInvoke(100, "asnInvoke"),
@@ -116,14 +118,14 @@ test("negotiate path: unsupported op id returns remoteNotCapable reject at stub 
 	assert.equal(CustomInvokeProblemEnum.remoteNotCapable, ROSE_REJECT_REMOTENOTCAPABLE);
 });
 
-test("subscription path: BlockUnsupportedOperations without state does not block", () => {
+test("subscription path: blocks event and invoke absent from the store", () => {
 	const transport = new SubscriptionTransport();
 	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
-	assert.equal(transport.isOperationBlocked(2109, true), false);
-	assert.equal(transport.isOperationBlocked(2109, false), false);
+	assert.equal(transport.isOperationBlocked(2109, true), true);
+	assert.equal(transport.isOperationBlocked(2109, false), true);
 });
 
-test("subscription path: blocks unsubscribed event after state is marked", () => {
+test("subscription path: blocks unsubscribed event", () => {
 	const transport = new SubscriptionTransport();
 	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
 	transport.setSubscribedEvents(100, [2170]);
@@ -131,7 +133,15 @@ test("subscription path: blocks unsubscribed event after state is marked", () =>
 	assert.equal(transport.isOperationBlocked(2170, true), false);
 });
 
-test("completeIfOperationBlocked blocks unsubscribed event after state is marked", () => {
+test("subscription path: blocks unsupported invoke", () => {
+	const transport = new SubscriptionTransport();
+	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
+	transport.setSupportedInvokes(100, [3001]);
+	assert.equal(transport.isOperationBlocked(3002, false), true);
+	assert.equal(transport.isOperationBlocked(3001, false), false);
+});
+
+test("completeIfOperationBlocked blocks unsubscribed event", () => {
 	const transport = new SubscriptionTransport();
 	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
 	transport.setSubscribedEvents(100, [2170]);
@@ -199,4 +209,47 @@ test("isSupportedOperation reflects applied snapshot", () => {
 	assert.equal(transport.hasRemoteModuleCapabilities(), true);
 	assert.equal(transport.isSupportedOperation(4100), true);
 	assert.equal(transport.isSupportedOperation(4101), false);
+});
+
+/**
+ * Minimal ROSE stub so a test can call handleEvent, the path generated event_* methods use.
+ * The abstract hooks are unused; the block check returns before encode.
+ */
+class EventSendRose extends ROSEBase {
+	/** Builds a stub bound to the subscription transport under test. */
+	public constructor(transport: SubscriptionTransport) {
+		super(transport, false);
+	}
+
+	/** Log label only. handleEvent does not log when the session filter blocks the event. */
+	public getLogData(): { className: string } {
+		return { className: "EventSendRose" };
+	}
+
+	/** Unused. The block check returns before name lookup. */
+	public getNameForOperationID(_id: number): string | undefined {
+		return undefined;
+	}
+
+	/** Unused. The block check returns before name lookup. */
+	public getIDForOperationName(_name: string): number | undefined {
+		return undefined;
+	}
+
+	/** Unused. This fixture does not receive invokes. */
+	public async onInvoke(): Promise<undefined> {
+		return undefined;
+	}
+}
+
+test("handleEvent returns remoteNotCapable and does not send a blocked event", () => {
+	const transport = new SubscriptionTransport();
+	transport.setOperationBlockPolicy(OperationBlockPolicy.BlockUnsupportedOperations);
+	transport.setSubscribedEvents(100, [2170]);
+	const rose = new EventSendRose(transport);
+
+	const code = rose.handleEvent({}, 2109, "asnJournalEntryChanged", {} as never);
+
+	assert.equal(code, ROSE_REJECT_REMOTENOTCAPABLE);
+	assert.equal(transport.sentEvents, 0);
 });

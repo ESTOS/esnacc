@@ -404,13 +404,16 @@ public:
 	void ReportOutboundBlocked(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, long lRoseResult, std::shared_ptr<SnaccInvokeContext> pCtx = {});
 
 	/**
-	 * An event (invoke without result) that is send to the other side. Should only be called by the ROSE stub itself generated files
+	 * An event (invoke without result) that is sent to the other side. Called by the generated ROSE stub.
+	 *
+	 * There is no peer answer. The return is the local send code and converts to long.
+	 * Send() still returns long; this method casts that value.
 	 *
 	 * pInvoke - the invoke payload (it is put into a ROSEMessage in the function)
 	 * pCtx - contextual data for the invoke. The caller may keep another shared reference
 	 *        to inspect changes after the call.
 	 */
-	virtual long SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
+	virtual ERoseResult SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, std::shared_ptr<SnaccInvokeContext> pCtx = {}) override;
 
 	/**
 	 * Creates the invoke context for inbound and outbound invoke lifecycles.

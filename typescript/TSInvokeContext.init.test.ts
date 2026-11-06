@@ -7,6 +7,7 @@ import type { ROSEError, ROSEReject, ROSEResult } from "./stub/SNACCROSE.js";
 import { ASN1ClassInstanceType, TSASN1Base } from "./stub/TSASN1Base.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
 import { ReceiveInvokeContext, SendInvokeContext } from "./stub/TSROSEBase.js";
+import { ERoseResult, ROSE_NOERROR } from "./stub/TSROSEBase.js";
 import type { IASN1InvokeData } from "./stub/TSROSEBase.js";
 import { roseInvoke } from "./support/snacc_test_helpers.js";
 
@@ -19,8 +20,9 @@ class LookupServerTransport extends TSASN1Base {
 		return undefined;
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
-		return true;
+	/** Accepts every encoded event. These tests do not send. */
+	public sendEvent(_data: IASN1InvokeData): ERoseResult {
+		return ROSE_NOERROR;
 	}
 
 	public getSessionID(): string | undefined {

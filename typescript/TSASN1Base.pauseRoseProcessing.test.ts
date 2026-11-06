@@ -4,7 +4,7 @@ import test from "node:test";
 import { type ROSEError, ROSEReject, type ROSEResult } from "./stub/SNACCROSE.js";
 import { ASN1ClassInstanceType, PendingInvoke, TSASN1Base } from "./stub/TSASN1Base.js";
 import { EASN1TransportEncoding } from "./stub/TSInvokeContext.js";
-import { type IASN1InvokeData, ReceiveInvokeContext, ROSE_TE_SHUTDOWN, SendInvokeContext } from "./stub/TSROSEBase.js";
+import { type ERoseResult, type IASN1InvokeData, ReceiveInvokeContext, ROSE_NOERROR, ROSE_TE_SHUTDOWN, ROSE_TE_TRANSPORTFAILED, SendInvokeContext } from "./stub/TSROSEBase.js";
 
 class TestTransport extends TSASN1Base {
 	public constructor() {
@@ -19,8 +19,17 @@ class TestTransport extends TSASN1Base {
 		return undefined;
 	}
 
-	public sendEventSync(_data: IASN1InvokeData): boolean {
-		return true;
+	/** When false, sendEvent reports that the socket or peer connection was not ready. */
+	public syncSendSucceeds = true;
+
+	/**
+	 * Local send codes for the pause tests. The session gate is checked here because the base class
+	 * no longer wraps sendEvent.
+	 */
+	public sendEvent(_data: IASN1InvokeData): ERoseResult {
+		if (!this.isProcessingAllowed())
+			return ROSE_TE_SHUTDOWN;
+		return this.syncSendSucceeds ? ROSE_NOERROR : ROSE_TE_TRANSPORTFAILED;
 	}
 
 	public getSessionID(): string | undefined {
@@ -66,15 +75,64 @@ test("pauseRoseProcessing blocks outbound invoke and event sends", async () => {
 	assert.ok(invokeReject instanceof ROSEReject);
 	assert.equal(invokeReject.reject?.invokeProblem, ROSE_TE_SHUTDOWN);
 
+	const eventContext = createInvokeContext(transport, 200, "asnEvent", true);
 	const eventResult = transport.sendEvent({
+		invoke: { invokeID: 99999, operationID: 200, operationName: "asnEvent" },
+		payLoad: {},
+		invokeContext: eventContext,
+	});
+	assert.equal(eventResult, ROSE_TE_SHUTDOWN);
+
+	transport.resumeRoseProcessing();
+	assert.equal(transport.isProcessingAllowed(), true);
+});
+
+test("resumeRoseProcessing allows the next outbound invoke", async () => {
+	const transport = new TestTransport();
+	transport.pauseRoseProcessing();
+
+	const blocked = await transport.sendInvoke({
+		invoke: { invokeID: 1, operationID: 100, operationName: "asnInvoke" },
+		payLoad: {},
+		invokeContext: createInvokeContext(transport, 100, "asnInvoke", false),
+	});
+	assert.ok(blocked instanceof ROSEReject);
+	assert.equal(blocked.reject?.invokeProblem, ROSE_TE_SHUTDOWN);
+
+	transport.resumeRoseProcessing();
+	const sent = await transport.sendInvoke({
+		invoke: { invokeID: 2, operationID: 100, operationName: "asnInvoke" },
+		payLoad: {},
+		invokeContext: createInvokeContext(transport, 100, "asnInvoke", false),
+	});
+	assert.equal(sent, undefined);
+
+	const eventContext = createInvokeContext(transport, 200, "asnEvent", true);
+	assert.equal(
+		transport.sendEvent({
+			invoke: { invokeID: 99999, operationID: 200, operationName: "asnEvent" },
+			payLoad: {},
+			invokeContext: eventContext,
+		}),
+		ROSE_NOERROR,
+	);
+});
+
+test("sendEvent returns the same local codes as C++ SendEvent", () => {
+	const transport = new TestTransport();
+	const eventData = (): IASN1InvokeData => ({
 		invoke: { invokeID: 99999, operationID: 200, operationName: "asnEvent" },
 		payLoad: {},
 		invokeContext: createInvokeContext(transport, 200, "asnEvent", true),
 	});
-	assert.equal(eventResult, undefined);
 
-	transport.resumeRoseProcessing();
-	assert.equal(transport.isProcessingAllowed(), true);
+	assert.equal(transport.sendEvent(eventData()), ROSE_NOERROR);
+
+	transport.syncSendSucceeds = false;
+	assert.equal(transport.sendEvent(eventData()), ROSE_TE_TRANSPORTFAILED);
+
+	transport.pauseRoseProcessing();
+	assert.equal(transport.sendEvent(eventData()), ROSE_TE_SHUTDOWN);
 });
 
 test("pauseRoseProcessing completes pending invokes with shutdown", async () => {
@@ -103,4 +161,75 @@ test("receiveHandleROSEMessage rejects inbound invoke while paused", async () =>
 
 	assert.ok(response);
 	assert.match(String(response?.payLoad), /"invokeProblem":2/);
+});
+
+test("pauseRoseProcessing blocks inbound dispatch until resumeRoseProcessing", async () => {
+	const transport = new TestTransport();
+	let handlerCalls = 0;
+	const handler = {
+		getNameForOperationID: () => undefined,
+		getIDForOperationName: () => undefined,
+		onInvoke: async () => {
+			handlerCalls += 1;
+			return undefined;
+		},
+	};
+	transport.registerOperation(handler, handler as never, 100, "asnInvoke", "TestModule", 100, 0, 0, false);
+	transport.pauseRoseProcessing();
+
+	const blocked = await transport.receiveHandleROSEMessage(
+		{ invoke: { invokeID: 3, operationID: 100, operationName: "asnInvoke" } },
+		{},
+		new ReceiveInvokeContext({ encoding: EASN1TransportEncoding.JSON }),
+	);
+	assert.match(String(blocked?.payLoad), /"invokeProblem":2/);
+	assert.equal(handlerCalls, 0);
+
+	transport.resumeRoseProcessing();
+	await transport.receiveHandleROSEMessage(
+		{ invoke: { invokeID: 4, operationID: 100, operationName: "asnInvoke" } },
+		{},
+		new ReceiveInvokeContext({ encoding: EASN1TransportEncoding.JSON }),
+	);
+	assert.equal(handlerCalls, 1);
+});
+
+test("late result after pauseRoseProcessing does not replace the shutdown reject", async () => {
+	const transport = new PendingTestTransport();
+	const pending = transport.sendInvoke({
+		invoke: { invokeID: 7, operationID: 100, operationName: "asnInvoke" },
+		payLoad: {},
+		invokeContext: createInvokeContext(transport, 100, "asnInvoke", false),
+	});
+
+	transport.pauseRoseProcessing();
+	const shutdown = await pending;
+	assert.ok(shutdown instanceof ROSEReject);
+	assert.equal(shutdown.reject?.invokeProblem, ROSE_TE_SHUTDOWN);
+
+	const late = await transport.receiveHandleROSEMessage(
+		{ result: { invokeID: 7, result: {} } },
+		{},
+		new ReceiveInvokeContext({ encoding: EASN1TransportEncoding.JSON }),
+	);
+	assert.equal(late, undefined);
+
+	transport.resumeRoseProcessing();
+	let settled = false;
+	const next = transport
+		.sendInvoke({
+			invoke: { invokeID: 8, operationID: 100, operationName: "asnInvoke" },
+			payLoad: {},
+			invokeContext: createInvokeContext(transport, 100, "asnInvoke", false),
+		})
+		.then((value) => {
+			settled = true;
+			return value;
+		});
+	await new Promise((resolve) => setTimeout(resolve, 20));
+	assert.equal(settled, false);
+	transport.pauseRoseProcessing();
+	const closed = await next;
+	assert.ok(closed instanceof ROSEReject);
+	assert.equal(closed.reject?.invokeProblem, ROSE_TE_SHUTDOWN);
 });
