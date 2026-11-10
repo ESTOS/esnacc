@@ -326,7 +326,7 @@ void PrintTSROSEInterfaceEntry(FILE* src, ModuleList* mods, ValueDef* vd, bool b
 					fprintf(src, " | %s.%s", pszErrorNS, pszError);
 			}
 
-			fprintf(src, " | AsnInvokeProblem>");
+			fprintf(src, " | AsnInvokeProblem | undefined>");
 			fprintf(src, bAsComment ? " {\n\treturn undefined;\n}\n" : ";\n");
 		}
 		else if (!pszResult)
@@ -907,7 +907,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 					fprintf(src, "\t * @param argument - An %s object containing all the relevant parameters for the call\n", pszArgument);
 					fprintf(src, "\t * @param ctx - Invoke related contextual data (e.g. a clientConnectionID)\n");
 					if (pszResult && !bEvents)
-						fprintf(src, "\t * @returns a Promise resolving into %s, an AsnRequestError or AsnInvokeProblem object\n", pszResult);
+						fprintf(src, "\t * @returns a Promise resolving into %s, an AsnRequestError, an AsnInvokeProblem, or undefined when the invoke timeout is 0\n", pszResult);
 					else if (bEvents)
 						fprintf(src, "\t * @returns ERoseResult, the local send code, same as C++ SendEvent\n");
 					fprintf(src, "\t */\n");
@@ -920,7 +920,7 @@ bool PrintTSROSEInvokeMethod(FILE* src, ModuleList* mods, int bEvents, ValueDef*
 				const char* szErrorNS = GetNameSpace(errorMod);
 				if (szErrorNS && pszError)
 					fprintf(src, " | %s.%s", szErrorNS, pszError);
-				fprintf(src, " | AsnInvokeProblem> {\n");
+				fprintf(src, " | AsnInvokeProblem | undefined> {\n");
 				if (bDeprecated)
 				{
 					asnoperationcomment comment;

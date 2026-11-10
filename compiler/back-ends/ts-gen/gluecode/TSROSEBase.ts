@@ -352,9 +352,14 @@ export interface IInvokeContextBase extends IInvokeContextBaseParams {
 }
 
 /**
- * A class holding the properties of the IInvokeContextBase
+ * Fields a send context and a receive context both carry.
+ *
+ * Holds the operation identity, the optional timeout, the connection id, headers, and custom data.
+ * `ReceiveInvokeContext` adds the inbound HTTP fields. `SendInvokeContext` adds the REST target.
+ * A product derives from the side class and returns that object from the matching factory.
+ * Deriving from this class alone does not satisfy either factory, because each factory returns its side's type.
  */
-class BaseInvokeContext implements IInvokeContextBase {
+export class BaseInvokeContext implements IInvokeContextBase {
 	public encoding: EASN1TransportEncoding | undefined;
 	public operationID: number;
 	public operationName: string;
@@ -374,9 +379,11 @@ class BaseInvokeContext implements IInvokeContextBase {
 		this.encoding = args?.encoding;
 		this.clientConnectionID = args?.clientConnectionID;
 		this.headers = args?.headers;
-		this.operationID = args?.operationID || -1;
-		this.operationName = args?.operationName || "";
-		this.invokeID = args?.invokeID || -1;
+		// 0 is a real invoke id and a real operation id (JSON clients send operationID 0 with a name).
+		// Only a missing field falls back to the unset sentinel.
+		this.operationID = args?.operationID ?? -1;
+		this.operationName = args?.operationName ?? "";
+		this.invokeID = args?.invokeID ?? -1;
 		this.customData = args?.customData;
 		if (args?.invokeTimeoutMs !== undefined)
 			this.setInvokeTimeout(args.invokeTimeoutMs);
@@ -412,7 +419,7 @@ class BaseInvokeContext implements IInvokeContextBase {
 	public init(operationID: number, operationName: string, invokeID?: number): void {
 		this.operationID = operationID;
 		this.operationName = operationName;
-		if (invokeID)
+		if (invokeID !== undefined)
 			this.invokeID = invokeID;
 	}
 }
@@ -642,9 +649,45 @@ export interface IInvokeHandler {
 }
 
 /**
+ * Inputs for `createReceiveInvokeContext`.
+ *
+ * The context fields are the partial receive context: connection, headers, client IP, and an explicit operation name.
+ * `invoke` is the decoded envelope when one exists. The socket path omits it because the envelope is not decoded yet.
+ * A non-empty `operationName` wins over the registry lookup.
+ * The transport owns the object it returns. Callers borrow it for the invoke.
+ */
+export interface IReceiveInvokeContextInit extends Partial<IReceiveInvokeContext> {
+	invoke?: ROSEInvoke;
+}
+
+/**
+ * Inputs for `createSendInvokeContext`.
+ *
+ * The context fields are the partial send context: encoding, connection, REST target, and the stub operation name.
+ * `invoke` is set when the caller already has an envelope. `encodeInvoke` omits it and passes the stub name.
+ * An empty or missing `operationName` leaves the outbound name empty.
+ * The transport owns the object it returns. Callers borrow it for the send.
+ */
+export interface ISendInvokeContextInit extends Partial<ISendInvokeContext> {
+	invoke?: ROSEInvoke;
+}
+
+/**
  * Defines the interface the transport layer has to fullfill
  */
 export interface IASN1Transport extends IRoseSessionSubscription {
+	/**
+	 * Builds the invoke context for one inbound ROSE exchange.
+	 * Products override this to return a derived receive context. The runtime calls it
+	 * instead of constructing `ReceiveInvokeContext` itself.
+	 */
+	createReceiveInvokeContext(init: IReceiveInvokeContextInit): ReceiveInvokeContext;
+	/**
+	 * Builds the invoke context for one outbound ROSE send.
+	 * Products override this to return a derived send context. The runtime calls it
+	 * instead of constructing `SendInvokeContext` itself.
+	 */
+	createSendInvokeContext(init: ISendInvokeContextInit): SendInvokeContext;
 	sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
 	sendEvent(data: IASN1InvokeData): ERoseResult;
 	registerOperation(
@@ -1192,7 +1235,15 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		const sessionID = this.transport.getSessionID();
 		const invokeID = event ? 99999 : this.transport.getNextInvokeID();
 		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
-		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
+		// The transport factory supplies the context so a product can replace the type.
+		// The stub operation name is the explicit outbound name for this send.
+		const invokeContext = this.transport.createSendInvokeContext({
+			...context,
+			encoding,
+			operationName,
+			operationID,
+			invokeID,
+		});
 		const wireTimeoutMs = this.resolveInvokeTimeout(contextParams, invokeContext, event);
 		const writeTimeout = typeof wireTimeoutMs === "number" && this.shouldWriteInvokeTimeout(encoding);
 
@@ -1306,7 +1357,7 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		resultConverter: IConverter,
 		invokeContext?: ISendInvokeContextParams,
 		errorConverter: IConverter = ENetUC_Common_Converter.AsnRequestError_Converter,
-	): Promise<T | U | AsnInvokeProblem> {
+	): Promise<T | U | AsnInvokeProblem | undefined> {
 		const shutdownReject = this.transport.completeIfProcessingShutdown({
 			invokeID: 0,
 			operationID,
@@ -1329,6 +1380,9 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		this.transport.logInvoke("handleInvoke", this, argument, context, true);
 
 		const roseResult = await this.transport.sendInvoke(result);
+		// Timeout 0 is fire-and-forget. There is no peer payload to decode. C++ returns ROSE_NOERROR.
+		if (roseResult === undefined && context.invokeTimeout() === 0)
+			return undefined;
 		// The outer ROSE envelop has already been decoded here by the receive mesage in TSASN1Base!
 
 		let payLoad: string | object | undefined;

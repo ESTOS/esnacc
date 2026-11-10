@@ -1,0 +1,12 @@
+---
+description: After opening or pushing a pull request, check the build that starts automatically
+alwaysApply: true
+---
+
+# Pull request build status
+
+Opening a pull request or pushing to its branch starts the build. Check that status before treating the pull request as done.
+
+- Read the checks on the pull request. A green local test run does not replace the remote build.
+- When a check fails, read the failing log, fix the cause, push, and check the new run.
+- The GitHub Actions workflow on this repo is `Build and Test (Ubuntu)`. It configures CMake, builds the TypeScript samples from the freshly built compiler, then runs the glue tests, the sample tests, and CTest.

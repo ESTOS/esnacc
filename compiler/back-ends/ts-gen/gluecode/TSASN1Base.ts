@@ -23,6 +23,8 @@ import {
 	IASN1LogData,
 	IASN1Transport,
 	IInvokeContextBase,
+	IReceiveInvokeContextInit,
+	ISendInvokeContextInit,
 	IInvokeHandler,
 	ILoadedModuleInfo,
 	IOpVersionInfo,
@@ -30,6 +32,7 @@ import {
 	IROSELogger,
 	ISendInvokeContext,
 	ReceiveInvokeContext,
+	SendInvokeContext,
 	OperationBlockPolicy,
 	snaccAssert,
 	snaccAssertFail,
@@ -587,6 +590,78 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
+	 * Builds the invoke context for one inbound ROSE exchange.
+	 *
+	 * Called by `receiveHandleROSEMessage` after the envelope is decoded, and by the socket path before decode.
+	 * A product overrides this to supply a derived receive context. The returned object is borrowed for the invoke.
+	 * Operation names come from the operation-id lookup. A wire name does not replace that lookup.
+	 * A present `ROSEInvoke.timeout`, including 0, is stored. An absent field leaves the timeout unset.
+	 */
+	public createReceiveInvokeContext(init: IReceiveInvokeContextInit): ReceiveInvokeContext {
+		const { invoke, ...fields } = init;
+
+		// operationID 0 plus a wire name is the JSON client pattern. Resolve the id before the name lookup.
+		let operationID = invoke?.operationID ?? fields.operationID ?? -1;
+		if (invoke && !invoke.operationID && invoke.operationName) {
+			const resolved = this.lookUpID(invoke.operationName);
+			if (resolved)
+				operationID = resolved;
+		}
+
+		// Explicit synthetic name wins. Otherwise the registry lookup wins over the wire name.
+		let operationName = "";
+		if (fields.operationName && fields.operationName.length > 0)
+			operationName = fields.operationName;
+		else if (invoke)
+			operationName = this.lookUpName(operationID) ?? "";
+
+		const inbound = new ReceiveInvokeContext({
+			...fields,
+			...(invoke
+				? {
+					invokeID: invoke.invokeID,
+					clientConnectionID: fields.clientConnectionID ?? invoke.sessionID,
+				}
+				: {}),
+			operationID,
+			operationName,
+			...(invoke?.timeout !== undefined ? { invokeTimeoutMs: invoke.timeout } : {}),
+		});
+		// The init may have carried a timeout. An invoke without the wire field stays unset.
+		if (invoke && invoke.timeout === undefined)
+			inbound.clearInvokeTimeout();
+		return inbound;
+	}
+
+	/**
+	 * Builds the invoke context for one outbound ROSE send.
+	 *
+	 * Called by `encodeInvoke` when the caller did not pass a `SendInvokeContext`.
+	 * A product overrides this to supply a derived send context. The returned object is borrowed for the send.
+	 * Stores `operationName` only when the caller passed an explicit name.
+	 * A present `ROSEInvoke.timeout`, including 0, is stored. An absent field leaves the timeout unset.
+	 */
+	public createSendInvokeContext(init: ISendInvokeContextInit): SendInvokeContext {
+		const { invoke, ...fields } = init;
+		// An explicit name wins. A missing name stays empty. The send path does not look the name up.
+		const explicitName = fields.operationName && fields.operationName.length > 0
+			? fields.operationName
+			: "";
+		return new SendInvokeContext({
+			...fields,
+			operationName: explicitName,
+			...(invoke
+				? {
+					invokeID: invoke.invokeID,
+					operationID: invoke.operationID,
+					clientConnectionID: fields.clientConnectionID ?? invoke.sessionID,
+				}
+				: {}),
+			...(invoke?.timeout !== undefined ? { invokeTimeoutMs: invoke.timeout } : {}),
+		});
+	}
+
+	/**
 	 * Resolves operation id from operation name via the registered handlers.
 	 */
 	public lookUpID(operationName: string): number | undefined {
@@ -1067,17 +1142,36 @@ export abstract class TSASN1Base implements IASN1Transport {
 		let result: ROSEReject | ROSEResult | ROSEError | undefined;
 		try {
 			if (message.invoke) {
-				invokeContext.invokeID = message.invoke.invokeID;
-				invokeContext.operationID = message.invoke.operationID;
-				if (message.invoke.operationName)
-					invokeContext.operationName = message.invoke.operationName;
-				else {
-					const handler = this.getHandlerById(invokeContext.operationID);
-					if (handler)
-						invokeContext.operationName = handler.operationName;
+				// Same resolution as C++ PrepareInboundInvokeOperationId: id 0 plus a name becomes the registry id.
+				if (!message.invoke.operationID && message.invoke.operationName) {
+					const resolved = this.lookUpID(message.invoke.operationName);
+					if (resolved)
+						message.invoke.operationID = resolved;
 				}
+				// The handler receives the factory context so a product override replaces the type.
+				// The caller's object keeps the resolved identity because callers read it after this method returns.
+				const dispatchContext = this.createReceiveInvokeContext({
+					invoke: message.invoke,
+					encoding: invokeContext.encoding,
+					clientConnectionID: invokeContext.clientConnectionID,
+					clientIP: invokeContext.clientIP,
+					headers: invokeContext.headers,
+					customData: invokeContext.customData,
+					handleEvent: invokeContext.handleEvent,
+					url: invokeContext.url,
+					noROSEEnvelop: invokeContext.noROSEEnvelop,
+				});
+				invokeContext.invokeID = dispatchContext.invokeID;
+				invokeContext.operationID = dispatchContext.operationID;
+				invokeContext.operationName = dispatchContext.operationName;
 				if (!invokeContext.clientConnectionID)
-					invokeContext.clientConnectionID = message.invoke.sessionID;
+					invokeContext.clientConnectionID = dispatchContext.clientConnectionID;
+				const wireTimeout = dispatchContext.invokeTimeout();
+				if (wireTimeout !== undefined)
+					invokeContext.setInvokeTimeout(wireTimeout);
+				else
+					invokeContext.clearInvokeTimeout();
+				invokeContext = dispatchContext;
 			} else if (message.result)
 				invokeContext.invokeID = message.result.invokeID;
 			else if (message.error)

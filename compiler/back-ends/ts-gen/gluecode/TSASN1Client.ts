@@ -817,8 +817,10 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 	 * @param event - the websocket message event
 	 */
 	private onSocketMessage(event: ISocketMessageEvent): void {
-		// Fill the invokecontext
-		const invokeContext = new ReceiveInvokeContext({ clientConnectionID: this.clientConnectionID });
+		// The transport factory builds the context so a product override supplies the type.
+		const invokeContext = this.createReceiveInvokeContext({
+			clientConnectionID: this.clientConnectionID,
+		});
 		// Call the receive method
 		this.receive(event.data, invokeContext).then((response: IResponseData | undefined): void => {
 			// If the receive returned data send it back
