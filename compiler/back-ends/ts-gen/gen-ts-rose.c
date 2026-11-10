@@ -44,6 +44,12 @@ void SaveTSROSEFilesToOutputDirectory(const int genRoseStubs, const char* szPath
 			strcat_s(szFileName, _MAX_PATH - 1, "TSASN1Base.ts");
 			SaveResourceToFile(ETS_ASN1_BASE, szFileName);
 		}
+		{
+			char szFileName[_MAX_PATH] = {0};
+			strcpy_s(szFileName, _MAX_PATH - 1, szPath);
+			strcat_s(szFileName, _MAX_PATH - 1, "SnaccTelemetry.ts");
+			SaveResourceToFile(ETS_SNACC_TELEMETRY, szFileName);
+		}
 		if (genRoseStubs & 0x01)
 		{
 			char szFileName[_MAX_PATH] = {0};

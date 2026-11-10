@@ -20,6 +20,7 @@
 #define TS_ROSE_SESSION_SUBSCRIPTION_STORE 1014
 #define TS_BASE_UTILS					1015
 #define TS_SNACCROSE_SERIALIZABLE		1016
+#define TS_SNACC_TELEMETRY				1017
 
 // Next default values for new objects
 //

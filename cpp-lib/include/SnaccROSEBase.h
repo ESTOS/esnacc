@@ -155,9 +155,11 @@ public:
 	virtual ~SnaccROSEBase(void);
 
 	/*
-	 * Allows to set a central callback for telemetry data the SnaccROSEBase class is providing
-	 * The implementer can either overwrite OnInvokeProcessed in this class or set
-	 * the central callback to gather telemetry data for inbound and outbound messages.
+	 * Installs the process-wide sink for ROSE lifecycle records.
+	 * When no sink is installed, the runtime does not build a record and does not clone the invoke context.
+	 * OnInvokeProcessed forwards each built record to this sink.
+	 * A subclass may override OnInvokeProcessed to replace that forward.
+	 * The override runs only while a sink is installed, because that is when a record is built.
 	 */
 	static void SetTelemetryCallback(SnaccTelemetryCallback* pCallBack);
 
@@ -463,7 +465,8 @@ protected:
 	virtual bool OnROSEMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, bool bAllowInvokes, unsigned long ulMessageSize);
 
 	/*
-	 * This callback provides telemetry data for processed ROSE messages.
+	 * Forwards one already built record to the process-wide sink.
+	 * Does nothing when the sink was cleared after the record was started.
 	 */
 	void OnInvokeProcessed(std::shared_ptr<const SnaccTelemetryData> data) override;
 
@@ -533,6 +536,14 @@ private:
 
 	/*! When PauseRoseProcessing() is active: sets outRoseResult to ROSE_TE_SHUTDOWN, records telemetry. Returns true when send must stop. */
 	bool CompleteIfProcessingShutdown(SNACC::ROSEInvoke* pInvoke, const char* szResolvedOperationName, std::chrono::steady_clock::time_point chronoCreated, std::shared_ptr<SnaccInvokeContext> pCtx, long& outRoseResult);
+
+	/*! True when SetTelemetryCallback installed a sink.
+		Every telemetry path uses this check, including OnInvokeProcessed.
+		The pointer is process-wide and read without a lock. */
+	bool HasTelemetryCallback() const
+	{
+		return m_pTelemetryCallback != nullptr;
+	}
 
 	// The central process wide telemetry callback
 	static inline SnaccTelemetryCallback* m_pTelemetryCallback{};

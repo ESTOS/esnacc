@@ -10,8 +10,9 @@
  * Carries telemetry for one ROSE request lifecycle.
  *
  * The object can represent inbound or outbound traffic and covers both invokes and
- * events. It is created when the library starts handling or sending a request and is
- * finalized once the local lifecycle has completed.
+ * events. It is created when the library starts handling or sending a request and a
+ * telemetry callback is installed, and is finalized once the local lifecycle has completed.
+ * When no callback is installed, the runtime does not create the object.
  *
  * The request metadata captured at construction time is immutable. Completion data
  * such as duration, response size, outcome, and the final ROSE result code are

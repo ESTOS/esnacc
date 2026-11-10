@@ -42,6 +42,7 @@ import {
 	ROSEBase,
 } from "./TSROSEBase.js";
 import { roseDebugBreak } from "./TSBaseUtils.js";
+import { payloadByteLength, SnaccTelemetryCallback, SnaccTelemetryData } from "./SnaccTelemetry.js";
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
 	className: string;
@@ -269,6 +270,16 @@ export class PendingInvoke {
 			this.timerID = undefined;
 		}
 	}
+
+	/** Operation id of the invoke this pending call is waiting on. */
+	public getOperationID(): number {
+		return this.invoke.operationID;
+	}
+
+	/** Operation name carried on the outbound invoke, or empty when the wire omitted it. */
+	public getOperationName(): string {
+		return this.invoke.operationName ?? "";
+	}
 }
 
 /**
@@ -338,6 +349,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 	protected logger?: IROSELogger;
 	// Logs the raw transport (inbound before decoding, outbound after encoding)
 	protected logRawTransport = false;
+	// Product sink for finalized ROSE lifecycle records. Unset means telemetry is not delivered.
+	private telemetryCallback?: SnaccTelemetryCallback;
 	// The default timeout for a websocket based invoke to the other side.
 	// Same 20000 ms as C++ m_lMaxInvokeWait and the ProCall client registry fallback.
 	// encodeInvoke copies a positive value onto the outbound context when the caller omits invokeTimeoutMs.
@@ -659,6 +672,123 @@ export abstract class TSASN1Base implements IASN1Transport {
 				: {}),
 			...(invoke?.timeout !== undefined ? { invokeTimeoutMs: invoke.timeout } : {}),
 		});
+	}
+
+	/**
+	 * Installs the telemetry sink. Called once by the product, before invokes run.
+	 * Passing undefined turns delivery off. The runtime then does not build a record.
+	 * The callback is not invoked re-entrantly by the library.
+	 */
+	public setTelemetryCallback(callback: SnaccTelemetryCallback | undefined): void {
+		this.telemetryCallback = callback;
+	}
+
+	/**
+	 * True when setTelemetryCallback installed a sink.
+	 * Inbound paths and ROSEBase return before createFinalized when this is false.
+	 * Returns boolean. telemetryCallback is private, so a this-type predicate that names it
+	 * collapses to never and the call after the check does not type-check.
+	 */
+	public hasTelemetryCallback(): boolean {
+		return this.telemetryCallback !== undefined;
+	}
+
+	/**
+	 * Delivers one finalized record to the product callback.
+	 * Called after a record was built. Does nothing when the sink was cleared in between.
+	 */
+	public emitInvokeProcessed(data: SnaccTelemetryData): void {
+		// Shared gate, same as C++ OnInvokeProcessed. The boolean does not narrow the private field.
+		if (!this.hasTelemetryCallback())
+			return;
+		this.telemetryCallback?.onInvokeProcessed(data);
+	}
+
+	/**
+	 * Builds and delivers one finalized record when a sink is installed.
+	 * Returns before createFinalized when no callback is set, so the record and its context clone are not allocated.
+	 * Called from the inbound decode, invoke, and response paths on this transport.
+	 */
+	private emitFinalizedTelemetry(
+		direction: SnaccTelemetryData.Direction,
+		operationID: number,
+		operationName: string | undefined,
+		requestData: number,
+		outcome: SnaccTelemetryData.Outcome,
+		stage: SnaccTelemetryData.Stage,
+		reason: SnaccTelemetryData.Reason,
+		roseResult: number,
+		responseData?: number,
+		context?: IInvokeContextBase,
+	): void {
+		if (!this.hasTelemetryCallback())
+			return;
+		this.emitInvokeProcessed(SnaccTelemetryData.createFinalized(
+			direction,
+			operationID,
+			operationName,
+			requestData,
+			outcome,
+			stage,
+			reason,
+			roseResult,
+			responseData,
+			context,
+		));
+	}
+
+	/**
+	 * Finalizes inbound invoke or event telemetry after the handler returns.
+	 * A shutdown reject stays UNHANDLED. A normal reject that we produced is LOCAL_REJECT
+	 * with ROSE_NOERROR, matching C++ after a successful reject encode.
+	 */
+	private emitInboundInvokeTelemetry(
+		invoke: ROSEInvoke,
+		invokeContext: IReceiveInvokeContext,
+		result: ROSEReject | ROSEResult | ROSEError | undefined,
+		requestSize: number,
+	): void {
+		// The handler result is unchanged. Skip classification and the record when no sink is installed.
+		if (!this.hasTelemetryCallback())
+			return;
+
+		let outcome = SnaccTelemetryData.Outcome.UNHANDLED;
+		let reason = SnaccTelemetryData.Reason.UNKNOWN_FAILURE;
+		let roseResult: number = ERoseResult.ROSE_NOERROR;
+		if (result instanceof ROSEResult) {
+			outcome = SnaccTelemetryData.Outcome.RESULT;
+			reason = SnaccTelemetryData.Reason.LOCAL_RESULT;
+		} else if (result instanceof ROSEError) {
+			outcome = SnaccTelemetryData.Outcome.ERR;
+			reason = SnaccTelemetryData.Reason.LOCAL_ERROR;
+		} else if (result instanceof ROSEReject) {
+			// A closed session gate uses the same reject type. The detail text is what marks shutdown.
+			const sessionClosed = result.details === "ROSE transport processing is paused"
+				|| result.details === "transport shutdown";
+			if (sessionClosed) {
+				outcome = SnaccTelemetryData.Outcome.UNHANDLED;
+				reason = SnaccTelemetryData.Reason.SHUTDOWN;
+				roseResult = ERoseResult.ROSE_TE_SHUTDOWN;
+			} else {
+				outcome = SnaccTelemetryData.Outcome.REJECT;
+				reason = SnaccTelemetryData.Reason.LOCAL_REJECT;
+			}
+		} else if (invoke.invokeID === 99999) {
+			outcome = SnaccTelemetryData.Outcome.EVENT;
+			reason = SnaccTelemetryData.Reason.LOCAL_EVENT;
+		}
+		this.emitFinalizedTelemetry(
+			SnaccTelemetryData.Direction.INBOUND,
+			invoke.operationID,
+			invokeContext.operationName,
+			requestSize,
+			outcome,
+			SnaccTelemetryData.Stage.INBOUND_INVOKE,
+			reason,
+			roseResult,
+			undefined,
+			invokeContext,
+		);
 	}
 
 	/**
@@ -1117,6 +1247,16 @@ export abstract class TSASN1Base implements IASN1Transport {
 
 		const payLoad = ROSEBase.getDebugPayload(rawData);
 		this.log(ELogSeverity.error, "Failed to decode ROSEMessage", "receive", this, { payLoad, errors });
+		this.emitFinalizedTelemetry(
+			SnaccTelemetryData.Direction.INBOUND,
+			0,
+			undefined,
+			payloadByteLength(rawData),
+			SnaccTelemetryData.Outcome.UNHANDLED,
+			SnaccTelemetryData.Stage.INBOUND_DECODE,
+			SnaccTelemetryData.Reason.DECODE_FAILED,
+			ERoseResult.ROSE_RE_DECODE_FAILED,
+		);
 		const result = createInvokeReject(
 			0,
 			InvokeProblemenum.unexpectedChildOperation,
@@ -1185,10 +1325,12 @@ export abstract class TSASN1Base implements IASN1Transport {
 				this.logTransport(rawData, "receive", "in", invokeContext);
 
 			if (message.invoke) {
+				const requestSize = payloadByteLength(rawData);
 				if (!this.isProcessingAllowed())
 					result = createInvokeReject(message.invoke, ROSE_TE_SHUTDOWN, "ROSE transport processing is paused");
 				else
 					result = await this.onROSEInvoke(message.invoke, invokeContext);
+				this.emitInboundInvokeTelemetry(message.invoke, invokeContext, result, requestSize);
 			} else if (message.result)
 				result = await this.onROSEResult(message.result, invokeContext);
 			else if (message.error)
@@ -1679,6 +1821,18 @@ export abstract class TSASN1Base implements IASN1Transport {
 	protected onROSEResult(result: ROSEResult, invokeContext: IReceiveInvokeContext): ROSEReject | undefined {
 		try {
 			const operation = this.pendingInvokes.get(result.invokeID);
+			this.emitFinalizedTelemetry(
+				SnaccTelemetryData.Direction.INBOUND,
+				operation?.getOperationID() ?? 0,
+				operation?.getOperationName(),
+				0,
+				SnaccTelemetryData.Outcome.RESULT,
+				SnaccTelemetryData.Stage.INBOUND_RESPONSE,
+				SnaccTelemetryData.Reason.REMOTE_RESULT,
+				ERoseResult.ROSE_NOERROR,
+				undefined,
+				invokeContext,
+			);
 			if (operation) {
 				this.pendingInvokes.delete(result.invokeID);
 				operation.completed_result(result);
@@ -1706,6 +1860,18 @@ export abstract class TSASN1Base implements IASN1Transport {
 	protected onROSEError(error: ROSEError, invokeContext: IReceiveInvokeContext): ROSEReject | undefined {
 		try {
 			const operation = this.pendingInvokes.get(error.invokedID);
+			this.emitFinalizedTelemetry(
+				SnaccTelemetryData.Direction.INBOUND,
+				operation?.getOperationID() ?? 0,
+				operation?.getOperationName(),
+				0,
+				SnaccTelemetryData.Outcome.ERR,
+				SnaccTelemetryData.Stage.INBOUND_RESPONSE,
+				SnaccTelemetryData.Reason.REMOTE_ERROR,
+				ERoseResult.ROSE_ERROR_VALUE,
+				undefined,
+				invokeContext,
+			);
 			if (operation) {
 				this.pendingInvokes.delete(error.invokedID);
 				operation.completed_error(error);
@@ -1734,6 +1900,18 @@ export abstract class TSASN1Base implements IASN1Transport {
 		try {
 			if (reject.invokedID.invokedID !== undefined) {
 				const operation = this.pendingInvokes.get(reject.invokedID.invokedID);
+				this.emitFinalizedTelemetry(
+					SnaccTelemetryData.Direction.INBOUND,
+					operation?.getOperationID() ?? 0,
+					operation?.getOperationName(),
+					0,
+					SnaccTelemetryData.Outcome.REJECT,
+					SnaccTelemetryData.Stage.INBOUND_RESPONSE,
+					SnaccTelemetryData.Reason.REMOTE_REJECT,
+					reject.reject?.invokeProblem ?? ERoseResult.ROSE_REJECT_UNKNOWN,
+					undefined,
+					invokeContext,
+				);
 				if (operation) {
 					this.pendingInvokes.delete(reject.invokedID.invokedID);
 					operation.completed_reject(reject);

@@ -488,7 +488,7 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 | `transport_failure_tests`                         | `TSTransportFailure.loopback.test.ts`             | **Partial** (timeout code `requestTimedOut` vs `ROSE_TE_TIMEOUT`)                                                                                                |
 | `async_invoke_tests`                              | —                                                 | **Blocked** — Promise model; no `SetAsyncCompletion` surface                                                                                                     |
 | `logging_tests`                                   | —                                                 | **Blocked** — C++ bitmask is specified; TS `logRawTransport` is still a boolean (hex or object, not both). Alignment is BUILDSYS-661. |
-| `telemetry_tests`                                 | —                                                 | **Blocked** — no telemetry subsystem in TS glue                                                                                                                  |
+| `telemetry_tests`                                 | `TSTelemetry.test.ts`                             | **Aligned** for outcome and reason (result, error, reject, event, decode, timeout, fire-and-forget, payload decode, shutdown, context clone). Async callback completion stays C++-only. |
 | `lifecycle_tests`                                 | —                                                 | **Blocked** — partial overlap with pause tests                                                                                                                   |
 | `public_api_tests` (decode hooks, file log)       | —                                                 | **Blocked** — C++-specific APIs                                                                                                                                  |
 
@@ -517,19 +517,9 @@ encode/decode in `SNACCROSE_Converter.ts` (not test harness).
 3. `TSCallFlow.loopback.test.ts`, `TSLogicalFailure.loopback.test.ts`, `TSTransportFailure.loopback.test.ts`.
 4. TypeScript glue specs run as one `node --test` on `typescript/dist` (`scripts/run-ts-glue-test-suite.mjs`). The VS Code node:test explorer, `pnpm test`, and CI use that command. It copies newer glue sources and emits when TypeScript sources change. It does not build the compiler or run `samples/prepare.js`. BER/JSON matrix cases use `test("… (BER)")` / `test("… (JSON)")` string literals so each case is its own explorer entry and its own GitHub row. The sample client/server file `samples/ts-microservice/node-client/src/microservice.integration.test.ts` uses the same literal `test()` calls. CI runs `scripts/run-ts-microservice-tests.mjs` and publishes that junit file beside the glue report.
 
-### Block C — Telemetry in TypeScript (largest product gap)
+### Block C — Telemetry in TypeScript (done, BUILDSYS-668)
 
-Port C++ `SnaccTelemetry.h` / `SnaccTelemetryData` / `SnaccTelemetryCallback` to glue:
-
-| C++                                                   | Proposed TS                                                               |
-| ----------------------------------------------------- | ------------------------------------------------------------------------- |
-| `SnaccTelemetryData::Create` / `CreateFinalized`      | `SnaccTelemetryData.create` / `createFinalized`                           |
-| `Direction`, `Stage`, `Outcome`, `Reason` enums       | Same names, TS enums                                                      |
-| `OnInvokeProcessed` callback                          | `onInvokeProcessed` on transport or logger sink                           |
-| `PrepareForTelemetry()` on invoke context             | Clone context for telemetry retention (needs pluggable context — Block D) |
-| Outbound/inbound wait, dispatch, decode-failure paths | Hook at same sites as `SnaccROSEBase.cpp`                                 |
-
-Then port `telemetry_tests.cpp` → `TSTelemetry.test.ts` (outcome/reason assertions, not C++ ownership).
+`SnaccTelemetryData.create` / `createFinalized`, the same direction, stage, outcome, and reason enums, and `onInvokeProcessed` live in the glue. Finalize runs on the outbound wait, the inbound invoke, the inbound response, shutdown, and decode failure. `prepareForTelemetry` runs on the retained clone. When no callback is installed, C++ and TypeScript return before that allocation, so the record and the context clone are not created. Human contract: [docs/rose-telemetry.md](../../docs/rose-telemetry.md). Glue spec: `TSTelemetry.test.ts`.
 
 ### Block D — Invoke context product parity (done, BUILDSYS-669)
 

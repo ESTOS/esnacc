@@ -48,6 +48,7 @@ Casing follows the naming map in `.cursor/rules/rose-cross-language-parity.mdc`.
 | `SnaccInvokeContext` | `BaseInvokeContext` | Shared identity, timeout, connection, and headers. Receive and send extend it |
 | `OperationName` | `operationName` | Canonical inbound name, or the explicit outbound name |
 | `SetInvokeTimeout` / `InvokeTimeout` | `setInvokeTimeout` / `invokeTimeout` | Stored timeout, empty when unset |
+| `PrepareForTelemetry` | `prepareForTelemetry` | Runs on the telemetry clone only |
 
 Sources:
 

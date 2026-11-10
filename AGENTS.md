@@ -72,6 +72,7 @@ Other backends (C, C#, Java, Kotlin, Swift, Delphi, JavaScript, IDL, JSDoc, Open
 | [docs/rose-processing-gate.md](docs/rose-processing-gate.md)                                   | ROSE pause/resume gate: behavior, API, C++/TS deviations |
 | [docs/rose-invoke-timeout.md](docs/rose-invoke-timeout.md)                                     | Invoke timeout: local wait, wire field, C++/TS deviations |
 | [docs/rose-invoke-context.md](docs/rose-invoke-context.md)                                     | Invoke context: operation name, wire timeout, factory |
+| [docs/rose-telemetry.md](docs/rose-telemetry.md)                                               | ROSE telemetry: outcomes, reasons, C++/TS deviations |
 | [docs/rose-worker-pools.md](docs/rose-worker-pools.md)                                         | Named C++ worker pools and the TypeScript absence |
 
 ## Typical task routing
