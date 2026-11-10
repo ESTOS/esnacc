@@ -214,6 +214,8 @@ export class LoopbackTransport extends TSASN1Base {
 
 		const encoding = data.invokeContext.encoding ?? EASN1TransportEncoding.JSON;
 		const wire = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
+		const decoded = wire.logData instanceof Uint8Array ? { invoke: data.invoke } : wire.logData;
+		this.logTransport(wire.payLoad, "sendInvoke", "out", data.invokeContext, decoded);
 		const receiveContext = new ReceiveInvokeContext({
 			encoding,
 			clientConnectionID: this.sessionId,

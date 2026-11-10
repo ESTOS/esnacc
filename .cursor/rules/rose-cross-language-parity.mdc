@@ -1,12 +1,30 @@
 ---
 description: Keep ROSE runtime and ASN.1 surfaces aligned across C++, TypeScript, and future Kotlin/Swift
 globs: cpp-lib/**/*,compiler/back-ends/ts-gen/**/*,compiler/back-ends/kotlin-gen/**/*,compiler/back-ends/swift-gen/**/*,ROSE/**/*
-alwaysApply: false
+alwaysApply: true
 ---
 
 # ROSE cross-language parity
 
-**Single contract, multiple runtimes.** C++ and TypeScript are maintained today; Kotlin and Swift will follow the same names, structures, concepts, and tests when their ROSE stacks land.
+**Single contract, multiple runtimes.** This rule outranks a local design preference. C++ and TypeScript are maintained today; Kotlin and Swift will follow the same names, structures, concepts, and tests when their ROSE stacks land.
+
+## Like C++ means transcribe the library
+
+When a ticket says to build a TypeScript behavior the way C++ already does it, the C++ library method, its parameters, and its stored state are the API. TypeScript gets the same words in camelCase, the same arguments, and the same number of stored values. A second call to the same C++ function is the same TypeScript function.
+
+The test harness is not the library. A helper that exists only on `sample_runtime_harness.h` is not a product feature. `SetLogLevels(inbound, outbound)` is that kind of helper: the library's `GetLogLevel` does not store two levels, and every harness test passes the same value twice.
+
+Do not invent a difference and then explain it in the deviations table. The table records a difference the language forces. It does not authorize a second method, a second stored field, or a narrower parameter type.
+
+Before finishing, list every new or changed public TypeScript method beside the C++ method it transcribes. A TypeScript name with no C++ counterpart is deleted, or the user is asked before it stays.
+
+These are the failures that rule is there to stop:
+
+- A second method for another call site of one C++ function. `LogTransportData` is `logTransport` on the wire log and on the decoded-body log.
+- A harness convenience copied into the product. One `logLevel`, because the library stores one answer.
+- A parameter narrowed to one side when C++ has one type. `SnaccInvokeContext` is `IReceiveInvokeContext | ISendInvokeContext` on every log method that takes a context.
+
+A real deviation is a language mechanic C++ does not have: `async` / `Promise` where C++ blocks, camelCase, or no process-wide JSON file when the product logger is the sink. Each of those is one row, written because there is no C++ equivalent.
 
 ## Source of truth (in order)
 
@@ -64,6 +82,9 @@ Human-readable feature docs live under `docs/` with routing front matter. A diff
 - `docs/rose-session-subscription.md`
 - `docs/rose-processing-gate.md`
 - `docs/rose-invoke-timeout.md`
+- `docs/rose-invoke-context.md`
+- `docs/rose-transport-logging.md`
+- `docs/rose-telemetry.md`
 - `docs/rose-worker-pools.md`
 
 ## Tests

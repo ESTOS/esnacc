@@ -343,7 +343,8 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 		// Get or create a connection to the target
 		this.getConnection(data.invokeContext).then((connection: IConnectionSocket): void => {
 			const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
-			this.logTransport(encodeResult.logData, "sendStatefull", "out", data.invokeContext);
+			const decoded = encodeResult.logData instanceof Uint8Array ? { invoke: data.invoke } : encodeResult.logData;
+			this.logTransport(encodeResult.payLoad, "sendStatefull", "out", data.invokeContext, decoded);
 			// Send the message
 			connection.send(encodeResult.payLoad);
 		}).catch((error: unknown): void => {
@@ -420,7 +421,8 @@ export abstract class TSASN1Client extends TSASN1Base implements IASN1Transport 
 		// Every request is added to this list no matter if we defined a timeout or not
 		// So we do not directly see the handling of the result.
 		// The result is handled through the regular methods and completed in the background
-		this.logTransport(encodeResult.logData, "sendInvoke", "out", data.invokeContext);
+		const decodedRest = encodeResult.logData instanceof Uint8Array ? { invoke: data.invoke } : encodeResult.logData;
+		this.logTransport(encodeResult.payLoad, "sendInvoke", "out", data.invokeContext, decodedRest);
 		const receiveInvokeContext = ReceiveInvokeContext.create(data.invoke);
 
 		const response = await this.fetch(target, requestdata);

@@ -289,6 +289,19 @@ class PendingInvokes extends Map<number, PendingInvoke> {
 }
 
 /**
+ * Which notations a ROSE transport log writes.
+ * Same bit values as C++ EAsnLogLevel. JSON and BER can be combined.
+ * JSON_ALWAYS_PRETTY_PRINTED forces a newline when the JSON payload has none.
+ */
+export enum EAsnLogLevel {
+	DISABLED = 0,
+	JSON = 1,
+	BER = 2,
+	JSON_AND_BER = 3,
+	JSON_ALWAYS_PRETTY_PRINTED = 4,
+}
+
+/**
  * A helper object that contains the log data
  */
 export interface ITransportMetaData {
@@ -349,6 +362,11 @@ export abstract class TSASN1Base implements IASN1Transport {
 	protected logger?: IROSELogger;
 	// Logs the raw transport (inbound before decoding, outbound after encoding)
 	protected logRawTransport = false;
+	// One bitmask for every ROSE PDU. C++ GetLogLevel takes a direction and the library stores no level of its own.
+	private logLevel = EAsnLogLevel.DISABLED;
+	// Plain result or error body captured while the handler still has it.
+	// handleResult substitutes it for an opaque BER ANY when the JSON notation is written.
+	private plainTransportBody?: object;
 	// Product sink for finalized ROSE lifecycle records. Unset means telemetry is not delivered.
 	private telemetryCallback?: SnaccTelemetryCallback;
 	// The default timeout for a websocket based invoke to the other side.
@@ -1102,6 +1120,23 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
+	 * Selects the transport notation for every ROSE PDU on this transport.
+	 * Called by the product before traffic starts. DISABLED leaves logRawTransport in charge.
+	 * A set bitmask writes every enabled notation and ignores logRawTransport.
+	 */
+	public setTransportLogLevel(level: EAsnLogLevel): void {
+		this.logLevel = level;
+	}
+
+	/**
+	 * Returns the transport notation bitmask.
+	 * One level covers every PDU on this transport.
+	 */
+	public getTransportLogLevel(): EAsnLogLevel {
+		return this.logLevel;
+	}
+
+	/**
 	 * A development debug log that shows the instance type with the log message
 	 *
 	 * @param log - the log text to print
@@ -1246,6 +1281,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 		}
 
 		const payLoad = ROSEBase.getDebugPayload(rawData);
+		this.logTransport(rawData, "receive", "in", invokeContext);
+		this.logDecodeFailure("receive", errors.getDiagnostic() || "Failed to decode ROSEMessage", invokeContext);
 		this.log(ELogSeverity.error, "Failed to decode ROSEMessage", "receive", this, { payLoad, errors });
 		this.emitFinalizedTelemetry(
 			SnaccTelemetryData.Direction.INBOUND,
@@ -1319,10 +1356,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 			else if (message.reject && message.reject.invokedID.invokedID)
 				invokeContext.invokeID = message.reject.invokedID.invokedID;
 
-			if (invokeContext.encoding === EASN1TransportEncoding.JSON)
-				this.logTransport(message, "receive", "in", invokeContext);
-			else
-				this.logTransport(rawData, "receive", "in", invokeContext);
+			this.logTransport(rawData, "receive", "in", invokeContext, message);
 
 			if (message.invoke) {
 				const requestSize = payloadByteLength(rawData);
@@ -1481,46 +1515,191 @@ export abstract class TSASN1Base implements IASN1Transport {
 		}
 
 		const encodeResult = ROSEBase.encodeToTransport(payload, this.encodeContext);
-		this.logTransport(encodeResult.logData, "handleResult", "out", invokeContext);
+		this.logTransport(encodeResult.payLoad, "handleResult", "out", invokeContext, message);
 		return { payLoad: encodeResult.payLoad, httpStatusCode: resultValue };
 	}
 
 	/**
-	 * Logs the transport data
+	 * Logs one ROSE PDU in each notation the bitmask enables.
+	 * This is `LogTransportData`. Receive, handleResult, outbound send, and the decoded-body follow-up all call it.
+	 * The follow-up passes the decoded object as both payload and decoded. The BER line was already written from the raw bytes.
+	 * When the level is DISABLED, logRawTransport still writes the single legacy wire payload.
 	 *
-	 * @param payLoad - the payload to log
+	 * @param payLoad - the wire bytes, the JSON value, or the decoded object on the follow-up call
 	 * @param method - the method which is calling the logTransport
 	 * @param direction - the direction of this transport log entry
-	 * @param invokeContext - the context of the invoke (connecitionID, clientID etc.)
+	 * @param invokeContext - the receive or send context of this invoke
+	 * @param decoded - the ROSE message when the JSON notation must be rebuilt from it
 	 */
-	protected logTransport(
+	public logTransport(
 		payLoad: Uint8Array | string | object,
 		method: string,
 		direction: "in" | "out",
-		invokeContext: IReceiveInvokeContext,
+		invokeContext: IReceiveInvokeContext | ISendInvokeContext,
+		decoded?: object,
 	): void {
-		if (this.logRawTransport) {
-			if (payLoad instanceof Uint8Array) {
-				if (invokeContext.encoding === EASN1TransportEncoding.JSON)
-					payLoad = ROSEBase.bytesToSring(payLoad);
-				else
-					payLoad = ROSEBase.buf2hex(payLoad);
-			}
-
-			// Let's log what we did receive
-			const meta: ITransportMetaData = {
-				...this.additionalLogMetaForRawTransport,
-				clientConnectionID: invokeContext.clientConnectionID,
-				clientIP: invokeContext.clientIP,
-				invokeID: invokeContext.invokeID,
-				type: invokeContext.clientConnectionID ? "ws" : "rest",
-				operationID: invokeContext.operationID,
-				operationName: invokeContext.operationName,
-				direction,
-				payLoad,
-			};
-			this.log(ELogSeverity.debug, "asn1Transport", method, this, meta);
+		const level = this.logLevel;
+		// Disabled level writes the legacy wire line only. The decoded follow-up passes the same object
+		// as payload and decoded and has no raw bytes, so it stays silent, as LogTransportData does.
+		if (level === EAsnLogLevel.DISABLED) {
+			if (this.logRawTransport && payLoad !== decoded)
+				this.writeLegacyTransportLog(payLoad, method, direction, invokeContext);
+			return;
 		}
+
+		const encoding = invokeContext.encoding ?? EASN1TransportEncoding.JSON;
+		const logJson = (level & (EAsnLogLevel.JSON | EAsnLogLevel.JSON_ALWAYS_PRETTY_PRINTED)) !== 0;
+		const logBer = (level & EAsnLogLevel.BER) !== 0;
+		if (logJson) {
+			const text = this.jsonNotation(payLoad, decoded, encoding, level);
+			if (text)
+				this.writeTransportEntry(method, direction, invokeContext, text, false, ELogSeverity.debug);
+		}
+		if (logBer && encoding === EASN1TransportEncoding.BER) {
+			const bytes = this.payloadBytes(payLoad);
+			if (bytes)
+				this.writeTransportEntry(method, direction, invokeContext, this.berHex(bytes, logJson), true, ELogSeverity.debug);
+		}
+	}
+
+	/**
+	 * Writes the decode-failure record. The payload contains the key "exception", matching C++ PrintJSONToLog.
+	 * Called when the outer ROSE envelope cannot be decoded and a transport log level is enabled.
+	 */
+	private logDecodeFailure(method: string, exception: string, invokeContext: IReceiveInvokeContext): void {
+		if (this.logLevel === EAsnLogLevel.DISABLED)
+			return;
+		const payload = JSON.stringify({ exception, method }, null, "\t");
+		this.writeTransportEntry(method, "in", invokeContext, payload, false, ELogSeverity.error);
+	}
+
+	/**
+	 * One legacy payload. Used only while the bitmask for that direction stays DISABLED.
+	 */
+	private writeLegacyTransportLog(
+		payLoad: Uint8Array | string | object,
+		method: string,
+		direction: "in" | "out",
+		invokeContext: IReceiveInvokeContext | ISendInvokeContext,
+	): void {
+		let logged: Uint8Array | string | object = payLoad;
+		if (logged instanceof Uint8Array) {
+			if (invokeContext.encoding === EASN1TransportEncoding.JSON)
+				logged = ROSEBase.bytesToSring(logged);
+			else
+				logged = ROSEBase.buf2hex(logged);
+		}
+		this.writeTransportEntry(method, direction, invokeContext, logged, false, ELogSeverity.debug);
+	}
+
+	/**
+	 * JSON text for one notation. A decoded message is pretty-printed.
+	 * A compact JSON string is reformatted when the pretty bit is set and the text has no newline.
+	 */
+	private jsonNotation(
+		payLoad: Uint8Array | string | object,
+		decoded: object | undefined,
+		encoding: EASN1TransportEncoding,
+		level: EAsnLogLevel,
+	): string | undefined {
+		if (decoded) {
+			try {
+				return JSON.stringify(this.viewForLog(decoded), null, "\t");
+			} catch {
+				// An opaque BER ANY can make the envelope unstringifiable. The grafted log writes the JSON line later.
+			}
+		}
+		let text: string | undefined;
+		if (typeof payLoad === "string")
+			text = payLoad;
+		else if (payLoad instanceof Uint8Array && encoding !== EASN1TransportEncoding.BER)
+			text = ROSEBase.bytesToSring(payLoad);
+		else if (payLoad && typeof payLoad === "object" && !(payLoad instanceof Uint8Array)) {
+			try {
+				text = JSON.stringify(payLoad);
+			} catch {
+				text = undefined;
+			}
+		}
+		if (!text)
+			return undefined;
+		const forcePretty = (level & EAsnLogLevel.JSON_ALWAYS_PRETTY_PRINTED) !== 0;
+		if (forcePretty && !text.includes("\n")) {
+			try {
+				return JSON.stringify(JSON.parse(text), null, "\t");
+			} catch {
+				return text;
+			}
+		}
+		return text;
+	}
+
+	/**
+	 * Replaces an opaque BER result or error body with the plain object the handler logged.
+	 * The stash is consumed so the next PDU does not reuse it.
+	 */
+	private viewForLog(decoded: object): object {
+		const body = this.plainTransportBody;
+		this.plainTransportBody = undefined;
+		if (!body)
+			return decoded;
+		const message = decoded as ROSEMessage;
+		if (message.result?.result) {
+			return {
+				result: {
+					invokeID: message.result.invokeID,
+					result: { result: body },
+				},
+			};
+		}
+		if (message.error)
+			return { error: { ...message.error, error: body } };
+		return decoded;
+	}
+
+	/**
+	 * Wire bytes for the BER notation. A string is the JSON wire and is not hex-encoded.
+	 */
+	private payloadBytes(payLoad: Uint8Array | string | object): Uint8Array | undefined {
+		if (payLoad instanceof Uint8Array)
+			return payLoad;
+		return undefined;
+	}
+
+	/**
+	 * Uppercase hex with spaces. When the JSON bit is also set the line is wrapped as "BER" : "...".
+	 */
+	private berHex(bytes: Uint8Array, wrap: boolean): string {
+		const parts: string[] = [];
+		for (const byte of bytes)
+			parts.push(byte.toString(16).padStart(2, "0").toUpperCase());
+		const hex = parts.join(" ");
+		return wrap ? `"BER" : "${hex}"` : hex;
+	}
+
+	/**
+	 * One transport log line. omitOperationName is set for the BER hex line, which C++ logs without a name.
+	 */
+	private writeTransportEntry(
+		method: string,
+		direction: "in" | "out",
+		invokeContext: IReceiveInvokeContext | ISendInvokeContext,
+		payLoad: string | object,
+		omitOperationName: boolean,
+		severity: ELogSeverity,
+	): void {
+		const meta: ITransportMetaData = {
+			...this.additionalLogMetaForRawTransport,
+			clientConnectionID: invokeContext.clientConnectionID,
+			clientIP: "clientIP" in invokeContext ? invokeContext.clientIP : undefined,
+			invokeID: invokeContext.invokeID,
+			type: invokeContext.clientConnectionID ? "ws" : "rest",
+			operationID: invokeContext.operationID,
+			operationName: omitOperationName ? undefined : invokeContext.operationName,
+			direction,
+			payLoad,
+		};
+		this.log(severity, "asn1Transport", method, this, meta);
 	}
 
 	/**
@@ -1643,6 +1822,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 		context: IReceiveInvokeContext | ISendInvokeContext,
 		isOutbound: boolean,
 	): void {
+		if (isOutbound)
+			this.plainTransportBody = result;
 		const meta: IResultLogEntry = {
 			_type: "IResultLogEntry",
 			operationName: context.operationName,
@@ -1674,9 +1855,11 @@ export abstract class TSASN1Base implements IASN1Transport {
 		callback: IASN1LogCallback,
 		error: object,
 		invokeArgument: object | undefined,
-		context: IInvokeContextBase,
+		context: IReceiveInvokeContext | ISendInvokeContext,
 		isOutbound: boolean,
 	): void {
+		if (isOutbound)
+			this.plainTransportBody = error;
 		const meta: IErrorLogEntry = {
 			_type: "IErrorLogEntry",
 			operationName: context.operationName,
@@ -1708,7 +1891,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 		callback: IASN1LogCallback,
 		reject: object,
 		invokeArgument: object | undefined,
-		context: IInvokeContextBase,
+		context: IReceiveInvokeContext | ISendInvokeContext,
 		isOutbound: boolean,
 	): void {
 		const meta: IRejectLogEntry = {

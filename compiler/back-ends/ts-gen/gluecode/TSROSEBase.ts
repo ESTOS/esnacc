@@ -771,6 +771,18 @@ export interface IASN1Transport extends IRoseSessionSubscription {
 	 * ROSEBase checks this before building a record, so the record and its context clone are skipped when no sink is set.
 	 */
 	hasTelemetryCallback(): boolean;
+	/**
+	 * Writes one ROSE PDU in each notation the bitmask enables.
+	 * This is `LogTransportData`. The wire log and the decoded-body log both call it.
+	 * The decoded-body call passes the same object as payload and decoded, so the BER line already written from the raw bytes is not repeated.
+	 */
+	logTransport(
+		payLoad: Uint8Array | string | object,
+		method: string,
+		direction: "in" | "out",
+		invokeContext: IReceiveInvokeContext | ISendInvokeContext,
+		decoded?: object,
+	): void;
 	sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
 	sendEvent(data: IASN1InvokeData): ERoseResult;
 	registerOperation(
@@ -853,7 +865,7 @@ export interface IASN1Transport extends IRoseSessionSubscription {
 		callback: IASN1LogCallback,
 		error: object,
 		invoke: unknown | undefined,
-		context: IInvokeContextBase,
+		context: IReceiveInvokeContext | ISendInvokeContext,
 		isOutbound: boolean,
 	): void;
 	logReject(
@@ -861,7 +873,7 @@ export interface IASN1Transport extends IRoseSessionSubscription {
 		callback: IASN1LogCallback,
 		reject: object,
 		invoke: unknown | undefined,
-		context: IInvokeContextBase,
+		context: IReceiveInvokeContext | ISendInvokeContext,
 		isOutbound: boolean,
 	): void;
 }
@@ -1551,6 +1563,8 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			);
 			if (decoded) {
 				this.transport.logResult(method, this, decoded, context, false);
+				const decodedResult = { result: { invokeID: roseResult.invokeID, result: { result: decoded } } };
+				this.transport.logTransport(decodedResult, method, "in", context, decodedResult);
 				this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.RESULT, SnaccTelemetryData.Stage.OUTBOUND_WAIT, SnaccTelemetryData.Reason.REMOTE_RESULT, ERoseResult.ROSE_NOERROR, context, responseSize, started);
 				return decoded;
 			} else {
@@ -1566,6 +1580,8 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			);
 			if (error) {
 				this.transport.logError(method, this, error, argument, context, false);
+				const decodedError = { error: { invokedID: roseResult.invokedID, error } };
+				this.transport.logTransport(decodedError, method, "in", context, decodedError);
 				this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.ERR, SnaccTelemetryData.Stage.OUTBOUND_WAIT, SnaccTelemetryData.Reason.REMOTE_ERROR, ERoseResult.ROSE_ERROR_VALUE, context, responseSize, started);
 				return error;
 			} else {
@@ -1643,6 +1659,8 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		);
 		if (argument) {
 			this.transport.logInvoke(methodName, this, argument, invokeContext, false);
+			const decodedEvent = { invoke: { ...invoke, argument } };
+			this.transport.logTransport(decodedEvent, methodName, "in", invokeContext, decodedEvent);
 			if (method) {
 				method = method.bind(handler);
 				if (handler.setLogContext)
@@ -1705,6 +1723,8 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		);
 		if (argument) {
 			this.transport.logInvoke(methodName, this, argument, invokeContext, false);
+			const decodedInvoke = { invoke: { ...invoke, argument } };
+			this.transport.logTransport(decodedInvoke, methodName, "in", invokeContext, decodedInvoke);
 			if (method) {
 				method = method.bind(handler);
 				if (handler.setLogContext)

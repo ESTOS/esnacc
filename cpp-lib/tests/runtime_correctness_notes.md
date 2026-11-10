@@ -487,7 +487,7 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 | `logical_failure_tests`                           | `TSLogicalFailure.loopback.test.ts`               | **Partial** — TS returns wire `InvokeProblemenum` (not C++ `ROSE_REJECT_*`); BER loopback loses `invokeProblem=1` on reject round-trip (spec failure, see below) |
 | `transport_failure_tests`                         | `TSTransportFailure.loopback.test.ts`             | **Partial** (timeout code `requestTimedOut` vs `ROSE_TE_TIMEOUT`)                                                                                                |
 | `async_invoke_tests`                              | —                                                 | **Blocked** — Promise model; no `SetAsyncCompletion` surface                                                                                                     |
-| `logging_tests`                                   | —                                                 | **Blocked** — C++ bitmask is specified; TS `logRawTransport` is still a boolean (hex or object, not both). Alignment is BUILDSYS-661. |
+| `logging_tests`                                   | `TSTransportLogging.test.ts`                      | **Aligned** for the bitmask (invoke, result, error, reject, event, both directions, JSON, BER hex, pretty, malformed). File logging stays C++-only. |
 | `telemetry_tests`                                 | `TSTelemetry.test.ts`                             | **Aligned** for outcome and reason (result, error, reject, event, decode, timeout, fire-and-forget, payload decode, shutdown, context clone). Async callback completion stays C++-only. |
 | `lifecycle_tests`                                 | —                                                 | **Blocked** — partial overlap with pause tests                                                                                                                   |
 | `public_api_tests` (decode hooks, file log)       | —                                                 | **Blocked** — C++-specific APIs                                                                                                                                  |
@@ -527,9 +527,11 @@ encode/decode in `SNACCROSE_Converter.ts` (not test harness).
 - `receiveHandleROSEMessage` copies a present wire `timeout`, including 0, and leaves an absent field unset.
 - Inbound `operationName` follows the C++ lookup. A wire name does not replace it.
 
-### Block E — Logging API
+### Block E — Logging API (bitmask done, BUILDSYS-661)
 
-- `configureFileLogging`, `OnBinaryDataBlock` log flags, decode-error hooks → port `logging_tests` / `public_api_tests` logging cases.
+`EAsnLogLevel` and `setTransportLogLevel` write every enabled notation for each ROSE PDU. Human contract: [docs/rose-transport-logging.md](../../docs/rose-transport-logging.md). Glue spec: `TSTransportLogging.test.ts`.
+
+`configureFileLogging` and the C++ file sink stay on the C++ runtime. The TypeScript sink is the logger callback.
 
 ### Block F — Kotlin / Swift
 
