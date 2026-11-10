@@ -6,7 +6,6 @@ packages:
 allowBuilds:
   dprint: true
   esbuild: true
-  ucconfig@https://codeload.github.com/estos/ucconfig/tar.gz/2812238c450fed1fd32227051cabf9f1e2723fbb: true
 
 minimumReleaseAgeExclude:
   - '@estos/asn1ts@3.2.5'

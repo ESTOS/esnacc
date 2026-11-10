@@ -126,7 +126,7 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -node
 
 # Default configuration
 
-Settings are read from the environment via `ucconfig` / `dotenv`. Copy `.env.sample` to `.env` in this directory.
+Settings are read from the environment via `envalid` / `dotenv`. Copy `.env.sample` to `.env` in this directory.
 
 ```
 MICROSERVICE_VERSION_BUILD_DATE=10/03/2026
@@ -144,4 +144,4 @@ MICROSERVICE_SERVER_LISTEN_PORT_TCP=3020
 MICROSERVICE_SERVER_DEFAULTENCODING=2
 ```
 
-`MICROSERVICE_ENVIRONMENT` must be one of `development`, `staging`, or `production` (required by `ucconfig`).
+`MICROSERVICE_ENVIRONMENT` must be one of `development`, `staging`, or `production`.

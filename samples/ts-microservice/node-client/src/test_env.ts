@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-/** Required by ucconfig `initCore()` — see node-server/.env.sample */
+/** Required by the node-server envalid schema — see node-server/.env.sample */
 const MICROSERVICE_CORE_ENV_KEYS = [
 	"MICROSERVICE_VERSION_BUILD_DATE",
 	"MICROSERVICE_VERSION_TAG",
@@ -22,7 +22,7 @@ export const REQUIRED_MICROSERVICE_SERVER_ENV_KEYS = [
 	...MICROSERVICE_SERVER_ENV_KEYS,
 ] as const;
 
-/** Runner configuration for the headless integration client (not ucconfig). */
+/** Runner configuration for the headless integration client. */
 export const REQUIRED_INTEGRATION_RUNNER_ENV_KEYS = [
 	"SNACC_TS_TEST_PORT",
 	"SNACC_TS_SERVER_ROOT",
