@@ -1,6 +1,5 @@
-import { ILogCallback, ILogData, LogLevels } from "uclogger";
-
-import { ILogger, omitForLogging } from "./ILogHelpers.js";
+import { ILogger, LogLevels, omitForLogging } from "./ILogHelpers.js";
+import { ILogCallback, ILogData } from "./pinoLogger.js";
 
 // By default do not log arguments and results, just the function call and the result
 const defaultNoArgumentsAndResult = true;

@@ -1,5 +1,5 @@
 import express from "express";
-import { ILogData } from "uclogger";
+import { ILogData } from "../../lib/pinoLogger.js";
 
 import { theLogger, theServer } from "../../globals.js";
 import { ReceiveInvokeContext } from "../../stub/TSROSEBase.js";

@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import { ILogData } from "uclogger";
+import { ILogData } from "./pinoLogger.js";
 import WebSocket from "ws";
 
 import { theConfig, theLogger, theLogStorage, theServer } from "../globals.js";

@@ -1,6 +1,6 @@
 // loads environment variables from a .env file into process.env
 import * as dotenv from "dotenv";
-import { IELoggerSettings } from "uclogger";
+import { IELoggerSettings } from "./lib/pinoLogger.js";
 
 import expressInit from "./express/expressInit.js";
 import { theClientConnectionManager, theConfig, theLogger, theLogStorage, theServer } from "./globals.js";

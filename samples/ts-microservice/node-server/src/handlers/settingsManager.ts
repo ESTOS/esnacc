@@ -1,4 +1,4 @@
-import { ILogData } from "uclogger";
+import { ILogData } from "../lib/pinoLogger.js";
 
 import { theClientConnectionManager } from "../globals.js";
 import { ENetUC_Settings_ManagerROSE } from "../stub/ENetUC_Settings_ManagerROSE.js";

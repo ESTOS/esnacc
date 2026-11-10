@@ -73,7 +73,7 @@ Singleton manager classes (prefix `the_`) are created in `src/globals.ts`:
 import {
 	theClientConnectionManager, // connected WebSocket clients
 	theConfig, // validated configuration from environment
-	theLogger, // logging (console, file, …)
+	theLogger, // pino logging (console and file)
 	theServer, // ASN.1 ROSE dispatch / handler routing
 } from "./globals.js";
 ```

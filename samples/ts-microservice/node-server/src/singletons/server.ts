@@ -1,4 +1,4 @@
-import { ILogData } from "uclogger";
+import { ILogData } from "../lib/pinoLogger.js";
 
 import { theConfig } from "../globals.js";
 import { EventManager } from "../handlers/eventManager.js";
