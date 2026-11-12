@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { IFinalLogData, ILogData } from "uclogger";
+import { IFinalLogData, ILogData } from "../lib/pinoLogger.js";
 
 import { theConfig, theLogger } from "../globals.js";
 import { Common } from "../lib/common.js";

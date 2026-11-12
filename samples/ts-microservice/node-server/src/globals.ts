@@ -4,7 +4,7 @@
 // Please do not forget to check for circular dependencies every now and then using
 // npm run check
 
-import { ELogger } from "uclogger";
+import { ELogger } from "./lib/pinoLogger.js";
 
 import { LogLocalStorage } from "./singletons/asyncLocalStorage.js";
 import { ClientConnectionManager } from "./singletons/clientConnectionManager.js";

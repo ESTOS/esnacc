@@ -1,4 +1,4 @@
-import { ILogData } from "uclogger";
+import { ILogData } from "./pinoLogger.js";
 
 import { theLogger } from "../globals.js";
 import { IClientConnection, IClientConnectionNotify } from "./IClientConnection.js";

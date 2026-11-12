@@ -1,7 +1,7 @@
 import { Request } from "express";
 import path from "node:path";
 import url from "node:url";
-import { ILogData } from "uclogger";
+import { ILogData } from "./pinoLogger.js";
 import { v4 as uuidv4 } from "uuid";
 
 import { theConfig } from "../globals.js";

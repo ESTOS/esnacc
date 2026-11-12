@@ -45,10 +45,14 @@ export class IntegrationClient extends TSASN1NodeClient {
 }
 
 export function assertInvokeResult<T>(
-	response: T | ENetUC_Common.AsnRequestError | AsnInvokeProblem,
+	response: T | ENetUC_Common.AsnRequestError | AsnInvokeProblem | undefined,
 	classType: { new(...args: never[]): T; },
 	label: string,
 ): T {
+	// Timeout 0 resolves undefined. That is not a result, an error, or a reject.
+	if (response === undefined)
+		throw new Error(`${label}: no response`);
+
 	if (response instanceof classType)
 		return response;
 

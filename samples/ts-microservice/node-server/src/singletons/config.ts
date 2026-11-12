@@ -1,11 +1,13 @@
 import dotenv from "dotenv";
-import { EConfigTemplate, ICoreConfig, validators } from "ucconfig";
+import { cleanEnv, makeValidator, str } from "envalid";
+import fs from "node:fs";
 
 import { Common } from "../lib/common.js";
 import { EASN1TransportEncoding } from "../stub/TSInvokeContext.js";
 
 /**
- * The static config of our server
+ * Values that do not come from the environment.
+ * Kept beside the env fields so the rest of the sample can read one IConfig.
  */
 class StaticConfig {
 	public readonly clientConnection = { client_keepalive: 30000 };
@@ -34,77 +36,118 @@ interface IEconfConfig extends StaticConfig {
 	econfServerKeyfile: string | undefined;
 	// The encoding the server is using as default
 	econfDefaultEncoding: EASN1TransportEncoding;
+	// development, staging, or production
+	environment: "development" | "staging" | "production";
 }
 
-export type IConfig = IEconfConfig & ICoreConfig;
+export type IConfig = IEconfConfig;
 
-/** */
-export class Config extends EConfigTemplate {
-	private _config: IEconfConfig;
+/**
+ * A TCP or TLS port. 0 means that listener is off.
+ */
+const portValue = makeValidator((input: string) => {
+	const value = Number(input);
+	if (!Number.isInteger(value) || value < 0 || value > 65535)
+		throw new Error("expected a port from 0 to 65535");
+	return value;
+});
+
+/**
+ * Replaces ${NAME} with the current environment value.
+ * The sample .env uses that form for the host name.
+ */
+function expandEnvRefs(value: string): string {
+	return value.replace(/\$\{([^}]+)\}/g, (_match, name: string) => process.env[name] ?? "");
+}
+
+/**
+ * Reads MICROSERVICE_* from the environment and checks the paths.
+ * Called once from the Config constructor after dotenv has loaded .env.
+ * A missing required variable or a bad port throws before the server listens.
+ */
+function readConfig(): IConfig {
+	for (const [key, value] of Object.entries(process.env)) {
+		if (key.startsWith("MICROSERVICE_") && typeof value === "string" && value.includes("${"))
+			process.env[key] = expandEnvRefs(value);
+	}
+
+	const env = cleanEnv(process.env, {
+		MICROSERVICE_ENVIRONMENT: str({ choices: ["development", "staging", "production"] }),
+		MICROSERVICE_VERSION_BUILD_DATE: str(),
+		MICROSERVICE_VERSION_TAG: str(),
+		MICROSERVICE_LOG_DIRECTORY: str(),
+		MICROSERVICE_SERVER_FQDN: str(),
+		MICROSERVICE_SERVER_LISTEN_PORT_TCP: portValue({ default: 0 }),
+		MICROSERVICE_SERVER_LISTEN_PORT_TLS: portValue({ default: 0 }),
+		MICROSERVICE_SERVER_LISTEN_IP: str({ default: "0.0.0.0" }),
+		MICROSERVICE_SERVER_CERTFILE: str({ default: "" }),
+		MICROSERVICE_SERVER_KEYFILE: str({ default: "" }),
+		MICROSERVICE_SERVER_DEFAULTENCODING: portValue({ default: EASN1TransportEncoding.BER }),
+	});
+
+	const logDirectory = env.MICROSERVICE_LOG_DIRECTORY;
+	if (!fs.existsSync(logDirectory) || !fs.statSync(logDirectory).isDirectory())
+		throw new Error(`MICROSERVICE_LOG_DIRECTORY is not a directory: ${logDirectory}`);
+
+	const fqdn = env.MICROSERVICE_SERVER_FQDN.trim().toLowerCase();
+	if (!fqdn)
+		throw new Error("MICROSERVICE_SERVER_FQDN is empty");
+
+	const listenIP = env.MICROSERVICE_SERVER_LISTEN_IP;
+	if (!/^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$/.test(listenIP))
+		throw new Error(`MICROSERVICE_SERVER_LISTEN_IP is not an IPv4 address: ${listenIP}`);
+
+	const certfile = env.MICROSERVICE_SERVER_CERTFILE || undefined;
+	const keyfile = env.MICROSERVICE_SERVER_KEYFILE || undefined;
+	if (certfile && !fs.existsSync(certfile))
+		throw new Error(`MICROSERVICE_SERVER_CERTFILE does not exist: ${certfile}`);
+	if (keyfile && !fs.existsSync(keyfile))
+		throw new Error(`MICROSERVICE_SERVER_KEYFILE does not exist: ${keyfile}`);
+
+	const encoding = env.MICROSERVICE_SERVER_DEFAULTENCODING;
+	if (encoding !== EASN1TransportEncoding.JSON && encoding !== EASN1TransportEncoding.BER)
+		throw new Error("MICROSERVICE_SERVER_DEFAULTENCODING must be 1 (JSON) or 2 (BER)");
+
+	return {
+		...new StaticConfig(),
+		instanceID: Common.generateGUID(),
+		logDirectory,
+		econfServerFDQN: fqdn,
+		econfServerListenPortTCP: env.MICROSERVICE_SERVER_LISTEN_PORT_TCP,
+		econfServerListenPortTLS: env.MICROSERVICE_SERVER_LISTEN_PORT_TLS,
+		econfServerListenIP: listenIP,
+		econfServerCertfile: certfile,
+		econfServerKeyfile: keyfile,
+		econfDefaultEncoding: encoding,
+		environment: env.MICROSERVICE_ENVIRONMENT,
+	};
+}
+
+/**
+ * Loads .env and exposes the sample configuration.
+ * globals.ts constructs one instance. The rest of the server reads config.
+ */
+export class Config {
+	private readonly parsed: IConfig;
 
 	/**
-	 * Constructor --- you know?
+	 * Loads dotenv, then reads and checks MICROSERVICE_*.
+	 * Throws when a required variable is missing or a path or port is invalid.
 	 */
 	public constructor() {
-		super("MICROSERVICE");
 		dotenv.config();
-		this.initCore();
-		this._config = this.init();
-		this.validate(true);
+		this.parsed = readConfig();
 	}
 
 	/**
-	 * Getter for the main config
-	 *
-	 * @returns - IConfig object
+	 * The configuration the rest of the sample reads.
 	 */
 	public get config(): IConfig {
-		return { ...this._config, ...this.coreConfig };
+		return this.parsed;
 	}
 
 	/**
-	 * Inits all configurations/settings from given environment variables
-	 *
-	 * @returns - Instance of this config
-	 */
-	private init(): IEconfConfig {
-		const config: IEconfConfig = {
-			...new StaticConfig(),
-			instanceID: Common.generateGUID(),
-			logDirectory: this.newProperty<string>("LOG_DIRECTORY", validators.validateFolderExists()),
-			econfServerFDQN: this.newEnvProperty<string>(
-				"SERVER_FQDN",
-				validators.validateStringNotEmpty("tolower"),
-				undefined,
-				true,
-			),
-			econfServerListenPortTCP: this.newProperty<number>("SERVER_LISTEN_PORT_TCP", validators.validatePort(), 0),
-			econfServerListenPortTLS: this.newProperty<number>("SERVER_LISTEN_PORT_TLS", validators.validatePort(), 0),
-			econfServerListenIP: this.newProperty<string>("SERVER_LISTEN_IP", validators.validateIPv4(), "0.0.0.0"),
-			econfServerCertfile: this.newProperty<string | undefined>(
-				"SERVER_CERTFILE",
-				validators.validateFileExists(),
-				undefined,
-			),
-			econfServerKeyfile: this.newProperty<string | undefined>(
-				"SERVER_KEYFILE",
-				validators.validateFileExists(),
-				undefined,
-			),
-			econfDefaultEncoding: this.newProperty<EASN1TransportEncoding>(
-				"SERVER_DEFAULTENCODING",
-				validators.validateInteger(EASN1TransportEncoding.JSON, EASN1TransportEncoding.BER),
-				EASN1TransportEncoding.BER,
-			),
-		};
-
-		return config;
-	}
-
-	/**
-	 * Current working directory of the Node.js process
-	 *
-	 * @returns - current working directory of the Node.js process
+	 * Current working directory of the Node.js process.
 	 */
 	public get rootdir(): string {
 		return process.cwd();

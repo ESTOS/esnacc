@@ -1,4 +1,4 @@
-import { ILogCallback, ILogData } from "uclogger";
+import { ILogCallback, ILogData } from "./pinoLogger.js";
 import WebSocket from "ws";
 
 import { EOwnInterval, EOwnTimeout } from "./common_timers.js";

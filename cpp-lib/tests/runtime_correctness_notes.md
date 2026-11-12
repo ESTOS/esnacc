@@ -480,22 +480,20 @@ Executable spec today: `cpp-lib/tests/` (~170 cases). TypeScript glue parity:
 | `rose_session_subscription_tests`                 | `TSASN1Base.roseSessionSubscription.test.ts`      | **Aligned** (store replace/clear matrix on both; component forward is `SnaccROSEComponentForwardsToSender` / `ROSEBase forwards subscription queries to transport`) |
 | Pause / shutdown gate                             | `TSASN1Base.pauseRoseProcessing.test.ts`          | **Aligned** for the session gate (block, complete pending, resume, inbound until resume, late result). Worker-pool reject inside `PauseRoseProcessing` stays C++-only. Async callback completion stays C++-only. |
 | `InvokeWireTimeoutTest` / outbound encode         | `TSROSEBase.invokeTimeout.test.ts`                | **Aligned** — JSON always writes the resolved timeout; BER writes it only after `SetSendTimeoutInInvokes(true)`; the local wait is unchanged; wire `0` is not an expired queue deadline |
-| `InvokeContextInitTest`                           | `TSInvokeContext.init.test.ts`                    | **Partial** (wire `operationName` vs lookup differs from C++)                                                                                                    |
-| `InvokeContextRuntimeTest` (loopback)             | `TSCallFlow.loopback.test.ts` (subset)            | **Partial** — full orphan/malformed matrix C++-only                                                                                                              |
-| `OutboundWireInvokeTimeoutReachesInboundHandler*` | —                                                 | **Blocked** — TS `receiveHandleROSEMessage` does not copy wire `timeout` into context yet                                                                        |
+| `InvokeContextInitTest`                           | `TSInvokeContext.init.test.ts`                    | **Aligned** — inbound `operationName` is the operation-id lookup; a wire name does not replace it                                                                 |
+| `InvokeContextRuntimeTest` (loopback)             | `TSCallFlow.loopback.test.ts` (subset)            | **Partial** — full orphan/malformed matrix C++-only. Factory override is `CreateReceiveInvokeContextOverrideReachesInboundHandler`                                      |
+| `OutboundWireInvokeTimeoutReachesInboundHandler*` | `TSInvokeContext.receive.test.ts`                 | **Aligned** — a present wire timeout, including 0, is on the inbound context; an absent field stays unset                                                        |
 | `call_flow_tests`                                 | `TSCallFlow.loopback.test.ts` + integration smoke | **Aligned** (loopback; integration smoke separate)                                                                                                               |
 | `logical_failure_tests`                           | `TSLogicalFailure.loopback.test.ts`               | **Partial** — TS returns wire `InvokeProblemenum` (not C++ `ROSE_REJECT_*`); BER loopback loses `invokeProblem=1` on reject round-trip (spec failure, see below) |
 | `transport_failure_tests`                         | `TSTransportFailure.loopback.test.ts`             | **Partial** (timeout code `requestTimedOut` vs `ROSE_TE_TIMEOUT`)                                                                                                |
 | `async_invoke_tests`                              | —                                                 | **Blocked** — Promise model; no `SetAsyncCompletion` surface                                                                                                     |
-| `logging_tests`                                   | —                                                 | **Blocked** — C++ bitmask is specified; TS `logRawTransport` is still a boolean (hex or object, not both). Alignment is BUILDSYS-661. |
-| `telemetry_tests`                                 | —                                                 | **Blocked** — no telemetry subsystem in TS glue                                                                                                                  |
+| `logging_tests`                                   | `TSTransportLogging.test.ts`                      | **Aligned** for the bitmask (invoke, result, error, reject, event, both directions, JSON, BER hex, pretty, malformed). File logging stays C++-only. |
+| `telemetry_tests`                                 | `TSTelemetry.test.ts`                             | **Aligned** for outcome and reason (result, error, reject, event, decode, timeout, fire-and-forget, payload decode, shutdown, context clone). Async callback completion stays C++-only. |
 | `lifecycle_tests`                                 | —                                                 | **Blocked** — partial overlap with pause tests                                                                                                                   |
 | `public_api_tests` (decode hooks, file log)       | —                                                 | **Blocked** — C++-specific APIs                                                                                                                                  |
 
-**Known TS/C++ behavioral difference (documented, not a test failure):** inbound
-`SnaccInvokeContext` resolves `OperationName()` from operationID lookup and **ignores** wire
-`operationName` when operationID is set. TypeScript `receiveHandleROSEMessage` keeps wire
-`operationName` when present (`TSInvokeContext.init.test.ts`).
+**Inbound operation name:** both runtimes resolve `operationName` from the operation-id lookup
+and ignore a wire name when the id is set. The human contract is [docs/rose-invoke-context.md](../../docs/rose-invoke-context.md).
 
 **Known TS glue spec failure (BER reject round-trip):** loopback delivery of server
 `ROSEReject` with `invokeProblem = unrecognisedOperation` (1) decodes as an empty reject
@@ -519,29 +517,21 @@ encode/decode in `SNACCROSE_Converter.ts` (not test harness).
 3. `TSCallFlow.loopback.test.ts`, `TSLogicalFailure.loopback.test.ts`, `TSTransportFailure.loopback.test.ts`.
 4. TypeScript glue specs run as one `node --test` on `typescript/dist` (`scripts/run-ts-glue-test-suite.mjs`). The VS Code node:test explorer, `pnpm test`, and CI use that command. It copies newer glue sources and emits when TypeScript sources change. It does not build the compiler or run `samples/prepare.js`. BER/JSON matrix cases use `test("… (BER)")` / `test("… (JSON)")` string literals so each case is its own explorer entry and its own GitHub row. The sample client/server file `samples/ts-microservice/node-client/src/microservice.integration.test.ts` uses the same literal `test()` calls. CI runs `scripts/run-ts-microservice-tests.mjs` and publishes that junit file beside the glue report.
 
-### Block C — Telemetry in TypeScript (largest product gap)
+### Block C — Telemetry in TypeScript (done, BUILDSYS-668)
 
-Port C++ `SnaccTelemetry.h` / `SnaccTelemetryData` / `SnaccTelemetryCallback` to glue:
+`SnaccTelemetryData.create` / `createFinalized`, the same direction, stage, outcome, and reason enums, and `onInvokeProcessed` live in the glue. Finalize runs on the outbound wait, the inbound invoke, the inbound response, shutdown, and decode failure. `prepareForTelemetry` runs on the retained clone. When no callback is installed, C++ and TypeScript return before that allocation, so the record and the context clone are not created. Human contract: [docs/rose-telemetry.md](../../docs/rose-telemetry.md). Glue spec: `TSTelemetry.test.ts`.
 
-| C++                                                   | Proposed TS                                                               |
-| ----------------------------------------------------- | ------------------------------------------------------------------------- |
-| `SnaccTelemetryData::Create` / `CreateFinalized`      | `SnaccTelemetryData.create` / `createFinalized`                           |
-| `Direction`, `Stage`, `Outcome`, `Reason` enums       | Same names, TS enums                                                      |
-| `OnInvokeProcessed` callback                          | `onInvokeProcessed` on transport or logger sink                           |
-| `PrepareForTelemetry()` on invoke context             | Clone context for telemetry retention (needs pluggable context — Block D) |
-| Outbound/inbound wait, dispatch, decode-failure paths | Hook at same sites as `SnaccROSEBase.cpp`                                 |
+### Block D — Invoke context product parity (done, BUILDSYS-669)
 
-Then port `telemetry_tests.cpp` → `TSTelemetry.test.ts` (outcome/reason assertions, not C++ ownership).
+- `createReceiveInvokeContext()` and `createSendInvokeContext()` on the transport (parity with C++ `CreateInvokeContext`).
+- `receiveHandleROSEMessage` copies a present wire `timeout`, including 0, and leaves an absent field unset.
+- Inbound `operationName` follows the C++ lookup. A wire name does not replace it.
 
-### Block D — Invoke context product parity
+### Block E — Logging API (bitmask done, BUILDSYS-661)
 
-- Pluggable `createInvokeContext()` on transport (parity with C++ `CreateInvokeContext`).
-- `receiveHandleROSEMessage`: copy wire `timeout` into `ReceiveInvokeContext` (unblocks inbound handler timeout E2E).
-- Align inbound `operationName` resolution with C++ (lookup wins over wire) **or** lock TS behavior in spec.
+`EAsnLogLevel` and `setTransportLogLevel` write every enabled notation for each ROSE PDU. Human contract: [docs/rose-transport-logging.md](../../docs/rose-transport-logging.md). Glue spec: `TSTransportLogging.test.ts`.
 
-### Block E — Logging API
-
-- `configureFileLogging`, `OnBinaryDataBlock` log flags, decode-error hooks → port `logging_tests` / `public_api_tests` logging cases.
+`configureFileLogging` and the C++ file sink stay on the C++ runtime. The TypeScript sink is the logger callback.
 
 ### Block F — Kotlin / Swift
 

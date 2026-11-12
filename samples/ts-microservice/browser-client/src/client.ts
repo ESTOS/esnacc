@@ -405,7 +405,7 @@ class Client extends TSASN1BrowserClient implements IClientConnectionCallback {
 	 * @returns - an object of type T
 	 */
 	public getResult<T>(
-		response: T | ENetUC_Common.AsnRequestError | AsnInvokeProblem,
+		response: T | ENetUC_Common.AsnRequestError | AsnInvokeProblem | undefined,
 		className: { new(...args: any[]): T; },
 	): T | undefined {
 		if (response instanceof className)

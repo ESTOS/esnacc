@@ -16,6 +16,7 @@ related_docs:
   - ../cpp-lib/tests/runtime_correctness_notes.md
   - ../.cursor/rules/rose-cross-language-parity.mdc
   - rose-worker-pools.md
+  - rose-invoke-context.md
 ---
 
 # ROSE invoke timeout

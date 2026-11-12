@@ -6,7 +6,7 @@ import net from "node:net";
 import path from "node:path";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ILogData } from "uclogger";
+import { ILogData } from "../lib/pinoLogger.js";
 import { theLogger } from "../globals.js";
 
 const router = express.Router();

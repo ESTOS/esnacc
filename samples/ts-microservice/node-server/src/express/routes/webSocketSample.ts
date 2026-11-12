@@ -1,6 +1,6 @@
 import express from "express";
 import net from "node:net";
-import { ILogData } from "uclogger";
+import { ILogData } from "../../lib/pinoLogger.js";
 import WebSocket from "ws";
 
 import { theClientConnectionManager, theLogger } from "../../globals.js";

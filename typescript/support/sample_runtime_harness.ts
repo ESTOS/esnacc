@@ -132,6 +132,14 @@ export class LoopbackTransport extends TSASN1Base {
 			return undefined;
 		}
 
+		// Timeout 0 is fire-and-forget: deliver the bytes and do not wait for a reply.
+		const ctxTimeout = data.invokeContext.invokeTimeout();
+		const timeoutMs = ctxTimeout === undefined ? this.defaultTimeout : ctxTimeout;
+		if (timeoutMs === 0) {
+			await this.deliverToPeer(data);
+			return undefined;
+		}
+
 		// Pending invoke is completed by TSASN1Base.onROSEResult/onROSEError/onROSEReject when the
 		// encoded response is delivered back through receive() — same as a real transport + C++ loopback.
 		return new Promise((resolve) => {
@@ -206,6 +214,8 @@ export class LoopbackTransport extends TSASN1Base {
 
 		const encoding = data.invokeContext.encoding ?? EASN1TransportEncoding.JSON;
 		const wire = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
+		const decoded = wire.logData instanceof Uint8Array ? { invoke: data.invoke } : wire.logData;
+		this.logTransport(wire.payLoad, "sendInvoke", "out", data.invokeContext, decoded);
 		const receiveContext = new ReceiveInvokeContext({
 			encoding,
 			clientConnectionID: this.sessionId,
@@ -260,6 +270,9 @@ export class SampleRuntimeHarness {
 	private lastSettingsEventEnabled = false;
 	private lastSettingsEventUsername = "";
 	private fancyEvents: Array<{ counter: number; left: number }> = [];
+	private lastInboundTimeout: number | undefined;
+	private lastInboundOperationName = "";
+	private inboundHandlerInvoked = false;
 
 	public constructor() {
 		this.clientTransport = new LoopbackTransport("client-session", "client");
@@ -297,6 +310,9 @@ export class SampleRuntimeHarness {
 		this.lastSettingsEventEnabled = false;
 		this.lastSettingsEventUsername = "";
 		this.fancyEvents = [];
+		this.lastInboundTimeout = undefined;
+		this.lastInboundOperationName = "";
+		this.inboundHandlerInvoked = false;
 		this.clientTransport.resetTransportState();
 		this.serverTransport.resetTransportState();
 	}
@@ -319,6 +335,20 @@ export class SampleRuntimeHarness {
 
 	public fancyEventsSnapshot(): Array<{ counter: number; left: number }> {
 		return [...this.fancyEvents];
+	}
+
+	/** Timeout the last inbound settings handler saw. Undefined when the wire field was absent. */
+	public getLastInboundTimeout(): number | undefined {
+		return this.lastInboundTimeout;
+	}
+
+	/** Operation name the last inbound settings handler saw. */
+	public getLastInboundOperationName(): string {
+		return this.lastInboundOperationName;
+	}
+
+	public wasInboundHandlerInvoked(): boolean {
+		return this.inboundHandlerInvoked;
 	}
 
 	public malformedPayload(encoding: TransportEncoding): object | Uint8Array {
@@ -356,8 +386,11 @@ export class SampleRuntimeHarness {
 			onInvoke_asnGetSettingsOld: async (): Promise<undefined> => undefined,
 			onInvoke_asnGetSettings: async (
 				_argument: ENetUC_Settings_Manager.AsnGetSettingsArgument,
-				_ctx,
+				ctx,
 			): Promise<ENetUC_Settings_Manager.AsnGetSettingsResult | ENetUC_Common.AsnRequestError | undefined> => {
+				this.inboundHandlerInvoked = true;
+				this.lastInboundTimeout = ctx.invokeTimeout();
+				this.lastInboundOperationName = ctx.operationName;
 				if (this.handlerModes.implementGetSettings === false) {
 					return undefined;
 				}

@@ -3,7 +3,7 @@ import express from "express";
 import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
-import { ILogData } from "uclogger";
+import { ILogData } from "../lib/pinoLogger.js";
 
 import { theConfig, theLogger } from "../globals.js";
 import { CONF_EXIT_CODES } from "../lib/exithandler.js";

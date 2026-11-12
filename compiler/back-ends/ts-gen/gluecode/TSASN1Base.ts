@@ -23,6 +23,8 @@ import {
 	IASN1LogData,
 	IASN1Transport,
 	IInvokeContextBase,
+	IReceiveInvokeContextInit,
+	ISendInvokeContextInit,
 	IInvokeHandler,
 	ILoadedModuleInfo,
 	IOpVersionInfo,
@@ -30,6 +32,7 @@ import {
 	IROSELogger,
 	ISendInvokeContext,
 	ReceiveInvokeContext,
+	SendInvokeContext,
 	OperationBlockPolicy,
 	snaccAssert,
 	snaccAssertFail,
@@ -39,6 +42,7 @@ import {
 	ROSEBase,
 } from "./TSROSEBase.js";
 import { roseDebugBreak } from "./TSBaseUtils.js";
+import { payloadByteLength, SnaccTelemetryCallback, SnaccTelemetryData } from "./SnaccTelemetry.js";
 // Original part of uclogger, duplicated here as we use it in frontend and backend the same
 interface ILogData {
 	className: string;
@@ -266,12 +270,35 @@ export class PendingInvoke {
 			this.timerID = undefined;
 		}
 	}
+
+	/** Operation id of the invoke this pending call is waiting on. */
+	public getOperationID(): number {
+		return this.invoke.operationID;
+	}
+
+	/** Operation name carried on the outbound invoke, or empty when the wire omitted it. */
+	public getOperationName(): string {
+		return this.invoke.operationName ?? "";
+	}
 }
 
 /**
  * List of pending invokes
  */
 class PendingInvokes extends Map<number, PendingInvoke> {
+}
+
+/**
+ * Which notations a ROSE transport log writes.
+ * Same bit values as C++ EAsnLogLevel. JSON and BER can be combined.
+ * JSON_ALWAYS_PRETTY_PRINTED forces a newline when the JSON payload has none.
+ */
+export enum EAsnLogLevel {
+	DISABLED = 0,
+	JSON = 1,
+	BER = 2,
+	JSON_AND_BER = 3,
+	JSON_ALWAYS_PRETTY_PRINTED = 4,
 }
 
 /**
@@ -335,6 +362,13 @@ export abstract class TSASN1Base implements IASN1Transport {
 	protected logger?: IROSELogger;
 	// Logs the raw transport (inbound before decoding, outbound after encoding)
 	protected logRawTransport = false;
+	// One bitmask for every ROSE PDU. C++ GetLogLevel takes a direction and the library stores no level of its own.
+	private logLevel = EAsnLogLevel.DISABLED;
+	// Plain result or error body captured while the handler still has it.
+	// handleResult substitutes it for an opaque BER ANY when the JSON notation is written.
+	private plainTransportBody?: object;
+	// Product sink for finalized ROSE lifecycle records. Unset means telemetry is not delivered.
+	private telemetryCallback?: SnaccTelemetryCallback;
 	// The default timeout for a websocket based invoke to the other side.
 	// Same 20000 ms as C++ m_lMaxInvokeWait and the ProCall client registry fallback.
 	// encodeInvoke copies a positive value onto the outbound context when the caller omits invokeTimeoutMs.
@@ -584,6 +618,195 @@ export abstract class TSASN1Base implements IASN1Transport {
 	 */
 	public lookUpName(operationID: number): string | undefined {
 		return this.handlersByID.get(operationID)?.operationName;
+	}
+
+	/**
+	 * Builds the invoke context for one inbound ROSE exchange.
+	 *
+	 * Called by `receiveHandleROSEMessage` after the envelope is decoded, and by the socket path before decode.
+	 * A product overrides this to supply a derived receive context. The returned object is borrowed for the invoke.
+	 * Operation names come from the operation-id lookup. A wire name does not replace that lookup.
+	 * A present `ROSEInvoke.timeout`, including 0, is stored. An absent field leaves the timeout unset.
+	 */
+	public createReceiveInvokeContext(init: IReceiveInvokeContextInit): ReceiveInvokeContext {
+		const { invoke, ...fields } = init;
+
+		// operationID 0 plus a wire name is the JSON client pattern. Resolve the id before the name lookup.
+		let operationID = invoke?.operationID ?? fields.operationID ?? -1;
+		if (invoke && !invoke.operationID && invoke.operationName) {
+			const resolved = this.lookUpID(invoke.operationName);
+			if (resolved)
+				operationID = resolved;
+		}
+
+		// Explicit synthetic name wins. Otherwise the registry lookup wins over the wire name.
+		let operationName = "";
+		if (fields.operationName && fields.operationName.length > 0)
+			operationName = fields.operationName;
+		else if (invoke)
+			operationName = this.lookUpName(operationID) ?? "";
+
+		const inbound = new ReceiveInvokeContext({
+			...fields,
+			...(invoke
+				? {
+					invokeID: invoke.invokeID,
+					clientConnectionID: fields.clientConnectionID ?? invoke.sessionID,
+				}
+				: {}),
+			operationID,
+			operationName,
+			...(invoke?.timeout !== undefined ? { invokeTimeoutMs: invoke.timeout } : {}),
+		});
+		// The init may have carried a timeout. An invoke without the wire field stays unset.
+		if (invoke && invoke.timeout === undefined)
+			inbound.clearInvokeTimeout();
+		return inbound;
+	}
+
+	/**
+	 * Builds the invoke context for one outbound ROSE send.
+	 *
+	 * Called by `encodeInvoke` when the caller did not pass a `SendInvokeContext`.
+	 * A product overrides this to supply a derived send context. The returned object is borrowed for the send.
+	 * Stores `operationName` only when the caller passed an explicit name.
+	 * A present `ROSEInvoke.timeout`, including 0, is stored. An absent field leaves the timeout unset.
+	 */
+	public createSendInvokeContext(init: ISendInvokeContextInit): SendInvokeContext {
+		const { invoke, ...fields } = init;
+		// An explicit name wins. A missing name stays empty. The send path does not look the name up.
+		const explicitName = fields.operationName && fields.operationName.length > 0
+			? fields.operationName
+			: "";
+		return new SendInvokeContext({
+			...fields,
+			operationName: explicitName,
+			...(invoke
+				? {
+					invokeID: invoke.invokeID,
+					operationID: invoke.operationID,
+					clientConnectionID: fields.clientConnectionID ?? invoke.sessionID,
+				}
+				: {}),
+			...(invoke?.timeout !== undefined ? { invokeTimeoutMs: invoke.timeout } : {}),
+		});
+	}
+
+	/**
+	 * Installs the telemetry sink. Called once by the product, before invokes run.
+	 * Passing undefined turns delivery off. The runtime then does not build a record.
+	 * The callback is not invoked re-entrantly by the library.
+	 */
+	public setTelemetryCallback(callback: SnaccTelemetryCallback | undefined): void {
+		this.telemetryCallback = callback;
+	}
+
+	/**
+	 * True when setTelemetryCallback installed a sink.
+	 * Inbound paths and ROSEBase return before createFinalized when this is false.
+	 * Returns boolean. telemetryCallback is private, so a this-type predicate that names it
+	 * collapses to never and the call after the check does not type-check.
+	 */
+	public hasTelemetryCallback(): boolean {
+		return this.telemetryCallback !== undefined;
+	}
+
+	/**
+	 * Delivers one finalized record to the product callback.
+	 * Called after a record was built. Does nothing when the sink was cleared in between.
+	 */
+	public emitInvokeProcessed(data: SnaccTelemetryData): void {
+		// Shared gate, same as C++ OnInvokeProcessed. The boolean does not narrow the private field.
+		if (!this.hasTelemetryCallback())
+			return;
+		this.telemetryCallback?.onInvokeProcessed(data);
+	}
+
+	/**
+	 * Builds and delivers one finalized record when a sink is installed.
+	 * Returns before createFinalized when no callback is set, so the record and its context clone are not allocated.
+	 * Called from the inbound decode, invoke, and response paths on this transport.
+	 */
+	private emitFinalizedTelemetry(
+		direction: SnaccTelemetryData.Direction,
+		operationID: number,
+		operationName: string | undefined,
+		requestData: number,
+		outcome: SnaccTelemetryData.Outcome,
+		stage: SnaccTelemetryData.Stage,
+		reason: SnaccTelemetryData.Reason,
+		roseResult: number,
+		responseData?: number,
+		context?: IInvokeContextBase,
+	): void {
+		if (!this.hasTelemetryCallback())
+			return;
+		this.emitInvokeProcessed(SnaccTelemetryData.createFinalized(
+			direction,
+			operationID,
+			operationName,
+			requestData,
+			outcome,
+			stage,
+			reason,
+			roseResult,
+			responseData,
+			context,
+		));
+	}
+
+	/**
+	 * Finalizes inbound invoke or event telemetry after the handler returns.
+	 * A shutdown reject stays UNHANDLED. A normal reject that we produced is LOCAL_REJECT
+	 * with ROSE_NOERROR, matching C++ after a successful reject encode.
+	 */
+	private emitInboundInvokeTelemetry(
+		invoke: ROSEInvoke,
+		invokeContext: IReceiveInvokeContext,
+		result: ROSEReject | ROSEResult | ROSEError | undefined,
+		requestSize: number,
+	): void {
+		// The handler result is unchanged. Skip classification and the record when no sink is installed.
+		if (!this.hasTelemetryCallback())
+			return;
+
+		let outcome = SnaccTelemetryData.Outcome.UNHANDLED;
+		let reason = SnaccTelemetryData.Reason.UNKNOWN_FAILURE;
+		let roseResult: number = ERoseResult.ROSE_NOERROR;
+		if (result instanceof ROSEResult) {
+			outcome = SnaccTelemetryData.Outcome.RESULT;
+			reason = SnaccTelemetryData.Reason.LOCAL_RESULT;
+		} else if (result instanceof ROSEError) {
+			outcome = SnaccTelemetryData.Outcome.ERR;
+			reason = SnaccTelemetryData.Reason.LOCAL_ERROR;
+		} else if (result instanceof ROSEReject) {
+			// A closed session gate uses the same reject type. The detail text is what marks shutdown.
+			const sessionClosed = result.details === "ROSE transport processing is paused"
+				|| result.details === "transport shutdown";
+			if (sessionClosed) {
+				outcome = SnaccTelemetryData.Outcome.UNHANDLED;
+				reason = SnaccTelemetryData.Reason.SHUTDOWN;
+				roseResult = ERoseResult.ROSE_TE_SHUTDOWN;
+			} else {
+				outcome = SnaccTelemetryData.Outcome.REJECT;
+				reason = SnaccTelemetryData.Reason.LOCAL_REJECT;
+			}
+		} else if (invoke.invokeID === 99999) {
+			outcome = SnaccTelemetryData.Outcome.EVENT;
+			reason = SnaccTelemetryData.Reason.LOCAL_EVENT;
+		}
+		this.emitFinalizedTelemetry(
+			SnaccTelemetryData.Direction.INBOUND,
+			invoke.operationID,
+			invokeContext.operationName,
+			requestSize,
+			outcome,
+			SnaccTelemetryData.Stage.INBOUND_INVOKE,
+			reason,
+			roseResult,
+			undefined,
+			invokeContext,
+		);
 	}
 
 	/**
@@ -897,6 +1120,23 @@ export abstract class TSASN1Base implements IASN1Transport {
 	}
 
 	/**
+	 * Selects the transport notation for every ROSE PDU on this transport.
+	 * Called by the product before traffic starts. DISABLED leaves logRawTransport in charge.
+	 * A set bitmask writes every enabled notation and ignores logRawTransport.
+	 */
+	public setTransportLogLevel(level: EAsnLogLevel): void {
+		this.logLevel = level;
+	}
+
+	/**
+	 * Returns the transport notation bitmask.
+	 * One level covers every PDU on this transport.
+	 */
+	public getTransportLogLevel(): EAsnLogLevel {
+		return this.logLevel;
+	}
+
+	/**
 	 * A development debug log that shows the instance type with the log message
 	 *
 	 * @param log - the log text to print
@@ -1041,7 +1281,19 @@ export abstract class TSASN1Base implements IASN1Transport {
 		}
 
 		const payLoad = ROSEBase.getDebugPayload(rawData);
+		this.logTransport(rawData, "receive", "in", invokeContext);
+		this.logDecodeFailure("receive", errors.getDiagnostic() || "Failed to decode ROSEMessage", invokeContext);
 		this.log(ELogSeverity.error, "Failed to decode ROSEMessage", "receive", this, { payLoad, errors });
+		this.emitFinalizedTelemetry(
+			SnaccTelemetryData.Direction.INBOUND,
+			0,
+			undefined,
+			payloadByteLength(rawData),
+			SnaccTelemetryData.Outcome.UNHANDLED,
+			SnaccTelemetryData.Stage.INBOUND_DECODE,
+			SnaccTelemetryData.Reason.DECODE_FAILED,
+			ERoseResult.ROSE_RE_DECODE_FAILED,
+		);
 		const result = createInvokeReject(
 			0,
 			InvokeProblemenum.unexpectedChildOperation,
@@ -1067,17 +1319,36 @@ export abstract class TSASN1Base implements IASN1Transport {
 		let result: ROSEReject | ROSEResult | ROSEError | undefined;
 		try {
 			if (message.invoke) {
-				invokeContext.invokeID = message.invoke.invokeID;
-				invokeContext.operationID = message.invoke.operationID;
-				if (message.invoke.operationName)
-					invokeContext.operationName = message.invoke.operationName;
-				else {
-					const handler = this.getHandlerById(invokeContext.operationID);
-					if (handler)
-						invokeContext.operationName = handler.operationName;
+				// Same resolution as C++ PrepareInboundInvokeOperationId: id 0 plus a name becomes the registry id.
+				if (!message.invoke.operationID && message.invoke.operationName) {
+					const resolved = this.lookUpID(message.invoke.operationName);
+					if (resolved)
+						message.invoke.operationID = resolved;
 				}
+				// The handler receives the factory context so a product override replaces the type.
+				// The caller's object keeps the resolved identity because callers read it after this method returns.
+				const dispatchContext = this.createReceiveInvokeContext({
+					invoke: message.invoke,
+					encoding: invokeContext.encoding,
+					clientConnectionID: invokeContext.clientConnectionID,
+					clientIP: invokeContext.clientIP,
+					headers: invokeContext.headers,
+					customData: invokeContext.customData,
+					handleEvent: invokeContext.handleEvent,
+					url: invokeContext.url,
+					noROSEEnvelop: invokeContext.noROSEEnvelop,
+				});
+				invokeContext.invokeID = dispatchContext.invokeID;
+				invokeContext.operationID = dispatchContext.operationID;
+				invokeContext.operationName = dispatchContext.operationName;
 				if (!invokeContext.clientConnectionID)
-					invokeContext.clientConnectionID = message.invoke.sessionID;
+					invokeContext.clientConnectionID = dispatchContext.clientConnectionID;
+				const wireTimeout = dispatchContext.invokeTimeout();
+				if (wireTimeout !== undefined)
+					invokeContext.setInvokeTimeout(wireTimeout);
+				else
+					invokeContext.clearInvokeTimeout();
+				invokeContext = dispatchContext;
 			} else if (message.result)
 				invokeContext.invokeID = message.result.invokeID;
 			else if (message.error)
@@ -1085,16 +1356,15 @@ export abstract class TSASN1Base implements IASN1Transport {
 			else if (message.reject && message.reject.invokedID.invokedID)
 				invokeContext.invokeID = message.reject.invokedID.invokedID;
 
-			if (invokeContext.encoding === EASN1TransportEncoding.JSON)
-				this.logTransport(message, "receive", "in", invokeContext);
-			else
-				this.logTransport(rawData, "receive", "in", invokeContext);
+			this.logTransport(rawData, "receive", "in", invokeContext, message);
 
 			if (message.invoke) {
+				const requestSize = payloadByteLength(rawData);
 				if (!this.isProcessingAllowed())
 					result = createInvokeReject(message.invoke, ROSE_TE_SHUTDOWN, "ROSE transport processing is paused");
 				else
 					result = await this.onROSEInvoke(message.invoke, invokeContext);
+				this.emitInboundInvokeTelemetry(message.invoke, invokeContext, result, requestSize);
 			} else if (message.result)
 				result = await this.onROSEResult(message.result, invokeContext);
 			else if (message.error)
@@ -1245,46 +1515,191 @@ export abstract class TSASN1Base implements IASN1Transport {
 		}
 
 		const encodeResult = ROSEBase.encodeToTransport(payload, this.encodeContext);
-		this.logTransport(encodeResult.logData, "handleResult", "out", invokeContext);
+		this.logTransport(encodeResult.payLoad, "handleResult", "out", invokeContext, message);
 		return { payLoad: encodeResult.payLoad, httpStatusCode: resultValue };
 	}
 
 	/**
-	 * Logs the transport data
+	 * Logs one ROSE PDU in each notation the bitmask enables.
+	 * This is `LogTransportData`. Receive, handleResult, outbound send, and the decoded-body follow-up all call it.
+	 * The follow-up passes the decoded object as both payload and decoded. The BER line was already written from the raw bytes.
+	 * When the level is DISABLED, logRawTransport still writes the single legacy wire payload.
 	 *
-	 * @param payLoad - the payload to log
+	 * @param payLoad - the wire bytes, the JSON value, or the decoded object on the follow-up call
 	 * @param method - the method which is calling the logTransport
 	 * @param direction - the direction of this transport log entry
-	 * @param invokeContext - the context of the invoke (connecitionID, clientID etc.)
+	 * @param invokeContext - the receive or send context of this invoke
+	 * @param decoded - the ROSE message when the JSON notation must be rebuilt from it
 	 */
-	protected logTransport(
+	public logTransport(
 		payLoad: Uint8Array | string | object,
 		method: string,
 		direction: "in" | "out",
-		invokeContext: IReceiveInvokeContext,
+		invokeContext: IReceiveInvokeContext | ISendInvokeContext,
+		decoded?: object,
 	): void {
-		if (this.logRawTransport) {
-			if (payLoad instanceof Uint8Array) {
-				if (invokeContext.encoding === EASN1TransportEncoding.JSON)
-					payLoad = ROSEBase.bytesToSring(payLoad);
-				else
-					payLoad = ROSEBase.buf2hex(payLoad);
-			}
-
-			// Let's log what we did receive
-			const meta: ITransportMetaData = {
-				...this.additionalLogMetaForRawTransport,
-				clientConnectionID: invokeContext.clientConnectionID,
-				clientIP: invokeContext.clientIP,
-				invokeID: invokeContext.invokeID,
-				type: invokeContext.clientConnectionID ? "ws" : "rest",
-				operationID: invokeContext.operationID,
-				operationName: invokeContext.operationName,
-				direction,
-				payLoad,
-			};
-			this.log(ELogSeverity.debug, "asn1Transport", method, this, meta);
+		const level = this.logLevel;
+		// Disabled level writes the legacy wire line only. The decoded follow-up passes the same object
+		// as payload and decoded and has no raw bytes, so it stays silent, as LogTransportData does.
+		if (level === EAsnLogLevel.DISABLED) {
+			if (this.logRawTransport && payLoad !== decoded)
+				this.writeLegacyTransportLog(payLoad, method, direction, invokeContext);
+			return;
 		}
+
+		const encoding = invokeContext.encoding ?? EASN1TransportEncoding.JSON;
+		const logJson = (level & (EAsnLogLevel.JSON | EAsnLogLevel.JSON_ALWAYS_PRETTY_PRINTED)) !== 0;
+		const logBer = (level & EAsnLogLevel.BER) !== 0;
+		if (logJson) {
+			const text = this.jsonNotation(payLoad, decoded, encoding, level);
+			if (text)
+				this.writeTransportEntry(method, direction, invokeContext, text, false, ELogSeverity.debug);
+		}
+		if (logBer && encoding === EASN1TransportEncoding.BER) {
+			const bytes = this.payloadBytes(payLoad);
+			if (bytes)
+				this.writeTransportEntry(method, direction, invokeContext, this.berHex(bytes, logJson), true, ELogSeverity.debug);
+		}
+	}
+
+	/**
+	 * Writes the decode-failure record. The payload contains the key "exception", matching C++ PrintJSONToLog.
+	 * Called when the outer ROSE envelope cannot be decoded and a transport log level is enabled.
+	 */
+	private logDecodeFailure(method: string, exception: string, invokeContext: IReceiveInvokeContext): void {
+		if (this.logLevel === EAsnLogLevel.DISABLED)
+			return;
+		const payload = JSON.stringify({ exception, method }, null, "\t");
+		this.writeTransportEntry(method, "in", invokeContext, payload, false, ELogSeverity.error);
+	}
+
+	/**
+	 * One legacy payload. Used only while the bitmask for that direction stays DISABLED.
+	 */
+	private writeLegacyTransportLog(
+		payLoad: Uint8Array | string | object,
+		method: string,
+		direction: "in" | "out",
+		invokeContext: IReceiveInvokeContext | ISendInvokeContext,
+	): void {
+		let logged: Uint8Array | string | object = payLoad;
+		if (logged instanceof Uint8Array) {
+			if (invokeContext.encoding === EASN1TransportEncoding.JSON)
+				logged = ROSEBase.bytesToSring(logged);
+			else
+				logged = ROSEBase.buf2hex(logged);
+		}
+		this.writeTransportEntry(method, direction, invokeContext, logged, false, ELogSeverity.debug);
+	}
+
+	/**
+	 * JSON text for one notation. A decoded message is pretty-printed.
+	 * A compact JSON string is reformatted when the pretty bit is set and the text has no newline.
+	 */
+	private jsonNotation(
+		payLoad: Uint8Array | string | object,
+		decoded: object | undefined,
+		encoding: EASN1TransportEncoding,
+		level: EAsnLogLevel,
+	): string | undefined {
+		if (decoded) {
+			try {
+				return JSON.stringify(this.viewForLog(decoded), null, "\t");
+			} catch {
+				// An opaque BER ANY can make the envelope unstringifiable. The grafted log writes the JSON line later.
+			}
+		}
+		let text: string | undefined;
+		if (typeof payLoad === "string")
+			text = payLoad;
+		else if (payLoad instanceof Uint8Array && encoding !== EASN1TransportEncoding.BER)
+			text = ROSEBase.bytesToSring(payLoad);
+		else if (payLoad && typeof payLoad === "object" && !(payLoad instanceof Uint8Array)) {
+			try {
+				text = JSON.stringify(payLoad);
+			} catch {
+				text = undefined;
+			}
+		}
+		if (!text)
+			return undefined;
+		const forcePretty = (level & EAsnLogLevel.JSON_ALWAYS_PRETTY_PRINTED) !== 0;
+		if (forcePretty && !text.includes("\n")) {
+			try {
+				return JSON.stringify(JSON.parse(text), null, "\t");
+			} catch {
+				return text;
+			}
+		}
+		return text;
+	}
+
+	/**
+	 * Replaces an opaque BER result or error body with the plain object the handler logged.
+	 * The stash is consumed so the next PDU does not reuse it.
+	 */
+	private viewForLog(decoded: object): object {
+		const body = this.plainTransportBody;
+		this.plainTransportBody = undefined;
+		if (!body)
+			return decoded;
+		const message = decoded as ROSEMessage;
+		if (message.result?.result) {
+			return {
+				result: {
+					invokeID: message.result.invokeID,
+					result: { result: body },
+				},
+			};
+		}
+		if (message.error)
+			return { error: { ...message.error, error: body } };
+		return decoded;
+	}
+
+	/**
+	 * Wire bytes for the BER notation. A string is the JSON wire and is not hex-encoded.
+	 */
+	private payloadBytes(payLoad: Uint8Array | string | object): Uint8Array | undefined {
+		if (payLoad instanceof Uint8Array)
+			return payLoad;
+		return undefined;
+	}
+
+	/**
+	 * Uppercase hex with spaces. When the JSON bit is also set the line is wrapped as "BER" : "...".
+	 */
+	private berHex(bytes: Uint8Array, wrap: boolean): string {
+		const parts: string[] = [];
+		for (const byte of bytes)
+			parts.push(byte.toString(16).padStart(2, "0").toUpperCase());
+		const hex = parts.join(" ");
+		return wrap ? `"BER" : "${hex}"` : hex;
+	}
+
+	/**
+	 * One transport log line. omitOperationName is set for the BER hex line, which C++ logs without a name.
+	 */
+	private writeTransportEntry(
+		method: string,
+		direction: "in" | "out",
+		invokeContext: IReceiveInvokeContext | ISendInvokeContext,
+		payLoad: string | object,
+		omitOperationName: boolean,
+		severity: ELogSeverity,
+	): void {
+		const meta: ITransportMetaData = {
+			...this.additionalLogMetaForRawTransport,
+			clientConnectionID: invokeContext.clientConnectionID,
+			clientIP: "clientIP" in invokeContext ? invokeContext.clientIP : undefined,
+			invokeID: invokeContext.invokeID,
+			type: invokeContext.clientConnectionID ? "ws" : "rest",
+			operationID: invokeContext.operationID,
+			operationName: omitOperationName ? undefined : invokeContext.operationName,
+			direction,
+			payLoad,
+		};
+		this.log(severity, "asn1Transport", method, this, meta);
 	}
 
 	/**
@@ -1407,6 +1822,8 @@ export abstract class TSASN1Base implements IASN1Transport {
 		context: IReceiveInvokeContext | ISendInvokeContext,
 		isOutbound: boolean,
 	): void {
+		if (isOutbound)
+			this.plainTransportBody = result;
 		const meta: IResultLogEntry = {
 			_type: "IResultLogEntry",
 			operationName: context.operationName,
@@ -1438,9 +1855,11 @@ export abstract class TSASN1Base implements IASN1Transport {
 		callback: IASN1LogCallback,
 		error: object,
 		invokeArgument: object | undefined,
-		context: IInvokeContextBase,
+		context: IReceiveInvokeContext | ISendInvokeContext,
 		isOutbound: boolean,
 	): void {
+		if (isOutbound)
+			this.plainTransportBody = error;
 		const meta: IErrorLogEntry = {
 			_type: "IErrorLogEntry",
 			operationName: context.operationName,
@@ -1472,7 +1891,7 @@ export abstract class TSASN1Base implements IASN1Transport {
 		callback: IASN1LogCallback,
 		reject: object,
 		invokeArgument: object | undefined,
-		context: IInvokeContextBase,
+		context: IReceiveInvokeContext | ISendInvokeContext,
 		isOutbound: boolean,
 	): void {
 		const meta: IRejectLogEntry = {
@@ -1585,6 +2004,18 @@ export abstract class TSASN1Base implements IASN1Transport {
 	protected onROSEResult(result: ROSEResult, invokeContext: IReceiveInvokeContext): ROSEReject | undefined {
 		try {
 			const operation = this.pendingInvokes.get(result.invokeID);
+			this.emitFinalizedTelemetry(
+				SnaccTelemetryData.Direction.INBOUND,
+				operation?.getOperationID() ?? 0,
+				operation?.getOperationName(),
+				0,
+				SnaccTelemetryData.Outcome.RESULT,
+				SnaccTelemetryData.Stage.INBOUND_RESPONSE,
+				SnaccTelemetryData.Reason.REMOTE_RESULT,
+				ERoseResult.ROSE_NOERROR,
+				undefined,
+				invokeContext,
+			);
 			if (operation) {
 				this.pendingInvokes.delete(result.invokeID);
 				operation.completed_result(result);
@@ -1612,6 +2043,18 @@ export abstract class TSASN1Base implements IASN1Transport {
 	protected onROSEError(error: ROSEError, invokeContext: IReceiveInvokeContext): ROSEReject | undefined {
 		try {
 			const operation = this.pendingInvokes.get(error.invokedID);
+			this.emitFinalizedTelemetry(
+				SnaccTelemetryData.Direction.INBOUND,
+				operation?.getOperationID() ?? 0,
+				operation?.getOperationName(),
+				0,
+				SnaccTelemetryData.Outcome.ERR,
+				SnaccTelemetryData.Stage.INBOUND_RESPONSE,
+				SnaccTelemetryData.Reason.REMOTE_ERROR,
+				ERoseResult.ROSE_ERROR_VALUE,
+				undefined,
+				invokeContext,
+			);
 			if (operation) {
 				this.pendingInvokes.delete(error.invokedID);
 				operation.completed_error(error);
@@ -1640,6 +2083,18 @@ export abstract class TSASN1Base implements IASN1Transport {
 		try {
 			if (reject.invokedID.invokedID !== undefined) {
 				const operation = this.pendingInvokes.get(reject.invokedID.invokedID);
+				this.emitFinalizedTelemetry(
+					SnaccTelemetryData.Direction.INBOUND,
+					operation?.getOperationID() ?? 0,
+					operation?.getOperationName(),
+					0,
+					SnaccTelemetryData.Outcome.REJECT,
+					SnaccTelemetryData.Stage.INBOUND_RESPONSE,
+					SnaccTelemetryData.Reason.REMOTE_REJECT,
+					reject.reject?.invokeProblem ?? ERoseResult.ROSE_REJECT_UNKNOWN,
+					undefined,
+					invokeContext,
+				);
 				if (operation) {
 					this.pendingInvokes.delete(reject.invokedID.invokedID);
 					operation.completed_reject(reject);

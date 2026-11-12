@@ -31,6 +31,7 @@ import {
 } from "./TSInvokeContext.js";
 import type { IRoseSessionSubscription } from "./IRoseSessionSubscription.js";
 import { roseDebugBreak } from "./TSBaseUtils.js";
+import { payloadByteLength, SnaccTelemetryData } from "./SnaccTelemetry.js";
 
 /**
  * The socket might be a node or browser websocket or a node raw tcp socket, thus we cast it to any
@@ -106,6 +107,60 @@ export enum ERoseResult {
 
 /** Same value as `ERoseResult.ROSE_REJECT_REMOTENOTCAPABLE`. Kept so existing imports stay valid. */
 export const ROSE_REJECT_REMOTENOTCAPABLE = ERoseResult.ROSE_REJECT_REMOTENOTCAPABLE;
+
+/**
+ * Maps a local ROSE result onto the telemetry reason. Same cases as C++ `GetUnhandledReasonFromResult`.
+ */
+export function unhandledReasonFromResult(roseResult: number): SnaccTelemetryData.Reason {
+	switch (roseResult) {
+		case ERoseResult.ROSE_REJECT_UNKNOWNOPERATION:
+		case ERoseResult.ROSE_REJECT_MISTYPEDARGUMENT:
+		case ERoseResult.ROSE_REJECT_FUNCTIONMISSING:
+		case ERoseResult.ROSE_REJECT_UNKNOWN:
+		case ERoseResult.ROSE_REJECT_ARGUMENT_MISSING:
+		case ERoseResult.ROSE_REJECT_QUEUE_FULL:
+			return SnaccTelemetryData.Reason.REJECT_PROTOCOL;
+		case ERoseResult.ROSE_REJECT_INVALIDSESSIONID:
+		case ERoseResult.ROSE_REJECT_STARTSSLREQUIRED:
+			return SnaccTelemetryData.Reason.REJECT_SESSION;
+		case ERoseResult.ROSE_REJECT_AUTHENTICATIONINCOMPLETE:
+		case ERoseResult.ROSE_REJECT_AUTHENTICATIONFAILED:
+		case ERoseResult.ROSE_REJECT_AUTHENTICATION_SERVER_BUSY:
+		case ERoseResult.ROSE_REJECT_AUTHENTICATION_USER_TEMPORARY_LOCKED_OUT:
+		case ERoseResult.ROSE_REJECT_AUTHENTICATION_USER_LOCKED_OUT:
+			return SnaccTelemetryData.Reason.REJECT_AUTHENTICATION;
+		case ERoseResult.ROSE_TE_TRANSPORTFAILED:
+			return SnaccTelemetryData.Reason.SEND_FAILED;
+		case ERoseResult.ROSE_TE_ENCODE_FAILED:
+			return SnaccTelemetryData.Reason.ENCODE_FAILED;
+		case ERoseResult.ROSE_TE_TIMEOUT:
+			return SnaccTelemetryData.Reason.TIMEOUT;
+		case ERoseResult.ROSE_TE_SHUTDOWN:
+			return SnaccTelemetryData.Reason.SHUTDOWN;
+		case ERoseResult.ROSE_REJECT_REMOTENOTCAPABLE:
+			return SnaccTelemetryData.Reason.OUTBOUND_BLOCKED;
+		case ERoseResult.ROSE_RE_DECODE_FAILED:
+			return SnaccTelemetryData.Reason.DECODE_FAILED;
+		case ERoseResult.ROSE_RE_INVALID_ANSWER:
+			return SnaccTelemetryData.Reason.INVALID_RESPONSE;
+		default:
+			return SnaccTelemetryData.Reason.UNKNOWN_FAILURE;
+	}
+}
+
+/**
+ * Stage for an outbound failure that has no peer answer.
+ * Transport and encode failures happen at send. Timeout and shutdown happen while waiting.
+ */
+export function outboundUnhandledStageFromResult(roseResult: number): SnaccTelemetryData.Stage {
+	switch (roseResult) {
+		case ERoseResult.ROSE_TE_TRANSPORTFAILED:
+		case ERoseResult.ROSE_TE_ENCODE_FAILED:
+			return SnaccTelemetryData.Stage.OUTBOUND_SEND;
+		default:
+			return SnaccTelemetryData.Stage.OUTBOUND_WAIT;
+	}
+}
 
 /** Same value as `ERoseResult.ROSE_NOERROR`. Kept so existing imports stay valid. */
 export const ROSE_NOERROR = ERoseResult.ROSE_NOERROR;
@@ -343,6 +398,9 @@ export interface IInvokeContextBase extends IInvokeContextBaseParams {
 	invokeTimeout: () => number | undefined;
 	// Set the base ids in one call
 	init: (operationID: number, operationName: string, invokeID?: number) => void;
+	// Clone retained on a telemetry record. prepareForTelemetry runs on the clone only.
+	cloneForTelemetryRetention: () => IInvokeContextBase;
+	prepareForTelemetry: () => void;
 	// Which operation id has been called
 	operationID: number;
 	// Which operation name has been called
@@ -352,9 +410,14 @@ export interface IInvokeContextBase extends IInvokeContextBaseParams {
 }
 
 /**
- * A class holding the properties of the IInvokeContextBase
+ * Fields a send context and a receive context both carry.
+ *
+ * Holds the operation identity, the optional timeout, the connection id, headers, and custom data.
+ * `ReceiveInvokeContext` adds the inbound HTTP fields. `SendInvokeContext` adds the REST target.
+ * A product derives from the side class and returns that object from the matching factory.
+ * Deriving from this class alone does not satisfy either factory, because each factory returns its side's type.
  */
-class BaseInvokeContext implements IInvokeContextBase {
+export class BaseInvokeContext implements IInvokeContextBase {
 	public encoding: EASN1TransportEncoding | undefined;
 	public operationID: number;
 	public operationName: string;
@@ -374,9 +437,11 @@ class BaseInvokeContext implements IInvokeContextBase {
 		this.encoding = args?.encoding;
 		this.clientConnectionID = args?.clientConnectionID;
 		this.headers = args?.headers;
-		this.operationID = args?.operationID || -1;
-		this.operationName = args?.operationName || "";
-		this.invokeID = args?.invokeID || -1;
+		// 0 is a real invoke id and a real operation id (JSON clients send operationID 0 with a name).
+		// Only a missing field falls back to the unset sentinel.
+		this.operationID = args?.operationID ?? -1;
+		this.operationName = args?.operationName ?? "";
+		this.invokeID = args?.invokeID ?? -1;
 		this.customData = args?.customData;
 		if (args?.invokeTimeoutMs !== undefined)
 			this.setInvokeTimeout(args.invokeTimeoutMs);
@@ -412,8 +477,26 @@ class BaseInvokeContext implements IInvokeContextBase {
 	public init(operationID: number, operationName: string, invokeID?: number): void {
 		this.operationID = operationID;
 		this.operationName = operationName;
-		if (invokeID)
+		if (invokeID !== undefined)
 			this.invokeID = invokeID;
+	}
+
+	/**
+	 * Builds the object stored on a telemetry record.
+	 * The copy has the same prototype, so a product override of prepareForTelemetry runs on the clone.
+	 * The live context is left unchanged.
+	 */
+	public cloneForTelemetryRetention(): this {
+		const cloned = Object.assign(Object.create(Object.getPrototypeOf(this)), this) as this;
+		cloned.prepareForTelemetry();
+		return cloned;
+	}
+
+	/**
+	 * Hook for a product context after the telemetry clone is made.
+	 * Copy any fields that must outlive the invoke, then drop borrows that die with the dispatch frame.
+	 */
+	public prepareForTelemetry(): void {
 	}
 }
 
@@ -642,9 +725,64 @@ export interface IInvokeHandler {
 }
 
 /**
+ * Inputs for `createReceiveInvokeContext`.
+ *
+ * The context fields are the partial receive context: connection, headers, client IP, and an explicit operation name.
+ * `invoke` is the decoded envelope when one exists. The socket path omits it because the envelope is not decoded yet.
+ * A non-empty `operationName` wins over the registry lookup.
+ * The transport owns the object it returns. Callers borrow it for the invoke.
+ */
+export interface IReceiveInvokeContextInit extends Partial<IReceiveInvokeContext> {
+	invoke?: ROSEInvoke;
+}
+
+/**
+ * Inputs for `createSendInvokeContext`.
+ *
+ * The context fields are the partial send context: encoding, connection, REST target, and the stub operation name.
+ * `invoke` is set when the caller already has an envelope. `encodeInvoke` omits it and passes the stub name.
+ * An empty or missing `operationName` leaves the outbound name empty.
+ * The transport owns the object it returns. Callers borrow it for the send.
+ */
+export interface ISendInvokeContextInit extends Partial<ISendInvokeContext> {
+	invoke?: ROSEInvoke;
+}
+
+/**
  * Defines the interface the transport layer has to fullfill
  */
 export interface IASN1Transport extends IRoseSessionSubscription {
+	/**
+	 * Builds the invoke context for one inbound ROSE exchange.
+	 * Products override this to return a derived receive context. The runtime calls it
+	 * instead of constructing `ReceiveInvokeContext` itself.
+	 */
+	createReceiveInvokeContext(init: IReceiveInvokeContextInit): ReceiveInvokeContext;
+	/**
+	 * Builds the invoke context for one outbound ROSE send.
+	 * Products override this to return a derived send context. The runtime calls it
+	 * instead of constructing `SendInvokeContext` itself.
+	 */
+	createSendInvokeContext(init: ISendInvokeContextInit): SendInvokeContext;
+	/** Delivers one finalized lifecycle record. No-op when the product did not set a callback. */
+	emitInvokeProcessed(data: SnaccTelemetryData): void;
+	/**
+	 * True when a product sink will receive the record.
+	 * ROSEBase checks this before building a record, so the record and its context clone are skipped when no sink is set.
+	 */
+	hasTelemetryCallback(): boolean;
+	/**
+	 * Writes one ROSE PDU in each notation the bitmask enables.
+	 * This is `LogTransportData`. The wire log and the decoded-body log both call it.
+	 * The decoded-body call passes the same object as payload and decoded, so the BER line already written from the raw bytes is not repeated.
+	 */
+	logTransport(
+		payLoad: Uint8Array | string | object,
+		method: string,
+		direction: "in" | "out",
+		invokeContext: IReceiveInvokeContext | ISendInvokeContext,
+		decoded?: object,
+	): void;
 	sendInvoke(data: IASN1InvokeData): Promise<ROSEReject | ROSEResult | ROSEError | undefined>;
 	sendEvent(data: IASN1InvokeData): ERoseResult;
 	registerOperation(
@@ -727,7 +865,7 @@ export interface IASN1Transport extends IRoseSessionSubscription {
 		callback: IASN1LogCallback,
 		error: object,
 		invoke: unknown | undefined,
-		context: IInvokeContextBase,
+		context: IReceiveInvokeContext | ISendInvokeContext,
 		isOutbound: boolean,
 	): void;
 	logReject(
@@ -735,7 +873,7 @@ export interface IASN1Transport extends IRoseSessionSubscription {
 		callback: IASN1LogCallback,
 		reject: object,
 		invoke: unknown | undefined,
-		context: IInvokeContextBase,
+		context: IReceiveInvokeContext | ISendInvokeContext,
 		isOutbound: boolean,
 	): void;
 }
@@ -1192,7 +1330,24 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		const sessionID = this.transport.getSessionID();
 		const invokeID = event ? 99999 : this.transport.getNextInvokeID();
 		const encoding = context.encoding || this.transport.getEncoding(context.clientConnectionID);
-		const invokeContext = new SendInvokeContext({ ...context, encoding, operationName, operationID, invokeID });
+		// A caller-supplied context is kept, matching C++ SendInvoke when pCtx is set.
+		// Otherwise the transport factory supplies it so a product can replace the type.
+		let invokeContext: SendInvokeContext;
+		if (contextParams instanceof SendInvokeContext) {
+			invokeContext = contextParams;
+			invokeContext.encoding = encoding;
+			invokeContext.operationName = operationName;
+			invokeContext.operationID = operationID;
+			invokeContext.invokeID = invokeID;
+		} else {
+			invokeContext = this.transport.createSendInvokeContext({
+				...context,
+				encoding,
+				operationName,
+				operationID,
+				invokeID,
+			});
+		}
 		const wireTimeoutMs = this.resolveInvokeTimeout(contextParams, invokeContext, event);
 		const writeTimeout = typeof wireTimeoutMs === "number" && this.shouldWriteInvokeTimeout(encoding);
 
@@ -1260,6 +1415,41 @@ export abstract class ROSEBase implements IASN1LogCallback {
 	 * @param invokeContext - the invokeContext which has already been prefilled with session related details
 	 * @returns the local send code
 	 */
+	/**
+	 * Publishes one outbound lifecycle record. Called from handleInvoke and handleEvent
+	 * at the same points C++ finalizes outbound telemetry.
+	 */
+	private emitOutboundTelemetry(
+		operationID: number,
+		operationName: string,
+		requestSize: number,
+		outcome: SnaccTelemetryData.Outcome,
+		stage: SnaccTelemetryData.Stage,
+		reason: SnaccTelemetryData.Reason,
+		roseResult: number,
+		context?: IInvokeContextBase,
+		responseSize?: number,
+		createdAt = performance.now(),
+	): void {
+		// No sink: skip the record and the context clone. The send result is decided by the caller.
+		if (!this.transport.hasTelemetryCallback())
+			return;
+
+		this.transport.emitInvokeProcessed(SnaccTelemetryData.createFinalized(
+			SnaccTelemetryData.Direction.OUTBOUND,
+			operationID,
+			operationName,
+			requestSize,
+			outcome,
+			stage,
+			reason,
+			roseResult,
+			responseSize,
+			context,
+			createdAt,
+		));
+	}
+
 	public handleEvent(
 		argument: object,
 		operationID: number,
@@ -1267,21 +1457,35 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		argumentConverter: IConverter,
 		invokeContext?: ISendInvokeContextParams,
 	): ERoseResult {
-		if (!this.transport.isProcessingAllowed())
+		const started = performance.now();
+		if (!this.transport.isProcessingAllowed()) {
+			this.emitOutboundTelemetry(operationID, operationName, 0, SnaccTelemetryData.Outcome.UNHANDLED, SnaccTelemetryData.Stage.OUTBOUND_SEND, SnaccTelemetryData.Reason.SHUTDOWN, ERoseResult.ROSE_TE_SHUTDOWN, undefined, undefined, started);
 			return ERoseResult.ROSE_TE_SHUTDOWN;
+		}
 
 		const blocked = this.transport.completeIfOperationBlocked(operationID, operationName, true);
-		if (blocked)
+		if (blocked) {
+			this.emitOutboundTelemetry(operationID, operationName, 0, SnaccTelemetryData.Outcome.UNHANDLED, SnaccTelemetryData.Stage.OUTBOUND_SEND, SnaccTelemetryData.Reason.OUTBOUND_BLOCKED, ERoseResult.ROSE_REJECT_REMOTENOTCAPABLE, undefined, undefined, started);
 			return ERoseResult.ROSE_REJECT_REMOTENOTCAPABLE;
+		}
 
 		// Encodes the argument and the ROSEInvoke envelop
 		const result = this.encodeInvoke(argument, operationID, operationName, argumentConverter, true, invokeContext);
-		if (result instanceof AsnInvokeProblem)
+		if (result instanceof AsnInvokeProblem) {
+			this.emitOutboundTelemetry(operationID, operationName, 0, SnaccTelemetryData.Outcome.UNHANDLED, SnaccTelemetryData.Stage.OUTBOUND_SEND, SnaccTelemetryData.Reason.ENCODE_FAILED, ERoseResult.ROSE_TE_ENCODE_FAILED, undefined, undefined, started);
 			return ERoseResult.ROSE_TE_ENCODE_FAILED;
+		}
 
 		this.transport.logInvoke("handleEvent", this, argument, result.invokeContext, true);
 
-		return this.transport.sendEvent(result);
+		const sent = this.transport.sendEvent(result);
+		const requestSize = payloadByteLength(result.payLoad);
+		if (sent === ERoseResult.ROSE_NOERROR) {
+			this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.EVENT, SnaccTelemetryData.Stage.OUTBOUND_SEND, SnaccTelemetryData.Reason.LOCAL_EVENT, sent, result.invokeContext, undefined, started);
+		} else {
+			this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.UNHANDLED, outboundUnhandledStageFromResult(sent), unhandledReasonFromResult(sent), sent, result.invokeContext, undefined, started);
+		}
+		return sent;
 	}
 
 	/**
@@ -1306,44 +1510,63 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		resultConverter: IConverter,
 		invokeContext?: ISendInvokeContextParams,
 		errorConverter: IConverter = ENetUC_Common_Converter.AsnRequestError_Converter,
-	): Promise<T | U | AsnInvokeProblem> {
+	): Promise<T | U | AsnInvokeProblem | undefined> {
+		const started = performance.now();
+		const callerContext = invokeContext instanceof SendInvokeContext ? invokeContext : undefined;
 		const shutdownReject = this.transport.completeIfProcessingShutdown({
 			invokeID: 0,
 			operationID,
 			operationName,
 		} as ROSEInvoke);
-		if (shutdownReject)
+		if (shutdownReject) {
+			this.emitOutboundTelemetry(operationID, operationName, 0, SnaccTelemetryData.Outcome.UNHANDLED, SnaccTelemetryData.Stage.OUTBOUND_SEND, SnaccTelemetryData.Reason.SHUTDOWN, ERoseResult.ROSE_TE_SHUTDOWN, callerContext, undefined, started);
 			return handleRoseReject(shutdownReject);
+		}
 
 		const blocked = this.transport.completeIfOperationBlocked(operationID, operationName, false);
-		if (blocked instanceof ROSEReject)
+		if (blocked instanceof ROSEReject) {
+			this.emitOutboundTelemetry(operationID, operationName, 0, SnaccTelemetryData.Outcome.UNHANDLED, SnaccTelemetryData.Stage.OUTBOUND_SEND, SnaccTelemetryData.Reason.OUTBOUND_BLOCKED, ERoseResult.ROSE_REJECT_REMOTENOTCAPABLE, callerContext, undefined, started);
 			return handleRoseReject(blocked);
+		}
 
-		const result = this.encodeInvoke(argument, operationID, operationName, argumentConverter, false, invokeContext);
-		if (result instanceof AsnInvokeProblem)
-			return result;
+		const encoded = this.encodeInvoke(argument, operationID, operationName, argumentConverter, false, invokeContext);
+		if (encoded instanceof AsnInvokeProblem) {
+			this.emitOutboundTelemetry(operationID, operationName, 0, SnaccTelemetryData.Outcome.UNHANDLED, SnaccTelemetryData.Stage.OUTBOUND_SEND, SnaccTelemetryData.Reason.ENCODE_FAILED, ERoseResult.ROSE_TE_ENCODE_FAILED, callerContext, undefined, started);
+			return encoded;
+		}
 
-		const method = "invoke_" + result.invokeContext.operationName;
-		const context = result.invokeContext;
+		const method = "invoke_" + encoded.invokeContext.operationName;
+		const context = encoded.invokeContext;
+		const requestSize = payloadByteLength(encoded.payLoad);
 
 		this.transport.logInvoke("handleInvoke", this, argument, context, true);
 
-		const roseResult = await this.transport.sendInvoke(result);
+		const roseResult = await this.transport.sendInvoke(encoded);
+		const responseSize = roseResult ? payloadByteLength(roseResult) : undefined;
+		// Timeout 0 is fire-and-forget. There is no peer payload to decode. C++ returns ROSE_NOERROR
+		// and records DISPATCHED / WAIT_SKIPPED, not an unhandled failure.
+		if (roseResult === undefined && context.invokeTimeout() === 0) {
+			this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.DISPATCHED, SnaccTelemetryData.Stage.OUTBOUND_WAIT, SnaccTelemetryData.Reason.WAIT_SKIPPED, ERoseResult.ROSE_NOERROR, context, undefined, started);
+			return undefined;
+		}
 		// The outer ROSE envelop has already been decoded here by the receive mesage in TSASN1Base!
 
 		let payLoad: string | object | undefined;
 		const converterErrors = new ConverterErrors();
 		if (roseResult instanceof ROSEResult && roseResult.result) {
-			const result = asn1Decode<T>(
+			const decoded = asn1Decode<T>(
 				roseResult.result.result,
 				resultConverter,
 				converterErrors,
 				this.transport.getDecodeContext(),
 				context,
 			);
-			if (result) {
-				this.transport.logResult(method, this, result, context, false);
-				return result;
+			if (decoded) {
+				this.transport.logResult(method, this, decoded, context, false);
+				const decodedResult = { result: { invokeID: roseResult.invokeID, result: { result: decoded } } };
+				this.transport.logTransport(decodedResult, method, "in", context, decodedResult);
+				this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.RESULT, SnaccTelemetryData.Stage.OUTBOUND_WAIT, SnaccTelemetryData.Reason.REMOTE_RESULT, ERoseResult.ROSE_NOERROR, context, responseSize, started);
+				return decoded;
 			} else {
 				payLoad = ROSEBase.getDebugPayload(roseResult.result.result);
 			}
@@ -1357,12 +1580,29 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			);
 			if (error) {
 				this.transport.logError(method, this, error, argument, context, false);
+				const decodedError = { error: { invokedID: roseResult.invokedID, error } };
+				this.transport.logTransport(decodedError, method, "in", context, decodedError);
+				this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.ERR, SnaccTelemetryData.Stage.OUTBOUND_WAIT, SnaccTelemetryData.Reason.REMOTE_ERROR, ERoseResult.ROSE_ERROR_VALUE, context, responseSize, started);
 				return error;
 			} else {
 				payLoad = ROSEBase.getDebugPayload(roseResult.error);
 			}
 		} else if (roseResult instanceof ROSEReject) {
 			this.transport.logReject(method, this, roseResult, argument, context, false);
+			// Wire invokeProblem 1, 2, and 3 are the same numbers as ROSE_TE_TRANSPORTFAILED,
+			// ROSE_TE_SHUTDOWN, and ROSE_TE_TIMEOUT. Local failures are recognized by the
+			// dedicated custom code or by the details the runtime itself wrote.
+			const problem = roseResult.reject?.invokeProblem;
+			const details = roseResult.details ?? "";
+			if (problem === CustomInvokeProblemEnum.requestTimedOut) {
+				this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.UNHANDLED, SnaccTelemetryData.Stage.OUTBOUND_WAIT, SnaccTelemetryData.Reason.TIMEOUT, ERoseResult.ROSE_TE_TIMEOUT, context, undefined, started);
+			} else if (details === "transport shutdown" || details === "ROSE transport processing is paused") {
+				this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.UNHANDLED, SnaccTelemetryData.Stage.OUTBOUND_WAIT, SnaccTelemetryData.Reason.SHUTDOWN, ERoseResult.ROSE_TE_SHUTDOWN, context, undefined, started);
+			} else if (details.includes("transport failure") || details.startsWith("Could not connect")) {
+				this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.UNHANDLED, SnaccTelemetryData.Stage.OUTBOUND_SEND, SnaccTelemetryData.Reason.SEND_FAILED, ERoseResult.ROSE_TE_TRANSPORTFAILED, context, undefined, started);
+			} else {
+				this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.REJECT, SnaccTelemetryData.Stage.OUTBOUND_WAIT, SnaccTelemetryData.Reason.REMOTE_REJECT, problem ?? ERoseResult.ROSE_REJECT_UNKNOWN, context, responseSize, started);
+			}
 			return handleRoseReject(roseResult);
 		} else if (roseResult) {
 			payLoad = ROSEBase.getDebugPayload(roseResult);
@@ -1375,6 +1615,9 @@ export abstract class ROSEBase implements IASN1LogCallback {
 			expected_type: resultDataClass.type,
 			diagnostic,
 		});
+		// A present envelope that does not decode is the caller-visible decode failure.
+		// Outcome is UNHANDLED / DECODE_FAILED, not the envelope kind.
+		this.emitOutboundTelemetry(operationID, operationName, requestSize, SnaccTelemetryData.Outcome.UNHANDLED, SnaccTelemetryData.Stage.OUTBOUND_WAIT, SnaccTelemetryData.Reason.DECODE_FAILED, ERoseResult.ROSE_RE_DECODE_FAILED, context, responseSize, started);
 		// If you land here, check the payLoad what the other side has replied to our request
 		roseDebugBreak();
 		return new AsnInvokeProblem(InvokeProblemenum.mistypedArgument, diagnostic);
@@ -1416,6 +1659,8 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		);
 		if (argument) {
 			this.transport.logInvoke(methodName, this, argument, invokeContext, false);
+			const decodedEvent = { invoke: { ...invoke, argument } };
+			this.transport.logTransport(decodedEvent, methodName, "in", invokeContext, decodedEvent);
 			if (method) {
 				method = method.bind(handler);
 				if (handler.setLogContext)
@@ -1478,6 +1723,8 @@ export abstract class ROSEBase implements IASN1LogCallback {
 		);
 		if (argument) {
 			this.transport.logInvoke(methodName, this, argument, invokeContext, false);
+			const decodedInvoke = { invoke: { ...invoke, argument } };
+			this.transport.logTransport(decodedInvoke, methodName, "in", invokeContext, decodedInvoke);
 			if (method) {
 				method = method.bind(handler);
 				if (handler.setLogContext)

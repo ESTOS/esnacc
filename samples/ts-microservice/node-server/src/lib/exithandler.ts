@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import fs from "node:fs";
 import path from "node:path";
 import { getHeapSnapshot } from "node:v8";
-import { ILogData } from "uclogger";
+import { ILogData } from "./pinoLogger.js";
 
 import { theClientConnectionManager, theConfig, theLogger, theLogStorage, theServer } from "../globals.js";
 import { Common } from "./common.js";

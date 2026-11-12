@@ -201,7 +201,8 @@ export class TSASN1Server extends TSASN1Base implements IASN1Transport {
 				}
 				const encodeResult = ROSEBase.encodeToTransport(data.payLoad, this.encodeContext);
 
-				this.logTransport(encodeResult.logData, "sendInvoke", "out", data.invokeContext);
+				const decodedSend = encodeResult.logData instanceof Uint8Array ? { invoke: data.invoke } : encodeResult.logData;
+				this.logTransport(encodeResult.payLoad, "sendInvoke", "out", data.invokeContext, decodedSend);
 				if (!client.send(encodeResult.payLoad)) {
 					const msg = new ROSEMessage();
 					msg.reject = {
