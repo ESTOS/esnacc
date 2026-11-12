@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
@@ -74,6 +75,40 @@ enum class SnaccWorkerEnqueueResult
 
 struct SnaccWorkerPoolState;
 
+/*! One named pool's health, copied by Health() for a caller that samples on its own timer.
+	Counts belong to the pool, not to a worker thread. queued is the shared queue once.
+	accepted equals processed + queued + running while the pool is in the current set.
+	rejectedFull and expired are not part of accepted. expired is a subset of processed. */
+struct SnaccWorkerPoolHealth
+{
+	/*! Pool name. Stable for the life of this pool object. */
+	std::string name{};
+	/*! Configured upper bound on live threads. */
+	unsigned int maxThreads{};
+	/*! Configured depth. 0 means the queue is not capped. */
+	unsigned int maxElements{};
+	/*! Threads waiting or inside a handler. The floor thread is included. */
+	unsigned int liveThreads{};
+	/*! Threads inside a handler. */
+	unsigned int running{};
+	/*! Threads blocked in the wait for the next item. */
+	unsigned int idleThreads{};
+	/*! Items waiting. Not the items inside a handler. */
+	unsigned int queued{};
+	/*! Items the pool took ownership of. */
+	std::uint64_t accepted{};
+	/*! Items that left the pool, finished by a worker or drained by pause or shutdown. */
+	std::uint64_t processed{};
+	/*! Offers refused because the depth was exhausted. */
+	std::uint64_t rejectedFull{};
+	/*! Accepted items whose deadline passed before the handler ran. */
+	std::uint64_t expired{};
+	/*! Threads started for this pool, including the floor thread and replacements. */
+	std::uint64_t threadsStarted{};
+	/*! Threads that left this pool. */
+	std::uint64_t threadsStopped{};
+};
+
 /*! Process-wide worker pools, owned once the way a listener owns SnaccRoseOperationLookup.
 	The owner calls Configure at startup and keeps this object for the process lifetime.
 	Each SnaccROSEBase borrows it through SetWorkerPools. Stubs share the threads and the
@@ -99,6 +134,9 @@ public:
 	/*! Live worker threads for poolName, including the one that waits while the queue is empty.
 		0 when the name is not in the current set. */
 	unsigned int LiveThreads(const std::string& poolName) const;
+	/*! Copies one record per pool in the current set. The caller samples this. Workers do not call out.
+		A pool removed by Shutdown is absent. The copy is taken under each pool lock and returned without it. */
+	std::vector<SnaccWorkerPoolHealth> Health() const;
 
 	/*! Queues pMessage on poolName. On Queued, pMessage and callbacks are taken. Otherwise both stay with the caller. */
 	SnaccWorkerEnqueueResult Enqueue(const std::string& poolName, SnaccROSEBase& stub, std::unique_ptr<SNACC::ROSEMessage>& pMessage, unsigned long ulMessageSize, SnaccPooledInboundCallbacks callbacks);

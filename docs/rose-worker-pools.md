@@ -64,6 +64,7 @@ These rules are the C++ contract.
 - A `SnaccException` from the handler becomes a mistyped-argument reject and the thread stays. Any other exception follows `SnaccWorkerFaultPolicy`. `KeepWorker` swallows it and takes the next item. `RetireWorker` ends that thread and starts a replacement when work remains. Neither path sends a reply for the failed item.
 - A positive `ROSEInvoke.timeout` is captured at enqueue as `T_enqueue + timeout`, so time spent queued counts. If that instant has passed when the worker dequeues the item, the handler does not run and the server sends no reply. The caller's own wait then completes locally. See [rose-invoke-timeout.md](rose-invoke-timeout.md). An absent or non-positive timeout is not a deadline, so the handler still runs.
 - `PauseRoseProcessing` and destroying the stub reject that stub's queued invokes with the shutdown reject and do not run those handlers. A handler of that stub already running finishes, and its reply is discarded. `Shutdown` rejects every stub and joins the workers.
+- `Health` copies one record per pool in the current set. The caller samples it. Workers do not push a callback. `queued` is the shared queue once. `accepted` equals `processed + queued + running`. `rejectedFull` counts offers the pool refused. `expired` is a subset of `processed`. `threadsStarted` and `threadsStopped` are counts on that record. A pool `Shutdown` has removed is absent.
 - `m_multithreadInvokeIDs` is not a pool. It chooses whether `OnBinaryDataBlockResult` accepts the invoke on that entry point. A pool chooses the worker thread.
 
 ## API
@@ -79,6 +80,7 @@ These rules are the C++ contract.
 | `RejectQueuedAndWait` | none | Drop one stub's queue and wait for its running handlers |
 | `Enqueue` | none | Hand one inbound message to a named pool |
 | `DecideInlineExecution` | none | Virtual. Default `Execute`. An override returns `RejectQueueFull` to refuse an unqueued message and counts the outcome |
+| `Health` | none | Copy one health record per pool. The caller samples it |
 
 The registry must outlive every stub that borrows it, or the caller passes `nullptr` to `SetWorkerPools` first. Replacing a previous registry drains that stub's queued items and waits until its handlers return. Do not call `SetWorkerPools` from a pool worker that is running that stub.
 
@@ -113,6 +115,7 @@ A row here is a decision, not a backlog item. Remove the row when the difference
 | Handler exception keeps or retires the worker | `KeepWorkerHandlesNextInvokeAfterHandlerException`, `RetireWorkerStartsReplacementAfterHandlerException` | No TypeScript counterpart |
 | Expired queued invoke does not run. Wire `0` still runs | `ExpiredQueuedInvokeDoesNotRunHandler`, `ZeroTimeoutQueuedInvokeStillRunsHandler` | No TypeScript counterpart |
 | Pause drops only that stub's queue | `PauseRejectsQueuedWorkAndDropsInflightReply`, `PauseDropsOnlyThePausingStubsQueuedInvoke` | No TypeScript counterpart |
+| Health is one record per pool | `HealthSnapshotCountsThePoolNotEachThread` | No TypeScript counterpart |
 
 The C++ names are cases of `snacclib_WorkerPoolRuntimeTest` in `cpp-lib/tests/worker_pool/worker_pool_tests.cpp`.
 

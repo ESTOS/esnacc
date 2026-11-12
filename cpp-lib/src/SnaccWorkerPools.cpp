@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <condition_variable>
 #include <deque>
 #include <mutex>
@@ -55,6 +56,18 @@ struct SnaccWorkerPoolState
 	unsigned int idleWorkers{};
 	// Waiting workers plus workers inside a handler. The floor thread is included. Idle-exited threads are not.
 	unsigned int liveWorkers{};
+	// Items this pool took ownership of. A rejected-full offer does not increment it.
+	std::uint64_t accepted{};
+	// Items that left: a worker finished them, or pause or shutdown drained them from the queue.
+	std::uint64_t processed{};
+	// Offers refused because queue size plus running reached maxElements.
+	std::uint64_t rejectedFull{};
+	// Subset of processed. The deadline had passed when the worker dequeued the item.
+	std::uint64_t expired{};
+	// Floor thread, burst threads, and replacements after RetireWorker.
+	std::uint64_t threadsStarted{};
+	// Idle exit, RetireWorker, and the exit during Shutdown.
+	std::uint64_t threadsStopped{};
 	std::chrono::milliseconds idleTimeout{30000};
 	SnaccWorkerFaultPolicy faultPolicy{SnaccWorkerFaultPolicy::KeepWorker};
 	// Set by JoinPool. Workers finish the item they already popped, then leave. New enqueues are refused.
@@ -171,6 +184,7 @@ void SnaccWorkerPools::StartFloorWorker(const std::shared_ptr<SnaccWorkerPoolSta
 		return;
 	// Count the thread before it runs, so LiveThreads does not report zero in the gap between start and the thread entering WorkerMain.
 	++pool->liveWorkers;
+	++pool->threadsStarted;
 	pool->threads.emplace_back([this, pool] { WorkerMain(pool); });
 }
 
@@ -184,6 +198,7 @@ void SnaccWorkerPools::EnsureWorker(const std::shared_ptr<SnaccWorkerPoolState>&
 		return;
 	// The new thread may find the item already taken and then idle-exit. That is cheaper than blocking the enqueue on a busy pool.
 	++pool->liveWorkers;
+	++pool->threadsStarted;
 	pool->threads.emplace_back([this, pool] { WorkerMain(pool); });
 }
 
@@ -195,6 +210,7 @@ bool SnaccWorkerPools::ExitIdleWorker(const std::shared_ptr<SnaccWorkerPoolState
 	if (pool->stopping || pool->liveWorkers <= kMinLiveWorkers || !pool->queue.empty())
 		return false;
 	--pool->liveWorkers;
+	++pool->threadsStopped;
 	// This jthread cannot join itself. Detach and drop it so JoinPool will not wait on it.
 	const auto self = std::this_thread::get_id();
 	const auto it = std::find_if(pool->threads.begin(), pool->threads.end(), [&](const std::jthread& thread) { return thread.get_id() == self; });
@@ -230,6 +246,7 @@ void SnaccWorkerPools::WorkerMain(const std::shared_ptr<SnaccWorkerPoolState>& p
 			if (pool->stopping && pool->queue.empty())
 			{
 				--pool->liveWorkers;
+				++pool->threadsStopped;
 				pool->cv.notify_all();
 				break;
 			}
@@ -248,15 +265,16 @@ void SnaccWorkerPools::WorkerMain(const std::shared_ptr<SnaccWorkerPoolState>& p
 			NoteInflight(item.stub, 1);
 		}
 		bool retire = false;
+		// Captured before the handler so the health count still records a deadline that passed when the handler throws.
+		const bool deadlinePassed = item.deadline.has_value() && std::chrono::steady_clock::now() >= *item.deadline;
 		try
 		{
 			// Stopping and a closed session both reject without the handler.
 			// A deadline that passed while the item sat in the queue drops the reply instead.
-			const bool expired = item.deadline.has_value() && std::chrono::steady_clock::now() >= *item.deadline;
 			const bool allowed = item.callbacks.processingAllowed && item.callbacks.processingAllowed();
 			if (pool->stopping || !allowed)
 				DispatchQueuedItem(item, SnaccPooledInboundAction::ShutdownReject);
-			else if (expired)
+			else if (deadlinePassed)
 				DispatchQueuedItem(item, SnaccPooledInboundAction::DropExpired);
 			else
 				DispatchQueuedItem(item, SnaccPooledInboundAction::Run);
@@ -271,10 +289,14 @@ void SnaccWorkerPools::WorkerMain(const std::shared_ptr<SnaccWorkerPoolState>& p
 		{
 			std::lock_guard<std::mutex> lock(pool->mutex);
 			--pool->running;
+			++pool->processed;
+			if (deadlinePassed)
+				++pool->expired;
 			// This thread is done. Start a replacement when the queue still has work, then leave the loop.
 			if (retire)
 			{
 				--pool->liveWorkers;
+				++pool->threadsStopped;
 				EnsureWorker(pool);
 				break;
 			}
@@ -293,6 +315,8 @@ void SnaccWorkerPools::JoinPool(const std::shared_ptr<SnaccWorkerPoolState>& poo
 		std::lock_guard<std::mutex> lock(pool->mutex);
 		pool->stopping = true;
 		queued.assign(std::make_move_iterator(pool->queue.begin()), std::make_move_iterator(pool->queue.end()));
+		// These items leave the queue here. Count them before the reject runs outside the lock.
+		pool->processed += queued.size();
 		pool->queue.clear();
 		pool->cv.notify_all();
 	}
@@ -381,6 +405,39 @@ unsigned int SnaccWorkerPools::LiveThreads(const std::string& poolName) const
 	return pool->liveWorkers;
 }
 
+// Copies the counters a product health timer reads. Workers do not call into that timer.
+std::vector<SnaccWorkerPoolHealth> SnaccWorkerPools::Health() const
+{
+	std::vector<std::shared_ptr<SnaccWorkerPoolState>> pools;
+	{
+		// Same lock order as Enqueue: registry lock only long enough to copy the pool pointers.
+		std::lock_guard<std::mutex> guard(m_state->registryMutex);
+		pools = m_state->pools;
+	}
+	std::vector<SnaccWorkerPoolHealth> health;
+	health.reserve(pools.size());
+	for (const std::shared_ptr<SnaccWorkerPoolState>& pool : pools)
+	{
+		std::lock_guard<std::mutex> lock(pool->mutex);
+		SnaccWorkerPoolHealth row;
+		row.name = pool->name;
+		row.maxThreads = pool->maxThreads;
+		row.maxElements = pool->maxElements;
+		row.liveThreads = pool->liveWorkers;
+		row.running = pool->running;
+		row.idleThreads = pool->idleWorkers;
+		row.queued = static_cast<unsigned int>(pool->queue.size());
+		row.accepted = pool->accepted;
+		row.processed = pool->processed;
+		row.rejectedFull = pool->rejectedFull;
+		row.expired = pool->expired;
+		row.threadsStarted = pool->threadsStarted;
+		row.threadsStopped = pool->threadsStopped;
+		health.push_back(std::move(row));
+	}
+	return health;
+}
+
 // Drops the registry maps, then joins every pool. A concurrent enqueue sees no pools and runs on the caller.
 void SnaccWorkerPools::Shutdown()
 {
@@ -419,7 +476,10 @@ SnaccWorkerEnqueueResult SnaccWorkerPools::Enqueue(const std::string& poolName, 
 		return SnaccWorkerEnqueueResult::PoolStopped;
 	// Depth is the queue plus handlers already running, so one long SQL call still occupies a slot.
 	if (pool->maxElements > 0 && pool->queue.size() + pool->running >= pool->maxElements)
+	{
+		++pool->rejectedFull;
 		return SnaccWorkerEnqueueResult::RejectedFull;
+	}
 
 	// Ownership moves only after the depth check. The deadline is fixed now, so queue time counts against the client timeout.
 	WorkItem item;
@@ -429,6 +489,7 @@ SnaccWorkerEnqueueResult SnaccWorkerPools::Enqueue(const std::string& poolName, 
 	item.callbacks = std::move(callbacks);
 	item.message = std::move(pMessage);
 	pool->queue.push_back(std::move(item));
+	++pool->accepted;
 	// Wake an idle waiter when one exists. Start a thread only when every live worker is busy and the cap allows it.
 	EnsureWorker(pool);
 	pool->cv.notify_one();
@@ -449,7 +510,11 @@ void SnaccWorkerPools::RejectQueuedAndWait(SnaccROSEBase& stub)
 			std::deque<WorkItem> kept;
 			for (auto& item : pool->queue)
 				if (item.stub == &stub)
+				{
 					queued.push_back(std::move(item));
+					// The item leaves this queue without a worker. It still counts as processed for the pool.
+					++pool->processed;
+				}
 				else
 					kept.push_back(std::move(item));
 			pool->queue.swap(kept);
