@@ -850,6 +850,47 @@ namespace snacclib
 		{
 		}
 
+		// Stands in for the product override of DecideInlineExecution.
+		// While armed, an unqueued message returns RejectQueueFull and the call is counted here.
+		// bIsEvent is true for invoke id 99999. The base answer is Execute.
+		SnaccInlineAction DecideInlineExecution(bool bIsEvent) const override
+		{
+			if (!m_bRefuseInline)
+				return SnaccInlineAction::Execute;
+			++m_refuseInlineCalls;
+			if (bIsEvent)
+				++m_refuseInlineEvents;
+			return SnaccInlineAction::RejectQueueFull;
+		}
+
+		// Arms RejectQueueFull for this endpoint and zeroes the counters. ClearRefuseInline turns it off again.
+		void ArmRefuseInline()
+		{
+			m_bRefuseInline = true;
+			m_refuseInlineCalls = 0;
+			m_refuseInlineEvents = 0;
+		}
+
+		// Returns this endpoint to Execute and zeroes the counters, including when a test fails.
+		void ClearRefuseInline()
+		{
+			m_bRefuseInline = false;
+			m_refuseInlineCalls = 0;
+			m_refuseInlineEvents = 0;
+		}
+
+		// How often the armed override returned RejectQueueFull.
+		int RefuseInlineCalls() const
+		{
+			return m_refuseInlineCalls;
+		}
+
+		// How often that refusal was an event (invoke id 99999).
+		int RefuseInlineEvents() const
+		{
+			return m_refuseInlineEvents;
+		}
+
 		// Configures the active log levels independently for inbound and outbound traffic.
 		void SetLogLevels(const EAsnLogLevel inbound, const EAsnLogLevel outbound)
 		{
@@ -932,7 +973,12 @@ namespace snacclib
 		EAsnLogLevel m_outboundLogLevel = EAsnLogLevel::DISABLED; // active outbound log level for the endpoint
 		bool m_bForwardLogsToBase = false;						  // whether logs are also forwarded into file logging
 		bool m_bThrowOnNextOutboundLog = false;					  // one-shot throw from the next outbound log callback
-		std::vector<CapturedLogEntry> m_logEntries;				  // captured final log entries for assertions
+		// When true, DecideInlineExecution returns RejectQueueFull. Default Execute.
+		bool m_bRefuseInline{};
+		// Refusals since ArmRefuseInline. Mutable because the override is const.
+		mutable int m_refuseInlineCalls{};
+		mutable int m_refuseInlineEvents{};
+		std::vector<CapturedLogEntry> m_logEntries; // captured final log entries for assertions
 	};
 
 	// Collects telemetry callback invocations from the process-wide runtime callback
@@ -1437,6 +1483,7 @@ namespace snacclib
 		RuntimeTestBase()
 			: m_telemetryRecorder(),
 			  m_telemetryScope(m_telemetryRecorder),
+			  m_server(L"LoopbackServer", "server-session", m_serverLookup),
 			  m_serverSettingsModule(m_server),
 			  m_clientSettingsModule(m_client),
 			  m_serverEventModule(m_server),
@@ -1608,7 +1655,7 @@ namespace snacclib
 		ScopedTelemetryCapture m_telemetryScope;											   // keeps telemetry callback capture installed for the fixture lifetime
 		SnaccRoseOperationLookup m_serverLookup;											   // listener lookup table for server session host
 		SnaccRoseOperationLookup m_clientLookup;											   // listener lookup table for client session host
-		ObservedRuntimeEndpoint m_server{L"LoopbackServer", "server-session", m_serverLookup}; // server-side session host used by all tests
+		ObservedRuntimeEndpoint m_server;													   // server-side session host used by all tests. ArmRefuseInline overrides the inline decision.
 		ObservedRuntimeEndpoint m_client{L"LoopbackClient", "client-session", m_clientLookup}; // client-side session host used by all tests
 		SettingsServiceModule m_serverSettingsModule;										   // server module handling settings invokes
 		SettingsClientModule m_clientSettingsModule;										   // client module issuing settings invokes and receiving settings events

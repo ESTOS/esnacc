@@ -146,6 +146,15 @@ class SnaccROSEBase;
 	The generated class overrides OnInvoke to implement the OnInvoke_XXX handlers.
 	The generated class calls the Invoke function from the Invoke_XXX functions.
 	*/
+
+// What the connection decides for a message that would still run on this thread.
+// Execute runs the handler here. RejectQueueFull does not: an invoke is rejected, an event is dropped.
+enum class SnaccInlineAction
+{
+	Execute,
+	RejectQueueFull
+};
+
 class SnaccROSEBase : public SnaccROSESender, public SnaccTelemetryCallback
 {
 public:
@@ -206,6 +215,14 @@ public:
 		The default reads the registry borrowed through SetWorkerPools.
 		A module overrides this to force a pool or to keep a listed operation inline. */
 	virtual bool ResolveWorkerPool(unsigned int uiOperationID, std::string& strWorkerPool) const;
+
+	/*! Decision for a message that would still run on this thread.
+		Called only after a named pool has been offered the message and did not take it.
+		bIsEvent is true when the invoke id is 99999.
+		The base returns Execute, so the handler runs here.
+		A connection returns RejectQueueFull to skip the handler: an invoke is rejected, an event is dropped.
+		That override counts the refusal on its own pool. This method must not block. */
+	virtual SnaccInlineAction DecideInlineExecution(bool bIsEvent) const;
 
 	/*! Re-opens ROSE processing after PauseRoseProcessing() (e.g. transport reconnect).
 		Does not complete or resurrect pending operations from the prior session. */

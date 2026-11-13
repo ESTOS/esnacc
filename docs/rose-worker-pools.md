@@ -57,6 +57,7 @@ These rules are the C++ contract.
 
 - `Configure` takes name, `maxThreads`, `maxElements`, `idleTimeoutMs`, `faultPolicy`, and `operationIds`. It starts one floor thread per pool before any invoke. `maxThreads` below 1 is treated as 1. An operation id listed twice is refused: `Configure` returns false, asserts in debug, and keeps the previous set. A repeated pool name is skipped and its operation ids are not registered.
 - `ResolveWorkerPool` returns true and writes the pool name when the invoke is handed to a pool. False leaves it on the calling thread. The default reads the borrowed registry. A module may override it.
+- `DecideInlineExecution` returns `Execute`. A connection overrides it. ROSE asks the override only when the message would still run on this thread, and passes whether the invoke id is 99999. `RejectQueueFull` finishes an unpooled invoke as `ROSE_REJECT_QUEUE_FULL` and does not run the handler. An event is dropped with no reject. The override counts that on its pool's `HPSSThreadPoolHealth` when it returns `RejectQueueFull`. `Execute` runs the handler here. The socket pool does not call into ROSE.
 - One FIFO per pool. `maxElements` counts waiting items plus items inside a handler. `0` means no depth limit. A full pool rejects an invoke with `ROSE_REJECT_QUEUE_FULL` (`resourceLimitation`, detail `queueFull`) and does not run the handler. An event (`invokeID` 99999) is dropped with no reject.
 - The worker decodes the argument, calls `OnInvoke`, sends the reply, and finalizes inbound telemetry. The reply goes out through `SendBinaryDataBlockEx` on the stub that received the invoke.
 - The floor thread is named `wp::<pool>` and stays until `Shutdown`. Further threads start when every live thread is busy, up to `maxThreads`. A thread above the floor waits `idleTimeoutMs` (default 30000) on an empty queue and then exits. `0` keeps every started thread until `Shutdown`.
@@ -77,6 +78,7 @@ These rules are the C++ contract.
 | `ResolveWorkerPool` | none | Pool name for one operation id, or stay on the calling thread |
 | `RejectQueuedAndWait` | none | Drop one stub's queue and wait for its running handlers |
 | `Enqueue` | none | Hand one inbound message to a named pool |
+| `DecideInlineExecution` | none | Virtual. Default `Execute`. An override returns `RejectQueueFull` to refuse an unqueued message and counts the outcome |
 
 The registry must outlive every stub that borrows it, or the caller passes `nullptr` to `SetWorkerPools` first. Replacing a previous registry drains that stub's queued items and waits until its handlers return. Do not call `SetWorkerPools` from a pool worker that is running that stub.
 
@@ -94,6 +96,7 @@ A row here is a decision, not a backlog item. Remove the row when the difference
 | Topic | C++ | TypeScript | Why this is allowed |
 | --- | --- | --- | --- |
 | Pool runtime | Named pools, shared threads, depth, and the enqueue deadline. | No pool runtime. Every invoke runs on the caller that received it. | TypeScript has no worker pools. The UCServer uses the C++ pools. |
+| Last accepting socket thread | `DecideInlineExecution` can answer `RejectQueueFull` for an unqueued invoke and counts it. | No socket pool and no override. | TypeScript has no high-performance socket thread pool. |
 | Pause of queued work | Pause rejects that stub's queued items and drops an in-flight reply. | No queued pool work to reject. | Same reason. The session gate itself is shared. See [rose-processing-gate.md](rose-processing-gate.md). |
 
 ## Tests
@@ -101,6 +104,7 @@ A row here is a decision, not a backlog item. Remove the row when the difference
 | Behavior | C++ | TypeScript |
 | --- | --- | --- |
 | Unassigned operation and a stub without a registry stay on the calling thread | `UnassignedOperationStaysOnCallingThread`, `StubWithoutBorrowedPoolsStaysOnCallingThread` | No TypeScript counterpart |
+| Last accepting thread refuses an unpooled invoke, drops an unpooled event, and still queues a pooled invoke | `RefuseInlineExecutionRejectsUnpooledInvoke`, `RefuseInlineExecutionDropsUnpooledEvent`, `PooledInvokeIsQueuedWhenInlineWouldBeRefused` | No TypeScript counterpart |
 | Assigned operation runs off the calling thread, in FIFO order | `AssignedOperationRunsOffCallingThread`, `SingleWorkerKeepsFifoOrder` | No TypeScript counterpart |
 | Two stubs share one registry | `SharedRegistryRunsBothStubsOnOneWorker` | No TypeScript counterpart |
 | Full depth rejects an invoke and drops an event | `FullQueueRejectsInvokeWithoutHandler`, `FullQueueDropsEventWithoutReject` | No TypeScript counterpart |
