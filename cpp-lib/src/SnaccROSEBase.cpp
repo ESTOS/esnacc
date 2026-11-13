@@ -896,17 +896,27 @@ void SnaccROSEPendingOperation::FinalizeTelemetry(long lFinalRoseResult, std::sh
 	m_pTelemetry->finalize(SnaccTelemetryData::Outcome::DISPATCHED, SnaccTelemetryData::Stage::OUTBOUND_WAIT, SnaccTelemetryData::Reason::WAIT_SKIPPED, m_lRoseResult, std::nullopt, std::move(pctx));
 }
 
+// operationLookup is borrowed for the stub lifetime. The listener seals it after startup.
 SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperationLookup& operationLookup)
 	: m_strClassName(szClassName),
 	  m_operationLookup(operationLookup)
 {
 }
 
+// multithreadInvokeIDs selects which invokes the result path accepts on this entry point.
 SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperationLookup& operationLookup, const std::set<int>& multithreadInvokeIDs)
 	: m_strClassName(szClassName),
 	  m_multithreadInvokeIDs(multithreadInvokeIDs),
 	  m_operationLookup(operationLookup)
 {
+}
+
+// The base has no socket pool, so the handler runs on this thread.
+// bIsEvent is for an override that counts a dropped event apart from a rejected invoke.
+SnaccInlineAction SnaccROSEBase::DecideInlineExecution(bool bIsEvent) const
+{
+	(void)bIsEvent;
+	return SnaccInlineAction::Execute;
 }
 
 void SnaccROSEBase::SetTelemetryCallback(SnaccTelemetryCallback* pTelemetryCallBack)
@@ -1635,6 +1645,15 @@ void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage
 				mode = PooledInboundMode::QueueFull;
 			else if (enqueueResult == SnaccWorkerEnqueueResult::PoolStopped)
 				mode = PooledInboundMode::ShutdownReject;
+		}
+		// Still on this thread. The connection may refuse. A pool that already took the message returned above.
+		// A full or stopped pool already replaced this mode.
+		// bIsEvent lets the override count a drop apart from a reject. RejectQueueFull skips the handler.
+		if (mode == PooledInboundMode::EnqueueOrRun)
+		{
+			const bool bIsEvent = (AsnIntType)invoke.invokeID == 99999;
+			if (DecideInlineExecution(bIsEvent) == SnaccInlineAction::RejectQueueFull)
+				mode = PooledInboundMode::QueueFull;
 		}
 	}
 

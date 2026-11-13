@@ -3,6 +3,25 @@
 namespace snacclib
 {
 
+	// Arms the server override until the test returns, including on failure.
+	struct RefuseInlineScope
+	{
+		explicit RefuseInlineScope(ObservedRuntimeEndpoint& server)
+			: m_server(server)
+		{
+			m_server.ArmRefuseInline();
+		}
+
+		// Clears the override after the assertions, including when the test fails.
+		~RefuseInlineScope()
+		{
+			m_server.ClearRefuseInline();
+		}
+
+		// The endpoint whose DecideInlineExecution this scope arms.
+		ObservedRuntimeEndpoint& m_server;
+	};
+
 	// Specifies the named worker-pool contract from runtime_correctness_notes.md section 12.
 	class snacclib_WorkerPoolRuntimeTest : public RuntimeTestBase
 	{
@@ -94,6 +113,58 @@ namespace snacclib
 		EXPECT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
 		EXPECT_EQ(1, m_gate->Entered());
 		EXPECT_EQ(std::this_thread::get_id(), m_gate->ThreadAt(0));
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, RefuseInlineExecutionRejectsUnpooledInvoke)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		m_gate->Release();
+		RefuseInlineScope gate(m_server);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		EXPECT_EQ(ROSE_REJECT_QUEUE_FULL, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+		EXPECT_EQ(0, m_gate->Entered());
+		EXPECT_EQ(1, m_server.RefuseInlineCalls());
+		EXPECT_EQ(0, m_server.RefuseInlineEvents());
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, RefuseInlineExecutionDropsUnpooledEvent)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		m_gate->Release();
+		RefuseInlineScope gate(m_server);
+
+		AsnGetSettingsArgument argument;
+		SnaccScopedInvokeMessage invokeMsg(99999, OPID_asnGetSettings, &argument);
+		EXPECT_EQ(ROSE_NOERROR, m_client.SendEvent(invokeMsg.GetPtr(), "asnGetSettings"));
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		EXPECT_EQ(0, m_gate->Entered());
+		EXPECT_EQ(1, m_server.RefuseInlineCalls());
+		EXPECT_EQ(1, m_server.RefuseInlineEvents());
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, PooledInvokeIsQueuedWhenInlineWouldBeRefused)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		ConfigureGetSettingsPool(1, 4);
+		RefuseInlineScope gate(m_server);
+
+		AsyncInvokeLatch latch;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(latch, result, error, 2000));
+		m_gate->WaitEntered(1);
+		EXPECT_EQ(1, m_gate->Entered());
+		EXPECT_NE(std::this_thread::get_id(), m_gate->ThreadAt(0));
+		EXPECT_EQ(0, m_server.RefuseInlineCalls());
+		m_gate->Release();
+		ASSERT_TRUE(latch.WaitFor(std::chrono::milliseconds(2000)));
+		EXPECT_EQ(ROSE_NOERROR, latch.RoseResult());
 	}
 
 	TEST_F(snacclib_WorkerPoolRuntimeTest, AssignedOperationRunsOffCallingThread)
