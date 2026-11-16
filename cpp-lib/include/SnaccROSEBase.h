@@ -224,6 +224,19 @@ public:
 		That override counts the refusal on its own pool. This method must not block. */
 	virtual SnaccInlineAction DecideInlineExecution(bool bIsEvent) const;
 
+	/*! A ROSE message reached this stub on the calling thread, before a pool is offered it.
+		The base does nothing. A socket connection counts one incoming message on its thread pool. */
+	virtual void NoteSocketArrival();
+
+	/*! This thread finished the message. A named pool did not take the outcome, and the last acceptor did not refuse it.
+		The base does nothing. A socket connection records the outcome and, when the handler ran, one run observation.
+		ui64RunUs is how long the handler ran. It is zero when the handler did not run. */
+	virtual void NoteSocketInlineOutcome(const SnaccPooledRunReport& report, std::uint64_t ui64RunUs);
+
+	/*! This thread refused the message because the connection is closed, before the handler.
+		The base does nothing. A socket connection counts that as RejectedConnectionClosed. */
+	virtual void NoteSocketConnectionClosed();
+
 	/*! Re-opens ROSE processing after PauseRoseProcessing() (e.g. transport reconnect).
 		Does not complete or resurrect pending operations from the prior session. */
 	void ResumeRoseProcessing();
@@ -499,11 +512,12 @@ private:
 	};
 
 	/*! Inbound invoke/event dispatch; takes ownership of the decoded message. */
-	virtual void OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long lMessageSize, PooledInboundMode mode = PooledInboundMode::EnqueueOrRun);
-	/*! Entry used by pool workers and by queue cancellation. */
-	void RunPooledInbound(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long lMessageSize, PooledInboundMode mode);
-	/*! Adopts pMessage and maps a pool action onto RunPooledInbound. Called from the enqueue callback. */
-	void CompletePooledFromPool(SNACC::ROSEMessage* pMessage, unsigned long lMessageSize, SnaccPooledInboundAction action);
+	virtual SnaccPooledRunReport OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long lMessageSize, PooledInboundMode mode = PooledInboundMode::EnqueueOrRun);
+	/*! Entry used by pool workers and by queue cancellation. Returns the run report for a Run action. */
+	SnaccPooledRunReport RunPooledInbound(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long lMessageSize, PooledInboundMode mode);
+	/*! Adopts pMessage and maps a pool action onto RunPooledInbound. Called from the enqueue callback.
+		The returned report is the handler outcome when the action was Run. */
+	SnaccPooledRunReport CompletePooledFromPool(SNACC::ROSEMessage* pMessage, unsigned long lMessageSize, SnaccPooledInboundAction action);
 	/*! Session gate read by a pool worker before it runs a handler. */
 	bool IsDispatchProcessingAllowed() const;
 	/*! Telemetry hook for matched inbound result; borrows arm of owned message. */

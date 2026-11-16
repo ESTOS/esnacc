@@ -247,8 +247,17 @@ namespace snacclib
 		AsnGetSettingsArgument argument;
 		SnaccScopedInvokeMessage invokeMsg(99999, OPID_asnGetSettings, &argument);
 		EXPECT_EQ(ROSE_NOERROR, m_client.SendEvent(invokeMsg.GetPtr(), "asnGetSettings"));
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		const auto fullDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+		std::vector<ROSEWorkerPoolHealth> full = m_pools.Health();
+		while ((full.empty() || full[0].m_counters.m_ui64RejectedFull < 1) && std::chrono::steady_clock::now() < fullDeadline)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			full = m_pools.Health();
+		}
 		EXPECT_EQ(1, m_gate->Entered());
+		ASSERT_EQ(1u, full.size());
+		EXPECT_EQ(1u, full[0].m_counters.m_ui64RejectedFull);
+		EXPECT_EQ(1u, full[0].m_wait.m_ui64Count);
 
 		m_gate->Release();
 		ASSERT_TRUE(running.WaitFor(std::chrono::milliseconds(2000)));
@@ -667,25 +676,23 @@ namespace snacclib
 		InitializeEndpoints(TransportEncoding::JSON);
 		ConfigureGetSettingsPool(2, 2);
 		const auto idleDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
-		std::vector<SnaccWorkerPoolHealth> idle = m_pools.Health();
-		while ((idle.empty() || idle[0].idleThreads < 1) && std::chrono::steady_clock::now() < idleDeadline)
+		std::vector<ROSEWorkerPoolHealth> idle = m_pools.Health();
+		while ((idle.empty() || idle[0].m_state.m_uiIdleThreads < 1) && std::chrono::steady_clock::now() < idleDeadline)
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			idle = m_pools.Health();
 		}
 		ASSERT_EQ(1u, idle.size());
-		EXPECT_EQ("settings", idle[0].name);
-		EXPECT_EQ(2u, idle[0].maxThreads);
-		EXPECT_EQ(2u, idle[0].maxElements);
-		EXPECT_EQ(1u, idle[0].liveThreads);
-		EXPECT_EQ(0u, idle[0].running);
-		EXPECT_EQ(1u, idle[0].idleThreads);
-		EXPECT_EQ(0u, idle[0].queued);
-		EXPECT_EQ(0u, idle[0].accepted);
-		EXPECT_EQ(0u, idle[0].processed);
-		EXPECT_EQ(0u, idle[0].rejectedFull);
-		EXPECT_EQ(1u, idle[0].threadsStarted);
-		EXPECT_EQ(0u, idle[0].threadsStopped);
+		EXPECT_EQ("settings", idle[0].m_strName);
+		EXPECT_EQ(2u, idle[0].m_uiMaxThreads);
+		EXPECT_EQ(0u, idle[0].m_state.m_uiRunning);
+		EXPECT_EQ(1u, idle[0].m_state.m_uiIdleThreads);
+		EXPECT_EQ(0u, idle[0].m_counters.m_ui64Incoming);
+		EXPECT_EQ(0u, idle[0].m_counters.m_ui64RejectedFull);
+		EXPECT_EQ(1u, idle[0].m_ui64ThreadsStarted);
+		EXPECT_EQ(0u, idle[0].m_ui64ThreadsStopped);
+		EXPECT_EQ(std::optional<unsigned int>(2), idle[0].m_uiMaxElements);
+		EXPECT_EQ(0u, idle[0].m_uiWaiting);
 
 		ArmBlockingGetSettings();
 		AsyncInvokeLatch first;
@@ -704,35 +711,38 @@ namespace snacclib
 		AsnRequestError error;
 		EXPECT_EQ(ROSE_REJECT_QUEUE_FULL, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error, 2000));
 
-		const std::vector<SnaccWorkerPoolHealth> busy = m_pools.Health();
+		const std::vector<ROSEWorkerPoolHealth> busy = m_pools.Health();
 		ASSERT_EQ(1u, busy.size());
-		EXPECT_EQ(2u, busy[0].liveThreads);
-		EXPECT_EQ(2u, busy[0].running);
-		EXPECT_EQ(0u, busy[0].queued);
-		EXPECT_EQ(2u, busy[0].accepted);
-		EXPECT_EQ(0u, busy[0].processed);
-		EXPECT_EQ(1u, busy[0].rejectedFull);
-		EXPECT_EQ(2u, busy[0].threadsStarted);
-		EXPECT_EQ(busy[0].accepted, busy[0].processed + busy[0].queued + busy[0].running);
+		EXPECT_EQ(2u, busy[0].m_state.m_uiRunning);
+		EXPECT_EQ(0u, busy[0].m_state.m_uiIdleThreads);
+		EXPECT_EQ(1u, busy[0].m_counters.m_ui64RejectedFull);
+		EXPECT_EQ(2u, busy[0].m_ui64ThreadsStarted);
+		EXPECT_EQ(0u, busy[0].m_uiWaiting);
+		EXPECT_EQ(3u, busy[0].m_counters.m_ui64Incoming);
+		EXPECT_EQ(0u, busy[0].m_counters.m_ui64Success);
+		EXPECT_EQ(busy[0].m_counters.m_ui64Incoming, busy[0].m_uiWaiting + busy[0].m_state.m_uiRunning + busy[0].m_counters.m_ui64RejectedFull);
 
 		m_gate->Release();
 		ASSERT_TRUE(first.WaitFor(std::chrono::milliseconds(2000)));
 		ASSERT_TRUE(second.WaitFor(std::chrono::milliseconds(2000)));
 
-		// The completion latch fires inside the handler, before the worker records processed.
+		// The completion latch fires inside the handler, before the worker records the outcome.
 		const auto doneDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
-		std::vector<SnaccWorkerPoolHealth> done = m_pools.Health();
-		while ((done.empty() || done[0].processed < 2) && std::chrono::steady_clock::now() < doneDeadline)
+		std::vector<ROSEWorkerPoolHealth> done = m_pools.Health();
+		while ((done.empty() || done[0].m_counters.m_ui64Success < 2) && std::chrono::steady_clock::now() < doneDeadline)
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			done = m_pools.Health();
 		}
 		ASSERT_EQ(1u, done.size());
-		EXPECT_EQ(2u, done[0].accepted);
-		EXPECT_EQ(2u, done[0].processed);
-		EXPECT_EQ(0u, done[0].running);
-		EXPECT_EQ(0u, done[0].queued);
-		EXPECT_EQ(1u, done[0].rejectedFull);
+		EXPECT_EQ(3u, done[0].m_counters.m_ui64Incoming);
+		EXPECT_EQ(2u, done[0].m_counters.m_ui64Success);
+		EXPECT_EQ(2u, done[0].m_counters.m_run.m_ui64Count);
+		EXPECT_EQ(2u, done[0].m_wait.m_ui64Count);
+		EXPECT_EQ(0u, done[0].m_state.m_uiRunning);
+		EXPECT_EQ(0u, done[0].m_uiWaiting);
+		EXPECT_EQ(1u, done[0].m_counters.m_ui64RejectedFull);
+		EXPECT_EQ(done[0].m_counters.m_ui64Incoming, done[0].m_uiWaiting + done[0].m_state.m_uiRunning + done[0].m_counters.m_ui64Success + done[0].m_counters.m_ui64RejectedFull);
 	}
 
 } // namespace snacclib
