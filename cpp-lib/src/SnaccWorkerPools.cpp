@@ -269,8 +269,8 @@ namespace
 		ASSERT(pool.threadsStarted >= pool.threadsStopped, "threadsStarted is below threadsStopped");
 		ASSERT(pool.threadsStarted - pool.threadsStopped == pool.liveWorkers, "started minus stopped is not the live threads");
 		ASSERT(pool.threadsStarted - pool.threadsStopped >= static_cast<std::uint64_t>(pool.idleWorkers) + pool.running, "started minus stopped is below idle plus running");
-		const std::uint64_t ui64Outcomes = pool.success + pool.handlerError + pool.handlerReject + pool.rejectedFull + pool.rejectedShuttingDown + pool.rejectedConnectionClosed + pool.timedOut + pool.replyDiscarded;
-		ASSERT(pool.incoming == static_cast<std::uint64_t>(pool.queue.size()) + pool.running + ui64Outcomes, "incoming is not waiting plus running plus outcomes");
+		// The sum stays inside the assert. A Release build drops the assert, so a named variable here would be unused.
+		ASSERT(pool.incoming == static_cast<std::uint64_t>(pool.queue.size()) + pool.running + pool.success + pool.handlerError + pool.handlerReject + pool.rejectedFull + pool.rejectedShuttingDown + pool.rejectedConnectionClosed + pool.timedOut + pool.replyDiscarded, "incoming is not waiting plus running plus outcomes");
 
 		ROSEWorkerPoolHealth row;
 		row.m_strName = pool.name;

@@ -4686,7 +4686,8 @@ void PrintROSECode(FILE* src, FILE* hdr, FILE* hdrInterface, ModuleList* mods, M
 		if (!iFirstIIDFound)
 		{
 			iFirstIIDFound = 1;
-			fprintf(hdr, "\tstatic const int m_iid = %d;\n", vd->value->basicValue->a.integer);
+			// constexpr makes this member inline, so a reference binds to the header and no .cpp definition is required.
+			fprintf(hdr, "\tstatic constexpr int m_iid = %d;\n", vd->value->basicValue->a.integer);
 		}
 		break;
 	}
