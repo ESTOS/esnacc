@@ -1034,6 +1034,125 @@ static void PrintSwiftTypeDefCode(FILE* src, ModuleList* mods, Module* m, TypeDe
 }
 
 /*
+ * Returns true if vd is a ROSE operation with an integer operation id (OPID) that is part of the generated output.
+ */
+static bool GetSwiftROSEOperationID(Module* m, ValueDef* vd, int* piOperationID)
+{
+	if (vd->value->basicValue->choiceId != BASICVALUE_INTEGER)
+		return false;
+	if (vd->value->type->basicType->choiceId != BASICTYPE_MACROTYPE)
+		return false;
+	if (vd->value->type->basicType->a.macroType->choiceId != MACROTYPE_ROSOPERATION)
+		return false;
+	if (IsDeprecatedNoOutputOperation(m, vd->definedName))
+		return false;
+	if (piOperationID)
+		*piOperationID = vd->value->basicValue->a.integer;
+	return true;
+}
+
+/*
+ * Returns true if vd is an operation without a result (an event).
+ * Same rule as the C++ operation registration and isEvent() of the generated swift operation.
+ */
+static bool IsSwiftROSEEvent(Module* m, ValueDef* vd)
+{
+	const char* pszArgument = NULL;
+	const char* pszResult = NULL;
+	const char* pszError = NULL;
+	Type* argumentType = NULL;
+	Type* resultType = NULL;
+	Type* errorType = NULL;
+	if (!GetROSEDetails(m, vd, &pszArgument, &pszResult, &pszError, &argumentType, &resultType, &errorType, true))
+		return false;
+	return pszResult == NULL;
+}
+
+/*
+ * The module interface id is the operation id of the first operation of the module.
+ * Matches MODULE_IID (TypeScript) and m_iid (C++).
+ */
+static int GetSwiftROSEModuleInterfaceID(Module* m)
+{
+	ValueDef* vd;
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		int iOperationID = 0;
+		if (GetSwiftROSEOperationID(m, vd, &iOperationID))
+			return iOperationID;
+	}
+	return 0;
+}
+
+/*
+ * Swift type name holding the ROSE module details, e.g. ENetUC_Journal_ROSEModule
+ */
+static void GetSwiftROSEModuleTypeName(Module* m, char* szTypeName, size_t size)
+{
+	strcpy_s(szTypeName, size - 1, m->moduleName);
+	Dash2Underscore(szTypeName, strlen(szTypeName));
+	strcat_s(szTypeName, size - 1, "_ROSEModule");
+}
+
+/*
+ * prints the operation ids of all invokes (bEvents == false) or events (bEvents == true) of the module as swift array literal
+ */
+static void PrintSwiftROSEModuleOperationIDs(FILE* src, Module* m, bool bEvents)
+{
+	ValueDef* vd;
+	bool bFirst = true;
+	fprintf(src, "[");
+	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
+	{
+		int iOperationID = 0;
+		if (!GetSwiftROSEOperationID(m, vd, &iOperationID))
+			continue;
+		if (IsSwiftROSEEvent(m, vd) != bEvents)
+			continue;
+		fprintf(src, "%s%d", bFirst ? "" : ", ", iOperationID);
+		bFirst = false;
+	}
+	fprintf(src, "]");
+}
+
+/*
+ * prints the module details (name, version, interface id, invoke and event operation ids) required for the interface negotiation
+ */
+static void PrintSwiftROSEModule(FILE* src, Module* m)
+{
+	PRINTDEBUGGING
+
+	char szTypeName[600] = {0};
+	GetSwiftROSEModuleTypeName(m, szTypeName, sizeof(szTypeName));
+
+	fprintf(src, "public enum %s\n", szTypeName);
+	fprintf(src, "{\n");
+	fprintf(src, "    public static let name = \"%s\"\n", m->moduleName);
+	if (gMajorInterfaceVersion >= 0)
+	{
+		char* szNumericDate = ConvertUnixTimeToNumericDate(GetModulePatchVersion(m->moduleName));
+		if (szNumericDate)
+		{
+			fprintf(src, "    public static let version = \"%i.0.%s\"\n", gMajorInterfaceVersion, szNumericDate);
+			free(szNumericDate);
+		}
+		else
+			fprintf(src, "    public static let version = \"\"\n");
+	}
+	else
+		fprintf(src, "    public static let version = \"\"\n");
+	fprintf(src, "    public static let interfaceID = %d\n", GetSwiftROSEModuleInterfaceID(m));
+	fprintf(src, "    public static let invokeOperationIDs: [Int] = ");
+	PrintSwiftROSEModuleOperationIDs(src, m, false);
+	fprintf(src, "\n");
+	fprintf(src, "    public static let eventOperationIDs: [Int] = ");
+	PrintSwiftROSEModuleOperationIDs(src, m, true);
+	fprintf(src, "\n\n");
+	fprintf(src, "    public static let info = AsnOperationFactory.ModuleInfo(name: name, version: version, interfaceID: interfaceID, invokeOperationIDs: invokeOperationIDs, eventOperationIDs: eventOperationIDs)\n");
+	fprintf(src, "}\n");
+}
+
+/*
  * prints PrintROSEInvoke
  */
 static void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd)
@@ -1073,6 +1192,10 @@ static void PrintSwiftROSEInvoke(FILE* src, Module* m, int bEvents, ValueDef* vd
 
 		fprintf(src, "    open class var name: String { return \"%s\" }\n", vd->definedName);
 		fprintf(src, "    open var operationName: String { return %s.name }\n", vd->definedName);
+		int iOperationID = 0;
+		GetSwiftROSEOperationID(m, vd, &iOperationID);
+		fprintf(src, "    public static let operationID: Int = %d\n", iOperationID);
+		fprintf(src, "    public var operationID: Int { return %s.operationID }\n", vd->definedName);
 
 		if (pszArgument)
 		{
@@ -1197,16 +1320,15 @@ void PrintSwiftROSECode(FILE* src, ModuleList* mods, Module* m)
 	PrintSwiftComments(src, m);
 
 	fprintf(src, "import Foundation\n\n");
-	bool bFirst = true;
+
+	PrintSwiftROSEModule(src, m);
 
 	FOR_EACH_LIST_ELMT(vd, m->valueDefs)
 	{
 		if (vd->value->type->basicType->choiceId == BASICTYPE_MACROTYPE)
 		{
-			if (!bFirst)
-				fprintf(src, "\n");
+			fprintf(src, "\n");
 			PrintSwiftROSEInvoke(src, m, 0, vd);
-			bFirst = false;
 		}
 	}
 }
@@ -1252,6 +1374,97 @@ void PrintSwiftCodeOne(FILE* src, ModuleList* mods, Module* m, long longJmpVal, 
 		PrintSwiftTypeDefCode(src, mods, m, td, novolatilefuncs);
 		bFirst = false;
 	}
+}
+
+/*
+ * prints the operation registry (operation id <-> name, module details) used for the interface negotiation
+ * Mirrors SnaccRoseOperationLookup (C++) and the registerOperation registry (TypeScript)
+ */
+static void PrintSwiftOperationRegistry(FILE* src, ModuleList* mods)
+{
+	Module* currMod;
+	ValueDef* vd;
+	char szTypeName[600] = {0};
+
+	fprintf(src, "\n");
+	fprintf(src, "    public struct ModuleInfo: Sendable\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        public let name: String\n");
+	fprintf(src, "        public let version: String\n");
+	fprintf(src, "        public let interfaceID: Int\n");
+	fprintf(src, "        public let invokeOperationIDs: [Int]\n");
+	fprintf(src, "        public let eventOperationIDs: [Int]\n");
+	fprintf(src, "    }\n\n");
+
+	fprintf(src, "    public struct OperationInfo: Sendable\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        public let operationID: Int\n");
+	fprintf(src, "        public let operationName: String\n");
+	fprintf(src, "        public let interfaceID: Int\n");
+	fprintf(src, "        public let moduleName: String\n");
+	fprintf(src, "        public let isEvent: Bool\n");
+	fprintf(src, "    }\n\n");
+
+	fprintf(src, "    public static let loadedModules: [ModuleInfo] = [\n");
+	FOR_EACH_LIST_ELMT(currMod, mods)
+	{
+		if (currMod->ImportedFlag != FALSE || !HasROSEOperations(currMod))
+			continue;
+		GetSwiftROSEModuleTypeName(currMod, szTypeName, sizeof(szTypeName));
+		fprintf(src, "        %s.info,\n", szTypeName);
+	}
+	fprintf(src, "    ]\n\n");
+
+	fprintf(src, "    public final class func operationInfo(for operationID: Int) -> OperationInfo?\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        switch operationID\n");
+	fprintf(src, "        {\n");
+	FOR_EACH_LIST_ELMT(currMod, mods)
+	{
+		if (currMod->ImportedFlag != FALSE || !HasROSEOperations(currMod))
+			continue;
+		GetSwiftROSEModuleTypeName(currMod, szTypeName, sizeof(szTypeName));
+		FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
+		{
+			int iOperationID = 0;
+			if (!GetSwiftROSEOperationID(currMod, vd, &iOperationID))
+				continue;
+			fprintf(src, "            case %d:\n", iOperationID);
+			fprintf(src, "                return OperationInfo(operationID: %d, operationName: \"%s\", interfaceID: %s.interfaceID, moduleName: %s.name, isEvent: %s)\n", iOperationID, vd->definedName, szTypeName, szTypeName, IsSwiftROSEEvent(currMod, vd) ? "true" : "false");
+		}
+	}
+	fprintf(src, "            default:\n");
+	fprintf(src, "                return nil\n");
+	fprintf(src, "        }\n");
+	fprintf(src, "    }\n\n");
+
+	fprintf(src, "    public final class func operationID(for operationName: String) -> Int?\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        switch operationName\n");
+	fprintf(src, "        {\n");
+	FOR_EACH_LIST_ELMT(currMod, mods)
+	{
+		if (currMod->ImportedFlag != FALSE || !HasROSEOperations(currMod))
+			continue;
+		FOR_EACH_LIST_ELMT(vd, currMod->valueDefs)
+		{
+			int iOperationID = 0;
+			if (!GetSwiftROSEOperationID(currMod, vd, &iOperationID))
+				continue;
+			fprintf(src, "            case \"%s\":\n", vd->definedName);
+			fprintf(src, "                return %d\n", iOperationID);
+		}
+	}
+	fprintf(src, "            default:\n");
+	fprintf(src, "                return nil\n");
+	fprintf(src, "        }\n");
+	fprintf(src, "    }\n\n");
+
+	fprintf(src, "    public final class func createOperation(operationID: Int, initializeWithDefaultProperties: Bool) -> AsnOperation?\n");
+	fprintf(src, "    {\n");
+	fprintf(src, "        guard let info = operationInfo(for: operationID) else { return nil }\n");
+	fprintf(src, "        return createOperation(info.operationName, initializeWithDefaultProperties: initializeWithDefaultProperties)\n");
+	fprintf(src, "    }\n");
 }
 
 void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
@@ -1403,6 +1616,8 @@ void PrintSwiftOperationFactory(FILE* src, ModuleList* mods)
 	fprintf(src, "                return nil\n");
 	fprintf(src, "        }\n");
 	fprintf(src, "    }\n");
+
+	PrintSwiftOperationRegistry(src, mods);
 
 	fprintf(src, "}\n");
 }
