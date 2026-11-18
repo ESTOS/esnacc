@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <locale>
 #include <chrono>
+#include <exception>
 #include <filesystem>
 #include <optional>
 
@@ -896,17 +897,27 @@ void SnaccROSEPendingOperation::FinalizeTelemetry(long lFinalRoseResult, std::sh
 	m_pTelemetry->finalize(SnaccTelemetryData::Outcome::DISPATCHED, SnaccTelemetryData::Stage::OUTBOUND_WAIT, SnaccTelemetryData::Reason::WAIT_SKIPPED, m_lRoseResult, std::nullopt, std::move(pctx));
 }
 
+// operationLookup is borrowed for the stub lifetime. The listener seals it after startup.
 SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperationLookup& operationLookup)
 	: m_strClassName(szClassName),
 	  m_operationLookup(operationLookup)
 {
 }
 
+// multithreadInvokeIDs selects which invokes the result path accepts on this entry point.
 SnaccROSEBase::SnaccROSEBase(const wchar_t* szClassName, const SnaccRoseOperationLookup& operationLookup, const std::set<int>& multithreadInvokeIDs)
 	: m_strClassName(szClassName),
 	  m_multithreadInvokeIDs(multithreadInvokeIDs),
 	  m_operationLookup(operationLookup)
 {
+}
+
+// The base has no socket pool, so the handler runs on this thread.
+// bIsEvent is for an override that counts a dropped event apart from a rejected invoke.
+SnaccInlineAction SnaccROSEBase::DecideInlineExecution(bool bIsEvent) const
+{
+	(void)bIsEvent;
+	return SnaccInlineAction::Execute;
 }
 
 void SnaccROSEBase::SetTelemetryCallback(SnaccTelemetryCallback* pTelemetryCallBack)
@@ -1583,15 +1594,46 @@ bool SnaccROSEBase::ResolveWorkerPool(unsigned int uiOperationID, std::string& s
 	return !strWorkerPool.empty();
 }
 
+namespace
+{
+	// Microseconds since start. A clock step backwards counts as zero.
+	std::uint64_t ElapsedUs(std::chrono::steady_clock::time_point start)
+	{
+		const auto elapsed = std::chrono::steady_clock::now() - start;
+		if (elapsed <= std::chrono::steady_clock::duration::zero())
+			return 0;
+		return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count());
+	}
+
+	// One outcome for a handler that was asked to run.
+	// A dropped reply after the handler is ReplyDiscarded and not also a success or an error.
+	SnaccPooledRunReport ClassifyRun(long lResult, bool bDropReply, bool bHandlerRan, bool bResponseIsError)
+	{
+		SnaccPooledRunReport report;
+		report.bHandlerRan = bHandlerRan;
+		if (bDropReply && bHandlerRan)
+			report.outcome = SnaccPooledRunOutcome::ReplyDiscarded;
+		else if (lResult == ROSE_NOERROR && bResponseIsError)
+			report.outcome = SnaccPooledRunOutcome::HandlerError;
+		else if (lResult == ROSE_NOERROR)
+			report.outcome = SnaccPooledRunOutcome::Success;
+		else
+			report.outcome = SnaccPooledRunOutcome::HandlerReject;
+		return report;
+	}
+} // namespace
+
 // Pool-worker entry into OnInvokeMessage. The caller already decided the mode.
-void SnaccROSEBase::RunPooledInbound(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long lMessageSize, PooledInboundMode mode)
+// The report is the handler outcome when mode is Run. The pool ignores it for every other mode.
+SnaccPooledRunReport SnaccROSEBase::RunPooledInbound(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long lMessageSize, PooledInboundMode mode)
 {
 	// Re-enters OnInvokeMessage with a mode other than EnqueueOrRun, so the socket-thread hand-off does not run again.
-	OnInvokeMessage(std::move(pMessage), lMessageSize, mode);
+	return OnInvokeMessage(std::move(pMessage), lMessageSize, mode);
 }
 
 // Adopts the message the pool released, then finishes it on this stub. Called from the enqueue callback.
-void SnaccROSEBase::CompletePooledFromPool(SNACC::ROSEMessage* pMessage, unsigned long lMessageSize, SnaccPooledInboundAction action)
+// The returned report is the handler outcome when the action was Run.
+SnaccPooledRunReport SnaccROSEBase::CompletePooledFromPool(SNACC::ROSEMessage* pMessage, unsigned long lMessageSize, SnaccPooledInboundAction action)
 {
 	// The pool released its unique_ptr to cross the callback. Adopt before anything else so a throw cannot leak the message.
 	std::unique_ptr<SNACC::ROSEMessage> owned(pMessage);
@@ -1601,7 +1643,24 @@ void SnaccROSEBase::CompletePooledFromPool(SNACC::ROSEMessage* pMessage, unsigne
 		mode = PooledInboundMode::ShutdownReject;
 	else if (action == SnaccPooledInboundAction::DropExpired)
 		mode = PooledInboundMode::DropExpired;
-	RunPooledInbound(std::move(owned), lMessageSize, mode);
+	return RunPooledInbound(std::move(owned), lMessageSize, mode);
+}
+
+// The base has no socket pool. A connection overrides this and counts one incoming message.
+void SnaccROSEBase::NoteSocketArrival()
+{
+}
+
+// The base has no socket pool. A connection overrides this and records the outcome of work this thread finished.
+void SnaccROSEBase::NoteSocketInlineOutcome(const SnaccPooledRunReport& report, std::uint64_t ui64RunUs)
+{
+	(void)report;
+	(void)ui64RunUs;
+}
+
+// The base has no socket pool. A connection overrides this and counts a connection that closed before the handler.
+void SnaccROSEBase::NoteSocketConnectionClosed()
+{
 }
 
 // Session gate as seen by a pool worker. Closed after PauseRoseProcessing.
@@ -1610,13 +1669,20 @@ bool SnaccROSEBase::IsDispatchProcessingAllowed() const
 	return IsProcessingAllowed();
 }
 
-void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long ulMessageSize, PooledInboundMode mode)
+SnaccPooledRunReport SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage, unsigned long ulMessageSize, PooledInboundMode mode)
 {
 	auto& invoke = *pMessage->invoke;
 	PrepareInboundInvokeOperationId(invoke, *this);
+	// True only for the socket-thread entry. A worker re-entry must not count on the socket pool.
+	bool bAccountOnSocket = false;
+	// The named pool already stored the outcome. The socket pool counts incoming only.
+	bool bRoseCountedOutcome = false;
 	// First entry is the socket thread. A worker re-enters with Run, ShutdownReject, or DropExpired and must not enqueue again.
 	if (mode == PooledInboundMode::EnqueueOrRun)
 	{
+		// Every message that reaches this thread counts, including one the named pool then takes.
+		NoteSocketArrival();
+		bAccountOnSocket = true;
 		// True hands this operation to a pool. False runs the handler below on this thread.
 		// A pool that refuses the item (full or stopping) also falls through, with the mode changed to a reject.
 		std::string strWorkerPool;
@@ -1625,16 +1691,35 @@ void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage
 			// Built here, on the stub, so the lambdas can call private methods. The pool stores them and does not become a friend.
 			SnaccPooledInboundCallbacks callbacks;
 			callbacks.processingAllowed = [this] { return IsDispatchProcessingAllowed(); };
-			callbacks.complete = [this](SNACC::ROSEMessage* pRaw, unsigned long size, SnaccPooledInboundAction action) { CompletePooledFromPool(pRaw, size, action); };
+			callbacks.complete = [this](SNACC::ROSEMessage* pRaw, unsigned long size, SnaccPooledInboundAction action) { return CompletePooledFromPool(pRaw, size, action); };
 			const SnaccWorkerEnqueueResult enqueueResult = m_pWorkerPools->Enqueue(strWorkerPool, *this, pMessage, ulMessageSize, std::move(callbacks));
 			// Queued: the worker owns the message. This call returns and the handler runs later on that thread.
 			if (enqueueResult == SnaccWorkerEnqueueResult::Queued)
-				return;
+			{
+				bAccountOnSocket = false;
+				return {};
+			}
 			// Not queued. The message is still ours. Change the mode and finish it below on this thread.
+			// The pool already counted that outcome. This thread must not count it again.
 			if (enqueueResult == SnaccWorkerEnqueueResult::RejectedFull)
+			{
 				mode = PooledInboundMode::QueueFull;
+				bRoseCountedOutcome = true;
+			}
 			else if (enqueueResult == SnaccWorkerEnqueueResult::PoolStopped)
+			{
 				mode = PooledInboundMode::ShutdownReject;
+				bRoseCountedOutcome = true;
+			}
+		}
+		// Still on this thread. The connection may refuse. A pool that already took the message returned above.
+		// A full or stopped pool already replaced this mode.
+		// bIsEvent lets the override count a drop apart from a reject. RejectQueueFull skips the handler.
+		if (mode == PooledInboundMode::EnqueueOrRun)
+		{
+			const bool bIsEvent = (AsnIntType)invoke.invokeID == 99999;
+			if (DecideInlineExecution(bIsEvent) == SnaccInlineAction::RejectQueueFull)
+				mode = PooledInboundMode::QueueFull;
 		}
 	}
 
@@ -1651,6 +1736,35 @@ void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage
 	auto telemetryReason = SnaccTelemetryData::Reason::UNKNOWN_FAILURE;
 	bool bInvokeException = false;
 	bool bDropReply = false;
+	bool bHandlerRan = false;
+	std::chrono::steady_clock::time_point runStarted{};
+	bool bTimedRun = false;
+
+	// Counts a handler that threw past OnInvoke on the socket thread. The pool worker counts that case itself.
+	struct SocketThrowAccount
+	{
+		SnaccROSEBase* m_pSelf{};
+		bool* m_pAccount{};
+		bool* m_pRoseCounted{};
+		bool* m_pHandlerRan{};
+		bool* m_pTimed{};
+		std::chrono::steady_clock::time_point* m_pRunStarted{};
+		PooledInboundMode* m_pMode{};
+		int m_iUncaughtAtStart{std::uncaught_exceptions()};
+
+		~SocketThrowAccount()
+		{
+			if (!m_pAccount || !*m_pAccount || *m_pRoseCounted || *m_pMode == PooledInboundMode::QueueFull || !*m_pHandlerRan)
+				return;
+			if (std::uncaught_exceptions() == m_iUncaughtAtStart)
+				return;
+			SnaccPooledRunReport report;
+			report.outcome = SnaccPooledRunOutcome::HandlerError;
+			report.bHandlerRan = true;
+			const std::uint64_t ui64RunUs = *m_pTimed ? ElapsedUs(*m_pRunStarted) : 0;
+			m_pSelf->NoteSocketInlineOutcome(report, ui64RunUs);
+		}
+	} socketThrowAccount{this, &bAccountOnSocket, &bRoseCountedOutcome, &bHandlerRan, &bTimedRun, &runStarted, &mode};
 
 	// Reached on the socket thread when the pool did not take the item, and on a worker for Run, reject, and expiry.
 	// QueueFull and shutdown reject without the handler. An expired deadline records a timeout and sends no reply.
@@ -1667,6 +1781,10 @@ void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage
 	{
 		try
 		{
+			// OnInvoke is the handler. A reject it returns has one m_run observation. A check that never reaches here does not.
+			bHandlerRan = true;
+			runStarted = std::chrono::steady_clock::now();
+			bTimedRun = true;
 			lResult = OnInvoke(pMessage, *pCtx, strResponse);
 		}
 		catch (const SnaccException& ex)
@@ -1689,6 +1807,11 @@ void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage
 			bDropReply = true;
 		}
 	}
+
+	// Taken before the reject encoder and the send overwrite lResult, and before telemetry takes the context.
+	const long lHandlerResult = bDropReply ? ROSE_TE_SHUTDOWN : lResult;
+	const bool bResponseIsError = pCtx && pCtx->m_bResponseIsError;
+	const SnaccPooledRunReport report = ClassifyRun(lHandlerResult, bDropReply, bHandlerRan, bResponseIsError);
 
 	const bool bIsInvoke = (AsnIntType)invoke.invokeID != 99999;
 	const bool bIsRejectResponse = lResult != ROSE_NOERROR && bIsInvoke;
@@ -1752,6 +1875,16 @@ void SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEMessage> pMessage
 		pTelemetry->finalize(telemetryResult, SnaccTelemetryData::Stage::INBOUND_INVOKE, telemetryReason, lResult, strResponse.empty() ? std::nullopt : std::optional(strResponse.length()), std::move(pCtx));
 		OnInvokeProcessed(pTelemetry);
 	}
+
+	// The socket pool counts only what this thread finished. A full or stopped named pool already counted, and so did the last acceptor.
+	if (bAccountOnSocket && !bRoseCountedOutcome && mode != PooledInboundMode::QueueFull)
+	{
+		if (!bHandlerRan && !bDropReply && lHandlerResult == ROSE_TE_SHUTDOWN)
+			NoteSocketConnectionClosed();
+		else
+			NoteSocketInlineOutcome(report, bTimedRun ? ElapsedUs(runStarted) : 0);
+	}
+	return report;
 }
 
 void SnaccROSEBase::OnResultMessage(const SNACC::ROSEResult& result, unsigned long ulMessageSize)

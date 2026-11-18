@@ -3,6 +3,25 @@
 namespace snacclib
 {
 
+	// Arms the server override until the test returns, including on failure.
+	struct RefuseInlineScope
+	{
+		explicit RefuseInlineScope(ObservedRuntimeEndpoint& server)
+			: m_server(server)
+		{
+			m_server.ArmRefuseInline();
+		}
+
+		// Clears the override after the assertions, including when the test fails.
+		~RefuseInlineScope()
+		{
+			m_server.ClearRefuseInline();
+		}
+
+		// The endpoint whose DecideInlineExecution this scope arms.
+		ObservedRuntimeEndpoint& m_server;
+	};
+
 	// Specifies the named worker-pool contract from runtime_correctness_notes.md section 12.
 	class snacclib_WorkerPoolRuntimeTest : public RuntimeTestBase
 	{
@@ -38,6 +57,66 @@ namespace snacclib
 		long SendAsyncGetSettings(AsyncInvokeLatch& latch, AsnGetSettingsResult& result, AsnRequestError& error, int timeoutMs)
 		{
 			return SendAsyncGetSettingsFrom(m_client, latch, result, error, timeoutMs);
+		}
+
+		// The eight outcomes. Unset members are expected to stay 0.
+		struct PoolOutcomeSample
+		{
+			std::uint64_t incoming{};
+			std::uint64_t success{};
+			std::uint64_t handlerError{};
+			std::uint64_t handlerReject{};
+			std::uint64_t rejectedFull{};
+			std::uint64_t rejectedShuttingDown{};
+			std::uint64_t rejectedConnectionClosed{};
+			std::uint64_t timedOut{};
+			std::uint64_t replyDiscarded{};
+		};
+
+		// Waits until the settings pool matches. The worker records an outcome after the client has already seen the reply.
+		template <typename Ready> ROSEWorkerPoolHealth WaitForSettings(Ready ready)
+		{
+			const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+			std::vector<ROSEWorkerPoolHealth> rows = m_pools.Health();
+			while (std::chrono::steady_clock::now() < deadline)
+			{
+				for (const ROSEWorkerPoolHealth& row : rows)
+					if (row.m_strName == "settings" && ready(row))
+						return row;
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				rows = m_pools.Health();
+			}
+			for (const ROSEWorkerPoolHealth& row : rows)
+				if (row.m_strName == "settings")
+					return row;
+			return {};
+		}
+
+		// Checks every outcome counter and the ROSE incoming identity.
+		void ExpectOutcomes(const ROSEWorkerPoolHealth& row, const PoolOutcomeSample& expected)
+		{
+			EXPECT_EQ(expected.incoming, row.m_counters.m_ui64Incoming);
+			EXPECT_EQ(expected.success, row.m_counters.m_ui64Success);
+			EXPECT_EQ(expected.handlerError, row.m_counters.m_ui64HandlerError);
+			EXPECT_EQ(expected.handlerReject, row.m_counters.m_ui64HandlerReject);
+			EXPECT_EQ(expected.rejectedFull, row.m_counters.m_ui64RejectedFull);
+			EXPECT_EQ(expected.rejectedShuttingDown, row.m_counters.m_ui64RejectedShuttingDown);
+			EXPECT_EQ(expected.rejectedConnectionClosed, row.m_counters.m_ui64RejectedConnectionClosed);
+			EXPECT_EQ(expected.timedOut, row.m_counters.m_ui64TimedOut);
+			EXPECT_EQ(expected.replyDiscarded, row.m_counters.m_ui64ReplyDiscarded);
+			const std::uint64_t ui64Outcomes = row.m_counters.m_ui64Success + row.m_counters.m_ui64HandlerError + row.m_counters.m_ui64HandlerReject + row.m_counters.m_ui64RejectedFull + row.m_counters.m_ui64RejectedShuttingDown + row.m_counters.m_ui64RejectedConnectionClosed + row.m_counters.m_ui64TimedOut + row.m_counters.m_ui64ReplyDiscarded;
+			EXPECT_EQ(row.m_counters.m_ui64Incoming, static_cast<std::uint64_t>(row.m_uiWaiting) + row.m_state.m_uiRunning + ui64Outcomes);
+		}
+
+		// A cumulative histogram: each wider bound holds at least the previous count, and the last bound equals the count.
+		void ExpectHistogramFilled(const LatencyHistogram& histogram, std::uint64_t ui64Count, bool bExpectPositiveSum)
+		{
+			EXPECT_EQ(ui64Count, histogram.m_ui64Count);
+			EXPECT_EQ(histogram.m_ui64Count, histogram.m_buckets.back());
+			for (std::size_t i = 1; i < histogram.m_buckets.size(); ++i)
+				EXPECT_LE(histogram.m_buckets[i - 1], histogram.m_buckets[i]);
+			if (bExpectPositiveSum)
+				EXPECT_GT(histogram.m_ui64SumUs, 0u);
 		}
 
 		void ConfigureGetSettingsPool(unsigned int maxThreads, unsigned int maxElements, SnaccWorkerFaultPolicy faultPolicy = SnaccWorkerFaultPolicy::KeepWorker, unsigned int idleTimeoutMs = 30000)
@@ -94,6 +173,58 @@ namespace snacclib
 		EXPECT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
 		EXPECT_EQ(1, m_gate->Entered());
 		EXPECT_EQ(std::this_thread::get_id(), m_gate->ThreadAt(0));
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, RefuseInlineExecutionRejectsUnpooledInvoke)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		m_gate->Release();
+		RefuseInlineScope gate(m_server);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		EXPECT_EQ(ROSE_REJECT_QUEUE_FULL, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+		EXPECT_EQ(0, m_gate->Entered());
+		EXPECT_EQ(1, m_server.RefuseInlineCalls());
+		EXPECT_EQ(0, m_server.RefuseInlineEvents());
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, RefuseInlineExecutionDropsUnpooledEvent)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		m_gate->Release();
+		RefuseInlineScope gate(m_server);
+
+		AsnGetSettingsArgument argument;
+		SnaccScopedInvokeMessage invokeMsg(99999, OPID_asnGetSettings, &argument);
+		EXPECT_EQ(ROSE_NOERROR, m_client.SendEvent(invokeMsg.GetPtr(), "asnGetSettings"));
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		EXPECT_EQ(0, m_gate->Entered());
+		EXPECT_EQ(1, m_server.RefuseInlineCalls());
+		EXPECT_EQ(1, m_server.RefuseInlineEvents());
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, PooledInvokeIsQueuedWhenInlineWouldBeRefused)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		ConfigureGetSettingsPool(1, 4);
+		RefuseInlineScope gate(m_server);
+
+		AsyncInvokeLatch latch;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(latch, result, error, 2000));
+		m_gate->WaitEntered(1);
+		EXPECT_EQ(1, m_gate->Entered());
+		EXPECT_NE(std::this_thread::get_id(), m_gate->ThreadAt(0));
+		EXPECT_EQ(0, m_server.RefuseInlineCalls());
+		m_gate->Release();
+		ASSERT_TRUE(latch.WaitFor(std::chrono::milliseconds(2000)));
+		EXPECT_EQ(ROSE_NOERROR, latch.RoseResult());
 	}
 
 	TEST_F(snacclib_WorkerPoolRuntimeTest, AssignedOperationRunsOffCallingThread)
@@ -176,8 +307,17 @@ namespace snacclib
 		AsnGetSettingsArgument argument;
 		SnaccScopedInvokeMessage invokeMsg(99999, OPID_asnGetSettings, &argument);
 		EXPECT_EQ(ROSE_NOERROR, m_client.SendEvent(invokeMsg.GetPtr(), "asnGetSettings"));
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		const auto fullDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+		std::vector<ROSEWorkerPoolHealth> full = m_pools.Health();
+		while ((full.empty() || full[0].m_counters.m_ui64RejectedFull < 1) && std::chrono::steady_clock::now() < fullDeadline)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			full = m_pools.Health();
+		}
 		EXPECT_EQ(1, m_gate->Entered());
+		ASSERT_EQ(1u, full.size());
+		EXPECT_EQ(1u, full[0].m_counters.m_ui64RejectedFull);
+		EXPECT_EQ(1u, full[0].m_wait.m_ui64Count);
 
 		m_gate->Release();
 		ASSERT_TRUE(running.WaitFor(std::chrono::milliseconds(2000)));
@@ -589,6 +729,305 @@ namespace snacclib
 		ASSERT_TRUE(spawned.WaitFor(std::chrono::milliseconds(2000)));
 		EXPECT_EQ(ROSE_NOERROR, again.RoseResult());
 		EXPECT_EQ(ROSE_NOERROR, spawned.RoseResult());
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, HealthSnapshotCountsThePoolNotEachThread)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ConfigureGetSettingsPool(2, 2);
+		const auto idleDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+		std::vector<ROSEWorkerPoolHealth> idle = m_pools.Health();
+		while ((idle.empty() || idle[0].m_state.m_uiIdleThreads < 1) && std::chrono::steady_clock::now() < idleDeadline)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			idle = m_pools.Health();
+		}
+		ASSERT_EQ(1u, idle.size());
+		EXPECT_EQ("settings", idle[0].m_strName);
+		EXPECT_EQ(2u, idle[0].m_uiMaxThreads);
+		EXPECT_EQ(0u, idle[0].m_state.m_uiRunning);
+		EXPECT_EQ(1u, idle[0].m_state.m_uiIdleThreads);
+		EXPECT_EQ(0u, idle[0].m_counters.m_ui64Incoming);
+		EXPECT_EQ(0u, idle[0].m_counters.m_ui64RejectedFull);
+		EXPECT_EQ(1u, idle[0].m_ui64ThreadsStarted);
+		EXPECT_EQ(0u, idle[0].m_ui64ThreadsStopped);
+		EXPECT_EQ(std::optional<unsigned int>(2), idle[0].m_uiMaxElements);
+		EXPECT_EQ(0u, idle[0].m_uiWaiting);
+
+		ArmBlockingGetSettings();
+		AsyncInvokeLatch first;
+		AsyncInvokeLatch second;
+		AsnGetSettingsResult firstResult;
+		AsnGetSettingsResult secondResult;
+		AsnRequestError firstError;
+		AsnRequestError secondError;
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(first, firstResult, firstError, 2000));
+		m_gate->WaitEntered(1);
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(second, secondResult, secondError, 2000));
+		m_gate->WaitEntered(2);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		EXPECT_EQ(ROSE_REJECT_QUEUE_FULL, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error, 2000));
+
+		const std::vector<ROSEWorkerPoolHealth> busy = m_pools.Health();
+		ASSERT_EQ(1u, busy.size());
+		EXPECT_EQ(2u, busy[0].m_state.m_uiRunning);
+		EXPECT_EQ(0u, busy[0].m_state.m_uiIdleThreads);
+		EXPECT_EQ(1u, busy[0].m_counters.m_ui64RejectedFull);
+		EXPECT_EQ(2u, busy[0].m_ui64ThreadsStarted);
+		EXPECT_EQ(0u, busy[0].m_uiWaiting);
+		EXPECT_EQ(3u, busy[0].m_counters.m_ui64Incoming);
+		EXPECT_EQ(0u, busy[0].m_counters.m_ui64Success);
+		EXPECT_EQ(busy[0].m_counters.m_ui64Incoming, busy[0].m_uiWaiting + busy[0].m_state.m_uiRunning + busy[0].m_counters.m_ui64RejectedFull);
+
+		m_gate->Release();
+		ASSERT_TRUE(first.WaitFor(std::chrono::milliseconds(2000)));
+		ASSERT_TRUE(second.WaitFor(std::chrono::milliseconds(2000)));
+
+		// The completion latch fires inside the handler, before the worker records the outcome.
+		const auto doneDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+		std::vector<ROSEWorkerPoolHealth> done = m_pools.Health();
+		while ((done.empty() || done[0].m_counters.m_ui64Success < 2) && std::chrono::steady_clock::now() < doneDeadline)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			done = m_pools.Health();
+		}
+		ASSERT_EQ(1u, done.size());
+		EXPECT_EQ(3u, done[0].m_counters.m_ui64Incoming);
+		EXPECT_EQ(2u, done[0].m_counters.m_ui64Success);
+		EXPECT_EQ(2u, done[0].m_counters.m_run.m_ui64Count);
+		EXPECT_EQ(2u, done[0].m_wait.m_ui64Count);
+		EXPECT_EQ(0u, done[0].m_state.m_uiRunning);
+		EXPECT_EQ(0u, done[0].m_uiWaiting);
+		EXPECT_EQ(1u, done[0].m_counters.m_ui64RejectedFull);
+		EXPECT_EQ(done[0].m_counters.m_ui64Incoming, done[0].m_uiWaiting + done[0].m_state.m_uiRunning + done[0].m_counters.m_ui64Success + done[0].m_counters.m_ui64RejectedFull);
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, HealthCountsHandlerError)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ConfigureGetSettingsPool(1, 4);
+		HandlerModes modes;
+		modes.getSettingsReturnsError = true;
+		ConfigureServerHandlers(modes);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		EXPECT_EQ(ROSE_ERROR_VALUE, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+
+		const ROSEWorkerPoolHealth row = WaitForSettings([](const ROSEWorkerPoolHealth& sample) { return sample.m_counters.m_ui64HandlerError >= 1; });
+		ExpectOutcomes(row, PoolOutcomeSample{.incoming = 1, .handlerError = 1});
+		ExpectHistogramFilled(row.m_counters.m_run, 1, false);
+		ExpectHistogramFilled(row.m_wait, 1, false);
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, HealthCountsHandlerReject)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ConfigureGetSettingsPool(1, 4);
+		HandlerModes modes;
+		modes.implementGetSettings = false;
+		ConfigureServerHandlers(modes);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		EXPECT_EQ(ROSE_REJECT_FUNCTIONMISSING, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+
+		const ROSEWorkerPoolHealth row = WaitForSettings([](const ROSEWorkerPoolHealth& sample) { return sample.m_counters.m_ui64HandlerReject >= 1; });
+		ExpectOutcomes(row, PoolOutcomeSample{.incoming = 1, .handlerReject = 1});
+		// The handler was entered, so the reject adds one run observation.
+		ExpectHistogramFilled(row.m_counters.m_run, 1, false);
+		ExpectHistogramFilled(row.m_wait, 1, false);
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, HealthCountsUncaughtExceptionAsHandlerError)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ConfigureGetSettingsPool(1, 4);
+		HandlerModes modes;
+		modes.throwRuntimeErrorOnGetSettings = 1;
+		ConfigureServerHandlers(modes);
+
+		AsyncInvokeLatch failed;
+		AsnGetSettingsResult failedResult;
+		AsnRequestError failedError;
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(failed, failedResult, failedError, 400));
+		ASSERT_TRUE(failed.WaitFor(std::chrono::milliseconds(1000)));
+
+		const ROSEWorkerPoolHealth row = WaitForSettings([](const ROSEWorkerPoolHealth& sample) { return sample.m_counters.m_ui64HandlerError >= 1; });
+		ExpectOutcomes(row, PoolOutcomeSample{.incoming = 1, .handlerError = 1});
+		ExpectHistogramFilled(row.m_counters.m_run, 1, false);
+		ExpectHistogramFilled(row.m_wait, 1, false);
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, HealthCountsTimedOut)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		ConfigureGetSettingsPool(1, 4);
+
+		AsyncInvokeLatch running;
+		AsyncInvokeLatch expired;
+		AsnGetSettingsResult runningResult;
+		AsnGetSettingsResult expiredResult;
+		AsnRequestError runningError;
+		AsnRequestError expiredError;
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(running, runningResult, runningError, 500));
+		m_gate->WaitEntered(1);
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(expired, expiredResult, expiredError, 30));
+		std::this_thread::sleep_for(std::chrono::milliseconds(80));
+		m_gate->Release();
+		ASSERT_TRUE(running.WaitFor(std::chrono::milliseconds(1000)));
+		ASSERT_TRUE(expired.WaitFor(std::chrono::milliseconds(1000)));
+		EXPECT_EQ(ROSE_NOERROR, running.RoseResult());
+		EXPECT_EQ(ROSE_TE_TIMEOUT, expired.RoseResult());
+
+		const ROSEWorkerPoolHealth row = WaitForSettings([](const ROSEWorkerPoolHealth& sample) { return sample.m_counters.m_ui64TimedOut >= 1 && sample.m_counters.m_ui64Success >= 1; });
+		ExpectOutcomes(row, PoolOutcomeSample{.incoming = 2, .success = 1, .timedOut = 1});
+		// The expired request left the queue and did not run the handler.
+		ExpectHistogramFilled(row.m_counters.m_run, 1, false);
+		ExpectHistogramFilled(row.m_wait, 2, false);
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, HealthCountsConnectionClosedAndDiscardedReply)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		ConfigureGetSettingsPool(1, 4);
+
+		AsyncInvokeLatch running;
+		AsyncInvokeLatch queued;
+		AsnGetSettingsResult runningResult;
+		AsnGetSettingsResult queuedResult;
+		AsnRequestError runningError;
+		AsnRequestError queuedError;
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(running, runningResult, runningError, 400));
+		m_gate->WaitEntered(1);
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(queued, queuedResult, queuedError, 2000));
+
+		std::thread releaser([this] {
+			std::this_thread::sleep_for(std::chrono::milliseconds(150));
+			m_gate->Release();
+		});
+		m_server.PauseRoseProcessing();
+		releaser.join();
+		ASSERT_TRUE(queued.WaitFor(std::chrono::milliseconds(2000)));
+		ASSERT_TRUE(running.WaitFor(std::chrono::milliseconds(2000)));
+		EXPECT_EQ(ROSE_REJECT_UNKNOWNOPERATION, queued.RoseResult());
+		EXPECT_EQ(ROSE_TE_TIMEOUT, running.RoseResult());
+
+		const ROSEWorkerPoolHealth row = WaitForSettings([](const ROSEWorkerPoolHealth& sample) { return sample.m_counters.m_ui64RejectedConnectionClosed >= 1 && sample.m_counters.m_ui64ReplyDiscarded >= 1; });
+		ExpectOutcomes(row, PoolOutcomeSample{.incoming = 2, .rejectedConnectionClosed = 1, .replyDiscarded = 1});
+		// The queued request never ran. The running handler finished and its reply was dropped, so it has one run observation.
+		ExpectHistogramFilled(row.m_counters.m_run, 1, false);
+		ExpectHistogramFilled(row.m_wait, 2, false);
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, HealthCountsRejectedShuttingDown)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		ConfigureGetSettingsPool(1, 4);
+
+		AsyncInvokeLatch running;
+		AsyncInvokeLatch queued;
+		AsnGetSettingsResult runningResult;
+		AsnGetSettingsResult queuedResult;
+		AsnRequestError runningError;
+		AsnRequestError queuedError;
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(running, runningResult, runningError, 500));
+		m_gate->WaitEntered(1);
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(queued, queuedResult, queuedError, 2000));
+		std::this_thread::sleep_for(std::chrono::milliseconds(30));
+		EXPECT_EQ(1, m_gate->Entered());
+
+		std::thread releaser([this] {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			m_gate->Release();
+		});
+		m_pools.Shutdown();
+		releaser.join();
+		ASSERT_TRUE(queued.WaitFor(std::chrono::milliseconds(2000)));
+		ASSERT_TRUE(running.WaitFor(std::chrono::milliseconds(2000)));
+
+		const std::vector<ROSEWorkerPoolHealth> rows = m_pools.Health();
+		ASSERT_EQ(1u, rows.size());
+		EXPECT_EQ("settings", rows[0].m_strName);
+		ExpectOutcomes(rows[0], PoolOutcomeSample{.incoming = 2, .rejectedShuttingDown = 1, .replyDiscarded = 1});
+		ExpectHistogramFilled(rows[0].m_counters.m_run, 1, false);
+		ExpectHistogramFilled(rows[0].m_wait, 2, false);
+		EXPECT_EQ(0u, rows[0].m_uiWaiting);
+		EXPECT_EQ(0u, rows[0].m_state.m_uiRunning);
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, HealthCountsRunAndWaitHistograms)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		ConfigureGetSettingsPool(1, 4);
+
+		AsyncInvokeLatch first;
+		AsyncInvokeLatch second;
+		AsnGetSettingsResult firstResult;
+		AsnGetSettingsResult secondResult;
+		AsnRequestError firstError;
+		AsnRequestError secondError;
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(first, firstResult, firstError, 2000));
+		m_gate->WaitEntered(1);
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(second, secondResult, secondError, 2000));
+		std::this_thread::sleep_for(std::chrono::milliseconds(40));
+
+		const ROSEWorkerPoolHealth busy = WaitForSettings([](const ROSEWorkerPoolHealth& sample) { return sample.m_uiWaiting >= 1 && sample.m_state.m_uiRunning >= 1; });
+		ExpectOutcomes(busy, PoolOutcomeSample{.incoming = 2});
+		EXPECT_EQ(1u, busy.m_state.m_uiRunning);
+		EXPECT_EQ(1u, busy.m_uiWaiting);
+		ASSERT_TRUE(busy.m_state.m_ui64OldestRunningUs.has_value());
+		ASSERT_TRUE(busy.m_ui64OldestWaitingUs.has_value());
+		EXPECT_GT(*busy.m_state.m_ui64OldestRunningUs, 0u);
+		EXPECT_GT(*busy.m_ui64OldestWaitingUs, 0u);
+
+		m_gate->Release();
+		ASSERT_TRUE(first.WaitFor(std::chrono::milliseconds(2000)));
+		ASSERT_TRUE(second.WaitFor(std::chrono::milliseconds(2000)));
+
+		const ROSEWorkerPoolHealth done = WaitForSettings([](const ROSEWorkerPoolHealth& sample) { return sample.m_counters.m_ui64Success >= 2; });
+		ExpectOutcomes(done, PoolOutcomeSample{.incoming = 2, .success = 2});
+		ExpectHistogramFilled(done.m_counters.m_run, 2, true);
+		ExpectHistogramFilled(done.m_wait, 2, true);
+		EXPECT_FALSE(done.m_state.m_ui64OldestRunningUs.has_value());
+		EXPECT_FALSE(done.m_ui64OldestWaitingUs.has_value());
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, HealthCountsThreadsStopped)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ArmBlockingGetSettings();
+		ConfigureGetSettingsPool(2, 4, SnaccWorkerFaultPolicy::KeepWorker, 80);
+
+		AsyncInvokeLatch first;
+		AsyncInvokeLatch second;
+		AsnGetSettingsResult firstResult;
+		AsnGetSettingsResult secondResult;
+		AsnRequestError firstError;
+		AsnRequestError secondError;
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(first, firstResult, firstError, 2000));
+		m_gate->WaitEntered(1);
+		ASSERT_EQ(ROSE_NOERROR, SendAsyncGetSettings(second, secondResult, secondError, 2000));
+		m_gate->WaitEntered(2);
+		m_gate->Release();
+		ASSERT_TRUE(first.WaitFor(std::chrono::milliseconds(2000)));
+		ASSERT_TRUE(second.WaitFor(std::chrono::milliseconds(2000)));
+
+		const ROSEWorkerPoolHealth row = WaitForSettings([](const ROSEWorkerPoolHealth& sample) { return sample.m_ui64ThreadsStopped >= 1 && sample.m_counters.m_ui64Success >= 2; });
+		ExpectOutcomes(row, PoolOutcomeSample{.incoming = 2, .success = 2});
+		EXPECT_EQ(2u, row.m_ui64ThreadsStarted);
+		EXPECT_EQ(1u, row.m_ui64ThreadsStopped);
+		ExpectHistogramFilled(row.m_counters.m_run, 2, false);
+		ExpectHistogramFilled(row.m_wait, 2, false);
 	}
 
 } // namespace snacclib

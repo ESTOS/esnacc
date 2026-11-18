@@ -21,7 +21,7 @@ related_docs:
 
 `PauseRoseProcessing` ends the current ROSE session on one stub. New work is refused and every invoke that is still waiting completes with `ROSE_TE_SHUTDOWN`. `ResumeRoseProcessing` opens the next session on the same object. It does not bring back work from the session that just ended.
 
-ProCall uses this pair on the client. `ENetCtiClientBase::OnDisconnect` pauses. `OnConnect` resumes. The UCServer transport borrows ROSE worker pools; destroying a C++ stub pauses, and that pause also drops queued pool work for that stub.
+The Pause/Resume pair is the client. `ENetCtiClientBase::OnDisconnect` pauses and `OnConnect` resumes on that same object. The inbound server does not use this pair. `ENetCtiTransport` is born with the gate open. Its `OnConnect` and `OnDisconnect` do not call Resume or Pause. A new socket is a new object, so there is no second session to open. Destroying that object runs Pause through the `SnaccROSEBase` destructor and drops queued pool work for that connection only.
 
 C++ and TypeScript implement the same session rules. The [deviations](#deviations) section is the only place a difference is allowed to exist without being called a bug.
 

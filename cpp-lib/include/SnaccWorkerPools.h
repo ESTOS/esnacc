@@ -1,7 +1,11 @@
 #pragma once
 
+#include "ROSEWorkerPoolHealth.h"
+
+#include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -50,13 +54,38 @@ enum class SnaccPooledInboundAction
 	DropExpired
 };
 
+/*! What the handler produced when the pool asked it to run.
+	The pool ignores this for a shutdown reject, a closed connection, and a deadline.
+	Those outcomes are known before the callback returns. */
+enum class SnaccPooledRunOutcome
+{
+	/*! The handler sent a result, neither an error nor a reject. */
+	Success,
+	/*! The handler sent an error, not a reject. */
+	HandlerError,
+	/*! A check or the handler rejected. bHandlerRan on the report says which. */
+	HandlerReject,
+	/*! The handler had finished and the reply was dropped. */
+	ReplyDiscarded
+};
+
+/*! Report from the completion callback after a Run action.
+	The stub builds it from the ROSE result. The pool stores the outcome and, when the handler ran, one m_run observation. */
+struct SnaccPooledRunReport
+{
+	/*! Which run outcome this message takes. */
+	SnaccPooledRunOutcome outcome{SnaccPooledRunOutcome::HandlerReject};
+	/*! True when OnInvoke was entered. A check that rejected before that adds no m_run observation. */
+	bool bHandlerRan{false};
+};
+
 /*! Callbacks the stub installs when it queues an invoke.
 	The pool calls them on a worker, or on the thread that cancels that stub's queue.
-	complete takes ownership of the ROSEMessage pointer. processingAllowed is the session gate. */
+	complete takes ownership of the ROSEMessage pointer and returns the run report. processingAllowed is the session gate. */
 struct SnaccPooledInboundCallbacks
 {
 	std::function<bool()> processingAllowed{};
-	std::function<void(SNACC::ROSEMessage*, unsigned long, SnaccPooledInboundAction)> complete{};
+	std::function<SnaccPooledRunReport(SNACC::ROSEMessage*, unsigned long, SnaccPooledInboundAction)> complete{};
 };
 
 /*! Result of offering one inbound invoke to a named worker pool. */
@@ -99,6 +128,11 @@ public:
 	/*! Live worker threads for poolName, including the one that waits while the queue is empty.
 		0 when the name is not in the current set. */
 	unsigned int LiveThreads(const std::string& poolName) const;
+	/*! Copies one record per pool still running, then one record per pool Shutdown has already joined.
+		The caller samples this. Workers do not call out.
+		A shut-down pool stays in the result until a later Configure reuses its name, so the drain is still visible.
+		The copy of a live pool is taken under that pool's lock and returned without it. */
+	std::vector<ROSEWorkerPoolHealth> Health() const;
 
 	/*! Queues pMessage on poolName. On Queued, pMessage and callbacks are taken. Otherwise both stay with the caller. */
 	SnaccWorkerEnqueueResult Enqueue(const std::string& poolName, SnaccROSEBase& stub, std::unique_ptr<SNACC::ROSEMessage>& pMessage, unsigned long ulMessageSize, SnaccPooledInboundCallbacks callbacks);
