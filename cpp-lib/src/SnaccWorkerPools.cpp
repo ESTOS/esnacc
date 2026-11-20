@@ -110,9 +110,10 @@ struct SnaccWorkerPools::State
 	std::unordered_map<std::string, std::shared_ptr<SnaccWorkerPoolState>> poolsByName{};
 	// operationID to the one pool allowed to run it. Empty means the stub runs that invoke itself.
 	std::unordered_map<unsigned int, std::shared_ptr<SnaccWorkerPoolState>> operationPools{};
-	// Pools Shutdown has joined. Health keeps them until Configure starts a pool with the same name.
+	// Pools Shutdown has joined. Health keeps them until the telemetry generation changes or Configure reuses the name.
 	std::vector<ROSEWorkerPoolHealth> retired{};
-	// Last worker-pool telemetry epoch seen by Health(). A newer epoch drops retired rows so an old drain does not return.
+	// Epoch of the retired rows. Health drops them when the generation changes, so an old drain does not return.
+	// Shutdown sets this to the current epoch before it stores its final rows. Otherwise the next Health treats that drain as stale.
 	std::uint64_t telemetryEpoch{};
 	std::mutex inflightMutex{};
 	std::condition_variable inflightCv{};
@@ -758,6 +759,14 @@ void SnaccWorkerPools::Shutdown()
 		JoinPool(pool);
 	// The drain is in the counters now. Drop the pools from the live set and keep the final copy for the next sample.
 	std::lock_guard<std::mutex> guard(m_state->registryMutex);
+	// These rows belong to the generation that just finished. Remember that epoch before storing them.
+	// Health drops retired rows when the remembered epoch differs, which would discard this drain.
+	const std::uint64_t uiEpoch = RoseWorkerPoolTelemetryEpoch();
+	if (m_state->telemetryEpoch != uiEpoch)
+	{
+		m_state->retired.clear();
+		m_state->telemetryEpoch = uiEpoch;
+	}
 	for (const auto& pool : pools)
 	{
 		std::lock_guard<std::mutex> lock(pool->mutex);
