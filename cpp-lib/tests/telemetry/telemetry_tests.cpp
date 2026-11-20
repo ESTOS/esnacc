@@ -696,4 +696,79 @@ namespace snacclib
 		AssertAsyncWaitSkippedTelemetry(TransportEncoding::JSON);
 	}
 
+	TEST_F(snacclib_TelemetryRuntimeTest, InvokeTelemetryGateSkipsRecordsUntilEnabled)
+	{
+		struct RestoreTelemetryConfig
+		{
+			~RestoreTelemetryConfig()
+			{
+				ConfigureTelemetry(TelemetryConfig{});
+			}
+		} restore;
+
+		InitializeEndpoints(TransportEncoding::JSON);
+		TelemetryConfig disabled;
+		disabled.m_bRoseTelemetryEnabled = false;
+		ConfigureTelemetry(disabled);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		EXPECT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+		EXPECT_TRUE(TelemetryEntries().empty());
+
+		ConfigureTelemetry(TelemetryConfig{});
+		m_telemetryRecorder.Clear();
+		EXPECT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+		EXPECT_FALSE(TelemetryEntries().empty());
+	}
+
+	// One ConfigureTelemetry call sets both switches. The pool epoch moves only when that switch changes.
+	// Restores the process-wide switches, including when an assertion fails, so later tests keep the generation they set up.
+	TEST(snacclib_TelemetryConfig, ConfigureTelemetrySetsBothSwitches)
+	{
+		const bool bInvoke = IsRoseTelemetryEnabled();
+		const bool bPool = IsRoseWorkerPoolTelemetryEnabled();
+		struct RestoreTelemetrySwitches
+		{
+			bool bInvoke;
+			bool bPool;
+			~RestoreTelemetrySwitches()
+			{
+				TelemetryConfig config;
+				config.m_bRoseTelemetryEnabled = bInvoke;
+				config.m_bRoseWorkerPoolTelemetryEnabled = bPool;
+				ConfigureTelemetry(config);
+			}
+		} restore{bInvoke, bPool};
+
+		const std::uint64_t uiEpoch = RoseWorkerPoolTelemetryEpoch();
+		TelemetryConfig off;
+		off.m_bRoseTelemetryEnabled = false;
+		off.m_bRoseWorkerPoolTelemetryEnabled = false;
+		ConfigureTelemetry(off);
+		EXPECT_FALSE(IsRoseTelemetryEnabled());
+		EXPECT_FALSE(IsRoseWorkerPoolTelemetryEnabled());
+		const std::uint64_t uiEpochAfterOff = RoseWorkerPoolTelemetryEpoch();
+		EXPECT_EQ(bPool ? uiEpoch + 1 : uiEpoch, uiEpochAfterOff);
+
+		TelemetryConfig invokeOnly = off;
+		invokeOnly.m_bRoseTelemetryEnabled = true;
+		ConfigureTelemetry(invokeOnly);
+		EXPECT_TRUE(IsRoseTelemetryEnabled());
+		EXPECT_FALSE(IsRoseWorkerPoolTelemetryEnabled());
+		EXPECT_EQ(uiEpochAfterOff, RoseWorkerPoolTelemetryEpoch());
+
+		TelemetryConfig both = invokeOnly;
+		both.m_bRoseWorkerPoolTelemetryEnabled = true;
+		ConfigureTelemetry(both);
+		EXPECT_TRUE(IsRoseTelemetryEnabled());
+		EXPECT_TRUE(IsRoseWorkerPoolTelemetryEnabled());
+		const std::uint64_t uiEpochWhileOn = RoseWorkerPoolTelemetryEpoch();
+		EXPECT_EQ(uiEpochAfterOff + 1, uiEpochWhileOn);
+
+		ConfigureTelemetry(both);
+		EXPECT_EQ(uiEpochWhileOn, RoseWorkerPoolTelemetryEpoch());
+	}
+
 } // namespace snacclib

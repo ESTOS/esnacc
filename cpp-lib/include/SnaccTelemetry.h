@@ -1,18 +1,50 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
 #include "SnaccROSEInterfaces.h"
 
+/*! Switches for every telemetry stream this library collects.
+	Defaults keep today's behavior: invoke records stay on when a callback is installed, and worker-pool sums stay off until a caller turns them on.
+	Add a field here when a new stream appears. ConfigureTelemetry keeps the same signature. */
+class TelemetryConfig
+{
+public:
+	/*! ROSE invoke records delivered to the installed callback.
+		True by default so an existing callback keeps receiving records.
+		False skips building a record and skips cloning the invoke context. A record already started is still delivered. */
+	bool m_bRoseTelemetryEnabled{true};
+	/*! Counters and histograms in ROSE worker pools, copied out by SnaccWorkerPools::Health.
+		False by default. Health() then returns no rows.
+		Each edge clears the cumulative sums under the pool lock before the next count or copy. Queue depth and running threads stay. */
+	bool m_bRoseWorkerPoolTelemetryEnabled{false};
+};
+
+/*! Applies every telemetry switch in one call. The new value replaces the previous one for the whole process.
+	Invoke records have no sums to clear. Worker-pool sums are cleared on each edge under that pool's lock.
+	@param config The full set of switches. Fields left at their defaults keep that stream's default. */
+void ConfigureTelemetry(const TelemetryConfig& config);
+
+/*! True when invoke records may be built. Default true. The callback pointer is a separate check. */
+bool IsRoseTelemetryEnabled();
+
+/*! True when ROSE worker pools count and Health() returns rows. Default false. */
+bool IsRoseWorkerPoolTelemetryEnabled();
+
+/*! Generation of the worker-pool switch. Pools compare it under their own lock and clear sums when it differs. */
+std::uint64_t RoseWorkerPoolTelemetryEpoch();
+
 /**
  * Carries telemetry for one ROSE request lifecycle.
  *
  * The object can represent inbound or outbound traffic and covers both invokes and
- * events. It is created when the library starts handling or sending a request and a
- * telemetry callback is installed, and is finalized once the local lifecycle has completed.
- * When no callback is installed, the runtime does not create the object.
+ * events. It is created when the library starts handling or sending a request, invoke
+ * telemetry is enabled, and a telemetry callback is installed. It is finalized once the
+ * local lifecycle has completed. When no callback is installed, or invoke telemetry is
+ * switched off, the runtime does not create the object.
  *
  * The request metadata captured at construction time is immutable. Completion data
  * such as duration, response size, outcome, and the final ROSE result code are

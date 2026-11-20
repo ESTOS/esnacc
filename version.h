@@ -1,8 +1,8 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define VERSION "7.0.26"
-#define VERSION_RC 7, 0, 26
-#define RELDATE "18.11.2026"
+#define VERSION "7.0.27"
+#define VERSION_RC 7, 0, 27
+#define RELDATE "20.11.2026"
 
 #endif // VERSION_H

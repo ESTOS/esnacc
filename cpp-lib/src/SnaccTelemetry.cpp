@@ -1,6 +1,39 @@
 #include "../include/SnaccTelemetry.h"
 #include "snacc-assert.h"
+#include <atomic>
 #include <stdexcept>
+
+namespace
+{
+	// Process-wide switches. ConfigureTelemetry is the only writer. Collectors read them on the hot path.
+	std::atomic<bool> g_bRoseTelemetryEnabled{true};
+	std::atomic<bool> g_bRoseWorkerPoolTelemetryEnabled{false};
+	// Bumped only when the worker-pool switch actually changes, so a repeated configure does not wipe sums.
+	std::atomic<std::uint64_t> g_uiWorkerPoolTelemetryEpoch{0};
+} // namespace
+
+void ConfigureTelemetry(const TelemetryConfig& config)
+{
+	g_bRoseTelemetryEnabled.store(config.m_bRoseTelemetryEnabled);
+	const bool bPreviousPool = g_bRoseWorkerPoolTelemetryEnabled.exchange(config.m_bRoseWorkerPoolTelemetryEnabled);
+	if (bPreviousPool != config.m_bRoseWorkerPoolTelemetryEnabled)
+		g_uiWorkerPoolTelemetryEpoch.fetch_add(1);
+}
+
+bool IsRoseTelemetryEnabled()
+{
+	return g_bRoseTelemetryEnabled.load();
+}
+
+bool IsRoseWorkerPoolTelemetryEnabled()
+{
+	return g_bRoseWorkerPoolTelemetryEnabled.load();
+}
+
+std::uint64_t RoseWorkerPoolTelemetryEpoch()
+{
+	return g_uiWorkerPoolTelemetryEpoch.load();
+}
 
 const char* SnaccTelemetryData::GetDebugText(Direction direction)
 {

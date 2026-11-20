@@ -26,12 +26,21 @@ namespace snacclib
 	class snacclib_WorkerPoolRuntimeTest : public RuntimeTestBase
 	{
 	protected:
+		void SetUp() override
+		{
+			TelemetryConfig config;
+			config.m_bRoseWorkerPoolTelemetryEnabled = true;
+			ConfigureTelemetry(config);
+			RuntimeTestBase::SetUp();
+		}
+
 		void TearDown() override
 		{
 			if (m_gate)
 				m_gate->Release();
 			m_server.SetWorkerPools(nullptr);
 			m_client.SetWorkerPools(nullptr);
+			ConfigureTelemetry(TelemetryConfig{});
 			RuntimeTestBase::TearDown();
 		}
 
@@ -1028,6 +1037,34 @@ namespace snacclib
 		EXPECT_EQ(1u, row.m_ui64ThreadsStopped);
 		ExpectHistogramFilled(row.m_counters.m_run, 2, false);
 		ExpectHistogramFilled(row.m_wait, 2, false);
+	}
+
+	TEST_F(snacclib_WorkerPoolRuntimeTest, TelemetryGateDropsAndResetsPoolHealth)
+	{
+		InitializeEndpoints(TransportEncoding::JSON);
+		ConfigureTelemetry(TelemetryConfig{});
+		ConfigureGetSettingsPool(1, 0);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		EXPECT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+		EXPECT_TRUE(m_pools.Health().empty());
+
+		TelemetryConfig enabled;
+		enabled.m_bRoseWorkerPoolTelemetryEnabled = true;
+		ConfigureTelemetry(enabled);
+		EXPECT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+		const ROSEWorkerPoolHealth counted = WaitForSettings([](const ROSEWorkerPoolHealth& sample) { return sample.m_counters.m_ui64Success >= 1; });
+		ExpectOutcomes(counted, PoolOutcomeSample{.incoming = 1, .success = 1});
+
+		ConfigureTelemetry(TelemetryConfig{});
+		EXPECT_TRUE(m_pools.Health().empty());
+
+		ConfigureTelemetry(enabled);
+		EXPECT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+		const ROSEWorkerPoolHealth restarted = WaitForSettings([](const ROSEWorkerPoolHealth& sample) { return sample.m_counters.m_ui64Success >= 1; });
+		ExpectOutcomes(restarted, PoolOutcomeSample{.incoming = 1, .success = 1});
 	}
 
 } // namespace snacclib
