@@ -569,11 +569,19 @@ private:
 	bool CompleteIfProcessingShutdown(SNACC::ROSEInvoke* pInvoke, const char* szResolvedOperationName, std::chrono::steady_clock::time_point chronoCreated, std::shared_ptr<SnaccInvokeContext> pCtx, long& outRoseResult);
 
 	/*! True when SetTelemetryCallback installed a sink.
-		Every telemetry path uses this check, including OnInvokeProcessed.
+		OnInvokeProcessed uses this so a record already built is still delivered.
 		The pointer is process-wide and read without a lock. */
 	bool HasTelemetryCallback() const
 	{
 		return m_pTelemetryCallback != nullptr;
+	}
+
+	/*! True when a new invoke record should be built.
+		Requires the process-wide invoke switch and an installed callback.
+		Creation sites use this. Delivery of a record already started does not. */
+	bool CollectsRoseTelemetry() const
+	{
+		return IsRoseTelemetryEnabled() && HasTelemetryCallback();
 	}
 
 	// The central process wide telemetry callback

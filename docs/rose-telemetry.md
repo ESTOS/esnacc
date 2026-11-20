@@ -35,6 +35,7 @@ C++ and TypeScript use the same outcome and reason values, finalized at the same
 - A closed session gate is `UNHANDLED` / `SHUTDOWN`. A local wait that ends with no answer is `UNHANDLED` / `TIMEOUT`.
 - The context stored on the record is a clone. `prepareForTelemetry` runs on that clone. The live context is unchanged.
 - No callback means the record is not built. The runtime does not allocate `SnaccTelemetryData` and does not clone the invoke context.
+- `ConfigureTelemetry` can switch invoke records off even when a callback is installed. The default is on, so an installed callback keeps today's behavior. A record already started is still delivered. This switch is C++ only.
 
 ## API
 
@@ -46,6 +47,7 @@ C++ and TypeScript use the same outcome and reason values, finalized at the same
 | `Direction`, `Outcome`, `Stage`, `Reason` | The same nested enums | Same numeric values |
 | `OnInvokeProcessed` | `onInvokeProcessed` | Deliver one finalized record |
 | `SnaccROSEBase::SetTelemetryCallback` | `setTelemetryCallback` | Install or clear the sink |
+| `ConfigureTelemetry` | — | Process-wide switches. Invoke records default on. Worker-pool health defaults off and has no TypeScript side. |
 
 Sources:
 

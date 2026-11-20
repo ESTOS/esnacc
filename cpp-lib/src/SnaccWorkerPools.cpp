@@ -1,6 +1,7 @@
 #include "../include/SnaccWorkerPools.h"
 #include "../include/SNACCROSE.h"
 #include "../include/SnaccROSEBase.h"
+#include "../include/SnaccTelemetry.h"
 #include "snacc-assert.h"
 
 #include <algorithm>
@@ -37,7 +38,12 @@ struct WorkItem
 	unsigned long size{};
 	std::optional<std::chrono::steady_clock::time_point> deadline{};
 	// When the item entered the queue. Wait is measured from here until the item leaves.
+	// Unset when this item was not counted. CountWait must not run on an unset stamp.
 	std::chrono::steady_clock::time_point enqueuedAt{};
+	// True when enqueue counted this item. Completion counts the outcome only for that generation.
+	bool bTelemetryCounted{false};
+	// RoseWorkerPoolTelemetryEpoch at the moment incoming was incremented. A later edge makes this stale.
+	std::uint64_t uiTelemetryEpoch{};
 	// Session gate and completion, installed by the stub when it queued this message.
 	SnaccPooledInboundCallbacks callbacks{};
 };
@@ -86,6 +92,8 @@ struct SnaccWorkerPoolState
 	std::uint64_t threadsStarted{};
 	// Idle exit, RetireWorker, and the exit during Shutdown.
 	std::uint64_t threadsStopped{};
+	// Last RoseWorkerPoolTelemetryEpoch applied under this pool's mutex. A mismatch clears the sums.
+	std::uint64_t telemetryEpoch{};
 	std::chrono::milliseconds idleTimeout{30000};
 	SnaccWorkerFaultPolicy faultPolicy{SnaccWorkerFaultPolicy::KeepWorker};
 	// Set by JoinPool. Workers finish the item they already popped, then leave. New enqueues are refused.
@@ -104,6 +112,8 @@ struct SnaccWorkerPools::State
 	std::unordered_map<unsigned int, std::shared_ptr<SnaccWorkerPoolState>> operationPools{};
 	// Pools Shutdown has joined. Health keeps them until Configure starts a pool with the same name.
 	std::vector<ROSEWorkerPoolHealth> retired{};
+	// Last worker-pool telemetry epoch seen by Health(). A newer epoch drops retired rows so an old drain does not return.
+	std::uint64_t telemetryEpoch{};
 	std::mutex inflightMutex{};
 	std::condition_variable inflightCv{};
 	// Handlers that have left the queue and not yet returned, per stub. Pause waits until the entry is gone.
@@ -219,6 +229,74 @@ namespace
 	void CountWait(SnaccWorkerPoolState& pool, const WorkItem& item)
 	{
 		ObserveUs(pool.wait, ElapsedUs(item.enqueuedAt));
+	}
+
+	// Zeros the sums. Caller holds the pool mutex.
+	// threadsStarted becomes the threads still inside the pool so started minus stopped stays equal to liveWorkers.
+	// Queue depth, idle threads, and running threads are left as they are.
+	void ClearPoolSums(SnaccWorkerPoolState& pool)
+	{
+		pool.incoming = 0;
+		pool.success = 0;
+		pool.handlerError = 0;
+		pool.handlerReject = 0;
+		pool.rejectedFull = 0;
+		pool.rejectedShuttingDown = 0;
+		pool.rejectedConnectionClosed = 0;
+		pool.timedOut = 0;
+		pool.replyDiscarded = 0;
+		pool.run = {};
+		pool.wait = {};
+		pool.threadsStopped = 0;
+		pool.threadsStarted = pool.liveWorkers;
+	}
+
+	// Applies a ConfigureTelemetry edge. Returns true when the sums were cleared.
+	// Caller holds the pool mutex.
+	bool ApplyWorkerPoolTelemetryEpoch(SnaccWorkerPoolState& pool)
+	{
+		const std::uint64_t uiEpoch = RoseWorkerPoolTelemetryEpoch();
+		if (pool.telemetryEpoch == uiEpoch)
+			return false;
+		ClearPoolSums(pool);
+		pool.telemetryEpoch = uiEpoch;
+		return true;
+	}
+
+	// True when this pool should count. Applies a pending edge first, under the caller's pool mutex.
+	bool WorkerPoolTelemetryActive(SnaccWorkerPoolState& pool)
+	{
+		ApplyWorkerPoolTelemetryEpoch(pool);
+		return IsRoseWorkerPoolTelemetryEnabled();
+	}
+
+	// True when this item was counted and that generation is still the one stored on the pool.
+	// Caller holds the pool mutex and has already applied the epoch.
+	bool WorkItemStillCounted(const SnaccWorkerPoolState& pool, const WorkItem& item)
+	{
+		if (!item.bTelemetryCounted)
+			return false;
+		if (item.uiTelemetryEpoch != pool.telemetryEpoch)
+			return false;
+		return IsRoseWorkerPoolTelemetryEnabled();
+	}
+
+	// Counts a thread start only while telemetry is on. A reset in this call already includes the new live thread.
+	// Caller holds the pool mutex and has already incremented liveWorkers.
+	void NoteThreadStarted(SnaccWorkerPoolState& pool)
+	{
+		const bool bReset = ApplyWorkerPoolTelemetryEpoch(pool);
+		if (!bReset && IsRoseWorkerPoolTelemetryEnabled())
+			++pool.threadsStarted;
+	}
+
+	// Counts a thread exit only while telemetry is on. A reset in this call already matches the reduced live count.
+	// Caller holds the pool mutex and has already decremented liveWorkers.
+	void NoteThreadStopped(SnaccWorkerPoolState& pool)
+	{
+		const bool bReset = ApplyWorkerPoolTelemetryEpoch(pool);
+		if (!bReset && IsRoseWorkerPoolTelemetryEnabled())
+			++pool.threadsStopped;
 	}
 
 	// Maps the stub report onto the stored outcome. ReplyDiscarded is not also a success.
@@ -351,7 +429,7 @@ void SnaccWorkerPools::StartFloorWorker(const std::shared_ptr<SnaccWorkerPoolSta
 		return;
 	// Count the thread before it runs, so LiveThreads does not report zero in the gap between start and the thread entering WorkerMain.
 	++pool->liveWorkers;
-	++pool->threadsStarted;
+	NoteThreadStarted(*pool);
 	pool->threads.emplace_back([this, pool] { WorkerMain(pool); });
 }
 
@@ -365,7 +443,7 @@ void SnaccWorkerPools::EnsureWorker(const std::shared_ptr<SnaccWorkerPoolState>&
 		return;
 	// The new thread may find the item already taken and then idle-exit. That is cheaper than blocking the enqueue on a busy pool.
 	++pool->liveWorkers;
-	++pool->threadsStarted;
+	NoteThreadStarted(*pool);
 	pool->threads.emplace_back([this, pool] { WorkerMain(pool); });
 }
 
@@ -377,7 +455,7 @@ bool SnaccWorkerPools::ExitIdleWorker(const std::shared_ptr<SnaccWorkerPoolState
 	if (pool->stopping || pool->liveWorkers <= kMinLiveWorkers || !pool->queue.empty())
 		return false;
 	--pool->liveWorkers;
-	++pool->threadsStopped;
+	NoteThreadStopped(*pool);
 	// This jthread cannot join itself. Detach and drop it so JoinPool will not wait on it.
 	const auto self = std::this_thread::get_id();
 	const auto it = std::find_if(pool->threads.begin(), pool->threads.end(), [&](const std::jthread& thread) { return thread.get_id() == self; });
@@ -400,6 +478,7 @@ void SnaccWorkerPools::WorkerMain(const std::shared_ptr<SnaccWorkerPoolState>& p
 	{
 		WorkItem item;
 		std::chrono::steady_clock::time_point startedAt{};
+		bool bCountRun = false;
 		{
 			std::unique_lock<std::mutex> lock(pool->mutex);
 			++pool->idleWorkers;
@@ -414,7 +493,7 @@ void SnaccWorkerPools::WorkerMain(const std::shared_ptr<SnaccWorkerPoolState>& p
 			if (pool->stopping && pool->queue.empty())
 			{
 				--pool->liveWorkers;
-				++pool->threadsStopped;
+				NoteThreadStopped(*pool);
 				pool->cv.notify_all();
 				break;
 			}
@@ -428,10 +507,16 @@ void SnaccWorkerPools::WorkerMain(const std::shared_ptr<SnaccWorkerPoolState>& p
 			item = std::move(pool->queue.front());
 			pool->queue.pop_front();
 			++pool->running;
-			// The request has left the queue. Wait is the time until this pop, whatever outcome follows.
-			CountWait(*pool, item);
-			startedAt = std::chrono::steady_clock::now();
-			pool->runningSince.push_back(startedAt);
+			// The request has left the queue. Wait is counted only for an item this generation still owns.
+			ApplyWorkerPoolTelemetryEpoch(*pool);
+			bCountRun = WorkItemStillCounted(*pool, item);
+			if (bCountRun)
+				CountWait(*pool, item);
+			if (bCountRun)
+			{
+				startedAt = std::chrono::steady_clock::now();
+				pool->runningSince.push_back(startedAt);
+			}
 			// Count the stub before releasing the queue lock. Pause and stub destruction
 			// scan the queue and then wait on this count, so a popped item must already be in it.
 			NoteInflight(item.stub, 1);
@@ -443,7 +528,7 @@ void SnaccWorkerPools::WorkerMain(const std::shared_ptr<SnaccWorkerPoolState>& p
 		const PoolLeave decided = pool->stopping ? PoolLeave::RejectedShuttingDown : !allowed ? PoolLeave::RejectedConnectionClosed : deadlinePassed ? PoolLeave::TimedOut : PoolLeave::Success;
 		SnaccPooledRunReport report{};
 		bool bThrew = false;
-		const auto runStarted = std::chrono::steady_clock::now();
+		const auto runStarted = bCountRun ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
 		try
 		{
 			// Stopping and a closed session both reject without the handler.
@@ -461,27 +546,35 @@ void SnaccWorkerPools::WorkerMain(const std::shared_ptr<SnaccWorkerPoolState>& p
 			bThrew = true;
 			retire = pool->faultPolicy == SnaccWorkerFaultPolicy::RetireWorker;
 		}
-		const std::uint64_t ui64RunUs = ElapsedUs(runStarted);
+		const std::uint64_t ui64RunUs = bCountRun ? ElapsedUs(runStarted) : 0;
 		NoteInflight(item.stub, -1);
 
 		{
 			std::lock_guard<std::mutex> lock(pool->mutex);
 			--pool->running;
-			const auto runningIt = std::find(pool->runningSince.begin(), pool->runningSince.end(), startedAt);
-			if (runningIt != pool->runningSince.end())
-				pool->runningSince.erase(runningIt);
+			if (bCountRun)
+			{
+				const auto runningIt = std::find(pool->runningSince.begin(), pool->runningSince.end(), startedAt);
+				if (runningIt != pool->runningSince.end())
+					pool->runningSince.erase(runningIt);
+			}
 			// A throw past OnInvoke ran the handler and sent neither a result nor a reject. That is the only outcome.
-			if (decided == PoolLeave::Success && bThrew)
-				CountRun(*pool, PoolLeave::HandlerError, true, ui64RunUs);
-			else if (decided == PoolLeave::Success)
-				CountRun(*pool, LeaveFromReport(report), report.bHandlerRan, ui64RunUs);
-			else
-				CountOutcome(*pool, decided);
+			// An edge since enqueue drops this outcome. The sums for that generation were already cleared.
+			ApplyWorkerPoolTelemetryEpoch(*pool);
+			if (WorkItemStillCounted(*pool, item))
+			{
+				if (decided == PoolLeave::Success && bThrew)
+					CountRun(*pool, PoolLeave::HandlerError, true, ui64RunUs);
+				else if (decided == PoolLeave::Success)
+					CountRun(*pool, LeaveFromReport(report), report.bHandlerRan, ui64RunUs);
+				else
+					CountOutcome(*pool, decided);
+			}
 			// This thread is done. Start a replacement when the queue still has work, then leave the loop.
 			if (retire)
 			{
 				--pool->liveWorkers;
-				++pool->threadsStopped;
+				NoteThreadStopped(*pool);
 				EnsureWorker(pool);
 				break;
 			}
@@ -501,8 +594,11 @@ void SnaccWorkerPools::JoinPool(const std::shared_ptr<SnaccWorkerPoolState>& poo
 		pool->stopping = true;
 		queued.assign(std::make_move_iterator(pool->queue.begin()), std::make_move_iterator(pool->queue.end()));
 		// These items leave the queue here. Each one waited, and the outcome is shutdown. Count them before the reject runs outside the lock.
+		ApplyWorkerPoolTelemetryEpoch(*pool);
 		for (const WorkItem& item : queued)
 		{
+			if (!WorkItemStillCounted(*pool, item))
+				continue;
 			CountWait(*pool, item);
 			CountOutcome(*pool, PoolLeave::RejectedShuttingDown);
 		}
@@ -601,11 +697,30 @@ std::vector<ROSEWorkerPoolHealth> SnaccWorkerPools::Health() const
 {
 	std::vector<std::shared_ptr<SnaccWorkerPoolState>> pools;
 	std::vector<ROSEWorkerPoolHealth> retired;
+	bool bEnabled = false;
 	{
 		// Same lock order as Enqueue: registry lock only long enough to copy the pool pointers.
 		std::lock_guard<std::mutex> guard(m_state->registryMutex);
+		const std::uint64_t uiEpoch = RoseWorkerPoolTelemetryEpoch();
+		if (m_state->telemetryEpoch != uiEpoch)
+		{
+			m_state->retired.clear();
+			m_state->telemetryEpoch = uiEpoch;
+		}
+		bEnabled = IsRoseWorkerPoolTelemetryEnabled();
 		pools = m_state->pools;
-		retired = m_state->retired;
+		if (bEnabled)
+			retired = m_state->retired;
+	}
+	if (!bEnabled)
+	{
+		// The edge clears under the pool lock even when the caller only asked for a copy.
+		for (const std::shared_ptr<SnaccWorkerPoolState>& pool : pools)
+		{
+			std::lock_guard<std::mutex> lock(pool->mutex);
+			ApplyWorkerPoolTelemetryEpoch(*pool);
+		}
+		return {};
 	}
 	std::vector<ROSEWorkerPoolHealth> health;
 	health.reserve(pools.size() + retired.size());
@@ -613,6 +728,9 @@ std::vector<ROSEWorkerPoolHealth> SnaccWorkerPools::Health() const
 	for (const std::shared_ptr<SnaccWorkerPoolState>& pool : pools)
 	{
 		std::lock_guard<std::mutex> lock(pool->mutex);
+		ApplyWorkerPoolTelemetryEpoch(*pool);
+		if (!IsRoseWorkerPoolTelemetryEnabled())
+			continue;
 		health.push_back(CopyPoolHealth(*pool));
 		liveNames.insert(pool->name);
 	}
@@ -667,18 +785,22 @@ SnaccWorkerEnqueueResult SnaccWorkerPools::Enqueue(const std::string& poolName, 
 
 	std::lock_guard<std::mutex> lock(pool->mutex);
 	// Count the arrival before the outcome, so a sample cannot see an outcome without its incoming.
-	++pool->incoming;
+	const bool bCount = WorkerPoolTelemetryActive(*pool);
+	if (bCount)
+		++pool->incoming;
 	// JoinPool has marked the pool, and it is still registered until the join finishes. The caller sends the shutdown reject.
 	if (pool->stopping)
 	{
-		CountOutcome(*pool, PoolLeave::RejectedShuttingDown);
+		if (bCount)
+			CountOutcome(*pool, PoolLeave::RejectedShuttingDown);
 		return SnaccWorkerEnqueueResult::PoolStopped;
 	}
 	// Depth is the queue plus handlers already running, so one long SQL call still occupies a slot.
 	if (pool->maxElements > 0 && pool->queue.size() + pool->running >= pool->maxElements)
 	{
 		// The message never enters the queue. Invoke and event share this one counter.
-		CountOutcome(*pool, PoolLeave::RejectedFull);
+		if (bCount)
+			CountOutcome(*pool, PoolLeave::RejectedFull);
 		return SnaccWorkerEnqueueResult::RejectedFull;
 	}
 
@@ -687,7 +809,12 @@ SnaccWorkerEnqueueResult SnaccWorkerPools::Enqueue(const std::string& poolName, 
 	item.stub = &stub;
 	item.size = ulMessageSize;
 	item.deadline = DeadlineFor(*pMessage->invoke);
-	item.enqueuedAt = std::chrono::steady_clock::now();
+	if (bCount)
+	{
+		item.bTelemetryCounted = true;
+		item.uiTelemetryEpoch = pool->telemetryEpoch;
+		item.enqueuedAt = std::chrono::steady_clock::now();
+	}
 	item.callbacks = std::move(callbacks);
 	item.message = std::move(pMessage);
 	pool->queue.push_back(std::move(item));
@@ -713,8 +840,12 @@ void SnaccWorkerPools::RejectQueuedAndWait(SnaccROSEBase& stub)
 				if (item.stub == &stub)
 				{
 					// The item leaves this queue without a worker. It waited, and the connection is closed.
-					CountWait(*pool, item);
-					CountOutcome(*pool, PoolLeave::RejectedConnectionClosed);
+					ApplyWorkerPoolTelemetryEpoch(*pool);
+					if (WorkItemStillCounted(*pool, item))
+					{
+						CountWait(*pool, item);
+						CountOutcome(*pool, PoolLeave::RejectedConnectionClosed);
+					}
 					queued.push_back(std::move(item));
 				}
 				else

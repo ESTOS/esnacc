@@ -696,4 +696,31 @@ namespace snacclib
 		AssertAsyncWaitSkippedTelemetry(TransportEncoding::JSON);
 	}
 
+	TEST_F(snacclib_TelemetryRuntimeTest, InvokeTelemetryGateSkipsRecordsUntilEnabled)
+	{
+		struct RestoreTelemetryConfig
+		{
+			~RestoreTelemetryConfig()
+			{
+				ConfigureTelemetry(TelemetryConfig{});
+			}
+		} restore;
+
+		InitializeEndpoints(TransportEncoding::JSON);
+		TelemetryConfig disabled;
+		disabled.m_bRoseTelemetryEnabled = false;
+		ConfigureTelemetry(disabled);
+
+		AsnGetSettingsArgument argument;
+		AsnGetSettingsResult result;
+		AsnRequestError error;
+		EXPECT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+		EXPECT_TRUE(TelemetryEntries().empty());
+
+		ConfigureTelemetry(TelemetryConfig{});
+		m_telemetryRecorder.Clear();
+		EXPECT_EQ(ROSE_NOERROR, m_clientSettingsModule.InvokeGetSettings(&argument, &result, &error));
+		EXPECT_FALSE(TelemetryEntries().empty());
+	}
+
 } // namespace snacclib

@@ -503,7 +503,7 @@ const char* SnaccROSEBase::InboundInvokeRejectContext::OperationNameCStr() const
 void SnaccROSEBase::EmitInboundDecodeFailureTelemetry(unsigned long ulMessageSize, unsigned int uiOperationID, const char* szOperationName, SnaccTelemetryData::Outcome outcome, long lTelemetryResult)
 {
 	// Decode failure still logs and rejects. The record is the only extra work, so skip it when no sink is installed.
-	if (!HasTelemetryCallback())
+	if (!CollectsRoseTelemetry())
 		return;
 
 	OnInvokeProcessed(SnaccTelemetryData::CreateFinalized(SnaccTelemetryData::Direction::INBOUND, uiOperationID, szOperationName, ulMessageSize, outcome, SnaccTelemetryData::Stage::INBOUND_DECODE, SnaccTelemetryData::Reason::DECODE_FAILED, lTelemetryResult));
@@ -1730,7 +1730,7 @@ SnaccPooledRunReport SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEM
 	const char* szOperationName = pCtx->OperationNameCStr();
 	// Start the clock before the handler, and only when a sink will keep the record. Otherwise skip the allocation and the later context clone.
 	std::shared_ptr<SnaccTelemetryData> pTelemetry{};
-	if (HasTelemetryCallback())
+	if (CollectsRoseTelemetry())
 		pTelemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::INBOUND, invoke.operationID, szOperationName, ulMessageSize);
 	auto telemetryResult = SnaccTelemetryData::Outcome::UNHANDLED;
 	auto telemetryReason = SnaccTelemetryData::Reason::UNKNOWN_FAILURE;
@@ -1890,7 +1890,7 @@ SnaccPooledRunReport SnaccROSEBase::OnInvokeMessage(std::unique_ptr<SNACC::ROSEM
 void SnaccROSEBase::OnResultMessage(const SNACC::ROSEResult& result, unsigned long ulMessageSize)
 {
 	// This hook only publishes the inbound result record. Skip the pending-op lookup when nobody is listening.
-	if (!HasTelemetryCallback())
+	if (!CollectsRoseTelemetry())
 		return;
 
 	unsigned int uiOperationID = 0;
@@ -1902,7 +1902,7 @@ void SnaccROSEBase::OnResultMessage(const SNACC::ROSEResult& result, unsigned lo
 void SnaccROSEBase::OnErrorMessage(const SNACC::ROSEError& error, unsigned long ulMessageSize)
 {
 	// This hook only publishes the inbound error record. Skip the pending-op lookup when nobody is listening.
-	if (!HasTelemetryCallback())
+	if (!CollectsRoseTelemetry())
 		return;
 
 	unsigned int uiOperationID = 0;
@@ -1914,7 +1914,7 @@ void SnaccROSEBase::OnErrorMessage(const SNACC::ROSEError& error, unsigned long 
 void SnaccROSEBase::OnRejectMessage(const SNACC::ROSEReject& reject, unsigned long ulMessageSize)
 {
 	// This hook only publishes the inbound reject record. Skip the pending-op lookup when nobody is listening.
-	if (!HasTelemetryCallback())
+	if (!CollectsRoseTelemetry())
 		return;
 
 	unsigned int uiOperationID = 0;
@@ -2004,7 +2004,7 @@ long SnaccROSEBase::Send(SNACC::ROSEInvoke* pInvoke, const char* szOperationName
 void SnaccROSEBase::ReportOutboundBlocked(SNACC::ROSEInvoke* pInvoke, const char* szOperationName, const long lRoseResult, std::shared_ptr<SnaccInvokeContext> pCtx /*= {}*/)
 {
 	// The caller still returns ROSE_REJECT_REMOTENOTCAPABLE. Building the record is the only work in this function.
-	if (!HasTelemetryCallback())
+	if (!CollectsRoseTelemetry())
 		return;
 
 	const auto chronoCreated = std::chrono::steady_clock::now();
@@ -2034,7 +2034,7 @@ bool SnaccROSEBase::CompleteIfProcessingShutdown(SNACC::ROSEInvoke* pInvoke, con
 
 	outRoseResult = ROSE_TE_SHUTDOWN;
 	// The caller still returns ROSE_TE_SHUTDOWN. The record is built only for a sink.
-	if (HasTelemetryCallback())
+	if (CollectsRoseTelemetry())
 	{
 		auto pTelemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, 0, chronoCreated);
 		pTelemetry->finalize(SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, SnaccTelemetryData::Reason::SHUTDOWN, outRoseResult, std::nullopt, std::move(pCtx));
@@ -2062,7 +2062,7 @@ ERoseResult SnaccROSEBase::SendEvent(SNACC::ROSEInvoke* pInvoke, const char* szO
 
 	lRoseResult = Send(pInvoke, szResolvedOperationName, ctx, &stRequestData);
 	// The send result is returned either way. Skip the record and the context clone when no sink is installed.
-	if (HasTelemetryCallback())
+	if (CollectsRoseTelemetry())
 	{
 		auto pTelemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, stRequestData, chronoCreated);
 		pTelemetry->finalize(lRoseResult == ROSE_NOERROR ? SnaccTelemetryData::Outcome::EVENT : SnaccTelemetryData::Outcome::UNHANDLED, SnaccTelemetryData::Stage::OUTBOUND_SEND, lRoseResult == ROSE_NOERROR ? SnaccTelemetryData::Reason::LOCAL_EVENT : GetUnhandledReasonFromResult(lRoseResult), lRoseResult, std::nullopt, pCtx);
@@ -2183,7 +2183,7 @@ ERoseResult SnaccROSEBase::SendInvoke(SNACC::ROSEInvoke* pInvoke, SNACC::AsnType
 	size_t stRequestData = 0;
 	lRoseResult = Send(pInvoke, szResolvedOperationName, ctx, &stRequestData);
 	// Created before the wait so duration includes it, and only when a sink will keep the record.
-	if (HasTelemetryCallback())
+	if (CollectsRoseTelemetry())
 		pendingOP.m_pTelemetry = SnaccTelemetryData::Create(SnaccTelemetryData::Direction::OUTBOUND, pInvoke->operationID, szResolvedOperationName, stRequestData, chronoCreated);
 
 	if (lRoseResult == 0)
@@ -2261,7 +2261,7 @@ void SnaccROSEBase::FinishAsyncInvoke(long invokeID, long lRoseResult, std::uniq
 	if (pending->m_bFireAndForgetAsync)
 	{
 		// The record uses the start time stored on the pending op. Do not allocate it when no sink is installed.
-		if (HasTelemetryCallback())
+		if (CollectsRoseTelemetry())
 			pending->EnsureOutboundTelemetry();
 		if (pending->m_pTelemetry)
 		{
@@ -2283,7 +2283,7 @@ void SnaccROSEBase::FinishAsyncInvoke(long invokeID, long lRoseResult, std::uniq
 		lFinalRoseResult = HandleInvokeResult(lFinalRoseResult, *pending->m_pAnswerMessage, pCtx->AsyncResultBuffer(), pCtx->AsyncErrorBuffer(), *pCtx);
 
 	// Async completion learns the outcome here. The record uses the start time stored on the pending op.
-	if (HasTelemetryCallback())
+	if (CollectsRoseTelemetry())
 		pending->EnsureOutboundTelemetry();
 
 	if (pending->m_pTelemetry)
